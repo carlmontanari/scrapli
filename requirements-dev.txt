@@ -1,0 +1,17 @@
+tox>=3.14.3
+black>=19.10b0
+isort>=4.3.21
+pytest>=5.3.4
+pytest-cov>=2.8.1
+pyfakefs>=3.7.1
+pylama>=7.7.1
+pycodestyle>=2.5.0
+pydocstyle>=5.0.2
+pylint>=2.4.4
+darglint>=1.1.2
+pdoc3>=0.7.4
+netmiko>=2.4.1
+-r requirements.txt
+-r requirements-textfsm.txt
+-r requirements-paramiko.txt
+-r requirements-ssh2.txt
