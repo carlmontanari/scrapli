@@ -3,9 +3,36 @@ import importlib
 import re
 import warnings
 from io import TextIOWrapper
-from typing import Any, Callable, Dict, List, Optional, TextIO, Union
+from typing import Any, Callable, Dict, List, Optional, Pattern, TextIO, Union
 
 import pkg_resources  # pylint: disable=C0411
+
+
+def get_prompt_pattern(prompt: str, class_prompt: str) -> Pattern[str]:
+    r"""
+    Return compiled prompt pattern
+
+    Given a potential prompt and the Channel class' prompt, return compiled prompt pattern
+
+    Args:
+        prompt: bytes string to process
+        class_prompt: Channel class' prompt pattern
+
+    Returns:
+        output: bytes string each line right stripped
+
+    Raises:
+        N/A  # noqa
+
+    """
+    if prompt and prompt.startswith("^") and prompt.endswith("$"):
+        prompt_pattern = re.compile(prompt, flags=re.M | re.I)
+    elif prompt:
+        # TODO -- does compiling escaped stuff work?
+        prompt_pattern = re.compile(re.escape(prompt))
+    else:
+        prompt_pattern = re.compile(class_prompt, flags=re.M | re.I)
+    return prompt_pattern
 
 
 def normalize_lines(output: bytes) -> bytes:

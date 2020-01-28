@@ -19,7 +19,7 @@ Thank you to the folks who create and maintain pexpect, vendoring this here
 has been ridiculously helpful! -CM
 """
 
-
+import builtins
 import errno
 import fcntl
 import io
@@ -32,16 +32,17 @@ import sys
 import termios
 import time
 
-import builtins
-
 # Constants
-from pty import STDIN_FILENO, CHILD
-
+from pty import CHILD, STDIN_FILENO
 from shutil import which
+from typing import Type, TypeVar
 
 
 class PtyProcessError(Exception):
     """Generic error class for this package."""
+
+
+PtyProcessType = TypeVar("PtyProcessType", bound="PtyProcess")
 
 
 def _byte(i):
@@ -177,8 +178,15 @@ class PtyProcess(object):
 
     @classmethod
     def spawn(
-        cls, argv, cwd=None, env=None, echo=True, preexec_fn=None, dimensions=(24, 80), pass_fds=()
-    ):
+        cls: Type[PtyProcessType],
+        argv,
+        cwd=None,
+        env=None,
+        echo=True,
+        preexec_fn=None,
+        dimensions=(24, 80),
+        pass_fds=(),
+    ) -> PtyProcessType:
         """Start the given command in a child process in a pseudo terminal.
 
         This does all the fork/exec type of stuff for a pty, and returns an
@@ -401,7 +409,7 @@ class PtyProcess(object):
             self.closed = True
             # self.pid = None
 
-    def flush(self):
+    def flush(self) -> None:
         """This does nothing. It is here to support the interface for a
         File-like object. """
 
@@ -499,7 +507,7 @@ class PtyProcess(object):
 
         self.echo = state
 
-    def read(self, size=1024):
+    def read(self, size=1024) -> bytes:
         """Read and return at most ``size`` bytes from the pty.
 
         Can block if there is nothing to read. Raises :exc:`EOFError` if the
@@ -553,7 +561,7 @@ class PtyProcess(object):
             self.fileobj.flush()
         return n
 
-    def write(self, s, flush=True):
+    def write(self, s, flush=True) -> int:
         """Write bytes to the pseudoterminal.
 
         Returns the number of bytes written.
@@ -613,7 +621,7 @@ class PtyProcess(object):
 
         return self._writeb(_INTR), _INTR
 
-    def eof(self):
+    def eof(self) -> bool:
         """This returns True if the EOF exception was ever raised.
         """
 
@@ -690,7 +698,7 @@ class PtyProcess(object):
             )
         return self.exitstatus
 
-    def isalive(self):
+    def isalive(self) -> bool:
         """This tests if the child process is running or not. This is
         non-blocking. If the child was terminated then this will read the
         exitstatus or signalstatus of the child. This returns True if the child
@@ -773,7 +781,7 @@ class PtyProcess(object):
             )
         return False
 
-    def kill(self, sig):
+    def kill(self, sig) -> None:
         """Send the given signal to the child application.
 
         In keeping with UNIX tradition it has a misleading name. It does not

@@ -4,7 +4,7 @@ from logging import getLogger
 from typing import List, Tuple, Union
 
 from nssh.decorators import operation_timeout
-from nssh.helper import normalize_lines, strip_ansi
+from nssh.helper import get_prompt_pattern, normalize_lines, strip_ansi
 from nssh.result import Result
 from nssh.transport.transport import Transport
 
@@ -136,15 +136,7 @@ class Channel:
             N/A  # noqa
 
         """
-        # prefer to use regex match where possible; assume pattern is regex if starting with
-        # ^ and ending with $ -- we always want multi-line so check for this
-        if prompt and prompt.startswith("^") and prompt.startswith("$"):
-            prompt_pattern = re.compile(prompt, flags=re.M | re.I)
-        elif prompt:
-            # TODO -- does compiling escaped stuff work?
-            prompt_pattern = re.compile(re.escape(prompt))
-        else:
-            prompt_pattern = re.compile(self.comms_prompt_pattern, flags=re.M | re.I)
+        prompt_pattern = get_prompt_pattern(prompt, self.comms_prompt_pattern)
 
         # disabling session blocking means the while loop will actually iterate
         # without this iteration we can never properly check for prompts

@@ -9,16 +9,20 @@ from nssh.helper import get_external_function, validate_external_function
 from nssh.transport import (
     MIKO_TRANSPORT_ARGS,
     SSH2_TRANSPORT_ARGS,
+    SYSTEM_SSH_TRANSPORT_ARGS,
     MikoTransport,
     SSH2Transport,
+    SystemSSHTransport,
     Transport,
 )
 
 TRANSPORT_CLASS: Dict[str, Callable[..., Transport]] = {
+    "system": SystemSSHTransport,
     "ssh2": SSH2Transport,
     "paramiko": MikoTransport,
 }
 TRANSPORT_ARGS: Dict[str, Tuple[str, ...]] = {
+    "system": SYSTEM_SSH_TRANSPORT_ARGS,
     "ssh2": SSH2_TRANSPORT_ARGS,
     "paramiko": MIKO_TRANSPORT_ARGS,
 }
@@ -43,7 +47,7 @@ class NSSH:
         comms_ansi: bool = False,
         session_pre_login_handler: Union[str, Callable[..., Any]] = "",
         session_disable_paging: Union[str, Callable[..., Any]] = "terminal length 0",
-        driver: str = "ssh2",
+        driver: str = "system",
     ):
         """
 
@@ -170,13 +174,20 @@ class NSSH:
             )
         else:
             self.session_pre_login_handler = ""
-        if not isinstance(session_disable_paging, str) or callable(session_disable_paging):
+        if callable(session_disable_paging):
+            self.session_disable_paging = session_disable_paging
+        if not isinstance(session_disable_paging, str) and not callable(session_disable_paging):
             raise TypeError(
                 "session_disable_paging should be str or callable, got "
                 f"{type(session_disable_paging)}"
             )
         if session_disable_paging != "terminal length 0":
-            self.session_disable_paging = self._set_session_disable_paging(session_disable_paging)
+            try:
+                self.session_disable_paging = self._set_session_disable_paging(
+                    session_disable_paging
+                )
+            except TypeError:
+                self.session_disable_paging = session_disable_paging
         else:
             self.session_disable_paging = session_disable_paging
 
@@ -202,8 +213,8 @@ class NSSH:
             return session_pre_login_handler
         if not validate_external_function(session_pre_login_handler):
             LOG.critical(f"Invalid comms_pre_login_handler: {session_pre_login_handler}")
-            raise ValueError(
-                f"{session_pre_login_handler} is an invalid comms_pre_login_handler function "
+            raise TypeError(
+                f"{session_pre_login_handler} is an invalid session_pre_login_handler function "
                 "or path to a function."
             )
         return get_external_function(session_pre_login_handler)
@@ -229,7 +240,10 @@ class NSSH:
         if callable(session_disable_paging):
             return session_disable_paging
         if not validate_external_function(session_disable_paging):
-            return session_disable_paging
+            raise TypeError(
+                f"{session_disable_paging} is an invalid session_disable_paging function or path "
+                "to a function. Assuming this is string to send to disable paging."
+            )
         return get_external_function(session_disable_paging)
 
     def _transport_factory(self, transport: str) -> Tuple[Callable[..., Any], Dict[str, Any]]:
