@@ -2,13 +2,20 @@
 import re
 from logging import getLogger
 from select import select
+from subprocess import PIPE, Popen
 from threading import Lock
-from typing import Optional
+from typing import TYPE_CHECKING, List, Optional, Union
 
+from nssh.decorators import operation_timeout
 from nssh.exceptions import NSSHAuthenticationFailed
 from nssh.helper import get_prompt_pattern
 from nssh.transport.ptyprocess import PtyProcess
 from nssh.transport.transport import Transport
+
+if TYPE_CHECKING:
+    PopenBytes = Popen[bytes]  # pylint: disable=E1136
+else:
+    PopenBytes = Popen
 
 LOG = getLogger(f"{__name__}_transport")
 
@@ -16,7 +23,6 @@ SYSTEM_SSH_TRANSPORT_ARGS = (
     "host",
     "port",
     "timeout_ssh",
-    "timeout_socket",
     "auth_username",
     "auth_public_key",
     "auth_password",
@@ -30,7 +36,6 @@ class SystemSSHTransport(Transport):
         host: str,
         port: int = 22,
         timeout_ssh: int = 5000,
-        timeout_socket: int = 5,
         auth_username: str = "",
         auth_public_key: str = "",
         auth_password: str = "",
@@ -47,7 +52,6 @@ class SystemSSHTransport(Transport):
             host: host ip/name to connect to
             port: port to connect to
             timeout_ssh: timeout for ssh2 transport in milliseconds
-            timeout_socket: timeout for establishing socket in seconds
             auth_username: username for authentication
             auth_public_key: path to public key for authentication
             auth_password: password for authentication
@@ -72,7 +76,6 @@ class SystemSSHTransport(Transport):
         self.host: str = host
         self.port: int = port
         self.timeout_ssh: int = timeout_ssh
-        self.timeout_socket: int = timeout_socket
         self.session_lock: Lock = Lock()
         self.auth_username: str = auth_username
         self.auth_public_key: str = auth_public_key
@@ -80,9 +83,9 @@ class SystemSSHTransport(Transport):
         self.comms_prompt_pattern: str = comms_prompt_pattern
         self.comms_return_char: str = comms_return_char
 
-        self.lib_session = PtyProcess
-        self.session: PtyProcess  # pylint: disable=E1136
+        self.session: Union[Popen[bytes], PtyProcess]  # pylint: disable=E1136
         self.lib_auth_exception = NSSHAuthenticationFailed
+        self._isauthenticated = False
 
     def open(self) -> None:
         """
@@ -95,30 +98,109 @@ class SystemSSHTransport(Transport):
             N/A  # noqa
 
         Raises:
-            Exception: if socket handshake fails
             AuthenticationFailed: if all authentication means fail
 
         """
         self.session_lock.acquire()
         # TODO -- construct open command -- this means parsing ssh keys and such prior to getting
         #  here in case users dont want to just rely on their ssh config file
-        open_cmd = ["ssh", self.host, "-l", "STi305"]
-        self.session = PtyProcess.spawn(open_cmd)
-        LOG.debug(f"Session to host {self.host} spawned")
-        self.authenticate()
-        # need to release the lock so isauthenticated can acquire it...
-        self.session_lock.release()
-        if not self.isauthenticated():
+        open_cmd = ["ssh", self.host, "-l", self.auth_username]
+
+        # If authenticating with public key prefer to use open pipes
+        # _open_pipes uses subprocess Popen which is preferable to opening a pty
+        if self.auth_public_key:
+            open_cmd.extend(["-i", self.auth_public_key])
+            if self._open_pipes(open_cmd):
+                return
+
+        # If public key auth fails or is not configured, open a pty session
+        if not self._open_pty(open_cmd):
             msg = f"Authentication to host {self.host} failed"
             LOG.critical(msg)
             raise NSSHAuthenticationFailed(msg)
 
-    def authenticate(self) -> None:
+    def _open_pipes(self, open_cmd: List[str]) -> bool:
         """
-        Parent method to try all means of authentication
+        Private method to open session with subprocess.Popen
 
         Args:
+            open_cmd: ssh command string to use to open connection
+
+        Returns:
+            bool: True/False session was opened and authenticated
+
+        Raises:
             N/A  # noqa
+
+        """
+        open_cmd.append("-v")
+        pipes_session = Popen(
+            open_cmd, bufsize=0, shell=False, stdin=PIPE, stdout=PIPE, stderr=PIPE
+        )
+        LOG.debug(f"Session to host {self.host} spawned")
+
+        try:
+            self._pipes_isauthenticated(pipes_session)
+        except TimeoutError:
+            return False
+
+        LOG.debug(f"Authenticated to host {self.host} with public key")
+        self.session_lock.release()
+        self.session = pipes_session
+        return True
+
+    @operation_timeout("timeout_ssh")
+    def _pipes_isauthenticated(self, pipes_session: PopenBytes) -> bool:
+        """
+        Private method to check initial authentication when using subprocess.Popen
+
+        Args:
+            pipes_session: Popen pipes session object
+
+        Returns:
+            bool: True/False session was authenticated
+
+        Raises:
+            N/A  # noqa
+
+        """
+        output = b""
+        while True:
+            output += pipes_session.stderr.read(1024)
+            if f"Authenticated to {self.host}".encode() in output:
+                self._isauthenticated = True
+                return True
+
+    def _open_pty(self, open_cmd: List[str]) -> bool:
+        """
+        Private method to open session with PtyProcess
+
+        Args:
+            open_cmd: ssh command string to use to open connection
+
+        Returns:
+            bool: True/False session was opened and authenticated
+
+        Raises:
+            N/A  # noqa
+
+        """
+        pty_session = PtyProcess.spawn(open_cmd)
+        LOG.debug(f"Session to host {self.host} spawned")
+        self.session_lock.release()
+        self._pty_authenticate(pty_session)
+        if not self._pty_isauthenticated(pty_session):
+            return False
+        LOG.debug(f"Authenticated to host {self.host} with password")
+        self.session = pty_session
+        return True
+
+    def _pty_authenticate(self, pty_session: PtyProcess) -> None:
+        """
+        Private method to check initial authentication when using pty_session
+
+        Args:
+            pty_session: PtyProcess session object
 
         Returns:
             N/A  # noqa
@@ -127,38 +209,14 @@ class SystemSSHTransport(Transport):
             N/A  # noqa
 
         """
-        if self.auth_public_key:
-            LOG.debug(f"Authenticated to host {self.host} with public key")
-            # TODO - just assuming we are working w/ keys and this works for now...
-            return
-        if self.auth_password:
-            self._authenticate_password()
-            LOG.debug(f"Authenticated to host {self.host} with password")
-            # TODO - just assuming password auth works -- need to implement `isauthenticated`
-            return
-        return
-
-    def _authenticate_password(self) -> None:
-        """
-        Attempt to authenticate with password authentication
-
-        Args:
-            N/A  # noqa
-
-        Returns:
-            N/A  # noqa
-
-        Raises:
-            Exception: if unknown (i.e. not auth failed) exception occurs
-
-        """
+        self.session_lock.acquire()
         try:
             attempt_count = 0
             while True:
-                output = self.read()
+                output = pty_session.read()
                 if b"password" in output.lower():
-                    self.write(self.auth_password)
-                    self.write("\n")
+                    pty_session.write(self.auth_password.encode())
+                    pty_session.write(b"\n")
                     break
                 attempt_count += 1
                 if attempt_count > 250:
@@ -171,8 +229,10 @@ class SystemSSHTransport(Transport):
                 f"{self.host}; Exception: {exc}"
             )
             raise exc
+        finally:
+            self.session_lock.release()
 
-    def isauthenticated(self) -> bool:
+    def _pty_isauthenticated(self, pty_session: PtyProcess) -> bool:
         """
         Check if session is authenticated
 
@@ -189,21 +249,22 @@ class SystemSSHTransport(Transport):
             N/A  # noqa
 
         """
-        if self.session.isalive() and not self.session.eof():
+        if pty_session.isalive() and not pty_session.eof():
             prompt_pattern = get_prompt_pattern("", self.comms_prompt_pattern)
             self.session_lock.acquire()
-            self.write(self.comms_return_char)
-            fd_ready, _, _ = select([self.session.fd], [], [], 0)
-            if self.session.fd in fd_ready:
+            pty_session.write(self.comms_return_char.encode())
+            fd_ready, _, _ = select([pty_session.fd], [], [], 0)
+            if pty_session.fd in fd_ready:
                 # TODO -- it seems that i need two reads here...? doesn't seem to be a problem
                 #  elsewhere though...? not sure whats going on
-                self.read()
-                output = self.read()
+                pty_session.read()
+                output = pty_session.read()
                 output_copy = output.decode("unicode_escape").strip()
                 output_copy = re.sub("\r", "\n", output_copy)
                 channel_match = re.search(prompt_pattern, output_copy)
                 if channel_match:
                     self.session_lock.release()
+                    self._isauthenticated = True
                     return True
         self.session_lock.release()
         return False
@@ -223,7 +284,10 @@ class SystemSSHTransport(Transport):
 
         """
         self.session_lock.acquire()
-        self.session.kill(1)
+        if isinstance(self.session, Popen):
+            self.session.kill()
+        elif isinstance(self.session, PtyProcess):
+            self.session.kill(1)
         LOG.debug(f"Channel to host {self.host} closed")
         self.session_lock.release()
 
@@ -241,8 +305,12 @@ class SystemSSHTransport(Transport):
             N/A  # noqa
 
         """
-        if self.session.isalive() and self.isauthenticated() and not self.session.eof():
-            return True
+        if isinstance(self.session, Popen):
+            if self.session.poll() is None and self._isauthenticated:
+                return True
+        elif isinstance(self.session, PtyProcess):
+            if self.session.isalive() and self._isauthenticated and not self.session.eof():
+                return True
         return False
 
     def read(self) -> bytes:
@@ -261,8 +329,12 @@ class SystemSSHTransport(Transport):
 
         """
         # TODO what value should read be...?
-        output: bytes = self.session.read(65535)
-        return output
+        read_bytes = 65535
+        if isinstance(self.session, Popen):
+            return self.session.stdout.read(read_bytes)
+        if isinstance(self.session, PtyProcess):
+            return self.session.read(read_bytes)
+        return b""
 
     def write(self, channel_input: str) -> None:
         """
@@ -278,7 +350,10 @@ class SystemSSHTransport(Transport):
             N/A  # noqa
 
         """
-        self.session.write(channel_input.encode())
+        if isinstance(self.session, Popen):
+            self.session.stdin.write(channel_input.encode())
+        elif isinstance(self.session, PtyProcess):
+            self.session.write(channel_input.encode())
 
     def flush(self) -> None:
         """
@@ -294,7 +369,11 @@ class SystemSSHTransport(Transport):
             N/A  # noqa
 
         """
-        self.session.flush()
+        if isinstance(self.session, Popen):
+            # TODO -- is this ok? should i read off the channel?
+            pass
+        elif isinstance(self.session, PtyProcess):
+            self.session.flush()
 
     def set_timeout(self, timeout: Optional[int] = None) -> None:
         """

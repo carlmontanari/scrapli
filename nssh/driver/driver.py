@@ -203,10 +203,10 @@ class NSSH:
                 a callable
 
         Returns:
-            comms_pre_login_handler: callable or default empty string value
+            session_pre_login_handler: callable or default empty string value
 
         Raises:
-            ValueError: if provided string does not result in a callable
+            TypeError: if provided string does not result in a callable
 
         """
         if callable(session_pre_login_handler):
@@ -234,7 +234,7 @@ class NSSH:
             session_disable_paging: callable or string to use to disable paging
 
         Raises:
-            ValueError: if provided string does not result in a callable
+            TypeError: if provided string does not result in a callable
 
         """
         if callable(session_disable_paging):
