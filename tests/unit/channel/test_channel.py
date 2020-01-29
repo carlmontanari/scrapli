@@ -45,38 +45,38 @@ class MockChannel(Channel):
 
 
 def test__restructure_output_no_strip_prompt():
-    channel = MockChannel(rb"^[a-z0-9.\-@()/:]{1,32}[#>$]$", "\n", False, timeout_ops=0.01)
+    channel = MockChannel(r"^[a-z0-9.\-@()/:]{1,32}[#>$]$", "\n", False, timeout_ops=0.01)
     output = b"hostname 3560CX\r\n3560CX#"
     output = channel._restructure_output(output)
     assert output == b"hostname 3560CX\n3560CX#"
 
 
 def test__restructure_output_strip_prompt():
-    channel = MockChannel(rb"^[a-z0-9.\-@()/:]{1,32}[#>$]$", "\n", False, timeout_ops=0.01)
+    channel = MockChannel(r"^[a-z0-9.\-@()/:]{1,32}[#>$]$", "\n", False, timeout_ops=0.01)
     output = b"hostname 3560CX\r\n3560CX#"
     output = channel._restructure_output(output, strip_prompt=True)
     assert output == b"hostname 3560CX\n"
 
 
 def test__read_until_prompt_regex_pattern():
-    channel = MockChannel(rb"^[a-z0-9.\-@()/:]{1,32}[#>$]$", "\n", False, timeout_ops=0.01)
+    channel = MockChannel(r"^[a-z0-9.\-@()/:]{1,32}[#>$]$", "\n", False, timeout_ops=0.01)
     parse_output = b"!\r\nntp server 172.31.255.1 prefer\r\n!\r\nend\r\n\r\n3560CX#"
     output = channel._read_until_prompt(parse_output)
-    assert output == b"!\r\nntp server 172.31.255.1 prefer\r\n!\r\nend\r\n\r\n3560CX#"
+    assert output == b"!\n\nntp server 172.31.255.1 prefer\n\n!\n\nend\n\n\n\n3560CX#"
 
 
 def test__read_until_prompt_string_pattern():
-    channel = MockChannel(rb"3560CX#", "\n", False, timeout_ops=0.01)
+    channel = MockChannel("3560CX#", "\n", False, timeout_ops=0.01)
     parse_output = b"!\r\nntp server 172.31.255.1 prefer\r\n!\r\nend\r\n\r\n3560CX#"
     output = channel._read_until_prompt(parse_output)
-    assert output == b"!\r\nntp server 172.31.255.1 prefer\r\n!\r\nend\r\n\r\n3560CX#"
+    assert output == b"!\n\nntp server 172.31.255.1 prefer\n\n!\n\nend\n\n\n\n3560CX#"
 
 
 def test__strip_ansi():
     def channel_read_mock():
         return b"[admin@CoolDevice.Sea1: \x1b[1m/\x1b[0;0m]$ ls -al"
 
-    channel = MockChannel(rb"3560CX#", "\n", True, timeout_ops=0.01)
+    channel = MockChannel("3560CX#", "\n", True, timeout_ops=0.01)
     channel.transport.read = channel_read_mock
     output = channel._read_until_input(b"ls -al")
     assert output == b"[admin@CoolDevice.Sea1: /]$ ls -al"
@@ -108,7 +108,7 @@ Configuration register is 0xF
     transport = MockTransport("localhost")
     transport.read = mock_read
     transport.write = mock_write
-    channel = Channel(transport, b"3560CX#", "\n", False, timeout_ops=1)
+    channel = Channel(transport, "3560CX#", "\n", False, timeout_ops=1)
 
     output = channel.get_prompt()
     assert output == "3560CX#"
@@ -134,11 +134,12 @@ def test__send_input():
         120 deny ip 203.0.113.0 0.0.0.255 any
         130 deny ip 224.0.0.0 15.255.255.255 any
         140 deny ip 240.0.0.0 15.255.255.255 any
-    3560CX#
-    """
+    3560CX#"""
 
     def mock_read():
-        return fd.read(1024)
+        output = fd.read(1024)
+        print(output)
+        return output
 
     def mock_write(received_input):
         if received_input == channel_input:
@@ -151,10 +152,10 @@ def test__send_input():
     transport = MockTransport("localhost")
     transport.read = mock_read
     transport.write = mock_write
-    channel = Channel(transport, b"3560CX#", return_char, False, timeout_ops=1)
+    channel = Channel(transport, "3560CX#", return_char, False, timeout_ops=1)
 
-    output = channel._send_input(channel_input, strip_prompt=False)
-    assert output[0].decode() == channel_output
+    output, processed_output = channel._send_input(channel_input, strip_prompt=False)
+    assert processed_output.decode() == channel_output
 
 
 def test_send_inputs():
@@ -193,7 +194,7 @@ def test_send_inputs():
     transport = MockTransport("localhost")
     transport.read = mock_read
     transport.write = mock_write
-    channel = Channel(transport, b"3560CX#", return_char, False, timeout_ops=1)
+    channel = Channel(transport, "3560CX#", return_char, False, timeout_ops=1)
 
     output = channel.send_inputs(channel_input, strip_prompt=False)
     assert output[0].result == channel_output
@@ -254,7 +255,7 @@ def test_send_inputs_multiple():
     transport = MockTransport("localhost")
     transport.read = mock_read
     transport.write = mock_write
-    channel = Channel(transport, b"3560CX#", return_char, False, timeout_ops=1)
+    channel = Channel(transport, "3560CX#", return_char, False, timeout_ops=1)
 
     output = channel.send_inputs((channel_input, channel_input_2), strip_prompt=False)
     assert output[0].result == channel_output
@@ -296,7 +297,7 @@ def test_send_inputs_interact():
     transport = MockTransport("localhost")
     transport.read = mock_read
     transport.write = mock_write
-    channel = Channel(transport, b"3560CX#", return_char, False, timeout_ops=1)
+    channel = Channel(transport, "3560CX#", return_char, False, timeout_ops=1)
 
     output = channel.send_inputs_interact(interact, hidden_response=False)
     assert output[0].result == "Clear logging buffer [confirm]\n3560CX#"

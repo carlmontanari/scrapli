@@ -146,6 +146,8 @@ class Channel:
             output += self._read_chunk()
             # we do not need to deal w/ line replacement for the actual output, only for
             # parsing if a prompt-like thing is at the end of the output
+            # TODO -- at one point this was bytes -> str w/ `unicode-escape` have not tested
+            #  on many live devices if keeping this all bytes works!!!
             output = re.sub(b"\r", b"\n", output.strip())
             channel_match = re.search(prompt_pattern, output)
             if channel_match:

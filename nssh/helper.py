@@ -25,21 +25,14 @@ def get_prompt_pattern(prompt: str, class_prompt: str) -> Pattern[bytes]:
         N/A  # noqa
 
     """
-    if prompt:
-        if isinstance(prompt, str):
-            bytes_prompt = prompt.encode()
-        else:
-            bytes_prompt = prompt
-
-        if bytes_prompt and prompt.startswith("^") and prompt.endswith("$"):
-            return re.compile(bytes_prompt, flags=re.M | re.I)
-        return re.compile(re.escape(prompt.encode()))
-
-    if isinstance(class_prompt, str):
-        bytes_bytes_prompt = class_prompt.encode()
+    check_prompt = prompt or class_prompt
+    if isinstance(check_prompt, str):
+        bytes_check_prompt = check_prompt.encode()
     else:
-        bytes_bytes_prompt = class_prompt
-    return re.compile(bytes_bytes_prompt, flags=re.M | re.I)
+        bytes_check_prompt = check_prompt
+    if bytes_check_prompt.startswith(b"^") and bytes_check_prompt.endswith(b"$"):
+        return re.compile(bytes_check_prompt, flags=re.M | re.I)
+    return re.compile(re.escape(bytes_check_prompt))
 
 
 def normalize_lines(output: bytes) -> bytes:
