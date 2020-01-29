@@ -1,5 +1,8 @@
 """nssh.decorators"""
+import logging
 from typing import Any, Callable, Dict, Union
+
+LOG = logging.getLogger("nssh")
 
 
 def operation_timeout(attribute: str) -> Callable[..., Any]:
@@ -27,7 +30,7 @@ def operation_timeout(attribute: str) -> Callable[..., Any]:
         def timeout_wrapper(
             self: object, *args: Union[str, int], **kwargs: Dict[str, Union[str, int]]
         ) -> Any:
-            timeout_duration = getattr(self, attribute)
+            timeout_duration = getattr(self, attribute, None)
             if not timeout_duration:
                 return wrapped_func(self, *args, **kwargs)
             old = signal.signal(signal.SIGALRM, _raise_exception)

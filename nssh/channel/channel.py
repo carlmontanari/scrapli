@@ -8,7 +8,7 @@ from nssh.helper import get_prompt_pattern, normalize_lines, strip_ansi
 from nssh.result import Result
 from nssh.transport.transport import Transport
 
-LOG = getLogger("nssh_channel")
+LOG = getLogger("channel")
 
 
 CHANNEL_ARGS = (
@@ -77,7 +77,7 @@ class Channel:
             return output
 
         # could be compiled elsewhere, but allow for users to modify the prompt whenever they want
-        prompt_pattern = re.compile(self.comms_prompt_pattern.encode(), flags=re.M | re.I)
+        prompt_pattern = get_prompt_pattern("", self.comms_prompt_pattern)
         output = re.sub(prompt_pattern, b"", output)
         return output
 
@@ -97,7 +97,7 @@ class Channel:
         """
         new_output = self.transport.read()
         if self.comms_ansi:
-            new_output += strip_ansi(new_output)
+            new_output = strip_ansi(new_output)
         LOG.debug(f"Read: {repr(new_output)}")
         return new_output
 
@@ -142,14 +142,12 @@ class Channel:
         # without this iteration we can never properly check for prompts
         self.transport.set_blocking(False)
 
-        # TODO -- make sure the appending works same as += (who knows w/ bytes!)
         while True:
             output += self._read_chunk()
             # we do not need to deal w/ line replacement for the actual output, only for
             # parsing if a prompt-like thing is at the end of the output
-            output_copy = output.decode("unicode_escape").strip()
-            output_copy = re.sub("\r", "\n", output_copy)
-            channel_match = re.search(prompt_pattern, output_copy)
+            output = re.sub(b"\r", b"\n", output.strip())
+            channel_match = re.search(prompt_pattern, output)
             if channel_match:
                 self.transport.set_blocking(True)
                 return output
@@ -169,20 +167,19 @@ class Channel:
             N/A  # noqa
 
         """
-        pattern = re.compile(self.comms_prompt_pattern, flags=re.M | re.I)
+        prompt_pattern = get_prompt_pattern("", self.comms_prompt_pattern)
         self.transport.set_timeout(1000)
         self.transport.flush()
         self.transport.write(self.comms_return_char)
         LOG.debug(f"Write (sending return character): {repr(self.comms_return_char)}")
         while True:
             output = self._read_chunk()
-            # TODO this has gotta be unnecessary? too many things happening!
-            decoded_output = output.rstrip(b"\\").decode("unicode_escape").strip()
-            channel_match = re.search(pattern, decoded_output)
+            output.rstrip(b"\\")
+            channel_match = re.search(prompt_pattern, output)
             if channel_match:
                 self.transport.set_timeout()
                 current_prompt = channel_match.group(0)
-                return current_prompt
+                return current_prompt.decode()
 
     def send_inputs(
         self, inputs: Union[str, List[str], Tuple[str]], strip_prompt: bool = True
@@ -258,9 +255,9 @@ class Channel:
         Args:
             inputs: list or tuple containing strings representing:
                 initial input
-                expectation (what should ssh2net expect after input)
+                expectation (what should nssh expect after input)
                 response (response to expectation)
-                finale (what should ssh2net expect when "done")
+                finale (what should nssh expect when "done")
             hidden_response: True/False response is hidden (i.e. password input)
 
         Returns:

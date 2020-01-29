@@ -8,7 +8,7 @@ from typing import Any, Callable, Dict, List, Optional, Pattern, TextIO, Union
 import pkg_resources  # pylint: disable=C0411
 
 
-def get_prompt_pattern(prompt: str, class_prompt: str) -> Pattern[str]:
+def get_prompt_pattern(prompt: str, class_prompt: str) -> Pattern[bytes]:
     r"""
     Return compiled prompt pattern
 
@@ -25,14 +25,21 @@ def get_prompt_pattern(prompt: str, class_prompt: str) -> Pattern[str]:
         N/A  # noqa
 
     """
-    if prompt and prompt.startswith("^") and prompt.endswith("$"):
-        prompt_pattern = re.compile(prompt, flags=re.M | re.I)
-    elif prompt:
-        # TODO -- does compiling escaped stuff work?
-        prompt_pattern = re.compile(re.escape(prompt))
+    if prompt:
+        if isinstance(prompt, str):
+            bytes_prompt = prompt.encode()
+        else:
+            bytes_prompt = prompt
+
+        if bytes_prompt and prompt.startswith("^") and prompt.endswith("$"):
+            return re.compile(bytes_prompt, flags=re.M | re.I)
+        return re.compile(re.escape(prompt.encode()))
+
+    if isinstance(class_prompt, str):
+        bytes_bytes_prompt = class_prompt.encode()
     else:
-        prompt_pattern = re.compile(class_prompt, flags=re.M | re.I)
-    return prompt_pattern
+        bytes_bytes_prompt = class_prompt
+    return re.compile(bytes_bytes_prompt, flags=re.M | re.I)
 
 
 def normalize_lines(output: bytes) -> bytes:

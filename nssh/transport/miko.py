@@ -9,7 +9,7 @@ from nssh.exceptions import MissingDependencies, NSSHAuthenticationFailed
 from nssh.transport.socket import Socket
 from nssh.transport.transport import Transport
 
-LOG = getLogger(f"nssh_transport")
+LOG = getLogger("transport")
 
 MIKO_TRANSPORT_ARGS = (
     "host",

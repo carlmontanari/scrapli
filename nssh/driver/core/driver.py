@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Union
 
 from nssh import NSSH
 from nssh.exceptions import CouldNotAcquirePrivLevel, UnknownPrivLevel
-from nssh.helper import _textfsm_get_template, textfsm_parse
+from nssh.helper import _textfsm_get_template, get_prompt_pattern, textfsm_parse
 from nssh.result import Result
 
 PrivilegeLevel = collections.namedtuple(
@@ -62,8 +62,10 @@ class NetworkDriver(NSSH):
             # NOTE: darglint raises DAR401 for some reason hence the noqa...
 
         """
+        # TODO -- fix above note...
         for priv_level in self.privs.values():
-            if re.search(priv_level.pattern, current_prompt):
+            prompt_pattern = get_prompt_pattern("", priv_level.pattern)
+            if re.search(prompt_pattern, current_prompt.encode()):
                 return priv_level
         raise UnknownPrivLevel
 
@@ -83,11 +85,16 @@ class NetworkDriver(NSSH):
         """
         current_priv = self._determine_current_priv(self.channel.get_prompt())
         if current_priv.escalate:
+            next_priv = self.privs.get(current_priv.escalate_priv, None)
+            if next_priv is None:
+                raise UnknownPrivLevel(
+                    f"Could not get next priv level, current priv is {current_priv.name}"
+                )
+            next_prompt = next_priv.pattern
             if current_priv.escalate_auth:
                 escalate_cmd: str = current_priv.escalate
                 escalate_prompt: str = current_priv.escalate_prompt
                 escalate_auth = self.auth_secondary
-                next_prompt = self.privs.get("escalate_priv")
                 if not isinstance(next_prompt, str):
                     raise TypeError(
                         f"got {type(next_prompt)} for {current_priv.name} escalate priv, "
@@ -99,6 +106,7 @@ class NetworkDriver(NSSH):
                 )
 
             else:
+                self.channel.comms_prompt_pattern = next_priv.pattern
                 self.channel.send_inputs(current_priv.escalate)
 
     def _deescalate(self) -> None:

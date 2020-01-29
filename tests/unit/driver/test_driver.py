@@ -116,7 +116,9 @@ def test_valid_session_pre_login_handler_func():
 
 
 def test_valid_session_pre_login_handler_ext_func():
-    conn = NSSH(session_pre_login_handler="tests.unit.ext_test_funcs.some_pre_login_handler_func")
+    conn = NSSH(
+        session_pre_login_handler="tests.unit.driver.ext_test_funcs.some_pre_login_handler_func"
+    )
     assert callable(conn.session_pre_login_handler)
 
 
@@ -144,7 +146,7 @@ def test_valid_session_disable_paging_func():
 
 
 def test_valid_session_disable_paging_ext_func():
-    conn = NSSH(session_disable_paging="tests.unit.ext_test_funcs.some_disable_paging_func")
+    conn = NSSH(session_disable_paging="tests.unit.driver.ext_test_funcs.some_disable_paging_func")
     assert callable(conn.session_disable_paging)
 
 

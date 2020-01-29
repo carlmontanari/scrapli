@@ -5,7 +5,7 @@ from typing import Optional
 
 from nssh.exceptions import NSSHTimeout
 
-LOG = logging.getLogger(f"nssh_transport")
+LOG = logging.getLogger("transport")
 
 
 class Socket:
@@ -34,6 +34,13 @@ class Socket:
             self.sock.settimeout(self.timeout)
             try:
                 self.sock.connect((self.host, self.port))
+            except ConnectionRefusedError:
+                LOG.critical(
+                    f"Connection refused trying to open socket to {self.host} on port {self.port}"
+                )
+                raise ConnectionRefusedError(
+                    f"Connection refused trying to open socket to {self.host} on port {self.port}"
+                )
             except socket.timeout:
                 LOG.critical(f"Timed out trying to open socket to {self.host} on port {self.port}")
                 raise NSSHTimeout(
@@ -79,8 +86,5 @@ class Socket:
                 return True
         except OSError:
             LOG.debug(f"Socket to host {self.host} is not alive")
-            return False
-        except AttributeError:
-            LOG.debug(f"Socket to host {self.host} has never been created")
             return False
         return False

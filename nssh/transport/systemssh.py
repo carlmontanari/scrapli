@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 else:
     PopenBytes = Popen
 
-LOG = getLogger(f"{__name__}_transport")
+LOG = getLogger("transport")
 
 SYSTEM_SSH_TRANSPORT_ARGS = (
     "host",
@@ -259,9 +259,10 @@ class SystemSSHTransport(Transport):
                 #  elsewhere though...? not sure whats going on
                 pty_session.read()
                 output = pty_session.read()
-                output_copy = output.decode("unicode_escape").strip()
-                output_copy = re.sub("\r", "\n", output_copy)
-                channel_match = re.search(prompt_pattern, output_copy)
+                # we do not need to deal w/ line replacement for the actual output, only for
+                # parsing if a prompt-like thing is at the end of the output
+                output = re.sub(b"\r", b"\n", output.strip())
+                channel_match = re.search(prompt_pattern, output)
                 if channel_match:
                     self.session_lock.release()
                     self._isauthenticated = True

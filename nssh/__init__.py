@@ -46,7 +46,7 @@ class DuplicateFilter(logging.Filter):
 
 
 # Setup transport logger
-TRANSPORT_LOG = logging.getLogger("nssh_channel")
+TRANSPORT_LOG = logging.getLogger("channel")
 # Add duplicate filter to channel log
 TRANSPORT_LOG.addFilter(DuplicateFilter())
-logging.getLogger("nssh_channel").addHandler(NullHandler())
+logging.getLogger("channel").addHandler(NullHandler())

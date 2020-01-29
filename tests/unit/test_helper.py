@@ -16,19 +16,19 @@ Internet  172.31.254.2            -   c800.84b2.e9c2  ARPA   Vlan254
 def test_get_prompt_pattern_class_pattern():
     class_pattern = "averygoodpattern"
     result = get_prompt_pattern("", class_pattern)
-    assert result == re.compile("averygoodpattern", re.IGNORECASE | re.MULTILINE)
+    assert result == re.compile(b"averygoodpattern", re.IGNORECASE | re.MULTILINE)
 
 
 def test_get_prompt_pattern_arg_pattern():
     class_pattern = "averygoodpattern"
     result = get_prompt_pattern("^awesomepattern$", class_pattern)
-    assert result == re.compile("^awesomepattern$", re.IGNORECASE | re.MULTILINE)
+    assert result == re.compile(b"^awesomepattern$", re.IGNORECASE | re.MULTILINE)
 
 
 def test_get_prompt_pattern_arg_string():
     class_pattern = "averygoodpattern"
     result = get_prompt_pattern("awesomepattern", class_pattern)
-    assert result == re.compile("awesomepattern")
+    assert result == re.compile(b"awesomepattern")
 
 
 def test__strip_ansi():

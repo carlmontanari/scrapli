@@ -1,5 +1,4 @@
 """nssh.driver.core.cisco_iosxe.driver"""
-import re
 from typing import Any, Dict
 
 from nssh.driver.core.driver import NetworkDriver, PrivilegeLevel
@@ -7,7 +6,7 @@ from nssh.driver.core.driver import NetworkDriver, PrivilegeLevel
 PRIVS = {
     "exec": (
         PrivilegeLevel(
-            re.compile(r"^[a-z0-9.\-@()/:]{1,32}>$", flags=re.M | re.I),
+            r"^[a-z0-9.\-@()/:]{1,32}>$",
             "exec",
             None,
             None,
@@ -21,7 +20,7 @@ PRIVS = {
     ),
     "privilege_exec": (
         PrivilegeLevel(
-            re.compile(r"^[a-z0-9.\-@/:]{1,32}#$", flags=re.M | re.I),
+            r"^[a-z0-9.\-@/:]{1,32}#$",
             "privilege_exec",
             "exec",
             "disable",
@@ -35,7 +34,7 @@ PRIVS = {
     ),
     "configuration": (
         PrivilegeLevel(
-            re.compile(r"^[a-z0-9.\-@/:]{1,32}\(config\)#$", flags=re.M | re.I),
+            r"^[a-z0-9.\-@/:]{1,32}\(config\)#$",
             "configuration",
             "priv",
             "end",
@@ -49,7 +48,7 @@ PRIVS = {
     ),
     "special_configuration": (
         PrivilegeLevel(
-            re.compile(r"^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{1,16}\)#$", flags=re.M | re.I),
+            r"^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{1,16}\)#$",
             "special_configuration",
             "priv",
             "end",

@@ -8,7 +8,7 @@ from nssh.exceptions import MissingDependencies, NSSHAuthenticationFailed
 from nssh.transport.socket import Socket
 from nssh.transport.transport import Transport
 
-LOG = getLogger(f"nssh_transport")
+LOG = getLogger("transport")
 
 
 SSH2_TRANSPORT_ARGS = (
@@ -315,7 +315,7 @@ class SSH2Transport(Socket, Transport):
             N/A  # noqa
 
         """
-        if self.socket_isalive() and self.isauthenticated():
+        if self.socket_isalive() and not self.channel.eof() and self.isauthenticated():
             return True
         return False
 
