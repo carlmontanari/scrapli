@@ -164,3 +164,9 @@ def test_invalid_session_disable_paging():
     with pytest.raises(TypeError) as e:
         NSSH(session_disable_paging=123)
     assert str(e.value) == "session_disable_paging should be str or callable, got <class 'int'>"
+
+
+# TODO -- add isalive and test against that!
+def test_close(mocked_channel):
+    conn = mocked_channel([])
+    conn.close()

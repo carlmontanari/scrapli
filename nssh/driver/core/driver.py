@@ -104,7 +104,7 @@ class NetworkDriver(NSSH):
                     (escalate_cmd, escalate_prompt, escalate_auth, next_prompt),
                     hidden_response=True,
                 )
-
+                self.channel.comms_prompt_pattern = next_priv.pattern
             else:
                 self.channel.comms_prompt_pattern = next_priv.pattern
                 self.channel.send_inputs(current_priv.escalate)
@@ -125,6 +125,8 @@ class NetworkDriver(NSSH):
         """
         current_priv = self._determine_current_priv(self.channel.get_prompt())
         if current_priv.deescalate:
+            next_priv = self.privs.get(current_priv.deescalate_priv, None)
+            self.channel.comms_prompt_pattern = next_priv.pattern
             self.channel.send_inputs(current_priv.deescalate)
 
     def acquire_priv(self, desired_priv: str) -> None:
@@ -151,7 +153,6 @@ class NetworkDriver(NSSH):
                 raise CouldNotAcquirePrivLevel(
                     f"Could not get to '{desired_priv}' privilege level."
                 )
-
             if current_priv.level > self.privs[desired_priv].level:
                 self._deescalate()
             else:

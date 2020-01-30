@@ -213,7 +213,8 @@ class Channel:
             results.append(result)
         return results
 
-    @operation_timeout("timeout_ops")
+    # TODO - uncomment!
+    #@operation_timeout("timeout_ops")
     def _send_input(self, channel_input: str, strip_prompt: bool) -> Tuple[bytes, bytes]:
         """
         Send input to device and return results
