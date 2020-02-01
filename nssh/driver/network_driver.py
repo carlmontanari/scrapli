@@ -1,13 +1,34 @@
-"""nssh.driver.core.driver"""
+"""nssh.base"""
 import collections
+import logging
 import re
 from io import TextIOWrapper
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-from nssh import NSSH
+from nssh.driver.driver import NSSH
 from nssh.exceptions import CouldNotAcquirePrivLevel, UnknownPrivLevel
 from nssh.helper import _textfsm_get_template, get_prompt_pattern, textfsm_parse
 from nssh.result import Result
+from nssh.transport import (
+    MIKO_TRANSPORT_ARGS,
+    SSH2_TRANSPORT_ARGS,
+    SYSTEM_SSH_TRANSPORT_ARGS,
+    MikoTransport,
+    SSH2Transport,
+    SystemSSHTransport,
+    Transport,
+)
+
+TRANSPORT_CLASS: Dict[str, Callable[..., Transport]] = {
+    "system": SystemSSHTransport,
+    "ssh2": SSH2Transport,
+    "paramiko": MikoTransport,
+}
+TRANSPORT_ARGS: Dict[str, Tuple[str, ...]] = {
+    "system": SYSTEM_SSH_TRANSPORT_ARGS,
+    "ssh2": SSH2_TRANSPORT_ARGS,
+    "paramiko": MIKO_TRANSPORT_ARGS,
+}
 
 PrivilegeLevel = collections.namedtuple(
     "PrivilegeLevel",
@@ -24,6 +45,8 @@ PrivilegeLevel = collections.namedtuple(
 )
 
 PRIVS: Dict[str, PrivilegeLevel] = {}
+
+LOG = logging.getLogger("nssh_base")
 
 
 class NetworkDriver(NSSH):
@@ -55,14 +78,12 @@ class NetworkDriver(NSSH):
             current_prompt: string of current prompt
 
         Returns:
-            priv_level: NamedTuple of current privilege level
+            PrivilegeLevel: NamedTuple of current privilege level
 
         Raises:
-            UnknownPrivLevel: if privilege level cannot be determined  # noqa
-            # NOTE: darglint raises DAR401 for some reason hence the noqa...
+            UnknownPrivLevel: if privilege level cannot be determined
 
         """
-        # TODO -- fix above note...
         for priv_level in self.privs.values():
             prompt_pattern = get_prompt_pattern("", priv_level.pattern)
             if re.search(prompt_pattern, current_prompt.encode()):
@@ -126,6 +147,10 @@ class NetworkDriver(NSSH):
         current_priv = self._determine_current_priv(self.channel.get_prompt())
         if current_priv.deescalate:
             next_priv = self.privs.get(current_priv.deescalate_priv, None)
+            if not next_priv:
+                raise UnknownPrivLevel(
+                    "NetworkDriver has no default priv levels, set them or use a network driver"
+                )
             self.channel.comms_prompt_pattern = next_priv.pattern
             self.channel.send_inputs(current_priv.deescalate)
 

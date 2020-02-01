@@ -4,9 +4,8 @@ from typing import Any, Callable, Dict, Optional, Tuple
 
 import pytest
 
-from nssh.driver import NSSH
+from nssh.driver import NSSH, NetworkDriver
 from nssh.driver.core.cisco_iosxe.driver import PRIVS
-from nssh.driver.core.driver import NetworkDriver
 from nssh.transport.transport import Transport
 
 

@@ -2,7 +2,8 @@
 import logging
 import os
 import re
-from typing import Any, Callable, Dict, Tuple, Union
+from types import TracebackType
+from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
 
 from nssh.channel import CHANNEL_ARGS, Channel
 from nssh.helper import get_external_function, validate_external_function
@@ -27,7 +28,6 @@ TRANSPORT_ARGS: Dict[str, Tuple[str, ...]] = {
     "paramiko": MIKO_TRANSPORT_ARGS,
 }
 
-
 LOG = logging.getLogger("nssh_base")
 
 
@@ -39,6 +39,7 @@ class NSSH:
         auth_username: str = "",
         auth_password: str = "",
         auth_public_key: str = "",
+        auth_strict_key: bool = True,
         timeout_socket: int = 5,
         timeout_ssh: int = 5000,
         timeout_ops: int = 10,
@@ -60,6 +61,7 @@ class NSSH:
             N/A  # noqa
 
         """
+        # TODO -- docstring
         self.host = host.strip()
         if not isinstance(port, int):
             raise TypeError(f"port should be int, got {type(port)}")
@@ -67,7 +69,9 @@ class NSSH:
 
         self.auth_username: str = ""
         self.auth_password: str = ""
-        self.auth_public_key: bytes = b""
+        if not isinstance(auth_strict_key, bool):
+            raise TypeError(f"auth_strict_key should be bool, got {type(auth_strict_key)}")
+        self.auth_strict_key = auth_strict_key
         self._setup_auth(auth_username, auth_password, auth_public_key)
 
         self.timeout_socket = int(timeout_socket)
@@ -189,7 +193,7 @@ class NSSH:
             except TypeError:
                 self.session_disable_paging = session_disable_paging
         else:
-            self.session_disable_paging = session_disable_paging
+            self.session_disable_paging = "terminal length 0"
 
     @staticmethod
     def _set_session_pre_login_handler(
@@ -301,3 +305,43 @@ class NSSH:
 
         """
         self.transport.close()
+
+    def __enter__(self) -> "NSSH":
+        """
+        Enter method for context manager
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            self: instance of self
+
+        Raises:
+            N/A  # noqa
+
+        """
+        self.open()
+        return self
+
+    def __exit__(
+        self,
+        exception_type: Optional[Type[BaseException]],
+        exception_value: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -> None:
+        """
+        Exit method to cleanup for context manager
+
+        Args:
+            exception_type: exception type being raised
+            exception_value: message from exception being raised
+            traceback: traceback from exception being raised
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        """
+        self.close()

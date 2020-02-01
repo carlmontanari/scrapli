@@ -4,7 +4,7 @@ from logging import getLogger
 from select import select
 from subprocess import PIPE, Popen
 from threading import Lock
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 from nssh.decorators import operation_timeout
 from nssh.exceptions import NSSHAuthenticationFailed
@@ -26,6 +26,7 @@ SYSTEM_SSH_TRANSPORT_ARGS = (
     "auth_username",
     "auth_public_key",
     "auth_password",
+    "auth_strict_key",
     "comms_return_char",
 )
 
@@ -39,6 +40,7 @@ class SystemSSHTransport(Transport):
         auth_username: str = "",
         auth_public_key: str = "",
         auth_password: str = "",
+        auth_strict_key: bool = True,
         comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
         comms_return_char: str = "\n",
     ):  # pylint: disable=W0231
@@ -55,6 +57,7 @@ class SystemSSHTransport(Transport):
             auth_username: username for authentication
             auth_public_key: path to public key for authentication
             auth_password: password for authentication
+            auth_strict_key: True/False to enforce strict key checking (default is True)
             comms_prompt_pattern: prompt pattern expected for device, same as the one provided to
                 channel -- system ssh needs to know this to know how to decide if we are properly
                 sending/receiving data -- i.e. we are not stuck at some password prompt or some
@@ -80,12 +83,39 @@ class SystemSSHTransport(Transport):
         self.auth_username: str = auth_username
         self.auth_public_key: str = auth_public_key
         self.auth_password: str = auth_password
+        self.auth_strict_key: bool = auth_strict_key
         self.comms_prompt_pattern: str = comms_prompt_pattern
         self.comms_return_char: str = comms_return_char
 
         self.session: Union[Popen[bytes], PtyProcess]  # pylint: disable=E1136
         self.lib_auth_exception = NSSHAuthenticationFailed
         self._isauthenticated = False
+
+        self.open_cmd = ["ssh", self.host]
+        self._build_open_cmd()
+
+    def _build_open_cmd(self) -> None:
+        """
+        Method to craft command to open ssh session
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        """
+        # TODO -- need to handle ssh config, proxy, other cli args...
+        self.open_cmd.extend(["-p", str(self.port)])
+        if self.auth_public_key:
+            self.open_cmd.extend(["-i", self.auth_public_key])
+        if self.auth_username:
+            self.open_cmd.extend(["-l", self.auth_username])
+        if self.auth_strict_key is False:
+            self.open_cmd.extend(["-o", "StrictHostKeyChecking=no"])
 
     def open(self) -> None:
         """
@@ -102,29 +132,25 @@ class SystemSSHTransport(Transport):
 
         """
         self.session_lock.acquire()
-        # TODO -- construct open command -- this means parsing ssh keys and such prior to getting
-        #  here in case users dont want to just rely on their ssh config file
-        open_cmd = ["ssh", self.host, "-l", self.auth_username]
 
         # If authenticating with public key prefer to use open pipes
         # _open_pipes uses subprocess Popen which is preferable to opening a pty
         if self.auth_public_key:
-            open_cmd.extend(["-i", self.auth_public_key])
-            if self._open_pipes(open_cmd):
+            if self._open_pipes():
                 return
 
         # If public key auth fails or is not configured, open a pty session
-        if not self._open_pty(open_cmd):
+        if not self._open_pty():
             msg = f"Authentication to host {self.host} failed"
             LOG.critical(msg)
             raise NSSHAuthenticationFailed(msg)
 
-    def _open_pipes(self, open_cmd: List[str]) -> bool:
+    def _open_pipes(self) -> bool:
         """
         Private method to open session with subprocess.Popen
 
         Args:
-            open_cmd: ssh command string to use to open connection
+            N/A  # noqa
 
         Returns:
             bool: True/False session was opened and authenticated
@@ -133,9 +159,9 @@ class SystemSSHTransport(Transport):
             N/A  # noqa
 
         """
-        open_cmd.append("-v")
+        self.open_cmd.append("-v")
         pipes_session = Popen(
-            open_cmd, bufsize=0, shell=False, stdin=PIPE, stdout=PIPE, stderr=PIPE
+            self.open_cmd, bufsize=0, shell=False, stdin=PIPE, stdout=PIPE, stderr=PIPE
         )
         LOG.debug(f"Session to host {self.host} spawned")
 
@@ -171,12 +197,12 @@ class SystemSSHTransport(Transport):
                 self._isauthenticated = True
                 return True
 
-    def _open_pty(self, open_cmd: List[str]) -> bool:
+    def _open_pty(self) -> bool:
         """
         Private method to open session with PtyProcess
 
         Args:
-            open_cmd: ssh command string to use to open connection
+            N/A  # noqa
 
         Returns:
             bool: True/False session was opened and authenticated
@@ -185,7 +211,7 @@ class SystemSSHTransport(Transport):
             N/A  # noqa
 
         """
-        pty_session = PtyProcess.spawn(open_cmd)
+        pty_session = PtyProcess.spawn(self.open_cmd)
         LOG.debug(f"Session to host {self.host} spawned")
         self.session_lock.release()
         self._pty_authenticate(pty_session)
@@ -329,7 +355,6 @@ class SystemSSHTransport(Transport):
             N/A  # noqa
 
         """
-        # TODO what value should read be...?
         read_bytes = 65535
         if isinstance(self.session, Popen):
             return self.session.stdout.read(read_bytes)

@@ -138,9 +138,6 @@ def _textfsm_get_template(platform: str, command: str) -> Optional[TextIO]:
     """
     try:
         from textfsm.clitable import CliTable  # pylint: disable=C0415
-
-        # TODO -- dont think we *need* ntc_templates since we can pass string path to template
-        import ntc_templates  # pylint: disable=C0415,W0611
     except ModuleNotFoundError as exc:
         err = f"Module '{exc.name}' not installed!"
         msg = f"***** {err} {'*' * (80 - len(err))}"

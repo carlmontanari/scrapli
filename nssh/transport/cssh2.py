@@ -335,7 +335,6 @@ class SSH2Transport(Socket, Transport):
 
         """
         output: bytes
-        # TODO should this always be 65535 or empty or...?
         _, output = self.channel.read(65535)
         return output
 

@@ -54,6 +54,40 @@ class Channel:
         self.comms_ansi = comms_ansi
         self.timeout_ops = timeout_ops
 
+    def __str__(self) -> str:
+        """
+        Magic str method for Channel
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        """
+        return "nssh Channel Object"
+
+    def __repr__(self) -> str:
+        """
+        Magic repr method for Channel
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            repr: repr for class object
+
+        Raises:
+            N/A  # noqa
+
+        """
+        class_dict = self.__dict__.copy()
+        class_dict.pop("transport")
+        return f"nssh Channel {class_dict}"
+
     def _restructure_output(self, output: bytes, strip_prompt: bool = False) -> bytes:
         """
         Clean up preceding empty lines, and strip prompt if desired
@@ -70,8 +104,12 @@ class Channel:
 
         """
         output = normalize_lines(output)
-        # purge empty rows before actual output
-        output = b"\n".join([row for row in output.splitlines() if row])
+
+        # TODO -- purge empty rows before actual output
+        #  this was used to remove duplicate line feeds in output, but that causes some issues for
+        #  testing where we want to match the normal output we see as users... so i think this
+        #  should be removed -- or optional?
+        # output = b"\n".join([row for row in output.splitlines() if row])
 
         if not strip_prompt:
             return output
@@ -116,7 +154,6 @@ class Channel:
 
         """
         output = b""
-        # TODO -- make sure the appending works same as += (who knows w/ bytes!)
         while channel_input not in output:
             output += self._read_chunk()
         return output
@@ -148,7 +185,7 @@ class Channel:
             # parsing if a prompt-like thing is at the end of the output
             # TODO -- at one point this was bytes -> str w/ `unicode-escape` have not tested
             #  on many live devices if keeping this all bytes works!!!
-            output = re.sub(b"\r", b"\n", output.strip())
+            output = re.sub(b"\r", b"", output.strip())
             channel_match = re.search(prompt_pattern, output)
             if channel_match:
                 self.transport.set_blocking(True)
@@ -209,12 +246,11 @@ class Channel:
             result = Result(self.transport.host, channel_input)
             raw_result, processed_result = self._send_input(channel_input, strip_prompt)
             result.raw_result = raw_result.decode()
-            result.record_result(processed_result.decode())
+            result.record_result(processed_result.decode().strip())
             results.append(result)
         return results
 
-    # TODO - uncomment!
-    #@operation_timeout("timeout_ops")
+    @operation_timeout("timeout_ops")
     def _send_input(self, channel_input: str, strip_prompt: bool) -> Tuple[bytes, bytes]:
         """
         Send input to device and return results
@@ -280,7 +316,7 @@ class Channel:
                 channel_input, expectation, response, finale, hidden_response
             )
             result.raw_result = raw_result.decode()
-            result.record_result(processed_result.decode())
+            result.record_result(processed_result.decode().strip())
             results.append(result)
         return results
 

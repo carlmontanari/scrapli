@@ -10,6 +10,56 @@ class Transport(ABC):
         self.host: str = ""
         self.session_lock: Lock = Lock()
 
+    def __bool__(self) -> bool:
+        """
+        Magic bool method for Socket
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            bool: True/False if socket is alive or not
+
+        Raises:
+            N/A  # noqa
+
+        """
+        return self.isalive()
+
+    def __str__(self) -> str:
+        """
+        Magic str method for Transport
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        """
+        return f"Transport Object for host {self.host}"
+
+    def __repr__(self) -> str:
+        """
+        Magic repr method for Transport
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            repr: repr for class object
+
+        Raises:
+            N/A  # noqa
+
+        """
+        class_dict = self.__dict__.copy()
+        class_dict["auth_password"] = "********"
+        return f"Transport {class_dict}"
+
     @abstractmethod
     def open(self) -> None:
         """

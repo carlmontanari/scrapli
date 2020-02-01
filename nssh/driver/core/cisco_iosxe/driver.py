@@ -1,7 +1,8 @@
 """nssh.driver.core.cisco_iosxe.driver"""
 from typing import Any, Dict
 
-from nssh.driver.core.driver import NetworkDriver, PrivilegeLevel
+from nssh.driver import NetworkDriver
+from nssh.driver.network_driver import PrivilegeLevel
 
 PRIVS = {
     "exec": (
@@ -36,7 +37,7 @@ PRIVS = {
         PrivilegeLevel(
             r"^[a-z0-9.\-@/:]{1,32}\(config\)#$",
             "configuration",
-            "priv",
+            "privilege_exec",
             "end",
             None,
             None,
@@ -50,7 +51,7 @@ PRIVS = {
         PrivilegeLevel(
             r"^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{1,16}\)#$",
             "special_configuration",
-            "priv",
+            "privilege_exec",
             "end",
             None,
             None,

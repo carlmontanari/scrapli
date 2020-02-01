@@ -74,6 +74,12 @@ def test_auth_password_strip():
     assert conn.auth_password == "password"
 
 
+def test_auth_strict_key_invalid():
+    with pytest.raises(TypeError) as e:
+        NSSH(auth_strict_key="notreal")
+    assert str(e.value) == "auth_strict_key should be bool, got <class 'str'>"
+
+
 def test_valid_comms_return_char():
     conn = NSSH(comms_return_char="\rn")
     assert conn.comms_return_char == "\rn"

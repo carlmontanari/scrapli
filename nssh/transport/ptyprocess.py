@@ -31,8 +31,6 @@ import struct
 import sys
 import termios
 import time
-
-# Constants
 from pty import CHILD, STDIN_FILENO
 from shutil import which
 from typing import Type, TypeVar

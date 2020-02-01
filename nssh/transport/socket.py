@@ -15,6 +15,54 @@ class Socket:
         self.timeout: int = timeout
         self.sock: Optional[socket.socket] = None
 
+    def __bool__(self) -> bool:
+        """
+        Magic bool method for Socket
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            bool: True/False if socket is alive or not
+
+        Raises:
+            N/A  # noqa
+
+        """
+        return self.socket_isalive()
+
+    def __str__(self) -> str:
+        """
+        Magic str method for Socket
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        """
+        return f"Socket Object for host {self.host}"
+
+    def __repr__(self) -> str:
+        """
+        Magic repr method for Socket
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            repr: repr for class object
+
+        Raises:
+            N/A  # noqa
+
+        """
+        return f"Socket {self.__dict__}"
+
     def socket_open(self) -> None:
         """
         Open underlying socket

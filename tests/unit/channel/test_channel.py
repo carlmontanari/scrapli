@@ -1,6 +1,19 @@
 import pytest
 
 
+def test__str(mocked_channel):
+    conn = mocked_channel([])
+    assert str(conn.channel) == "nssh Channel Object"
+
+
+def test__repr(mocked_channel):
+    conn = mocked_channel([])
+    assert (
+        repr(conn.channel)
+        == r"nssh Channel {'comms_prompt_pattern': '^[a-z0-9.\\-@()/:]{1,32}[#>$]$', 'comms_return_char': '\n', 'comms_ansi': False, 'timeout_ops': 10}"
+    )
+
+
 def test__restructure_output_strip_prompt(mocked_channel):
     channel_output_1 = b"hostname 3560CX\r\n3560CX#"
     conn = mocked_channel([])
@@ -19,21 +32,21 @@ def test__read_until_prompt_default_pattern(mocked_channel):
     channel_output_1 = b"!\r\nntp server 172.31.255.1 prefer\r\n!\r\nend\r\n\r\n"
     conn = mocked_channel([])
     output = conn.channel._read_until_prompt(channel_output_1)
-    assert output == b"!\n\nntp server 172.31.255.1 prefer\n\n!\n\nend\n\n\n\n3560CX#"
+    assert output == b"!\nntp server 172.31.255.1 prefer\n!\nend\n\n3560CX#"
 
 
 def test__read_until_prompt_regex_pattern(mocked_channel):
     channel_output_1 = b"!\r\nntp server 172.31.255.1 prefer\r\n!\r\nend\r\n\r\n"
     conn = mocked_channel([], comms_prompt_pattern="^3560CX#$")
     output = conn.channel._read_until_prompt(channel_output_1)
-    assert output == b"!\n\nntp server 172.31.255.1 prefer\n\n!\n\nend\n\n\n\n3560CX#"
+    assert output == b"!\nntp server 172.31.255.1 prefer\n!\nend\n\n3560CX#"
 
 
 def test__read_until_prompt_string_pattern(mocked_channel):
     channel_output_1 = b"!\r\nntp server 172.31.255.1 prefer\r\n!\r\nend\r\n\r\n"
     conn = mocked_channel([], comms_prompt_pattern="3560CX#")
     output = conn.channel._read_until_prompt(channel_output_1)
-    assert output == b"!\n\nntp server 172.31.255.1 prefer\n\n!\n\nend\n\n\n\n3560CX#"
+    assert output == b"!\nntp server 172.31.255.1 prefer\n!\nend\n\n3560CX#"
 
 
 #  TODO i may not be stripping ansi from get prompt which could break shit w/ ansi in the prompt

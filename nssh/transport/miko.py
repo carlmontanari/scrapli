@@ -302,7 +302,7 @@ class MikoTransport(Socket, Transport):
             N/A  # noqa
 
         """
-        channel_read: bytes = self.channel.recv(1024)
+        channel_read: bytes = self.channel.recv(65535)
         return channel_read
 
     def write(self, channel_input: str) -> None:

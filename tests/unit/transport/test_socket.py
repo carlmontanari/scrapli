@@ -35,3 +35,18 @@ def test_socket_close_success():
 def test_socket_isalive_false():
     sock = Socket("localhost", 22, 1)
     assert sock.socket_isalive() is False
+
+
+def test__str():
+    sock = Socket("localhost", 22, 1)
+    assert str(sock) == "Socket Object for host localhost"
+
+
+def test__repr():
+    sock = Socket("localhost", 22, 1)
+    assert repr(sock) == "Socket {'host': 'localhost', 'port': 22, 'timeout': 1, 'sock': None}"
+
+
+def test__bool():
+    sock = Socket("localhost", 22, 1)
+    assert bool(sock) is False
