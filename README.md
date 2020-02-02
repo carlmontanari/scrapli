@@ -1,6 +1,5 @@
-![](https://github.com/carlmontanari/nssh/workflows/build/badge.svg)
+![](https://github.com/carlmontanari/nssh/workflows/Weekly%20Build/badge.svg)
 [![PyPI version](https://badge.fury.io/py/nssh.svg)](https://badge.fury.io/py/nssh)
-[![Python 3.6](https://img.shields.io/badge/python-3.6-blue.svg)](https://www.python.org/downloads/release/python-360/)
 [![Python 3.7](https://img.shields.io/badge/python-3.7-blue.svg)](https://www.python.org/downloads/release/python-370/)
 [![Python 3.8](https://img.shields.io/badge/python-3.8-blue.svg)](https://www.python.org/downloads/release/python-380/)
 [![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
@@ -460,9 +459,9 @@ with IOSXEDriver(**my_device) as conn:
         "good", it is the lowest common denominator for automation in the networking world. So I figured I could try
          to make the fastest, most flexible library around for SSH network automation! 
 - Question: Is this better than Netmiko/Paramiko/Ansible?
-  - Answer: Nope! It is different though! The main focus is just to be stupid fast. It is very much that. It *should
-  * be super reliable too as the timeouts are very easy/obvious to control, and it should also be very very very easy
-   to adapt to any other network-y type CLI.
+  - Answer: Nope! It is different though! The main focus is just to be stupid fast. It is very much that. It *should* be
+  super reliable too as the timeouts are very easy/obvious to control, and it should also be very very very easy to
+   adapt to any other network-y type CLI.
 - Question: Is this easy to use?
   - Answer: Yep! The "native" usage is pretty straight forward -- the thing to remember is that it doesn't do "things
   " for you like Netmiko does for example, so its a lot more like Paramiko in that regard. That said you can use one
@@ -479,17 +478,21 @@ with IOSXEDriver(**my_device) as conn:
 
 ## SSH2-Python
 
-Arista EOS uses keyboard interactive authentication which is currently broken in the pip-installable version
+- Arista EOS uses keyboard interactive authentication which is currently broken in the pip-installable version
  of ssh2-python (as of January 2020). GitHub user [Red-M](https://github.com/Red-M) has contributed to and fixed this
   particular issue but the fix has not been merged. If you would like to use ssh2-python with EOS I suggest cloning
    and installing via Red-M's repository or my fork of Red-M's fork!
 
 - Use the context manager where possible! More testing needs to be done to confirm/troubleshoot, but limited testing
  seems to indicate that without properly closing the connection there appears to be a bug that causes Python to crash
-  on MacOS at least. More to come on this as I have time to poke it more!
+  on MacOS at least. More to come on this as I have time to poke it more! I believe this is only occurring on the
+   latest branch/update (i.e. not on the pip installable version).
   
  
 # Linting and Testing
+
+*NOTE* Currently there are no unit/functional tests for IOSXR/NXOS/EOS/Junos, however as this part of nssh is largely
+ a port of ssh2net, they should work :) 
 
 ## Linting
 
@@ -561,6 +564,13 @@ You can tag the image names on creation (following the vrnetlab readme docs), or
 ```
 docker tag [TAG OF IMAGE CREATED] nssh[VENDOR][OS]
 ```
+
+*NOTE* I have added vty lines 5-98 on the CSR image -- I think the connections opening/closing so quickly during
+ testing caused them to get hung. Testing things more slowly (adding time.sleep after closing connections) fixed this
+  but that obviously made the testing time longer, so this seemed like a better fix. This change will be in my fork
+   of vrnetlab or you can simply modify the `line vty 0 5` --> `line vty 0 98` in the `luanch.py` for the CSR in your
+    vrnetlab clone.
+
 
 ### Functional Tests
 

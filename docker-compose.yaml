@@ -1,0 +1,53 @@
+---
+version: "3.3"
+
+services:
+  iosxe:
+    hostname: cisco_iosxe
+    privileged: true
+    image: nsshciscoiosxe
+    networks:
+      net1:
+        ipv4_address: 172.18.0.11
+
+  nxos:
+    hostname: cisco_nxos
+    privileged: true
+    image: nsshcisconxos
+    networks:
+      net1:
+        ipv4_address: 172.18.0.12
+
+  iosxr:
+    hostname: cisco_iosxr
+    privileged: true
+    image: nsshciscoiosxr
+    networks:
+      net1:
+        ipv4_address: 172.18.0.13
+
+  eos:
+    hostname: arista_eos
+    privileged: true
+    image: nssharistaeos
+    networks:
+      net1:
+        ipv4_address: 172.18.0.14
+
+  junos:
+    hostname: juniper_junos
+    privileged: true
+    image: nsshjuniperjunos
+    networks:
+      net1:
+        ipv4_address: 172.18.0.15
+
+networks:
+  net1:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.18.0.0/26
+    driver_opts:
+      com.docker.network.bridge.name: br_nssh
+
