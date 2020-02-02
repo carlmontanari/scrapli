@@ -1,0 +1,28 @@
+name: Weekly Build
+
+on:
+  schedule:
+    # weekly at 0700 PST/1400 UTC on Sunday
+    - cron: '0 14 * * 0'
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      max-parallel: 6
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: [3.7, 3.8]
+    steps:
+      - uses: actions/checkout@v1
+      - name: set up python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: setup test env
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install setuptools
+          python -m pip install tox
+      - name: run tox
+        run: python -m tox --skip-missing-interpreters=true
