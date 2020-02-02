@@ -1,7 +1,7 @@
 """nssh.driver.network_driver"""
-import collections
 import logging
 import re
+from dataclasses import dataclass
 from io import TextIOWrapper
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
@@ -30,19 +30,50 @@ TRANSPORT_ARGS: Dict[str, Tuple[str, ...]] = {
     "paramiko": MIKO_TRANSPORT_ARGS,
 }
 
-PrivilegeLevel = collections.namedtuple(
-    "PrivilegeLevel",
-    "pattern "
-    "name "
-    "deescalate_priv "
-    "deescalate "
-    "escalate_priv "
-    "escalate "
-    "escalate_auth "
-    "escalate_prompt "
-    "requestable "
-    "level",
-)
+
+@dataclass
+class PrivilegeLevel:
+    """
+    Dataclass representing privilege levels of a device
+
+    PrivilegeLevel contains the following fields:
+
+    pattern:
+    name:
+    deescalate_priv:
+    deescalate:
+    escalate_priv:
+    escalate:
+    escalate_auth:
+    escalate_prompt:
+    requestable:
+    level:
+
+    """
+
+    __slots__ = (
+        "pattern",
+        "name",
+        "deescalate_priv",
+        "deescalate",
+        "escalate_priv",
+        "escalate",
+        "escalate_auth",
+        "escalate_prompt",
+        "requestable",
+        "level",
+    )
+    pattern: str
+    name: str
+    deescalate_priv: str
+    deescalate: str
+    escalate_priv: str
+    escalate: str
+    escalate_auth: bool
+    escalate_prompt: str
+    requestable: bool
+    level: int
+
 
 PRIVS: Dict[str, PrivilegeLevel] = {}
 
@@ -63,12 +94,14 @@ class NetworkDriver(NSSH):
 
         Raises:
             N/A  # noqa
+
         """
         super().__init__(**kwargs)
         self.auth_secondary = auth_secondary
         self.privs = PRIVS
         self.default_desired_priv: Optional[str] = None
         self.textfsm_platform: str = ""
+        self.exit_command: str = "exit"
 
     def _determine_current_priv(self, current_prompt: str) -> PrivilegeLevel:
         """
@@ -212,6 +245,37 @@ class NetworkDriver(NSSH):
             )
         return results
 
+    def send_interactive(
+        self, inputs: Union[List[str], Tuple[str, str, str, str]], hidden_response: bool = False,
+    ) -> List[Result]:
+        """
+        Send inputs in an interactive fashion; used to handle prompts
+
+        accepts inputs and looks for expected prompt;
+        sends the appropriate response, then waits for the "finale"
+        returns the results of the interaction
+
+        could be "chained" together to respond to more than a "single" staged prompt
+
+        Args:
+            inputs: list or tuple containing strings representing:
+                initial input
+                expectation (what should nssh expect after input)
+                response (response to expectation)
+                finale (what should nssh expect when "done")
+            hidden_response: True/False response is hidden (i.e. password input)
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        """
+        self.acquire_priv(str(self.default_desired_priv))
+        results = self.channel.send_inputs_interact(inputs, hidden_response)
+        return results
+
     def send_configs(
         self, configs: Union[str, List[str]], strip_prompt: bool = True
     ) -> List[Result]:
@@ -287,3 +351,7 @@ class NetworkDriver(NSSH):
                 self.session_disable_paging(self)
             else:
                 self.channel.send_inputs(self.session_disable_paging)
+
+    def close(self) -> None:
+        self.transport.write(f"{self.exit_command}{self.comms_return_char}")
+        super().close()

@@ -4,13 +4,20 @@ from typing import Any, Dict
 from nssh.driver import NetworkDriver
 from nssh.driver.network_driver import PrivilegeLevel
 
+IOSXE_ARG_MAPPER = {
+    "comms_prompt_pattern": r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
+    "comms_return_char": "\n",
+    "session_pre_login_handler": "",
+    "session_disable_paging": "terminal length 0",
+}
+
 PRIVS = {
     "exec": (
         PrivilegeLevel(
             r"^[a-z0-9.\-@()/:]{1,32}>$",
             "exec",
-            None,
-            None,
+            "",
+            "",
             "privilege_exec",
             "enable",
             True,
@@ -28,7 +35,7 @@ PRIVS = {
             "configuration",
             "configure terminal",
             False,
-            False,
+            "",
             True,
             1,
         )
@@ -39,10 +46,10 @@ PRIVS = {
             "configuration",
             "privilege_exec",
             "end",
-            None,
-            None,
+            "",
+            "",
             False,
-            False,
+            "",
             True,
             2,
         )
@@ -53,10 +60,10 @@ PRIVS = {
             "special_configuration",
             "privilege_exec",
             "end",
-            None,
-            None,
+            "",
+            "",
             False,
-            False,
+            "",
             False,
             3,
         )
@@ -83,3 +90,4 @@ class IOSXEDriver(NetworkDriver):
         self.privs = PRIVS
         self.default_desired_priv = "privilege_exec"
         self.textfsm_platform = "cisco_ios"
+        self.exit_command = "exit"

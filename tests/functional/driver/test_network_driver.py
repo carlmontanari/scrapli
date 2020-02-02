@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 import nssh
-from nssh.driver.core.cisco_iosxe import PRIVS as CISCO_IOSXE_PRIVS
+from nssh.driver.core.cisco_iosxe.driver import PRIVS as CISCO_IOSXE_PRIVS
 
 from .core.cisco_iosxe.helper import clean_output_data
 
@@ -74,6 +74,28 @@ def test_send_commands(network_driver, driver, test):
     conn.default_desired_priv = "privilege_exec"
     conn.privs = CISCO_IOSXE_PRIVS
     results = conn.send_commands(test["inputs"], **test["kwargs"])
+
+    for index, result in enumerate(results):
+        cleaned_result = clean_output_data(test, result.result)
+        assert cleaned_result == test["outputs"][index]
+        if test.get("textfsm", None):
+            assert isinstance(result.structured_result, (list, dict))
+    conn.close()
+
+
+@pytest.mark.parametrize(
+    "test",
+    [t for t in CISCO_IOSXE_TEST_CASES["send_interactive"]["tests"]],
+    ids=[n["name"] for n in CISCO_IOSXE_TEST_CASES["send_interactive"]["tests"]],
+)
+@pytest.mark.parametrize(
+    "driver", ["system", "ssh2", "paramiko"], ids=["system", "ssh2", "paramiko"]
+)
+def test_send_commands(network_driver, driver, test):
+    conn = network_driver(**CISCO_IOSXE_DEVICE, driver=driver)
+    conn.default_desired_priv = "privilege_exec"
+    conn.privs = CISCO_IOSXE_PRIVS
+    results = conn.send_interactive(test["inputs"], **test["kwargs"])
 
     for index, result in enumerate(results):
         cleaned_result = clean_output_data(test, result.result)

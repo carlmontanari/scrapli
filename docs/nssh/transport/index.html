@@ -1,0 +1,2671 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.7.4" />
+<title>nssh.transport API documentation</title>
+<meta name="description" content="nssh.transport" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>nssh.transport</code></h1>
+</header>
+<section id="section-intro">
+<p>nssh.transport</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;nssh.transport&#34;&#34;&#34;
+from nssh.transport.cssh2 import SSH2_TRANSPORT_ARGS, SSH2Transport
+from nssh.transport.miko import MIKO_TRANSPORT_ARGS, MikoTransport
+from nssh.transport.systemssh import SYSTEM_SSH_TRANSPORT_ARGS, SystemSSHTransport
+from nssh.transport.transport import Transport
+
+__all__ = (
+    &#34;Transport&#34;,
+    &#34;MikoTransport&#34;,
+    &#34;MIKO_TRANSPORT_ARGS&#34;,
+    &#34;SSH2Transport&#34;,
+    &#34;SSH2_TRANSPORT_ARGS&#34;,
+    &#34;SystemSSHTransport&#34;,
+    &#34;SYSTEM_SSH_TRANSPORT_ARGS&#34;,
+)</code></pre>
+</details>
+</section>
+<section>
+<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+<dl>
+<dt><code class="name"><a title="nssh.transport.cssh2" href="cssh2.html">nssh.transport.cssh2</a></code></dt>
+<dd>
+<section class="desc"><p>nssh.transport.cssh2</p></section>
+</dd>
+<dt><code class="name"><a title="nssh.transport.miko" href="miko.html">nssh.transport.miko</a></code></dt>
+<dd>
+<section class="desc"><p>nssh.transport.miko</p></section>
+</dd>
+<dt><code class="name"><a title="nssh.transport.ptyprocess" href="ptyprocess.html">nssh.transport.ptyprocess</a></code></dt>
+<dd>
+<section class="desc"><p>Ptyprocess is under the ISC license, as code derived from Pexpect.
+<a href="http://opensource.org/licenses/ISC">http://opensource.org/licenses/ISC</a> …</p></section>
+</dd>
+<dt><code class="name"><a title="nssh.transport.socket" href="socket.html">nssh.transport.socket</a></code></dt>
+<dd>
+<section class="desc"><p>nssh.transport.socket</p></section>
+</dd>
+<dt><code class="name"><a title="nssh.transport.systemssh" href="systemssh.html">nssh.transport.systemssh</a></code></dt>
+<dd>
+<section class="desc"><p>nssh.transport.systemssh</p></section>
+</dd>
+<dt><code class="name"><a title="nssh.transport.transport" href="transport.html">nssh.transport.transport</a></code></dt>
+<dd>
+<section class="desc"><p>nssh.transport.transport</p></section>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="nssh.transport.MikoTransport"><code class="flex name class">
+<span>class <span class="ident">MikoTransport</span></span>
+<span>(</span><span>host, port=22, auth_username='', auth_public_key='', auth_password='', timeout_ssh=5000, timeout_socket=5)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<p>MikoTransport Object</p>
+<p>Inherit from Transport ABC and Socket base class:
+MikoTransport &lt;- Transport (ABC)
+MikoTransport &lt;- Socket</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>host</code></strong></dt>
+<dd>host ip/name to connect to</dd>
+<dt><strong><code>port</code></strong></dt>
+<dd>port to connect to</dd>
+<dt><strong><code>auth_username</code></strong></dt>
+<dd>username for authentication</dd>
+<dt><strong><code>auth_public_key</code></strong></dt>
+<dd>path to public key for authentication</dd>
+<dt><strong><code>auth_password</code></strong></dt>
+<dd>password for authentication</dd>
+<dt><strong><code>timeout_socket</code></strong></dt>
+<dd>timeout for establishing socket in seconds</dd>
+<dt><strong><code>timeout_ssh</code></strong></dt>
+<dd>timeout for ssh transport in milliseconds</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><strong><code>Exception</code></strong></dt>
+<dd>if socket handshake fails</dd>
+<dt><strong><code>AuthenticationFailed</code></strong></dt>
+<dd>if all authentication means fail</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MikoTransport(Socket, Transport):
+    def __init__(
+        self,
+        host: str,
+        port: int = 22,
+        auth_username: str = &#34;&#34;,
+        auth_public_key: str = &#34;&#34;,
+        auth_password: str = &#34;&#34;,
+        timeout_ssh: int = 5000,
+        timeout_socket: int = 5,
+    ):
+        &#34;&#34;&#34;
+        MikoTransport Object
+
+        Inherit from Transport ABC and Socket base class:
+        MikoTransport &lt;- Transport (ABC)
+        MikoTransport &lt;- Socket
+
+        Args:
+            host: host ip/name to connect to
+            port: port to connect to
+            auth_username: username for authentication
+            auth_public_key: path to public key for authentication
+            auth_password: password for authentication
+            timeout_socket: timeout for establishing socket in seconds
+            timeout_ssh: timeout for ssh transport in milliseconds
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            Exception: if socket handshake fails
+            AuthenticationFailed: if all authentication means fail
+
+        &#34;&#34;&#34;
+        self.host: str = host
+        self.port: int = port
+        self.timeout_ssh: int = timeout_ssh
+        self.timeout_socket: int = timeout_socket
+        self.session_lock: Lock = Lock()
+        self.auth_username: str = auth_username
+        self.auth_public_key: str = auth_public_key
+        self.auth_password: str = auth_password
+
+        try:
+            # import here so these are optional
+            from paramiko import Transport as pTransport  # pylint: disable=C0415
+            from paramiko import Channel  # pylint: disable=C0415
+            from paramiko.ssh_exception import (  # pylint: disable=C0415
+                AuthenticationException,
+                SSHException,
+            )
+
+            self.lib_session = pTransport
+            self.session: pTransport = None
+            self.channel: Channel = None
+            self.lib_auth_exception = AuthenticationException
+        except ModuleNotFoundError as exc:
+            err = f&#34;Module &#39;{exc.name}&#39; not installed!&#34;
+            msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
+            fix = (
+                f&#34;To resolve this issue, install &#39;{exc.name}&#39;. You can do this in one of the &#34;
+                &#34;following ways:\n&#34;
+                &#34;1: &#39;pip install -r requirements-paramiko.txt&#39;\n&#34;
+                &#34;2: &#39;pip install nssh[paramiko]&#39;&#34;
+            )
+            warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
+            warnings.warn(warning)
+            LOG.warning(warning)
+            raise MissingDependencies
+
+        super().__init__(host=self.host, port=self.port, timeout=self.timeout_socket)
+
+    def open(self) -&gt; None:
+        &#34;&#34;&#34;
+        Parent method to open session, authenticate and acquire shell
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            Exception: if socket handshake fails
+            AuthenticationFailed: if all authentication means fail
+
+        &#34;&#34;&#34;
+        if not self.socket_isalive():
+            self.socket_open()
+        self.session_lock.acquire()
+        try:
+            self.session = self.lib_session(self.sock)
+            self.session.start_client()
+        except Exception as exc:
+            LOG.critical(
+                f&#34;Failed to complete handshake with host {self.host}; &#34; f&#34;Exception: {exc}&#34;
+            )
+            raise exc
+        LOG.debug(f&#34;Session to host {self.host} opened&#34;)
+        self.authenticate()
+        if not self.isauthenticated():
+            msg = f&#34;Authentication to host {self.host} failed&#34;
+            LOG.critical(msg)
+            raise NSSHAuthenticationFailed(msg)
+        self._open_channel()
+        self.session_lock.release()
+
+    def authenticate(self) -&gt; None:
+        &#34;&#34;&#34;
+        Parent method to try all means of authentication
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        if self.auth_public_key:
+            self._authenticate_public_key()
+            if self.isauthenticated():
+                LOG.debug(f&#34;Authenticated to host {self.host} with public key&#34;)
+                return
+        if self.auth_password:
+            self._authenticate_password()
+            if self.isauthenticated():
+                LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
+                return
+        return
+
+    def _authenticate_public_key(self) -&gt; None:
+        &#34;&#34;&#34;
+        Attempt to authenticate with public key authentication
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            Exception: if unknown (i.e. not auth failed) exception occurs
+
+        &#34;&#34;&#34;
+        try:
+            self.session.auth_publickey(self.auth_username, self.auth_public_key)
+        except self.lib_auth_exception as exc:
+            LOG.critical(
+                f&#34;Public key authentication with host {self.host} failed. Exception: {exc}.&#34;
+            )
+        except Exception as exc:
+            LOG.critical(
+                &#34;Unknown error occurred during public key authentication with host &#34;
+                f&#34;{self.host}; Exception: {exc}&#34;
+            )
+            raise exc
+
+    def _authenticate_password(self) -&gt; None:
+        &#34;&#34;&#34;
+        Attempt to authenticate with password authentication
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            Exception: if unknown (i.e. not auth failed) exception occurs
+
+        &#34;&#34;&#34;
+        try:
+            self.session.auth_password(self.auth_username, self.auth_password)
+        except self.lib_auth_exception as exc:
+            LOG.critical(
+                f&#34;Password authentication with host {self.host} failed. Exception: {exc}.&#34;
+                &#34;\n\tNote: Paramiko automatically attempts both standard auth as well as keyboard &#34;
+                &#34;interactive auth. Paramiko exception about bad auth type may be misleading!&#34;
+            )
+        except Exception as exc:
+            LOG.critical(
+                &#34;Unknown error occurred during password authentication with host &#34;
+                f&#34;{self.host}; Exception: {exc}&#34;
+            )
+            raise exc
+
+    def isauthenticated(self) -&gt; bool:
+        &#34;&#34;&#34;
+        Check if session is authenticated
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            authenticated: True if authenticated, else False
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        authenticated: bool = self.session.is_authenticated()
+        return authenticated
+
+    def _open_channel(self) -&gt; None:
+        &#34;&#34;&#34;
+        Open channel, acquire pty, request interactive shell
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        self.channel = self.session.open_session()
+        self.set_timeout(self.timeout_ssh)
+        self.channel.get_pty()
+        self.channel.invoke_shell()
+        LOG.debug(f&#34;Channel to host {self.host} opened&#34;)
+
+    def close(self) -&gt; None:
+        &#34;&#34;&#34;
+        Close session and socket
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        self.session_lock.acquire()
+        self.channel.close()
+        LOG.debug(f&#34;Channel to host {self.host} closed&#34;)
+        self.socket_close()
+        self.session_lock.release()
+
+    def isalive(self) -&gt; bool:
+        &#34;&#34;&#34;
+        Check if socket is alive and session is authenticated
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            bool: True if socket is alive and session authenticated, else False
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        if self.socket_isalive() and self.session.is_alive() and self.isauthenticated():
+            return True
+        return False
+
+    def read(self) -&gt; bytes:
+        &#34;&#34;&#34;
+        Read data from the channel
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            bytes_read: int of bytes read
+            output: bytes output as read from channel
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        channel_read: bytes = self.channel.recv(65535)
+        return channel_read
+
+    def write(self, channel_input: str) -&gt; None:
+        &#34;&#34;&#34;
+        Write data to the channel
+
+        Args:
+            channel_input: string to send to channel
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        self.channel.send(channel_input)
+
+    def flush(self) -&gt; None:
+        &#34;&#34;&#34;
+        Flush channel stdout stream
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        while True:
+            time.sleep(0.1)
+            if self.channel.recv_ready():
+                self.read()
+            else:
+                return
+
+    def set_timeout(self, timeout: Optional[int] = None) -&gt; None:
+        &#34;&#34;&#34;
+        Set session timeout
+
+        Args:
+            timeout: timeout in seconds
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        if isinstance(timeout, int):
+            set_timeout = timeout
+        else:
+            set_timeout = self.timeout_ssh
+        self.channel.settimeout(set_timeout)
+
+    def set_blocking(self, blocking: bool = False) -&gt; None:
+        &#34;&#34;&#34;
+        Set session blocking configuration
+
+        Args:
+            blocking: True/False set session to blocking
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        self.channel.setblocking(blocking)
+        self.set_timeout()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="nssh.transport.socket.Socket" href="socket.html#nssh.transport.socket.Socket">Socket</a></li>
+<li><a title="nssh.transport.transport.Transport" href="transport.html#nssh.transport.transport.Transport">Transport</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="nssh.transport.MikoTransport.authenticate"><code class="name flex">
+<span>def <span class="ident">authenticate</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Parent method to try all means of authentication</p>
+<h2 id="args">Args</h2>
+<p>N/A
+# noqa</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def authenticate(self) -&gt; None:
+    &#34;&#34;&#34;
+    Parent method to try all means of authentication
+
+    Args:
+        N/A  # noqa
+
+    Returns:
+        N/A  # noqa
+
+    Raises:
+        N/A  # noqa
+
+    &#34;&#34;&#34;
+    if self.auth_public_key:
+        self._authenticate_public_key()
+        if self.isauthenticated():
+            LOG.debug(f&#34;Authenticated to host {self.host} with public key&#34;)
+            return
+    if self.auth_password:
+        self._authenticate_password()
+        if self.isauthenticated():
+            LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
+            return
+    return</code></pre>
+</details>
+</dd>
+<dt id="nssh.transport.MikoTransport.isauthenticated"><code class="name flex">
+<span>def <span class="ident">isauthenticated</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Check if session is authenticated</p>
+<h2 id="args">Args</h2>
+<p>N/A
+# noqa</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>authenticated</code></strong></dt>
+<dd>True if authenticated, else False</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def isauthenticated(self) -&gt; bool:
+    &#34;&#34;&#34;
+    Check if session is authenticated
+
+    Args:
+        N/A  # noqa
+
+    Returns:
+        authenticated: True if authenticated, else False
+
+    Raises:
+        N/A  # noqa
+
+    &#34;&#34;&#34;
+    authenticated: bool = self.session.is_authenticated()
+    return authenticated</code></pre>
+</details>
+</dd>
+<dt id="nssh.transport.MikoTransport.open"><code class="name flex">
+<span>def <span class="ident">open</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Parent method to open session, authenticate and acquire shell</p>
+<h2 id="args">Args</h2>
+<p>N/A
+# noqa</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><strong><code>Exception</code></strong></dt>
+<dd>if socket handshake fails</dd>
+<dt><strong><code>AuthenticationFailed</code></strong></dt>
+<dd>if all authentication means fail</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def open(self) -&gt; None:
+    &#34;&#34;&#34;
+    Parent method to open session, authenticate and acquire shell
+
+    Args:
+        N/A  # noqa
+
+    Returns:
+        N/A  # noqa
+
+    Raises:
+        Exception: if socket handshake fails
+        AuthenticationFailed: if all authentication means fail
+
+    &#34;&#34;&#34;
+    if not self.socket_isalive():
+        self.socket_open()
+    self.session_lock.acquire()
+    try:
+        self.session = self.lib_session(self.sock)
+        self.session.start_client()
+    except Exception as exc:
+        LOG.critical(
+            f&#34;Failed to complete handshake with host {self.host}; &#34; f&#34;Exception: {exc}&#34;
+        )
+        raise exc
+    LOG.debug(f&#34;Session to host {self.host} opened&#34;)
+    self.authenticate()
+    if not self.isauthenticated():
+        msg = f&#34;Authentication to host {self.host} failed&#34;
+        LOG.critical(msg)
+        raise NSSHAuthenticationFailed(msg)
+    self._open_channel()
+    self.session_lock.release()</code></pre>
+</details>
+</dd>
+<dt id="nssh.transport.MikoTransport.read"><code class="name flex">
+<span>def <span class="ident">read</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Read data from the channel</p>
+<h2 id="args">Args</h2>
+<p>N/A
+# noqa</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>bytes_read</code></strong></dt>
+<dd>int of bytes read</dd>
+<dt><strong><code>output</code></strong></dt>
+<dd>bytes output as read from channel</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read(self) -&gt; bytes:
+    &#34;&#34;&#34;
+    Read data from the channel
+
+    Args:
+        N/A  # noqa
+
+    Returns:
+        bytes_read: int of bytes read
+        output: bytes output as read from channel
+
+    Raises:
+        N/A  # noqa
+
+    &#34;&#34;&#34;
+    channel_read: bytes = self.channel.recv(65535)
+    return channel_read</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="nssh.transport.socket.Socket" href="socket.html#nssh.transport.socket.Socket">Socket</a></b></code>:
+<ul class="hlist">
+<li><code><a title="nssh.transport.socket.Socket.socket_close" href="socket.html#nssh.transport.socket.Socket.socket_close">socket_close</a></code></li>
+<li><code><a title="nssh.transport.socket.Socket.socket_isalive" href="socket.html#nssh.transport.socket.Socket.socket_isalive">socket_isalive</a></code></li>
+<li><code><a title="nssh.transport.socket.Socket.socket_open" href="socket.html#nssh.transport.socket.Socket.socket_open">socket_open</a></code></li>
+</ul>
+</li>
+<li><code><b><a title="nssh.transport.transport.Transport" href="transport.html#nssh.transport.transport.Transport">Transport</a></b></code>:
+<ul class="hlist">
+<li><code><a title="nssh.transport.transport.Transport.close" href="transport.html#nssh.transport.transport.Transport.close">close</a></code></li>
+<li><code><a title="nssh.transport.transport.Transport.flush" href="transport.html#nssh.transport.transport.Transport.flush">flush</a></code></li>
+<li><code><a title="nssh.transport.transport.Transport.isalive" href="transport.html#nssh.transport.transport.Transport.isalive">isalive</a></code></li>
+<li><code><a title="nssh.transport.transport.Transport.set_blocking" href="transport.html#nssh.transport.transport.Transport.set_blocking">set_blocking</a></code></li>
+<li><code><a title="nssh.transport.transport.Transport.set_timeout" href="transport.html#nssh.transport.transport.Transport.set_timeout">set_timeout</a></code></li>
+<li><code><a title="nssh.transport.transport.Transport.write" href="transport.html#nssh.transport.transport.Transport.write">write</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="nssh.transport.SSH2Transport"><code class="flex name class">
+<span>class <span class="ident">SSH2Transport</span></span>
+<span>(</span><span>host, port=22, auth_username='', auth_public_key='', auth_password='', timeout_ssh=5000, timeout_socket=5)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<p>SSH2Transport Object</p>
+<p>Inherit from Transport ABC and Socket base class:
+SSH2Transport &lt;- Transport (ABC)
+SSH2Transport &lt;- Socket</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>host</code></strong></dt>
+<dd>host ip/name to connect to</dd>
+<dt><strong><code>port</code></strong></dt>
+<dd>port to connect to</dd>
+<dt><strong><code>auth_username</code></strong></dt>
+<dd>username for authentication</dd>
+<dt><strong><code>auth_public_key</code></strong></dt>
+<dd>path to public key for authentication</dd>
+<dt><strong><code>auth_password</code></strong></dt>
+<dd>password for authentication</dd>
+<dt><strong><code>timeout_ssh</code></strong></dt>
+<dd>timeout for ssh2 transport in milliseconds</dd>
+<dt><strong><code>timeout_socket</code></strong></dt>
+<dd>timeout for establishing socket in seconds</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><strong><code>Exception</code></strong></dt>
+<dd>if socket handshake fails</dd>
+<dt><strong><code>AuthenticationFailed</code></strong></dt>
+<dd>if all authentication means fail</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SSH2Transport(Socket, Transport):
+    def __init__(
+        self,
+        host: str,
+        port: int = 22,
+        auth_username: str = &#34;&#34;,
+        auth_public_key: str = &#34;&#34;,
+        auth_password: str = &#34;&#34;,
+        timeout_ssh: int = 5000,
+        timeout_socket: int = 5,
+    ):
+        &#34;&#34;&#34;
+        SSH2Transport Object
+
+        Inherit from Transport ABC and Socket base class:
+        SSH2Transport &lt;- Transport (ABC)
+        SSH2Transport &lt;- Socket
+
+        Args:
+            host: host ip/name to connect to
+            port: port to connect to
+            auth_username: username for authentication
+            auth_public_key: path to public key for authentication
+            auth_password: password for authentication
+            timeout_ssh: timeout for ssh2 transport in milliseconds
+            timeout_socket: timeout for establishing socket in seconds
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            Exception: if socket handshake fails
+            AuthenticationFailed: if all authentication means fail
+
+        &#34;&#34;&#34;
+        self.host: str = host
+        self.port: int = port
+        self.timeout_ssh: int = timeout_ssh
+        self.timeout_socket: int = timeout_socket
+        self.session_lock: Lock = Lock()
+        self.auth_username: str = auth_username
+        self.auth_public_key: str = auth_public_key
+        self.auth_password: str = auth_password
+
+        try:
+            # import here so these are optional
+            from ssh2.channel import Channel  # pylint: disable=C0415
+            from ssh2.session import Session  # pylint: disable=C0415
+            from ssh2.exceptions import AuthenticationError  # pylint: disable=C0415
+
+            self.lib_session = Session
+            self.session: Session = None
+            self.channel: Channel = None
+            self.lib_auth_exception = AuthenticationError
+        except ModuleNotFoundError as exc:
+            err = f&#34;Module &#39;{exc.name}&#39; not installed!&#34;
+            msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
+            fix = (
+                f&#34;To resolve this issue, install &#39;{exc.name}&#39;. You can do this in one of the &#34;
+                &#34;following ways:\n&#34;
+                &#34;1: &#39;pip install -r requirements-ssh2.txt&#39;\n&#34;
+                &#34;2: &#39;pip install nssh[ssh2]&#39;&#34;
+            )
+            warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
+            warnings.warn(warning)
+            LOG.warning(warning)
+            raise MissingDependencies
+
+        super().__init__(host=self.host, port=self.port, timeout=self.timeout_socket)
+
+    def open(self) -&gt; None:
+        &#34;&#34;&#34;
+        Parent method to open session, authenticate and acquire shell
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            Exception: if socket handshake fails
+            AuthenticationFailed: if all authentication means fail
+
+        &#34;&#34;&#34;
+        if not self.socket_isalive():
+            self.socket_open()
+        self.session_lock.acquire()
+        self.session = self.lib_session()
+        self.set_timeout(self.timeout_ssh)
+        try:
+            self.session.handshake(self.sock)
+        except Exception as exc:
+            LOG.critical(
+                f&#34;Failed to complete handshake with host {self.host}; &#34; f&#34;Exception: {exc}&#34;
+            )
+            raise exc
+        LOG.debug(f&#34;Session to host {self.host} opened&#34;)
+        self.authenticate()
+        if not self.isauthenticated():
+            msg = f&#34;Authentication to host {self.host} failed&#34;
+            LOG.critical(msg)
+            raise NSSHAuthenticationFailed(msg)
+        self._open_channel()
+        self.session_lock.release()
+
+    def authenticate(self) -&gt; None:
+        &#34;&#34;&#34;
+        Parent method to try all means of authentication
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        if self.auth_public_key:
+            self._authenticate_public_key()
+            if self.isauthenticated():
+                LOG.debug(f&#34;Authenticated to host {self.host} with public key&#34;)
+                return
+        if self.auth_password:
+            self._authenticate_password()
+            if self.isauthenticated():
+                LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
+                return
+            self._authenticate_keyboard_interactive()
+            if self.isauthenticated():
+                LOG.debug(f&#34;Authenticated to host {self.host} with keyboard interactive&#34;)
+                return
+        return
+
+    def _authenticate_public_key(self) -&gt; None:
+        &#34;&#34;&#34;
+        Attempt to authenticate with public key authentication
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            Exception: if unknown (i.e. not auth failed) exception occurs
+
+        &#34;&#34;&#34;
+        try:
+            self.session.userauth_publickey_fromfile(self.auth_username, self.auth_public_key)
+        except self.lib_auth_exception as exc:
+            LOG.critical(
+                f&#34;Public key authentication with host {self.host} failed. Exception: {exc}.&#34;
+            )
+        except Exception as exc:
+            LOG.critical(
+                &#34;Unknown error occurred during public key authentication with host &#34;
+                f&#34;{self.host}; Exception: {exc}&#34;
+            )
+            raise exc
+
+    def _authenticate_password(self) -&gt; None:
+        &#34;&#34;&#34;
+        Attempt to authenticate with password authentication
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            Exception: if unknown (i.e. not auth failed) exception occurs
+
+        &#34;&#34;&#34;
+        try:
+            self.session.userauth_password(self.auth_username, self.auth_password)
+        except self.lib_auth_exception as exc:
+            LOG.critical(f&#34;Password authentication with host {self.host} failed. Exception: {exc}.&#34;)
+        except Exception as exc:
+            LOG.critical(
+                &#34;Unknown error occurred during password authentication with host &#34;
+                f&#34;{self.host}; Exception: {exc}&#34;
+            )
+            raise exc
+
+    def _authenticate_keyboard_interactive(self) -&gt; None:
+        &#34;&#34;&#34;
+        Attempt to authenticate with keyboard interactive authentication
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            Exception: if unknown (i.e. not auth failed) exception occurs
+
+        &#34;&#34;&#34;
+        try:
+            self.session.userauth_keyboardinteractive(  # pylint: disable=C0415
+                self.auth_username, self.auth_password
+            )
+        except AttributeError as exc:
+            LOG.critical(
+                &#34;Keyboard interactive authentication not supported in your ssh2-python version. &#34;
+                f&#34;Exception: {exc}&#34;
+            )
+        except self.lib_auth_exception as exc:
+            LOG.critical(
+                f&#34;Keyboard interactive authentication with host {self.host} failed. &#34;
+                f&#34;Exception: {exc}.&#34;
+            )
+        except Exception as exc:
+            LOG.critical(
+                &#34;Unknown error occurred during keyboard interactive authentication with host &#34;
+                f&#34;{self.host}; Exception: {exc}&#34;
+            )
+            raise exc
+
+    def isauthenticated(self) -&gt; bool:
+        &#34;&#34;&#34;
+        Check if session is authenticated
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            authenticated: True if authenticated, else False
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        authenticated: bool = self.session.userauth_authenticated()
+        return authenticated
+
+    def _open_channel(self) -&gt; None:
+        &#34;&#34;&#34;
+        Open channel, acquire pty, request interactive shell
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        self.channel = self.session.open_session()
+        self.channel.pty()
+        self.channel.shell()
+        LOG.debug(f&#34;Channel to host {self.host} opened&#34;)
+
+    def close(self) -&gt; None:
+        &#34;&#34;&#34;
+        Close session and socket
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        self.session_lock.acquire()
+        self.channel.close()
+        LOG.debug(f&#34;Channel to host {self.host} closed&#34;)
+        self.socket_close()
+        self.session_lock.release()
+
+    def isalive(self) -&gt; bool:
+        &#34;&#34;&#34;
+        Check if socket is alive and session is authenticated
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            bool: True if socket is alive and session authenticated, else False
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        if self.socket_isalive() and not self.channel.eof() and self.isauthenticated():
+            return True
+        return False
+
+    def read(self) -&gt; bytes:
+        &#34;&#34;&#34;
+        Read data from the channel
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            bytes_read: int of bytes read
+            output: bytes output as read from channel
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        output: bytes
+        _, output = self.channel.read(65535)
+        return output
+
+    def write(self, channel_input: str) -&gt; None:
+        &#34;&#34;&#34;
+        Write data to the channel
+
+        Args:
+            channel_input: string to send to channel
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        self.channel.write(channel_input)
+
+    def flush(self) -&gt; None:
+        &#34;&#34;&#34;
+        Flush channel stdout stream
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        self.channel.flush()
+
+    def set_timeout(self, timeout: Optional[int] = None) -&gt; None:
+        &#34;&#34;&#34;
+        Set session timeout
+
+        Args:
+            timeout: timeout in seconds
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        if isinstance(timeout, int):
+            set_timeout = timeout
+        else:
+            set_timeout = self.timeout_ssh
+        self.session.set_timeout(set_timeout)
+
+    def set_blocking(self, blocking: bool = False) -&gt; None:
+        &#34;&#34;&#34;
+        Set session blocking configuration
+
+        Args:
+            blocking: True/False set session to blocking
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        self.session.set_blocking(blocking)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="nssh.transport.socket.Socket" href="socket.html#nssh.transport.socket.Socket">Socket</a></li>
+<li><a title="nssh.transport.transport.Transport" href="transport.html#nssh.transport.transport.Transport">Transport</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="nssh.transport.SSH2Transport.authenticate"><code class="name flex">
+<span>def <span class="ident">authenticate</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Parent method to try all means of authentication</p>
+<h2 id="args">Args</h2>
+<p>N/A
+# noqa</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def authenticate(self) -&gt; None:
+    &#34;&#34;&#34;
+    Parent method to try all means of authentication
+
+    Args:
+        N/A  # noqa
+
+    Returns:
+        N/A  # noqa
+
+    Raises:
+        N/A  # noqa
+
+    &#34;&#34;&#34;
+    if self.auth_public_key:
+        self._authenticate_public_key()
+        if self.isauthenticated():
+            LOG.debug(f&#34;Authenticated to host {self.host} with public key&#34;)
+            return
+    if self.auth_password:
+        self._authenticate_password()
+        if self.isauthenticated():
+            LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
+            return
+        self._authenticate_keyboard_interactive()
+        if self.isauthenticated():
+            LOG.debug(f&#34;Authenticated to host {self.host} with keyboard interactive&#34;)
+            return
+    return</code></pre>
+</details>
+</dd>
+<dt id="nssh.transport.SSH2Transport.isauthenticated"><code class="name flex">
+<span>def <span class="ident">isauthenticated</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Check if session is authenticated</p>
+<h2 id="args">Args</h2>
+<p>N/A
+# noqa</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>authenticated</code></strong></dt>
+<dd>True if authenticated, else False</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def isauthenticated(self) -&gt; bool:
+    &#34;&#34;&#34;
+    Check if session is authenticated
+
+    Args:
+        N/A  # noqa
+
+    Returns:
+        authenticated: True if authenticated, else False
+
+    Raises:
+        N/A  # noqa
+
+    &#34;&#34;&#34;
+    authenticated: bool = self.session.userauth_authenticated()
+    return authenticated</code></pre>
+</details>
+</dd>
+<dt id="nssh.transport.SSH2Transport.open"><code class="name flex">
+<span>def <span class="ident">open</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Parent method to open session, authenticate and acquire shell</p>
+<h2 id="args">Args</h2>
+<p>N/A
+# noqa</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><strong><code>Exception</code></strong></dt>
+<dd>if socket handshake fails</dd>
+<dt><strong><code>AuthenticationFailed</code></strong></dt>
+<dd>if all authentication means fail</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def open(self) -&gt; None:
+    &#34;&#34;&#34;
+    Parent method to open session, authenticate and acquire shell
+
+    Args:
+        N/A  # noqa
+
+    Returns:
+        N/A  # noqa
+
+    Raises:
+        Exception: if socket handshake fails
+        AuthenticationFailed: if all authentication means fail
+
+    &#34;&#34;&#34;
+    if not self.socket_isalive():
+        self.socket_open()
+    self.session_lock.acquire()
+    self.session = self.lib_session()
+    self.set_timeout(self.timeout_ssh)
+    try:
+        self.session.handshake(self.sock)
+    except Exception as exc:
+        LOG.critical(
+            f&#34;Failed to complete handshake with host {self.host}; &#34; f&#34;Exception: {exc}&#34;
+        )
+        raise exc
+    LOG.debug(f&#34;Session to host {self.host} opened&#34;)
+    self.authenticate()
+    if not self.isauthenticated():
+        msg = f&#34;Authentication to host {self.host} failed&#34;
+        LOG.critical(msg)
+        raise NSSHAuthenticationFailed(msg)
+    self._open_channel()
+    self.session_lock.release()</code></pre>
+</details>
+</dd>
+<dt id="nssh.transport.SSH2Transport.read"><code class="name flex">
+<span>def <span class="ident">read</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Read data from the channel</p>
+<h2 id="args">Args</h2>
+<p>N/A
+# noqa</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>bytes_read</code></strong></dt>
+<dd>int of bytes read</dd>
+<dt><strong><code>output</code></strong></dt>
+<dd>bytes output as read from channel</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read(self) -&gt; bytes:
+    &#34;&#34;&#34;
+    Read data from the channel
+
+    Args:
+        N/A  # noqa
+
+    Returns:
+        bytes_read: int of bytes read
+        output: bytes output as read from channel
+
+    Raises:
+        N/A  # noqa
+
+    &#34;&#34;&#34;
+    output: bytes
+    _, output = self.channel.read(65535)
+    return output</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="nssh.transport.socket.Socket" href="socket.html#nssh.transport.socket.Socket">Socket</a></b></code>:
+<ul class="hlist">
+<li><code><a title="nssh.transport.socket.Socket.socket_close" href="socket.html#nssh.transport.socket.Socket.socket_close">socket_close</a></code></li>
+<li><code><a title="nssh.transport.socket.Socket.socket_isalive" href="socket.html#nssh.transport.socket.Socket.socket_isalive">socket_isalive</a></code></li>
+<li><code><a title="nssh.transport.socket.Socket.socket_open" href="socket.html#nssh.transport.socket.Socket.socket_open">socket_open</a></code></li>
+</ul>
+</li>
+<li><code><b><a title="nssh.transport.transport.Transport" href="transport.html#nssh.transport.transport.Transport">Transport</a></b></code>:
+<ul class="hlist">
+<li><code><a title="nssh.transport.transport.Transport.close" href="transport.html#nssh.transport.transport.Transport.close">close</a></code></li>
+<li><code><a title="nssh.transport.transport.Transport.flush" href="transport.html#nssh.transport.transport.Transport.flush">flush</a></code></li>
+<li><code><a title="nssh.transport.transport.Transport.isalive" href="transport.html#nssh.transport.transport.Transport.isalive">isalive</a></code></li>
+<li><code><a title="nssh.transport.transport.Transport.set_blocking" href="transport.html#nssh.transport.transport.Transport.set_blocking">set_blocking</a></code></li>
+<li><code><a title="nssh.transport.transport.Transport.set_timeout" href="transport.html#nssh.transport.transport.Transport.set_timeout">set_timeout</a></code></li>
+<li><code><a title="nssh.transport.transport.Transport.write" href="transport.html#nssh.transport.transport.Transport.write">write</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="nssh.transport.SystemSSHTransport"><code class="flex name class">
+<span>class <span class="ident">SystemSSHTransport</span></span>
+<span>(</span><span>host, port=22, auth_username='', auth_public_key='', auth_password='', auth_strict_key=True, timeout_socket=5, timeout_ssh=5000, comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n', ssh_config_file=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<p>SystemSSHTransport Object</p>
+<p>Inherit from Transport ABC
+SSH2Transport &lt;- Transport (ABC)</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>host</code></strong></dt>
+<dd>host ip/name to connect to</dd>
+<dt><strong><code>port</code></strong></dt>
+<dd>port to connect to</dd>
+<dt><strong><code>auth_username</code></strong></dt>
+<dd>username for authentication</dd>
+<dt><strong><code>auth_public_key</code></strong></dt>
+<dd>path to public key for authentication</dd>
+<dt><strong><code>auth_password</code></strong></dt>
+<dd>password for authentication</dd>
+<dt><strong><code>auth_strict_key</code></strong></dt>
+<dd>True/False to enforce strict key checking (default is True)</dd>
+<dt><strong><code>timeout_socket</code></strong></dt>
+<dd>timeout for establishing socket in seconds</dd>
+<dt><strong><code>timeout_ssh</code></strong></dt>
+<dd>timeout for ssh transport in milliseconds</dd>
+<dt><strong><code>comms_prompt_pattern</code></strong></dt>
+<dd>prompt pattern expected for device, same as the one provided to
+channel &ndash; system ssh needs to know this to know how to decide if we are properly
+sending/receiving data &ndash; i.e. we are not stuck at some password prompt or some
+other failure scenario. If using driver, this should be passed from driver (NSSH, or
+IOSXE, etc.) to this Transport class.</dd>
+<dt><strong><code>comms_return_char</code></strong></dt>
+<dd>return character to use on the channel, same as the one provided to
+channel &ndash; system ssh needs to know this to know what to send so that we can probe
+the channel to make sure we are authenticated and sending/receiving data. If using
+driver, this should be passed from driver (NSSH, or IOSXE, etc.) to this Transport
+class.</dd>
+<dt><strong><code>ssh_config_file</code></strong></dt>
+<dd>string to path for ssh config file, True to use default ssh config file
+or False to ignore default ssh config file</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><strong><code>AuthenticationFailed</code></strong></dt>
+<dd>if all authentication means fail</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SystemSSHTransport(Transport):
+    def __init__(
+        self,
+        host: str,
+        port: int = 22,
+        auth_username: str = &#34;&#34;,
+        auth_public_key: str = &#34;&#34;,
+        auth_password: str = &#34;&#34;,
+        auth_strict_key: bool = True,
+        timeout_socket: int = 5,
+        timeout_ssh: int = 5000,
+        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]$&#34;,
+        comms_return_char: str = &#34;\n&#34;,
+        ssh_config_file: Union[str, bool] = False,
+    ):  # pylint: disable=W0231
+        &#34;&#34;&#34;
+        SystemSSHTransport Object
+
+        Inherit from Transport ABC
+        SSH2Transport &lt;- Transport (ABC)
+
+        Args:
+            host: host ip/name to connect to
+            port: port to connect to
+            auth_username: username for authentication
+            auth_public_key: path to public key for authentication
+            auth_password: password for authentication
+            auth_strict_key: True/False to enforce strict key checking (default is True)
+            timeout_socket: timeout for establishing socket in seconds
+            timeout_ssh: timeout for ssh transport in milliseconds
+            comms_prompt_pattern: prompt pattern expected for device, same as the one provided to
+                channel -- system ssh needs to know this to know how to decide if we are properly
+                sending/receiving data -- i.e. we are not stuck at some password prompt or some
+                other failure scenario. If using driver, this should be passed from driver (NSSH, or
+                IOSXE, etc.) to this Transport class.
+            comms_return_char: return character to use on the channel, same as the one provided to
+                channel -- system ssh needs to know this to know what to send so that we can probe
+                the channel to make sure we are authenticated and sending/receiving data. If using
+                driver, this should be passed from driver (NSSH, or IOSXE, etc.) to this Transport
+                class.
+            ssh_config_file: string to path for ssh config file, True to use default ssh config file
+                or False to ignore default ssh config file
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            AuthenticationFailed: if all authentication means fail
+
+        &#34;&#34;&#34;
+        self.host: str = host
+        self.port: int = port
+        self.timeout_socket: int = timeout_socket
+        self.timeout_ssh: int = int(timeout_ssh / 1000)
+        self.session_lock: Lock = Lock()
+        self.auth_username: str = auth_username
+        self.auth_public_key: str = auth_public_key
+        self.auth_password: str = auth_password
+        self.auth_strict_key: bool = auth_strict_key
+        self.comms_prompt_pattern: str = comms_prompt_pattern
+        self.comms_return_char: str = comms_return_char
+        self.ssh_config_file: Union[str, bool] = ssh_config_file
+
+        self.session: Union[Popen[bytes], PtyProcess]  # pylint: disable=E1136
+        self.lib_auth_exception = NSSHAuthenticationFailed
+        self._isauthenticated = False
+
+        self.open_cmd = [&#34;ssh&#34;, self.host]
+        self._build_open_cmd()
+
+    def _build_open_cmd(self) -&gt; None:
+        &#34;&#34;&#34;
+        Method to craft command to open ssh session
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        self.open_cmd.extend([&#34;-p&#34;, str(self.port)])
+        self.open_cmd.extend([&#34;-o&#34;, f&#34;ConnectTimeout={self.timeout_socket}&#34;])
+        if self.auth_public_key:
+            self.open_cmd.extend([&#34;-i&#34;, self.auth_public_key])
+        if self.auth_username:
+            self.open_cmd.extend([&#34;-l&#34;, self.auth_username])
+        if self.auth_strict_key is False:
+            self.open_cmd.extend([&#34;-o&#34;, &#34;StrictHostKeyChecking=no&#34;])
+        if isinstance(self.ssh_config_file, str):
+            self.open_cmd.extend([&#34;-F&#34;, self.ssh_config_file])
+
+    def open(self) -&gt; None:
+        &#34;&#34;&#34;
+        Parent method to open session, authenticate and acquire shell
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            AuthenticationFailed: if all authentication means fail
+
+        &#34;&#34;&#34;
+        self.session_lock.acquire()
+
+        # If authenticating with public key prefer to use open pipes
+        # _open_pipes uses subprocess Popen which is preferable to opening a pty
+        if self.auth_public_key:
+            if self._open_pipes():
+                return
+
+        # If public key auth fails or is not configured, open a pty session
+        if not self._open_pty():
+            msg = f&#34;Authentication to host {self.host} failed&#34;
+            LOG.critical(msg)
+            raise NSSHAuthenticationFailed(msg)
+
+    def _open_pipes(self) -&gt; bool:
+        &#34;&#34;&#34;
+        Private method to open session with subprocess.Popen
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            bool: True/False session was opened and authenticated
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        self.open_cmd.append(&#34;-v&#34;)
+        pipes_session = Popen(
+            self.open_cmd, bufsize=0, shell=False, stdin=PIPE, stdout=PIPE, stderr=PIPE
+        )
+        LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
+
+        try:
+            self._pipes_isauthenticated(pipes_session)
+        except TimeoutError:
+            return False
+
+        LOG.debug(f&#34;Authenticated to host {self.host} with public key&#34;)
+        self.session_lock.release()
+        self.session = pipes_session
+        return True
+
+    @operation_timeout(&#34;timeout_ssh&#34;)
+    def _pipes_isauthenticated(self, pipes_session: PopenBytes) -&gt; bool:
+        &#34;&#34;&#34;
+        Private method to check initial authentication when using subprocess.Popen
+
+        Args:
+            pipes_session: Popen pipes session object
+
+        Returns:
+            bool: True/False session was authenticated
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        output = b&#34;&#34;
+        while True:
+            output += pipes_session.stderr.read(1024)
+            if f&#34;Authenticated to {self.host}&#34;.encode() in output:
+                self._isauthenticated = True
+                return True
+
+    def _open_pty(self) -&gt; bool:
+        &#34;&#34;&#34;
+        Private method to open session with PtyProcess
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            bool: True/False session was opened and authenticated
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        pty_session = PtyProcess.spawn(self.open_cmd)
+        LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
+        self.session_lock.release()
+        self._pty_authenticate(pty_session)
+        if not self._pty_isauthenticated(pty_session):
+            return False
+        LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
+        self.session = pty_session
+        return True
+
+    def _pty_authenticate(self, pty_session: PtyProcess) -&gt; None:
+        &#34;&#34;&#34;
+        Private method to check initial authentication when using pty_session
+
+        Args:
+            pty_session: PtyProcess session object
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        self.session_lock.acquire()
+        try:
+            attempt_count = 0
+            while True:
+                output = pty_session.read()
+                if b&#34;password&#34; in output.lower():
+                    pty_session.write(self.auth_password.encode())
+                    pty_session.write(b&#34;\n&#34;)
+                    break
+                attempt_count += 1
+                if attempt_count &gt; 250:
+                    raise self.lib_auth_exception
+        except self.lib_auth_exception as exc:
+            LOG.critical(f&#34;Password authentication with host {self.host} failed. Exception: {exc}.&#34;)
+        except Exception as exc:
+            LOG.critical(
+                &#34;Unknown error occurred during password authentication with host &#34;
+                f&#34;{self.host}; Exception: {exc}&#34;
+            )
+            raise exc
+        finally:
+            self.session_lock.release()
+
+    def _pty_isauthenticated(self, pty_session: PtyProcess) -&gt; bool:
+        &#34;&#34;&#34;
+        Check if session is authenticated
+
+        This is very naive -- it only knows if the sub process is alive and has not received an EOF.
+        Beyond that we lock the session and send the return character and re-read the channel.
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            authenticated: True if authenticated, else False
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        if pty_session.isalive() and not pty_session.eof():
+            prompt_pattern = get_prompt_pattern(&#34;&#34;, self.comms_prompt_pattern)
+            self.session_lock.acquire()
+            pty_session.write(self.comms_return_char.encode())
+            fd_ready, _, _ = select([pty_session.fd], [], [], 0)
+            if pty_session.fd in fd_ready:
+                # unclear as to why there needs to be two read operations here, but fails w/out it
+                pty_session.read()
+                output = pty_session.read()
+                # we do not need to deal w/ line replacement for the actual output, only for
+                # parsing if a prompt-like thing is at the end of the output
+                output = re.sub(b&#34;\r&#34;, b&#34;\n&#34;, output.strip())
+                channel_match = re.search(prompt_pattern, output)
+                if channel_match:
+                    self.session_lock.release()
+                    self._isauthenticated = True
+                    return True
+        self.session_lock.release()
+        return False
+
+    def close(self) -&gt; None:
+        &#34;&#34;&#34;
+        Close session and socket
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        self.session_lock.acquire()
+        if isinstance(self.session, Popen):
+            self.session.kill(1)
+        elif isinstance(self.session, PtyProcess):
+            self.session.kill(1)
+        LOG.debug(f&#34;Channel to host {self.host} closed&#34;)
+        self.session_lock.release()
+
+    def isalive(self) -&gt; bool:
+        &#34;&#34;&#34;
+        Check if session is alive and session is authenticated
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            bool: True if session is alive and session authenticated, else False
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        if isinstance(self.session, Popen):
+            if self.session.poll() is None and self._isauthenticated:
+                return True
+        elif isinstance(self.session, PtyProcess):
+            if self.session.isalive() and self._isauthenticated and not self.session.eof():
+                return True
+        return False
+
+    def read(self) -&gt; bytes:
+        &#34;&#34;&#34;
+        Read data from the channel
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            bytes_read: int of bytes read
+            output: bytes output as read from channel
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        read_bytes = 65535
+        if isinstance(self.session, Popen):
+            return self.session.stdout.read(read_bytes)
+        if isinstance(self.session, PtyProcess):
+            return self.session.read(read_bytes)
+        return b&#34;&#34;
+
+    def write(self, channel_input: str) -&gt; None:
+        &#34;&#34;&#34;
+        Write data to the channel
+
+        Args:
+            channel_input: string to send to channel
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        if isinstance(self.session, Popen):
+            self.session.stdin.write(channel_input.encode())
+        elif isinstance(self.session, PtyProcess):
+            self.session.write(channel_input.encode())
+
+    def flush(self) -&gt; None:
+        &#34;&#34;&#34;
+        Flush channel stdout stream
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        if isinstance(self.session, Popen):
+            # flush seems to be unnecessary for Popen sessions
+            pass
+        elif isinstance(self.session, PtyProcess):
+            self.session.flush()
+
+    def set_timeout(self, timeout: Optional[int] = None) -&gt; None:
+        &#34;&#34;&#34;
+        Set session timeout
+
+        Args:
+            timeout: timeout in seconds
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+
+    def set_blocking(self, blocking: bool = False) -&gt; None:
+        &#34;&#34;&#34;
+        Set session blocking configuration
+
+        Unnecessary when using Popen/system ssh
+
+        Args:
+            blocking: True/False set session to blocking
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="nssh.transport.transport.Transport" href="transport.html#nssh.transport.transport.Transport">Transport</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="nssh.transport.SystemSSHTransport.isalive"><code class="name flex">
+<span>def <span class="ident">isalive</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Check if session is alive and session is authenticated</p>
+<h2 id="args">Args</h2>
+<p>N/A
+# noqa</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>bool</code></strong></dt>
+<dd>True if session is alive and session authenticated, else False</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def isalive(self) -&gt; bool:
+    &#34;&#34;&#34;
+    Check if session is alive and session is authenticated
+
+    Args:
+        N/A  # noqa
+
+    Returns:
+        bool: True if session is alive and session authenticated, else False
+
+    Raises:
+        N/A  # noqa
+
+    &#34;&#34;&#34;
+    if isinstance(self.session, Popen):
+        if self.session.poll() is None and self._isauthenticated:
+            return True
+    elif isinstance(self.session, PtyProcess):
+        if self.session.isalive() and self._isauthenticated and not self.session.eof():
+            return True
+    return False</code></pre>
+</details>
+</dd>
+<dt id="nssh.transport.SystemSSHTransport.open"><code class="name flex">
+<span>def <span class="ident">open</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Parent method to open session, authenticate and acquire shell</p>
+<h2 id="args">Args</h2>
+<p>N/A
+# noqa</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><strong><code>AuthenticationFailed</code></strong></dt>
+<dd>if all authentication means fail</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def open(self) -&gt; None:
+    &#34;&#34;&#34;
+    Parent method to open session, authenticate and acquire shell
+
+    Args:
+        N/A  # noqa
+
+    Returns:
+        N/A  # noqa
+
+    Raises:
+        AuthenticationFailed: if all authentication means fail
+
+    &#34;&#34;&#34;
+    self.session_lock.acquire()
+
+    # If authenticating with public key prefer to use open pipes
+    # _open_pipes uses subprocess Popen which is preferable to opening a pty
+    if self.auth_public_key:
+        if self._open_pipes():
+            return
+
+    # If public key auth fails or is not configured, open a pty session
+    if not self._open_pty():
+        msg = f&#34;Authentication to host {self.host} failed&#34;
+        LOG.critical(msg)
+        raise NSSHAuthenticationFailed(msg)</code></pre>
+</details>
+</dd>
+<dt id="nssh.transport.SystemSSHTransport.read"><code class="name flex">
+<span>def <span class="ident">read</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Read data from the channel</p>
+<h2 id="args">Args</h2>
+<p>N/A
+# noqa</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>bytes_read</code></strong></dt>
+<dd>int of bytes read</dd>
+<dt><strong><code>output</code></strong></dt>
+<dd>bytes output as read from channel</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read(self) -&gt; bytes:
+    &#34;&#34;&#34;
+    Read data from the channel
+
+    Args:
+        N/A  # noqa
+
+    Returns:
+        bytes_read: int of bytes read
+        output: bytes output as read from channel
+
+    Raises:
+        N/A  # noqa
+
+    &#34;&#34;&#34;
+    read_bytes = 65535
+    if isinstance(self.session, Popen):
+        return self.session.stdout.read(read_bytes)
+    if isinstance(self.session, PtyProcess):
+        return self.session.read(read_bytes)
+    return b&#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="nssh.transport.SystemSSHTransport.set_blocking"><code class="name flex">
+<span>def <span class="ident">set_blocking</span></span>(<span>self, blocking=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Set session blocking configuration</p>
+<p>Unnecessary when using Popen/system ssh</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>blocking</code></strong></dt>
+<dd>True/False set session to blocking</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_blocking(self, blocking: bool = False) -&gt; None:
+    &#34;&#34;&#34;
+    Set session blocking configuration
+
+    Unnecessary when using Popen/system ssh
+
+    Args:
+        blocking: True/False set session to blocking
+
+    Returns:
+        N/A  # noqa
+
+    Raises:
+        N/A  # noqa
+
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="nssh.transport.transport.Transport" href="transport.html#nssh.transport.transport.Transport">Transport</a></b></code>:
+<ul class="hlist">
+<li><code><a title="nssh.transport.transport.Transport.close" href="transport.html#nssh.transport.transport.Transport.close">close</a></code></li>
+<li><code><a title="nssh.transport.transport.Transport.flush" href="transport.html#nssh.transport.transport.Transport.flush">flush</a></code></li>
+<li><code><a title="nssh.transport.transport.Transport.set_timeout" href="transport.html#nssh.transport.transport.Transport.set_timeout">set_timeout</a></code></li>
+<li><code><a title="nssh.transport.transport.Transport.write" href="transport.html#nssh.transport.transport.Transport.write">write</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="nssh.transport.Transport"><code class="flex name class">
+<span>class <span class="ident">Transport</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Transport(ABC):
+    @abstractmethod
+    def __init__(self, *args: Union[str, int], **kwargs: Dict[str, Union[str, int]]) -&gt; None:
+        self.host: str = &#34;&#34;
+        self.session_lock: Lock = Lock()
+
+    def __bool__(self) -&gt; bool:
+        &#34;&#34;&#34;
+        Magic bool method for Socket
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            bool: True/False if socket is alive or not
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        return self.isalive()
+
+    def __str__(self) -&gt; str:
+        &#34;&#34;&#34;
+        Magic str method for Transport
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        return f&#34;Transport Object for host {self.host}&#34;
+
+    def __repr__(self) -&gt; str:
+        &#34;&#34;&#34;
+        Magic repr method for Transport
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            repr: repr for class object
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        class_dict = self.__dict__.copy()
+        class_dict[&#34;auth_password&#34;] = &#34;********&#34;
+        return f&#34;Transport {class_dict}&#34;
+
+    @abstractmethod
+    def open(self) -&gt; None:
+        &#34;&#34;&#34;
+        Open channel, acquire pty, request interactive shell
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+
+    @abstractmethod
+    def close(self) -&gt; None:
+        &#34;&#34;&#34;
+        Close session and socket
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+
+    @abstractmethod
+    def isalive(self) -&gt; bool:
+        &#34;&#34;&#34;
+        Check if socket is alive and session is authenticated
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            bool: True if socket is alive and session authenticated, else False
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+
+    @abstractmethod
+    def read(self) -&gt; bytes:
+        &#34;&#34;&#34;
+        Read data from the channel
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            output: bytes output as read from channel
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+
+    @abstractmethod
+    def write(self, channel_input: str) -&gt; None:
+        &#34;&#34;&#34;
+        Write data to the channel
+
+        Args:
+            channel_input: string to send to channel
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+
+    @abstractmethod
+    def flush(self) -&gt; None:
+        &#34;&#34;&#34;
+        Flush channel stdout stream
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+
+    @abstractmethod
+    def set_timeout(self, timeout: Optional[int] = None) -&gt; None:
+        &#34;&#34;&#34;
+        Set session timeout
+
+        Args:
+            timeout: timeout in seconds
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+
+    @abstractmethod
+    def set_blocking(self, blocking: bool = False) -&gt; None:
+        &#34;&#34;&#34;
+        Set session blocking configuration
+
+        Args:
+            blocking: True/False set session to blocking
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="nssh.transport.cssh2.SSH2Transport" href="cssh2.html#nssh.transport.cssh2.SSH2Transport">SSH2Transport</a></li>
+<li><a title="nssh.transport.miko.MikoTransport" href="miko.html#nssh.transport.miko.MikoTransport">MikoTransport</a></li>
+<li><a title="nssh.transport.systemssh.SystemSSHTransport" href="systemssh.html#nssh.transport.systemssh.SystemSSHTransport">SystemSSHTransport</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="nssh.transport.Transport.close"><code class="name flex">
+<span>def <span class="ident">close</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Close session and socket</p>
+<h2 id="args">Args</h2>
+<p>N/A
+# noqa</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def close(self) -&gt; None:
+    &#34;&#34;&#34;
+    Close session and socket
+
+    Args:
+        N/A  # noqa
+
+    Returns:
+        N/A  # noqa
+
+    Raises:
+        N/A  # noqa
+
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="nssh.transport.Transport.flush"><code class="name flex">
+<span>def <span class="ident">flush</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Flush channel stdout stream</p>
+<h2 id="args">Args</h2>
+<p>N/A
+# noqa</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def flush(self) -&gt; None:
+    &#34;&#34;&#34;
+    Flush channel stdout stream
+
+    Args:
+        N/A  # noqa
+
+    Returns:
+        N/A  # noqa
+
+    Raises:
+        N/A  # noqa
+
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="nssh.transport.Transport.isalive"><code class="name flex">
+<span>def <span class="ident">isalive</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Check if socket is alive and session is authenticated</p>
+<h2 id="args">Args</h2>
+<p>N/A
+# noqa</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>bool</code></strong></dt>
+<dd>True if socket is alive and session authenticated, else False</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def isalive(self) -&gt; bool:
+    &#34;&#34;&#34;
+    Check if socket is alive and session is authenticated
+
+    Args:
+        N/A  # noqa
+
+    Returns:
+        bool: True if socket is alive and session authenticated, else False
+
+    Raises:
+        N/A  # noqa
+
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="nssh.transport.Transport.open"><code class="name flex">
+<span>def <span class="ident">open</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Open channel, acquire pty, request interactive shell</p>
+<h2 id="args">Args</h2>
+<p>N/A
+# noqa</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def open(self) -&gt; None:
+    &#34;&#34;&#34;
+    Open channel, acquire pty, request interactive shell
+
+    Args:
+        N/A  # noqa
+
+    Returns:
+        N/A  # noqa
+
+    Raises:
+        N/A  # noqa
+
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="nssh.transport.Transport.read"><code class="name flex">
+<span>def <span class="ident">read</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Read data from the channel</p>
+<h2 id="args">Args</h2>
+<p>N/A
+# noqa</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>output</code></strong></dt>
+<dd>bytes output as read from channel</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def read(self) -&gt; bytes:
+    &#34;&#34;&#34;
+    Read data from the channel
+
+    Args:
+        N/A  # noqa
+
+    Returns:
+        output: bytes output as read from channel
+
+    Raises:
+        N/A  # noqa
+
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="nssh.transport.Transport.set_blocking"><code class="name flex">
+<span>def <span class="ident">set_blocking</span></span>(<span>self, blocking=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Set session blocking configuration</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>blocking</code></strong></dt>
+<dd>True/False set session to blocking</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def set_blocking(self, blocking: bool = False) -&gt; None:
+    &#34;&#34;&#34;
+    Set session blocking configuration
+
+    Args:
+        blocking: True/False set session to blocking
+
+    Returns:
+        N/A  # noqa
+
+    Raises:
+        N/A  # noqa
+
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="nssh.transport.Transport.set_timeout"><code class="name flex">
+<span>def <span class="ident">set_timeout</span></span>(<span>self, timeout=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Set session timeout</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>timeout</code></strong></dt>
+<dd>timeout in seconds</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def set_timeout(self, timeout: Optional[int] = None) -&gt; None:
+    &#34;&#34;&#34;
+    Set session timeout
+
+    Args:
+        timeout: timeout in seconds
+
+    Returns:
+        N/A  # noqa
+
+    Raises:
+        N/A  # noqa
+
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="nssh.transport.Transport.write"><code class="name flex">
+<span>def <span class="ident">write</span></span>(<span>self, channel_input)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Write data to the channel</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>channel_input</code></strong></dt>
+<dd>string to send to channel</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def write(self, channel_input: str) -&gt; None:
+    &#34;&#34;&#34;
+    Write data to the channel
+
+    Args:
+        channel_input: string to send to channel
+
+    Returns:
+        N/A  # noqa
+
+    Raises:
+        N/A  # noqa
+
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="nssh" href="../index.html">nssh</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<ul>
+<li><code><a title="nssh.transport.cssh2" href="cssh2.html">nssh.transport.cssh2</a></code></li>
+<li><code><a title="nssh.transport.miko" href="miko.html">nssh.transport.miko</a></code></li>
+<li><code><a title="nssh.transport.ptyprocess" href="ptyprocess.html">nssh.transport.ptyprocess</a></code></li>
+<li><code><a title="nssh.transport.socket" href="socket.html">nssh.transport.socket</a></code></li>
+<li><code><a title="nssh.transport.systemssh" href="systemssh.html">nssh.transport.systemssh</a></code></li>
+<li><code><a title="nssh.transport.transport" href="transport.html">nssh.transport.transport</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="nssh.transport.MikoTransport" href="#nssh.transport.MikoTransport">MikoTransport</a></code></h4>
+<ul class="">
+<li><code><a title="nssh.transport.MikoTransport.authenticate" href="#nssh.transport.MikoTransport.authenticate">authenticate</a></code></li>
+<li><code><a title="nssh.transport.MikoTransport.isauthenticated" href="#nssh.transport.MikoTransport.isauthenticated">isauthenticated</a></code></li>
+<li><code><a title="nssh.transport.MikoTransport.open" href="#nssh.transport.MikoTransport.open">open</a></code></li>
+<li><code><a title="nssh.transport.MikoTransport.read" href="#nssh.transport.MikoTransport.read">read</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="nssh.transport.SSH2Transport" href="#nssh.transport.SSH2Transport">SSH2Transport</a></code></h4>
+<ul class="">
+<li><code><a title="nssh.transport.SSH2Transport.authenticate" href="#nssh.transport.SSH2Transport.authenticate">authenticate</a></code></li>
+<li><code><a title="nssh.transport.SSH2Transport.isauthenticated" href="#nssh.transport.SSH2Transport.isauthenticated">isauthenticated</a></code></li>
+<li><code><a title="nssh.transport.SSH2Transport.open" href="#nssh.transport.SSH2Transport.open">open</a></code></li>
+<li><code><a title="nssh.transport.SSH2Transport.read" href="#nssh.transport.SSH2Transport.read">read</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="nssh.transport.SystemSSHTransport" href="#nssh.transport.SystemSSHTransport">SystemSSHTransport</a></code></h4>
+<ul class="">
+<li><code><a title="nssh.transport.SystemSSHTransport.isalive" href="#nssh.transport.SystemSSHTransport.isalive">isalive</a></code></li>
+<li><code><a title="nssh.transport.SystemSSHTransport.open" href="#nssh.transport.SystemSSHTransport.open">open</a></code></li>
+<li><code><a title="nssh.transport.SystemSSHTransport.read" href="#nssh.transport.SystemSSHTransport.read">read</a></code></li>
+<li><code><a title="nssh.transport.SystemSSHTransport.set_blocking" href="#nssh.transport.SystemSSHTransport.set_blocking">set_blocking</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="nssh.transport.Transport" href="#nssh.transport.Transport">Transport</a></code></h4>
+<ul class="two-column">
+<li><code><a title="nssh.transport.Transport.close" href="#nssh.transport.Transport.close">close</a></code></li>
+<li><code><a title="nssh.transport.Transport.flush" href="#nssh.transport.Transport.flush">flush</a></code></li>
+<li><code><a title="nssh.transport.Transport.isalive" href="#nssh.transport.Transport.isalive">isalive</a></code></li>
+<li><code><a title="nssh.transport.Transport.open" href="#nssh.transport.Transport.open">open</a></code></li>
+<li><code><a title="nssh.transport.Transport.read" href="#nssh.transport.Transport.read">read</a></code></li>
+<li><code><a title="nssh.transport.Transport.set_blocking" href="#nssh.transport.Transport.set_blocking">set_blocking</a></code></li>
+<li><code><a title="nssh.transport.Transport.set_timeout" href="#nssh.transport.Transport.set_timeout">set_timeout</a></code></li>
+<li><code><a title="nssh.transport.Transport.write" href="#nssh.transport.Transport.write">write</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.4</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>
