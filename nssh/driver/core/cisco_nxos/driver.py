@@ -1,14 +1,14 @@
-"""nssh.driver.core.cisco_iosxe.driver"""
+"""nssh.driver.core.cisco_nxos.driver"""
 from typing import Any, Dict
 
 from nssh.driver import NetworkDriver
 from nssh.driver.network_driver import PrivilegeLevel
 
-IOSXE_ARG_MAPPER = {
-    "comms_prompt_pattern": r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
+NXOS_ARG_MAPPER = {
+    "comms_prompt_regex": r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
     "comms_return_char": "\n",
-    "session_pre_login_handler": "",
-    "session_disable_paging": "terminal length 0",
+    "comms_pre_login_handler": "",
+    "comms_disable_paging": "terminal length 0",
 }
 
 PRIVS = {
@@ -44,7 +44,7 @@ PRIVS = {
         PrivilegeLevel(
             r"^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{0,16}\)#$",
             "configuration",
-            "privilege_exec",
+            "priv",
             "end",
             "",
             "",
@@ -58,7 +58,7 @@ PRIVS = {
         PrivilegeLevel(
             r"^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{1,16}\)#$",
             "special_configuration",
-            "privilege_exec",
+            "priv",
             "end",
             "",
             "",
@@ -71,10 +71,10 @@ PRIVS = {
 }
 
 
-class IOSXEDriver(NetworkDriver):
+class NXOSDriver(NetworkDriver):
     def __init__(self, auth_secondary: str = "", **kwargs: Dict[str, Any]):
         """
-        IOSXEDriver Object
+        NXOSDriver Object
 
         Args:
             auth_secondary: password to use for secondary authentication (enable)
@@ -89,5 +89,5 @@ class IOSXEDriver(NetworkDriver):
         super().__init__(auth_secondary, **kwargs)
         self.privs = PRIVS
         self.default_desired_priv = "privilege_exec"
-        self.textfsm_platform = "cisco_ios"
+        self.textfsm_platform = "cisco_nxos"
         self.exit_command = "exit"

@@ -492,6 +492,9 @@ with IOSXEDriver(**my_device) as conn:
  
 # Linting and Testing
 
+*NOTE* Currently there are no unit/functional tests for IOSXR/NXOS/EOS/Junos, however as this part of nssh is largely
+ a port of ssh2net, they should work :) 
+
 ## Linting
 
 This project uses [black](https://github.com/psf/black) for auto-formatting. In addition to black, tox will execute
@@ -562,6 +565,13 @@ You can tag the image names on creation (following the vrnetlab readme docs), or
 ```
 docker tag [TAG OF IMAGE CREATED] nssh[VENDOR][OS]
 ```
+
+*NOTE* I have added vty lines 5-98 on the CSR image -- I think the connections opening/closing so quickly during
+ testing caused them to get hung. Testing things more slowly (adding time.sleep after closing connections) fixed this
+  but that obviously made the testing time longer, so this seemed like a better fix. This change will be in my fork
+   of vrnetlab or you can simply modify the `line vty 0 5` --> `line vty 0 98` in the `luanch.py` for the CSR in your
+    vrnetlab clone.
+
 
 ### Functional Tests
 

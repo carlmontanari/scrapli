@@ -1,3 +1,4 @@
+import types
 from io import BytesIO
 from threading import Lock
 from typing import Any, Callable, Dict, Optional, Tuple
@@ -7,6 +8,12 @@ import pytest
 from nssh.channel import Channel
 from nssh.driver import NSSH, NetworkDriver
 from nssh.driver.core.cisco_iosxe.driver import PRIVS
+from nssh.netmiko_compatability import (
+    netmiko_find_prompt,
+    netmiko_send_command,
+    netmiko_send_command_timing,
+    netmiko_send_config_set,
+)
 from nssh.transport.transport import Transport
 
 
@@ -156,3 +163,30 @@ def mocked_network_driver():
         return conn
 
     return _create_mocked_network_driver
+
+
+@pytest.fixture(scope="module")
+def mocked_netmiko_driver():
+    def _create_mocked_netmiko_driver(
+        test_operations,
+        initial_bytes=b"3560CX#",
+        comms_ansi=False,
+        comms_prompt_pattern=r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
+    ):
+        conn = MockNetworkDriver(
+            host="localhost",
+            port=22,
+            timeout_socket=1,
+            channel_ops=test_operations,
+            initial_bytes=initial_bytes,
+            comms_ansi=comms_ansi,
+            comms_prompt_pattern=comms_prompt_pattern,
+        )
+        conn.open()
+        conn.find_prompt = types.MethodType(netmiko_find_prompt, conn)
+        conn.send_command = types.MethodType(netmiko_send_command, conn)
+        conn.send_command_timing = types.MethodType(netmiko_send_command_timing, conn)
+        conn.send_config_set = types.MethodType(netmiko_send_config_set, conn)
+        return conn
+
+    return _create_mocked_netmiko_driver

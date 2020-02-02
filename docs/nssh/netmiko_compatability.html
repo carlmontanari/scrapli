@@ -1,0 +1,918 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.7.4" />
+<title>nssh.netmiko_compatability API documentation</title>
+<meta name="description" content="nssh.netmiko_compatibility" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>nssh.netmiko_compatability</code></h1>
+</header>
+<section id="section-intro">
+<p>nssh.netmiko_compatibility</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;nssh.netmiko_compatibility&#34;&#34;&#34;
+import types
+import warnings
+from io import TextIOWrapper
+from typing import Any, Dict, List, Union
+
+from nssh.driver import NetworkDriver
+from nssh.driver.core.arista_eos.driver import EOS_ARG_MAPPER, EOSDriver
+from nssh.driver.core.cisco_iosxe.driver import IOSXE_ARG_MAPPER, IOSXEDriver
+from nssh.driver.core.cisco_iosxr.driver import IOSXR_ARG_MAPPER, IOSXRDriver
+from nssh.driver.core.cisco_nxos.driver import NXOS_ARG_MAPPER, NXOSDriver
+from nssh.driver.core.juniper_junos.driver import JUNOS_ARG_MAPPER, JunosDriver
+from nssh.helper import _textfsm_get_template, textfsm_parse
+
+VALID_NSSH_KWARGS = {
+    &#34;host&#34;,
+    &#34;port&#34;,
+    &#34;auth_username&#34;,
+    &#34;auth_password&#34;,
+    &#34;auth_public_key&#34;,
+    &#34;auth_strict_key&#34;,
+    &#34;timeout_socket&#34;,
+    &#34;timeout_ssh&#34;,
+    &#34;timeout_ops&#34;,
+    &#34;comms_prompt_pattern&#34;,
+    &#34;comms_return_char&#34;,
+    &#34;comms_ansi&#34;,
+    &#34;session_pre_login_handler&#34;,
+    &#34;session_disable_paging&#34;,
+    &#34;ssh_config_file&#34;,
+    &#34;driver&#34;,
+}
+
+
+NETMIKO_DEVICE_TYPE_MAPPER = {
+    &#34;arista_eos&#34;: {&#34;driver&#34;: EOSDriver, &#34;arg_mapper&#34;: EOS_ARG_MAPPER},
+    &#34;cisco_ios&#34;: {&#34;driver&#34;: IOSXEDriver, &#34;arg_mapper&#34;: IOSXE_ARG_MAPPER},
+    &#34;cisco_xe&#34;: {&#34;driver&#34;: IOSXEDriver, &#34;arg_mapper&#34;: IOSXE_ARG_MAPPER},
+    &#34;cisco_xr&#34;: {&#34;driver&#34;: IOSXRDriver, &#34;arg_mapper&#34;: IOSXR_ARG_MAPPER},
+    &#34;cisco_nxos&#34;: {&#34;driver&#34;: NXOSDriver, &#34;arg_mapper&#34;: NXOS_ARG_MAPPER},
+    &#34;juniper_junos&#34;: {&#34;driver&#34;: JunosDriver, &#34;arg_mapper&#34;: JUNOS_ARG_MAPPER},
+}
+
+
+class NetmikoNetworkDriver(NetworkDriver):
+    def send_command(
+        self: NetworkDriver, command_string: Union[str, List[str]], **kwargs: Dict[str, Any]
+    ) -&gt; Union[str, List[Any], Dict[str, Any]]:
+        &#34;&#34;&#34;
+        Netmiko style NetworkDriver with send_command method to appease typing
+
+        Patch `send_command_timing` in netmiko connect handler
+
+        Really just a shim to send_command, nssh doesnt support/need timing mechanics -- adjust the
+        timers on the connection object if needed, or adjust them on the fly in your code.
+
+        Args:
+            command_string: string or list of strings to send as commands
+            **kwargs: keyword arguments to support other netmiko args without blowing up
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+
+
+def connect_handler(auto_open: bool = True, **kwargs: Dict[str, Any]) -&gt; NetmikoNetworkDriver:
+    &#34;&#34;&#34;
+    Convert netmiko style &#34;ConnectHandler&#34; device creation to nssh style
+
+    Args:
+        auto_open: auto open connection or not (primarily for testing purposes)
+        **kwargs: keyword arguments
+
+    Returns:
+        NetmikoNetworkDriver: NSSH connection object for specified device-type
+
+    Raises:
+        TypeError: if unsupported netmiko device type is provided
+
+    &#34;&#34;&#34;
+    netmiko_device_type = kwargs[&#34;device_type&#34;]
+    if not isinstance(netmiko_device_type, str):
+        raise TypeError(f&#34;Argument &#39;device_type&#39; must be string, got {type(netmiko_device_type)}&#34;)
+
+    if netmiko_device_type not in NETMIKO_DEVICE_TYPE_MAPPER.keys():
+        raise TypeError(f&#34;Unsupported netmiko device type for nssh: {kwargs[&#39;device_type&#39;]}&#34;)
+
+    driver_class = NETMIKO_DEVICE_TYPE_MAPPER.get(netmiko_device_type).get(&#34;driver&#34;)
+    driver_args = NETMIKO_DEVICE_TYPE_MAPPER.get(netmiko_device_type).get(&#34;arg_mapper&#34;)
+
+    kwargs.pop(&#34;device_type&#34;)
+    transformed_kwargs = transform_netmiko_kwargs(kwargs)
+
+    final_kwargs = {**transformed_kwargs, **driver_args}
+    driver = driver_class(**final_kwargs)
+
+    if auto_open:
+        driver.open()
+
+    # Below is a dirty way to patch netmiko methods into nssh without having a factory function
+    # and a million classes... as this is just for testing interoperability we&#39;ll let this slide...
+    driver.find_prompt = types.MethodType(netmiko_find_prompt, driver)
+    driver.send_command = types.MethodType(netmiko_send_command, driver)
+    driver.send_command_timing = types.MethodType(netmiko_send_command_timing, driver)
+    driver.send_config_set = types.MethodType(netmiko_send_config_set, driver)
+
+    return driver
+
+
+def transform_netmiko_kwargs(kwargs: Dict[str, Any]) -&gt; Dict[str, Any]:
+    &#34;&#34;&#34;
+    Transform netmiko style ConnectHandler arguments to nssh style
+
+    Args:
+        kwargs: netmiko-style ConnectHandler kwargs to transform to nssh style
+
+    Returns:
+        transformed_kwargs: converted keyword arguments
+
+    Raises:
+        N/A  # noqa
+
+    &#34;&#34;&#34;
+    host = kwargs.pop(&#34;host&#34;, None)
+    ip = kwargs.pop(&#34;ip&#34;, None)
+    kwargs[&#34;host&#34;] = host if host is not None else ip
+    kwargs[&#34;port&#34;] = kwargs.pop(&#34;port&#34;, 22)
+    kwargs[&#34;setup_timeout&#34;] = 5
+    kwargs[&#34;setup_ssh_config_file&#34;] = kwargs.pop(&#34;ssh_config_file&#34;, False)
+    if &#34;global_delay_factor&#34; in kwargs.keys():
+        kwargs[&#34;timeout_socket&#34;] = kwargs[&#34;global_delay_factor&#34;] * 5
+        kwargs[&#34;timeout_ssh&#34;] = kwargs[&#34;global_delay_factor&#34;] * 5000
+        kwargs[&#34;timeout_ops&#34;] = kwargs[&#34;global_delay_factor&#34;] * 10
+        kwargs.pop(&#34;global_delay_factor&#34;)
+    else:
+        kwargs[&#34;timeout_ssh&#34;] = 5000
+    kwargs[&#34;auth_username&#34;] = kwargs.pop(&#34;username&#34;)
+    kwargs[&#34;auth_password&#34;] = kwargs.pop(&#34;password&#34;, None)
+    kwargs[&#34;auth_public_key&#34;] = kwargs.pop(&#34;key_file&#34;, &#34;&#34;)
+    kwargs[&#34;auth_secondary&#34;] = kwargs.pop(&#34;secret&#34;, &#34;&#34;)
+    kwargs[&#34;comms_prompt_pattern&#34;] = &#34;&#34;
+    kwargs[&#34;comms_operation_timeout&#34;] = 10
+    kwargs[&#34;comms_return_char&#34;] = &#34;&#34;
+    kwargs[&#34;session_pre_login_handler&#34;] = &#34;&#34;
+    kwargs[&#34;session_disable_paging&#34;] = &#34;&#34;
+
+    transformed_kwargs = {k: v for (k, v) in kwargs.items() if k in VALID_NSSH_KWARGS}
+
+    return transformed_kwargs
+
+
+def netmiko_find_prompt(self: NetmikoNetworkDriver) -&gt; str:
+    &#34;&#34;&#34;
+    Patch `find_prompt` in netmiko connect handler to `get_prompt` in nssh
+
+    Args:
+        N/A  # noqa
+
+    Returns:
+        N/A  # noqa
+
+    Raises:
+        N/A  # noqa
+
+    &#34;&#34;&#34;
+    return self.get_prompt()
+
+
+def netmiko_send_command(
+    self: NetmikoNetworkDriver, command_string: Union[str, List[str]], **kwargs: Dict[str, Any]
+) -&gt; Union[str, List[Any], Dict[str, Any]]:
+    &#34;&#34;&#34;
+    Patch `send_command` in netmiko connect handler
+
+    Patch and support strip_prompt, use_textfsm, and textfsm_template args. Return a single
+    string to match netmiko functionality (instead of nssh result object)
+
+    Args:
+        command_string: string or list of strings to send as commands
+        **kwargs: keyword arguments to support other netmiko args without blowing up
+
+    Returns:
+        N/A  # noqa
+
+    Raises:
+        N/A  # noqa
+
+    &#34;&#34;&#34;
+    provided_strip_prompt = kwargs.pop(&#34;strip_prompt&#34;, None)
+    if not isinstance(provided_strip_prompt, bool):
+        strip_prompt = True
+    else:
+        strip_prompt = provided_strip_prompt
+    expect_string = kwargs.pop(&#34;expect_string&#34;, None)
+    use_textfsm = kwargs.pop(&#34;use_textfsm&#34;, False)
+    textfsm_template = kwargs.pop(&#34;textfsm_template&#34;, None)
+
+    if expect_string:
+        err = &#34;nssh netmiko interoperability does not support expect_string!&#34;
+        msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
+        fix = (
+            f&#34;To resolve this issue, use native or driver mode with `send_inputs_interact` &#34;
+            &#34; method.&#34;
+        )
+        warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
+        warnings.warn(warning)
+
+    if isinstance(command_string, list):
+        err = &#34;netmiko does not support sending list of commands, using only the first command!&#34;
+        msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
+        fix = f&#34;To resolve this issue, use native or driver mode with `send_inputs` method.&#34;
+        warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
+        warnings.warn(warning)
+        command = command_string[0]
+    else:
+        command = command_string
+
+    results = self.send_commands(command, strip_prompt)
+    # netmiko supports sending single commands only and has no &#34;result&#34; object
+    # peel out just result
+    result = results[0].result
+
+    if use_textfsm:
+        structured_result = None
+        if isinstance(textfsm_template, (str, TextIOWrapper)):
+            structured_result = textfsm_parse(textfsm_template, result)
+        else:
+            gathered_textfsm_template = _textfsm_get_template(self.textfsm_platform, command)
+            if isinstance(gathered_textfsm_template, TextIOWrapper):
+                structured_result = textfsm_parse(gathered_textfsm_template, result)
+        # netmiko returns unstructured data if no structured data was generated
+        if structured_result:
+            return structured_result
+    return result
+
+
+def netmiko_send_command_timing(
+    self: NetmikoNetworkDriver, command_string: Union[str, List[str]], **kwargs: Dict[str, Any]
+) -&gt; Union[str, List[Any], Dict[str, Any]]:
+    &#34;&#34;&#34;
+    Patch `send_command_timing` in netmiko connect handler
+
+    Really just a shim to send_command, nssh doesnt support/need timing mechanics -- adjust the
+    timers on the connection object if needed, or adjust them on the fly in your code.
+
+    Args:
+        command_string: string or list of strings to send as commands
+        **kwargs: keyword arguments to support other netmiko args without blowing up
+
+    Returns:
+        N/A  # noqa
+
+    Raises:
+        N/A  # noqa
+
+    &#34;&#34;&#34;
+    return self.send_command(command_string, **kwargs)
+
+
+def netmiko_send_config_set(
+    self: NetmikoNetworkDriver, config_commands: Union[str, List[str]], **kwargs: Dict[str, Any]
+) -&gt; str:
+    &#34;&#34;&#34;
+    Patch `send_config_set` in netmiko connect handler
+
+    Note: nssh strips commands always (as it retains them in the result object anyway), so there
+    is no interesting output from this as there would be in netmiko.
+
+    Args:
+        config_commands: configuration command(s) to send to device
+        **kwargs: keyword arguments to support other netmiko args without blowing up
+
+    Returns:
+        N/A  # noqa
+
+    Raises:
+        N/A  # noqa
+
+    &#34;&#34;&#34;
+    provided_strip_prompt = kwargs.pop(&#34;strip_prompt&#34;, None)
+    if not isinstance(provided_strip_prompt, bool):
+        strip_prompt = True
+    else:
+        strip_prompt = provided_strip_prompt
+    enter_config_mode = kwargs.pop(&#34;enter_config_mode&#34;, True)
+    exit_config_mode = kwargs.pop(&#34;exit_config_mode&#34;, True)
+
+    if not enter_config_mode:
+        results = self.send_commands(config_commands, strip_prompt)
+    elif not exit_config_mode:
+        self.acquire_priv(&#34;configuration&#34;)
+        results = self.channel.send_inputs(config_commands, strip_prompt)
+    else:
+        results = self.send_configs(config_commands, strip_prompt)
+    # nssh always strips command, so there isn&#39;t typically anything useful coming back from this
+    result = &#34;\n&#34;.join([r.result for r in results])
+    return result</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="nssh.netmiko_compatability.connect_handler"><code class="name flex">
+<span>def <span class="ident">connect_handler</span></span>(<span>auto_open=True, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Convert netmiko style "ConnectHandler" device creation to nssh style</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>auto_open</code></strong></dt>
+<dd>auto open connection or not (primarily for testing purposes)</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>keyword arguments</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><a title="nssh.netmiko_compatability.NetmikoNetworkDriver" href="#nssh.netmiko_compatability.NetmikoNetworkDriver"><code>NetmikoNetworkDriver</code></a></strong></dt>
+<dd>NSSH connection object for specified device-type</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><strong><code>TypeError</code></strong></dt>
+<dd>if unsupported netmiko device type is provided</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def connect_handler(auto_open: bool = True, **kwargs: Dict[str, Any]) -&gt; NetmikoNetworkDriver:
+    &#34;&#34;&#34;
+    Convert netmiko style &#34;ConnectHandler&#34; device creation to nssh style
+
+    Args:
+        auto_open: auto open connection or not (primarily for testing purposes)
+        **kwargs: keyword arguments
+
+    Returns:
+        NetmikoNetworkDriver: NSSH connection object for specified device-type
+
+    Raises:
+        TypeError: if unsupported netmiko device type is provided
+
+    &#34;&#34;&#34;
+    netmiko_device_type = kwargs[&#34;device_type&#34;]
+    if not isinstance(netmiko_device_type, str):
+        raise TypeError(f&#34;Argument &#39;device_type&#39; must be string, got {type(netmiko_device_type)}&#34;)
+
+    if netmiko_device_type not in NETMIKO_DEVICE_TYPE_MAPPER.keys():
+        raise TypeError(f&#34;Unsupported netmiko device type for nssh: {kwargs[&#39;device_type&#39;]}&#34;)
+
+    driver_class = NETMIKO_DEVICE_TYPE_MAPPER.get(netmiko_device_type).get(&#34;driver&#34;)
+    driver_args = NETMIKO_DEVICE_TYPE_MAPPER.get(netmiko_device_type).get(&#34;arg_mapper&#34;)
+
+    kwargs.pop(&#34;device_type&#34;)
+    transformed_kwargs = transform_netmiko_kwargs(kwargs)
+
+    final_kwargs = {**transformed_kwargs, **driver_args}
+    driver = driver_class(**final_kwargs)
+
+    if auto_open:
+        driver.open()
+
+    # Below is a dirty way to patch netmiko methods into nssh without having a factory function
+    # and a million classes... as this is just for testing interoperability we&#39;ll let this slide...
+    driver.find_prompt = types.MethodType(netmiko_find_prompt, driver)
+    driver.send_command = types.MethodType(netmiko_send_command, driver)
+    driver.send_command_timing = types.MethodType(netmiko_send_command_timing, driver)
+    driver.send_config_set = types.MethodType(netmiko_send_config_set, driver)
+
+    return driver</code></pre>
+</details>
+</dd>
+<dt id="nssh.netmiko_compatability.netmiko_find_prompt"><code class="name flex">
+<span>def <span class="ident">netmiko_find_prompt</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Patch <code>find_prompt</code> in netmiko connect handler to <code>get_prompt</code> in nssh</p>
+<h2 id="args">Args</h2>
+<p>N/A
+# noqa</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def netmiko_find_prompt(self: NetmikoNetworkDriver) -&gt; str:
+    &#34;&#34;&#34;
+    Patch `find_prompt` in netmiko connect handler to `get_prompt` in nssh
+
+    Args:
+        N/A  # noqa
+
+    Returns:
+        N/A  # noqa
+
+    Raises:
+        N/A  # noqa
+
+    &#34;&#34;&#34;
+    return self.get_prompt()</code></pre>
+</details>
+</dd>
+<dt id="nssh.netmiko_compatability.netmiko_send_command"><code class="name flex">
+<span>def <span class="ident">netmiko_send_command</span></span>(<span>self, command_string, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Patch <code>send_command</code> in netmiko connect handler</p>
+<p>Patch and support strip_prompt, use_textfsm, and textfsm_template args. Return a single
+string to match netmiko functionality (instead of nssh result object)</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>command_string</code></strong></dt>
+<dd>string or list of strings to send as commands</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>keyword arguments to support other netmiko args without blowing up</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def netmiko_send_command(
+    self: NetmikoNetworkDriver, command_string: Union[str, List[str]], **kwargs: Dict[str, Any]
+) -&gt; Union[str, List[Any], Dict[str, Any]]:
+    &#34;&#34;&#34;
+    Patch `send_command` in netmiko connect handler
+
+    Patch and support strip_prompt, use_textfsm, and textfsm_template args. Return a single
+    string to match netmiko functionality (instead of nssh result object)
+
+    Args:
+        command_string: string or list of strings to send as commands
+        **kwargs: keyword arguments to support other netmiko args without blowing up
+
+    Returns:
+        N/A  # noqa
+
+    Raises:
+        N/A  # noqa
+
+    &#34;&#34;&#34;
+    provided_strip_prompt = kwargs.pop(&#34;strip_prompt&#34;, None)
+    if not isinstance(provided_strip_prompt, bool):
+        strip_prompt = True
+    else:
+        strip_prompt = provided_strip_prompt
+    expect_string = kwargs.pop(&#34;expect_string&#34;, None)
+    use_textfsm = kwargs.pop(&#34;use_textfsm&#34;, False)
+    textfsm_template = kwargs.pop(&#34;textfsm_template&#34;, None)
+
+    if expect_string:
+        err = &#34;nssh netmiko interoperability does not support expect_string!&#34;
+        msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
+        fix = (
+            f&#34;To resolve this issue, use native or driver mode with `send_inputs_interact` &#34;
+            &#34; method.&#34;
+        )
+        warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
+        warnings.warn(warning)
+
+    if isinstance(command_string, list):
+        err = &#34;netmiko does not support sending list of commands, using only the first command!&#34;
+        msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
+        fix = f&#34;To resolve this issue, use native or driver mode with `send_inputs` method.&#34;
+        warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
+        warnings.warn(warning)
+        command = command_string[0]
+    else:
+        command = command_string
+
+    results = self.send_commands(command, strip_prompt)
+    # netmiko supports sending single commands only and has no &#34;result&#34; object
+    # peel out just result
+    result = results[0].result
+
+    if use_textfsm:
+        structured_result = None
+        if isinstance(textfsm_template, (str, TextIOWrapper)):
+            structured_result = textfsm_parse(textfsm_template, result)
+        else:
+            gathered_textfsm_template = _textfsm_get_template(self.textfsm_platform, command)
+            if isinstance(gathered_textfsm_template, TextIOWrapper):
+                structured_result = textfsm_parse(gathered_textfsm_template, result)
+        # netmiko returns unstructured data if no structured data was generated
+        if structured_result:
+            return structured_result
+    return result</code></pre>
+</details>
+</dd>
+<dt id="nssh.netmiko_compatability.netmiko_send_command_timing"><code class="name flex">
+<span>def <span class="ident">netmiko_send_command_timing</span></span>(<span>self, command_string, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Patch <code>send_command_timing</code> in netmiko connect handler</p>
+<p>Really just a shim to send_command, nssh doesnt support/need timing mechanics &ndash; adjust the
+timers on the connection object if needed, or adjust them on the fly in your code.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>command_string</code></strong></dt>
+<dd>string or list of strings to send as commands</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>keyword arguments to support other netmiko args without blowing up</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def netmiko_send_command_timing(
+    self: NetmikoNetworkDriver, command_string: Union[str, List[str]], **kwargs: Dict[str, Any]
+) -&gt; Union[str, List[Any], Dict[str, Any]]:
+    &#34;&#34;&#34;
+    Patch `send_command_timing` in netmiko connect handler
+
+    Really just a shim to send_command, nssh doesnt support/need timing mechanics -- adjust the
+    timers on the connection object if needed, or adjust them on the fly in your code.
+
+    Args:
+        command_string: string or list of strings to send as commands
+        **kwargs: keyword arguments to support other netmiko args without blowing up
+
+    Returns:
+        N/A  # noqa
+
+    Raises:
+        N/A  # noqa
+
+    &#34;&#34;&#34;
+    return self.send_command(command_string, **kwargs)</code></pre>
+</details>
+</dd>
+<dt id="nssh.netmiko_compatability.netmiko_send_config_set"><code class="name flex">
+<span>def <span class="ident">netmiko_send_config_set</span></span>(<span>self, config_commands, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Patch <code>send_config_set</code> in netmiko connect handler</p>
+<p>Note: nssh strips commands always (as it retains them in the result object anyway), so there
+is no interesting output from this as there would be in netmiko.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>config_commands</code></strong></dt>
+<dd>configuration command(s) to send to device</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>keyword arguments to support other netmiko args without blowing up</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def netmiko_send_config_set(
+    self: NetmikoNetworkDriver, config_commands: Union[str, List[str]], **kwargs: Dict[str, Any]
+) -&gt; str:
+    &#34;&#34;&#34;
+    Patch `send_config_set` in netmiko connect handler
+
+    Note: nssh strips commands always (as it retains them in the result object anyway), so there
+    is no interesting output from this as there would be in netmiko.
+
+    Args:
+        config_commands: configuration command(s) to send to device
+        **kwargs: keyword arguments to support other netmiko args without blowing up
+
+    Returns:
+        N/A  # noqa
+
+    Raises:
+        N/A  # noqa
+
+    &#34;&#34;&#34;
+    provided_strip_prompt = kwargs.pop(&#34;strip_prompt&#34;, None)
+    if not isinstance(provided_strip_prompt, bool):
+        strip_prompt = True
+    else:
+        strip_prompt = provided_strip_prompt
+    enter_config_mode = kwargs.pop(&#34;enter_config_mode&#34;, True)
+    exit_config_mode = kwargs.pop(&#34;exit_config_mode&#34;, True)
+
+    if not enter_config_mode:
+        results = self.send_commands(config_commands, strip_prompt)
+    elif not exit_config_mode:
+        self.acquire_priv(&#34;configuration&#34;)
+        results = self.channel.send_inputs(config_commands, strip_prompt)
+    else:
+        results = self.send_configs(config_commands, strip_prompt)
+    # nssh always strips command, so there isn&#39;t typically anything useful coming back from this
+    result = &#34;\n&#34;.join([r.result for r in results])
+    return result</code></pre>
+</details>
+</dd>
+<dt id="nssh.netmiko_compatability.transform_netmiko_kwargs"><code class="name flex">
+<span>def <span class="ident">transform_netmiko_kwargs</span></span>(<span>kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Transform netmiko style ConnectHandler arguments to nssh style</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>kwargs</code></strong></dt>
+<dd>netmiko-style ConnectHandler kwargs to transform to nssh style</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>transformed_kwargs</code></strong></dt>
+<dd>converted keyword arguments</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def transform_netmiko_kwargs(kwargs: Dict[str, Any]) -&gt; Dict[str, Any]:
+    &#34;&#34;&#34;
+    Transform netmiko style ConnectHandler arguments to nssh style
+
+    Args:
+        kwargs: netmiko-style ConnectHandler kwargs to transform to nssh style
+
+    Returns:
+        transformed_kwargs: converted keyword arguments
+
+    Raises:
+        N/A  # noqa
+
+    &#34;&#34;&#34;
+    host = kwargs.pop(&#34;host&#34;, None)
+    ip = kwargs.pop(&#34;ip&#34;, None)
+    kwargs[&#34;host&#34;] = host if host is not None else ip
+    kwargs[&#34;port&#34;] = kwargs.pop(&#34;port&#34;, 22)
+    kwargs[&#34;setup_timeout&#34;] = 5
+    kwargs[&#34;setup_ssh_config_file&#34;] = kwargs.pop(&#34;ssh_config_file&#34;, False)
+    if &#34;global_delay_factor&#34; in kwargs.keys():
+        kwargs[&#34;timeout_socket&#34;] = kwargs[&#34;global_delay_factor&#34;] * 5
+        kwargs[&#34;timeout_ssh&#34;] = kwargs[&#34;global_delay_factor&#34;] * 5000
+        kwargs[&#34;timeout_ops&#34;] = kwargs[&#34;global_delay_factor&#34;] * 10
+        kwargs.pop(&#34;global_delay_factor&#34;)
+    else:
+        kwargs[&#34;timeout_ssh&#34;] = 5000
+    kwargs[&#34;auth_username&#34;] = kwargs.pop(&#34;username&#34;)
+    kwargs[&#34;auth_password&#34;] = kwargs.pop(&#34;password&#34;, None)
+    kwargs[&#34;auth_public_key&#34;] = kwargs.pop(&#34;key_file&#34;, &#34;&#34;)
+    kwargs[&#34;auth_secondary&#34;] = kwargs.pop(&#34;secret&#34;, &#34;&#34;)
+    kwargs[&#34;comms_prompt_pattern&#34;] = &#34;&#34;
+    kwargs[&#34;comms_operation_timeout&#34;] = 10
+    kwargs[&#34;comms_return_char&#34;] = &#34;&#34;
+    kwargs[&#34;session_pre_login_handler&#34;] = &#34;&#34;
+    kwargs[&#34;session_disable_paging&#34;] = &#34;&#34;
+
+    transformed_kwargs = {k: v for (k, v) in kwargs.items() if k in VALID_NSSH_KWARGS}
+
+    return transformed_kwargs</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="nssh.netmiko_compatability.NetmikoNetworkDriver"><code class="flex name class">
+<span>class <span class="ident">NetmikoNetworkDriver</span></span>
+<span>(</span><span>auth_secondary='', **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>BaseNetworkDriver Object</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>auth_secondary</code></strong></dt>
+<dd>password to use for secondary authentication (enable)</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>keyword args to pass to inherited class(es)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class NetmikoNetworkDriver(NetworkDriver):
+    def send_command(
+        self: NetworkDriver, command_string: Union[str, List[str]], **kwargs: Dict[str, Any]
+    ) -&gt; Union[str, List[Any], Dict[str, Any]]:
+        &#34;&#34;&#34;
+        Netmiko style NetworkDriver with send_command method to appease typing
+
+        Patch `send_command_timing` in netmiko connect handler
+
+        Really just a shim to send_command, nssh doesnt support/need timing mechanics -- adjust the
+        timers on the connection object if needed, or adjust them on the fly in your code.
+
+        Args:
+            command_string: string or list of strings to send as commands
+            **kwargs: keyword arguments to support other netmiko args without blowing up
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="nssh.driver.network_driver.NetworkDriver" href="driver/network_driver.html#nssh.driver.network_driver.NetworkDriver">NetworkDriver</a></li>
+<li><a title="nssh.driver.driver.NSSH" href="driver/driver.html#nssh.driver.driver.NSSH">NSSH</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="nssh.netmiko_compatability.NetmikoNetworkDriver.send_command"><code class="name flex">
+<span>def <span class="ident">send_command</span></span>(<span>self, command_string, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Netmiko style NetworkDriver with send_command method to appease typing</p>
+<p>Patch <code>send_command_timing</code> in netmiko connect handler</p>
+<p>Really just a shim to send_command, nssh doesnt support/need timing mechanics &ndash; adjust the
+timers on the connection object if needed, or adjust them on the fly in your code.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>command_string</code></strong></dt>
+<dd>string or list of strings to send as commands</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>keyword arguments to support other netmiko args without blowing up</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def send_command(
+    self: NetworkDriver, command_string: Union[str, List[str]], **kwargs: Dict[str, Any]
+) -&gt; Union[str, List[Any], Dict[str, Any]]:
+    &#34;&#34;&#34;
+    Netmiko style NetworkDriver with send_command method to appease typing
+
+    Patch `send_command_timing` in netmiko connect handler
+
+    Really just a shim to send_command, nssh doesnt support/need timing mechanics -- adjust the
+    timers on the connection object if needed, or adjust them on the fly in your code.
+
+    Args:
+        command_string: string or list of strings to send as commands
+        **kwargs: keyword arguments to support other netmiko args without blowing up
+
+    Returns:
+        N/A  # noqa
+
+    Raises:
+        N/A  # noqa
+
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="nssh.driver.network_driver.NetworkDriver" href="driver/network_driver.html#nssh.driver.network_driver.NetworkDriver">NetworkDriver</a></b></code>:
+<ul class="hlist">
+<li><code><a title="nssh.driver.network_driver.NetworkDriver.acquire_priv" href="driver/network_driver.html#nssh.driver.network_driver.NetworkDriver.acquire_priv">acquire_priv</a></code></li>
+<li><code><a title="nssh.driver.network_driver.NetworkDriver.close" href="driver/driver.html#nssh.driver.driver.NSSH.close">close</a></code></li>
+<li><code><a title="nssh.driver.network_driver.NetworkDriver.get_prompt" href="driver/network_driver.html#nssh.driver.network_driver.NetworkDriver.get_prompt">get_prompt</a></code></li>
+<li><code><a title="nssh.driver.network_driver.NetworkDriver.isalive" href="driver/driver.html#nssh.driver.driver.NSSH.isalive">isalive</a></code></li>
+<li><code><a title="nssh.driver.network_driver.NetworkDriver.open" href="driver/driver.html#nssh.driver.driver.NSSH.open">open</a></code></li>
+<li><code><a title="nssh.driver.network_driver.NetworkDriver.send_commands" href="driver/network_driver.html#nssh.driver.network_driver.NetworkDriver.send_commands">send_commands</a></code></li>
+<li><code><a title="nssh.driver.network_driver.NetworkDriver.send_configs" href="driver/network_driver.html#nssh.driver.network_driver.NetworkDriver.send_configs">send_configs</a></code></li>
+<li><code><a title="nssh.driver.network_driver.NetworkDriver.send_interactive" href="driver/network_driver.html#nssh.driver.network_driver.NetworkDriver.send_interactive">send_interactive</a></code></li>
+<li><code><a title="nssh.driver.network_driver.NetworkDriver.textfsm_parse_output" href="driver/network_driver.html#nssh.driver.network_driver.NetworkDriver.textfsm_parse_output">textfsm_parse_output</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="nssh" href="index.html">nssh</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="nssh.netmiko_compatability.connect_handler" href="#nssh.netmiko_compatability.connect_handler">connect_handler</a></code></li>
+<li><code><a title="nssh.netmiko_compatability.netmiko_find_prompt" href="#nssh.netmiko_compatability.netmiko_find_prompt">netmiko_find_prompt</a></code></li>
+<li><code><a title="nssh.netmiko_compatability.netmiko_send_command" href="#nssh.netmiko_compatability.netmiko_send_command">netmiko_send_command</a></code></li>
+<li><code><a title="nssh.netmiko_compatability.netmiko_send_command_timing" href="#nssh.netmiko_compatability.netmiko_send_command_timing">netmiko_send_command_timing</a></code></li>
+<li><code><a title="nssh.netmiko_compatability.netmiko_send_config_set" href="#nssh.netmiko_compatability.netmiko_send_config_set">netmiko_send_config_set</a></code></li>
+<li><code><a title="nssh.netmiko_compatability.transform_netmiko_kwargs" href="#nssh.netmiko_compatability.transform_netmiko_kwargs">transform_netmiko_kwargs</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="nssh.netmiko_compatability.NetmikoNetworkDriver" href="#nssh.netmiko_compatability.NetmikoNetworkDriver">NetmikoNetworkDriver</a></code></h4>
+<ul class="">
+<li><code><a title="nssh.netmiko_compatability.NetmikoNetworkDriver.send_command" href="#nssh.netmiko_compatability.NetmikoNetworkDriver.send_command">send_command</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.4</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>
