@@ -4,9 +4,13 @@ from logging import NullHandler
 from typing import Optional, Tuple
 
 from nssh.driver import NSSH
+from nssh.netmiko_compatability import connect_handler as ConnectHandler
 
 __version__ = "2020.02.01"
-__all__ = ("NSSH",)
+__all__ = (
+    "NSSH",
+    "ConnectHandler",
+)
 
 
 class DuplicateFilter(logging.Filter):

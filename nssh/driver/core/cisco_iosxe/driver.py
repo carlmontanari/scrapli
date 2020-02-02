@@ -4,6 +4,13 @@ from typing import Any, Dict
 from nssh.driver import NetworkDriver
 from nssh.driver.network_driver import PrivilegeLevel
 
+IOSXE_ARG_MAPPER = {
+    "comms_prompt_pattern": r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
+    "comms_return_char": "\n",
+    "session_pre_login_handler": "",
+    "session_disable_paging": "terminal length 0",
+}
+
 PRIVS = {
     "exec": (
         PrivilegeLevel(
@@ -63,6 +70,9 @@ PRIVS = {
     ),
 }
 
+DEFAULT_DESIRED_PRIV = "privilege_exec"
+TEXTFSM_PLATFORM = "cisco_ios"
+
 
 class IOSXEDriver(NetworkDriver):
     def __init__(self, auth_secondary: str = "", **kwargs: Dict[str, Any]):
@@ -81,5 +91,5 @@ class IOSXEDriver(NetworkDriver):
         """
         super().__init__(auth_secondary, **kwargs)
         self.privs = PRIVS
-        self.default_desired_priv = "privilege_exec"
-        self.textfsm_platform = "cisco_ios"
+        self.default_desired_priv = DEFAULT_DESIRED_PRIV
+        self.textfsm_platform = TEXTFSM_PLATFORM

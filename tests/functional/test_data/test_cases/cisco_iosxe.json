@@ -140,6 +140,32 @@
           ]
         }
       ]
+    },
+    "send_configs": {
+      "tests": [
+        {
+          "name": "send configs",
+          "notes": "test basic configuration",
+          "replace_bytes": false,
+          "replace_timestamps": false,
+          "replace_cfg_by": false,
+          "replace_crypto": false,
+          "kwargs": {},
+          "setup": [
+            "interface loopback123",
+            "description nssh was here"
+          ],
+          "inputs": [
+            "show run int loopback123"
+          ],
+          "outputs": [
+            "Building configuration...\nCurrent configuration : 71 bytes\n!\ninterface Loopback123\n description nssh was here\n no ip address\nend"
+          ],
+          "teardown": [
+            "no interface loopback123"
+          ]
+        }
+      ]
     }
   }
 }

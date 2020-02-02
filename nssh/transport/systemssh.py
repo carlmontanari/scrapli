@@ -322,7 +322,7 @@ class SystemSSHTransport(Transport):
         """
         self.session_lock.acquire()
         if isinstance(self.session, Popen):
-            self.session.kill()
+            self.session.kill(1)
         elif isinstance(self.session, PtyProcess):
             self.session.kill(1)
         LOG.debug(f"Channel to host {self.host} closed")
@@ -330,13 +330,13 @@ class SystemSSHTransport(Transport):
 
     def isalive(self) -> bool:
         """
-        Check if socket is alive and session is authenticated
+        Check if session is alive and session is authenticated
 
         Args:
             N/A  # noqa
 
         Returns:
-            bool: True if socket is alive and session authenticated, else False
+            bool: True if session is alive and session authenticated, else False
 
         Raises:
             N/A  # noqa

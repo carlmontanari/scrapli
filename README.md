@@ -460,9 +460,9 @@ with IOSXEDriver(**my_device) as conn:
         "good", it is the lowest common denominator for automation in the networking world. So I figured I could try
          to make the fastest, most flexible library around for SSH network automation! 
 - Question: Is this better than Netmiko/Paramiko/Ansible?
-  - Answer: Nope! It is different though! The main focus is just to be stupid fast. It is very much that. It *should
-  * be super reliable too as the timeouts are very easy/obvious to control, and it should also be very very very easy
-   to adapt to any other network-y type CLI.
+  - Answer: Nope! It is different though! The main focus is just to be stupid fast. It is very much that. It *should* be
+  super reliable too as the timeouts are very easy/obvious to control, and it should also be very very very easy to
+   adapt to any other network-y type CLI.
 - Question: Is this easy to use?
   - Answer: Yep! The "native" usage is pretty straight forward -- the thing to remember is that it doesn't do "things
   " for you like Netmiko does for example, so its a lot more like Paramiko in that regard. That said you can use one
@@ -479,14 +479,15 @@ with IOSXEDriver(**my_device) as conn:
 
 ## SSH2-Python
 
-Arista EOS uses keyboard interactive authentication which is currently broken in the pip-installable version
+- Arista EOS uses keyboard interactive authentication which is currently broken in the pip-installable version
  of ssh2-python (as of January 2020). GitHub user [Red-M](https://github.com/Red-M) has contributed to and fixed this
   particular issue but the fix has not been merged. If you would like to use ssh2-python with EOS I suggest cloning
    and installing via Red-M's repository or my fork of Red-M's fork!
 
 - Use the context manager where possible! More testing needs to be done to confirm/troubleshoot, but limited testing
  seems to indicate that without properly closing the connection there appears to be a bug that causes Python to crash
-  on MacOS at least. More to come on this as I have time to poke it more!
+  on MacOS at least. More to come on this as I have time to poke it more! I believe this is only occurring on the
+   latest branch/update (i.e. not on the pip installable version).
   
  
 # Linting and Testing
