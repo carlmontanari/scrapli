@@ -105,12 +105,6 @@ class Channel:
         """
         output = normalize_lines(output)
 
-        # TODO -- purge empty rows before actual output
-        #  this was used to remove duplicate line feeds in output, but that causes some issues for
-        #  testing where we want to match the normal output we see as users... so i think this
-        #  should be removed -- or optional?
-        # output = b"\n".join([row for row in output.splitlines() if row])
-
         if not strip_prompt:
             return output
 
@@ -181,10 +175,6 @@ class Channel:
 
         while True:
             output += self._read_chunk()
-            # we do not need to deal w/ line replacement for the actual output, only for
-            # parsing if a prompt-like thing is at the end of the output
-            # TODO -- at one point this was bytes -> str w/ `unicode-escape` have not tested
-            #  on many live devices if keeping this all bytes works!!!
             output = re.sub(b"\r", b"", output.strip())
             channel_match = re.search(prompt_pattern, output)
             if channel_match:

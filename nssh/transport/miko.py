@@ -27,11 +27,11 @@ class MikoTransport(Socket, Transport):
         self,
         host: str,
         port: int = 22,
-        timeout_ssh: int = 5000,
-        timeout_socket: int = 5,
         auth_username: str = "",
         auth_public_key: str = "",
         auth_password: str = "",
+        timeout_ssh: int = 5000,
+        timeout_socket: int = 5,
     ):
         """
         MikoTransport Object
@@ -43,11 +43,11 @@ class MikoTransport(Socket, Transport):
         Args:
             host: host ip/name to connect to
             port: port to connect to
-            timeout_ssh: timeout for ssh2 transport in milliseconds
-            timeout_socket: timeout for establishing socket in seconds
             auth_username: username for authentication
             auth_public_key: path to public key for authentication
             auth_password: password for authentication
+            timeout_socket: timeout for establishing socket in seconds
+            timeout_ssh: timeout for ssh transport in milliseconds
 
         Returns:
             N/A  # noqa

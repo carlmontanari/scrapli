@@ -1,4 +1,3 @@
-from threading import Lock
 from typing import Optional
 
 from nssh.transport import Transport

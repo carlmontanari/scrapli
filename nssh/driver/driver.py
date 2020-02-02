@@ -1,4 +1,4 @@
-"""nssh.base"""
+"""nssh.driver.driver"""
 import logging
 import os
 import re
@@ -48,20 +48,58 @@ class NSSH:
         comms_ansi: bool = False,
         session_pre_login_handler: Union[str, Callable[..., Any]] = "",
         session_disable_paging: Union[str, Callable[..., Any]] = "terminal length 0",
+        ssh_config_file: Union[str, bool] = True,
         driver: str = "system",
     ):
         """
+        NSSH Object
+
+        NSSH is the base class for NetworkDriver, and subsequent platform specific drivers
+        (i.e. IOSXEDriver). NSSH can be used on its own and offers a semi-pexpect like experience in
+        that it doesn't know or care about privilege levels, platform types, and things like that.
 
         Args:
+            host: host ip/name to connect to
+            port: port to connect to
+            auth_username: username for authentication
+            auth_public_key: path to public key for authentication
+            auth_password: password for authentication
+            auth_strict_key: strict host checking or not -- applicable for system ssh driver only
+            timeout_socket: timeout for establishing socket in seconds
+            timeout_ssh: timeout for ssh transport in milliseconds
+            timeout_ops: timeout for ssh channel operations
+            comms_prompt_pattern: raw string regex pattern -- preferably use `^` and `$` anchors!
+                this is the single most important attribute here! if this does not match a prompt,
+                nssh will not work!
+                IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
+                for highly reliably matching for prompts after stripping trailing white space,
+                case insensitive is just a convenience factor so i can be lazy.
+            comms_return_char: character to use to send returns to host
+            comms_ansi: True/False strip comms_ansi characters from output
+            session_pre_login_handler: callable or string that resolves to an importable function to
+                handle pre-login (pre disable paging) operations
+            session_disable_paging: callable, string that resolves to an importable function, or
+                string to send to device to disable paging
+            ssh_config_file: string to path for ssh config file, True to use default ssh config file
+                or False to ignore default ssh config file
+            driver: system|ssh2|paramiko -- type of ssh driver to use
+                system uses system available ssh (/usr/bin/ssh)
+                ssh2 uses ssh2-python
+                paramiko uses... paramiko
+                choice of driver depends on the features you need. in general system is easiest as
+                it will just "auto-magically" use your ssh config file (~/.ssh/config or
+                /etc/ssh/config_file). ssh2 is very very fast as it is a thin wrapper around libssh2
+                however it is slightly feature limited. paramiko is slower than ssh2, but has more
+                features built in (though nssh does not expose/support them all).
 
         Returns:
             N/A  # noqa
 
-        Raises
-            N/A  # noqa
+        Raises:
+            TypeError: if auth_strict_key is not a bool
+            ValueError: if driver value is invalid
 
         """
-        # TODO -- docstring
         self.host = host.strip()
         if not isinstance(port, int):
             raise TypeError(f"port should be int, got {type(port)}")
@@ -83,9 +121,13 @@ class NSSH:
         self.comms_ansi: bool = False
         self._setup_comms(comms_prompt_pattern, comms_return_char, comms_ansi)
 
-        self.session_pre_login_handler: Union[str, Callable[..., Any]] = ""
+        self.session_pre_login_handler: Optional[Callable[..., Any]] = None
         self.session_disable_paging: Union[str, Callable[..., Any]] = ""
         self._setup_session(session_pre_login_handler, session_disable_paging)
+
+        if not isinstance(ssh_config_file, (str, bool)):
+            raise TypeError(f"ssh_config_file should be str or bool, got {type(ssh_config_file)}")
+        self.ssh_config_file = ssh_config_file
 
         if driver not in ("ssh2", "paramiko", "system"):
             raise ValueError(f"transport should be one of ssh2|paramiko|system, got {driver}")
@@ -98,6 +140,80 @@ class NSSH:
             if arg == "transport":
                 continue
             self.channel_args[arg] = getattr(self, arg)
+
+    def __enter__(self) -> "NSSH":
+        """
+        Enter method for context manager
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            self: instance of self
+
+        Raises:
+            N/A  # noqa
+
+        """
+        self.open()
+        return self
+
+    def __exit__(
+        self,
+        exception_type: Optional[Type[BaseException]],
+        exception_value: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -> None:
+        """
+        Exit method to cleanup for context manager
+
+        Args:
+            exception_type: exception type being raised
+            exception_value: message from exception being raised
+            traceback: traceback from exception being raised
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        """
+        self.close()
+
+    def __str__(self) -> str:
+        """
+        Magic str method for NSSH
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            N/A  # noqa
+
+        Raises:
+            N/A  # noqa
+
+        """
+        return f"NSSH Object for host {self.host}"
+
+    def __repr__(self) -> str:
+        """
+        Magic repr method for NSSH
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            repr: repr for class object
+
+        Raises:
+            N/A  # noqa
+
+        """
+        class_dict = self.__dict__.copy()
+        class_dict["auth_password"] = "********"
+        return f"NSSH {class_dict}"
 
     def _setup_auth(self, auth_username: str, auth_password: str, auth_public_key: str) -> None:
         """
@@ -177,7 +293,7 @@ class NSSH:
                 session_pre_login_handler
             )
         else:
-            self.session_pre_login_handler = ""
+            self.session_pre_login_handler = None
         if callable(session_disable_paging):
             self.session_disable_paging = session_disable_paging
         if not isinstance(session_disable_paging, str) and not callable(session_disable_paging):
@@ -197,8 +313,8 @@ class NSSH:
 
     @staticmethod
     def _set_session_pre_login_handler(
-        session_pre_login_handler: Union[Callable[..., Any], str]
-    ) -> Union[Callable[..., Any], str]:
+        session_pre_login_handler: Union[str, Callable[..., Any]]
+    ) -> Optional[Callable[..., Any]]:
         """
         Return session_pre_login_handler argument
 
@@ -306,42 +422,22 @@ class NSSH:
         """
         self.transport.close()
 
-    def __enter__(self) -> "NSSH":
+    def isalive(self) -> bool:
         """
-        Enter method for context manager
+        Check if underlying socket/channel is alive
 
         Args:
             N/A  # noqa
 
         Returns:
-            self: instance of self
+            alive: True/False if socket/channel is alive
 
         Raises:
             N/A  # noqa
 
         """
-        self.open()
-        return self
-
-    def __exit__(
-        self,
-        exception_type: Optional[Type[BaseException]],
-        exception_value: Optional[BaseException],
-        traceback: Optional[TracebackType],
-    ) -> None:
-        """
-        Exit method to cleanup for context manager
-
-        Args:
-            exception_type: exception type being raised
-            exception_value: message from exception being raised
-            traceback: traceback from exception being raised
-
-        Returns:
-            N/A  # noqa
-
-        Raises:
-            N/A  # noqa
-
-        """
-        self.close()
+        try:
+            alive = self.transport.isalive()
+        except AttributeError:
+            alive = False
+        return alive

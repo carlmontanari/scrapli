@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 import nssh
+from nssh.driver.core.cisco_iosxe import PRIVS as CISCO_IOSXE_PRIVS
 
 from .core.cisco_iosxe.helper import clean_output_data
 
@@ -57,4 +58,52 @@ def test_channel_send_inputs_interact(base_driver, driver, test):
     results = conn.channel.send_inputs_interact(test["inputs"])
     cleaned_result = clean_output_data(test, results[0].result)
     assert cleaned_result == test["outputs"][0]
+    conn.close()
+
+
+@pytest.mark.parametrize(
+    "test",
+    [t for t in CISCO_IOSXE_TEST_CASES["send_commands"]["tests"]],
+    ids=[n["name"] for n in CISCO_IOSXE_TEST_CASES["send_commands"]["tests"]],
+)
+@pytest.mark.parametrize(
+    "driver", ["system", "ssh2", "paramiko"], ids=["system", "ssh2", "paramiko"]
+)
+def test_send_commands(network_driver, driver, test):
+    conn = network_driver(**CISCO_IOSXE_DEVICE, driver=driver)
+    conn.default_desired_priv = "privilege_exec"
+    conn.privs = CISCO_IOSXE_PRIVS
+    results = conn.send_commands(test["inputs"], **test["kwargs"])
+
+    for index, result in enumerate(results):
+        cleaned_result = clean_output_data(test, result.result)
+        assert cleaned_result == test["outputs"][index]
+        if test.get("textfsm", None):
+            assert isinstance(result.structured_result, (list, dict))
+    conn.close()
+
+
+@pytest.mark.parametrize(
+    "driver", ["system", "ssh2", "paramiko"], ids=["system", "ssh2", "paramiko"]
+)
+def test__acquire_priv_escalate(network_driver, driver):
+    conn = network_driver(**CISCO_IOSXE_DEVICE, driver=driver)
+    conn.default_desired_priv = "privilege_exec"
+    conn.privs = CISCO_IOSXE_PRIVS
+    conn.acquire_priv("configuration")
+    current_priv = conn._determine_current_priv(conn.get_prompt())
+    assert current_priv.name == "configuration"
+    conn.close()
+
+
+@pytest.mark.parametrize(
+    "driver", ["system", "ssh2", "paramiko"], ids=["system", "ssh2", "paramiko"]
+)
+def test__acquire_priv_deescalate(network_driver, driver):
+    conn = network_driver(**CISCO_IOSXE_DEVICE, driver=driver)
+    conn.default_desired_priv = "privilege_exec"
+    conn.privs = CISCO_IOSXE_PRIVS
+    conn.acquire_priv("exec")
+    current_priv = conn._determine_current_priv(conn.get_prompt())
+    assert current_priv.name == "exec"
     conn.close()

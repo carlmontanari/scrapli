@@ -5,7 +5,7 @@ from typing import Optional, Tuple
 
 from nssh.driver import NSSH
 
-__version__ = "2020.01.21"
+__version__ = "2020.02.01"
 __all__ = ("NSSH",)
 
 
@@ -45,7 +45,7 @@ class DuplicateFilter(logging.Filter):
         return False
 
 
-# Setup transport logger
+# Setup channel logger
 TRANSPORT_LOG = logging.getLogger("channel")
 # Add duplicate filter to channel log
 TRANSPORT_LOG.addFilter(DuplicateFilter())

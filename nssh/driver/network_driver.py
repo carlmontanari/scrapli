@@ -1,4 +1,4 @@
-"""nssh.base"""
+"""nssh.driver.network_driver"""
 import collections
 import logging
 import re
@@ -200,6 +200,7 @@ class NetworkDriver(NSSH):
 
         Raises:
             N/A  # noqa
+
         """
         self.acquire_priv(str(self.default_desired_priv))
         results = self.channel.send_inputs(commands, strip_prompt)
@@ -226,6 +227,7 @@ class NetworkDriver(NSSH):
 
         Raises:
             N/A  # noqa
+
         """
         self.acquire_priv("configuration")
         result = self.channel.send_inputs(configs, strip_prompt)
@@ -249,6 +251,7 @@ class NetworkDriver(NSSH):
 
         Raises:
             N/A  # noqa
+
         """
         template = _textfsm_get_template(self.textfsm_platform, command)
         if isinstance(template, TextIOWrapper):
@@ -256,3 +259,31 @@ class NetworkDriver(NSSH):
             if isinstance(structured_output, (dict, list)):
                 return structured_output
         return {}
+
+    def get_prompt(self) -> str:
+        """
+        Convenience method to get device prompt from Channel
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            prompt: prompt received from channel.get_prompt
+
+        Raises:
+            N/A  # noqa
+
+        """
+        prompt: str = self.channel.get_prompt()
+        return prompt
+
+    def open(self) -> None:
+        super().open()
+        if self.session_pre_login_handler:
+            self.session_pre_login_handler(self)
+        # send disable paging if needed
+        if self.session_disable_paging:
+            if callable(self.session_disable_paging):
+                self.session_disable_paging(self)
+            else:
+                self.channel.send_inputs(self.session_disable_paging)

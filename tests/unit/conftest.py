@@ -4,6 +4,7 @@ from typing import Any, Callable, Dict, Optional, Tuple
 
 import pytest
 
+from nssh.channel import Channel
 from nssh.driver import NSSH, NetworkDriver
 from nssh.driver.core.cisco_iosxe.driver import PRIVS
 from nssh.transport.transport import Transport
@@ -50,6 +51,13 @@ class MockNetworkDriver(MockNSSH, NetworkDriver):
     def __init__(self, channel_ops, initial_bytes, *args, comms_ansi=False, **kwargs):
         super().__init__(channel_ops, initial_bytes, *args, comms_ansi=comms_ansi, **kwargs)
         self.privs = PRIVS
+
+    def open(self):
+        # Overriding "normal" network driver open method as we don't need to worry about disable
+        # paging or pre login handles; ignoring this makes the mocked file read/write pieces simpler
+        self.transport = self.transport_class(**self.transport_args)
+        self.transport.open()
+        self.channel = Channel(self.transport, **self.channel_args)
 
 
 class MockTransport(Transport):

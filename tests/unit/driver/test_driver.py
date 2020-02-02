@@ -6,6 +6,19 @@ from nssh import NSSH
 from nssh.transport import MikoTransport, SSH2Transport, SystemSSHTransport
 
 
+def test__str():
+    conn = NSSH(host="myhost")
+    assert str(conn) == "NSSH Object for host myhost"
+
+
+def test__repr():
+    conn = NSSH(host="myhost")
+    assert (
+        repr(conn)
+        == "NSSH {'host': 'myhost', 'port': 22, 'auth_username': '', 'auth_password': '********', 'auth_strict_key': True, 'auth_public_key': b'', 'timeout_socket': 5, 'timeout_ssh': 5000, 'timeout_ops': 10, 'comms_prompt_pattern': '^[a-z0-9.\\\\-@()/:]{1,32}[#>$]$', 'comms_return_char': '\\n', 'comms_ansi': False, 'session_pre_login_handler': None, 'session_disable_paging': 'terminal length 0', 'ssh_config_file': True, 'transport_class': <class 'nssh.transport.systemssh.SystemSSHTransport'>, 'transport_args': {'host': 'myhost', 'port': 22, 'timeout_socket': 5, 'timeout_ssh': 5000, 'auth_username': '', 'auth_public_key': b'', 'auth_password': '', 'auth_strict_key': True, 'comms_return_char': '\\n', 'ssh_config_file': True}, 'channel_args': {'comms_prompt_pattern': '^[a-z0-9.\\\\-@()/:]{1,32}[#>$]$', 'comms_return_char': '\\n', 'comms_ansi': False, 'timeout_ops': 10}}"
+    )
+
+
 def test_host():
     conn = NSSH(host="myhost")
     assert conn.host == "myhost"
@@ -172,7 +185,8 @@ def test_invalid_session_disable_paging():
     assert str(e.value) == "session_disable_paging should be str or callable, got <class 'int'>"
 
 
-# TODO -- add isalive and test against that!
-def test_close(mocked_channel):
+def test_isalive(mocked_channel):
+    # mocked channel always returns true so this is not a great test
     conn = mocked_channel([])
-    conn.close()
+    conn.open()
+    assert conn.isalive() is True

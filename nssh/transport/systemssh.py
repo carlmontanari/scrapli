@@ -22,12 +22,14 @@ LOG = getLogger("transport")
 SYSTEM_SSH_TRANSPORT_ARGS = (
     "host",
     "port",
+    "timeout_socket",
     "timeout_ssh",
     "auth_username",
     "auth_public_key",
     "auth_password",
     "auth_strict_key",
     "comms_return_char",
+    "ssh_config_file",
 )
 
 
@@ -36,13 +38,15 @@ class SystemSSHTransport(Transport):
         self,
         host: str,
         port: int = 22,
-        timeout_ssh: int = 5000,
         auth_username: str = "",
         auth_public_key: str = "",
         auth_password: str = "",
         auth_strict_key: bool = True,
+        timeout_socket: int = 5,
+        timeout_ssh: int = 5000,
         comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
         comms_return_char: str = "\n",
+        ssh_config_file: Union[str, bool] = False,
     ):  # pylint: disable=W0231
         """
         SystemSSHTransport Object
@@ -53,11 +57,12 @@ class SystemSSHTransport(Transport):
         Args:
             host: host ip/name to connect to
             port: port to connect to
-            timeout_ssh: timeout for ssh2 transport in milliseconds
             auth_username: username for authentication
             auth_public_key: path to public key for authentication
             auth_password: password for authentication
             auth_strict_key: True/False to enforce strict key checking (default is True)
+            timeout_socket: timeout for establishing socket in seconds
+            timeout_ssh: timeout for ssh transport in milliseconds
             comms_prompt_pattern: prompt pattern expected for device, same as the one provided to
                 channel -- system ssh needs to know this to know how to decide if we are properly
                 sending/receiving data -- i.e. we are not stuck at some password prompt or some
@@ -68,6 +73,8 @@ class SystemSSHTransport(Transport):
                 the channel to make sure we are authenticated and sending/receiving data. If using
                 driver, this should be passed from driver (NSSH, or IOSXE, etc.) to this Transport
                 class.
+            ssh_config_file: string to path for ssh config file, True to use default ssh config file
+                or False to ignore default ssh config file
 
         Returns:
             N/A  # noqa
@@ -78,7 +85,8 @@ class SystemSSHTransport(Transport):
         """
         self.host: str = host
         self.port: int = port
-        self.timeout_ssh: int = timeout_ssh
+        self.timeout_socket: int = timeout_socket
+        self.timeout_ssh: int = int(timeout_ssh / 1000)
         self.session_lock: Lock = Lock()
         self.auth_username: str = auth_username
         self.auth_public_key: str = auth_public_key
@@ -86,6 +94,7 @@ class SystemSSHTransport(Transport):
         self.auth_strict_key: bool = auth_strict_key
         self.comms_prompt_pattern: str = comms_prompt_pattern
         self.comms_return_char: str = comms_return_char
+        self.ssh_config_file: Union[str, bool] = ssh_config_file
 
         self.session: Union[Popen[bytes], PtyProcess]  # pylint: disable=E1136
         self.lib_auth_exception = NSSHAuthenticationFailed
@@ -108,14 +117,16 @@ class SystemSSHTransport(Transport):
             N/A  # noqa
 
         """
-        # TODO -- need to handle ssh config, proxy, other cli args...
         self.open_cmd.extend(["-p", str(self.port)])
+        self.open_cmd.extend(["-o", f"ConnectTimeout={self.timeout_socket}"])
         if self.auth_public_key:
             self.open_cmd.extend(["-i", self.auth_public_key])
         if self.auth_username:
             self.open_cmd.extend(["-l", self.auth_username])
         if self.auth_strict_key is False:
             self.open_cmd.extend(["-o", "StrictHostKeyChecking=no"])
+        if isinstance(self.ssh_config_file, str):
+            self.open_cmd.extend(["-F", self.ssh_config_file])
 
     def open(self) -> None:
         """
@@ -281,8 +292,7 @@ class SystemSSHTransport(Transport):
             pty_session.write(self.comms_return_char.encode())
             fd_ready, _, _ = select([pty_session.fd], [], [], 0)
             if pty_session.fd in fd_ready:
-                # TODO -- it seems that i need two reads here...? doesn't seem to be a problem
-                #  elsewhere though...? not sure whats going on
+                # unclear as to why there needs to be two read operations here, but fails w/out it
                 pty_session.read()
                 output = pty_session.read()
                 # we do not need to deal w/ line replacement for the actual output, only for
@@ -396,7 +406,7 @@ class SystemSSHTransport(Transport):
 
         """
         if isinstance(self.session, Popen):
-            # TODO -- is this ok? should i read off the channel?
+            # flush seems to be unnecessary for Popen sessions
             pass
         elif isinstance(self.session, PtyProcess):
             self.session.flush()
@@ -415,7 +425,6 @@ class SystemSSHTransport(Transport):
             N/A  # noqa
 
         """
-        # TODO would be good to be able to set this?? Or is it unnecessary for popen??
 
     def set_blocking(self, blocking: bool = False) -> None:
         """
