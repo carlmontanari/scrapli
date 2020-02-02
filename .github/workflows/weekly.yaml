@@ -1,4 +1,4 @@
-name: weekly linting and unit tests
+name: Weekly Build
 
 on:
   schedule:
