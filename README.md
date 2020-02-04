@@ -59,7 +59,7 @@ The final piece of nssh is the actual "driver" -- or the component that binds th
   - [Native and Platform Drivers Examples](#native-and-platform-drivers-examples)
   - [Platform Regex](#platform-regex)
   - [Basic Operations -- Sending and Receiving](#basic-operations----sending-and-receiving)
-  - [Result Objects](#result-objects)
+  - [Response Objects](#response-objects)
   - [Handling Prompts](#handling-prompts)
   - [Driver Privilege Levels](#driver-privilege-levels)
   - [Sending Configurations](#sending-configurations)
@@ -140,6 +140,20 @@ git clone https://github.com/carlmontanari/nssh
 cd nssh
 python setup.py install
 ```
+
+nssh has made an effort to have as few dependencies as possible. The "core" of nssh can run with nothing other than
+ standard library! If you wish to use paramiko or ssh2-python as a driver, however, you of course need to install
+  those. This can be done with pip:
+
+```
+pip install nssh[paramiko]
+```
+
+The available optional installation options are:
+
+- paramiko
+- ssh2 (ssh2-python)
+- textfsm (textfsm and ntc-templates)
 
 As for platforms to *run* nssh on -- it has and will be tested on MacOS and Ubuntu regularly and should work on any
  POSIX system.
@@ -244,9 +258,9 @@ with IOSXEDriver(**my_device) as conn:
 ```
 
 
-## Result Objects
+## Response Objects
 
-All read operations result in a `Result` object being created. The `Result` object contains attributes for the command
+All read operations result in a `Response` object being created. The `Response` object contains attributes for the command
  sent (`channel_input`), start/end/elapsed time, and of course the result of the command sent.
 
 ```python
@@ -262,21 +276,37 @@ with IOSXEDriver(**my_device) as conn:
 
 ## Handling Prompts
 
-In some cases you may need to run an "interactive" command on your device. The `send_inputs_interact` method can be
- used to handle these situations. This method accepts a tuple containing the initial input (command) to send, the
-  expected prompt after the initial send, the response to that prompt, and the final expected prompt -- basically
-   telling nssh when it is done with the interactive command. In the below example the expectation is that the
-    current/base prompt is the final expected prompt, so we can simply call the `get_prompt` method to snag that
-     directly off the router.
+In some cases you may need to run an "interactive" command on your device. The `channel.send_inputs_interact` method
+ can be used to handle these situations if using the base `NSSH` driver -- if using the `NetworkBase` or any of the
+  platform drivers, the `send_interactive` method can be used to accomplish this -- `send_interactive` is just a thin
+   wrapper around the `channel.send_inputs_interact` method for convenience (not having to call a channel method
+    basically). This method accepts a tuple containing the initial input (command) to send, the expected prompt after
+     the initial send, the response to that prompt, and the final expected prompt -- basically telling nssh when it
+      is done with the interactive command. In the below example the expectation is that the current/base prompt is
+       the final expected prompt, so we can simply call the `get_prompt` method to snag that directly off the router.
 
 ```python
-from nssh.driver.core import IOSXEDriver
+from nssh import NSSH
 
 my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password": "VR-netlab9"}
 interact = ["clear logging", "Clear logging buffer [confirm]", "\n"]
 
-with IOSXEDriver(**my_device) as conn:
+with NSSH(**my_device) as conn:
     interactive = conn.channel.send_inputs_interact(
+                ("clear logging", "Clear logging buffer [confirm]", "\n", conn.get_prompt())
+            )
+```
+
+Or with the `NetworkDriver` or any platform driver:
+
+```python
+from nssh.driver import NetworkDriver
+
+my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password": "VR-netlab9"}
+interact = ["clear logging", "Clear logging buffer [confirm]", "\n"]
+
+with NetworkDriver(**my_device) as conn:
+    interactive = conn.send_interactive(
                 ("clear logging", "Clear logging buffer [confirm]", "\n", conn.get_prompt())
             )
 ```
@@ -345,7 +375,7 @@ with IOSXEDriver(**my_device) as conn:
 
 nssh supports parsing output with TextFSM. This of course requires installing TextFSM and having ntc-templates
  somewhere on your system. When using a driver you can pass `textfsm=True` to the `send_commands` method to
-  automatically try to parse all output. Parsed/structured output is stored in the `Result` object in the
+  automatically try to parse all output. Parsed/structured output is stored in the `Response` object in the
    `structured_result` attribute. Alternatively you can use the `textfsm_parse_output` method of the driver to parse
     output in a more manual fashion. This method accepts the string command (channel_input) and the text result and
      returns structured data; the driver is already configured with the ntc-templates device type to find the correct
@@ -556,7 +586,8 @@ The docker-compose file here will be looking for the container images matching t
 nsshciscoiosxe
 nsshcisconxos
 nsshciscoiosxr
-nsshciscojunos
+nssharistaeos
+nsshjuniperjunos
 ```
 
 You can tag the image names on creation (following the vrnetlab readme docs), or create a new tag once the image is built:

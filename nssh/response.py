@@ -3,18 +3,19 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
 
-class Result:
+class Response:
     def __init__(
         self,
         host: str,
         channel_input: str,
+        platform: Optional[str] = None,
         expectation: Optional[str] = None,
-        response: Optional[str] = None,
+        channel_response: Optional[str] = None,
         finale: Optional[str] = None,
         failed_when_contains: Optional[List[str]] = None,
     ):
         """
-        NSSH Result
+        NSSH Response
 
         Store channel_input, resulting output, and start/end/elapsed time information. Attempt to
         determine if command was successful or not and reflect that in a failed attribute.
@@ -22,9 +23,11 @@ class Result:
         Args:
             host: host that was operated on
             channel_input: input that got sent down the channel
+            platform: ntc-templates friendly platform type
             expectation: used for send_inputs_interact -- string to expect back from the channel
                 after initial input
-            response: used for send_inputs_interact -- string to use to respond to expected prompt
+            channel_response: used for send_inputs_interact -- string to use to respond to expected
+                prompt
             finale: string of prompt to look for to know when "done" with interaction
             failed_when_contains: list of strings that, if present in final output, represent a
                 failed command/interaction
@@ -42,8 +45,9 @@ class Result:
         self.elapsed_time: Optional[float] = None
 
         self.channel_input = channel_input
+        self.platform = platform
         self.expectation = expectation
-        self.response = response
+        self.channel_response = channel_response
         self.finale = finale
         self.raw_result: str = ""
         self.result: str = ""
@@ -84,7 +88,7 @@ class Result:
             N/A  # noqa
 
         """
-        return f"SSH2NetResponse <Success: {str(not self.failed)}>"
+        return f"NSSH <Success: {str(not self.failed)}>"
 
     def __str__(self) -> str:
         """
@@ -100,9 +104,9 @@ class Result:
             N/A  # noqa
 
         """
-        return f"SSH2NetResponse <Success: {str(not self.failed)}>"
+        return f"NSSH <Success: {str(not self.failed)}>"
 
-    def record_result(self, result: str) -> None:
+    def record_response(self, result: str) -> None:
         """
         Record channel_input results and elapsed time of channel input/reading output
 
@@ -121,3 +125,19 @@ class Result:
         self.result = result
         # update failed to false after recording results
         self.failed = False
+
+    def textfsm_parse(self) -> None:
+        """
+        Parse results with textfsm, assign result to `structured_result`
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            structured_result: textfsm parsed result or empty list
+
+        Raises:
+            N/A  # noqa
+
+        """
+        # TODO

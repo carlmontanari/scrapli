@@ -275,7 +275,7 @@ __all__ = (&#34;Channel&#34;, &#34;CHANNEL_ARGS&#34;)</code></pre>
 
     def send_inputs(
         self, inputs: Union[str, List[str], Tuple[str]], strip_prompt: bool = True
-    ) -&gt; List[Result]:
+    ) -&gt; List[Response]:
         &#34;&#34;&#34;
         Primary entry point to send data to devices in shell mode; accept inputs and return results
 
@@ -284,7 +284,7 @@ __all__ = (&#34;Channel&#34;, &#34;CHANNEL_ARGS&#34;)</code></pre>
             strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
 
         Returns:
-            results: list of Result object(s)
+            responses: list of Response object(s)
 
         Raises:
             N/A  # noqa
@@ -294,14 +294,14 @@ __all__ = (&#34;Channel&#34;, &#34;CHANNEL_ARGS&#34;)</code></pre>
             raw_inputs = tuple(inputs)
         else:
             raw_inputs = (inputs,)
-        results = []
+        responses = []
         for channel_input in raw_inputs:
-            result = Result(self.transport.host, channel_input)
+            response = Response(self.transport.host, channel_input)
             raw_result, processed_result = self._send_input(channel_input, strip_prompt)
-            result.raw_result = raw_result.decode()
-            result.record_result(processed_result.decode().strip())
-            results.append(result)
-        return results
+            response.raw_result = raw_result.decode()
+            response.record_response(processed_result.decode().strip())
+            responses.append(response)
+        return responses
 
     @operation_timeout(&#34;timeout_ops&#34;)
     def _send_input(self, channel_input: str, strip_prompt: bool) -&gt; Tuple[bytes, bytes]:
@@ -334,7 +334,7 @@ __all__ = (&#34;Channel&#34;, &#34;CHANNEL_ARGS&#34;)</code></pre>
 
     def send_inputs_interact(
         self, inputs: Union[List[str], Tuple[str, str, str, str]], hidden_response: bool = False,
-    ) -&gt; List[Result]:
+    ) -&gt; List[Response]:
         &#34;&#34;&#34;
         Send inputs in an interactive fashion; used to handle prompts
 
@@ -348,12 +348,13 @@ __all__ = (&#34;Channel&#34;, &#34;CHANNEL_ARGS&#34;)</code></pre>
             inputs: list or tuple containing strings representing:
                 initial input
                 expectation (what should nssh expect after input)
-                response (response to expectation)
+                channel_response: string what to respond to the &#34;expectation&#34;, or empty string to
+                    send return character only
                 finale (what should nssh expect when &#34;done&#34;)
             hidden_response: True/False response is hidden (i.e. password input)
 
         Returns:
-            N/A  # noqa
+            responses: list of NSSH Respons objects
 
         Raises:
             N/A  # noqa
@@ -362,23 +363,25 @@ __all__ = (&#34;Channel&#34;, &#34;CHANNEL_ARGS&#34;)</code></pre>
         if not isinstance(inputs, (list, tuple)):
             raise TypeError(f&#34;send_inputs_interact expects a List or Tuple, got {type(inputs)}&#34;)
         input_stages = (inputs,)
-        results = []
-        for channel_input, expectation, response, finale in input_stages:
-            result = Result(self.transport.host, channel_input, expectation, response, finale)
-            raw_result, processed_result = self._send_input_interact(
-                channel_input, expectation, response, finale, hidden_response
+        responses = []
+        for channel_input, expectation, channel_response, finale in input_stages:
+            response = Response(
+                self.transport.host, channel_input, expectation, channel_response, finale
             )
-            result.raw_result = raw_result.decode()
-            result.record_result(processed_result.decode().strip())
-            results.append(result)
-        return results
+            raw_result, processed_result = self._send_input_interact(
+                channel_input, expectation, channel_response, finale, hidden_response
+            )
+            response.raw_result = raw_result.decode()
+            response.record_response(processed_result.decode().strip())
+            responses.append(response)
+        return responses
 
     @operation_timeout(&#34;timeout_ops&#34;)
     def _send_input_interact(
         self,
         channel_input: str,
         expectation: str,
-        response: str,
+        channel_response: str,
         finale: str,
         hidden_response: bool = False,
     ) -&gt; Tuple[bytes, bytes]:
@@ -388,7 +391,8 @@ __all__ = (&#34;Channel&#34;, &#34;CHANNEL_ARGS&#34;)</code></pre>
         Args:
             channel_input: string input to write to channel
             expectation: string of what to expect from channel
-            response: string what to respond to the &#34;expectation&#34;
+            channel_response: string what to respond to the &#34;expectation&#34;, or empty string to send
+                return character only
             finale: string of prompt to look for to know when &#34;done&#34;
             hidden_response: True/False response is hidden (i.e. password input)
 
@@ -405,7 +409,7 @@ __all__ = (&#34;Channel&#34;, &#34;CHANNEL_ARGS&#34;)</code></pre>
         LOG.debug(
             f&#34;Attempting to send input interact: {channel_input}; &#34;
             f&#34;\texpecting: {expectation};&#34;
-            f&#34;\tresponding: {response};&#34;
+            f&#34;\tresponding: {channel_response};&#34;
             f&#34;\twith a finale: {finale};&#34;
             f&#34;\thidden_response: {hidden_response}&#34;
         )
@@ -416,11 +420,11 @@ __all__ = (&#34;Channel&#34;, &#34;CHANNEL_ARGS&#34;)</code></pre>
         output = self._read_until_prompt(prompt=expectation)
         # if response is simply a return; add that so it shows in output likewise if response is
         # &#34;hidden&#34; (i.e. password input), add return, otherwise, skip
-        if not response:
+        if not channel_response:
             output += self.comms_return_char.encode()
         elif hidden_response is True:
             output += self.comms_return_char.encode()
-        self.transport.write(response)
+        self.transport.write(channel_response)
         LOG.debug(f&#34;Write: {repr(channel_input)}&#34;)
         self._send_return()
         LOG.debug(f&#34;Write (sending return character): {repr(self.comms_return_char)}&#34;)
@@ -488,8 +492,8 @@ __all__ = (&#34;Channel&#34;, &#34;CHANNEL_ARGS&#34;)</code></pre>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>results</code></strong></dt>
-<dd>list of Result object(s)</dd>
+<dt><strong><code>responses</code></strong></dt>
+<dd>list of Response object(s)</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
@@ -503,7 +507,7 @@ __all__ = (&#34;Channel&#34;, &#34;CHANNEL_ARGS&#34;)</code></pre>
 </summary>
 <pre><code class="python">def send_inputs(
     self, inputs: Union[str, List[str], Tuple[str]], strip_prompt: bool = True
-) -&gt; List[Result]:
+) -&gt; List[Response]:
     &#34;&#34;&#34;
     Primary entry point to send data to devices in shell mode; accept inputs and return results
 
@@ -512,7 +516,7 @@ __all__ = (&#34;Channel&#34;, &#34;CHANNEL_ARGS&#34;)</code></pre>
         strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
 
     Returns:
-        results: list of Result object(s)
+        responses: list of Response object(s)
 
     Raises:
         N/A  # noqa
@@ -522,14 +526,14 @@ __all__ = (&#34;Channel&#34;, &#34;CHANNEL_ARGS&#34;)</code></pre>
         raw_inputs = tuple(inputs)
     else:
         raw_inputs = (inputs,)
-    results = []
+    responses = []
     for channel_input in raw_inputs:
-        result = Result(self.transport.host, channel_input)
+        response = Response(self.transport.host, channel_input)
         raw_result, processed_result = self._send_input(channel_input, strip_prompt)
-        result.raw_result = raw_result.decode()
-        result.record_result(processed_result.decode().strip())
-        results.append(result)
-    return results</code></pre>
+        response.raw_result = raw_result.decode()
+        response.record_response(processed_result.decode().strip())
+        responses.append(response)
+    return responses</code></pre>
 </details>
 </dd>
 <dt id="nssh.channel.Channel.send_inputs_interact"><code class="name flex">
@@ -547,16 +551,16 @@ returns the results of the interaction</p>
 <dd>list or tuple containing strings representing:
 initial input
 expectation (what should nssh expect after input)
-response (response to expectation)
+channel_response: string what to respond to the "expectation", or empty string to
+send return character only
 finale (what should nssh expect when "done")</dd>
 <dt><strong><code>hidden_response</code></strong></dt>
 <dd>True/False response is hidden (i.e. password input)</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>N</code>/<code>A</code>
-# <code>noqa</code></dt>
-<dd>&nbsp;</dd>
+<dt><strong><code>responses</code></strong></dt>
+<dd>list of NSSH Respons objects</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
@@ -570,7 +574,7 @@ finale (what should nssh expect when "done")</dd>
 </summary>
 <pre><code class="python">def send_inputs_interact(
     self, inputs: Union[List[str], Tuple[str, str, str, str]], hidden_response: bool = False,
-) -&gt; List[Result]:
+) -&gt; List[Response]:
     &#34;&#34;&#34;
     Send inputs in an interactive fashion; used to handle prompts
 
@@ -584,12 +588,13 @@ finale (what should nssh expect when "done")</dd>
         inputs: list or tuple containing strings representing:
             initial input
             expectation (what should nssh expect after input)
-            response (response to expectation)
+            channel_response: string what to respond to the &#34;expectation&#34;, or empty string to
+                send return character only
             finale (what should nssh expect when &#34;done&#34;)
         hidden_response: True/False response is hidden (i.e. password input)
 
     Returns:
-        N/A  # noqa
+        responses: list of NSSH Respons objects
 
     Raises:
         N/A  # noqa
@@ -598,16 +603,18 @@ finale (what should nssh expect when "done")</dd>
     if not isinstance(inputs, (list, tuple)):
         raise TypeError(f&#34;send_inputs_interact expects a List or Tuple, got {type(inputs)}&#34;)
     input_stages = (inputs,)
-    results = []
-    for channel_input, expectation, response, finale in input_stages:
-        result = Result(self.transport.host, channel_input, expectation, response, finale)
-        raw_result, processed_result = self._send_input_interact(
-            channel_input, expectation, response, finale, hidden_response
+    responses = []
+    for channel_input, expectation, channel_response, finale in input_stages:
+        response = Response(
+            self.transport.host, channel_input, expectation, channel_response, finale
         )
-        result.raw_result = raw_result.decode()
-        result.record_result(processed_result.decode().strip())
-        results.append(result)
-    return results</code></pre>
+        raw_result, processed_result = self._send_input_interact(
+            channel_input, expectation, channel_response, finale, hidden_response
+        )
+        response.raw_result = raw_result.decode()
+        response.record_response(processed_result.decode().strip())
+        responses.append(response)
+    return responses</code></pre>
 </details>
 </dd>
 </dl>

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.7.4" />
-<title>nssh.result API documentation</title>
+<title>nssh.response API documentation</title>
 <meta name="description" content="nssh.response" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
@@ -17,7 +17,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>nssh.result</code></h1>
+<h1 class="title">Module <code>nssh.response</code></h1>
 </header>
 <section id="section-intro">
 <p>nssh.response</p>
@@ -35,8 +35,9 @@ class Response:
         self,
         host: str,
         channel_input: str,
+        platform: Optional[str] = None,
         expectation: Optional[str] = None,
-        response: Optional[str] = None,
+        channel_response: Optional[str] = None,
         finale: Optional[str] = None,
         failed_when_contains: Optional[List[str]] = None,
     ):
@@ -49,9 +50,11 @@ class Response:
         Args:
             host: host that was operated on
             channel_input: input that got sent down the channel
+            platform: ntc-templates friendly platform type
             expectation: used for send_inputs_interact -- string to expect back from the channel
                 after initial input
-            response: used for send_inputs_interact -- string to use to respond to expected prompt
+            channel_response: used for send_inputs_interact -- string to use to respond to expected
+                prompt
             finale: string of prompt to look for to know when &#34;done&#34; with interaction
             failed_when_contains: list of strings that, if present in final output, represent a
                 failed command/interaction
@@ -69,8 +72,9 @@ class Response:
         self.elapsed_time: Optional[float] = None
 
         self.channel_input = channel_input
+        self.platform = platform
         self.expectation = expectation
-        self.response = response
+        self.channel_response = channel_response
         self.finale = finale
         self.raw_result: str = &#34;&#34;
         self.result: str = &#34;&#34;
@@ -111,7 +115,7 @@ class Response:
             N/A  # noqa
 
         &#34;&#34;&#34;
-        return f&#34;SSH2NetResponse &lt;Success: {str(not self.failed)}&gt;&#34;
+        return f&#34;NSSH &lt;Success: {str(not self.failed)}&gt;&#34;
 
     def __str__(self) -&gt; str:
         &#34;&#34;&#34;
@@ -127,7 +131,7 @@ class Response:
             N/A  # noqa
 
         &#34;&#34;&#34;
-        return f&#34;SSH2NetResponse &lt;Success: {str(not self.failed)}&gt;&#34;
+        return f&#34;NSSH &lt;Success: {str(not self.failed)}&gt;&#34;
 
     def record_response(self, result: str) -&gt; None:
         &#34;&#34;&#34;
@@ -147,7 +151,23 @@ class Response:
         self.elapsed_time = (self.finish_time - self.start_time).total_seconds()
         self.result = result
         # update failed to false after recording results
-        self.failed = False</code></pre>
+        self.failed = False
+
+    def textfsm_parse(self) -&gt; None:
+        &#34;&#34;&#34;
+        Parse results with textfsm, assign result to `structured_result`
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            structured_result: textfsm parsed result or empty list
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;
+        # TODO</code></pre>
 </details>
 </section>
 <section>
@@ -159,9 +179,9 @@ class Response:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="nssh.result.Response"><code class="flex name class">
+<dt id="nssh.response.Response"><code class="flex name class">
 <span>class <span class="ident">Response</span></span>
-<span>(</span><span>host, channel_input, expectation=None, response=None, finale=None, failed_when_contains=None)</span>
+<span>(</span><span>host, channel_input, platform=None, expectation=None, channel_response=None, finale=None, failed_when_contains=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>NSSH Response</p>
@@ -173,11 +193,14 @@ determine if command was successful or not and reflect that in a failed attribut
 <dd>host that was operated on</dd>
 <dt><strong><code>channel_input</code></strong></dt>
 <dd>input that got sent down the channel</dd>
+<dt><strong><code>platform</code></strong></dt>
+<dd>ntc-templates friendly platform type</dd>
 <dt><strong><code>expectation</code></strong></dt>
 <dd>used for send_inputs_interact &ndash; string to expect back from the channel
 after initial input</dd>
-<dt><strong><code>response</code></strong></dt>
-<dd>used for send_inputs_interact &ndash; string to use to respond to expected prompt</dd>
+<dt><strong><code>channel_response</code></strong></dt>
+<dd>used for send_inputs_interact &ndash; string to use to respond to expected
+prompt</dd>
 <dt><strong><code>finale</code></strong></dt>
 <dd>string of prompt to look for to know when "done" with interaction</dd>
 <dt><strong><code>failed_when_contains</code></strong></dt>
@@ -205,8 +228,9 @@ failed command/interaction</dd>
         self,
         host: str,
         channel_input: str,
+        platform: Optional[str] = None,
         expectation: Optional[str] = None,
-        response: Optional[str] = None,
+        channel_response: Optional[str] = None,
         finale: Optional[str] = None,
         failed_when_contains: Optional[List[str]] = None,
     ):
@@ -219,9 +243,11 @@ failed command/interaction</dd>
         Args:
             host: host that was operated on
             channel_input: input that got sent down the channel
+            platform: ntc-templates friendly platform type
             expectation: used for send_inputs_interact -- string to expect back from the channel
                 after initial input
-            response: used for send_inputs_interact -- string to use to respond to expected prompt
+            channel_response: used for send_inputs_interact -- string to use to respond to expected
+                prompt
             finale: string of prompt to look for to know when &#34;done&#34; with interaction
             failed_when_contains: list of strings that, if present in final output, represent a
                 failed command/interaction
@@ -239,8 +265,9 @@ failed command/interaction</dd>
         self.elapsed_time: Optional[float] = None
 
         self.channel_input = channel_input
+        self.platform = platform
         self.expectation = expectation
-        self.response = response
+        self.channel_response = channel_response
         self.finale = finale
         self.raw_result: str = &#34;&#34;
         self.result: str = &#34;&#34;
@@ -281,7 +308,7 @@ failed command/interaction</dd>
             N/A  # noqa
 
         &#34;&#34;&#34;
-        return f&#34;SSH2NetResponse &lt;Success: {str(not self.failed)}&gt;&#34;
+        return f&#34;NSSH &lt;Success: {str(not self.failed)}&gt;&#34;
 
     def __str__(self) -&gt; str:
         &#34;&#34;&#34;
@@ -297,7 +324,7 @@ failed command/interaction</dd>
             N/A  # noqa
 
         &#34;&#34;&#34;
-        return f&#34;SSH2NetResponse &lt;Success: {str(not self.failed)}&gt;&#34;
+        return f&#34;NSSH &lt;Success: {str(not self.failed)}&gt;&#34;
 
     def record_response(self, result: str) -&gt; None:
         &#34;&#34;&#34;
@@ -317,11 +344,26 @@ failed command/interaction</dd>
         self.elapsed_time = (self.finish_time - self.start_time).total_seconds()
         self.result = result
         # update failed to false after recording results
-        self.failed = False</code></pre>
+        self.failed = False
+
+    def textfsm_parse(self) -&gt; None:
+        &#34;&#34;&#34;
+        Parse results with textfsm, assign result to `structured_result`
+
+        Args:
+            N/A  # noqa
+
+        Returns:
+            structured_result: textfsm parsed result or empty list
+
+        Raises:
+            N/A  # noqa
+
+        &#34;&#34;&#34;</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
-<dt id="nssh.result.Response.record_response"><code class="name flex">
+<dt id="nssh.response.Response.record_response"><code class="name flex">
 <span>def <span class="ident">record_response</span></span>(<span>self, result)</span>
 </code></dt>
 <dd>
@@ -368,6 +410,45 @@ failed command/interaction</dd>
     self.failed = False</code></pre>
 </details>
 </dd>
+<dt id="nssh.response.Response.textfsm_parse"><code class="name flex">
+<span>def <span class="ident">textfsm_parse</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Parse results with textfsm, assign result to <code>structured_result</code></p>
+<h2 id="args">Args</h2>
+<p>N/A
+# noqa</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>structured_result</code></strong></dt>
+<dd>textfsm parsed result or empty list</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def textfsm_parse(self) -&gt; None:
+    &#34;&#34;&#34;
+    Parse results with textfsm, assign result to `structured_result`
+
+    Args:
+        N/A  # noqa
+
+    Returns:
+        structured_result: textfsm parsed result or empty list
+
+    Raises:
+        N/A  # noqa
+
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
 </dl>
 </dd>
 </dl>
@@ -387,9 +468,10 @@ failed command/interaction</dd>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="nssh.result.Response" href="#nssh.result.Response">Response</a></code></h4>
+<h4><code><a title="nssh.response.Response" href="#nssh.response.Response">Response</a></code></h4>
 <ul class="">
-<li><code><a title="nssh.result.Response.record_response" href="#nssh.result.Response.record_response">record_response</a></code></li>
+<li><code><a title="nssh.response.Response.record_response" href="#nssh.response.Response.record_response">record_response</a></code></li>
+<li><code><a title="nssh.response.Response.textfsm_parse" href="#nssh.response.Response.textfsm_parse">textfsm_parse</a></code></li>
 </ul>
 </li>
 </ul>

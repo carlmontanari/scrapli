@@ -8,7 +8,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from nssh.driver.driver import NSSH
 from nssh.exceptions import CouldNotAcquirePrivLevel, UnknownPrivLevel
 from nssh.helper import _textfsm_get_template, get_prompt_pattern, textfsm_parse
-from nssh.result import Result
+from nssh.response import Response
 from nssh.transport import (
     MIKO_TRANSPORT_ARGS,
     SSH2_TRANSPORT_ARGS,
@@ -219,7 +219,7 @@ class NetworkDriver(NSSH):
 
     def send_commands(
         self, commands: Union[str, List[str]], strip_prompt: bool = True, textfsm: bool = False,
-    ) -> List[Result]:
+    ) -> List[Response]:
         """
         Send command(s)
 
@@ -229,25 +229,25 @@ class NetworkDriver(NSSH):
             textfsm: True/False try to parse each command with textfsm
 
         Returns:
-            results: list of SSH2NetResult objects
+            responses: list of NSSH Response objects
 
         Raises:
             N/A  # noqa
 
         """
         self.acquire_priv(str(self.default_desired_priv))
-        results = self.channel.send_inputs(commands, strip_prompt)
+        responses = self.channel.send_inputs(commands, strip_prompt)
         if not textfsm:
-            return results
-        for result in results:
-            result.structured_result = self.textfsm_parse_output(
-                result.channel_input, result.result
+            return responses
+        for response in responses:
+            response.structured_result = self.textfsm_parse_output(
+                response.channel_input, response.result
             )
-        return results
+        return responses
 
     def send_interactive(
         self, inputs: Union[List[str], Tuple[str, str, str, str]], hidden_response: bool = False,
-    ) -> List[Result]:
+    ) -> List[Response]:
         """
         Send inputs in an interactive fashion; used to handle prompts
 
@@ -261,24 +261,25 @@ class NetworkDriver(NSSH):
             inputs: list or tuple containing strings representing:
                 initial input
                 expectation (what should nssh expect after input)
-                response (response to expectation)
+                channel_response: string what to respond to the "expectation", or empty string to
+                    send return character only
                 finale (what should nssh expect when "done")
             hidden_response: True/False response is hidden (i.e. password input)
 
         Returns:
-            N/A  # noqa
+            responses: List of NSSH Response objects
 
         Raises:
             N/A  # noqa
 
         """
         self.acquire_priv(str(self.default_desired_priv))
-        results = self.channel.send_inputs_interact(inputs, hidden_response)
-        return results
+        responses = self.channel.send_inputs_interact(inputs, hidden_response)
+        return responses
 
     def send_configs(
         self, configs: Union[str, List[str]], strip_prompt: bool = True
-    ) -> List[Result]:
+    ) -> List[Response]:
         """
         Send configuration(s)
 
@@ -287,16 +288,16 @@ class NetworkDriver(NSSH):
             strip_prompt: True/False strip prompt from returned output
 
         Returns:
-            N/A  # noqa
+            responses: List of NSSH Response objects
 
         Raises:
             N/A  # noqa
 
         """
         self.acquire_priv("configuration")
-        result = self.channel.send_inputs(configs, strip_prompt)
+        responses = self.channel.send_inputs(configs, strip_prompt)
         self.acquire_priv(str(self.default_desired_priv))
-        return result
+        return responses
 
     def textfsm_parse_output(
         self, command: str, output: str
