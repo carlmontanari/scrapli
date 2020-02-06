@@ -2,12 +2,11 @@
 import logging
 import re
 from dataclasses import dataclass
-from io import TextIOWrapper
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from nssh.driver.driver import NSSH
 from nssh.exceptions import CouldNotAcquirePrivLevel, UnknownPrivLevel
-from nssh.helper import _textfsm_get_template, get_prompt_pattern, textfsm_parse
+from nssh.helper import get_prompt_pattern
 from nssh.response import Response
 from nssh.transport import (
     MIKO_TRANSPORT_ARGS,
@@ -218,7 +217,7 @@ class NetworkDriver(NSSH):
             priv_attempt_counter += 1
 
     def send_commands(
-        self, commands: Union[str, List[str]], strip_prompt: bool = True, textfsm: bool = False,
+        self, commands: Union[str, List[str]], strip_prompt: bool = True
     ) -> List[Response]:
         """
         Send command(s)
@@ -226,23 +225,22 @@ class NetworkDriver(NSSH):
         Args:
             commands: string or list of strings to send to device in privilege exec mode
             strip_prompt: True/False strip prompt from returned output
-            textfsm: True/False try to parse each command with textfsm
 
         Returns:
             responses: list of NSSH Response objects
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         self.acquire_priv(str(self.default_desired_priv))
         responses = self.channel.send_inputs(commands, strip_prompt)
-        if not textfsm:
-            return responses
+
+        # update the response objects with textfsm platform; we do this here because the underlying
+        #  channel doesn't know or care about platforms
         for response in responses:
-            response.structured_result = self.textfsm_parse_output(
-                response.channel_input, response.result
-            )
+            response.textfsm_platform = self.textfsm_platform
+
         return responses
 
     def send_interactive(
@@ -298,32 +296,6 @@ class NetworkDriver(NSSH):
         responses = self.channel.send_inputs(configs, strip_prompt)
         self.acquire_priv(str(self.default_desired_priv))
         return responses
-
-    def textfsm_parse_output(
-        self, command: str, output: str
-    ) -> Union[List[Union[List[Any], Dict[str, Any]]], Dict[str, Any]]:
-        """
-        Parse output with TextFSM and ntc-templates
-
-        Always return a non-string value -- if parsing fails to produce list/dict, return empty dict
-
-        Args:
-            command: command used to get output
-            output: output from command
-
-        Returns:
-            output: parsed output
-
-        Raises:
-            N/A  # noqa
-
-        """
-        template = _textfsm_get_template(self.textfsm_platform, command)
-        if isinstance(template, TextIOWrapper):
-            structured_output = textfsm_parse(template, output)
-            if isinstance(structured_output, (dict, list)):
-                return structured_output
-        return {}
 
     def get_prompt(self) -> str:
         """

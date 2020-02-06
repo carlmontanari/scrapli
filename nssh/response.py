@@ -1,6 +1,9 @@
 """nssh.response"""
 from datetime import datetime
+from io import TextIOWrapper
 from typing import Any, Dict, List, Optional, Union
+
+from nssh.helper import _textfsm_get_template, textfsm_parse
 
 
 class Response:
@@ -8,7 +11,7 @@ class Response:
         self,
         host: str,
         channel_input: str,
-        platform: Optional[str] = None,
+        textfsm_platform: str = "",
         expectation: Optional[str] = None,
         channel_response: Optional[str] = None,
         finale: Optional[str] = None,
@@ -45,7 +48,7 @@ class Response:
         self.elapsed_time: Optional[float] = None
 
         self.channel_input = channel_input
-        self.platform = platform
+        self.textfsm_platform = textfsm_platform
         self.expectation = expectation
         self.channel_response = channel_response
         self.finale = finale
@@ -63,13 +66,13 @@ class Response:
         Magic bool method based on channel_input being failed or not
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
             bool: True/False if channel_input failed
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         return self.failed
@@ -79,13 +82,13 @@ class Response:
         Magic repr method for SSH2NetResponse class
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            repr: repr for class object
+            str: repr for class object
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         return f"NSSH <Success: {str(not self.failed)}>"
@@ -95,13 +98,13 @@ class Response:
         Magic str method for SSH2NetResponse class
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            N/A  # noqa
+            str: str for class object
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         return f"NSSH <Success: {str(not self.failed)}>"
@@ -117,7 +120,7 @@ class Response:
             N/A  # noqa
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         self.finish_time = datetime.now()
@@ -126,18 +129,22 @@ class Response:
         # update failed to false after recording results
         self.failed = False
 
-    def textfsm_parse(self) -> None:
+    def textfsm_parse_output(self) -> None:
         """
         Parse results with textfsm, assign result to `structured_result`
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            structured_result: textfsm parsed result or empty list
-
-        Raises:
             N/A  # noqa
 
+        Raises:
+            N/A
+
         """
-        # TODO
+        template = _textfsm_get_template(self.textfsm_platform, self.channel_input)
+        if isinstance(template, TextIOWrapper):
+            self.structured_result = textfsm_parse(template, self.result)
+        else:
+            self.structured_result = []

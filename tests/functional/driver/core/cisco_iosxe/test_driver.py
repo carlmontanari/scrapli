@@ -28,12 +28,14 @@ TEST_CASES = {"cisco_iosxe": CISCO_IOSXE_TEST_CASES}
 )
 def test_send_commands(cisco_iosxe_driver, driver, test):
     conn = cisco_iosxe_driver(**CISCO_IOSXE_DEVICE, driver=driver)
+    try_textfsm = test["kwargs"].pop("textfsm", None)
     results = conn.send_commands(test["inputs"], **test["kwargs"])
     conn.close()
     for index, result in enumerate(results):
         cleaned_result = clean_output_data(test, result.result)
         assert cleaned_result == test["outputs"][index]
-        if test.get("textfsm", None):
+        if try_textfsm:
+            result.textfsm_parse_output()
             assert isinstance(result.structured_result, (list, dict))
 
 

@@ -73,12 +73,14 @@ def test_send_commands(network_driver, driver, test):
     conn = network_driver(**CISCO_IOSXE_DEVICE, driver=driver)
     conn.default_desired_priv = "privilege_exec"
     conn.privs = CISCO_IOSXE_PRIVS
+    try_textfsm = test["kwargs"].pop("textfsm", None)
     results = conn.send_commands(test["inputs"], **test["kwargs"])
 
     for index, result in enumerate(results):
         cleaned_result = clean_output_data(test, result.result)
         assert cleaned_result == test["outputs"][index]
-        if test.get("textfsm", None):
+        if try_textfsm:
+            result.textfsm_parse_output()
             assert isinstance(result.structured_result, (list, dict))
     conn.close()
 

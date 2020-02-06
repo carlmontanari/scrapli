@@ -42,27 +42,27 @@ test_functional:
 test_iosxe:
 	python -m pytest -v \
 	tests/unit \
-	tests/functional/cisco_iosxe
+	tests/functional/driver/core/cisco_iosxe
 
 test_nxos:
 	python -m pytest -v \
 	tests/unit \
-	tests/functional/cisco_nxos
+	tests/functional/driver/core/cisco_nxos
 
 test_iosxr:
 	python -m pytest -v \
 	tests/unit \
-	tests/functional/cisco_iosxr
+	tests/functional/driver/core/cisco_iosxr
 
 test_eos:
 	python -m pytest -v \
 	tests/unit \
-	tests/functional/arista_eos
+	tests/functional/driver/core/arista_eos
 
 test_junos:
 	python -m pytest -v \
 	tests/unit \
-	tests/functional/juniper_junos
+	tests/functional/driver/core/juniper_junos
 
 .PHONY: docs
 docs:

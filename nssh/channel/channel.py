@@ -37,15 +37,16 @@ class Channel:
             comms_prompt_pattern: raw string regex pattern -- use `^` and `$` for multi-line!
             comms_return_char: character to use to send returns to host
             comms_ansi: True/False strip comms_ansi characters from output
+            timeout_ops: timeout in seconds for channel operations (reads/writes)
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         self.transport: Transport = transport
@@ -59,13 +60,13 @@ class Channel:
         Magic str method for Channel
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            N/A  # noqa
+            str: str for class object
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         return "nssh Channel Object"
@@ -75,13 +76,13 @@ class Channel:
         Magic repr method for Channel
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            repr: repr for class object
+            str: repr for class object
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         class_dict = self.__dict__.copy()
@@ -97,10 +98,10 @@ class Channel:
             strip_prompt: bool True/False whether to strip prompt or not
 
         Returns:
-            output: bytes of joined output lines optionally with prompt removed
+            bytes: output of joined output lines optionally with prompt removed
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         output = normalize_lines(output)
@@ -118,13 +119,13 @@ class Channel:
         Private method to read chunk and strip comms_ansi if needed
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            output: output read from channel
+            bytes: output read from channel
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         new_output = self.transport.read()
@@ -141,10 +142,10 @@ class Channel:
             channel_input: string to write to channel
 
         Returns:
-            output: output read from channel
+            bytes: output read from channel
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         output = b""
@@ -161,10 +162,10 @@ class Channel:
             prompt: prompt to look for if not looking for base prompt (self.comms_prompt_pattern)
 
         Returns:
-            output: output read from channel
+            bytes: output read from channel
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         prompt_pattern = get_prompt_pattern(prompt, self.comms_prompt_pattern)
@@ -187,13 +188,13 @@ class Channel:
         Get current channel prompt
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         prompt_pattern = get_prompt_pattern("", self.comms_prompt_pattern)
@@ -224,7 +225,7 @@ class Channel:
             responses: list of Response object(s)
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         if isinstance(inputs, (list, tuple)):
@@ -253,7 +254,7 @@ class Channel:
             result: output read from the channel
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         bytes_channel_input = channel_input.encode()
@@ -273,28 +274,21 @@ class Channel:
         self, inputs: Union[List[str], Tuple[str, str, str, str]], hidden_response: bool = False,
     ) -> List[Response]:
         """
-        Send inputs in an interactive fashion; used to handle prompts
-
-        accepts inputs and looks for expected prompt;
-        sends the appropriate response, then waits for the "finale"
-        returns the results of the interaction
-
-        could be "chained" together to respond to more than a "single" staged prompt
+        Send inputs in an interactive fashion, used to handle prompts that occur after an input.
 
         Args:
-            inputs: list or tuple containing strings representing:
-                initial input
-                expectation (what should nssh expect after input)
-                channel_response: string what to respond to the "expectation", or empty string to
-                    send return character only
-                finale (what should nssh expect when "done")
+            inputs: list or tuple containing strings representing
+                channel_input - initial input to send
+                expected_prompt - prompt to expect after initial input
+                response - response to prompt
+                final_prompt - final prompt to expect
             hidden_response: True/False response is hidden (i.e. password input)
 
         Returns:
-            responses: list of NSSH Respons objects
+            responses: list of NSSH Response objects
 
         Raises:
-            N/A  # noqa
+            TypeError: if inputs is not tuple or list
 
         """
         if not isinstance(inputs, (list, tuple)):
@@ -323,21 +317,21 @@ class Channel:
         hidden_response: bool = False,
     ) -> Tuple[bytes, bytes]:
         """
-        Respond to a single "staged" prompt and return results
+        Respond to a single "staged" prompt and return results.
 
         Args:
             channel_input: string input to write to channel
             expectation: string of what to expect from channel
-            channel_response: string what to respond to the "expectation", or empty string to send
+            channel_response: string what to respond to the `expectation`, or empty string to send
                 return character only
-            finale: string of prompt to look for to know when "done"
+            finale: string of prompt to look for to know when `done`
             hidden_response: True/False response is hidden (i.e. password input)
 
         Returns:
             output: output read from the channel
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         bytes_channel_input = channel_input.encode()
@@ -375,13 +369,13 @@ class Channel:
         Send return char to device
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         self.transport.flush()
