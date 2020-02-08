@@ -50,11 +50,10 @@ class SSH2Transport(Socket, Transport):
             timeout_socket: timeout for establishing socket in seconds
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            Exception: if socket handshake fails
-            AuthenticationFailed: if all authentication means fail
+            MissingDependencies: if ssh2-python is not installed
 
         """
         self.host: str = host
@@ -97,14 +96,14 @@ class SSH2Transport(Socket, Transport):
         Parent method to open session, authenticate and acquire shell
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            Exception: if socket handshake fails
-            AuthenticationFailed: if all authentication means fail
+            exc: if socket handshake fails
+            NSSHAuthenticationFailed: if all authentication means fail
 
         """
         if not self.socket_isalive():
@@ -133,13 +132,13 @@ class SSH2Transport(Socket, Transport):
         Parent method to try all means of authentication
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         if self.auth_public_key:
@@ -163,13 +162,13 @@ class SSH2Transport(Socket, Transport):
         Attempt to authenticate with public key authentication
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            Exception: if unknown (i.e. not auth failed) exception occurs
+            exc: if unknown (i.e. not auth failed) exception occurs
 
         """
         try:
@@ -190,13 +189,13 @@ class SSH2Transport(Socket, Transport):
         Attempt to authenticate with password authentication
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            Exception: if unknown (i.e. not auth failed) exception occurs
+            exc: if unknown (i.e. not auth failed) exception occurs
 
         """
         try:
@@ -215,13 +214,13 @@ class SSH2Transport(Socket, Transport):
         Attempt to authenticate with keyboard interactive authentication
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            Exception: if unknown (i.e. not auth failed) exception occurs
+            exc: if unknown (i.e. not auth failed) exception occurs
 
         """
         try:
@@ -250,13 +249,13 @@ class SSH2Transport(Socket, Transport):
         Check if session is authenticated
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            authenticated: True if authenticated, else False
+            bool: True if authenticated, else False
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         authenticated: bool = self.session.userauth_authenticated()
@@ -267,13 +266,13 @@ class SSH2Transport(Socket, Transport):
         Open channel, acquire pty, request interactive shell
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         self.channel = self.session.open_session()
@@ -286,13 +285,13 @@ class SSH2Transport(Socket, Transport):
         Close session and socket
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         self.session_lock.acquire()
@@ -306,13 +305,13 @@ class SSH2Transport(Socket, Transport):
         Check if socket is alive and session is authenticated
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
             bool: True if socket is alive and session authenticated, else False
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         if self.socket_isalive() and not self.channel.eof() and self.isauthenticated():
@@ -324,14 +323,13 @@ class SSH2Transport(Socket, Transport):
         Read data from the channel
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            bytes_read: int of bytes read
-            output: bytes output as read from channel
+            bytes: bytes output as read from channel
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         output: bytes
@@ -346,10 +344,10 @@ class SSH2Transport(Socket, Transport):
             channel_input: string to send to channel
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         self.channel.write(channel_input)
@@ -359,13 +357,13 @@ class SSH2Transport(Socket, Transport):
         Flush channel stdout stream
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         self.channel.flush()
@@ -378,10 +376,10 @@ class SSH2Transport(Socket, Transport):
             timeout: timeout in seconds
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         if isinstance(timeout, int):
@@ -398,10 +396,10 @@ class SSH2Transport(Socket, Transport):
             blocking: True/False set session to blocking
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         self.session.set_blocking(blocking)

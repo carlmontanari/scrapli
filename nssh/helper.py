@@ -22,7 +22,7 @@ def get_prompt_pattern(prompt: str, class_prompt: str) -> Pattern[bytes]:
         output: bytes string each line right stripped
 
     Raises:
-        N/A  # noqa
+        N/A
 
     """
     check_prompt = prompt or class_prompt
@@ -45,10 +45,10 @@ def normalize_lines(output: bytes) -> bytes:
         output: bytes string to process
 
     Returns:
-        output: bytes string each line right stripped
+        bytes: bytes string each line right stripped
 
     Raises:
-        N/A  # noqa
+        N/A
 
     """
     return b"\n".join([line.rstrip() for line in output.splitlines()])
@@ -64,10 +64,10 @@ def strip_ansi(output: bytes) -> bytes:
         output: bytes from previous reads if needed
 
     Returns:
-        output: output read from channel with comms_ansi characters removed
+        bytes: bytes output read from channel with comms_ansi characters removed
 
     Raises:
-        N/A  # noqa
+        N/A
 
     """
     ansi_escape_pattern = re.compile(rb"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
@@ -86,7 +86,7 @@ def validate_external_function(possible_function: Union[Callable[..., Any], str]
         bool: True if provided string/callable is valid function, else False
 
     Raises:
-        N/A  # noqa
+        N/A
 
     """
     try:
@@ -113,7 +113,7 @@ def get_external_function(external_function_path: str) -> Callable[..., Any]:
         ext_func: callable imported from external_function_path
 
     Raises:
-        N/A  # noqa
+        N/A
 
     """
     ext_func_path = external_function_path.split(".")
@@ -134,6 +134,9 @@ def _textfsm_get_template(platform: str, command: str) -> Optional[TextIO]:
 
     Returns:
         None or TextIO of opened template
+
+    Raises:
+        N/A
 
     """
     try:
@@ -172,6 +175,9 @@ def textfsm_parse(
 
     Returns:
         output: structured data
+
+    Raises:
+        N/A
 
     """
     import textfsm  # pylint: disable=C0415

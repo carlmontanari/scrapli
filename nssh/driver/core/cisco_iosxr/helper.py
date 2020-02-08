@@ -12,10 +12,10 @@ def comms_pre_login_handler(cls: NetworkDriver) -> None:  # pylint: disable=W061
         cls: IOSXRDriver object
 
     Returns:
-        N/A  # noqa
+        N/A  # noqa: DAR202
 
     Raises:
-        N/A  # noqa
+        N/A
 
     """
     # sleep for session to establish; without this we never find base prompt

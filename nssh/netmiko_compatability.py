@@ -59,10 +59,10 @@ class NetmikoNetworkDriver(NetworkDriver):
             **kwargs: keyword arguments to support other netmiko args without blowing up
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
 
@@ -122,7 +122,7 @@ def transform_netmiko_kwargs(kwargs: Dict[str, Any]) -> Dict[str, Any]:
         transformed_kwargs: converted keyword arguments
 
     Raises:
-        N/A  # noqa
+        N/A
 
     """
     host = kwargs.pop("host", None)
@@ -158,13 +158,14 @@ def netmiko_find_prompt(self: NetmikoNetworkDriver) -> str:
     Patch `find_prompt` in netmiko connect handler to `get_prompt` in nssh
 
     Args:
-        N/A  # noqa
+        self: NetmikoNetworkDriver object -- `self` as this gets shoe-horned into NetworkDriver via
+            types MethodType
 
     Returns:
-        N/A  # noqa
+        N/A  # noqa: DAR202
 
     Raises:
-        N/A  # noqa
+        N/A
 
     """
     return self.get_prompt()
@@ -180,14 +181,16 @@ def netmiko_send_command(
     string to match netmiko functionality (instead of nssh result object)
 
     Args:
+        self: NetmikoNetworkDriver object -- `self` as this gets shoe-horned into NetworkDriver via
+            types MethodType
         command_string: string or list of strings to send as commands
         **kwargs: keyword arguments to support other netmiko args without blowing up
 
     Returns:
-        N/A  # noqa
+        N/A  # noqa: DAR202
 
     Raises:
-        N/A  # noqa
+        N/A
 
     """
     provided_strip_prompt = kwargs.pop("strip_prompt", None)
@@ -248,14 +251,16 @@ def netmiko_send_command_timing(
     timers on the connection object if needed, or adjust them on the fly in your code.
 
     Args:
+        self: NetmikoNetworkDriver object -- `self` as this gets shoe-horned into NetworkDriver via
+            types MethodType
         command_string: string or list of strings to send as commands
         **kwargs: keyword arguments to support other netmiko args without blowing up
 
     Returns:
-        N/A  # noqa
+        N/A  # noqa: DAR202
 
     Raises:
-        N/A  # noqa
+        N/A
 
     """
     return self.send_command(command_string, **kwargs)
@@ -271,14 +276,16 @@ def netmiko_send_config_set(
     is no interesting output from this as there would be in netmiko.
 
     Args:
+        self: NetmikoNetworkDriver object -- `self` as this gets shoe-horned into NetworkDriver via
+            types MethodType
         config_commands: configuration command(s) to send to device
         **kwargs: keyword arguments to support other netmiko args without blowing up
 
     Returns:
-        N/A  # noqa
+        N/A  # noqa: DAR202
 
     Raises:
-        N/A  # noqa
+        N/A
 
     """
     provided_strip_prompt = kwargs.pop("strip_prompt", None)

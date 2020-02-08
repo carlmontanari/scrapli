@@ -15,13 +15,13 @@ class Transport(ABC):
         Magic bool method for Socket
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
             bool: True/False if socket is alive or not
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         return self.isalive()
@@ -31,13 +31,13 @@ class Transport(ABC):
         Magic str method for Transport
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         return f"Transport Object for host {self.host}"
@@ -47,13 +47,13 @@ class Transport(ABC):
         Magic repr method for Transport
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            repr: repr for class object
+            str: repr for class object
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         class_dict = self.__dict__.copy()
@@ -66,13 +66,13 @@ class Transport(ABC):
         Open channel, acquire pty, request interactive shell
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
 
@@ -82,13 +82,13 @@ class Transport(ABC):
         Close session and socket
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
 
@@ -98,13 +98,13 @@ class Transport(ABC):
         Check if socket is alive and session is authenticated
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            bool: True if socket is alive and session authenticated, else False
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
 
@@ -114,13 +114,13 @@ class Transport(ABC):
         Read data from the channel
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            output: bytes output as read from channel
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
 
@@ -133,10 +133,10 @@ class Transport(ABC):
             channel_input: string to send to channel
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
 
@@ -146,13 +146,13 @@ class Transport(ABC):
         Flush channel stdout stream
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
 
@@ -165,10 +165,10 @@ class Transport(ABC):
             timeout: timeout in seconds
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
 
@@ -181,9 +181,9 @@ class Transport(ABC):
             blocking: True/False set session to blocking
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """

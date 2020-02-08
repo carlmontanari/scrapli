@@ -53,10 +53,10 @@ class JunosDriver(NetworkDriver):
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
         """
         super().__init__(auth_secondary, **kwargs)
         self.privs = PRIVS

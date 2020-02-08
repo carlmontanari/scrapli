@@ -89,10 +89,10 @@ class NetworkDriver(NSSH):
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         super().__init__(**kwargs)
@@ -127,13 +127,14 @@ class NetworkDriver(NSSH):
         Escalate to the next privilege level up
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            UnknownPrivLevel: if priv level cant be attained
+            TypeError: if invalid next prompt value
 
         """
         current_priv = self._determine_current_priv(self.channel.get_prompt())
@@ -167,13 +168,13 @@ class NetworkDriver(NSSH):
         Deescalate to the next privilege level down
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            UnknownPrivLevel: if no default priv level set to deescalate to
 
         """
         current_priv = self._determine_current_priv(self.channel.get_prompt())
@@ -195,7 +196,7 @@ class NetworkDriver(NSSH):
                 (see nssh.driver.<driver_category.device_type>.driver for levels)
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
             CouldNotAcquirePrivLevel: if requested priv level not attained
@@ -256,19 +257,18 @@ class NetworkDriver(NSSH):
         could be "chained" together to respond to more than a "single" staged prompt
 
         Args:
-            inputs: list or tuple containing strings representing:
-                initial input
-                expectation (what should nssh expect after input)
-                channel_response: string what to respond to the "expectation", or empty string to
-                    send return character only
-                finale (what should nssh expect when "done")
+            inputs: list or tuple containing strings representing
+                channel_input - initial input to send
+                expected_prompt - prompt to expect after initial input
+                response - response to prompt
+                final_prompt - final prompt to expect
             hidden_response: True/False response is hidden (i.e. password input)
 
         Returns:
             responses: List of NSSH Response objects
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         self.acquire_priv(str(self.default_desired_priv))
@@ -289,7 +289,7 @@ class NetworkDriver(NSSH):
             responses: List of NSSH Response objects
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         self.acquire_priv("configuration")
@@ -302,13 +302,13 @@ class NetworkDriver(NSSH):
         Convenience method to get device prompt from Channel
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            prompt: prompt received from channel.get_prompt
+            str: prompt received from channel.get_prompt
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         prompt: str = self.channel.get_prompt()

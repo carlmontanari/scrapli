@@ -26,7 +26,7 @@ class Response:
         Args:
             host: host that was operated on
             channel_input: input that got sent down the channel
-            platform: ntc-templates friendly platform type
+            textfsm_platform: ntc-templates friendly platform type
             expectation: used for send_inputs_interact -- string to expect back from the channel
                 after initial input
             channel_response: used for send_inputs_interact -- string to use to respond to expected
@@ -36,7 +36,7 @@ class Response:
                 failed command/interaction
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
             N/A  # noqa
@@ -117,7 +117,7 @@ class Response:
             result: string result of channel_input
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
             N/A
@@ -137,7 +137,7 @@ class Response:
             N/A
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
             N/A

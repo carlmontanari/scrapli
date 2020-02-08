@@ -77,10 +77,10 @@ class SystemSSHTransport(Transport):
                 or False to ignore default ssh config file
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            AuthenticationFailed: if all authentication means fail
+            N/A
 
         """
         self.host: str = host
@@ -108,13 +108,13 @@ class SystemSSHTransport(Transport):
         Method to craft command to open ssh session
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         self.open_cmd.extend(["-p", str(self.port)])
@@ -133,13 +133,13 @@ class SystemSSHTransport(Transport):
         Parent method to open session, authenticate and acquire shell
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            AuthenticationFailed: if all authentication means fail
+            NSSHAuthenticationFailed: if all authentication means fail
 
         """
         self.session_lock.acquire()
@@ -161,13 +161,13 @@ class SystemSSHTransport(Transport):
         Private method to open session with subprocess.Popen
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
             bool: True/False session was opened and authenticated
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         self.open_cmd.append("-v")
@@ -198,7 +198,7 @@ class SystemSSHTransport(Transport):
             bool: True/False session was authenticated
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         output = b""
@@ -213,13 +213,13 @@ class SystemSSHTransport(Transport):
         Private method to open session with PtyProcess
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
             bool: True/False session was opened and authenticated
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         pty_session = PtyProcess.spawn(self.open_cmd)
@@ -240,10 +240,11 @@ class SystemSSHTransport(Transport):
             pty_session: PtyProcess session object
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            exc: if unknown (i.e. not auth failed) exception occurs
+            lib_auth_exception: if known auth exception occurs
 
         """
         self.session_lock.acquire()
@@ -277,13 +278,13 @@ class SystemSSHTransport(Transport):
         Beyond that we lock the session and send the return character and re-read the channel.
 
         Args:
-            N/A  # noqa
+            pty_session: PtyProcess session object
 
         Returns:
-            authenticated: True if authenticated, else False
+            bool: True if authenticated, else False
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         if pty_session.isalive() and not pty_session.eof():
@@ -311,13 +312,13 @@ class SystemSSHTransport(Transport):
         Close session and socket
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         self.session_lock.acquire()
@@ -333,13 +334,13 @@ class SystemSSHTransport(Transport):
         Check if session is alive and session is authenticated
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
             bool: True if session is alive and session authenticated, else False
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         if isinstance(self.session, Popen):
@@ -355,14 +356,13 @@ class SystemSSHTransport(Transport):
         Read data from the channel
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            bytes_read: int of bytes read
-            output: bytes output as read from channel
+            bytes: bytes output as read from channel
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         read_bytes = 65535
@@ -380,10 +380,10 @@ class SystemSSHTransport(Transport):
             channel_input: string to send to channel
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         if isinstance(self.session, Popen):
@@ -396,13 +396,13 @@ class SystemSSHTransport(Transport):
         Flush channel stdout stream
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         if isinstance(self.session, Popen):
@@ -419,10 +419,10 @@ class SystemSSHTransport(Transport):
             timeout: timeout in seconds
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
 
@@ -436,9 +436,9 @@ class SystemSSHTransport(Transport):
             blocking: True/False set session to blocking
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """

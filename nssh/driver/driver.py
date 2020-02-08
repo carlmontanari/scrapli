@@ -93,7 +93,7 @@ class NSSH:
                 features built in (though nssh does not expose/support them all).
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
             TypeError: if auth_strict_key is not a bool
@@ -146,13 +146,13 @@ class NSSH:
         Enter method for context manager
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
             self: instance of self
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         self.open()
@@ -173,10 +173,10 @@ class NSSH:
             traceback: traceback from exception being raised
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         self.close()
@@ -186,13 +186,13 @@ class NSSH:
         Magic str method for NSSH
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            N/A  # noqa
+            str: str representation of object
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         return f"NSSH Object for host {self.host}"
@@ -202,13 +202,13 @@ class NSSH:
         Magic repr method for NSSH
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            repr: repr for class object
+            str: repr for class object
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         class_dict = self.__dict__.copy()
@@ -225,10 +225,10 @@ class NSSH:
             auth_public_key: public key to parse/set
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         self.auth_username = auth_username.strip()
@@ -253,10 +253,10 @@ class NSSH:
             comms_ansi: ansi val to parse/set
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            TypeError: if invalid type args provided
 
         """
         # try to compile prompt to raise TypeError before opening any connections
@@ -282,10 +282,10 @@ class NSSH:
             session_disable_paging: disable paging to parse/set
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            TypeError: if invalid type args provided
 
         """
         if session_pre_login_handler:
@@ -393,13 +393,13 @@ class NSSH:
         Open Transport (socket/session) and establish channel
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         self.transport = self.transport_class(**self.transport_args)
@@ -411,13 +411,13 @@ class NSSH:
         Close Transport (socket/session)
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         self.transport.close()
@@ -427,13 +427,13 @@ class NSSH:
         Check if underlying socket/channel is alive
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            alive: True/False if socket/channel is alive
+            bool: True/False if socket/channel is alive
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         try:

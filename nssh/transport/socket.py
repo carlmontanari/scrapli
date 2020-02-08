@@ -20,13 +20,13 @@ class Socket:
         Magic bool method for Socket
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
             bool: True/False if socket is alive or not
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         return self.socket_isalive()
@@ -36,13 +36,13 @@ class Socket:
         Magic str method for Socket
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         return f"Socket Object for host {self.host}"
@@ -52,13 +52,13 @@ class Socket:
         Magic repr method for Socket
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            repr: repr for class object
+            str: repr for class object
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         return f"Socket {self.__dict__}"
@@ -68,13 +68,14 @@ class Socket:
         Open underlying socket
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            SetupTimeout: if socket connection times out
+            ConnectionRefusedError: if socket refuses connection
+            NSSHTimeout: if socket connection times out
 
         """
         if not self.socket_isalive():
@@ -101,13 +102,13 @@ class Socket:
         Close socket
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
-            N/A  # noqa
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         if self.socket_isalive() and isinstance(self.sock, socket.socket):
@@ -119,13 +120,13 @@ class Socket:
         Check if socket is alive
 
         Args:
-            N/A  # noqa
+            N/A
 
         Returns:
             bool True/False if socket is alive
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         try:
