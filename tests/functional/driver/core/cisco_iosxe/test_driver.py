@@ -50,6 +50,7 @@ def test_send_commands(cisco_iosxe_driver, driver, test):
 def test_send_configs(cisco_iosxe_driver, driver, test):
     conn = cisco_iosxe_driver(**CISCO_IOSXE_DEVICE, driver=driver)
     conn.send_configs(test["setup"], **test["kwargs"])
+    conn.channel.get_prompt()
     verification_results = conn.send_commands(test["inputs"], **test["kwargs"])
     conn.send_configs(test["teardown"], **test["kwargs"])
     conn.close()

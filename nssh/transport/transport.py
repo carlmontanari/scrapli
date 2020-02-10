@@ -141,22 +141,6 @@ class Transport(ABC):
         """
 
     @abstractmethod
-    def flush(self) -> None:
-        """
-        Flush channel stdout stream
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        """
-
-    @abstractmethod
     def set_timeout(self, timeout: Optional[int] = None) -> None:
         """
         Set session timeout

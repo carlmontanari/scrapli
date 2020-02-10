@@ -352,22 +352,6 @@ class SSH2Transport(Socket, Transport):
         """
         self.channel.write(channel_input)
 
-    def flush(self) -> None:
-        """
-        Flush channel stdout stream
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        """
-        self.channel.flush()
-
     def set_timeout(self, timeout: Optional[int] = None) -> None:
         """
         Set session timeout

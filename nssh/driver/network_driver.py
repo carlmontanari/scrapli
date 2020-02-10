@@ -1,7 +1,7 @@
 """nssh.driver.network_driver"""
 import logging
 import re
-from dataclasses import dataclass
+from collections import namedtuple
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from nssh.driver.driver import NSSH
@@ -30,48 +30,19 @@ TRANSPORT_ARGS: Dict[str, Tuple[str, ...]] = {
 }
 
 
-@dataclass
-class PrivilegeLevel:
-    """
-    Dataclass representing privilege levels of a device
-
-    PrivilegeLevel contains the following fields:
-
-    pattern:
-    name:
-    deescalate_priv:
-    deescalate:
-    escalate_priv:
-    escalate:
-    escalate_auth:
-    escalate_prompt:
-    requestable:
-    level:
-
-    """
-
-    __slots__ = (
-        "pattern",
-        "name",
-        "deescalate_priv",
-        "deescalate",
-        "escalate_priv",
-        "escalate",
-        "escalate_auth",
-        "escalate_prompt",
-        "requestable",
-        "level",
-    )
-    pattern: str
-    name: str
-    deescalate_priv: str
-    deescalate: str
-    escalate_priv: str
-    escalate: str
-    escalate_auth: bool
-    escalate_prompt: str
-    requestable: bool
-    level: int
+PrivilegeLevel = namedtuple(
+    "PrivilegeLevel",
+    "pattern "
+    "name "
+    "deescalate_priv "
+    "deescalate "
+    "escalate_priv "
+    "escalate "
+    "escalate_auth "
+    "escalate_prompt "
+    "requestable "
+    "level",
+)
 
 
 PRIVS: Dict[str, PrivilegeLevel] = {}

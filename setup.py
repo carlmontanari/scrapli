@@ -9,7 +9,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="nssh",
-    version="2020.02.02",
+    version="2020.02.09",
     author=__author__,
     author_email="carl.r.montanari@gmail.com",
     description="SSH client focused on network devices",
@@ -32,5 +32,5 @@ setuptools.setup(
         "Operating System :: POSIX :: Linux",
         "Operating System :: MacOS",
     ],
-    python_requires=">=3.7",
+    python_requires=">=3.6",
 )

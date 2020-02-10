@@ -176,7 +176,7 @@ class Channel:
 
         while True:
             output += self._read_chunk()
-            output = re.sub(b"\r", b"", output.strip())
+            output = re.sub(b"\r", b"", output)
             channel_match = re.search(prompt_pattern, output)
             if channel_match:
                 self.transport.set_blocking(True)
@@ -199,7 +199,6 @@ class Channel:
         """
         prompt_pattern = get_prompt_pattern("", self.comms_prompt_pattern)
         self.transport.set_timeout(1000)
-        self.transport.flush()
         self.transport.write(self.comms_return_char)
         LOG.debug(f"Write (sending return character): {repr(self.comms_return_char)}")
         while True:
@@ -259,7 +258,6 @@ class Channel:
         """
         bytes_channel_input = channel_input.encode()
         self.transport.session_lock.acquire()
-        self.transport.flush()
         LOG.debug(f"Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}")
         self.transport.write(channel_input)
         LOG.debug(f"Write: {repr(channel_input)}")
@@ -336,7 +334,6 @@ class Channel:
         """
         bytes_channel_input = channel_input.encode()
         self.transport.session_lock.acquire()
-        self.transport.flush()
         LOG.debug(
             f"Attempting to send input interact: {channel_input}; "
             f"\texpecting: {expectation};"
@@ -378,6 +375,5 @@ class Channel:
             N/A
 
         """
-        self.transport.flush()
         self.transport.write(self.comms_return_char)
         LOG.debug(f"Write (sending return character): {repr(self.comms_return_char)}")
