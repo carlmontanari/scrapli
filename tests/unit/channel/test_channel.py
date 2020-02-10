@@ -3,14 +3,14 @@ import pytest
 
 def test__str(mocked_channel):
     conn = mocked_channel([])
-    assert str(conn.channel) == "nssh Channel Object"
+    assert str(conn.channel) == "scrapli Channel Object"
 
 
 def test__repr(mocked_channel):
     conn = mocked_channel([])
     assert (
         repr(conn.channel)
-        == r"nssh Channel {'comms_prompt_pattern': '^[a-z0-9.\\-@()/:]{1,32}[#>$]$', 'comms_return_char': '\n', 'comms_ansi': False, 'timeout_ops': 10}"
+        == r"scrapli Channel {'comms_prompt_pattern': '^[a-z0-9.\\-@()/:]{1,32}[#>$]$', 'comms_return_char': '\n', 'comms_ansi': False, 'timeout_ops': 10}"
     )
 
 
@@ -87,8 +87,8 @@ def test__send_input(mocked_channel):
     test_operations = [(channel_input_1, channel_output_1)]
     conn = mocked_channel(test_operations)
     output, processed_output = conn.channel._send_input(channel_input_1, strip_prompt=False)
-    assert output == channel_output_1.encode()
-    assert processed_output.decode() == channel_output_1
+    assert output.lstrip() == channel_output_1.encode()
+    assert processed_output.lstrip().decode() == channel_output_1
 
 
 def test_send_inputs(mocked_channel):
@@ -149,7 +149,7 @@ def test_send_inputs_interact(mocked_channel):
     test_operations = [(interact[0], interact[1]), (interact[2], interact[3])]
     conn = mocked_channel(test_operations)
     output = conn.channel.send_inputs_interact(interact, hidden_response=False)
-    assert output[0].result == "Clear logging buffer [confirm]\n3560CX#"
+    assert output[0].result == "Clear logging buffer [confirm]\n\n3560CX#"
 
 
 def test_send_inputs_interact_invalid_input(mocked_channel):

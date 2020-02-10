@@ -1,6 +1,6 @@
 import pytest
 
-from nssh.transport import SystemSSHTransport
+from scrapli.transport import SystemSSHTransport
 
 
 def test_creation():

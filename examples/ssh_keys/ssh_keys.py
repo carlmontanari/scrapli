@@ -1,4 +1,4 @@
-from nssh.driver.core import IOSXEDriver
+from scrapli.driver.core import IOSXEDriver
 
 args = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_public_key": "/path/to/your/key"}
 

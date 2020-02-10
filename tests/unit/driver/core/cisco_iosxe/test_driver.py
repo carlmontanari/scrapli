@@ -1,4 +1,4 @@
-from nssh.driver.core.cisco_iosxe.driver import IOSXEDriver
+from scrapli.driver.core.cisco_iosxe.driver import IOSXEDriver
 
 
 def test_init():
