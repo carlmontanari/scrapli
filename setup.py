@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""nssh (network) ssh client library"""
+"""scrapli - screen scraping client library"""
 import setuptools
 
 __author__ = "Carl Montanari"
@@ -8,14 +8,14 @@ with open("README.md", "r") as f:
     README = f.read()
 
 setuptools.setup(
-    name="nssh",
-    version="2020.02.02",
+    name="scrapli",
+    version="2020.02.09",
     author=__author__,
     author_email="carl.r.montanari@gmail.com",
-    description="SSH client focused on network devices",
+    description="Screen scraping client focused on network devices",
     long_description=README,
     long_description_content_type="text/markdown",
-    url="https://github.com/carlmontanari/nssh",
+    url="https://github.com/carlmontanari/scrapli",
     packages=setuptools.find_packages(),
     install_requires=[],
     extras_require={
@@ -32,5 +32,5 @@ setuptools.setup(
         "Operating System :: POSIX :: Linux",
         "Operating System :: MacOS",
     ],
-    python_requires=">=3.7",
+    python_requires=">=3.6",
 )

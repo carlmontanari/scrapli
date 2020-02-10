@@ -5,7 +5,7 @@ from io import TextIOWrapper
 import pkg_resources  # pylint: disable=C041
 import pytest
 
-from nssh.helper import _textfsm_get_template, get_prompt_pattern, strip_ansi, textfsm_parse
+from scrapli.helper import _textfsm_get_template, get_prompt_pattern, strip_ansi, textfsm_parse
 
 IOS_ARP = """Protocol  Address          Age (min)  Hardware Addr   Type   Interface
 Internet  172.31.254.1            -   0000.0c07.acfe  ARPA   Vlan254

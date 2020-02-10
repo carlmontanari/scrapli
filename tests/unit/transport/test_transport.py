@@ -1,6 +1,6 @@
 from typing import Optional
 
-from nssh.transport import Transport
+from scrapli.transport import Transport
 
 
 class MockTransport(Transport):

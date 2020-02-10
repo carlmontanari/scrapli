@@ -5,7 +5,7 @@ services:
   iosxe:
     hostname: cisco_iosxe
     privileged: true
-    image: nsshciscoiosxe
+    image: scrapliciscoiosxe
     networks:
       net1:
         ipv4_address: 172.18.0.11
@@ -13,7 +13,7 @@ services:
   nxos:
     hostname: cisco_nxos
     privileged: true
-    image: nsshcisconxos
+    image: scraplicisconxos
     networks:
       net1:
         ipv4_address: 172.18.0.12
@@ -21,7 +21,7 @@ services:
   iosxr:
     hostname: cisco_iosxr
     privileged: true
-    image: nsshciscoiosxr
+    image: scrapliciscoiosxr
     networks:
       net1:
         ipv4_address: 172.18.0.13
@@ -29,7 +29,7 @@ services:
   eos:
     hostname: arista_eos
     privileged: true
-    image: nssharistaeos
+    image: scrapliaristaeos
     networks:
       net1:
         ipv4_address: 172.18.0.14
@@ -37,7 +37,7 @@ services:
   junos:
     hostname: juniper_junos
     privileged: true
-    image: nsshjuniperjunos
+    image: scraplijuniperjunos
     networks:
       net1:
         ipv4_address: 172.18.0.15

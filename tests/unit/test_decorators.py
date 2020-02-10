@@ -2,7 +2,7 @@ import time
 
 import pytest
 
-from nssh.decorators import operation_timeout
+from scrapli.decorators import operation_timeout
 
 
 class SlowClass:

@@ -5,19 +5,19 @@ from typing import Any, Callable, Dict, Optional, Tuple
 
 import pytest
 
-from nssh.channel import Channel
-from nssh.driver import NSSH, NetworkDriver
-from nssh.driver.core.cisco_iosxe.driver import PRIVS
-from nssh.netmiko_compatability import (
+from scrapli.channel import Channel
+from scrapli.driver import NetworkDriver, Scrape
+from scrapli.driver.core.cisco_iosxe.driver import PRIVS
+from scrapli.netmiko_compatability import (
     netmiko_find_prompt,
     netmiko_send_command,
     netmiko_send_command_timing,
     netmiko_send_config_set,
 )
-from nssh.transport.transport import Transport
+from scrapli.transport.transport import Transport
 
 
-class MockNSSH(NSSH):
+class MockNSSH(Scrape):
     def __init__(self, channel_ops, initial_bytes, *args, comms_ansi=False, **kwargs):
         self.channel_ops = channel_ops
         self.initial_bytes = initial_bytes

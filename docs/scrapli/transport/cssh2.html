@@ -1,0 +1,1135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.7.4" />
+<title>scrapli.transport.cssh2 API documentation</title>
+<meta name="description" content="scrapli.transport.cssh2" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>scrapli.transport.cssh2</code></h1>
+</header>
+<section id="section-intro">
+<p>scrapli.transport.cssh2</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;scrapli.transport.cssh2&#34;&#34;&#34;
+import warnings
+from logging import getLogger
+from threading import Lock
+from typing import Optional
+
+from scrapli.exceptions import MissingDependencies, ScrapliAuthenticationFailed
+from scrapli.transport.socket import Socket
+from scrapli.transport.transport import Transport
+
+LOG = getLogger(&#34;transport&#34;)
+
+
+SSH2_TRANSPORT_ARGS = (
+    &#34;host&#34;,
+    &#34;port&#34;,
+    &#34;timeout_ssh&#34;,
+    &#34;timeout_socket&#34;,
+    &#34;auth_username&#34;,
+    &#34;auth_public_key&#34;,
+    &#34;auth_password&#34;,
+)
+
+
+class SSH2Transport(Socket, Transport):
+    def __init__(
+        self,
+        host: str,
+        port: int = 22,
+        auth_username: str = &#34;&#34;,
+        auth_public_key: str = &#34;&#34;,
+        auth_password: str = &#34;&#34;,
+        timeout_ssh: int = 5000,
+        timeout_socket: int = 5,
+    ):
+        &#34;&#34;&#34;
+        SSH2Transport Object
+
+        Inherit from Transport ABC and Socket base class:
+        SSH2Transport &lt;- Transport (ABC)
+        SSH2Transport &lt;- Socket
+
+        Args:
+            host: host ip/name to connect to
+            port: port to connect to
+            auth_username: username for authentication
+            auth_public_key: path to public key for authentication
+            auth_password: password for authentication
+            timeout_ssh: timeout for ssh2 transport in milliseconds
+            timeout_socket: timeout for establishing socket in seconds
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            MissingDependencies: if ssh2-python is not installed
+
+        &#34;&#34;&#34;
+        self.host: str = host
+        self.port: int = port
+        self.timeout_ssh: int = timeout_ssh
+        self.timeout_socket: int = timeout_socket
+        self.session_lock: Lock = Lock()
+        self.auth_username: str = auth_username
+        self.auth_public_key: str = auth_public_key
+        self.auth_password: str = auth_password
+
+        try:
+            # import here so these are optional
+            from ssh2.channel import Channel  # pylint: disable=C0415
+            from ssh2.session import Session  # pylint: disable=C0415
+            from ssh2.exceptions import AuthenticationError  # pylint: disable=C0415
+
+            self.lib_session = Session
+            self.session: Session = None
+            self.channel: Channel = None
+            self.lib_auth_exception = AuthenticationError
+        except ModuleNotFoundError as exc:
+            err = f&#34;Module &#39;{exc.name}&#39; not installed!&#34;
+            msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
+            fix = (
+                f&#34;To resolve this issue, install &#39;{exc.name}&#39;. You can do this in one of the &#34;
+                &#34;following ways:\n&#34;
+                &#34;1: &#39;pip install -r requirements-ssh2.txt&#39;\n&#34;
+                &#34;2: &#39;pip install scrapli[ssh2]&#39;&#34;
+            )
+            warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
+            warnings.warn(warning)
+            LOG.warning(warning)
+            raise MissingDependencies
+
+        super().__init__(host=self.host, port=self.port, timeout=self.timeout_socket)
+
+    def open(self) -&gt; None:
+        &#34;&#34;&#34;
+        Parent method to open session, authenticate and acquire shell
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            exc: if socket handshake fails
+            ScrapliAuthenticationFailed: if all authentication means fail
+
+        &#34;&#34;&#34;
+        if not self.socket_isalive():
+            self.socket_open()
+        self.session_lock.acquire()
+        self.session = self.lib_session()
+        self.set_timeout(self.timeout_ssh)
+        try:
+            self.session.handshake(self.sock)
+        except Exception as exc:
+            LOG.critical(
+                f&#34;Failed to complete handshake with host {self.host}; &#34; f&#34;Exception: {exc}&#34;
+            )
+            raise exc
+        LOG.debug(f&#34;Session to host {self.host} opened&#34;)
+        self.authenticate()
+        if not self.isauthenticated():
+            msg = f&#34;Authentication to host {self.host} failed&#34;
+            LOG.critical(msg)
+            raise ScrapliAuthenticationFailed(msg)
+        self._open_channel()
+        self.session_lock.release()
+
+    def authenticate(self) -&gt; None:
+        &#34;&#34;&#34;
+        Parent method to try all means of authentication
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        if self.auth_public_key:
+            self._authenticate_public_key()
+            if self.isauthenticated():
+                LOG.debug(f&#34;Authenticated to host {self.host} with public key&#34;)
+                return
+        if self.auth_password:
+            self._authenticate_password()
+            if self.isauthenticated():
+                LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
+                return
+            self._authenticate_keyboard_interactive()
+            if self.isauthenticated():
+                LOG.debug(f&#34;Authenticated to host {self.host} with keyboard interactive&#34;)
+                return
+        return
+
+    def _authenticate_public_key(self) -&gt; None:
+        &#34;&#34;&#34;
+        Attempt to authenticate with public key authentication
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            exc: if unknown (i.e. not auth failed) exception occurs
+
+        &#34;&#34;&#34;
+        try:
+            self.session.userauth_publickey_fromfile(self.auth_username, self.auth_public_key)
+        except self.lib_auth_exception as exc:
+            LOG.critical(
+                f&#34;Public key authentication with host {self.host} failed. Exception: {exc}.&#34;
+            )
+        except Exception as exc:
+            LOG.critical(
+                &#34;Unknown error occurred during public key authentication with host &#34;
+                f&#34;{self.host}; Exception: {exc}&#34;
+            )
+            raise exc
+
+    def _authenticate_password(self) -&gt; None:
+        &#34;&#34;&#34;
+        Attempt to authenticate with password authentication
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            exc: if unknown (i.e. not auth failed) exception occurs
+
+        &#34;&#34;&#34;
+        try:
+            self.session.userauth_password(self.auth_username, self.auth_password)
+        except self.lib_auth_exception as exc:
+            LOG.critical(f&#34;Password authentication with host {self.host} failed. Exception: {exc}.&#34;)
+        except Exception as exc:
+            LOG.critical(
+                &#34;Unknown error occurred during password authentication with host &#34;
+                f&#34;{self.host}; Exception: {exc}&#34;
+            )
+            raise exc
+
+    def _authenticate_keyboard_interactive(self) -&gt; None:
+        &#34;&#34;&#34;
+        Attempt to authenticate with keyboard interactive authentication
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            exc: if unknown (i.e. not auth failed) exception occurs
+
+        &#34;&#34;&#34;
+        try:
+            self.session.userauth_keyboardinteractive(  # pylint: disable=C0415
+                self.auth_username, self.auth_password
+            )
+        except AttributeError as exc:
+            LOG.critical(
+                &#34;Keyboard interactive authentication not supported in your ssh2-python version. &#34;
+                f&#34;Exception: {exc}&#34;
+            )
+        except self.lib_auth_exception as exc:
+            LOG.critical(
+                f&#34;Keyboard interactive authentication with host {self.host} failed. &#34;
+                f&#34;Exception: {exc}.&#34;
+            )
+        except Exception as exc:
+            LOG.critical(
+                &#34;Unknown error occurred during keyboard interactive authentication with host &#34;
+                f&#34;{self.host}; Exception: {exc}&#34;
+            )
+            raise exc
+
+    def isauthenticated(self) -&gt; bool:
+        &#34;&#34;&#34;
+        Check if session is authenticated
+
+        Args:
+            N/A
+
+        Returns:
+            bool: True if authenticated, else False
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        authenticated: bool = self.session.userauth_authenticated()
+        return authenticated
+
+    def _open_channel(self) -&gt; None:
+        &#34;&#34;&#34;
+        Open channel, acquire pty, request interactive shell
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.channel = self.session.open_session()
+        self.channel.pty()
+        self.channel.shell()
+        LOG.debug(f&#34;Channel to host {self.host} opened&#34;)
+
+    def close(self) -&gt; None:
+        &#34;&#34;&#34;
+        Close session and socket
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.session_lock.acquire()
+        self.channel.close()
+        LOG.debug(f&#34;Channel to host {self.host} closed&#34;)
+        self.socket_close()
+        self.session_lock.release()
+
+    def isalive(self) -&gt; bool:
+        &#34;&#34;&#34;
+        Check if socket is alive and session is authenticated
+
+        Args:
+            N/A
+
+        Returns:
+            bool: True if socket is alive and session authenticated, else False
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        if self.socket_isalive() and not self.channel.eof() and self.isauthenticated():
+            return True
+        return False
+
+    def read(self) -&gt; bytes:
+        &#34;&#34;&#34;
+        Read data from the channel
+
+        Args:
+            N/A
+
+        Returns:
+            bytes: bytes output as read from channel
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        output: bytes
+        _, output = self.channel.read(65535)
+        return output
+
+    def write(self, channel_input: str) -&gt; None:
+        &#34;&#34;&#34;
+        Write data to the channel
+
+        Args:
+            channel_input: string to send to channel
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.channel.write(channel_input)
+
+    def set_timeout(self, timeout: Optional[int] = None) -&gt; None:
+        &#34;&#34;&#34;
+        Set session timeout
+
+        Args:
+            timeout: timeout in seconds
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        if isinstance(timeout, int):
+            set_timeout = timeout
+        else:
+            set_timeout = self.timeout_ssh
+        self.session.set_timeout(set_timeout)
+
+    def set_blocking(self, blocking: bool = False) -&gt; None:
+        &#34;&#34;&#34;
+        Set session blocking configuration
+
+        Args:
+            blocking: True/False set session to blocking
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.session.set_blocking(blocking)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="scrapli.transport.cssh2.SSH2Transport"><code class="flex name class">
+<span>class <span class="ident">SSH2Transport</span></span>
+<span>(</span><span>host, port=22, auth_username='', auth_public_key='', auth_password='', timeout_ssh=5000, timeout_socket=5)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<p>SSH2Transport Object</p>
+<p>Inherit from Transport ABC and Socket base class:
+SSH2Transport &lt;- Transport (ABC)
+SSH2Transport &lt;- Socket</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>host</code></strong></dt>
+<dd>host ip/name to connect to</dd>
+<dt><strong><code>port</code></strong></dt>
+<dd>port to connect to</dd>
+<dt><strong><code>auth_username</code></strong></dt>
+<dd>username for authentication</dd>
+<dt><strong><code>auth_public_key</code></strong></dt>
+<dd>path to public key for authentication</dd>
+<dt><strong><code>auth_password</code></strong></dt>
+<dd>password for authentication</dd>
+<dt><strong><code>timeout_ssh</code></strong></dt>
+<dd>timeout for ssh2 transport in milliseconds</dd>
+<dt><strong><code>timeout_socket</code></strong></dt>
+<dd>timeout for establishing socket in seconds</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code>: <code>DAR202</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><strong><code>MissingDependencies</code></strong></dt>
+<dd>if ssh2-python is not installed</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SSH2Transport(Socket, Transport):
+    def __init__(
+        self,
+        host: str,
+        port: int = 22,
+        auth_username: str = &#34;&#34;,
+        auth_public_key: str = &#34;&#34;,
+        auth_password: str = &#34;&#34;,
+        timeout_ssh: int = 5000,
+        timeout_socket: int = 5,
+    ):
+        &#34;&#34;&#34;
+        SSH2Transport Object
+
+        Inherit from Transport ABC and Socket base class:
+        SSH2Transport &lt;- Transport (ABC)
+        SSH2Transport &lt;- Socket
+
+        Args:
+            host: host ip/name to connect to
+            port: port to connect to
+            auth_username: username for authentication
+            auth_public_key: path to public key for authentication
+            auth_password: password for authentication
+            timeout_ssh: timeout for ssh2 transport in milliseconds
+            timeout_socket: timeout for establishing socket in seconds
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            MissingDependencies: if ssh2-python is not installed
+
+        &#34;&#34;&#34;
+        self.host: str = host
+        self.port: int = port
+        self.timeout_ssh: int = timeout_ssh
+        self.timeout_socket: int = timeout_socket
+        self.session_lock: Lock = Lock()
+        self.auth_username: str = auth_username
+        self.auth_public_key: str = auth_public_key
+        self.auth_password: str = auth_password
+
+        try:
+            # import here so these are optional
+            from ssh2.channel import Channel  # pylint: disable=C0415
+            from ssh2.session import Session  # pylint: disable=C0415
+            from ssh2.exceptions import AuthenticationError  # pylint: disable=C0415
+
+            self.lib_session = Session
+            self.session: Session = None
+            self.channel: Channel = None
+            self.lib_auth_exception = AuthenticationError
+        except ModuleNotFoundError as exc:
+            err = f&#34;Module &#39;{exc.name}&#39; not installed!&#34;
+            msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
+            fix = (
+                f&#34;To resolve this issue, install &#39;{exc.name}&#39;. You can do this in one of the &#34;
+                &#34;following ways:\n&#34;
+                &#34;1: &#39;pip install -r requirements-ssh2.txt&#39;\n&#34;
+                &#34;2: &#39;pip install scrapli[ssh2]&#39;&#34;
+            )
+            warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
+            warnings.warn(warning)
+            LOG.warning(warning)
+            raise MissingDependencies
+
+        super().__init__(host=self.host, port=self.port, timeout=self.timeout_socket)
+
+    def open(self) -&gt; None:
+        &#34;&#34;&#34;
+        Parent method to open session, authenticate and acquire shell
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            exc: if socket handshake fails
+            ScrapliAuthenticationFailed: if all authentication means fail
+
+        &#34;&#34;&#34;
+        if not self.socket_isalive():
+            self.socket_open()
+        self.session_lock.acquire()
+        self.session = self.lib_session()
+        self.set_timeout(self.timeout_ssh)
+        try:
+            self.session.handshake(self.sock)
+        except Exception as exc:
+            LOG.critical(
+                f&#34;Failed to complete handshake with host {self.host}; &#34; f&#34;Exception: {exc}&#34;
+            )
+            raise exc
+        LOG.debug(f&#34;Session to host {self.host} opened&#34;)
+        self.authenticate()
+        if not self.isauthenticated():
+            msg = f&#34;Authentication to host {self.host} failed&#34;
+            LOG.critical(msg)
+            raise ScrapliAuthenticationFailed(msg)
+        self._open_channel()
+        self.session_lock.release()
+
+    def authenticate(self) -&gt; None:
+        &#34;&#34;&#34;
+        Parent method to try all means of authentication
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        if self.auth_public_key:
+            self._authenticate_public_key()
+            if self.isauthenticated():
+                LOG.debug(f&#34;Authenticated to host {self.host} with public key&#34;)
+                return
+        if self.auth_password:
+            self._authenticate_password()
+            if self.isauthenticated():
+                LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
+                return
+            self._authenticate_keyboard_interactive()
+            if self.isauthenticated():
+                LOG.debug(f&#34;Authenticated to host {self.host} with keyboard interactive&#34;)
+                return
+        return
+
+    def _authenticate_public_key(self) -&gt; None:
+        &#34;&#34;&#34;
+        Attempt to authenticate with public key authentication
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            exc: if unknown (i.e. not auth failed) exception occurs
+
+        &#34;&#34;&#34;
+        try:
+            self.session.userauth_publickey_fromfile(self.auth_username, self.auth_public_key)
+        except self.lib_auth_exception as exc:
+            LOG.critical(
+                f&#34;Public key authentication with host {self.host} failed. Exception: {exc}.&#34;
+            )
+        except Exception as exc:
+            LOG.critical(
+                &#34;Unknown error occurred during public key authentication with host &#34;
+                f&#34;{self.host}; Exception: {exc}&#34;
+            )
+            raise exc
+
+    def _authenticate_password(self) -&gt; None:
+        &#34;&#34;&#34;
+        Attempt to authenticate with password authentication
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            exc: if unknown (i.e. not auth failed) exception occurs
+
+        &#34;&#34;&#34;
+        try:
+            self.session.userauth_password(self.auth_username, self.auth_password)
+        except self.lib_auth_exception as exc:
+            LOG.critical(f&#34;Password authentication with host {self.host} failed. Exception: {exc}.&#34;)
+        except Exception as exc:
+            LOG.critical(
+                &#34;Unknown error occurred during password authentication with host &#34;
+                f&#34;{self.host}; Exception: {exc}&#34;
+            )
+            raise exc
+
+    def _authenticate_keyboard_interactive(self) -&gt; None:
+        &#34;&#34;&#34;
+        Attempt to authenticate with keyboard interactive authentication
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            exc: if unknown (i.e. not auth failed) exception occurs
+
+        &#34;&#34;&#34;
+        try:
+            self.session.userauth_keyboardinteractive(  # pylint: disable=C0415
+                self.auth_username, self.auth_password
+            )
+        except AttributeError as exc:
+            LOG.critical(
+                &#34;Keyboard interactive authentication not supported in your ssh2-python version. &#34;
+                f&#34;Exception: {exc}&#34;
+            )
+        except self.lib_auth_exception as exc:
+            LOG.critical(
+                f&#34;Keyboard interactive authentication with host {self.host} failed. &#34;
+                f&#34;Exception: {exc}.&#34;
+            )
+        except Exception as exc:
+            LOG.critical(
+                &#34;Unknown error occurred during keyboard interactive authentication with host &#34;
+                f&#34;{self.host}; Exception: {exc}&#34;
+            )
+            raise exc
+
+    def isauthenticated(self) -&gt; bool:
+        &#34;&#34;&#34;
+        Check if session is authenticated
+
+        Args:
+            N/A
+
+        Returns:
+            bool: True if authenticated, else False
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        authenticated: bool = self.session.userauth_authenticated()
+        return authenticated
+
+    def _open_channel(self) -&gt; None:
+        &#34;&#34;&#34;
+        Open channel, acquire pty, request interactive shell
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.channel = self.session.open_session()
+        self.channel.pty()
+        self.channel.shell()
+        LOG.debug(f&#34;Channel to host {self.host} opened&#34;)
+
+    def close(self) -&gt; None:
+        &#34;&#34;&#34;
+        Close session and socket
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.session_lock.acquire()
+        self.channel.close()
+        LOG.debug(f&#34;Channel to host {self.host} closed&#34;)
+        self.socket_close()
+        self.session_lock.release()
+
+    def isalive(self) -&gt; bool:
+        &#34;&#34;&#34;
+        Check if socket is alive and session is authenticated
+
+        Args:
+            N/A
+
+        Returns:
+            bool: True if socket is alive and session authenticated, else False
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        if self.socket_isalive() and not self.channel.eof() and self.isauthenticated():
+            return True
+        return False
+
+    def read(self) -&gt; bytes:
+        &#34;&#34;&#34;
+        Read data from the channel
+
+        Args:
+            N/A
+
+        Returns:
+            bytes: bytes output as read from channel
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        output: bytes
+        _, output = self.channel.read(65535)
+        return output
+
+    def write(self, channel_input: str) -&gt; None:
+        &#34;&#34;&#34;
+        Write data to the channel
+
+        Args:
+            channel_input: string to send to channel
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.channel.write(channel_input)
+
+    def set_timeout(self, timeout: Optional[int] = None) -&gt; None:
+        &#34;&#34;&#34;
+        Set session timeout
+
+        Args:
+            timeout: timeout in seconds
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        if isinstance(timeout, int):
+            set_timeout = timeout
+        else:
+            set_timeout = self.timeout_ssh
+        self.session.set_timeout(set_timeout)
+
+    def set_blocking(self, blocking: bool = False) -&gt; None:
+        &#34;&#34;&#34;
+        Set session blocking configuration
+
+        Args:
+            blocking: True/False set session to blocking
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.session.set_blocking(blocking)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scrapli.transport.socket.Socket" href="socket.html#scrapli.transport.socket.Socket">Socket</a></li>
+<li><a title="scrapli.transport.transport.Transport" href="transport.html#scrapli.transport.transport.Transport">Transport</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="scrapli.transport.cssh2.SSH2Transport.authenticate"><code class="name flex">
+<span>def <span class="ident">authenticate</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Parent method to try all means of authentication</p>
+<h2 id="args">Args</h2>
+<p>N/A</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code>: <code>DAR202</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def authenticate(self) -&gt; None:
+    &#34;&#34;&#34;
+    Parent method to try all means of authentication
+
+    Args:
+        N/A
+
+    Returns:
+        N/A  # noqa: DAR202
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    if self.auth_public_key:
+        self._authenticate_public_key()
+        if self.isauthenticated():
+            LOG.debug(f&#34;Authenticated to host {self.host} with public key&#34;)
+            return
+    if self.auth_password:
+        self._authenticate_password()
+        if self.isauthenticated():
+            LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
+            return
+        self._authenticate_keyboard_interactive()
+        if self.isauthenticated():
+            LOG.debug(f&#34;Authenticated to host {self.host} with keyboard interactive&#34;)
+            return
+    return</code></pre>
+</details>
+</dd>
+<dt id="scrapli.transport.cssh2.SSH2Transport.isalive"><code class="name flex">
+<span>def <span class="ident">isalive</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Check if socket is alive and session is authenticated</p>
+<h2 id="args">Args</h2>
+<p>N/A</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>bool</code></strong></dt>
+<dd>True if socket is alive and session authenticated, else False</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def isalive(self) -&gt; bool:
+    &#34;&#34;&#34;
+    Check if socket is alive and session is authenticated
+
+    Args:
+        N/A
+
+    Returns:
+        bool: True if socket is alive and session authenticated, else False
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    if self.socket_isalive() and not self.channel.eof() and self.isauthenticated():
+        return True
+    return False</code></pre>
+</details>
+</dd>
+<dt id="scrapli.transport.cssh2.SSH2Transport.isauthenticated"><code class="name flex">
+<span>def <span class="ident">isauthenticated</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Check if session is authenticated</p>
+<h2 id="args">Args</h2>
+<p>N/A</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>bool</code></strong></dt>
+<dd>True if authenticated, else False</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def isauthenticated(self) -&gt; bool:
+    &#34;&#34;&#34;
+    Check if session is authenticated
+
+    Args:
+        N/A
+
+    Returns:
+        bool: True if authenticated, else False
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    authenticated: bool = self.session.userauth_authenticated()
+    return authenticated</code></pre>
+</details>
+</dd>
+<dt id="scrapli.transport.cssh2.SSH2Transport.open"><code class="name flex">
+<span>def <span class="ident">open</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Parent method to open session, authenticate and acquire shell</p>
+<h2 id="args">Args</h2>
+<p>N/A</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code>: <code>DAR202</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><strong><code>exc</code></strong></dt>
+<dd>if socket handshake fails</dd>
+<dt><strong><code>ScrapliAuthenticationFailed</code></strong></dt>
+<dd>if all authentication means fail</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def open(self) -&gt; None:
+    &#34;&#34;&#34;
+    Parent method to open session, authenticate and acquire shell
+
+    Args:
+        N/A
+
+    Returns:
+        N/A  # noqa: DAR202
+
+    Raises:
+        exc: if socket handshake fails
+        ScrapliAuthenticationFailed: if all authentication means fail
+
+    &#34;&#34;&#34;
+    if not self.socket_isalive():
+        self.socket_open()
+    self.session_lock.acquire()
+    self.session = self.lib_session()
+    self.set_timeout(self.timeout_ssh)
+    try:
+        self.session.handshake(self.sock)
+    except Exception as exc:
+        LOG.critical(
+            f&#34;Failed to complete handshake with host {self.host}; &#34; f&#34;Exception: {exc}&#34;
+        )
+        raise exc
+    LOG.debug(f&#34;Session to host {self.host} opened&#34;)
+    self.authenticate()
+    if not self.isauthenticated():
+        msg = f&#34;Authentication to host {self.host} failed&#34;
+        LOG.critical(msg)
+        raise ScrapliAuthenticationFailed(msg)
+    self._open_channel()
+    self.session_lock.release()</code></pre>
+</details>
+</dd>
+<dt id="scrapli.transport.cssh2.SSH2Transport.read"><code class="name flex">
+<span>def <span class="ident">read</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Read data from the channel</p>
+<h2 id="args">Args</h2>
+<p>N/A</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>bytes</code></strong></dt>
+<dd>bytes output as read from channel</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read(self) -&gt; bytes:
+    &#34;&#34;&#34;
+    Read data from the channel
+
+    Args:
+        N/A
+
+    Returns:
+        bytes: bytes output as read from channel
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    output: bytes
+    _, output = self.channel.read(65535)
+    return output</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scrapli.transport.socket.Socket" href="socket.html#scrapli.transport.socket.Socket">Socket</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scrapli.transport.socket.Socket.socket_close" href="socket.html#scrapli.transport.socket.Socket.socket_close">socket_close</a></code></li>
+<li><code><a title="scrapli.transport.socket.Socket.socket_isalive" href="socket.html#scrapli.transport.socket.Socket.socket_isalive">socket_isalive</a></code></li>
+<li><code><a title="scrapli.transport.socket.Socket.socket_open" href="socket.html#scrapli.transport.socket.Socket.socket_open">socket_open</a></code></li>
+</ul>
+</li>
+<li><code><b><a title="scrapli.transport.transport.Transport" href="transport.html#scrapli.transport.transport.Transport">Transport</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scrapli.transport.transport.Transport.close" href="transport.html#scrapli.transport.transport.Transport.close">close</a></code></li>
+<li><code><a title="scrapli.transport.transport.Transport.set_blocking" href="transport.html#scrapli.transport.transport.Transport.set_blocking">set_blocking</a></code></li>
+<li><code><a title="scrapli.transport.transport.Transport.set_timeout" href="transport.html#scrapli.transport.transport.Transport.set_timeout">set_timeout</a></code></li>
+<li><code><a title="scrapli.transport.transport.Transport.write" href="transport.html#scrapli.transport.transport.Transport.write">write</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="scrapli.transport" href="index.html">scrapli.transport</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="scrapli.transport.cssh2.SSH2Transport" href="#scrapli.transport.cssh2.SSH2Transport">SSH2Transport</a></code></h4>
+<ul class="">
+<li><code><a title="scrapli.transport.cssh2.SSH2Transport.authenticate" href="#scrapli.transport.cssh2.SSH2Transport.authenticate">authenticate</a></code></li>
+<li><code><a title="scrapli.transport.cssh2.SSH2Transport.isalive" href="#scrapli.transport.cssh2.SSH2Transport.isalive">isalive</a></code></li>
+<li><code><a title="scrapli.transport.cssh2.SSH2Transport.isauthenticated" href="#scrapli.transport.cssh2.SSH2Transport.isauthenticated">isauthenticated</a></code></li>
+<li><code><a title="scrapli.transport.cssh2.SSH2Transport.open" href="#scrapli.transport.cssh2.SSH2Transport.open">open</a></code></li>
+<li><code><a title="scrapli.transport.cssh2.SSH2Transport.read" href="#scrapli.transport.cssh2.SSH2Transport.read">read</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.4</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>
