@@ -6,26 +6,26 @@ lint:
 	python -m black .
 	python -m pylama .
 	python -m pydocstyle .
-	python -m mypy --strict nssh/
-	find nssh -type f \( -iname "*.py" ! -iname "ptyprocess.py" \) | xargs darglint
+	python -m mypy --strict scrapli/
+	find scrapli -type f \( -iname "*.py" ! -iname "ptyprocess.py" \) | xargs darglint -x
 
 cov:
 	python -m pytest \
-		--cov=nssh \
+		--cov=scrapli \
 		--cov-report html \
 		--cov-report term \
 		tests/
 
 cov_unit:
 	python -m pytest \
-		--cov=nssh \
+		--cov=scrapli \
 		--cov-report html \
 		--cov-report term \
 		tests/unit/
 
 cov_functional:
 	python -m pytest \
-		--cov=nssh \
+		--cov=scrapli \
 		--cov-report html \
 		--cov-report term \
 		tests/functional/
@@ -69,7 +69,7 @@ docs:
 	python -m pdoc \
 	--html \
 	--output-dir docs \
-	nssh \
+	scrapli \
 	--force
 
 start_dev_env:

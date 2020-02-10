@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from nssh.response import Response
+from scrapli.response import Response
 
 
 def test_response_init():
@@ -11,8 +11,8 @@ def test_response_init():
     assert str(response.start_time)[:-7] == response_start_time
     assert response.failed is True
     assert bool(response) is True
-    assert repr(response) == "NSSH <Success: False>"
-    assert str(response) == "NSSH <Success: False>"
+    assert repr(response) == "Scrape <Success: False>"
+    assert str(response) == "Scrape <Success: False>"
 
 
 def test_response_record_result():

@@ -1,7 +1,7 @@
 import pkg_resources  # pylint: disable=C0411
 import pytest
 
-from nssh.netmiko_compatability import connect_handler, transform_netmiko_kwargs
+from scrapli.netmiko_compatability import connect_handler, transform_netmiko_kwargs
 
 try:
     import ntc_templates
@@ -216,9 +216,9 @@ def test_netmiko_send_command_expect_string(mocked_netmiko_driver):
     assert (
         record[0].message.args[0]
         == """
-***** nssh netmiko interoperability does not support expect_string! *******************
+***** scrapli netmiko interoperability does not support expect_string! ****************
 To resolve this issue, use native or driver mode with `send_inputs_interact`  method.
-***** nssh netmiko interoperability does not support expect_string! *******************"""
+***** scrapli netmiko interoperability does not support expect_string! ****************"""
     )
     assert result == channel_output_2
 

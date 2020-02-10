@@ -4,11 +4,11 @@ from pathlib import Path
 
 import pytest
 
-import nssh
+import scrapli
 
 from .helper import clean_output_data
 
-TEST_DATA_PATH = f"{Path(nssh.__file__).parents[1]}/tests/functional/test_data"
+TEST_DATA_PATH = f"{Path(scrapli.__file__).parents[1]}/tests/functional/test_data"
 with open(f"{TEST_DATA_PATH}/devices/cisco_iosxe.json", "r") as f:
     CISCO_IOSXE_DEVICE = json.load(f)
 with open(f"{TEST_DATA_PATH}/test_cases/cisco_iosxe.json", "r") as f:

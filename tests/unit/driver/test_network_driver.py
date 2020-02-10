@@ -2,8 +2,8 @@ import types
 
 import pytest
 
-from nssh.driver.network_driver import PrivilegeLevel
-from nssh.exceptions import CouldNotAcquirePrivLevel, UnknownPrivLevel
+from scrapli.driver.network_driver import PrivilegeLevel
+from scrapli.exceptions import CouldNotAcquirePrivLevel, UnknownPrivLevel
 
 try:
     import ntc_templates

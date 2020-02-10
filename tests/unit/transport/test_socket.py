@@ -1,7 +1,7 @@
 import pytest
 
-from nssh.exceptions import NSSHTimeout
-from nssh.transport.socket import Socket
+from scrapli.exceptions import ScrapliTimeout
+from scrapli.transport.socket import Socket
 
 
 def test_socket_open_success():
@@ -19,7 +19,7 @@ def test_socket_open_failure_connection_refused():
 
 def test_socket_open_failure_timeout():
     sock = Socket("240.0.0.1", 22, 0.1)
-    with pytest.raises(NSSHTimeout) as e:
+    with pytest.raises(ScrapliTimeout) as e:
         sock.socket_open()
     assert str(e.value) == "Timed out trying to open socket to 240.0.0.1 on port 22"
 

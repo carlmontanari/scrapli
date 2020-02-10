@@ -1,8 +1,8 @@
 import pytest
 
-from nssh import NSSH
-from nssh.driver import NetworkDriver
-from nssh.driver.core import IOSXEDriver
+from scrapli import Scrape
+from scrapli.driver import NetworkDriver
+from scrapli.driver.core import IOSXEDriver
 
 
 @pytest.fixture(scope="module")
@@ -22,7 +22,7 @@ def base_driver():
         session_disable_paging="terminal length 0",
         driver="system",
     ):
-        conn = NSSH(
+        conn = Scrape(
             host=host,
             port=port,
             auth_username=auth_username,
