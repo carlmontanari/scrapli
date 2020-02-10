@@ -1,5 +1,4 @@
 """nssh.transport.miko"""
-import time
 import warnings
 from logging import getLogger
 from threading import Lock
