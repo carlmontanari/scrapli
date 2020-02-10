@@ -20,7 +20,7 @@ def base_driver():
         comms_ansi=False,
         session_pre_login_handler="",
         session_disable_paging="terminal length 0",
-        driver="system",
+        transport="system",
     ):
         conn = Scrape(
             host=host,
@@ -35,7 +35,7 @@ def base_driver():
             comms_ansi=comms_ansi,
             session_pre_login_handler=session_pre_login_handler,
             session_disable_paging=session_disable_paging,
-            driver=driver,
+            transport=transport,
         )
         conn.open()
         return conn
@@ -58,7 +58,7 @@ def network_driver():
         comms_ansi=False,
         session_pre_login_handler="",
         session_disable_paging="terminal length 0",
-        driver="system",
+        transport="system",
     ):
         conn = NetworkDriver(
             host=host,
@@ -73,7 +73,7 @@ def network_driver():
             comms_ansi=comms_ansi,
             session_pre_login_handler=session_pre_login_handler,
             session_disable_paging=session_disable_paging,
-            driver=driver,
+            transport=transport,
         )
         conn.open()
         return conn
@@ -96,7 +96,7 @@ def cisco_iosxe_driver():
         comms_ansi=False,
         session_pre_login_handler="",
         session_disable_paging="terminal length 0",
-        driver="system",
+        transport="system",
     ):
         conn = IOSXEDriver(
             host=host,
@@ -111,7 +111,7 @@ def cisco_iosxe_driver():
             comms_ansi=comms_ansi,
             session_pre_login_handler=session_pre_login_handler,
             session_disable_paging=session_disable_paging,
-            driver=driver,
+            transport=transport,
         )
         conn.open()
         return conn

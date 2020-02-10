@@ -19,10 +19,10 @@ TEST_CASES = {"cisco_iosxe": CISCO_IOSXE_TEST_CASES}
 
 
 @pytest.mark.parametrize(
-    "driver", ["system", "ssh2", "paramiko"], ids=["system", "ssh2", "paramiko"]
+    "transport", ["system", "ssh2", "paramiko"], ids=["system", "ssh2", "paramiko"]
 )
-def test_get_prompt(base_driver, driver):
-    conn = base_driver(**CISCO_IOSXE_DEVICE, driver=driver)
+def test_get_prompt(base_driver, transport):
+    conn = base_driver(**CISCO_IOSXE_DEVICE, transport=transport)
     result = conn.channel.get_prompt()
     assert result == "csr1000v#"
     conn.close()
@@ -34,10 +34,10 @@ def test_get_prompt(base_driver, driver):
     ids=[n["name"] for n in CISCO_IOSXE_TEST_CASES["channel.send_inputs"]["tests"]],
 )
 @pytest.mark.parametrize(
-    "driver", ["system", "ssh2", "paramiko"], ids=["system", "ssh2", "paramiko"]
+    "transport", ["system", "ssh2", "paramiko"], ids=["system", "ssh2", "paramiko"]
 )
-def test_channel_send_inputs(base_driver, driver, test):
-    conn = base_driver(**CISCO_IOSXE_DEVICE, driver=driver)
+def test_channel_send_inputs(base_driver, transport, test):
+    conn = base_driver(**CISCO_IOSXE_DEVICE, transport=transport)
     results = conn.channel.send_inputs(test["inputs"], **test["kwargs"])
     for index, result in enumerate(results):
         cleaned_result = clean_output_data(test, result.result)
@@ -51,10 +51,10 @@ def test_channel_send_inputs(base_driver, driver, test):
     ids=[n["name"] for n in CISCO_IOSXE_TEST_CASES["channel.send_inputs_interact"]["tests"]],
 )
 @pytest.mark.parametrize(
-    "driver", ["system", "ssh2", "paramiko"], ids=["system", "ssh2", "paramiko"]
+    "transport", ["system", "ssh2", "paramiko"], ids=["system", "ssh2", "paramiko"]
 )
-def test_channel_send_inputs_interact(base_driver, driver, test):
-    conn = base_driver(**CISCO_IOSXE_DEVICE, driver=driver)
+def test_channel_send_inputs_interact(base_driver, transport, test):
+    conn = base_driver(**CISCO_IOSXE_DEVICE, transport=transport)
     results = conn.channel.send_inputs_interact(test["inputs"])
     cleaned_result = clean_output_data(test, results[0].result)
     assert cleaned_result == test["outputs"][0]
@@ -67,10 +67,10 @@ def test_channel_send_inputs_interact(base_driver, driver, test):
     ids=[n["name"] for n in CISCO_IOSXE_TEST_CASES["send_commands"]["tests"]],
 )
 @pytest.mark.parametrize(
-    "driver", ["system", "ssh2", "paramiko"], ids=["system", "ssh2", "paramiko"]
+    "transport", ["system", "ssh2", "paramiko"], ids=["system", "ssh2", "paramiko"]
 )
-def test_send_commands(network_driver, driver, test):
-    conn = network_driver(**CISCO_IOSXE_DEVICE, driver=driver)
+def test_send_commands(network_driver, transport, test):
+    conn = network_driver(**CISCO_IOSXE_DEVICE, transport=transport)
     conn.default_desired_priv = "privilege_exec"
     conn.privs = CISCO_IOSXE_PRIVS
     try_textfsm = test["kwargs"].pop("textfsm", None)
@@ -91,10 +91,10 @@ def test_send_commands(network_driver, driver, test):
     ids=[n["name"] for n in CISCO_IOSXE_TEST_CASES["send_interactive"]["tests"]],
 )
 @pytest.mark.parametrize(
-    "driver", ["system", "ssh2", "paramiko"], ids=["system", "ssh2", "paramiko"]
+    "transport", ["system", "ssh2", "paramiko"], ids=["system", "ssh2", "paramiko"]
 )
-def test_send_commands(network_driver, driver, test):
-    conn = network_driver(**CISCO_IOSXE_DEVICE, driver=driver)
+def test_send_commands(network_driver, transport, test):
+    conn = network_driver(**CISCO_IOSXE_DEVICE, transport=transport)
     conn.default_desired_priv = "privilege_exec"
     conn.privs = CISCO_IOSXE_PRIVS
     results = conn.send_interactive(test["inputs"], **test["kwargs"])
@@ -108,10 +108,10 @@ def test_send_commands(network_driver, driver, test):
 
 
 @pytest.mark.parametrize(
-    "driver", ["system", "ssh2", "paramiko"], ids=["system", "ssh2", "paramiko"]
+    "transport", ["system", "ssh2", "paramiko"], ids=["system", "ssh2", "paramiko"]
 )
-def test__acquire_priv_escalate(network_driver, driver):
-    conn = network_driver(**CISCO_IOSXE_DEVICE, driver=driver)
+def test__acquire_priv_escalate(network_driver, transport):
+    conn = network_driver(**CISCO_IOSXE_DEVICE, transport=transport)
     conn.default_desired_priv = "privilege_exec"
     conn.privs = CISCO_IOSXE_PRIVS
     conn.acquire_priv("configuration")
@@ -121,10 +121,10 @@ def test__acquire_priv_escalate(network_driver, driver):
 
 
 @pytest.mark.parametrize(
-    "driver", ["system", "ssh2", "paramiko"], ids=["system", "ssh2", "paramiko"]
+    "transport", ["system", "ssh2", "paramiko"], ids=["system", "ssh2", "paramiko"]
 )
-def test__acquire_priv_deescalate(network_driver, driver):
-    conn = network_driver(**CISCO_IOSXE_DEVICE, driver=driver)
+def test__acquire_priv_deescalate(network_driver, transport):
+    conn = network_driver(**CISCO_IOSXE_DEVICE, transport=transport)
     conn.default_desired_priv = "privilege_exec"
     conn.privs = CISCO_IOSXE_PRIVS
     conn.acquire_priv("exec")

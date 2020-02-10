@@ -11,9 +11,11 @@ from scrapli.transport import (
     MIKO_TRANSPORT_ARGS,
     SSH2_TRANSPORT_ARGS,
     SYSTEM_SSH_TRANSPORT_ARGS,
+    TELNET_TRANSPORT_ARGS,
     MikoTransport,
     SSH2Transport,
     SystemSSHTransport,
+    TelnetTransport,
     Transport,
 )
 
@@ -21,11 +23,13 @@ TRANSPORT_CLASS: Dict[str, Callable[..., Transport]] = {
     "system": SystemSSHTransport,
     "ssh2": SSH2Transport,
     "paramiko": MikoTransport,
+    "telnet": TelnetTransport,
 }
 TRANSPORT_ARGS: Dict[str, Tuple[str, ...]] = {
     "system": SYSTEM_SSH_TRANSPORT_ARGS,
     "ssh2": SSH2_TRANSPORT_ARGS,
     "paramiko": MIKO_TRANSPORT_ARGS,
+    "telnet": TELNET_TRANSPORT_ARGS,
 }
 
 LOG = logging.getLogger("scrapli_base")
@@ -49,7 +53,7 @@ class Scrape:
         session_pre_login_handler: Union[str, Callable[..., Any]] = "",
         session_disable_paging: Union[str, Callable[..., Any]] = "terminal length 0",
         ssh_config_file: Union[str, bool] = True,
-        driver: str = "system",
+        transport: str = "system",
     ):
         """
         Scrape Object
@@ -82,10 +86,11 @@ class Scrape:
                 string to send to device to disable paging
             ssh_config_file: string to path for ssh config file, True to use default ssh config file
                 or False to ignore default ssh config file
-            driver: system|ssh2|paramiko -- type of ssh driver to use
+            transport: system|ssh2|paramiko|telnet -- type of transport to use
                 system uses system available ssh (/usr/bin/ssh)
                 ssh2 uses ssh2-python
                 paramiko uses... paramiko
+                telnet uses telnetlib
                 choice of driver depends on the features you need. in general system is easiest as
                 it will just "auto-magically" use your ssh config file (~/.ssh/config or
                 /etc/ssh/config_file). ssh2 is very very fast as it is a thin wrapper around libssh2
@@ -129,10 +134,12 @@ class Scrape:
             raise TypeError(f"ssh_config_file should be str or bool, got {type(ssh_config_file)}")
         self.ssh_config_file = ssh_config_file
 
-        if driver not in ("ssh2", "paramiko", "system"):
-            raise ValueError(f"transport should be one of ssh2|paramiko|system, got {driver}")
+        if transport not in ("ssh2", "paramiko", "system", "telnet"):
+            raise ValueError(
+                f"transport should be one of ssh2|paramiko|system|telnet, got {transport}"
+            )
         self.transport: Transport
-        self.transport_class, self.transport_args = self._transport_factory(driver)
+        self.transport_class, self.transport_args = self._transport_factory(transport)
 
         self.channel: Channel
         self.channel_args = {}

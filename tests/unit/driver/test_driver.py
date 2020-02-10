@@ -15,7 +15,7 @@ def test__repr():
     conn = Scrape(host="myhost")
     assert (
         repr(conn)
-        == "Scrape {'host': 'myhost', 'port': 22, 'auth_username': '', 'auth_password': '********', 'auth_strict_key': True, 'auth_public_key': b'', 'timeout_socket': 5, 'timeout_ssh': 5000, 'timeout_ops': 10, 'comms_prompt_pattern': '^[a-z0-9.\\\\-@()/:]{1,32}[#>$]$', 'comms_return_char': '\\n', 'comms_ansi': False, 'session_pre_login_handler': None, 'session_disable_paging': 'terminal length 0', 'ssh_config_file': True, 'transport_class': <class 'scrapli.transport.systemssh.SystemSSHTransport'>, 'transport_args': {'host': 'myhost', 'port': 22, 'timeout_socket': 5, 'timeout_ssh': 5000, 'auth_username': '', 'auth_public_key': b'', 'auth_password': '', 'auth_strict_key': True, 'comms_return_char': '\\n', 'ssh_config_file': True}, 'channel_args': {'comms_prompt_pattern': '^[a-z0-9.\\\\-@()/:]{1,32}[#>$]$', 'comms_return_char': '\\n', 'comms_ansi': False, 'timeout_ops': 10}}"
+        == "Scrape {'host': 'myhost', 'port': 22, 'auth_username': '', 'auth_password': '********', 'auth_strict_key': True, 'auth_public_key': b'', 'timeout_socket': 5, 'timeout_ssh': 5000, 'timeout_ops': 10, 'comms_prompt_pattern': '^[a-z0-9.\\\\-@()/:]{1,32}[#>$]$', 'comms_return_char': '\\n', 'comms_ansi': False, 'session_pre_login_handler': None, 'session_disable_paging': 'terminal length 0', 'ssh_config_file': True, 'transport_class': <class 'scrapli.transport.systemssh.SystemSSHTransport'>, 'transport_args': {'host': 'myhost', 'port': 22, 'timeout_socket': 5, 'timeout_ssh': 5000, 'auth_username': '', 'auth_public_key': b'', 'auth_password': '', 'auth_strict_key': True, 'comms_prompt_pattern': '^[a-z0-9.\\\\-@()/:]{1,32}[#>$]$', 'comms_return_char': '\\n', 'ssh_config_file': True}, 'channel_args': {'comms_prompt_pattern': '^[a-z0-9.\\\\-@()/:]{1,32}[#>$]$', 'comms_return_char': '\\n', 'comms_ansi': False, 'timeout_ops': 10}}"
     )
 
 
@@ -61,19 +61,19 @@ def test_system_driver():
 
 
 def test_ssh2_driver():
-    conn = Scrape(driver="ssh2")
+    conn = Scrape(transport="ssh2")
     assert conn.transport_class == SSH2Transport
 
 
 def test_paramiko_driver():
-    conn = Scrape(driver="paramiko")
+    conn = Scrape(transport="paramiko")
     assert conn.transport_class == MikoTransport
 
 
 def test_invalid_driver():
     with pytest.raises(ValueError) as e:
-        Scrape(driver="notreal")
-    assert str(e.value) == "transport should be one of ssh2|paramiko|system, got notreal"
+        Scrape(transport="notreal")
+    assert str(e.value) == "transport should be one of ssh2|paramiko|system|telnet, got notreal"
 
 
 def test_auth_ssh_key_strip():

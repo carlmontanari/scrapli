@@ -28,6 +28,7 @@ SYSTEM_SSH_TRANSPORT_ARGS = (
     "auth_public_key",
     "auth_password",
     "auth_strict_key",
+    "comms_prompt_pattern",
     "comms_return_char",
     "ssh_config_file",
 )
@@ -254,7 +255,7 @@ class SystemSSHTransport(Transport):
                 output = pty_session.read()
                 if b"password" in output.lower():
                     pty_session.write(self.auth_password.encode())
-                    pty_session.write(b"\n")
+                    pty_session.write(self.comms_return_char.encode())
                     break
                 attempt_count += 1
                 if attempt_count > 250:

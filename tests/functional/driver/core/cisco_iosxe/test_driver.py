@@ -24,10 +24,10 @@ TEST_CASES = {"cisco_iosxe": CISCO_IOSXE_TEST_CASES}
     ids=[n["name"] for n in CISCO_IOSXE_TEST_CASES["send_commands"]["tests"]],
 )
 @pytest.mark.parametrize(
-    "driver", ["system", "ssh2", "paramiko"], ids=["system", "ssh2", "paramiko"]
+    "transport", ["system", "ssh2", "paramiko"], ids=["system", "ssh2", "paramiko"]
 )
-def test_send_commands(cisco_iosxe_driver, driver, test):
-    conn = cisco_iosxe_driver(**CISCO_IOSXE_DEVICE, driver=driver)
+def test_send_commands(cisco_iosxe_driver, transport, test):
+    conn = cisco_iosxe_driver(**CISCO_IOSXE_DEVICE, transport=transport)
     try_textfsm = test["kwargs"].pop("textfsm", None)
     results = conn.send_commands(test["inputs"], **test["kwargs"])
     conn.close()
@@ -45,10 +45,10 @@ def test_send_commands(cisco_iosxe_driver, driver, test):
     ids=[n["name"] for n in CISCO_IOSXE_TEST_CASES["send_configs"]["tests"]],
 )
 @pytest.mark.parametrize(
-    "driver", ["system", "ssh2", "paramiko"], ids=["system", "ssh2", "paramiko"]
+    "transport", ["system", "ssh2", "paramiko"], ids=["system", "ssh2", "paramiko"]
 )
-def test_send_configs(cisco_iosxe_driver, driver, test):
-    conn = cisco_iosxe_driver(**CISCO_IOSXE_DEVICE, driver=driver)
+def test_send_configs(cisco_iosxe_driver, transport, test):
+    conn = cisco_iosxe_driver(**CISCO_IOSXE_DEVICE, transport=transport)
     conn.send_configs(test["setup"], **test["kwargs"])
     conn.channel.get_prompt()
     verification_results = conn.send_commands(test["inputs"], **test["kwargs"])
@@ -62,10 +62,10 @@ def test_send_configs(cisco_iosxe_driver, driver, test):
 
 
 @pytest.mark.parametrize(
-    "driver", ["system", "ssh2", "paramiko"], ids=["system", "ssh2", "paramiko"]
+    "transport", ["system", "ssh2", "paramiko"], ids=["system", "ssh2", "paramiko"]
 )
-def test__acquire_priv_escalate(cisco_iosxe_driver, driver):
-    conn = cisco_iosxe_driver(**CISCO_IOSXE_DEVICE, driver=driver)
+def test__acquire_priv_escalate(cisco_iosxe_driver, transport):
+    conn = cisco_iosxe_driver(**CISCO_IOSXE_DEVICE, transport=transport)
     conn.acquire_priv("configuration")
     current_priv = conn._determine_current_priv(conn.get_prompt())
     conn.close()
@@ -73,14 +73,14 @@ def test__acquire_priv_escalate(cisco_iosxe_driver, driver):
 
 
 @pytest.mark.parametrize(
-    "driver", ["system", "ssh2", "paramiko"], ids=["system", "ssh2", "paramiko"]
+    "transport", ["system", "ssh2", "paramiko"], ids=["system", "ssh2", "paramiko"]
 )
-def test__acquire_priv_deescalate(cisco_iosxe_driver, driver):
-    if driver == "ssh2":
+def test__acquire_priv_deescalate(cisco_iosxe_driver, transport):
+    if transport == "ssh2":
         # seems to need a tiny bit of time so sockets arent tied up between tests??
         # it only seemed to happen here... could be something to do w/ how many tests ran before?
         time.sleep(0.5)
-    conn = cisco_iosxe_driver(**CISCO_IOSXE_DEVICE, driver=driver)
+    conn = cisco_iosxe_driver(**CISCO_IOSXE_DEVICE, transport=transport)
     conn.acquire_priv("exec")
     current_priv = conn._determine_current_priv(conn.get_prompt())
     conn.close()
