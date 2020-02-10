@@ -29,6 +29,7 @@
 from scrapli.transport.cssh2 import SSH2_TRANSPORT_ARGS, SSH2Transport
 from scrapli.transport.miko import MIKO_TRANSPORT_ARGS, MikoTransport
 from scrapli.transport.systemssh import SYSTEM_SSH_TRANSPORT_ARGS, SystemSSHTransport
+from scrapli.transport.telnet import TELNET_TRANSPORT_ARGS, TelnetTransport
 from scrapli.transport.transport import Transport
 
 __all__ = (
@@ -39,6 +40,8 @@ __all__ = (
     &#34;SSH2_TRANSPORT_ARGS&#34;,
     &#34;SystemSSHTransport&#34;,
     &#34;SYSTEM_SSH_TRANSPORT_ARGS&#34;,
+    &#34;TELNET_TRANSPORT_ARGS&#34;,
+    &#34;TelnetTransport&#34;,
 )</code></pre>
 </details>
 </section>
@@ -65,6 +68,10 @@ __all__ = (
 <dt><code class="name"><a title="scrapli.transport.systemssh" href="systemssh.html">scrapli.transport.systemssh</a></code></dt>
 <dd>
 <section class="desc"><p>scrapli.transport.systemssh</p></section>
+</dd>
+<dt><code class="name"><a title="scrapli.transport.telnet" href="telnet.html">scrapli.transport.telnet</a></code></dt>
+<dd>
+<section class="desc"><p>scrapli.transport.telnet</p></section>
 </dd>
 <dt><code class="name"><a title="scrapli.transport.transport" href="transport.html">scrapli.transport.transport</a></code></dt>
 <dd>
@@ -1661,7 +1668,7 @@ or False to ignore default ssh config file</dd>
                 output = pty_session.read()
                 if b&#34;password&#34; in output.lower():
                     pty_session.write(self.auth_password.encode())
-                    pty_session.write(b&#34;\n&#34;)
+                    pty_session.write(self.comms_return_char.encode())
                     break
                 attempt_count += 1
                 if attempt_count &gt; 250:
@@ -2031,6 +2038,440 @@ or False to ignore default ssh config file</dd>
 </li>
 </ul>
 </dd>
+<dt id="scrapli.transport.TelnetTransport"><code class="flex name class">
+<span>class <span class="ident">TelnetTransport</span></span>
+<span>(</span><span>host, port=23, auth_username='', auth_public_key='', auth_password='', timeout_ssh=5000, timeout_socket=5, comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n')</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<p>TelnetTransport Object</p>
+<p>Inherit from Transport ABC and Socket base class:
+TelnetTransport &lt;- Transport (ABC)
+TelnetTransport &lt;- Socket</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>host</code></strong></dt>
+<dd>host ip/name to connect to</dd>
+<dt><strong><code>port</code></strong></dt>
+<dd>port to connect to</dd>
+<dt><strong><code>auth_username</code></strong></dt>
+<dd>username for authentication</dd>
+<dt><strong><code>auth_public_key</code></strong></dt>
+<dd>path to public key for authentication</dd>
+<dt><strong><code>auth_password</code></strong></dt>
+<dd>password for authentication</dd>
+<dt><strong><code>timeout_socket</code></strong></dt>
+<dd>timeout for establishing socket in seconds</dd>
+<dt><strong><code>timeout_ssh</code></strong></dt>
+<dd>timeout for ssh transport in milliseconds</dd>
+<dt><strong><code>comms_prompt_pattern</code></strong></dt>
+<dd>prompt pattern expected for device, same as the one provided to
+channel &ndash; system ssh needs to know this to know how to decide if we are properly
+sending/receiving data &ndash; i.e. we are not stuck at some password prompt or some
+other failure scenario. If using driver, this should be passed from driver (Scrape,
+or IOSXE, etc.) to this Transport class.</dd>
+<dt><strong><code>comms_return_char</code></strong></dt>
+<dd>return character to use on the channel, same as the one provided to
+channel &ndash; system ssh needs to know this to know what to send so that we can probe
+the channel to make sure we are authenticated and sending/receiving data. If using
+driver, this should be passed from driver (Scrape, or IOSXE, etc.) to this Transport
+class.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code>: <code>DAR202</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TelnetTransport(Transport):
+    def __init__(
+        self,
+        host: str,
+        port: int = 23,
+        auth_username: str = &#34;&#34;,
+        auth_public_key: str = &#34;&#34;,
+        auth_password: str = &#34;&#34;,
+        timeout_ssh: int = 5000,
+        timeout_socket: int = 5,
+        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]$&#34;,
+        comms_return_char: str = &#34;\n&#34;,
+    ):  # pylint: disable=W0231
+        &#34;&#34;&#34;
+        TelnetTransport Object
+
+        Inherit from Transport ABC and Socket base class:
+        TelnetTransport &lt;- Transport (ABC)
+        TelnetTransport &lt;- Socket
+
+        Args:
+            host: host ip/name to connect to
+            port: port to connect to
+            auth_username: username for authentication
+            auth_public_key: path to public key for authentication
+            auth_password: password for authentication
+            timeout_socket: timeout for establishing socket in seconds
+            timeout_ssh: timeout for ssh transport in milliseconds
+            comms_prompt_pattern: prompt pattern expected for device, same as the one provided to
+                channel -- system ssh needs to know this to know how to decide if we are properly
+                sending/receiving data -- i.e. we are not stuck at some password prompt or some
+                other failure scenario. If using driver, this should be passed from driver (Scrape,
+                or IOSXE, etc.) to this Transport class.
+            comms_return_char: return character to use on the channel, same as the one provided to
+                channel -- system ssh needs to know this to know what to send so that we can probe
+                the channel to make sure we are authenticated and sending/receiving data. If using
+                driver, this should be passed from driver (Scrape, or IOSXE, etc.) to this Transport
+                class.
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.host: str = host
+        self.port: int = port
+        self.timeout_ssh: int = timeout_ssh
+        self.timeout_socket: int = timeout_socket
+        self.session_lock: Lock = Lock()
+        self.auth_username: str = auth_username
+        self.auth_public_key: str = auth_public_key
+        self.auth_password: str = auth_password
+        self.comms_prompt_pattern: str = comms_prompt_pattern
+        self.comms_return_char: str = comms_return_char
+
+        self.session: ScrapliTelnet
+        self.lib_auth_exception = ScrapliAuthenticationFailed
+        self._isauthenticated = False
+
+    def open(self) -&gt; None:
+        &#34;&#34;&#34;
+        Open channel, acquire pty, request interactive shell
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            ScrapliAuthenticationFailed: if cant successfully authenticate
+
+        &#34;&#34;&#34;
+        self.session_lock.acquire()
+        telnet_session = ScrapliTelnet(host=self.host, port=self.port)
+        LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
+        self.session_lock.release()
+        self._authenticate(telnet_session)
+        if not self._telnet_isauthenticated(telnet_session):
+            raise ScrapliAuthenticationFailed(
+                f&#34;Could not authenticate over telnet to host: {self.host}&#34;
+            )
+        LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
+        print(&#34;SUCH GOOD SUCCESS&#34;)
+        self.session = telnet_session
+
+    def _authenticate(self, telnet_session: ScrapliTelnet) -&gt; None:
+        &#34;&#34;&#34;
+        Parent private method to handle telnet authentication
+
+        Args:
+            telnet_session: Telnet session object
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self._authenticate_username(telnet_session)
+        self._authenticate_password(telnet_session)
+
+    def _authenticate_username(self, telnet_session: ScrapliTelnet) -&gt; None:
+        &#34;&#34;&#34;
+        Private method to enter username for telnet authentication
+
+        Args:
+            telnet_session: Telnet session object
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            exc: if unknown (i.e. not auth failed) exception occurs
+
+        &#34;&#34;&#34;
+        self.session_lock.acquire()
+        try:
+            attempt_count = 0
+            while True:
+                output = telnet_session.read_eager()
+                if b&#34;username:&#34; in output.lower():
+                    telnet_session.write(self.auth_username.encode())
+                    telnet_session.write(self.comms_return_char.encode())
+                    break
+                attempt_count += 1
+                if attempt_count &gt; 1000:
+                    break
+        except self.lib_auth_exception as exc:
+            LOG.critical(f&#34;Did not see username prompt from {self.host} failed. Exception: {exc}.&#34;)
+            raise exc
+        finally:
+            self.session_lock.release()
+
+    def _authenticate_password(self, telnet_session: ScrapliTelnet) -&gt; None:
+        &#34;&#34;&#34;
+        Private method to enter password for telnet authentication
+
+        Args:
+            telnet_session: Telnet session object
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            exc: if unknown (i.e. not auth failed) exception occurs
+
+        &#34;&#34;&#34;
+        self.session_lock.acquire()
+        try:
+            attempt_count = 0
+            while True:
+                output = telnet_session.read_eager()
+                if b&#34;password&#34; in output.lower():
+                    telnet_session.write(self.auth_password.encode())
+                    telnet_session.write(self.comms_return_char.encode())
+                    break
+                attempt_count += 1
+                if attempt_count &gt; 1000:
+                    break
+        except self.lib_auth_exception as exc:
+            LOG.critical(f&#34;Password authentication with host {self.host} failed. Exception: {exc}.&#34;)
+        except Exception as exc:
+            LOG.critical(
+                &#34;Unknown error occurred during password authentication with host &#34;
+                f&#34;{self.host}; Exception: {exc}&#34;
+            )
+            raise exc
+        finally:
+            self.session_lock.release()
+
+    def _telnet_isauthenticated(self, telnet_session: ScrapliTelnet) -&gt; bool:
+        &#34;&#34;&#34;
+        Check if session is authenticated
+
+        This is very naive -- it only knows if the sub process is alive and has not received an EOF.
+        Beyond that we lock the session and send the return character and re-read the channel.
+
+        Args:
+            telnet_session: Telnet session object
+
+        Returns:
+            bool: True if authenticated, else False
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        if not telnet_session.eof:
+            prompt_pattern = get_prompt_pattern(&#34;&#34;, self.comms_prompt_pattern)
+            telnet_session_fd = telnet_session.fileno()
+            self.session_lock.acquire()
+            telnet_session.write(self.comms_return_char.encode())
+            time.sleep(0.25)
+            fd_ready, _, _ = select([telnet_session_fd], [], [], 0)
+            if telnet_session_fd in fd_ready:
+                output = telnet_session.read_eager()
+                # we do not need to deal w/ line replacement for the actual output, only for
+                # parsing if a prompt-like thing is at the end of the output
+                output = re.sub(b&#34;\r&#34;, b&#34;\n&#34;, output.strip())
+                channel_match = re.search(prompt_pattern, output)
+                if channel_match:
+                    self.session_lock.release()
+                    self._isauthenticated = True
+                    return True
+        self.session_lock.release()
+        return False
+
+    def close(self) -&gt; None:
+        &#34;&#34;&#34;
+        Close session and socket
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.session_lock.acquire()
+        self.session.close()
+        LOG.debug(f&#34;Channel to host {self.host} closed&#34;)
+        self.session_lock.release()
+
+    def isalive(self) -&gt; bool:
+        &#34;&#34;&#34;
+        Check if socket is alive and session is authenticated
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+
+    def read(self) -&gt; bytes:
+        &#34;&#34;&#34;
+        Read data from the channel
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        return self.session.read_eager()
+
+    def write(self, channel_input: str) -&gt; None:
+        &#34;&#34;&#34;
+        Write data to the channel
+
+        Args:
+            channel_input: string to send to channel
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.session.write(channel_input.encode())
+
+    def set_timeout(self, timeout: Optional[int] = None) -&gt; None:
+        &#34;&#34;&#34;
+        Set session timeout
+
+        Args:
+            timeout: timeout in seconds
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+
+    def set_blocking(self, blocking: bool = False) -&gt; None:
+        &#34;&#34;&#34;
+        Set session blocking configuration
+
+        Args:
+            blocking: True/False set session to blocking
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scrapli.transport.transport.Transport" href="transport.html#scrapli.transport.transport.Transport">Transport</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="scrapli.transport.TelnetTransport.open"><code class="name flex">
+<span>def <span class="ident">open</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Open channel, acquire pty, request interactive shell</p>
+<h2 id="args">Args</h2>
+<p>N/A</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code>: <code>DAR202</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><strong><code>ScrapliAuthenticationFailed</code></strong></dt>
+<dd>if cant successfully authenticate</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def open(self) -&gt; None:
+    &#34;&#34;&#34;
+    Open channel, acquire pty, request interactive shell
+
+    Args:
+        N/A
+
+    Returns:
+        N/A  # noqa: DAR202
+
+    Raises:
+        ScrapliAuthenticationFailed: if cant successfully authenticate
+
+    &#34;&#34;&#34;
+    self.session_lock.acquire()
+    telnet_session = ScrapliTelnet(host=self.host, port=self.port)
+    LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
+    self.session_lock.release()
+    self._authenticate(telnet_session)
+    if not self._telnet_isauthenticated(telnet_session):
+        raise ScrapliAuthenticationFailed(
+            f&#34;Could not authenticate over telnet to host: {self.host}&#34;
+        )
+    LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
+    print(&#34;SUCH GOOD SUCCESS&#34;)
+    self.session = telnet_session</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scrapli.transport.transport.Transport" href="transport.html#scrapli.transport.transport.Transport">Transport</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scrapli.transport.transport.Transport.close" href="transport.html#scrapli.transport.transport.Transport.close">close</a></code></li>
+<li><code><a title="scrapli.transport.transport.Transport.isalive" href="transport.html#scrapli.transport.transport.Transport.isalive">isalive</a></code></li>
+<li><code><a title="scrapli.transport.transport.Transport.read" href="transport.html#scrapli.transport.transport.Transport.read">read</a></code></li>
+<li><code><a title="scrapli.transport.transport.Transport.set_blocking" href="transport.html#scrapli.transport.transport.Transport.set_blocking">set_blocking</a></code></li>
+<li><code><a title="scrapli.transport.transport.Transport.set_timeout" href="transport.html#scrapli.transport.transport.Transport.set_timeout">set_timeout</a></code></li>
+<li><code><a title="scrapli.transport.transport.Transport.write" href="transport.html#scrapli.transport.transport.Transport.write">write</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="scrapli.transport.Transport"><code class="flex name class">
 <span>class <span class="ident">Transport</span></span>
 <span>(</span><span>*args, **kwargs)</span>
@@ -2219,6 +2660,7 @@ inheritance.</p></section>
 <li><a title="scrapli.transport.cssh2.SSH2Transport" href="cssh2.html#scrapli.transport.cssh2.SSH2Transport">SSH2Transport</a></li>
 <li><a title="scrapli.transport.miko.MikoTransport" href="miko.html#scrapli.transport.miko.MikoTransport">MikoTransport</a></li>
 <li><a title="scrapli.transport.systemssh.SystemSSHTransport" href="systemssh.html#scrapli.transport.systemssh.SystemSSHTransport">SystemSSHTransport</a></li>
+<li><a title="scrapli.transport.telnet.TelnetTransport" href="telnet.html#scrapli.transport.telnet.TelnetTransport">TelnetTransport</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -2527,6 +2969,7 @@ def write(self, channel_input: str) -&gt; None:
 <li><code><a title="scrapli.transport.ptyprocess" href="ptyprocess.html">scrapli.transport.ptyprocess</a></code></li>
 <li><code><a title="scrapli.transport.socket" href="socket.html">scrapli.transport.socket</a></code></li>
 <li><code><a title="scrapli.transport.systemssh" href="systemssh.html">scrapli.transport.systemssh</a></code></li>
+<li><code><a title="scrapli.transport.telnet" href="telnet.html">scrapli.transport.telnet</a></code></li>
 <li><code><a title="scrapli.transport.transport" href="transport.html">scrapli.transport.transport</a></code></li>
 </ul>
 </li>
@@ -2559,6 +3002,12 @@ def write(self, channel_input: str) -&gt; None:
 <li><code><a title="scrapli.transport.SystemSSHTransport.open" href="#scrapli.transport.SystemSSHTransport.open">open</a></code></li>
 <li><code><a title="scrapli.transport.SystemSSHTransport.read" href="#scrapli.transport.SystemSSHTransport.read">read</a></code></li>
 <li><code><a title="scrapli.transport.SystemSSHTransport.set_blocking" href="#scrapli.transport.SystemSSHTransport.set_blocking">set_blocking</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="scrapli.transport.TelnetTransport" href="#scrapli.transport.TelnetTransport">TelnetTransport</a></code></h4>
+<ul class="">
+<li><code><a title="scrapli.transport.TelnetTransport.open" href="#scrapli.transport.TelnetTransport.open">open</a></code></li>
 </ul>
 </li>
 <li>

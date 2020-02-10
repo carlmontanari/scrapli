@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.7.4" />
-<title>scrapli.transport.systemssh API documentation</title>
-<meta name="description" content="scrapli.transport.systemssh" />
+<title>scrapli.transport.telnet API documentation</title>
+<meta name="description" content="scrapli.transport.telnet" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -17,70 +17,67 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>scrapli.transport.systemssh</code></h1>
+<h1 class="title">Module <code>scrapli.transport.telnet</code></h1>
 </header>
 <section id="section-intro">
-<p>scrapli.transport.systemssh</p>
+<p>scrapli.transport.telnet</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;scrapli.transport.systemssh&#34;&#34;&#34;
+<pre><code class="python">&#34;&#34;&#34;scrapli.transport.telnet&#34;&#34;&#34;
 import re
+import time
 from logging import getLogger
 from select import select
-from subprocess import PIPE, Popen
+from telnetlib import Telnet
 from threading import Lock
-from typing import TYPE_CHECKING, Optional, Union
+from typing import Optional
 
-from scrapli.decorators import operation_timeout
 from scrapli.exceptions import ScrapliAuthenticationFailed
 from scrapli.helper import get_prompt_pattern
-from scrapli.transport.ptyprocess import PtyProcess
 from scrapli.transport.transport import Transport
-
-if TYPE_CHECKING:
-    PopenBytes = Popen[bytes]  # pylint: disable=E1136
-else:
-    PopenBytes = Popen
 
 LOG = getLogger(&#34;transport&#34;)
 
-SYSTEM_SSH_TRANSPORT_ARGS = (
+TELNET_TRANSPORT_ARGS = (
     &#34;host&#34;,
     &#34;port&#34;,
-    &#34;timeout_socket&#34;,
     &#34;timeout_ssh&#34;,
+    &#34;timeout_socket&#34;,
     &#34;auth_username&#34;,
     &#34;auth_public_key&#34;,
     &#34;auth_password&#34;,
-    &#34;auth_strict_key&#34;,
     &#34;comms_prompt_pattern&#34;,
     &#34;comms_return_char&#34;,
-    &#34;ssh_config_file&#34;,
 )
 
 
-class SystemSSHTransport(Transport):
+class ScrapliTelnet(Telnet):
+    def __init__(self, host: str, port: int) -&gt; None:
+        self.eof: bool
+        super().__init__(host, port)
+
+
+class TelnetTransport(Transport):
     def __init__(
         self,
         host: str,
-        port: int = 22,
+        port: int = 23,
         auth_username: str = &#34;&#34;,
         auth_public_key: str = &#34;&#34;,
         auth_password: str = &#34;&#34;,
-        auth_strict_key: bool = True,
-        timeout_socket: int = 5,
         timeout_ssh: int = 5000,
+        timeout_socket: int = 5,
         comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]$&#34;,
         comms_return_char: str = &#34;\n&#34;,
-        ssh_config_file: Union[str, bool] = False,
     ):  # pylint: disable=W0231
         &#34;&#34;&#34;
-        SystemSSHTransport Object
+        TelnetTransport Object
 
-        Inherit from Transport ABC
-        SSH2Transport &lt;- Transport (ABC)
+        Inherit from Transport ABC and Socket base class:
+        TelnetTransport &lt;- Transport (ABC)
+        TelnetTransport &lt;- Socket
 
         Args:
             host: host ip/name to connect to
@@ -88,7 +85,6 @@ class SystemSSHTransport(Transport):
             auth_username: username for authentication
             auth_public_key: path to public key for authentication
             auth_password: password for authentication
-            auth_strict_key: True/False to enforce strict key checking (default is True)
             timeout_socket: timeout for establishing socket in seconds
             timeout_ssh: timeout for ssh transport in milliseconds
             comms_prompt_pattern: prompt pattern expected for device, same as the one provided to
@@ -101,8 +97,6 @@ class SystemSSHTransport(Transport):
                 the channel to make sure we are authenticated and sending/receiving data. If using
                 driver, this should be passed from driver (Scrape, or IOSXE, etc.) to this Transport
                 class.
-            ssh_config_file: string to path for ssh config file, True to use default ssh config file
-                or False to ignore default ssh config file
 
         Returns:
             N/A  # noqa: DAR202
@@ -113,52 +107,22 @@ class SystemSSHTransport(Transport):
         &#34;&#34;&#34;
         self.host: str = host
         self.port: int = port
+        self.timeout_ssh: int = timeout_ssh
         self.timeout_socket: int = timeout_socket
-        self.timeout_ssh: int = int(timeout_ssh / 1000)
         self.session_lock: Lock = Lock()
         self.auth_username: str = auth_username
         self.auth_public_key: str = auth_public_key
         self.auth_password: str = auth_password
-        self.auth_strict_key: bool = auth_strict_key
         self.comms_prompt_pattern: str = comms_prompt_pattern
         self.comms_return_char: str = comms_return_char
-        self.ssh_config_file: Union[str, bool] = ssh_config_file
 
-        self.session: Union[Popen[bytes], PtyProcess]  # pylint: disable=E1136
+        self.session: ScrapliTelnet
         self.lib_auth_exception = ScrapliAuthenticationFailed
         self._isauthenticated = False
 
-        self.open_cmd = [&#34;ssh&#34;, self.host]
-        self._build_open_cmd()
-
-    def _build_open_cmd(self) -&gt; None:
-        &#34;&#34;&#34;
-        Method to craft command to open ssh session
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.open_cmd.extend([&#34;-p&#34;, str(self.port)])
-        self.open_cmd.extend([&#34;-o&#34;, f&#34;ConnectTimeout={self.timeout_socket}&#34;])
-        if self.auth_public_key:
-            self.open_cmd.extend([&#34;-i&#34;, self.auth_public_key])
-        if self.auth_username:
-            self.open_cmd.extend([&#34;-l&#34;, self.auth_username])
-        if self.auth_strict_key is False:
-            self.open_cmd.extend([&#34;-o&#34;, &#34;StrictHostKeyChecking=no&#34;])
-        if isinstance(self.ssh_config_file, str):
-            self.open_cmd.extend([&#34;-F&#34;, self.ssh_config_file])
-
     def open(self) -&gt; None:
         &#34;&#34;&#34;
-        Parent method to open session, authenticate and acquire shell
+        Open channel, acquire pty, request interactive shell
 
         Args:
             N/A
@@ -167,126 +131,97 @@ class SystemSSHTransport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            ScrapliAuthenticationFailed: if all authentication means fail
+            ScrapliAuthenticationFailed: if cant successfully authenticate
 
         &#34;&#34;&#34;
         self.session_lock.acquire()
-
-        # If authenticating with public key prefer to use open pipes
-        # _open_pipes uses subprocess Popen which is preferable to opening a pty
-        if self.auth_public_key:
-            if self._open_pipes():
-                return
-
-        # If public key auth fails or is not configured, open a pty session
-        if not self._open_pty():
-            msg = f&#34;Authentication to host {self.host} failed&#34;
-            LOG.critical(msg)
-            raise ScrapliAuthenticationFailed(msg)
-
-    def _open_pipes(self) -&gt; bool:
-        &#34;&#34;&#34;
-        Private method to open session with subprocess.Popen
-
-        Args:
-            N/A
-
-        Returns:
-            bool: True/False session was opened and authenticated
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.open_cmd.append(&#34;-v&#34;)
-        pipes_session = Popen(
-            self.open_cmd, bufsize=0, shell=False, stdin=PIPE, stdout=PIPE, stderr=PIPE
-        )
-        LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
-
-        try:
-            self._pipes_isauthenticated(pipes_session)
-        except TimeoutError:
-            return False
-
-        LOG.debug(f&#34;Authenticated to host {self.host} with public key&#34;)
-        self.session_lock.release()
-        self.session = pipes_session
-        return True
-
-    @operation_timeout(&#34;timeout_ssh&#34;)
-    def _pipes_isauthenticated(self, pipes_session: PopenBytes) -&gt; bool:
-        &#34;&#34;&#34;
-        Private method to check initial authentication when using subprocess.Popen
-
-        Args:
-            pipes_session: Popen pipes session object
-
-        Returns:
-            bool: True/False session was authenticated
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        output = b&#34;&#34;
-        while True:
-            output += pipes_session.stderr.read(1024)
-            if f&#34;Authenticated to {self.host}&#34;.encode() in output:
-                self._isauthenticated = True
-                return True
-
-    def _open_pty(self) -&gt; bool:
-        &#34;&#34;&#34;
-        Private method to open session with PtyProcess
-
-        Args:
-            N/A
-
-        Returns:
-            bool: True/False session was opened and authenticated
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        pty_session = PtyProcess.spawn(self.open_cmd)
+        telnet_session = ScrapliTelnet(host=self.host, port=self.port)
         LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
         self.session_lock.release()
-        self._pty_authenticate(pty_session)
-        if not self._pty_isauthenticated(pty_session):
-            return False
+        self._authenticate(telnet_session)
+        if not self._telnet_isauthenticated(telnet_session):
+            raise ScrapliAuthenticationFailed(
+                f&#34;Could not authenticate over telnet to host: {self.host}&#34;
+            )
         LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
-        self.session = pty_session
-        return True
+        print(&#34;SUCH GOOD SUCCESS&#34;)
+        self.session = telnet_session
 
-    def _pty_authenticate(self, pty_session: PtyProcess) -&gt; None:
+    def _authenticate(self, telnet_session: ScrapliTelnet) -&gt; None:
         &#34;&#34;&#34;
-        Private method to check initial authentication when using pty_session
+        Parent private method to handle telnet authentication
 
         Args:
-            pty_session: PtyProcess session object
+            telnet_session: Telnet session object
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self._authenticate_username(telnet_session)
+        self._authenticate_password(telnet_session)
+
+    def _authenticate_username(self, telnet_session: ScrapliTelnet) -&gt; None:
+        &#34;&#34;&#34;
+        Private method to enter username for telnet authentication
+
+        Args:
+            telnet_session: Telnet session object
 
         Returns:
             N/A  # noqa: DAR202
 
         Raises:
             exc: if unknown (i.e. not auth failed) exception occurs
-            lib_auth_exception: if known auth exception occurs
 
         &#34;&#34;&#34;
         self.session_lock.acquire()
         try:
             attempt_count = 0
             while True:
-                output = pty_session.read()
-                if b&#34;password&#34; in output.lower():
-                    pty_session.write(self.auth_password.encode())
-                    pty_session.write(self.comms_return_char.encode())
+                output = telnet_session.read_eager()
+                if b&#34;username:&#34; in output.lower():
+                    telnet_session.write(self.auth_username.encode())
+                    telnet_session.write(self.comms_return_char.encode())
                     break
                 attempt_count += 1
-                if attempt_count &gt; 250:
-                    raise self.lib_auth_exception
+                if attempt_count &gt; 1000:
+                    break
+        except self.lib_auth_exception as exc:
+            LOG.critical(f&#34;Did not see username prompt from {self.host} failed. Exception: {exc}.&#34;)
+            raise exc
+        finally:
+            self.session_lock.release()
+
+    def _authenticate_password(self, telnet_session: ScrapliTelnet) -&gt; None:
+        &#34;&#34;&#34;
+        Private method to enter password for telnet authentication
+
+        Args:
+            telnet_session: Telnet session object
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            exc: if unknown (i.e. not auth failed) exception occurs
+
+        &#34;&#34;&#34;
+        self.session_lock.acquire()
+        try:
+            attempt_count = 0
+            while True:
+                output = telnet_session.read_eager()
+                if b&#34;password&#34; in output.lower():
+                    telnet_session.write(self.auth_password.encode())
+                    telnet_session.write(self.comms_return_char.encode())
+                    break
+                attempt_count += 1
+                if attempt_count &gt; 1000:
+                    break
         except self.lib_auth_exception as exc:
             LOG.critical(f&#34;Password authentication with host {self.host} failed. Exception: {exc}.&#34;)
         except Exception as exc:
@@ -298,7 +233,7 @@ class SystemSSHTransport(Transport):
         finally:
             self.session_lock.release()
 
-    def _pty_isauthenticated(self, pty_session: PtyProcess) -&gt; bool:
+    def _telnet_isauthenticated(self, telnet_session: ScrapliTelnet) -&gt; bool:
         &#34;&#34;&#34;
         Check if session is authenticated
 
@@ -306,7 +241,7 @@ class SystemSSHTransport(Transport):
         Beyond that we lock the session and send the return character and re-read the channel.
 
         Args:
-            pty_session: PtyProcess session object
+            telnet_session: Telnet session object
 
         Returns:
             bool: True if authenticated, else False
@@ -315,15 +250,15 @@ class SystemSSHTransport(Transport):
             N/A
 
         &#34;&#34;&#34;
-        if pty_session.isalive() and not pty_session.eof():
+        if not telnet_session.eof:
             prompt_pattern = get_prompt_pattern(&#34;&#34;, self.comms_prompt_pattern)
+            telnet_session_fd = telnet_session.fileno()
             self.session_lock.acquire()
-            pty_session.write(self.comms_return_char.encode())
-            fd_ready, _, _ = select([pty_session.fd], [], [], 0)
-            if pty_session.fd in fd_ready:
-                # unclear as to why there needs to be two read operations here, but fails w/out it
-                pty_session.read()
-                output = pty_session.read()
+            telnet_session.write(self.comms_return_char.encode())
+            time.sleep(0.25)
+            fd_ready, _, _ = select([telnet_session_fd], [], [], 0)
+            if telnet_session_fd in fd_ready:
+                output = telnet_session.read_eager()
                 # we do not need to deal w/ line replacement for the actual output, only for
                 # parsing if a prompt-like thing is at the end of the output
                 output = re.sub(b&#34;\r&#34;, b&#34;\n&#34;, output.strip())
@@ -350,34 +285,24 @@ class SystemSSHTransport(Transport):
 
         &#34;&#34;&#34;
         self.session_lock.acquire()
-        if isinstance(self.session, Popen):
-            self.session.kill(1)
-        elif isinstance(self.session, PtyProcess):
-            self.session.kill(1)
+        self.session.close()
         LOG.debug(f&#34;Channel to host {self.host} closed&#34;)
         self.session_lock.release()
 
     def isalive(self) -&gt; bool:
         &#34;&#34;&#34;
-        Check if session is alive and session is authenticated
+        Check if socket is alive and session is authenticated
 
         Args:
             N/A
 
         Returns:
-            bool: True if session is alive and session authenticated, else False
+            N/A  # noqa: DAR202
 
         Raises:
             N/A
 
         &#34;&#34;&#34;
-        if isinstance(self.session, Popen):
-            if self.session.poll() is None and self._isauthenticated:
-                return True
-        elif isinstance(self.session, PtyProcess):
-            if self.session.isalive() and self._isauthenticated and not self.session.eof():
-                return True
-        return False
 
     def read(self) -&gt; bytes:
         &#34;&#34;&#34;
@@ -387,18 +312,13 @@ class SystemSSHTransport(Transport):
             N/A
 
         Returns:
-            bytes: bytes output as read from channel
+            N/A  # noqa: DAR202
 
         Raises:
             N/A
 
         &#34;&#34;&#34;
-        read_bytes = 65535
-        if isinstance(self.session, Popen):
-            return self.session.stdout.read(read_bytes)
-        if isinstance(self.session, PtyProcess):
-            return self.session.read(read_bytes)
-        return b&#34;&#34;
+        return self.session.read_eager()
 
     def write(self, channel_input: str) -&gt; None:
         &#34;&#34;&#34;
@@ -414,10 +334,7 @@ class SystemSSHTransport(Transport):
             N/A
 
         &#34;&#34;&#34;
-        if isinstance(self.session, Popen):
-            self.session.stdin.write(channel_input.encode())
-        elif isinstance(self.session, PtyProcess):
-            self.session.write(channel_input.encode())
+        self.session.write(channel_input.encode())
 
     def set_timeout(self, timeout: Optional[int] = None) -&gt; None:
         &#34;&#34;&#34;
@@ -437,8 +354,6 @@ class SystemSSHTransport(Transport):
     def set_blocking(self, blocking: bool = False) -&gt; None:
         &#34;&#34;&#34;
         Set session blocking configuration
-
-        Unnecessary when using Popen/system ssh
 
         Args:
             blocking: True/False set session to blocking
@@ -461,16 +376,82 @@ class SystemSSHTransport(Transport):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="scrapli.transport.systemssh.SystemSSHTransport"><code class="flex name class">
-<span>class <span class="ident">SystemSSHTransport</span></span>
-<span>(</span><span>host, port=22, auth_username='', auth_public_key='', auth_password='', auth_strict_key=True, timeout_socket=5, timeout_ssh=5000, comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n', ssh_config_file=False)</span>
+<dt id="scrapli.transport.telnet.ScrapliTelnet"><code class="flex name class">
+<span>class <span class="ident">ScrapliTelnet</span></span>
+<span>(</span><span>host, port)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Telnet interface class.</p>
+<p>An instance of this class represents a connection to a telnet
+server.
+The instance is initially not connected; the open()
+method must be used to establish a connection.
+Alternatively, the
+host name and optional port number can be passed to the
+constructor, too.</p>
+<p>Don't try to reopen an already connected instance.</p>
+<p>This class has many read_*() methods.
+Note that some of them
+raise EOFError when the end of the connection is read, because
+they can return an empty string for other reasons.
+See the
+individual doc strings.</p>
+<p>read_until(expected, [timeout])
+Read until the expected string has been seen, or a timeout is
+hit (default is no timeout); may block.</p>
+<p>read_all()
+Read all data until EOF; may block.</p>
+<p>read_some()
+Read at least one byte or EOF; may block.</p>
+<p>read_very_eager()
+Read all data available already queued or on the socket,
+without blocking.</p>
+<p>read_eager()
+Read either data already queued or some data available on the
+socket, without blocking.</p>
+<p>read_lazy()
+Read all data in the raw queue (processing it first), without
+doing any socket I/O.</p>
+<p>read_very_lazy()
+Reads all data in the cooked queue, without doing any socket
+I/O.</p>
+<p>read_sb_data()
+Reads available data between SB &hellip; SE sequence. Don't block.</p>
+<p>set_option_negotiation_callback(callback)
+Each time a telnet option is read on the input flow, this callback
+(if set) is called with the following parameters :
+callback(telnet socket, command, option)
+option will be chr(0) when there is no option.
+No other action is done afterwards by telnetlib.</p>
+<p>Constructor.</p>
+<p>When called without arguments, create an unconnected instance.
+With a hostname argument, it connects the instance; port number
+and timeout are optional.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ScrapliTelnet(Telnet):
+    def __init__(self, host: str, port: int) -&gt; None:
+        self.eof: bool
+        super().__init__(host, port)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>telnetlib.Telnet</li>
+</ul>
+</dd>
+<dt id="scrapli.transport.telnet.TelnetTransport"><code class="flex name class">
+<span>class <span class="ident">TelnetTransport</span></span>
+<span>(</span><span>host, port=23, auth_username='', auth_public_key='', auth_password='', timeout_ssh=5000, timeout_socket=5, comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n')</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Helper class that provides a standard way to create an ABC using
 inheritance.</p>
-<p>SystemSSHTransport Object</p>
-<p>Inherit from Transport ABC
-SSH2Transport &lt;- Transport (ABC)</p>
+<p>TelnetTransport Object</p>
+<p>Inherit from Transport ABC and Socket base class:
+TelnetTransport &lt;- Transport (ABC)
+TelnetTransport &lt;- Socket</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>host</code></strong></dt>
@@ -483,8 +464,6 @@ SSH2Transport &lt;- Transport (ABC)</p>
 <dd>path to public key for authentication</dd>
 <dt><strong><code>auth_password</code></strong></dt>
 <dd>password for authentication</dd>
-<dt><strong><code>auth_strict_key</code></strong></dt>
-<dd>True/False to enforce strict key checking (default is True)</dd>
 <dt><strong><code>timeout_socket</code></strong></dt>
 <dd>timeout for establishing socket in seconds</dd>
 <dt><strong><code>timeout_ssh</code></strong></dt>
@@ -501,9 +480,6 @@ channel &ndash; system ssh needs to know this to know what to send so that we ca
 the channel to make sure we are authenticated and sending/receiving data. If using
 driver, this should be passed from driver (Scrape, or IOSXE, etc.) to this Transport
 class.</dd>
-<dt><strong><code>ssh_config_file</code></strong></dt>
-<dd>string to path for ssh config file, True to use default ssh config file
-or False to ignore default ssh config file</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -520,26 +496,25 @@ or False to ignore default ssh config file</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class SystemSSHTransport(Transport):
+<pre><code class="python">class TelnetTransport(Transport):
     def __init__(
         self,
         host: str,
-        port: int = 22,
+        port: int = 23,
         auth_username: str = &#34;&#34;,
         auth_public_key: str = &#34;&#34;,
         auth_password: str = &#34;&#34;,
-        auth_strict_key: bool = True,
-        timeout_socket: int = 5,
         timeout_ssh: int = 5000,
+        timeout_socket: int = 5,
         comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]$&#34;,
         comms_return_char: str = &#34;\n&#34;,
-        ssh_config_file: Union[str, bool] = False,
     ):  # pylint: disable=W0231
         &#34;&#34;&#34;
-        SystemSSHTransport Object
+        TelnetTransport Object
 
-        Inherit from Transport ABC
-        SSH2Transport &lt;- Transport (ABC)
+        Inherit from Transport ABC and Socket base class:
+        TelnetTransport &lt;- Transport (ABC)
+        TelnetTransport &lt;- Socket
 
         Args:
             host: host ip/name to connect to
@@ -547,7 +522,6 @@ or False to ignore default ssh config file</dd>
             auth_username: username for authentication
             auth_public_key: path to public key for authentication
             auth_password: password for authentication
-            auth_strict_key: True/False to enforce strict key checking (default is True)
             timeout_socket: timeout for establishing socket in seconds
             timeout_ssh: timeout for ssh transport in milliseconds
             comms_prompt_pattern: prompt pattern expected for device, same as the one provided to
@@ -560,8 +534,6 @@ or False to ignore default ssh config file</dd>
                 the channel to make sure we are authenticated and sending/receiving data. If using
                 driver, this should be passed from driver (Scrape, or IOSXE, etc.) to this Transport
                 class.
-            ssh_config_file: string to path for ssh config file, True to use default ssh config file
-                or False to ignore default ssh config file
 
         Returns:
             N/A  # noqa: DAR202
@@ -572,52 +544,22 @@ or False to ignore default ssh config file</dd>
         &#34;&#34;&#34;
         self.host: str = host
         self.port: int = port
+        self.timeout_ssh: int = timeout_ssh
         self.timeout_socket: int = timeout_socket
-        self.timeout_ssh: int = int(timeout_ssh / 1000)
         self.session_lock: Lock = Lock()
         self.auth_username: str = auth_username
         self.auth_public_key: str = auth_public_key
         self.auth_password: str = auth_password
-        self.auth_strict_key: bool = auth_strict_key
         self.comms_prompt_pattern: str = comms_prompt_pattern
         self.comms_return_char: str = comms_return_char
-        self.ssh_config_file: Union[str, bool] = ssh_config_file
 
-        self.session: Union[Popen[bytes], PtyProcess]  # pylint: disable=E1136
+        self.session: ScrapliTelnet
         self.lib_auth_exception = ScrapliAuthenticationFailed
         self._isauthenticated = False
 
-        self.open_cmd = [&#34;ssh&#34;, self.host]
-        self._build_open_cmd()
-
-    def _build_open_cmd(self) -&gt; None:
-        &#34;&#34;&#34;
-        Method to craft command to open ssh session
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.open_cmd.extend([&#34;-p&#34;, str(self.port)])
-        self.open_cmd.extend([&#34;-o&#34;, f&#34;ConnectTimeout={self.timeout_socket}&#34;])
-        if self.auth_public_key:
-            self.open_cmd.extend([&#34;-i&#34;, self.auth_public_key])
-        if self.auth_username:
-            self.open_cmd.extend([&#34;-l&#34;, self.auth_username])
-        if self.auth_strict_key is False:
-            self.open_cmd.extend([&#34;-o&#34;, &#34;StrictHostKeyChecking=no&#34;])
-        if isinstance(self.ssh_config_file, str):
-            self.open_cmd.extend([&#34;-F&#34;, self.ssh_config_file])
-
     def open(self) -&gt; None:
         &#34;&#34;&#34;
-        Parent method to open session, authenticate and acquire shell
+        Open channel, acquire pty, request interactive shell
 
         Args:
             N/A
@@ -626,126 +568,97 @@ or False to ignore default ssh config file</dd>
             N/A  # noqa: DAR202
 
         Raises:
-            ScrapliAuthenticationFailed: if all authentication means fail
+            ScrapliAuthenticationFailed: if cant successfully authenticate
 
         &#34;&#34;&#34;
         self.session_lock.acquire()
-
-        # If authenticating with public key prefer to use open pipes
-        # _open_pipes uses subprocess Popen which is preferable to opening a pty
-        if self.auth_public_key:
-            if self._open_pipes():
-                return
-
-        # If public key auth fails or is not configured, open a pty session
-        if not self._open_pty():
-            msg = f&#34;Authentication to host {self.host} failed&#34;
-            LOG.critical(msg)
-            raise ScrapliAuthenticationFailed(msg)
-
-    def _open_pipes(self) -&gt; bool:
-        &#34;&#34;&#34;
-        Private method to open session with subprocess.Popen
-
-        Args:
-            N/A
-
-        Returns:
-            bool: True/False session was opened and authenticated
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.open_cmd.append(&#34;-v&#34;)
-        pipes_session = Popen(
-            self.open_cmd, bufsize=0, shell=False, stdin=PIPE, stdout=PIPE, stderr=PIPE
-        )
-        LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
-
-        try:
-            self._pipes_isauthenticated(pipes_session)
-        except TimeoutError:
-            return False
-
-        LOG.debug(f&#34;Authenticated to host {self.host} with public key&#34;)
-        self.session_lock.release()
-        self.session = pipes_session
-        return True
-
-    @operation_timeout(&#34;timeout_ssh&#34;)
-    def _pipes_isauthenticated(self, pipes_session: PopenBytes) -&gt; bool:
-        &#34;&#34;&#34;
-        Private method to check initial authentication when using subprocess.Popen
-
-        Args:
-            pipes_session: Popen pipes session object
-
-        Returns:
-            bool: True/False session was authenticated
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        output = b&#34;&#34;
-        while True:
-            output += pipes_session.stderr.read(1024)
-            if f&#34;Authenticated to {self.host}&#34;.encode() in output:
-                self._isauthenticated = True
-                return True
-
-    def _open_pty(self) -&gt; bool:
-        &#34;&#34;&#34;
-        Private method to open session with PtyProcess
-
-        Args:
-            N/A
-
-        Returns:
-            bool: True/False session was opened and authenticated
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        pty_session = PtyProcess.spawn(self.open_cmd)
+        telnet_session = ScrapliTelnet(host=self.host, port=self.port)
         LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
         self.session_lock.release()
-        self._pty_authenticate(pty_session)
-        if not self._pty_isauthenticated(pty_session):
-            return False
+        self._authenticate(telnet_session)
+        if not self._telnet_isauthenticated(telnet_session):
+            raise ScrapliAuthenticationFailed(
+                f&#34;Could not authenticate over telnet to host: {self.host}&#34;
+            )
         LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
-        self.session = pty_session
-        return True
+        print(&#34;SUCH GOOD SUCCESS&#34;)
+        self.session = telnet_session
 
-    def _pty_authenticate(self, pty_session: PtyProcess) -&gt; None:
+    def _authenticate(self, telnet_session: ScrapliTelnet) -&gt; None:
         &#34;&#34;&#34;
-        Private method to check initial authentication when using pty_session
+        Parent private method to handle telnet authentication
 
         Args:
-            pty_session: PtyProcess session object
+            telnet_session: Telnet session object
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self._authenticate_username(telnet_session)
+        self._authenticate_password(telnet_session)
+
+    def _authenticate_username(self, telnet_session: ScrapliTelnet) -&gt; None:
+        &#34;&#34;&#34;
+        Private method to enter username for telnet authentication
+
+        Args:
+            telnet_session: Telnet session object
 
         Returns:
             N/A  # noqa: DAR202
 
         Raises:
             exc: if unknown (i.e. not auth failed) exception occurs
-            lib_auth_exception: if known auth exception occurs
 
         &#34;&#34;&#34;
         self.session_lock.acquire()
         try:
             attempt_count = 0
             while True:
-                output = pty_session.read()
-                if b&#34;password&#34; in output.lower():
-                    pty_session.write(self.auth_password.encode())
-                    pty_session.write(self.comms_return_char.encode())
+                output = telnet_session.read_eager()
+                if b&#34;username:&#34; in output.lower():
+                    telnet_session.write(self.auth_username.encode())
+                    telnet_session.write(self.comms_return_char.encode())
                     break
                 attempt_count += 1
-                if attempt_count &gt; 250:
-                    raise self.lib_auth_exception
+                if attempt_count &gt; 1000:
+                    break
+        except self.lib_auth_exception as exc:
+            LOG.critical(f&#34;Did not see username prompt from {self.host} failed. Exception: {exc}.&#34;)
+            raise exc
+        finally:
+            self.session_lock.release()
+
+    def _authenticate_password(self, telnet_session: ScrapliTelnet) -&gt; None:
+        &#34;&#34;&#34;
+        Private method to enter password for telnet authentication
+
+        Args:
+            telnet_session: Telnet session object
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            exc: if unknown (i.e. not auth failed) exception occurs
+
+        &#34;&#34;&#34;
+        self.session_lock.acquire()
+        try:
+            attempt_count = 0
+            while True:
+                output = telnet_session.read_eager()
+                if b&#34;password&#34; in output.lower():
+                    telnet_session.write(self.auth_password.encode())
+                    telnet_session.write(self.comms_return_char.encode())
+                    break
+                attempt_count += 1
+                if attempt_count &gt; 1000:
+                    break
         except self.lib_auth_exception as exc:
             LOG.critical(f&#34;Password authentication with host {self.host} failed. Exception: {exc}.&#34;)
         except Exception as exc:
@@ -757,7 +670,7 @@ or False to ignore default ssh config file</dd>
         finally:
             self.session_lock.release()
 
-    def _pty_isauthenticated(self, pty_session: PtyProcess) -&gt; bool:
+    def _telnet_isauthenticated(self, telnet_session: ScrapliTelnet) -&gt; bool:
         &#34;&#34;&#34;
         Check if session is authenticated
 
@@ -765,7 +678,7 @@ or False to ignore default ssh config file</dd>
         Beyond that we lock the session and send the return character and re-read the channel.
 
         Args:
-            pty_session: PtyProcess session object
+            telnet_session: Telnet session object
 
         Returns:
             bool: True if authenticated, else False
@@ -774,15 +687,15 @@ or False to ignore default ssh config file</dd>
             N/A
 
         &#34;&#34;&#34;
-        if pty_session.isalive() and not pty_session.eof():
+        if not telnet_session.eof:
             prompt_pattern = get_prompt_pattern(&#34;&#34;, self.comms_prompt_pattern)
+            telnet_session_fd = telnet_session.fileno()
             self.session_lock.acquire()
-            pty_session.write(self.comms_return_char.encode())
-            fd_ready, _, _ = select([pty_session.fd], [], [], 0)
-            if pty_session.fd in fd_ready:
-                # unclear as to why there needs to be two read operations here, but fails w/out it
-                pty_session.read()
-                output = pty_session.read()
+            telnet_session.write(self.comms_return_char.encode())
+            time.sleep(0.25)
+            fd_ready, _, _ = select([telnet_session_fd], [], [], 0)
+            if telnet_session_fd in fd_ready:
+                output = telnet_session.read_eager()
                 # we do not need to deal w/ line replacement for the actual output, only for
                 # parsing if a prompt-like thing is at the end of the output
                 output = re.sub(b&#34;\r&#34;, b&#34;\n&#34;, output.strip())
@@ -809,34 +722,24 @@ or False to ignore default ssh config file</dd>
 
         &#34;&#34;&#34;
         self.session_lock.acquire()
-        if isinstance(self.session, Popen):
-            self.session.kill(1)
-        elif isinstance(self.session, PtyProcess):
-            self.session.kill(1)
+        self.session.close()
         LOG.debug(f&#34;Channel to host {self.host} closed&#34;)
         self.session_lock.release()
 
     def isalive(self) -&gt; bool:
         &#34;&#34;&#34;
-        Check if session is alive and session is authenticated
+        Check if socket is alive and session is authenticated
 
         Args:
             N/A
 
         Returns:
-            bool: True if session is alive and session authenticated, else False
+            N/A  # noqa: DAR202
 
         Raises:
             N/A
 
         &#34;&#34;&#34;
-        if isinstance(self.session, Popen):
-            if self.session.poll() is None and self._isauthenticated:
-                return True
-        elif isinstance(self.session, PtyProcess):
-            if self.session.isalive() and self._isauthenticated and not self.session.eof():
-                return True
-        return False
 
     def read(self) -&gt; bytes:
         &#34;&#34;&#34;
@@ -846,18 +749,13 @@ or False to ignore default ssh config file</dd>
             N/A
 
         Returns:
-            bytes: bytes output as read from channel
+            N/A  # noqa: DAR202
 
         Raises:
             N/A
 
         &#34;&#34;&#34;
-        read_bytes = 65535
-        if isinstance(self.session, Popen):
-            return self.session.stdout.read(read_bytes)
-        if isinstance(self.session, PtyProcess):
-            return self.session.read(read_bytes)
-        return b&#34;&#34;
+        return self.session.read_eager()
 
     def write(self, channel_input: str) -&gt; None:
         &#34;&#34;&#34;
@@ -873,10 +771,7 @@ or False to ignore default ssh config file</dd>
             N/A
 
         &#34;&#34;&#34;
-        if isinstance(self.session, Popen):
-            self.session.stdin.write(channel_input.encode())
-        elif isinstance(self.session, PtyProcess):
-            self.session.write(channel_input.encode())
+        self.session.write(channel_input.encode())
 
     def set_timeout(self, timeout: Optional[int] = None) -&gt; None:
         &#34;&#34;&#34;
@@ -897,8 +792,6 @@ or False to ignore default ssh config file</dd>
         &#34;&#34;&#34;
         Set session blocking configuration
 
-        Unnecessary when using Popen/system ssh
-
         Args:
             blocking: True/False set session to blocking
 
@@ -917,55 +810,11 @@ or False to ignore default ssh config file</dd>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="scrapli.transport.systemssh.SystemSSHTransport.isalive"><code class="name flex">
-<span>def <span class="ident">isalive</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Check if session is alive and session is authenticated</p>
-<h2 id="args">Args</h2>
-<p>N/A</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>bool</code></strong></dt>
-<dd>True if session is alive and session authenticated, else False</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def isalive(self) -&gt; bool:
-    &#34;&#34;&#34;
-    Check if session is alive and session is authenticated
-
-    Args:
-        N/A
-
-    Returns:
-        bool: True if session is alive and session authenticated, else False
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    if isinstance(self.session, Popen):
-        if self.session.poll() is None and self._isauthenticated:
-            return True
-    elif isinstance(self.session, PtyProcess):
-        if self.session.isalive() and self._isauthenticated and not self.session.eof():
-            return True
-    return False</code></pre>
-</details>
-</dd>
-<dt id="scrapli.transport.systemssh.SystemSSHTransport.open"><code class="name flex">
+<dt id="scrapli.transport.telnet.TelnetTransport.open"><code class="name flex">
 <span>def <span class="ident">open</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Parent method to open session, authenticate and acquire shell</p>
+<section class="desc"><p>Open channel, acquire pty, request interactive shell</p>
 <h2 id="args">Args</h2>
 <p>N/A</p>
 <h2 id="returns">Returns</h2>
@@ -977,7 +826,7 @@ or False to ignore default ssh config file</dd>
 <h2 id="raises">Raises</h2>
 <dl>
 <dt><strong><code>ScrapliAuthenticationFailed</code></strong></dt>
-<dd>if all authentication means fail</dd>
+<dd>if cant successfully authenticate</dd>
 </dl></section>
 <details class="source">
 <summary>
@@ -985,7 +834,7 @@ or False to ignore default ssh config file</dd>
 </summary>
 <pre><code class="python">def open(self) -&gt; None:
     &#34;&#34;&#34;
-    Parent method to open session, authenticate and acquire shell
+    Open channel, acquire pty, request interactive shell
 
     Args:
         N/A
@@ -994,109 +843,21 @@ or False to ignore default ssh config file</dd>
         N/A  # noqa: DAR202
 
     Raises:
-        ScrapliAuthenticationFailed: if all authentication means fail
+        ScrapliAuthenticationFailed: if cant successfully authenticate
 
     &#34;&#34;&#34;
     self.session_lock.acquire()
-
-    # If authenticating with public key prefer to use open pipes
-    # _open_pipes uses subprocess Popen which is preferable to opening a pty
-    if self.auth_public_key:
-        if self._open_pipes():
-            return
-
-    # If public key auth fails or is not configured, open a pty session
-    if not self._open_pty():
-        msg = f&#34;Authentication to host {self.host} failed&#34;
-        LOG.critical(msg)
-        raise ScrapliAuthenticationFailed(msg)</code></pre>
-</details>
-</dd>
-<dt id="scrapli.transport.systemssh.SystemSSHTransport.read"><code class="name flex">
-<span>def <span class="ident">read</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Read data from the channel</p>
-<h2 id="args">Args</h2>
-<p>N/A</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>bytes</code></strong></dt>
-<dd>bytes output as read from channel</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def read(self) -&gt; bytes:
-    &#34;&#34;&#34;
-    Read data from the channel
-
-    Args:
-        N/A
-
-    Returns:
-        bytes: bytes output as read from channel
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    read_bytes = 65535
-    if isinstance(self.session, Popen):
-        return self.session.stdout.read(read_bytes)
-    if isinstance(self.session, PtyProcess):
-        return self.session.read(read_bytes)
-    return b&#34;&#34;</code></pre>
-</details>
-</dd>
-<dt id="scrapli.transport.systemssh.SystemSSHTransport.set_blocking"><code class="name flex">
-<span>def <span class="ident">set_blocking</span></span>(<span>self, blocking=False)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Set session blocking configuration</p>
-<p>Unnecessary when using Popen/system ssh</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>blocking</code></strong></dt>
-<dd>True/False set session to blocking</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N</code>/<code>A</code>
-# <code>noqa</code>: <code>DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def set_blocking(self, blocking: bool = False) -&gt; None:
-    &#34;&#34;&#34;
-    Set session blocking configuration
-
-    Unnecessary when using Popen/system ssh
-
-    Args:
-        blocking: True/False set session to blocking
-
-    Returns:
-        N/A  # noqa: DAR202
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;</code></pre>
+    telnet_session = ScrapliTelnet(host=self.host, port=self.port)
+    LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
+    self.session_lock.release()
+    self._authenticate(telnet_session)
+    if not self._telnet_isauthenticated(telnet_session):
+        raise ScrapliAuthenticationFailed(
+            f&#34;Could not authenticate over telnet to host: {self.host}&#34;
+        )
+    LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
+    print(&#34;SUCH GOOD SUCCESS&#34;)
+    self.session = telnet_session</code></pre>
 </details>
 </dd>
 </dl>
@@ -1105,6 +866,9 @@ or False to ignore default ssh config file</dd>
 <li><code><b><a title="scrapli.transport.transport.Transport" href="transport.html#scrapli.transport.transport.Transport">Transport</a></b></code>:
 <ul class="hlist">
 <li><code><a title="scrapli.transport.transport.Transport.close" href="transport.html#scrapli.transport.transport.Transport.close">close</a></code></li>
+<li><code><a title="scrapli.transport.transport.Transport.isalive" href="transport.html#scrapli.transport.transport.Transport.isalive">isalive</a></code></li>
+<li><code><a title="scrapli.transport.transport.Transport.read" href="transport.html#scrapli.transport.transport.Transport.read">read</a></code></li>
+<li><code><a title="scrapli.transport.transport.Transport.set_blocking" href="transport.html#scrapli.transport.transport.Transport.set_blocking">set_blocking</a></code></li>
 <li><code><a title="scrapli.transport.transport.Transport.set_timeout" href="transport.html#scrapli.transport.transport.Transport.set_timeout">set_timeout</a></code></li>
 <li><code><a title="scrapli.transport.transport.Transport.write" href="transport.html#scrapli.transport.transport.Transport.write">write</a></code></li>
 </ul>
@@ -1128,12 +892,12 @@ or False to ignore default ssh config file</dd>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="scrapli.transport.systemssh.SystemSSHTransport" href="#scrapli.transport.systemssh.SystemSSHTransport">SystemSSHTransport</a></code></h4>
+<h4><code><a title="scrapli.transport.telnet.ScrapliTelnet" href="#scrapli.transport.telnet.ScrapliTelnet">ScrapliTelnet</a></code></h4>
+</li>
+<li>
+<h4><code><a title="scrapli.transport.telnet.TelnetTransport" href="#scrapli.transport.telnet.TelnetTransport">TelnetTransport</a></code></h4>
 <ul class="">
-<li><code><a title="scrapli.transport.systemssh.SystemSSHTransport.isalive" href="#scrapli.transport.systemssh.SystemSSHTransport.isalive">isalive</a></code></li>
-<li><code><a title="scrapli.transport.systemssh.SystemSSHTransport.open" href="#scrapli.transport.systemssh.SystemSSHTransport.open">open</a></code></li>
-<li><code><a title="scrapli.transport.systemssh.SystemSSHTransport.read" href="#scrapli.transport.systemssh.SystemSSHTransport.read">read</a></code></li>
-<li><code><a title="scrapli.transport.systemssh.SystemSSHTransport.set_blocking" href="#scrapli.transport.systemssh.SystemSSHTransport.set_blocking">set_blocking</a></code></li>
+<li><code><a title="scrapli.transport.telnet.TelnetTransport.open" href="#scrapli.transport.telnet.TelnetTransport.open">open</a></code></li>
 </ul>
 </li>
 </ul>
