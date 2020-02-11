@@ -74,6 +74,7 @@ The final piece of scrapli is the actual "driver" -- or the component that binds
   - [Disabling Paging](#disabling-paging)
   - [Login Handlers](#login-handlers)
   - [SSH Config Support](#ssh-config-support)
+  - [Telnet](#telnet)
 - [FAQ](#faq)
 - [Known Issues](#known-issues)
 - [Linting and Testing](#linting-and-testing)
@@ -486,6 +487,21 @@ my_device = {"host": "172.18.0.11", "ssh_config_file": "~/mysshconfig", "auth_st
 with IOSXEDriver(**my_device) as conn:
     print(conn.get_prompt())
 ```
+
+
+## Telnet
+
+scrapli supports telnet as a transport driver via the standard library module `telnetlib`. Telnet is a bit of a
+ special case for scrapli, here are the things you need to know if you wish to use Telnet:
+ 
+- Currently, you *must* set the port number. At the moment scrapli assumes SSH and defaults to port 22, even if you
+ specify the telnet driver. This could obviously change in the future but for now, specify your telnet port!
+- You can set the username and password prompt expect string after `Scrape` (or network driver) object instantiation
+ and before calling the `open` method -- this means if you have non-default prompts you cannot use scrapli with a
+  context manager and Telnet (because the context manager calls open for you). You can set the prompts using the
+   following attributes of the `Scrape` object:
+  - `username_prompt`
+  - `password_prompt`
 
 
 # FAQ
