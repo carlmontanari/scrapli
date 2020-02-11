@@ -45,7 +45,7 @@ class Scrape:
         auth_public_key: str = "",
         auth_strict_key: bool = True,
         timeout_socket: int = 5,
-        timeout_ssh: int = 5000,
+        timeout_transport: int = 5000,
         timeout_ops: int = 10,
         comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
         comms_return_char: str = "\n",
@@ -70,7 +70,7 @@ class Scrape:
             auth_password: password for authentication
             auth_strict_key: strict host checking or not -- applicable for system ssh driver only
             timeout_socket: timeout for establishing socket in seconds
-            timeout_ssh: timeout for ssh transport in milliseconds
+            timeout_transport: timeout for ssh|telnet transport in milliseconds
             timeout_ops: timeout for ssh channel operations
             comms_prompt_pattern: raw string regex pattern -- preferably use `^` and `$` anchors!
                 this is the single most important attribute here! if this does not match a prompt,
@@ -118,7 +118,7 @@ class Scrape:
         self._setup_auth(auth_username, auth_password, auth_public_key)
 
         self.timeout_socket = int(timeout_socket)
-        self.timeout_ssh = int(timeout_ssh)
+        self.timeout_transport = int(timeout_transport)
         self.timeout_ops = int(timeout_ops)
 
         self.comms_prompt_pattern: str = ""

@@ -16,7 +16,7 @@ LOG = getLogger("transport")
 TELNET_TRANSPORT_ARGS = (
     "host",
     "port",
-    "timeout_ssh",
+    "timeout_transport",
     "timeout_socket",
     "auth_username",
     "auth_public_key",

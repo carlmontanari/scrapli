@@ -14,7 +14,7 @@ LOG = getLogger("transport")
 SSH2_TRANSPORT_ARGS = (
     "host",
     "port",
-    "timeout_ssh",
+    "timeout_transport",
     "timeout_socket",
     "auth_username",
     "auth_public_key",
@@ -30,7 +30,7 @@ class SSH2Transport(Socket, Transport):
         auth_username: str = "",
         auth_public_key: str = "",
         auth_password: str = "",
-        timeout_ssh: int = 5000,
+        timeout_transport: int = 5000,
         timeout_socket: int = 5,
     ):
         """
@@ -46,7 +46,7 @@ class SSH2Transport(Socket, Transport):
             auth_username: username for authentication
             auth_public_key: path to public key for authentication
             auth_password: password for authentication
-            timeout_ssh: timeout for ssh2 transport in milliseconds
+            timeout_transport: timeout for ssh2 transport in milliseconds
             timeout_socket: timeout for establishing socket in seconds
 
         Returns:
@@ -58,7 +58,7 @@ class SSH2Transport(Socket, Transport):
         """
         self.host: str = host
         self.port: int = port
-        self.timeout_ssh: int = timeout_ssh
+        self.timeout_transport: int = timeout_transport
         self.timeout_socket: int = timeout_socket
         self.session_lock: Lock = Lock()
         self.auth_username: str = auth_username
@@ -110,7 +110,7 @@ class SSH2Transport(Socket, Transport):
             self.socket_open()
         self.session_lock.acquire()
         self.session = self.lib_session()
-        self.set_timeout(self.timeout_ssh)
+        self.set_timeout(self.timeout_transport)
         try:
             self.session.handshake(self.sock)
         except Exception as exc:
@@ -369,7 +369,7 @@ class SSH2Transport(Socket, Transport):
         if isinstance(timeout, int):
             set_timeout = timeout
         else:
-            set_timeout = self.timeout_ssh
+            set_timeout = self.timeout_transport
         self.session.set_timeout(set_timeout)
 
     def set_blocking(self, blocking: bool = False) -> None:

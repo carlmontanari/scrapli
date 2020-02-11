@@ -8,46 +8,51 @@
 scrapli
 =======
 
-scrapli -- scrap(e) (c)li --  is a python library focused on connecting to devices, specifically network devices
- (routers/switches/firewalls/etc.) via SSH or Telnet. The name scrapli -- is just "scrape cli" (as in screen scrape
- ) squished together! scrapli's goal is to be as fast and flexible as possible, while providing a well typed, well
+scrapli -- scrap(e c)li --  is a python library focused on connecting to devices, specifically network devices
+ (routers/switches/firewalls/etc.) via SSH or Telnet. The name scrapli -- is just "scrape cli" (as in screen scrape)
+ squished together! scrapli's goal is to be as fast and flexible as possible, while providing a well typed, well
   documented, simple API.
 
-scrapli is built primarily in two parts: transport and channel. The transport layer is responsible for providing a file
--like interface to the target SSH server. The channel layer is responsible for reading and writing to the provided
- file-like interface.
+scrapli is built primarily in three parts: transport, channel, and driver. The transport layer is responsible for
+ providing a file-like interface to the target SSH server. The channel layer is responsible for reading and writing
+  to the provided file-like interface. Finally, the driver provides the user facing API/interface to scrapli.
 
-There are three available "drivers" for the transport layer -- all of which inherit from a base transport class and
- provide the same file-like interface to the upstream channel. The transport drivers are:
- 
+There are four available "transports" for the transport layer -- all of which inherit from a base transport class and
+ provide the same file-like interface to the upstream channel. The transport options are:
+
 - [paramiko]()
 - [ssh2-python]()
 - OpenSSH/System available SSH
+- telnetlib
 
 A good question to ask at this point is probably "why?". Why multiple transport options? Why not just use paramiko
  like most folks do? Historically the reason for moving away from paramiko was simply speed. ssh2-python is a wrapper
   around the libssh2 C library, and as such is very very fast. In a prior project ([ssh2net]()), of which scrapli is the
    successor/evolution, ssh2-python was used with great success, however, it is a bit feature-limited, and development
     seems to have stalled.
-   
+
 This led to moving back to paramiko, which of course is a fantastic project with tons and tons of feature support
-. Paramiko, however, does not "direct" OpenSSH support, and I don't believe it provides 100% full OpenSSH support
- either (ex: ControlPersist). Fully supporting an OpenSSH config file would be an ideal end goal for scrapli, something
-  that may not be possible with Paramiko - ControlPersist in particular is very interesting to me.
- 
+. Paramiko, however, does not provide "direct" OpenSSH support (as in -- auto-magically like when you ssh on your
+ normal shell), and I don't believe it provides 100% full OpenSSH support either (ex: ControlPersist). Fully
+  supporting an OpenSSH config file would be an ideal end goal for scrapli, something that may not be possible with
+   Paramiko - ControlPersist in particular is very interesting to me.
+
 With the goal of supporting all of the OpenSSH configuration options the final transport driver option is simply
  native system local SSH (almost certainly this won't work on Windows, but I don't have a Windows box to test on, or
   any particular interest in doing so). The implementation of using system SSH is of course a little bit messy
   , however scrapli takes care of that for you so you don't need to care about it! The payoff of using system SSH is of
    course that OpenSSH config files simply "work" -- no passing it to scrapli, no selective support, no need to set
     username or ports or any of the other config items that may reside in your SSH config file. The "system"
-     transport driver is still a bit of a work in progress, but in testing has been reliable thus far.
+     transport driver is still a bit of a work in progress, but in testing has been reliable thus far. This driver
+      will likely be the focus of most development for this project.
 
 The final piece of scrapli is the actual "driver" -- or the component that binds the transport and channel together and
  deals with instantiation of an scrapli object. There is a "base" driver object -- `Scrape` -- which provides essentially
   a "raw" SSH connection with read and write methods (provided by the channel object), and not much else. More
    specific "drivers" can inherit from this class to extend functionality of the driver to make it more friendly for
-    network devices.
+    network devices. As this library is focused on interacting with network devices, an example scrapli driver would
+     be the `IOSXE` driver -- to, as you may have guessed, interact with devices running Cisco's IOS-XE operating
+      system.
 
 
 # Table of Contents
@@ -142,9 +147,9 @@ cd scrapli
 python setup.py install
 ```
 
-scrapli has made an effort to have as few dependencies as possible. The "core" of scrapli can run with nothing other
- than standard library! If you wish to use paramiko or ssh2-python as a driver, however, you of course need to install
-  those. This can be done with pip:
+scrapli has made an effort to have as few dependencies as possible -- in fact to have ZERO dependencies! The "core" of
+ scrapli can run with nothing other than standard library! If you wish to use paramiko or ssh2-python as a driver
+ , however, you of course need to install those. This can be done with pip:
 
 ```
 pip install scrapli[paramiko]
@@ -229,7 +234,7 @@ The `comms_prompt_pattern` pattern can be changed at any time at or after instan
 
 ## Basic Operations -- Sending and Receiving
 
-Sending inputs and receiving outputs is done through the base Scrape object or your selected driver object. The inputs
+Sending inputs and receiving outputs is done through the base `Scrape` object or your selected driver object. The inputs
  /outputs all are processed (sent/read) via the channel object. If using the base `Scrape` object you must use the
   `channel.send_inputs` method -- the `NetworkDriver` and platform specific drivers have a `send_commands` method as
    outlined below. The following example shows sending a "show version" command as a string. Also shown: `send_inputs
@@ -273,6 +278,11 @@ with IOSXEDriver(**my_device) as conn:
     print(results[0].elapsed_time)
     print(results[0].result)
 ```
+
+scrapli always returns a list of `Response` objects. In addition to containing the input and output of the command(s
+) that you sent, the `Response` object also contains a method `textfsm_parse_output` which will attempt to parse the
+ received output and assign it to the `structured_result` attribute of the `Response` object. If parsing fails, the
+  value assigned to the `structured_result` attribute will be an empty list.
 
 
 ## Handling Prompts

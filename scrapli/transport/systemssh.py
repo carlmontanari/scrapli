@@ -23,7 +23,7 @@ SYSTEM_SSH_TRANSPORT_ARGS = (
     "host",
     "port",
     "timeout_socket",
-    "timeout_ssh",
+    "timeout_transport",
     "auth_username",
     "auth_public_key",
     "auth_password",
@@ -44,7 +44,7 @@ class SystemSSHTransport(Transport):
         auth_password: str = "",
         auth_strict_key: bool = True,
         timeout_socket: int = 5,
-        timeout_ssh: int = 5000,
+        timeout_transport: int = 5000,
         comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
         comms_return_char: str = "\n",
         ssh_config_file: Union[str, bool] = False,
@@ -63,7 +63,7 @@ class SystemSSHTransport(Transport):
             auth_password: password for authentication
             auth_strict_key: True/False to enforce strict key checking (default is True)
             timeout_socket: timeout for establishing socket in seconds
-            timeout_ssh: timeout for ssh transport in milliseconds
+            timeout_transport: timeout for ssh transport in milliseconds
             comms_prompt_pattern: prompt pattern expected for device, same as the one provided to
                 channel -- system ssh needs to know this to know how to decide if we are properly
                 sending/receiving data -- i.e. we are not stuck at some password prompt or some
@@ -87,7 +87,7 @@ class SystemSSHTransport(Transport):
         self.host: str = host
         self.port: int = port
         self.timeout_socket: int = timeout_socket
-        self.timeout_ssh: int = int(timeout_ssh / 1000)
+        self.timeout_transport: int = int(timeout_transport / 1000)
         self.session_lock: Lock = Lock()
         self.auth_username: str = auth_username
         self.auth_public_key: str = auth_public_key
@@ -187,7 +187,7 @@ class SystemSSHTransport(Transport):
         self.session = pipes_session
         return True
 
-    @operation_timeout("timeout_ssh")
+    @operation_timeout("timeout_transport")
     def _pipes_isauthenticated(self, pipes_session: PopenBytes) -> bool:
         """
         Private method to check initial authentication when using subprocess.Popen

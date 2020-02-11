@@ -20,7 +20,7 @@ VALID_SCRAPLI_KWARGS = {
     "auth_public_key",
     "auth_strict_key",
     "timeout_socket",
-    "timeout_ssh",
+    "timeout_transport",
     "timeout_ops",
     "comms_prompt_pattern",
     "comms_return_char",
@@ -133,11 +133,11 @@ def transform_netmiko_kwargs(kwargs: Dict[str, Any]) -> Dict[str, Any]:
     kwargs["setup_ssh_config_file"] = kwargs.pop("ssh_config_file", False)
     if "global_delay_factor" in kwargs.keys():
         kwargs["timeout_socket"] = kwargs["global_delay_factor"] * 5
-        kwargs["timeout_ssh"] = kwargs["global_delay_factor"] * 5000
+        kwargs["timeout_transport"] = kwargs["global_delay_factor"] * 5000
         kwargs["timeout_ops"] = kwargs["global_delay_factor"] * 10
         kwargs.pop("global_delay_factor")
     else:
-        kwargs["timeout_ssh"] = 5000
+        kwargs["timeout_transport"] = 5000
     kwargs["auth_username"] = kwargs.pop("username")
     kwargs["auth_password"] = kwargs.pop("password", None)
     kwargs["auth_public_key"] = kwargs.pop("key_file", "")
