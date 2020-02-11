@@ -22,8 +22,8 @@ LOG = getLogger("transport")
 SYSTEM_SSH_TRANSPORT_ARGS = (
     "host",
     "port",
-    "timeout_socket",
     "timeout_transport",
+    "timeout_ops",
     "auth_username",
     "auth_public_key",
     "auth_password",
@@ -43,8 +43,8 @@ class SystemSSHTransport(Transport):
         auth_public_key: str = "",
         auth_password: str = "",
         auth_strict_key: bool = True,
-        timeout_socket: int = 5,
         timeout_transport: int = 5000,
+        timeout_ops: int = 10,
         comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
         comms_return_char: str = "\n",
         ssh_config_file: Union[str, bool] = False,
@@ -62,8 +62,10 @@ class SystemSSHTransport(Transport):
             auth_public_key: path to public key for authentication
             auth_password: password for authentication
             auth_strict_key: True/False to enforce strict key checking (default is True)
-            timeout_socket: timeout for establishing socket in seconds
             timeout_transport: timeout for ssh transport in milliseconds
+            timeout_ops: timeout for ssh channel operations in seconds -- this is also the
+                timeout for finding and responding to username and password prompts at initial
+                login.
             comms_prompt_pattern: prompt pattern expected for device, same as the one provided to
                 channel -- system ssh needs to know this to know how to decide if we are properly
                 sending/receiving data -- i.e. we are not stuck at some password prompt or some
@@ -86,8 +88,8 @@ class SystemSSHTransport(Transport):
         """
         self.host: str = host
         self.port: int = port
-        self.timeout_socket: int = timeout_socket
         self.timeout_transport: int = int(timeout_transport / 1000)
+        self.timeout_ops: int = timeout_ops
         self.session_lock: Lock = Lock()
         self.auth_username: str = auth_username
         self.auth_public_key: str = auth_public_key
@@ -119,7 +121,7 @@ class SystemSSHTransport(Transport):
 
         """
         self.open_cmd.extend(["-p", str(self.port)])
-        self.open_cmd.extend(["-o", f"ConnectTimeout={self.timeout_socket}"])
+        self.open_cmd.extend(["-o", f"ConnectTimeout={self.timeout_transport}"])
         if self.auth_public_key:
             self.open_cmd.extend(["-i", self.auth_public_key])
         if self.auth_username:
@@ -187,10 +189,12 @@ class SystemSSHTransport(Transport):
         self.session = pipes_session
         return True
 
-    @operation_timeout("timeout_transport")
     def _pipes_isauthenticated(self, pipes_session: PopenBytes) -> bool:
         """
         Private method to check initial authentication when using subprocess.Popen
+
+        Since we always run ssh with `-v` we can simply check the stderr (where verbose output goes)
+        to see if `Authenticated to [our host]` is in the output.
 
         Args:
             pipes_session: Popen pipes session object
@@ -233,6 +237,7 @@ class SystemSSHTransport(Transport):
         self.session = pty_session
         return True
 
+    @operation_timeout("timeout_ops", "Timed out looking for SSH login password prompt")
     def _pty_authenticate(self, pty_session: PtyProcess) -> None:
         """
         Private method to check initial authentication when using pty_session
@@ -249,27 +254,13 @@ class SystemSSHTransport(Transport):
 
         """
         self.session_lock.acquire()
-        try:
-            attempt_count = 0
-            while True:
-                output = pty_session.read()
-                if b"password" in output.lower():
-                    pty_session.write(self.auth_password.encode())
-                    pty_session.write(self.comms_return_char.encode())
-                    break
-                attempt_count += 1
-                if attempt_count > 250:
-                    raise self.lib_auth_exception
-        except self.lib_auth_exception as exc:
-            LOG.critical(f"Password authentication with host {self.host} failed. Exception: {exc}.")
-        except Exception as exc:
-            LOG.critical(
-                "Unknown error occurred during password authentication with host "
-                f"{self.host}; Exception: {exc}"
-            )
-            raise exc
-        finally:
-            self.session_lock.release()
+        while True:
+            output = pty_session.read()
+            if b"password" in output.lower():
+                pty_session.write(self.auth_password.encode())
+                pty_session.write(self.comms_return_char.encode())
+                self.session_lock.release()
+                break
 
     def _pty_isauthenticated(self, pty_session: PtyProcess) -> bool:
         """

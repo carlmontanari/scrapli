@@ -429,10 +429,10 @@ with IOSXEDriver(**my_device) as conn:
 
 scrapli supports several timeout options. The simplest is the `timeout_socket` which controls the timeout for... setting
  up the underlying socket in seconds. Value should be a positive, non-zero number, however ssh2 and paramiko
-  transport options support floats.
+  transport options support floats. `timeout_scoket` is not used when using the `telnet` transport option.
  
-`timeout_ssh` sets the timeout for the actual SSH session when using ssh2 or paramiko transport options. When using
- system SSH, this is currently only used as the timeout timer for authentication.
+`timeout_transport` sets the timeout for the actual transport session setup (system|paramiko|ssh2|telnet) -- for
+ example for `system` transport this is the SSH `ConnectTimeout` value.
  
 Finally, `timeout_ops` sets a timeout value for individual operations -- or put another way, the timeout for each
  send_input operation.
@@ -601,26 +601,30 @@ make cov_unit
 
 Executing the functional tests is a bit more complicated! First, thank you to Kristian Larsson for his great tool [vrnetlab](https://github.com/plajjan/vrnetlab)! All functional tests are built on this awesome platform that allows for easy creation of containerized network devices.
 
-Basic functional tests exist for all "core" platform types (IOSXE, NXOS, IOSXR, EOS, Junos). Vrnetlab currently only supports the older emulation style NX-OS devices, and *not* the newer VM image n9kv. I have made some very minor tweaks to vrnetlab locally in order to get the n9kv image running -- I have raised a PR to add this to vrnetlab proper. Minus the n9kv tweaks, getting going with vrnetlab is fairly straightforward -- simply follow Kristian's great readme docs. For the Arista EOS image -- prior to creating the container you should boot the device and enter the `zerotouch disable` command. This allows for the config to actually be saved and prevents the interfaces from cycling through interface types in the container (I'm not clear why it does that but executing this command before building the container "fixes" this!). After creating the image(s) that you wish to test, rename the image to the following format:
+Basic functional tests exist for all "core" platform types (IOSXE, NXOS, IOSXR, EOS, Junos). Vrnetlab currently only
+ supports the older emulation style NX-OS devices, and *not* the newer VM image n9kv. I have made some very minor
+  tweaks to vrnetlab locally in order to get the n9kv image running -- I have raised a PR to add this to vrnetlab
+   proper. Minus the n9kv tweaks, getting going with vrnetlab is fairly straightforward -- simply follow Kristian's
+    great readme docs. For the Arista EOS image -- prior to creating the container you should boot the device and
+     enter the `zerotouch disable` command. This allows for the config to actually be saved and prevents the
+      interfaces from cycling through interface types in the container (I'm not clear why it does that but executing
+       this command before building the container "fixes" this!).
+
+The docker-compose file here will be looking for the container images matching this pattern, so this is an important
+ bit! The container image names should be:
 
 ```
-scrapli[PLATFORM]
-```
-
-The docker-compose file here will be looking for the container images matching this pattern, so this is an important bit! The container image names should be:
-
-```
-scrapliciscoiosxe
-scraplicisconxos
-scrapliciscoiosxr
-scrapliaristaeos
-scraplijuniperjunos
+scrapli-cisco-iosxe
+scrapli-cisco-nxos
+scrapli-cisco-iosxr
+scrapli-arista-eos
+scrapli-juniper-junos
 ```
 
 You can tag the image names on creation (following the vrnetlab readme docs), or create a new tag once the image is built:
 
 ```
-docker tag [TAG OF IMAGE CREATED] scrapli[VENDOR][OS]
+docker tag [TAG OF IMAGE CREATED] scrapli-[VENDOR]-[OS]
 ```
 
 *NOTE* I have added vty lines 5-98 on the CSR image -- I think the connections opening/closing so quickly during
