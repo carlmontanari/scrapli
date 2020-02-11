@@ -246,7 +246,7 @@ class TelnetTransport(Transport):
 
     def isalive(self) -> bool:
         """
-        Check if socket is alive and session is authenticated
+        Check if alive and session is authenticated
 
         Args:
             N/A
@@ -258,6 +258,9 @@ class TelnetTransport(Transport):
             N/A
 
         """
+        if self._isauthenticated and not self.session.eof:
+            return True
+        return False
 
     def read(self) -> bytes:
         """
