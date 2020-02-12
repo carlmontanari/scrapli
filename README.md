@@ -1,5 +1,6 @@
 ![](https://github.com/carlmontanari/scrapli/workflows/Weekly%20Build/badge.svg)
 [![PyPI version](https://badge.fury.io/py/scrapli.svg)](https://badge.fury.io/py/scrapli)
+[![Python 3.6](https://img.shields.io/badge/python-3.6-blue.svg)](https://www.python.org/downloads/release/python-360/)
 [![Python 3.7](https://img.shields.io/badge/python-3.7-blue.svg)](https://www.python.org/downloads/release/python-370/)
 [![Python 3.8](https://img.shields.io/badge/python-3.8-blue.svg)](https://www.python.org/downloads/release/python-380/)
 [![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
@@ -386,12 +387,11 @@ with IOSXEDriver(**my_device) as conn:
 ## TextFSM/NTC-Templates Integration
 
 scrapli supports parsing output with TextFSM. This of course requires installing TextFSM and having ntc-templates
- somewhere on your system. When using a driver you can pass `textfsm=True` to the `send_commands` method to
-  automatically try to parse all output. Parsed/structured output is stored in the `Response` object in the
-   `structured_result` attribute. Alternatively you can use the `textfsm_parse_output` method of the driver to parse
-    output in a more manual fashion. This method accepts the string command (channel_input) and the text result and
-     returns structured data; the driver is already configured with the ntc-templates device type to find the correct
-      template. 
+ somewhere on your system. When using a platform driver (i.e. `IOSXEDriver`) the textfsm-platform will be set for you
+ . If you wish to parse the output of your send commands, you can use the `textfsm_parse_output` method of the
+  response object. This method will attempt to find the template for you -- based on the textfsm-platform and the
+   channel-input. If textfsm parsing succeeds, the structured result is assigned to the `structed_result` attribute
+    of the response object. If textfsm parsing fails, an empty list is assigned to the `structured_result` attribute.
 
 ```python
 from scrapli.driver.core import IOSXEDriver
@@ -399,11 +399,9 @@ from scrapli.driver.core import IOSXEDriver
 my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password": "VR-netlab9"}
 
 with IOSXEDriver(**my_device) as conn:
-    results = conn.send_commands("show version", textfsm=True)
-    print(results[0].structured_result)
-    # or parse manually...
     results = conn.send_commands("show version")
-    structured_output = conn.textfsm_parse_output("show version", results[0].result)
+    results[0].textfsm_parse_output()
+    print(results[0].structured_result)
 ```
 
 scrapli also supports passing in templates manually (meaning not using the pip installed ntc-templates directory to
@@ -422,7 +420,7 @@ with IOSXEDriver(**my_device) as conn:
     structured_result = textfsm_parse("/path/to/my/template", results[0].result)
 ```
 
-*NOTE*: If a template does not return structured data an empty dict will be returned!
+*NOTE*: If a template does not return structured data an empty string will be returned!
 
 
 ## Timeouts
@@ -599,7 +597,9 @@ make cov_unit
 ### Setting up Functional Test Environment
 
 
-Executing the functional tests is a bit more complicated! First, thank you to Kristian Larsson for his great tool [vrnetlab](https://github.com/plajjan/vrnetlab)! All functional tests are built on this awesome platform that allows for easy creation of containerized network devices.
+Executing the functional tests is a bit more complicated! First, thank you to Kristian Larsson for his great tool
+ [vrnetlab](https://github.com/plajjan/vrnetlab)! All functional tests are built on this awesome platform that allows
+  for easy creation of containerized network devices.
 
 Basic functional tests exist for all "core" platform types (IOSXE, NXOS, IOSXR, EOS, Junos). Vrnetlab currently only
  supports the older emulation style NX-OS devices, and *not* the newer VM image n9kv. I have made some very minor
@@ -631,7 +631,10 @@ docker tag [TAG OF IMAGE CREATED] scrapli-[VENDOR]-[OS]
  testing caused them to get hung. Testing things more slowly (adding time.sleep after closing connections) fixed this
   but that obviously made the testing time longer, so this seemed like a better fix. This change will be in my fork
    of vrnetlab or you can simply modify the `line vty 0 5` --> `line vty 0 98` in the `luanch.py` for the CSR in your
-    vrnetlab clone.
+    vrnetlab clone. `line vty 1` for some reason also had `length 0` which I have removed (and tests expect to be
+     gone). Lastly, to test telnet the `csr` setup in vrnetlab needs to be modified to allow telnet as well; this
+      means the Dockerfile must expose port 23, the qemu nic settings must support port 23 being sent into the VM and
+       socat must also be setup appropriately. This should all be updated in my vrnetlab fork. 
 
 
 ### Functional Tests
