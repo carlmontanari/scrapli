@@ -249,8 +249,7 @@ class SystemSSHTransport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            exc: if unknown (i.e. not auth failed) exception occurs
-            lib_auth_exception: if known auth exception occurs
+            N/A
 
         """
         self.session_lock.acquire()
