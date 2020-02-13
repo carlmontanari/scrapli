@@ -3,7 +3,7 @@ import os
 import re
 import shlex
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, Match
 
 
 class SSHConfig:
@@ -195,27 +195,27 @@ class SSHConfig:
         for host_entry in host_entries:
             host = Host()
             host_line = re.search(hosts_pattern, host_entry)
-            if isinstance(host_line, re.Match):
+            if isinstance(host_line, Match):
                 host.hosts = self._strip_comments(host_line.groups()[0])
             else:
                 host.hosts = ""
             hostname = re.search(hostname_pattern, host_entry)
-            if isinstance(hostname, re.Match):
+            if isinstance(hostname, Match):
                 host.hostname = self._strip_comments(hostname.groups()[0])
             port = re.search(port_pattern, host_entry)
-            if isinstance(port, re.Match):
+            if isinstance(port, Match):
                 host.port = int(self._strip_comments(port.groups()[0]))
             user = re.search(user_pattern, host_entry)
-            if isinstance(user, re.Match):
+            if isinstance(user, Match):
                 host.user = self._strip_comments(user.groups()[0])
             # address_family = re.search(user_pattern, host_entry[0])
             # bind_address = re.search(user_pattern, host_entry[0])
             # connect_timeout = re.search(user_pattern, host_entry[0])
             identities_only = re.search(identities_only_pattern, host_entry)
-            if isinstance(identities_only, re.Match):
+            if isinstance(identities_only, Match):
                 host.identities_only = self._strip_comments(identities_only.groups()[0])
             identity_file = re.search(identity_file_pattern, host_entry)
-            if isinstance(identity_file, re.Match):
+            if isinstance(identity_file, Match):
                 host.identity_file = self._strip_comments(identity_file.groups()[0])
             # keyboard_interactive = re.search(user_pattern, host_entry[0])
             # password_authentication = re.search(user_pattern, host_entry[0])
