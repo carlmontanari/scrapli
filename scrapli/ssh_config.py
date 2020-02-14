@@ -3,7 +3,7 @@ import os
 import re
 import shlex
 from pathlib import Path
-from typing import Dict, Optional, Match
+from typing import Dict, Match, Optional
 
 
 class SSHConfig:
@@ -42,7 +42,7 @@ class SSHConfig:
         self.ssh_config_file = self._select_config_file(ssh_config_file)
         if self.ssh_config_file:
             with open(self.ssh_config_file, "r") as f:
-                self.ssh_config_file = f.read()
+                self.ssh_config = f.read()
             self.hosts = self._parse()
             if not self.hosts:
                 self.hosts = {}
@@ -85,7 +85,7 @@ class SSHConfig:
 
         """
         class_dict = self.__dict__.copy()
-        del class_dict["ssh_config_file"]
+        del class_dict["ssh_config"]
         return f"SSHConfig {class_dict}"
 
     def __bool__(self) -> bool:
@@ -102,7 +102,7 @@ class SSHConfig:
             N/A
 
         """
-        if self.ssh_config_file:
+        if self.ssh_config:
             return True
         return False
 
@@ -168,7 +168,7 @@ class SSHConfig:
         # need to do this as whitespace/formatting is not really a thing in ssh_config file
         # match host\s to ensure we don't pick up hostname and split things there accidentally
         host_pattern = re.compile(r"\bhost.*?\b(?=host\s|\s+$)", flags=re.I | re.S)
-        host_entries = re.findall(host_pattern, self.ssh_config_file)
+        host_entries = re.findall(host_pattern, self.ssh_config)
 
         discovered_hosts: Dict[str, Host] = {}
         if not host_entries:

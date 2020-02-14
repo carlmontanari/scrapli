@@ -1,4 +1,5 @@
 """scrapli.transport.systemssh"""
+import os
 import re
 from logging import getLogger
 from select import select
@@ -9,6 +10,7 @@ from typing import TYPE_CHECKING, Optional, Union
 from scrapli.decorators import operation_timeout
 from scrapli.exceptions import ScrapliAuthenticationFailed
 from scrapli.helper import get_prompt_pattern
+from scrapli.ssh_config import SSHConfig
 from scrapli.transport.ptyprocess import PtyProcess
 from scrapli.transport.transport import Transport
 
@@ -97,7 +99,7 @@ class SystemSSHTransport(Transport):
         self.auth_strict_key: bool = auth_strict_key
         self.comms_prompt_pattern: str = comms_prompt_pattern
         self.comms_return_char: str = comms_return_char
-        self.ssh_config_file: Union[str, bool] = ssh_config_file
+        self._process_ssh_config(ssh_config_file)
 
         self.session: Union[Popen[bytes], PtyProcess]  # pylint: disable=E1136
         self.lib_auth_exception = ScrapliAuthenticationFailed
@@ -105,6 +107,41 @@ class SystemSSHTransport(Transport):
 
         self.open_cmd = ["ssh", self.host]
         self._build_open_cmd()
+
+    def _process_ssh_config(self, ssh_config_file: Union[str, bool]) -> None:
+        """
+        Method to parse ssh config file
+
+        TODO
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+        if ssh_config_file is False:
+            self.ssh_config_file = None
+            return
+        elif isinstance(ssh_config_file, str):
+            cfg = ssh_config_file
+        else:
+            # assumes that you are using the transport via a driver, where the only other option
+            # after `False` or a string, is `True` in which case we want an empty string
+            cfg = ""
+
+        ssh = SSHConfig(cfg)
+        self.ssh_config_file = ssh.ssh_config_file
+        host_config = ssh.lookup(self.host)
+        if not self.auth_public_key and host_config.identity_file:
+            self.auth_public_key = os.path.expanduser(host_config.identity_file.strip())
+        # TODO -- set other supported values!
+        # think this should be done via getattr/setattr so it can be "auto-magic" -- pub key is a
+        # special case for system ssh so that has to be one off...
 
     def _build_open_cmd(self) -> None:
         """
@@ -134,6 +171,16 @@ class SystemSSHTransport(Transport):
     def open(self) -> None:
         """
         Parent method to open session, authenticate and acquire shell
+
+        If possible it is preferable to use the `_open_pipes` method, but we can only do this IF we
+        can authenticate with public key authorization (because we don't have to spawn a PTY; if no
+        public key we have to spawn PTY to deal w/ authentication prompts). IF we get a public key
+        provided, use pipes method, otherwise we *may* auth via public key but we will just deal
+        with `_open_pty`. `_open_pty` is less preferable because we have to spawn a PTY and cannot
+        as easily tell if SSH authentication is successful. With `_open_pipes` we can read stderr
+        which contains the output from the verbose flag for SSH -- this contains a message that
+        indicates success of SSH auth. In the case of `_open_pty` we have to read from the channel
+        directly like in the case of telnet... so it works, but its just a bit less desirable.
 
         Args:
             N/A

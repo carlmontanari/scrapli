@@ -14,7 +14,7 @@ def test_init_ssh_config_file_explicit():
     ssh_conf = SSHConfig(f"{UNIT_TEST_DIR}_ssh_config")
     with open(f"{UNIT_TEST_DIR}_ssh_config", "r") as f:
         ssh_config_file = f.read()
-    assert ssh_conf.ssh_config_file == ssh_config_file
+    assert ssh_conf.ssh_config == ssh_config_file
 
 
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting ssh config on windows")
@@ -23,7 +23,7 @@ def test_init_ssh_config_file_user(fs):
     ssh_conf = SSHConfig()
     with open(f"{os.path.expanduser('~')}/.ssh/config", "r") as f:
         ssh_config_file = f.read()
-    assert ssh_conf.ssh_config_file == ssh_config_file
+    assert ssh_conf.ssh_config == ssh_config_file
 
 
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting ssh config on windows")
@@ -32,7 +32,7 @@ def test_init_ssh_config_file_system(fs):
     ssh_conf = SSHConfig()
     with open("/etc/ssh/ssh_config", "r") as f:
         ssh_config_file = f.read()
-    assert ssh_conf.ssh_config_file == ssh_config_file
+    assert ssh_conf.ssh_config == ssh_config_file
 
 
 def test_init_ssh_config_file_no_config_file(fs):
@@ -78,7 +78,8 @@ def test_str():
 def test_repr():
     ssh_conf = SSHConfig(f"{UNIT_TEST_DIR}_ssh_config")
     assert repr(ssh_conf) == (
-        "SSHConfig {'hosts': {'1.2.3.4 someswitch1': Host {'hosts': '1.2.3.4 someswitch1', "
+        "SSHConfig {'ssh_config_file': '/Users/carl/dev/github/scrapli/tests/unit/_ssh_config', "
+        "'hosts': {'1.2.3.4 someswitch1': Host {'hosts': '1.2.3.4 someswitch1', "
         "'hostname': 'someswitch1.bogus.com', 'port': 1234, 'user': 'carl', 'address_family': None,"
         " 'bind_address': None, 'connect_timeout': None, 'identities_only': 'yes', 'identity_file':"
         " '~/.ssh/mysshkey', 'keyboard_interactive': None, 'password_authentication': None, "
