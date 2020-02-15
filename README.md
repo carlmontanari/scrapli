@@ -43,17 +43,18 @@ With the goal of supporting all of the OpenSSH configuration options the final t
   any particular interest in doing so). The implementation of using system SSH is of course a little bit messy
   , however scrapli takes care of that for you so you don't need to care about it! The payoff of using system SSH is of
    course that OpenSSH config files simply "work" -- no passing it to scrapli, no selective support, no need to set
-    username or ports or any of the other config items that may reside in your SSH config file. The "system"
-     transport driver is still a bit of a work in progress, but in testing has been reliable thus far. This driver
-      will likely be the focus of most development for this project.
+    username or ports or any of the other config items that may reside in your SSH config file. This driver
+      will likely be the focus of most development for this project, though I will try to keep the other transport
+       drivers -- in particular ssh2-python -- as close to parity as is possible/practical.
 
 The final piece of scrapli is the actual "driver" -- or the component that binds the transport and channel together and
  deals with instantiation of an scrapli object. There is a "base" driver object -- `Scrape` -- which provides essentially
   a "raw" SSH connection with read and write methods (provided by the channel object), and not much else. More
    specific "drivers" can inherit from this class to extend functionality of the driver to make it more friendly for
-    network devices. As this library is focused on interacting with network devices, an example scrapli driver would
-     be the `IOSXE` driver -- to, as you may have guessed, interact with devices running Cisco's IOS-XE operating
-      system.
+    network devices. In fact, there is a `NetworkDriver` which does just that. This `NetworkDriver` isn't really
+     meant to be used directly though, but to be further extended and built upon instead. As this library is focused on
+     interacting with network devices, an example scrapli driver (built on the `NetworkDriver`) would be the `IOSXE
+     ` driver -- to, as you may have guessed, interact with devices running Cisco's IOS-XE operating system.
 
 
 # Table of Contents
@@ -77,8 +78,10 @@ The final piece of scrapli is the actual "driver" -- or the component that binds
   - [SSH Config Support](#ssh-config-support)
   - [Telnet](#telnet)
 - [FAQ](#faq)
+- [Transport Notes](#transport-notes)
 - [Known Issues](#known-issues)
 - [Linting and Testing](#linting-and-testing)
+- [Todo and Roadmap](#todo-and-roadmap)
 
 
 # Documentation
@@ -86,7 +89,7 @@ The final piece of scrapli is the actual "driver" -- or the component that binds
 Documentation is auto-generated [using pdoc3](https://github.com/pdoc3/pdoc). Documentation is linted (see Linting and
  Testing section) via [pydocstyle](https://github.com/PyCQA/pydocstyle/) and [darglint](https://github.com/terrencepreilly/darglint).
 
-Documentation is hosted via GitHub Pages and can be found [here.](https://carlmontanari.github.io/scrapli/docs/scrapli/index.html). 
+Documentation is hosted via GitHub Pages and can be found [here](https://carlmontanari.github.io/scrapli/docs/scrapli/index.html). 
  You can also view the readme as a web page [here.](https://carlmontanari.github.io/scrapli/)
 
 To regenerate documentation locally, use the following make command:
@@ -100,11 +103,8 @@ make docs
 
 scrapli "core" drivers cover basically the [NAPALM](https://github.com/napalm-automation/napalm) platforms -- Cisco
  IOS-XE, IOS-XR, NX-OS, Arista EOS, and Juniper JunOS. These drivers provide an interface tailored to network device
-  "screen-scraping" rather than just a generic SSH connection/channel.
-
-At the moment there are five "core" drivers representing the most common networking platforms (outlined below)
-, however in the future it would be possible for folks to contribute additional "community" drivers. It is unlikely
- that any additional "core" platforms would be added at the moment.
+  "screen-scraping" rather than just a generic SSH connection/channel. Below are the core driver platforms and
+   currently tested version.
 
 - Cisco IOS-XE (tested on: 16.04.01)
 - Cisco NX-OS (tested on: 9.2.4)
@@ -112,13 +112,16 @@ At the moment there are five "core" drivers representing the most common network
 - Cisco IOS-XR (tested on: 6.5.3)
 - Arista EOS (tested on: 4.22.1F)
 
-This "driver" pattern is pretty much exactly like the implementation in NAPALM. The driver extends the base class/base
-  networking driver class with device specific functionality such as privilege escalation/de-escalation, setting
-   appropriate prompts to search for, and picking out appropriate [ntc templates](https://github.com/napalm-automation/napalm)
-    for use with TextFSM. 
+In the future it would be possible for folks to contribute additional "community" drivers, however, is unlikely that any
+ additional "core" platforms would be added.
+
+The "driver" pattern is pretty much exactly like the implementation in NAPALM. The driver extends the base class
+ (`Scrape`)/base networking driver class (`NetworkDriver`) with device specific functionality such as privilege
+  escalation/de-escalation, setting appropriate prompts to search for, and picking out appropriate [ntc templates
+  ](https://github.com/napalm-automation/napalm) for use with TextFSM. 
 
 All of this is focused on network device type SSH cli interfaces, but should work on pretty much any SSH connection
- (though there are almost certainly better options for non-network type devices!). This "base" (`Scrape`) connection does
+ (though there are almost certainly better options for non-network type devices!). The "base" (`Scrape`) connection does
   not handle any kind of device-specific operations such as privilege escalation or saving configurations, it is simply
    intended to be a bare bones connection that can interact with nearly any device/platform if you are willing to
     send/parse inputs/outputs manually.
@@ -185,7 +188,7 @@ Example Scrape "native/base" connection:
 ```python
 from scrapli import Scrape
 
-my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password": "VR-netlab9"}
+my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password": "VR-netlab9", "auth_strict_key": False}
 conn = Scrape(**my_device)
 conn.open()
 # do stuff!
@@ -197,7 +200,7 @@ Example IOS-XE driver setup. This also shows using context manager which is also
 ```python
 from scrapli.driver.core import IOSXEDriver
 
-my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password": "VR-netlab9"}
+my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password": "VR-netlab9", "auth_strict_key": False}
 with IOSXEDriver(**my_device) as conn:
     print(conn)
     # do stuff!
@@ -239,14 +242,16 @@ The `comms_prompt_pattern` pattern can be changed at any time at or after instan
 Sending inputs and receiving outputs is done through the base `Scrape` object or your selected driver object. The inputs
  /outputs all are processed (sent/read) via the channel object. If using the base `Scrape` object you must use the
   `channel.send_inputs` method -- the `NetworkDriver` and platform specific drivers have a `send_commands` method as
-   outlined below. The following example shows sending a "show version" command as a string. Also shown: `send_inputs
-   ` accepts a list/tuple of commands.
+   outlined below (second example). The following example shows sending a "show version" command as a string.
+   Also shown: `send_inputs` accepts a list/tuple of commands. Finally -- note that `Scrape` does NOT disable paging
+   , so in this example we need to do that (show version and show run both will need paging disabled!).
 
 ```python
 from scrapli import Scrape
 
-my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password": "VR-netlab9"}
+my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password": "VR-netlab9", "auth_strict_key": False}
 with Scrape(**my_device) as conn:
+    results = conn.channel.send_inputs("terminal length 0")
     results = conn.channel.send_inputs("show version")
     results = conn.channel.send_inputs(("show version", "show run"))
 ```
@@ -259,7 +264,7 @@ When using a network "driver", it is more desirable to use the `send_commands` m
 ```python
 from scrapli.driver.core import IOSXEDriver
 
-my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password": "VR-netlab9"}
+my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password": "VR-netlab9", "auth_strict_key": False}
 with IOSXEDriver(**my_device) as conn:
     results = conn.send_commands("show version")
     results = conn.send_commands(("show version", "show run"))
@@ -274,17 +279,24 @@ All read operations result in a `Response` object being created. The `Response` 
 ```python
 from scrapli.driver.core import IOSXEDriver
 
-my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password": "VR-netlab9"}
+my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password": "VR-netlab9", "auth_strict_key": False}
 with IOSXEDriver(**my_device) as conn:
     results = conn.send_commands("show version")
     print(results[0].elapsed_time)
     print(results[0].result)
 ```
 
-scrapli always returns a list of `Response` objects. In addition to containing the input and output of the command(s
-) that you sent, the `Response` object also contains a method `textfsm_parse_output` which will attempt to parse the
- received output and assign it to the `structured_result` attribute of the `Response` object. If parsing fails, the
-  value assigned to the `structured_result` attribute will be an empty list.
+scrapli always returns a list of `Response` objects, even if the amount of responses is just one. In addition to
+ containing the input and output of the command(s) that you sent, the `Response` object also contains a method
+  `textfsm_parse_output` which will attempt to parse the received output and assign it to the `structured_result
+  ` attribute of the `Response` object. If parsing fails, the value assigned to the `structured_result` attribute
+   will be an empty list.
+   
+```python
+>>> results[0].textfsm_parse_output()
+>>> print(results[0].structured_result)
+[['16.4.1', 'IOS-XE', 'csr1000v', '2 days, 22 hours, 10 minutes', 'reload', 'packages.conf', ['CSR1000V'], ['9FKLJWM5EB0'], '0x2102', []]]
+```
 
 
 ## Handling Prompts
@@ -295,30 +307,31 @@ In some cases you may need to run an "interactive" command on your device. The `
    wrapper around the `channel.send_inputs_interact` method for convenience (not having to call a channel method
     basically). This method accepts a tuple containing the initial input (command) to send, the expected prompt after
      the initial send, the response to that prompt, and the final expected prompt -- basically telling scrapli when it
-      is done with the interactive command. In the below example the expectation is that the current/base prompt is
-       the final expected prompt, so we can simply call the `get_prompt` method to snag that directly off the router.
+      is done with the interactive command. In the second example below (using the `IOSXEDriver`) the expectation is
+       that the current /base prompt is the final expected prompt, so we can simply call the `get_prompt` method to
+        snag that directly off the router.
 
 ```python
 from scrapli import Scrape
 
-my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password": "VR-netlab9"}
+my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password": "VR-netlab9", "auth_strict_key": False}
 interact = ["clear logging", "Clear logging buffer [confirm]", "\n"]
 
 with Scrape(**my_device) as conn:
     interactive = conn.channel.send_inputs_interact(
-                ("clear logging", "Clear logging buffer [confirm]", "\n", conn.get_prompt())
+                ("clear logging", "Clear logging buffer [confirm]", "\n", "csr1000v#")
             )
 ```
 
 Or with the `NetworkDriver` or any platform driver:
 
 ```python
-from scrapli.driver import NetworkDriver
+from scrapli.driver.core import IOSXEDriver
 
-my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password": "VR-netlab9"}
+my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password": "VR-netlab9", "auth_strict_key": False}
 interact = ["clear logging", "Clear logging buffer [confirm]", "\n"]
 
-with NetworkDriver(**my_device) as conn:
+with IOSXEDriver(**my_device) as conn:
     interactive = conn.send_interactive(
                 ("clear logging", "Clear logging buffer [confirm]", "\n", conn.get_prompt())
             )
@@ -329,10 +342,10 @@ with NetworkDriver(**my_device) as conn:
 
 The "core" drivers understand the basic privilege levels of their respective device types. As mentioned previously
 , the drivers will automatically attain the "privilege_exec" (or equivalent) privilege level prior to executing "show
-" commands. If you don't want this "auto-magic" you can use the base driver (Scrape). The privileges for each device
+" commands. If you don't want this "auto-magic" you can use the base driver (`Scrape`). The privileges for each device
  are outlined in named tuples in the platforms `driver.py` file. 
  
-As an example, the following privilege levels are supported by the IOSXEDriver:
+As an example, the following privilege levels are supported by the `IOSXEDriver`:
 
 1. "exec"
 2. "privilege_exec"
@@ -358,7 +371,7 @@ If you wish to manually enter a privilege level you can use the `acquire_priv` m
 ```python
 from scrapli.driver.core import IOSXEDriver
 
-my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password": "VR-netlab9"}
+my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password": "VR-netlab9", "auth_strict_key": False}
 
 with IOSXEDriver(**my_device) as conn:
     conn.acquire_priv("configuration")
@@ -370,14 +383,14 @@ with IOSXEDriver(**my_device) as conn:
 When using the native mode (`Scrape` object), sending configurations is no different than sending commands and is done via
  the `send_inputs` method. You must manually ensure you are in the correct privilege/mode.
  
-When using any of the core drivers or the base `NetworkDriver`, you can send configurations via the `send_configs` method
- which will handle privilege escalation for you. As with the `send_commands` and `send_inputs` methods -- you can
-  send a single string or a list/tuple of strings.
+When using any of the core drivers, you can send configurations via the `send_configs` method which will handle
+ privilege escalation for you. As with the `send_commands` and `send_inputs` methods -- you can send a single string
+  or a list/tuple of strings.
 
 ```python
 from scrapli.driver.core import IOSXEDriver
 
-my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password": "VR-netlab9"}
+my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password": "VR-netlab9", "auth_strict_key": False}
 
 with IOSXEDriver(**my_device) as conn:
     conn.send_configs(("interface loopback123", "description configured by scrapli"))
@@ -396,7 +409,7 @@ scrapli supports parsing output with TextFSM. This of course requires installing
 ```python
 from scrapli.driver.core import IOSXEDriver
 
-my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password": "VR-netlab9"}
+my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password": "VR-netlab9", "auth_strict_key": False}
 
 with IOSXEDriver(**my_device) as conn:
     results = conn.send_commands("show version")
@@ -413,7 +426,7 @@ scrapli also supports passing in templates manually (meaning not using the pip i
 from scrapli.driver.core import IOSXEDriver
 from scrapli.helper import textfsm_parse
 
-my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password": "VR-netlab9"}
+my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password": "VR-netlab9", "auth_strict_key": False}
 
 with IOSXEDriver(**my_device) as conn:
     results = conn.send_commands("show version")
@@ -438,7 +451,7 @@ Finally, `timeout_ops` sets a timeout value for individual operations -- or put 
 
 ## Disabling Paging
 
-scrapli native driver attempts to send `terminal length 0` to disable paging by default. In the future this will
+scrapli `Scrape` driver attempts to send `terminal length 0` to disable paging by default. In the future this will
  likely be removed and relegated to the device drivers only. For all drivers, there is a standard disable paging
   string already configured for you, however this is of course user configurable. In addition to passing a string to
    send to disable paging, scrapli supports passing a callable. This callable should accept the drivers reference to
@@ -452,7 +465,7 @@ from scrapli.driver.core import IOSXEDriver
 def iosxe_disable_paging(cls):
     cls.send_commands("term length 0")
 
-my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password": "VR-netlab9", "session_disable_paging": iosxe_disable_paging}
+my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password": "VR-netlab9", "session_disable_paging": iosxe_disable_paging, "auth_strict_key": False}
 
 with IOSXEDriver(**my_device) as conn:
     print(conn.get_prompt())
@@ -468,10 +481,10 @@ Some devices have additional prompts or banners at login. This generally causes 
 
 ## SSH Config Support
 
-scrapli supports using OpenSSH configuration files in a few ways. For "system" SSH driver, passing a path to a config
+scrapli supports using OpenSSH configuration files in a few ways. For "system" SSH transport, passing a path to a config
  file will simply make scrapli "point" to that file, and therefore use that configuration files attributes (because it
-  is just exec'ing system SSH!). Soon SSH support that exists in ssh2net will be ported over to scrapli for ssh2-python
-   and paramiko transport drivers.
+  is just exec'ing system SSH!). See the [Transport Notes](#transport-notes) section for details about what Transport
+   supports what configuration options.
    
 *NOTE* -- when using the system (default) SSH transport driver scrapli does NOT disable strict host checking by default
 . Obviously this is the "smart" behavior, but it can be overridden on a per host basis in your SSH config file, or by
@@ -501,12 +514,13 @@ scrapli supports telnet as a transport driver via the standard library module `t
   - `username_prompt`
   - `password_prompt`
 
+If telnet for some reason becomes an important use case, the telnet Transport layer can be improved/augmented.
 
 # FAQ
 
 - Question: Why build this? Netmiko exists, Paramiko exists, Ansible exists, etc...?
   - Answer: I built ssh2net to learn -- to have a goal/target for writing some code. scrapli is an evolution of the
-   lessons learned building ssh2net. About mid-way through building ssh2net I realized it may actually be kinda good
+   lessons learned building ssh2net. About mid-way through building `ssh2net` I realized it may actually be kinda good
     at doing... stuff. So, sure there are other tools out there, but I think scrapli its pretty snazzy and fills in some
      of the gaps in other tools. For example scrapli is 100% compliant with strict mypy type checking, very uniformly
       documented/linted, contains a results object for every operation, is very very fast, is very flexible, and in
@@ -527,6 +541,47 @@ scrapli supports telnet as a transport driver via the standard library module `t
   - Answer: Those objects do not "auto open", and the channel attribute is not assigned until opening the connection
   . Call `conn.open()` (or your object name in place of conn) to open the session and assign the channel attribute.
 - Other questions? Ask away!
+
+
+#Transport Notes
+
+## paramiko
+
+- I'll think of something...
+
+### SSH Config Supported Arguments
+
+- N/A at the moment
+
+## ssh2-python
+
+- See caveats section for a few items...
+
+### SSH Config Supported Arguments
+
+- user
+- port
+- identity_file
+
+## system
+
+- Any arguments passed to the SystemSSHTransport class will override arguments in your ssh config file. This is
+ because the arguments get crafted into an "open_cmd" (the command that actually fires off the ssh session), and
+  these cli arguments take precedence over the config file arguments.
+- strict key checking is ENABLED by default! If you see weird EOF errors immediately after opening a connection, you
+ probably did not disable strict key checking!
+
+### SSH Config Supported Arguments
+
+- literally whatever your system supports as scrapli just execs SSH on your system!
+
+## telnet
+
+- See the telnet section!
+
+### SSH Config Supported Arguments
+
+- Obviously none!
 
 
 # Known Issues
@@ -690,3 +745,45 @@ Once the container(s) are ready, you can use the make commands to execute tests 
 - `test_iosxr` will execute all unit tests and iosxr functional tests
 - `test_eos` will execute all unit tests and eos functional tests
 - `test_junos` will execute all unit tests and junos functional tests
+
+
+# Todo and Roadmap
+
+This section may not get updated much, but will hopefully reflect the priority items for short term (todo) and longer
+ term (roadmap) for scrapli.
+
+## Todo
+
+- Paramiko Transport ssh config support -- at least for user/port/identity-file (to match ssh2-python current support)
+- Continue to bring in features from `ssh2net` -- at the moment finishing/adding ssh config support is the priority
+, however it would be good to add keep alives and some other widgets from `ssh2net` in a more optimized, cleaned up
+ fashion here in scrapli.
+- Investigate blocking modes and timeouts further. This was reasonably fleshed out in `ssh2net` I think, but less so
+ here... it seems to not actually be needed (the ability to flip between blocking and non-blocking reads), so it may
+  be worth removing this from the base Transport class entirely to simplify things.
+- Investigate pre-authentication handling for telnet -- support handling a prompt *before* auth happens i.e. accept
+ some banner/message -- does this ever happen for ssh? I don't know! If so, support dealing with that as well.
+- Remove as much as possible from the vendor'd `ptyprocess` code. Type hint it, add docstrings everywhere, add tests
+ if possible (and remove from ignore for test coverage and darglint).
+- Improve testing in general... make it more orderly/nicer, retry connections automatically if there is a failure
+ (failures happen from vtys getting tied up and stuff like that it seems), shoot for even better coverage!
+- Remove disable paging "stuff" from the base `Scrape` class -- thats really network specific and doesnt belog in a
+ base ssh type class.
+- Add a dummy container (like nornir maybe?) to use for functional testing -- its very likely folks won't have a
+ vrnetlab setup or compute to set that up... it'd be nice to have a lightweight container that can be used for basic
+  testing of `Scrape` and for testing auth with keys and such.
+
+## Roadmap
+
+- Async support. This is a bit of a question mark as I personally don't know even where to start to implement this
+, and have no real current use case... that said I think it would be cool if for no other reason than to learn!
+- Plugins -- make the drivers all plugins!
+- Nonrir plugin -- make scrapli a Nornir plugin!
+
+## Things that may or may not happen
+
+- Modify `send_commands` to *only* accept a list/tuple of commands. Add a `send_command` method which only accepts a
+ *single* command. The idea would be to be more exacting/make docs more specific/etc. but not sure I'm fully bought
+  into this yet.
+- Add a `validate_host` arg to the base `Scrape` class (like ssh2net) to validate host is resolvable/socket can be
+ opened before bothering attempting to do so for real (as an option).

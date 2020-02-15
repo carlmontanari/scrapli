@@ -137,13 +137,14 @@ class Scrape:
 
         if not isinstance(ssh_config_file, (str, bool)):
             raise TypeError(f"ssh_config_file should be str or bool, got {type(ssh_config_file)}")
-        self.ssh_config_file = ssh_config_file
         if transport != "telnet" and ssh_config_file is not False:
             if isinstance(ssh_config_file, bool):
                 cfg = ""
             else:
                 cfg = ssh_config_file
             self.ssh_config_file = resolve_ssh_config(cfg)
+        else:
+            self.ssh_config_file = ""
 
         self.transport: Transport
         self.transport_class, self.transport_args = self._transport_factory(transport)
