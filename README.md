@@ -543,7 +543,7 @@ If telnet for some reason becomes an important use case, the telnet Transport la
 - Other questions? Ask away!
 
 
-#Transport Notes
+# Transport Notes
 
 ## paramiko
 
