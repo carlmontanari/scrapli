@@ -5,7 +5,7 @@
   "auth_password": "VR-netlab9",
   "auth_public_key": "",
   "timeout_socket": 1,
-  "timeout_ssh": 2000,
+  "timeout_transport": 2000,
   "timeout_ops": 2,
   "comms_prompt_pattern": "^[a-z0-9.\\-@()/:]{1,32}[#>$]$",
   "comms_ansi": false,

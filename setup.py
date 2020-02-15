@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""scrapli - screen scraping client library"""
+"""scrapli - ssh|telnet screen scraping client library"""
 import setuptools
 
 __author__ = "Carl Montanari"
@@ -9,10 +9,10 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="scrapli",
-    version="2020.02.09",
+    version="2020.02.14",
     author=__author__,
     author_email="carl.r.montanari@gmail.com",
-    description="Screen scraping client focused on network devices",
+    description="Screen scraping (ssh|telnet) client focused on network devices",
     long_description=README,
     long_description_content_type="text/markdown",
     url="https://github.com/carlmontanari/scrapli",

@@ -1,0 +1,16 @@
+Host 1.2.3.4 someswitch1
+   User carl
+   IdentityFile ~/.ssh/mysshkey
+   IdentitiesOnly yes
+   Hostname someswitch1.bogus.com
+   Port 1234
+
+Host someswitch?
+   User carl
+   IdentityFile ~/.ssh/mysshkey
+   IdentitiesOnly yes
+   Hostname someswitch1.bogus.com
+   Port 1234
+
+Host *
+   User carl

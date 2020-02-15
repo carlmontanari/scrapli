@@ -5,7 +5,7 @@ from typing import Any, Callable, Dict, Union
 LOG = logging.getLogger("scrapli")
 
 
-def operation_timeout(attribute: str) -> Callable[..., Any]:
+def operation_timeout(attribute: str, message: str = "") -> Callable[..., Any]:
     """
     Decorate an "operation" -- raises exception if the operation timeout is exceeded
 
@@ -13,6 +13,8 @@ def operation_timeout(attribute: str) -> Callable[..., Any]:
 
     Args:
         attribute: attribute to inspect in class (to set timeout duration)
+        message: optional message to pass when decorating a non-standard operation such as telnet
+            login (as opposed to "normal" channel operations)
 
     Returns:
         decorate: wrapped function
@@ -24,6 +26,8 @@ def operation_timeout(attribute: str) -> Callable[..., Any]:
     import signal  # noqa
 
     def _raise_exception(signum: Any, frame: Any) -> None:
+        if message:
+            raise TimeoutError(message)
         raise TimeoutError
 
     def decorate(wrapped_func: Callable[..., Any]) -> Callable[..., Any]:

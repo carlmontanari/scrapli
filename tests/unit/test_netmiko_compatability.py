@@ -60,14 +60,14 @@ def test_transform_netmiko_args():
     }
     transformed_args = transform_netmiko_kwargs(netmiko_args)
     assert transformed_args["host"] == "1.2.3.4"
-    assert transformed_args["timeout_ssh"] == 25000
+    assert transformed_args["timeout_transport"] == 25000
 
 
 def test_transform_netmiko_args_setup_timeout():
     netmiko_args = {"host": "1.2.3.4", "username": "person", "password": "password", "port": 123}
     transformed_args = transform_netmiko_kwargs(netmiko_args)
     assert transformed_args["host"] == "1.2.3.4"
-    assert transformed_args["timeout_ssh"] == 5000
+    assert transformed_args["timeout_transport"] == 5000
 
 
 def test_netmiko_find_prompt(mocked_netmiko_driver):

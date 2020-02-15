@@ -76,10 +76,6 @@ def test__acquire_priv_escalate(cisco_iosxe_driver, transport):
     "transport", ["system", "ssh2", "paramiko"], ids=["system", "ssh2", "paramiko"]
 )
 def test__acquire_priv_deescalate(cisco_iosxe_driver, transport):
-    if transport == "ssh2":
-        # seems to need a tiny bit of time so sockets arent tied up between tests??
-        # it only seemed to happen here... could be something to do w/ how many tests ran before?
-        time.sleep(0.5)
     conn = cisco_iosxe_driver(**CISCO_IOSXE_DEVICE, transport=transport)
     conn.acquire_priv("exec")
     current_priv = conn._determine_current_priv(conn.get_prompt())

@@ -2,9 +2,10 @@
 import warnings
 from logging import getLogger
 from threading import Lock
-from typing import Optional
+from typing import Optional, Tuple
 
 from scrapli.exceptions import MissingDependencies, ScrapliAuthenticationFailed
+from scrapli.ssh_config import SSHConfig
 from scrapli.transport.socket import Socket
 from scrapli.transport.transport import Transport
 
@@ -14,11 +15,12 @@ LOG = getLogger("transport")
 SSH2_TRANSPORT_ARGS = (
     "host",
     "port",
-    "timeout_ssh",
+    "timeout_transport",
     "timeout_socket",
     "auth_username",
     "auth_public_key",
     "auth_password",
+    "ssh_config_file",
 )
 
 
@@ -26,12 +28,13 @@ class SSH2Transport(Socket, Transport):
     def __init__(
         self,
         host: str,
-        port: int = 22,
+        port: int = -1,
         auth_username: str = "",
         auth_public_key: str = "",
         auth_password: str = "",
-        timeout_ssh: int = 5000,
+        timeout_transport: int = 5000,
         timeout_socket: int = 5,
+        ssh_config_file: str = "",
     ):
         """
         SSH2Transport Object
@@ -46,8 +49,9 @@ class SSH2Transport(Socket, Transport):
             auth_username: username for authentication
             auth_public_key: path to public key for authentication
             auth_password: password for authentication
-            timeout_ssh: timeout for ssh2 transport in milliseconds
+            timeout_transport: timeout for ssh2 transport in milliseconds
             timeout_socket: timeout for establishing socket in seconds
+            ssh_config_file: string to path for ssh config file
 
         Returns:
             N/A  # noqa: DAR202
@@ -57,12 +61,18 @@ class SSH2Transport(Socket, Transport):
 
         """
         self.host: str = host
-        self.port: int = port
-        self.timeout_ssh: int = timeout_ssh
+
+        cfg_port, cfg_user, cfg_public_key = self._process_ssh_config(self.host, ssh_config_file)
+
+        if port != -1:
+            self.port = port
+        else:
+            self.port = cfg_port or 22
+        self.timeout_transport: int = timeout_transport
         self.timeout_socket: int = timeout_socket
         self.session_lock: Lock = Lock()
-        self.auth_username: str = auth_username
-        self.auth_public_key: str = auth_public_key
+        self.auth_username: str = auth_username or cfg_user
+        self.auth_public_key: str = auth_public_key or cfg_public_key
         self.auth_password: str = auth_password
 
         try:
@@ -91,6 +101,29 @@ class SSH2Transport(Socket, Transport):
 
         super().__init__(host=self.host, port=self.port, timeout=self.timeout_socket)
 
+    @staticmethod
+    def _process_ssh_config(host: str, ssh_config_file: str) -> Tuple[Optional[int], str, str]:
+        """
+        Method to parse ssh config file
+
+        TODO
+
+        Args:
+            host: host to lookup in ssh config file
+            ssh_config_file: string path to ssh config file; passed down from `Scrape`, or the
+                `NetworkDriver` or subclasses of it, in most cases.
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+        ssh = SSHConfig(ssh_config_file)
+        host_config = ssh.lookup(host)
+        return host_config.port, host_config.user or "", host_config.identity_file or ""
+
     def open(self) -> None:
         """
         Parent method to open session, authenticate and acquire shell
@@ -110,7 +143,7 @@ class SSH2Transport(Socket, Transport):
             self.socket_open()
         self.session_lock.acquire()
         self.session = self.lib_session()
-        self.set_timeout(self.timeout_ssh)
+        self.set_timeout(self.timeout_transport)
         try:
             self.session.handshake(self.sock)
         except Exception as exc:
@@ -369,7 +402,7 @@ class SSH2Transport(Socket, Transport):
         if isinstance(timeout, int):
             set_timeout = timeout
         else:
-            set_timeout = self.timeout_ssh
+            set_timeout = self.timeout_transport
         self.session.set_timeout(set_timeout)
 
     def set_blocking(self, blocking: bool = False) -> None:

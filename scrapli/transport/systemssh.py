@@ -1,4 +1,5 @@
 """scrapli.transport.systemssh"""
+import os
 import re
 from logging import getLogger
 from select import select
@@ -9,6 +10,7 @@ from typing import TYPE_CHECKING, Optional, Union
 from scrapli.decorators import operation_timeout
 from scrapli.exceptions import ScrapliAuthenticationFailed
 from scrapli.helper import get_prompt_pattern
+from scrapli.ssh_config import SSHConfig
 from scrapli.transport.ptyprocess import PtyProcess
 from scrapli.transport.transport import Transport
 
@@ -22,8 +24,8 @@ LOG = getLogger("transport")
 SYSTEM_SSH_TRANSPORT_ARGS = (
     "host",
     "port",
-    "timeout_socket",
-    "timeout_ssh",
+    "timeout_transport",
+    "timeout_ops",
     "auth_username",
     "auth_public_key",
     "auth_password",
@@ -43,17 +45,24 @@ class SystemSSHTransport(Transport):
         auth_public_key: str = "",
         auth_password: str = "",
         auth_strict_key: bool = True,
-        timeout_socket: int = 5,
-        timeout_ssh: int = 5000,
+        timeout_transport: int = 5000,
+        timeout_ops: int = 10,
         comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
         comms_return_char: str = "\n",
-        ssh_config_file: Union[str, bool] = False,
+        ssh_config_file: str = "",
     ):  # pylint: disable=W0231
         """
         SystemSSHTransport Object
 
         Inherit from Transport ABC
         SSH2Transport <- Transport (ABC)
+
+        If using this driver, and passing a ssh_config_file (or setting this argument to `True`),
+        all settings in the ssh config file will be superseded by any arguments passed here!
+
+        SystemSSHTransport *always* prefers public key auth if given the option! If auth_public_key
+        is set in the provided arguments OR if ssh_config_file is passed/True and there is a key for
+        ANY match (i.e. `*` has a key in ssh config file!!), we will use that key!
 
         Args:
             host: host ip/name to connect to
@@ -62,8 +71,10 @@ class SystemSSHTransport(Transport):
             auth_public_key: path to public key for authentication
             auth_password: password for authentication
             auth_strict_key: True/False to enforce strict key checking (default is True)
-            timeout_socket: timeout for establishing socket in seconds
-            timeout_ssh: timeout for ssh transport in milliseconds
+            timeout_transport: timeout for ssh transport in milliseconds
+            timeout_ops: timeout for ssh channel operations in seconds -- this is also the
+                timeout for finding and responding to username and password prompts at initial
+                login.
             comms_prompt_pattern: prompt pattern expected for device, same as the one provided to
                 channel -- system ssh needs to know this to know how to decide if we are properly
                 sending/receiving data -- i.e. we are not stuck at some password prompt or some
@@ -74,8 +85,7 @@ class SystemSSHTransport(Transport):
                 the channel to make sure we are authenticated and sending/receiving data. If using
                 driver, this should be passed from driver (Scrape, or IOSXE, etc.) to this Transport
                 class.
-            ssh_config_file: string to path for ssh config file, True to use default ssh config file
-                or False to ignore default ssh config file
+            ssh_config_file: string to path for ssh config file
 
         Returns:
             N/A  # noqa: DAR202
@@ -86,8 +96,8 @@ class SystemSSHTransport(Transport):
         """
         self.host: str = host
         self.port: int = port
-        self.timeout_socket: int = timeout_socket
-        self.timeout_ssh: int = int(timeout_ssh / 1000)
+        self.timeout_transport: int = int(timeout_transport / 1000)
+        self.timeout_ops: int = timeout_ops
         self.session_lock: Lock = Lock()
         self.auth_username: str = auth_username
         self.auth_public_key: str = auth_public_key
@@ -95,7 +105,7 @@ class SystemSSHTransport(Transport):
         self.auth_strict_key: bool = auth_strict_key
         self.comms_prompt_pattern: str = comms_prompt_pattern
         self.comms_return_char: str = comms_return_char
-        self.ssh_config_file: Union[str, bool] = ssh_config_file
+        self._process_ssh_config(ssh_config_file)
 
         self.session: Union[Popen[bytes], PtyProcess]  # pylint: disable=E1136
         self.lib_auth_exception = ScrapliAuthenticationFailed
@@ -103,6 +113,32 @@ class SystemSSHTransport(Transport):
 
         self.open_cmd = ["ssh", self.host]
         self._build_open_cmd()
+
+    def _process_ssh_config(self, ssh_config_file: str) -> None:
+        """
+        Method to parse ssh config file
+
+        Ensure ssh_config_file is valid (if providing a string path to config file), or resolve
+        config file if passed True. Search config file for any public key, if ANY matching key is
+        found and user has not provided a public key, set `auth_public_key` to the value of the
+        found key. This is because we prefer to use `open_pipes` over `open_pty`!
+
+        Args:
+            ssh_config_file: string path to ssh config file; passed down from `Scrape`, or the
+                `NetworkDriver` or subclasses of it, in most cases.
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+        ssh = SSHConfig(ssh_config_file)
+        self.ssh_config_file = ssh.ssh_config_file
+        host_config = ssh.lookup(self.host)
+        if not self.auth_public_key and host_config.identity_file:
+            self.auth_public_key = os.path.expanduser(host_config.identity_file.strip())
 
     def _build_open_cmd(self) -> None:
         """
@@ -119,19 +155,31 @@ class SystemSSHTransport(Transport):
 
         """
         self.open_cmd.extend(["-p", str(self.port)])
-        self.open_cmd.extend(["-o", f"ConnectTimeout={self.timeout_socket}"])
+        self.open_cmd.extend(["-o", f"ConnectTimeout={self.timeout_transport}"])
         if self.auth_public_key:
             self.open_cmd.extend(["-i", self.auth_public_key])
         if self.auth_username:
             self.open_cmd.extend(["-l", self.auth_username])
         if self.auth_strict_key is False:
             self.open_cmd.extend(["-o", "StrictHostKeyChecking=no"])
-        if isinstance(self.ssh_config_file, str):
+        else:
+            self.open_cmd.extend(["-o", "StrictHostKeyChecking=yes"])
+        if self.ssh_config_file:
             self.open_cmd.extend(["-F", self.ssh_config_file])
 
     def open(self) -> None:
         """
         Parent method to open session, authenticate and acquire shell
+
+        If possible it is preferable to use the `_open_pipes` method, but we can only do this IF we
+        can authenticate with public key authorization (because we don't have to spawn a PTY; if no
+        public key we have to spawn PTY to deal w/ authentication prompts). IF we get a public key
+        provided, use pipes method, we will just deal with `_open_pty`. `_open_pty` is less
+        preferable because we have to spawn a PTY and cannot as easily tell if SSH authentication is
+        successful. With `_open_pipes` we can read stderr which contains the output from the verbose
+        flag for SSH -- this contains a message that indicates success of SSH auth. In the case of
+        `_open_pty` we have to read from the channel directly like in the case of telnet... so it
+        works, but its just a bit less desirable.
 
         Args:
             N/A
@@ -187,10 +235,12 @@ class SystemSSHTransport(Transport):
         self.session = pipes_session
         return True
 
-    @operation_timeout("timeout_ssh")
     def _pipes_isauthenticated(self, pipes_session: PopenBytes) -> bool:
         """
         Private method to check initial authentication when using subprocess.Popen
+
+        Since we always run ssh with `-v` we can simply check the stderr (where verbose output goes)
+        to see if `Authenticated to [our host]` is in the output.
 
         Args:
             pipes_session: Popen pipes session object
@@ -233,6 +283,7 @@ class SystemSSHTransport(Transport):
         self.session = pty_session
         return True
 
+    @operation_timeout("timeout_ops", "Timed out looking for SSH login password prompt")
     def _pty_authenticate(self, pty_session: PtyProcess) -> None:
         """
         Private method to check initial authentication when using pty_session
@@ -244,32 +295,17 @@ class SystemSSHTransport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            exc: if unknown (i.e. not auth failed) exception occurs
-            lib_auth_exception: if known auth exception occurs
+            N/A
 
         """
         self.session_lock.acquire()
-        try:
-            attempt_count = 0
-            while True:
-                output = pty_session.read()
-                if b"password" in output.lower():
-                    pty_session.write(self.auth_password.encode())
-                    pty_session.write(self.comms_return_char.encode())
-                    break
-                attempt_count += 1
-                if attempt_count > 250:
-                    raise self.lib_auth_exception
-        except self.lib_auth_exception as exc:
-            LOG.critical(f"Password authentication with host {self.host} failed. Exception: {exc}.")
-        except Exception as exc:
-            LOG.critical(
-                "Unknown error occurred during password authentication with host "
-                f"{self.host}; Exception: {exc}"
-            )
-            raise exc
-        finally:
-            self.session_lock.release()
+        while True:
+            output = pty_session.read()
+            if b"password" in output.lower():
+                pty_session.write(self.auth_password.encode())
+                pty_session.write(self.comms_return_char.encode())
+                self.session_lock.release()
+                break
 
     def _pty_isauthenticated(self, pty_session: PtyProcess) -> bool:
         """

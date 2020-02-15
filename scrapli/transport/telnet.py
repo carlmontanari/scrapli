@@ -7,6 +7,7 @@ from telnetlib import Telnet
 from threading import Lock
 from typing import Optional
 
+from scrapli.decorators import operation_timeout
 from scrapli.exceptions import ScrapliAuthenticationFailed
 from scrapli.helper import get_prompt_pattern
 from scrapli.transport.transport import Transport
@@ -16,10 +17,9 @@ LOG = getLogger("transport")
 TELNET_TRANSPORT_ARGS = (
     "host",
     "port",
-    "timeout_ssh",
-    "timeout_socket",
+    "timeout_transport",
+    "timeout_ops",
     "auth_username",
-    "auth_public_key",
     "auth_password",
     "comms_prompt_pattern",
     "comms_return_char",
@@ -27,9 +27,9 @@ TELNET_TRANSPORT_ARGS = (
 
 
 class ScrapliTelnet(Telnet):
-    def __init__(self, host: str, port: int) -> None:
+    def __init__(self, host: str, port: int, timeout: int) -> None:
         self.eof: bool
-        super().__init__(host, port)
+        super().__init__(host, port, timeout)
 
 
 class TelnetTransport(Transport):
@@ -38,10 +38,9 @@ class TelnetTransport(Transport):
         host: str,
         port: int = 23,
         auth_username: str = "",
-        auth_public_key: str = "",
         auth_password: str = "",
-        timeout_ssh: int = 5000,
-        timeout_socket: int = 5,
+        timeout_transport: int = 5000,
+        timeout_ops: int = 10,
         comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
         comms_return_char: str = "\n",
     ):  # pylint: disable=W0231
@@ -56,10 +55,11 @@ class TelnetTransport(Transport):
             host: host ip/name to connect to
             port: port to connect to
             auth_username: username for authentication
-            auth_public_key: path to public key for authentication
             auth_password: password for authentication
-            timeout_socket: timeout for establishing socket in seconds
-            timeout_ssh: timeout for ssh transport in milliseconds
+            timeout_transport: timeout for telnet transport in milliseconds
+            timeout_ops: timeout for telnet channel operations in seconds -- this is also the
+                timeout for finding and responding to username and password prompts at initial
+                login.
             comms_prompt_pattern: prompt pattern expected for device, same as the one provided to
                 channel -- system ssh needs to know this to know how to decide if we are properly
                 sending/receiving data -- i.e. we are not stuck at some password prompt or some
@@ -80,14 +80,16 @@ class TelnetTransport(Transport):
         """
         self.host: str = host
         self.port: int = port
-        self.timeout_ssh: int = timeout_ssh
-        self.timeout_socket: int = timeout_socket
+        self.timeout_transport: int = int(timeout_transport / 1000)
+        self.timeout_ops: int = timeout_ops
         self.session_lock: Lock = Lock()
         self.auth_username: str = auth_username
-        self.auth_public_key: str = auth_public_key
         self.auth_password: str = auth_password
         self.comms_prompt_pattern: str = comms_prompt_pattern
         self.comms_return_char: str = comms_return_char
+
+        self.username_prompt: str = "Username:"
+        self.password_prompt: str = "Password:"
 
         self.session: ScrapliTelnet
         self.lib_auth_exception = ScrapliAuthenticationFailed
@@ -108,7 +110,9 @@ class TelnetTransport(Transport):
 
         """
         self.session_lock.acquire()
-        telnet_session = ScrapliTelnet(host=self.host, port=self.port)
+        telnet_session = ScrapliTelnet(
+            host=self.host, port=self.port, timeout=self.timeout_transport
+        )
         LOG.debug(f"Session to host {self.host} spawned")
         self.session_lock.release()
         self._authenticate(telnet_session)
@@ -117,7 +121,6 @@ class TelnetTransport(Transport):
                 f"Could not authenticate over telnet to host: {self.host}"
             )
         LOG.debug(f"Authenticated to host {self.host} with password")
-        print("SUCH GOOD SUCCESS")
         self.session = telnet_session
 
     def _authenticate(self, telnet_session: ScrapliTelnet) -> None:
@@ -137,6 +140,7 @@ class TelnetTransport(Transport):
         self._authenticate_username(telnet_session)
         self._authenticate_password(telnet_session)
 
+    @operation_timeout("timeout_ops", "Timed out looking for telnet login username prompt")
     def _authenticate_username(self, telnet_session: ScrapliTelnet) -> None:
         """
         Private method to enter username for telnet authentication
@@ -148,27 +152,19 @@ class TelnetTransport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            exc: if unknown (i.e. not auth failed) exception occurs
+            N/A
 
         """
         self.session_lock.acquire()
-        try:
-            attempt_count = 0
-            while True:
-                output = telnet_session.read_eager()
-                if b"username:" in output.lower():
-                    telnet_session.write(self.auth_username.encode())
-                    telnet_session.write(self.comms_return_char.encode())
-                    break
-                attempt_count += 1
-                if attempt_count > 1000:
-                    break
-        except self.lib_auth_exception as exc:
-            LOG.critical(f"Did not see username prompt from {self.host} failed. Exception: {exc}.")
-            raise exc
-        finally:
-            self.session_lock.release()
+        while True:
+            output = telnet_session.read_eager()
+            if self.username_prompt.lower().encode() in output.lower():
+                telnet_session.write(self.auth_username.encode())
+                telnet_session.write(self.comms_return_char.encode())
+                self.session_lock.release()
+                break
 
+    @operation_timeout("timeout_ops", "Timed out looking for telnet login password prompt")
     def _authenticate_password(self, telnet_session: ScrapliTelnet) -> None:
         """
         Private method to enter password for telnet authentication
@@ -180,31 +176,17 @@ class TelnetTransport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            exc: if unknown (i.e. not auth failed) exception occurs
+            N/A
 
         """
         self.session_lock.acquire()
-        try:
-            attempt_count = 0
-            while True:
-                output = telnet_session.read_eager()
-                if b"password" in output.lower():
-                    telnet_session.write(self.auth_password.encode())
-                    telnet_session.write(self.comms_return_char.encode())
-                    break
-                attempt_count += 1
-                if attempt_count > 1000:
-                    break
-        except self.lib_auth_exception as exc:
-            LOG.critical(f"Password authentication with host {self.host} failed. Exception: {exc}.")
-        except Exception as exc:
-            LOG.critical(
-                "Unknown error occurred during password authentication with host "
-                f"{self.host}; Exception: {exc}"
-            )
-            raise exc
-        finally:
-            self.session_lock.release()
+        while True:
+            output = telnet_session.read_eager()
+            if self.password_prompt.lower().encode() in output.lower():
+                telnet_session.write(self.auth_password.encode())
+                telnet_session.write(self.comms_return_char.encode())
+                self.session_lock.release()
+                break
 
     def _telnet_isauthenticated(self, telnet_session: ScrapliTelnet) -> bool:
         """
@@ -264,7 +246,7 @@ class TelnetTransport(Transport):
 
     def isalive(self) -> bool:
         """
-        Check if socket is alive and session is authenticated
+        Check if alive and session is authenticated
 
         Args:
             N/A
@@ -276,6 +258,9 @@ class TelnetTransport(Transport):
             N/A
 
         """
+        if self._isauthenticated and not self.session.eof:
+            return True
+        return False
 
     def read(self) -> bytes:
         """
