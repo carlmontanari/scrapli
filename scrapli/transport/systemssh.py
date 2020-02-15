@@ -49,13 +49,20 @@ class SystemSSHTransport(Transport):
         timeout_ops: int = 10,
         comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
         comms_return_char: str = "\n",
-        ssh_config_file: Union[str, bool] = False,
+        ssh_config_file: str = "",
     ):  # pylint: disable=W0231
         """
         SystemSSHTransport Object
 
         Inherit from Transport ABC
         SSH2Transport <- Transport (ABC)
+
+        If using this driver, and passing a ssh_config_file (or setting this argument to `True`),
+        all settings in the ssh config file will be superseded by any arguments passed here!
+
+        SystemSSHTransport *always* prefers public key auth if given the option! If auth_public_key
+        is set in the provided arguments OR if ssh_config_file is passed/True and there is a key for
+        ANY match (i.e. `*` has a key in ssh config file!!), we will use that key!
 
         Args:
             host: host ip/name to connect to
@@ -78,8 +85,7 @@ class SystemSSHTransport(Transport):
                 the channel to make sure we are authenticated and sending/receiving data. If using
                 driver, this should be passed from driver (Scrape, or IOSXE, etc.) to this Transport
                 class.
-            ssh_config_file: string to path for ssh config file, True to use default ssh config file
-                or False to ignore default ssh config file
+            ssh_config_file: string to path for ssh config file
 
         Returns:
             N/A  # noqa: DAR202
@@ -108,14 +114,18 @@ class SystemSSHTransport(Transport):
         self.open_cmd = ["ssh", self.host]
         self._build_open_cmd()
 
-    def _process_ssh_config(self, ssh_config_file: Union[str, bool]) -> None:
+    def _process_ssh_config(self, ssh_config_file: str) -> None:
         """
         Method to parse ssh config file
 
-        TODO
+        Ensure ssh_config_file is valid (if providing a string path to config file), or resolve
+        config file if passed True. Search config file for any public key, if ANY matching key is
+        found and user has not provided a public key, set `auth_public_key` to the value of the
+        found key. This is because we prefer to use `open_pipes` over `open_pty`!
 
         Args:
-            N/A
+            ssh_config_file: string path to ssh config file; passed down from `Scrape`, or the
+                `NetworkDriver` or subclasses of it, in most cases.
 
         Returns:
             N/A  # noqa: DAR202
@@ -124,24 +134,11 @@ class SystemSSHTransport(Transport):
             N/A
 
         """
-        if ssh_config_file is False:
-            self.ssh_config_file = None
-            return
-        elif isinstance(ssh_config_file, str):
-            cfg = ssh_config_file
-        else:
-            # assumes that you are using the transport via a driver, where the only other option
-            # after `False` or a string, is `True` in which case we want an empty string
-            cfg = ""
-
-        ssh = SSHConfig(cfg)
+        ssh = SSHConfig(ssh_config_file)
         self.ssh_config_file = ssh.ssh_config_file
         host_config = ssh.lookup(self.host)
         if not self.auth_public_key and host_config.identity_file:
             self.auth_public_key = os.path.expanduser(host_config.identity_file.strip())
-        # TODO -- set other supported values!
-        # think this should be done via getattr/setattr so it can be "auto-magic" -- pub key is a
-        # special case for system ssh so that has to be one off...
 
     def _build_open_cmd(self) -> None:
         """
@@ -165,7 +162,9 @@ class SystemSSHTransport(Transport):
             self.open_cmd.extend(["-l", self.auth_username])
         if self.auth_strict_key is False:
             self.open_cmd.extend(["-o", "StrictHostKeyChecking=no"])
-        if isinstance(self.ssh_config_file, str):
+        else:
+            self.open_cmd.extend(["-o", "StrictHostKeyChecking=yes"])
+        if self.ssh_config_file:
             self.open_cmd.extend(["-F", self.ssh_config_file])
 
     def open(self) -> None:
@@ -175,12 +174,12 @@ class SystemSSHTransport(Transport):
         If possible it is preferable to use the `_open_pipes` method, but we can only do this IF we
         can authenticate with public key authorization (because we don't have to spawn a PTY; if no
         public key we have to spawn PTY to deal w/ authentication prompts). IF we get a public key
-        provided, use pipes method, otherwise we *may* auth via public key but we will just deal
-        with `_open_pty`. `_open_pty` is less preferable because we have to spawn a PTY and cannot
-        as easily tell if SSH authentication is successful. With `_open_pipes` we can read stderr
-        which contains the output from the verbose flag for SSH -- this contains a message that
-        indicates success of SSH auth. In the case of `_open_pty` we have to read from the channel
-        directly like in the case of telnet... so it works, but its just a bit less desirable.
+        provided, use pipes method, we will just deal with `_open_pty`. `_open_pty` is less
+        preferable because we have to spawn a PTY and cannot as easily tell if SSH authentication is
+        successful. With `_open_pipes` we can read stderr which contains the output from the verbose
+        flag for SSH -- this contains a message that indicates success of SSH auth. In the case of
+        `_open_pty` we have to read from the channel directly like in the case of telnet... so it
+        works, but its just a bit less desirable.
 
         Args:
             N/A

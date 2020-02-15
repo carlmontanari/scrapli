@@ -2,12 +2,11 @@
 import os
 import re
 import shlex
-from pathlib import Path
 from typing import Dict, Match, Optional
 
 
 class SSHConfig:
-    def __init__(self, ssh_config_file: str = "") -> None:
+    def __init__(self, ssh_config_file: str) -> None:
         """
         Initialize SSHConfig Object
 
@@ -28,18 +27,19 @@ class SSHConfig:
             PreferredAuthentications
 
         Args:
-            ssh_config_file: string path to ssh configuration file to use if not provided
-                will try to use users ssh config file in ~/.ssh/config first, then will try
-                /etc/ssh/config_file
+            ssh_config_file: string path to ssh configuration file
 
         Returns:
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            TypeError: if non-string value provided for ssh_config_file
 
         """
-        self.ssh_config_file = self._select_config_file(ssh_config_file)
+        if not isinstance(ssh_config_file, str):
+            raise TypeError(f"`ssh_config_file` expected str, got {type(ssh_config_file)}")
+
+        self.ssh_config_file = os.path.expanduser(ssh_config_file)
         if self.ssh_config_file:
             with open(self.ssh_config_file, "r") as f:
                 self.ssh_config = f.read()
@@ -105,29 +105,6 @@ class SSHConfig:
         if self.ssh_config:
             return True
         return False
-
-    @staticmethod
-    def _select_config_file(ssh_config_file: str) -> str:
-        """
-        Select ssh configuration file
-
-        Args:
-            ssh_config_file: string representation of ssh config file to try to use
-
-        Returns:
-            str: string to path fro ssh config file or an empty string
-
-        Raises:
-            N/A
-
-        """
-        if Path(ssh_config_file).is_file():
-            return str(Path(ssh_config_file))
-        if Path(os.path.expanduser("~/.ssh/config")).is_file():
-            return str(Path(os.path.expanduser("~/.ssh/config")))
-        if Path("/etc/ssh/ssh_config").is_file():
-            return str(Path("/etc/ssh/ssh_config"))
-        return ""
 
     @staticmethod
     def _strip_comments(line: str) -> str:
@@ -216,7 +193,9 @@ class SSHConfig:
                 host.identities_only = self._strip_comments(identities_only.groups()[0])
             identity_file = re.search(identity_file_pattern, host_entry)
             if isinstance(identity_file, Match):
-                host.identity_file = self._strip_comments(identity_file.groups()[0])
+                host.identity_file = os.path.expanduser(
+                    self._strip_comments(identity_file.groups()[0])
+                )
             # keyboard_interactive = re.search(user_pattern, host_entry[0])
             # password_authentication = re.search(user_pattern, host_entry[0])
             # preferred_authentication = re.search(user_pattern, host_entry[0])

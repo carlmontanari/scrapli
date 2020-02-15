@@ -6,7 +6,7 @@ from types import TracebackType
 from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
 
 from scrapli.channel import CHANNEL_ARGS, Channel
-from scrapli.helper import get_external_function, validate_external_function
+from scrapli.helper import get_external_function, resolve_ssh_config, validate_external_function
 from scrapli.transport import (
     MIKO_TRANSPORT_ARGS,
     SSH2_TRANSPORT_ARGS,
@@ -52,7 +52,7 @@ class Scrape:
         comms_ansi: bool = False,
         session_pre_login_handler: Union[str, Callable[..., Any]] = "",
         session_disable_paging: Union[str, Callable[..., Any]] = "terminal length 0",
-        ssh_config_file: Union[str, bool] = True,
+        ssh_config_file: Union[str, bool] = False,
         transport: str = "system",
     ):
         """
@@ -130,14 +130,21 @@ class Scrape:
         self.session_disable_paging: Union[str, Callable[..., Any]] = ""
         self._setup_session(session_pre_login_handler, session_disable_paging)
 
-        if not isinstance(ssh_config_file, (str, bool)):
-            raise TypeError(f"ssh_config_file should be str or bool, got {type(ssh_config_file)}")
-        self.ssh_config_file = ssh_config_file
-
         if transport not in ("ssh2", "paramiko", "system", "telnet"):
             raise ValueError(
                 f"transport should be one of ssh2|paramiko|system|telnet, got {transport}"
             )
+
+        if not isinstance(ssh_config_file, (str, bool)):
+            raise TypeError(f"ssh_config_file should be str or bool, got {type(ssh_config_file)}")
+        self.ssh_config_file = ssh_config_file
+        if transport != "telnet" and ssh_config_file is not False:
+            if isinstance(ssh_config_file, bool):
+                cfg = ""
+            else:
+                cfg = ssh_config_file
+            self.ssh_config_file = resolve_ssh_config(cfg)
+
         self.transport: Transport
         self.transport_class, self.transport_args = self._transport_factory(transport)
 
