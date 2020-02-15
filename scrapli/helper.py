@@ -1,8 +1,10 @@
 """scrapli.helper"""
 import importlib
+import os
 import re
 import warnings
 from io import TextIOWrapper
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Pattern, TextIO, Union
 
 import pkg_resources  # pylint: disable=C0411
@@ -193,3 +195,29 @@ def textfsm_parse(
     except textfsm.parser.TextFSMError:
         pass
     return None
+
+
+def resolve_ssh_config(ssh_config_file: str) -> str:
+    """
+    Resolve ssh configuration file from provided string
+
+    If provided string is empty (`""`) try to resolve system ssh config files located at
+    `~/.ssh/config` or `/etc/ssh/ssh_config`.
+
+    Args:
+        ssh_config_file: string representation of ssh config file to try to use
+
+    Returns:
+        str: string to path fro ssh config file or an empty string
+
+    Raises:
+        N/A
+
+    """
+    if Path(ssh_config_file).is_file():
+        return str(Path(ssh_config_file))
+    if Path(os.path.expanduser("~/.ssh/config")).is_file():
+        return str(Path(os.path.expanduser("~/.ssh/config")))
+    if Path("/etc/ssh/ssh_config").is_file():
+        return str(Path("/etc/ssh/ssh_config"))
+    return ""

@@ -13,7 +13,7 @@ LOG = getLogger("transport")
 MIKO_TRANSPORT_ARGS = (
     "host",
     "port",
-    "timeout_ssh",
+    "timeout_transport",
     "timeout_socket",
     "auth_username",
     "auth_public_key",
@@ -29,7 +29,7 @@ class MikoTransport(Socket, Transport):
         auth_username: str = "",
         auth_public_key: str = "",
         auth_password: str = "",
-        timeout_ssh: int = 5000,
+        timeout_transport: int = 5000,
         timeout_socket: int = 5,
     ):
         """
@@ -46,7 +46,7 @@ class MikoTransport(Socket, Transport):
             auth_public_key: path to public key for authentication
             auth_password: password for authentication
             timeout_socket: timeout for establishing socket in seconds
-            timeout_ssh: timeout for ssh transport in milliseconds
+            timeout_transport: timeout for ssh transport in milliseconds
 
         Returns:
             N/A  # noqa: DAR202
@@ -57,7 +57,7 @@ class MikoTransport(Socket, Transport):
         """
         self.host: str = host
         self.port: int = port
-        self.timeout_ssh: int = timeout_ssh
+        self.timeout_transport: int = timeout_transport
         self.timeout_socket: int = timeout_socket
         self.session_lock: Lock = Lock()
         self.auth_username: str = auth_username
@@ -242,7 +242,7 @@ class MikoTransport(Socket, Transport):
 
         """
         self.channel = self.session.open_session()
-        self.set_timeout(self.timeout_ssh)
+        self.set_timeout(self.timeout_transport)
         self.channel.get_pty()
         self.channel.invoke_shell()
         LOG.debug(f"Channel to host {self.host} opened")
@@ -335,7 +335,7 @@ class MikoTransport(Socket, Transport):
         if isinstance(timeout, int):
             set_timeout = timeout
         else:
-            set_timeout = self.timeout_ssh
+            set_timeout = self.timeout_transport
         self.channel.settimeout(set_timeout)
 
     def set_blocking(self, blocking: bool = False) -> None:

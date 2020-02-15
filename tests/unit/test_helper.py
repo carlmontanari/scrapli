@@ -1,11 +1,23 @@
+import os
 import re
 import sys
 from io import TextIOWrapper
+from pathlib import Path
 
 import pkg_resources  # pylint: disable=C041
 import pytest
 
-from scrapli.helper import _textfsm_get_template, get_prompt_pattern, strip_ansi, textfsm_parse
+import scrapli
+from scrapli.helper import (
+    _textfsm_get_template,
+    get_prompt_pattern,
+    resolve_ssh_config,
+    strip_ansi,
+    textfsm_parse,
+)
+from scrapli.ssh_config import SSHConfig
+
+UNIT_TEST_DIR = f"{Path(scrapli.__file__).parents[1]}/tests/unit/"
 
 IOS_ARP = """Protocol  Address          Age (min)  Hardware Addr   Type   Interface
 Internet  172.31.254.1            -   0000.0c07.acfe  ARPA   Vlan254
@@ -77,3 +89,22 @@ def test_text_textfsm_parse_failure():
     template = _textfsm_get_template("cisco_ios", "show ip arp")
     result = textfsm_parse(template, "not really arp data")
     assert result is None
+
+
+def test_resolve_ssh_config_file_explicit():
+    ssh_conf = resolve_ssh_config(f"{UNIT_TEST_DIR}_ssh_config")
+    assert ssh_conf == f"{UNIT_TEST_DIR}_ssh_config"
+
+
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting ssh config on windows")
+def test_resolve_ssh_config_file_user(fs):
+    fs.add_real_file("/etc/ssh/ssh_config", target_path=f"{os.path.expanduser('~')}/.ssh/config")
+    ssh_conf = resolve_ssh_config("")
+    assert ssh_conf == f"{os.path.expanduser('~')}/.ssh/config"
+
+
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting ssh config on windows")
+def test_resolve_ssh_config_file_system(fs):
+    fs.add_real_file("/etc/ssh/ssh_config")
+    ssh_conf = resolve_ssh_config("")
+    assert ssh_conf == "/etc/ssh/ssh_config"

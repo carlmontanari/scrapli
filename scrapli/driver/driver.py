@@ -6,7 +6,7 @@ from types import TracebackType
 from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
 
 from scrapli.channel import CHANNEL_ARGS, Channel
-from scrapli.helper import get_external_function, validate_external_function
+from scrapli.helper import get_external_function, resolve_ssh_config, validate_external_function
 from scrapli.transport import (
     MIKO_TRANSPORT_ARGS,
     SSH2_TRANSPORT_ARGS,
@@ -45,14 +45,14 @@ class Scrape:
         auth_public_key: str = "",
         auth_strict_key: bool = True,
         timeout_socket: int = 5,
-        timeout_ssh: int = 5000,
+        timeout_transport: int = 5000,
         timeout_ops: int = 10,
         comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
         comms_return_char: str = "\n",
         comms_ansi: bool = False,
         session_pre_login_handler: Union[str, Callable[..., Any]] = "",
         session_disable_paging: Union[str, Callable[..., Any]] = "terminal length 0",
-        ssh_config_file: Union[str, bool] = True,
+        ssh_config_file: Union[str, bool] = False,
         transport: str = "system",
     ):
         """
@@ -70,7 +70,7 @@ class Scrape:
             auth_password: password for authentication
             auth_strict_key: strict host checking or not -- applicable for system ssh driver only
             timeout_socket: timeout for establishing socket in seconds
-            timeout_ssh: timeout for ssh transport in milliseconds
+            timeout_transport: timeout for ssh|telnet transport in milliseconds
             timeout_ops: timeout for ssh channel operations
             comms_prompt_pattern: raw string regex pattern -- preferably use `^` and `$` anchors!
                 this is the single most important attribute here! if this does not match a prompt,
@@ -118,7 +118,7 @@ class Scrape:
         self._setup_auth(auth_username, auth_password, auth_public_key)
 
         self.timeout_socket = int(timeout_socket)
-        self.timeout_ssh = int(timeout_ssh)
+        self.timeout_transport = int(timeout_transport)
         self.timeout_ops = int(timeout_ops)
 
         self.comms_prompt_pattern: str = ""
@@ -130,14 +130,22 @@ class Scrape:
         self.session_disable_paging: Union[str, Callable[..., Any]] = ""
         self._setup_session(session_pre_login_handler, session_disable_paging)
 
-        if not isinstance(ssh_config_file, (str, bool)):
-            raise TypeError(f"ssh_config_file should be str or bool, got {type(ssh_config_file)}")
-        self.ssh_config_file = ssh_config_file
-
         if transport not in ("ssh2", "paramiko", "system", "telnet"):
             raise ValueError(
                 f"transport should be one of ssh2|paramiko|system|telnet, got {transport}"
             )
+
+        if not isinstance(ssh_config_file, (str, bool)):
+            raise TypeError(f"ssh_config_file should be str or bool, got {type(ssh_config_file)}")
+        if transport != "telnet" and ssh_config_file is not False:
+            if isinstance(ssh_config_file, bool):
+                cfg = ""
+            else:
+                cfg = ssh_config_file
+            self.ssh_config_file = resolve_ssh_config(cfg)
+        else:
+            self.ssh_config_file = ""
+
         self.transport: Transport
         self.transport_class, self.transport_args = self._transport_factory(transport)
 

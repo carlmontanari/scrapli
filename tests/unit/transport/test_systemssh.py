@@ -1,5 +1,3 @@
-import pytest
-
 from scrapli.transport import SystemSSHTransport
 
 
