@@ -106,7 +106,9 @@ class SSH2Transport(Socket, Transport):
         """
         Method to parse ssh config file
 
-        TODO
+        In the future this may move to be a "helper" function as it should be very similar between
+        paramiko and and ssh2-python... for now it can be a static method as there may be varying
+        supported args between the two transport drivers.
 
         Args:
             host: host to lookup in ssh config file
