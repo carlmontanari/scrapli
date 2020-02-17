@@ -6,7 +6,12 @@ from types import TracebackType
 from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
 
 from scrapli.channel import CHANNEL_ARGS, Channel
-from scrapli.helper import get_external_function, resolve_ssh_config, validate_external_function
+from scrapli.helper import (
+    get_external_function,
+    resolve_ssh_config,
+    resolve_ssh_known_hosts,
+    validate_external_function,
+)
 from scrapli.transport import (
     MIKO_TRANSPORT_ARGS,
     SSH2_TRANSPORT_ARGS,
@@ -53,6 +58,7 @@ class Scrape:
         session_pre_login_handler: Union[str, Callable[..., Any]] = "",
         session_disable_paging: Union[str, Callable[..., Any]] = "terminal length 0",
         ssh_config_file: Union[str, bool] = False,
+        ssh_known_hosts_file: str = "",
         transport: str = "system",
     ):
         """
@@ -86,6 +92,8 @@ class Scrape:
                 string to send to device to disable paging
             ssh_config_file: string to path for ssh config file, True to use default ssh config file
                 or False to ignore default ssh config file
+            ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
+                file locations. Only applicable/needed if `auth_strict_key` is set to True
             transport: system|ssh2|paramiko|telnet -- type of transport to use
                 system uses system available ssh (/usr/bin/ssh)
                 ssh2 uses ssh2-python
@@ -135,16 +143,10 @@ class Scrape:
                 f"transport should be one of ssh2|paramiko|system|telnet, got {transport}"
             )
 
-        if not isinstance(ssh_config_file, (str, bool)):
-            raise TypeError(f"ssh_config_file should be str or bool, got {type(ssh_config_file)}")
-        if transport != "telnet" and ssh_config_file is not False:
-            if isinstance(ssh_config_file, bool):
-                cfg = ""
-            else:
-                cfg = ssh_config_file
-            self.ssh_config_file = resolve_ssh_config(cfg)
-        else:
+        if transport != "telnet":
             self.ssh_config_file = ""
+            self.ssh_known_hosts_file = ""
+            self._setup_ssh_args(ssh_config_file, ssh_known_hosts_file)
 
         self.transport: Transport
         self.transport_class, self.transport_args = self._transport_factory(transport)
@@ -380,6 +382,49 @@ class Scrape:
                 "to a function. Assuming this is string to send to disable paging."
             )
         return get_external_function(session_disable_paging)
+
+    def _setup_ssh_args(
+        self, ssh_config_file: Union[str, bool], ssh_known_hosts_file: Union[str, bool]
+    ) -> None:
+        """
+        Parse and setup ssh related arguments
+
+        Args:
+            ssh_config_file: string to path for ssh config file, True to use default ssh config file
+                or False to ignore default ssh config file
+            ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
+                file locations. Only applicable/needed if `auth_strict_key` is set to True
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            TypeError: if invalid config file or known hosts file value provided
+
+        """
+        if not isinstance(ssh_config_file, (str, bool)):
+            raise TypeError(f"`ssh_config_file` should be str or bool, got {type(ssh_config_file)}")
+        if ssh_config_file is not False:
+            if isinstance(ssh_config_file, bool):
+                cfg = ""
+            else:
+                cfg = ssh_config_file
+            self.ssh_config_file = resolve_ssh_config(cfg)
+        else:
+            self.ssh_config_file = ""
+
+        if not isinstance(ssh_known_hosts_file, (str, bool)):
+            raise TypeError(
+                "`ssh_known_hosts_file` should be str or bool, got " f"{type(ssh_known_hosts_file)}"
+            )
+        if ssh_known_hosts_file is not False:
+            if isinstance(ssh_known_hosts_file, bool):
+                known_hosts = ""
+            else:
+                known_hosts = ssh_known_hosts_file
+            self.ssh_known_hosts_file = resolve_ssh_known_hosts(known_hosts)
+        else:
+            self.ssh_known_hosts_file = ""
 
     def _transport_factory(self, transport: str) -> Tuple[Callable[..., Any], Dict[str, Any]]:
         """
