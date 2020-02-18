@@ -1,11 +1,16 @@
 """scrapli.transport.cssh2"""
+import base64
 import warnings
 from logging import getLogger
 from threading import Lock
 from typing import Optional, Tuple
 
-from scrapli.exceptions import MissingDependencies, ScrapliAuthenticationFailed
-from scrapli.ssh_config import SSHConfig
+from scrapli.exceptions import (
+    KeyVerificationFailed,
+    MissingDependencies,
+    ScrapliAuthenticationFailed,
+)
+from scrapli.ssh_config import SSHConfig, SSHKnownHosts
 from scrapli.transport.socket import Socket
 from scrapli.transport.transport import Transport
 
@@ -20,7 +25,9 @@ SSH2_TRANSPORT_ARGS = (
     "auth_username",
     "auth_public_key",
     "auth_password",
+    "auth_strict_key",
     "ssh_config_file",
+    "ssh_known_hosts_file",
 )
 
 
@@ -32,9 +39,11 @@ class SSH2Transport(Socket, Transport):
         auth_username: str = "",
         auth_public_key: str = "",
         auth_password: str = "",
+        auth_strict_key: bool = True,
         timeout_transport: int = 5000,
         timeout_socket: int = 5,
         ssh_config_file: str = "",
+        ssh_known_hosts_file: str = "",
     ):
         """
         SSH2Transport Object
@@ -49,9 +58,11 @@ class SSH2Transport(Socket, Transport):
             auth_username: username for authentication
             auth_public_key: path to public key for authentication
             auth_password: password for authentication
+            auth_strict_key: True/False to enforce strict key checking (default is True)
             timeout_transport: timeout for ssh2 transport in milliseconds
             timeout_socket: timeout for establishing socket in seconds
             ssh_config_file: string to path for ssh config file
+            ssh_known_hosts_file: string to path for ssh known hosts file
 
         Returns:
             N/A  # noqa: DAR202
@@ -74,6 +85,8 @@ class SSH2Transport(Socket, Transport):
         self.auth_username: str = auth_username or cfg_user
         self.auth_public_key: str = auth_public_key or cfg_public_key
         self.auth_password: str = auth_password
+        self.auth_strict_key: bool = auth_strict_key
+        self.ssh_known_hosts_file: str = ssh_known_hosts_file
 
         try:
             # import here so these are optional
@@ -106,7 +119,9 @@ class SSH2Transport(Socket, Transport):
         """
         Method to parse ssh config file
 
-        TODO
+        In the future this may move to be a "helper" function as it should be very similar between
+        paramiko and and ssh2-python... for now it can be a static method as there may be varying
+        supported args between the two transport drivers.
 
         Args:
             host: host to lookup in ssh config file
@@ -151,6 +166,11 @@ class SSH2Transport(Socket, Transport):
                 f"Failed to complete handshake with host {self.host}; " f"Exception: {exc}"
             )
             raise exc
+
+        if self.auth_strict_key:
+            LOG.debug(f"Attempting to validate {self.host} public key")
+            self._verify_key()
+
         LOG.debug(f"Session to host {self.host} opened")
         self.authenticate()
         if not self.isauthenticated():
@@ -159,6 +179,35 @@ class SSH2Transport(Socket, Transport):
             raise ScrapliAuthenticationFailed(msg)
         self._open_channel()
         self.session_lock.release()
+
+    def _verify_key(self) -> None:
+        """
+        Verify target host public key, raise exception if invalid/unknown
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            KeyVerificationFailed: if public key verification fails
+
+        """
+        known_hosts = SSHKnownHosts(self.ssh_known_hosts_file)
+
+        if self.host not in known_hosts.hosts.keys():
+            raise KeyVerificationFailed(f"{self.host} not in known_hosts!")
+
+        remote_server_key_info = self.session.hostkey()
+        encoded_remote_server_key = remote_server_key_info[0]
+        raw_remote_public_key = base64.encodebytes(encoded_remote_server_key)
+        remote_public_key = raw_remote_public_key.replace(b"\n", b"").decode()
+
+        if known_hosts.hosts[self.host]["public_key"] != remote_public_key:
+            raise KeyVerificationFailed(
+                f"{self.host} in known_hosts but public key does not match!"
+            )
 
     def authenticate(self) -> None:
         """
