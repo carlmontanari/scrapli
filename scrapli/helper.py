@@ -221,3 +221,29 @@ def resolve_ssh_config(ssh_config_file: str) -> str:
     if Path("/etc/ssh/ssh_config").is_file():
         return str(Path("/etc/ssh/ssh_config"))
     return ""
+
+
+def resolve_ssh_known_hosts(ssh_known_hosts: str) -> str:
+    """
+    Resolve ssh known hosts file from provided string
+
+    If provided string is empty (`""`) try to resolve system known hosts files located at
+    `~/.ssh/known_hosts` or `/etc/ssh/ssh_known_hosts`.
+
+    Args:
+        ssh_known_hosts: string representation of ssh config file to try to use
+
+    Returns:
+        str: string to path fro ssh config file or an empty string
+
+    Raises:
+        N/A
+
+    """
+    if Path(ssh_known_hosts).is_file():
+        return str(Path(ssh_known_hosts))
+    if Path(os.path.expanduser("~/.ssh/known_hosts")).is_file():
+        return str(Path(os.path.expanduser("~/.ssh/known_hosts")))
+    if Path("/etc/ssh/ssh_known_hosts").is_file():
+        return str(Path("/etc/ssh/ssh_known_hosts"))
+    return ""

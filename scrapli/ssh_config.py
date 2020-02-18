@@ -337,3 +337,71 @@ class Host:
         """
         class_dict = self.__dict__.copy()
         return f"Host {class_dict}"
+
+
+class SSHKnownHosts:
+    def __init__(self, ssh_known_hosts_file: str) -> None:
+        """
+        Initialize SSHKnownHosts Object
+
+        Parse OpenSSH known hosts file
+
+        Try to load the following data for all entries in known hosts file:
+            Host
+            Key Type
+            Public Key
+
+        Args:
+            ssh_known_hosts_file: string path to ssh known hosts file
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            TypeError: if non-string value provided for ssh_known_hosts
+
+        """
+        if not isinstance(ssh_known_hosts_file, str):
+            raise TypeError(f"`ssh_config_file` expected str, got {type(ssh_known_hosts_file)}")
+
+        self.ssh_known_hosts_file = os.path.expanduser(ssh_known_hosts_file)
+        if self.ssh_known_hosts_file:
+            with open(self.ssh_known_hosts_file, "r") as f:
+                self.ssh_known_hosts = f.read()
+            self.hosts = self._parse()
+            if not self.hosts:
+                self.hosts = {}
+        else:
+            self.hosts = {}
+
+    def _parse(self) -> Dict[str, Dict[str, str]]:
+        """
+        Parse SSH configuration file
+
+        Args:
+            N/A
+
+        Returns:
+            discovered_hosts: dict of host objects discovered in known hosts file
+
+        Raises:
+            N/A
+
+        """
+        # match any non whitespace from start of the line... this should cover v4/v6/names
+        # skip a space and match any word (also w/ hyphen) to get key type, lastly
+        # match any non whitespace to the end of the line to get the public key
+        host_pattern = re.compile(r"^\S+\s[\w\-]+\s\S+$", flags=re.I | re.M)
+        host_entries = re.findall(host_pattern, self.ssh_known_hosts)
+
+        known_hosts: Dict[str, Dict[str, str]] = {}
+        for host_entry in host_entries:
+            host, key_type, public_key = host_entry.split()
+            # to simplify lookups down the line, split any list of hosts and just create a unique
+            # entry per host
+            for individual_host in host.split(","):
+                known_hosts[individual_host] = {}
+                known_hosts[individual_host]["key_type"] = key_type
+                known_hosts[individual_host]["public_key"] = public_key
+
+        return known_hosts

@@ -9,6 +9,10 @@ class MissingDependencies(Exception):
     """Exception for any missing (probably optional) dependencies"""
 
 
+class KeyVerificationFailed(Exception):
+    """Exception for scrapli public key verification failure"""
+
+
 class ScrapliAuthenticationFailed(Exception):
     """Exception for scrapli authentication failure"""
 
