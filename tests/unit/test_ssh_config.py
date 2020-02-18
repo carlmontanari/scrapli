@@ -1,11 +1,8 @@
 import os
-import sys
 from pathlib import Path
 
-import pytest
-
 import scrapli
-from scrapli.ssh_config import Host, SSHConfig
+from scrapli.ssh_config import Host, SSHConfig, SSHKnownHosts
 
 UNIT_TEST_DIR = f"{Path(scrapli.__file__).parents[1]}/tests/unit/"
 
@@ -149,3 +146,20 @@ def test_host_lookup_host_fuzzy_multi_match():
         "'keyboard_interactive': None, 'password_authentication': None, 'preferred_authentication': "
         "None}"
     )
+
+
+def test_init_ssh_known_hosts_file_explicit():
+    known_hosts = SSHKnownHosts(f"{UNIT_TEST_DIR}_ssh_known_hosts")
+    with open(f"{UNIT_TEST_DIR}_ssh_known_hosts", "r") as f:
+        ssh_known_hosts = f.read()
+    assert known_hosts.ssh_known_hosts == ssh_known_hosts
+
+
+def test_init_ssh_known_hosts_file_no_config_file(fs):
+    known_hosts = SSHKnownHosts("")
+    assert known_hosts.hosts == {}
+
+
+def test_init_ssh_known_hosts_file_no_hosts():
+    known_hosts = SSHKnownHosts(f"{UNIT_TEST_DIR}__init__.py")
+    assert known_hosts.hosts == {}
