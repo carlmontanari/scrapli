@@ -27,10 +27,8 @@ If applicable, add screenshots to help explain your problem.
 
 **OS (please complete the following information):**
  - OS: [e.g. Ubuntu, MacOS, etc. - Note this is *not* tested on Windows and likely will not be supported]
- - nssh version
- - ssh2python version
- - paramiko version
- - python version
+ - scrapli version
+ - version of any optional extras (paramiko|ssh2-python|textfsm, etc.)
 
 **Additional context**
 Add any other context about the problem here.
