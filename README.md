@@ -622,11 +622,17 @@ As stated, this project is 100% type checked and will remain that way. The value
 
 ## Testing
 
-I broke testing into two main categories -- unit and functional. Unit is what you would expect -- unit testing the code.
- Functional testing connects to virtual devices in order to more accurately test the code. Unit tests cover quite a
-  bit of the code base due to mocking the FileIO that the channel reads/writes to. This gives a pretty high level of
-   confidence that at least object instantiation and channel read/writes will generally work... Functional tests
-    against virtual devices helps reinforce that and gets coverage for the transport classes.
+Testing is broken into two main categories -- unit and functional. Unit is what you would expect -- unit testing the
+ code. Functional testing connects to virtual devices in order to more accurately test the code. Unit tests cover
+  quite a bit of the code base due to mocking the FileIO that the channel reads/writes to. This gives a pretty high
+   level of confidence that at least object instantiation and channel read/writes will generally work... Functional
+    tests against virtual devices helps reinforce that and gets coverage for the transport classes.
+
+For more ad-hoc type testing there is a `smoke` folder in the tests directory -- for "smoke tests". These are simple
+ scripts that don't really "test" (as in no assertions or pytest or anything), but are useful for basic testing that
+  things have not gotten broken while working on new features. These have been handy for spot testing during
+   development so rather than leave them in a private directory they are included here in case they are useful for
+    anyone else!
 
 ### Unit Tests
 
@@ -772,6 +778,7 @@ This section may not get updated much, but will hopefully reflect the priority i
 - Add a dummy container (like nornir maybe?) to use for functional testing -- its very likely folks won't have a
  vrnetlab setup or compute to set that up... it'd be nice to have a lightweight container that can be used for basic
   testing of `Scrape` and for testing auth with keys and such.
+- Improve logging -- especially in the transport classes.
 
 ## Roadmap
 

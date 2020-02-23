@@ -195,9 +195,15 @@ class SystemSSHTransport(Transport):
 
         # If authenticating with public key prefer to use open pipes
         # _open_pipes uses subprocess Popen which is preferable to opening a pty
+        # if _open_pipes fails and no password available, raise failure, otherwise try password auth
         if self.auth_public_key:
-            if self._open_pipes():
+            open_pipes_result = self._open_pipes()
+            if open_pipes_result:
                 return
+            if not open_pipes_result and not self.auth_password:
+                msg = f"Authentication to host {self.host} failed"
+                LOG.critical(msg)
+                raise ScrapliAuthenticationFailed(msg)
 
         # If public key auth fails or is not configured, open a pty session
         if not self._open_pty():
@@ -219,22 +225,32 @@ class SystemSSHTransport(Transport):
             N/A
 
         """
-        self.open_cmd.append("-v")
+        # copy the open_cmd as we don't want to update the objects open_cmd until we know we can
+        # authenticate. add verbose output and disable batch mode (disables passphrase/password
+        # queries). If auth is successful update the object open_cmd to represent what was used
+        open_cmd = self.open_cmd.copy()
+        open_cmd.append("-v")
+        open_cmd.extend(["-o", "BatchMode=yes"])
+
         pipes_session = Popen(
-            self.open_cmd, bufsize=0, shell=False, stdin=PIPE, stdout=PIPE, stderr=PIPE
+            open_cmd, bufsize=0, shell=False, stdin=PIPE, stdout=PIPE, stderr=PIPE
         )
         LOG.debug(f"Session to host {self.host} spawned")
 
         try:
             self._pipes_isauthenticated(pipes_session)
         except TimeoutError:
+            # If auth fails, kill the popen session
+            pipes_session.kill()
             return False
 
         LOG.debug(f"Authenticated to host {self.host} with public key")
+        self.open_cmd = open_cmd
         self.session_lock.release()
         self.session = pipes_session
         return True
 
+    @operation_timeout("timeout_ops", "Timed out determining if session is authenticated")
     def _pipes_isauthenticated(self, pipes_session: PopenBytes) -> bool:
         """
         Private method to check initial authentication when using subprocess.Popen
@@ -295,18 +311,26 @@ class SystemSSHTransport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            ScrapliAuthenticationFailed: if we receive an EOFError -- this usually indicates that
+                host key checking is enabled and failed.
 
         """
         self.session_lock.acquire()
         while True:
-            output = pty_session.read()
+            try:
+                output = pty_session.read()
+            except EOFError:
+                raise ScrapliAuthenticationFailed(
+                    "PTY Authentication failed, often this means strict host key checking is "
+                    "enabled and is failing!"
+                )
             if b"password" in output.lower():
                 pty_session.write(self.auth_password.encode())
                 pty_session.write(self.comms_return_char.encode())
                 self.session_lock.release()
                 break
 
+    @operation_timeout("timeout_ops", "Timed out determining if session is authenticated")
     def _pty_isauthenticated(self, pty_session: PtyProcess) -> bool:
         """
         Check if session is authenticated

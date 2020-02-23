@@ -61,12 +61,12 @@ class TelnetTransport(Transport):
                 timeout for finding and responding to username and password prompts at initial
                 login.
             comms_prompt_pattern: prompt pattern expected for device, same as the one provided to
-                channel -- system ssh needs to know this to know how to decide if we are properly
+                channel -- telnet needs to know this to know how to decide if we are properly
                 sending/receiving data -- i.e. we are not stuck at some password prompt or some
                 other failure scenario. If using driver, this should be passed from driver (Scrape,
                 or IOSXE, etc.) to this Transport class.
             comms_return_char: return character to use on the channel, same as the one provided to
-                channel -- system ssh needs to know this to know what to send so that we can probe
+                channel -- telnet needs to know this to know what to send so that we can probe
                 the channel to make sure we are authenticated and sending/receiving data. If using
                 driver, this should be passed from driver (Scrape, or IOSXE, etc.) to this Transport
                 class.
