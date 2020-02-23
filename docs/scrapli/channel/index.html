@@ -233,16 +233,11 @@ __all__ = (&#34;Channel&#34;, &#34;CHANNEL_ARGS&#34;)</code></pre>
         &#34;&#34;&#34;
         prompt_pattern = get_prompt_pattern(prompt, self.comms_prompt_pattern)
 
-        # disabling session blocking means the while loop will actually iterate
-        # without this iteration we can never properly check for prompts
-        self.transport.set_blocking(False)
-
         while True:
             output += self._read_chunk()
             output = re.sub(b&#34;\r&#34;, b&#34;&#34;, output)
             channel_match = re.search(prompt_pattern, output)
             if channel_match:
-                self.transport.set_blocking(True)
                 return output
 
     @operation_timeout(&#34;timeout_ops&#34;)

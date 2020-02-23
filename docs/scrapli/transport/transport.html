@@ -181,22 +181,6 @@ class Transport(ABC):
         Raises:
             N/A
 
-        &#34;&#34;&#34;
-
-    @abstractmethod
-    def set_blocking(self, blocking: bool = False) -&gt; None:
-        &#34;&#34;&#34;
-        Set session blocking configuration
-
-        Args:
-            blocking: True/False set session to blocking
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
         &#34;&#34;&#34;</code></pre>
 </details>
 </section>
@@ -363,22 +347,6 @@ inheritance.</p></section>
 
         Args:
             timeout: timeout in seconds
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-
-    @abstractmethod
-    def set_blocking(self, blocking: bool = False) -&gt; None:
-        &#34;&#34;&#34;
-        Set session blocking configuration
-
-        Args:
-            blocking: True/False set session to blocking
 
         Returns:
             N/A  # noqa: DAR202
@@ -557,48 +525,6 @@ def read(self) -&gt; bytes:
     &#34;&#34;&#34;</code></pre>
 </details>
 </dd>
-<dt id="scrapli.transport.transport.Transport.set_blocking"><code class="name flex">
-<span>def <span class="ident">set_blocking</span></span>(<span>self, blocking=False)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Set session blocking configuration</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>blocking</code></strong></dt>
-<dd>True/False set session to blocking</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N</code>/<code>A</code>
-# <code>noqa</code>: <code>DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@abstractmethod
-def set_blocking(self, blocking: bool = False) -&gt; None:
-    &#34;&#34;&#34;
-    Set session blocking configuration
-
-    Args:
-        blocking: True/False set session to blocking
-
-    Returns:
-        N/A  # noqa: DAR202
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;</code></pre>
-</details>
-</dd>
 <dt id="scrapli.transport.transport.Transport.set_timeout"><code class="name flex">
 <span>def <span class="ident">set_timeout</span></span>(<span>self, timeout=None)</span>
 </code></dt>
@@ -708,7 +634,6 @@ def write(self, channel_input: str) -&gt; None:
 <li><code><a title="scrapli.transport.transport.Transport.isalive" href="#scrapli.transport.transport.Transport.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.transport.transport.Transport.open" href="#scrapli.transport.transport.Transport.open">open</a></code></li>
 <li><code><a title="scrapli.transport.transport.Transport.read" href="#scrapli.transport.transport.Transport.read">read</a></code></li>
-<li><code><a title="scrapli.transport.transport.Transport.set_blocking" href="#scrapli.transport.transport.Transport.set_blocking">set_blocking</a></code></li>
 <li><code><a title="scrapli.transport.transport.Transport.set_timeout" href="#scrapli.transport.transport.Transport.set_timeout">set_timeout</a></code></li>
 <li><code><a title="scrapli.transport.transport.Transport.write" href="#scrapli.transport.transport.Transport.write">write</a></code></li>
 </ul>

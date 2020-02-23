@@ -466,13 +466,15 @@ Finally, `timeout_ops` sets a timeout value for individual operations -- or put 
 
 ## Disabling Paging
 
-scrapli `Scrape` driver attempts to send `terminal length 0` to disable paging by default. In the future this will
- likely be removed and relegated to the device drivers only. For all drivers, there is a standard disable paging
-  string already configured for you, however this is of course user configurable. In addition to passing a string to
-   send to disable paging, scrapli supports passing a callable. This callable should accept the drivers reference to
-    self as the only argument. This allows for users to create a custom function to disable paging however they like
-    . This callable option is supported on the native driver as well. In general it is probably a better idea to
-     handle this by simply passing a string, but the goal is to be flexible so the callable is supported.
+scrapli `Scrape` (the base driver) does not know or care about disabling paging! If you use the base `Scrape` class
+ you will need to handle disabling paging yourself. The `NetworkDriver` and all of its sub-classes (i.e. iosxe/junos
+  drivers) will however attempt to disable paging for you. 
+
+All of the drivers, have a standard/default disable paging string already configured for you, however this is of
+ course user configurable. In addition to passing a string to send to disable paging, scrapli supports passing a
+  callable. This callable should accept the drivers reference to self as the only argument. This allows for users to
+   create a custom function to disable paging however they like. In general it is probably a better idea to handle
+    this by simply passing a string, but the goal is to be flexible so the callable is supported.
     
 ```python
 from scrapli.driver.core import IOSXEDriver
@@ -490,8 +492,9 @@ with IOSXEDriver(**my_device) as conn:
 ## Login Handlers
 
 Some devices have additional prompts or banners at login. This generally causes issues for SSH screen scraping
- automation. scrapli supports -- just like disable paging -- passing a string to send or a callable to execute after
-  successful SSH connection but before disabling paging occurs. By default this is an empty string which does nothing.
+ automation. scrapli (`NetworkDriver` and all sub classes) supports -- just like disable paging -- passing a string to
+  send or a callable to execute after successful SSH connection but before disabling paging occurs. By default this
+   is an empty string which does nothing.
 
 
 ## SSH Config Support
@@ -778,10 +781,6 @@ This section may not get updated much, but will hopefully reflect the priority i
 - Continue to bring in features from `ssh2net` -- at the moment finishing/adding ssh config support is the priority
 , however it would be good to add keep alives and some other widgets from `ssh2net` in a more optimized, cleaned up
  fashion here in scrapli.
-- Move some `Scrape` args --> `NetworkDriver` and convert `NetworkDriver` to an ABC... network driver should really
- never be used by itself so no reason for it to be a "real" class. Moving things that are not 100% necessary in
-  `Scrape` seems like a good thing for cleanliness, however with the auto docs this could make things confusing so
-   need to make sure docs look sane and/or have well documented readme stuff about this.
 - Maybe worth breaking readme up into multiple pages and/or use a wiki -- don't like the fact that wiki pages are not
  in the repo though...
 - Investigate pre-authentication handling for telnet -- support handling a prompt *before* auth happens i.e. accept
@@ -790,8 +789,6 @@ This section may not get updated much, but will hopefully reflect the priority i
  if possible (and remove from ignore for test coverage and darglint).
 - Improve testing in general... make it more orderly/nicer, retry connections automatically if there is a failure
  (failures happen from vtys getting tied up and stuff like that it seems), shoot for even better coverage!
-- Remove disable paging "stuff" from the base `Scrape` class -- thats really network specific and doesnt belog in a
- base ssh type class.
 - Add a dummy container (like nornir maybe?) to use for functional testing -- its very likely folks won't have a
  vrnetlab setup or compute to set that up... it'd be nice to have a lightweight container that can be used for basic
   testing of `Scrape` and for testing auth with keys and such.

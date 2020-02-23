@@ -36,6 +36,10 @@ class MissingDependencies(Exception):
     &#34;&#34;&#34;Exception for any missing (probably optional) dependencies&#34;&#34;&#34;
 
 
+class KeyVerificationFailed(Exception):
+    &#34;&#34;&#34;Exception for scrapli public key verification failure&#34;&#34;&#34;
+
+
 class ScrapliAuthenticationFailed(Exception):
     &#34;&#34;&#34;Exception for scrapli authentication failure&#34;&#34;&#34;
 
@@ -69,6 +73,25 @@ class CouldNotAcquirePrivLevel(Exception):
 </summary>
 <pre><code class="python">class CouldNotAcquirePrivLevel(Exception):
     &#34;&#34;&#34;Exception for failure to acquire desired privilege level&#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="scrapli.exceptions.KeyVerificationFailed"><code class="flex name class">
+<span>class <span class="ident">KeyVerificationFailed</span></span>
+<span>(</span><span>...)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Exception for scrapli public key verification failure</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class KeyVerificationFailed(Exception):
+    &#34;&#34;&#34;Exception for scrapli public key verification failure&#34;&#34;&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -170,6 +193,9 @@ class CouldNotAcquirePrivLevel(Exception):
 <ul>
 <li>
 <h4><code><a title="scrapli.exceptions.CouldNotAcquirePrivLevel" href="#scrapli.exceptions.CouldNotAcquirePrivLevel">CouldNotAcquirePrivLevel</a></code></h4>
+</li>
+<li>
+<h4><code><a title="scrapli.exceptions.KeyVerificationFailed" href="#scrapli.exceptions.KeyVerificationFailed">KeyVerificationFailed</a></code></h4>
 </li>
 <li>
 <h4><code><a title="scrapli.exceptions.MissingDependencies" href="#scrapli.exceptions.MissingDependencies">MissingDependencies</a></code></h4>

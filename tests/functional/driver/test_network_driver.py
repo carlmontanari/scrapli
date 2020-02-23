@@ -23,11 +23,11 @@ TEST_CASES = {"cisco_iosxe": CISCO_IOSXE_TEST_CASES}
     ["system", "ssh2", "paramiko", "telnet"],
     ids=["system", "ssh2", "paramiko", "telnet"],
 )
-def test_get_prompt(base_driver, transport):
+def test_get_prompt(network_driver, transport):
     device = CISCO_IOSXE_DEVICE.copy()
     if transport == "telnet":
         device["port"] = 23
-    conn = base_driver(**device, transport=transport)
+    conn = network_driver(**device, transport=transport)
     result = conn.channel.get_prompt()
     assert result == "csr1000v#"
     conn.close()
@@ -43,11 +43,11 @@ def test_get_prompt(base_driver, transport):
     [t for t in CISCO_IOSXE_TEST_CASES["channel.send_inputs"]["tests"]],
     ids=[n["name"] for n in CISCO_IOSXE_TEST_CASES["channel.send_inputs"]["tests"]],
 )
-def test_channel_send_inputs(base_driver, transport, test):
+def test_channel_send_inputs(network_driver, transport, test):
     device = CISCO_IOSXE_DEVICE.copy()
     if transport == "telnet":
         device["port"] = 23
-    conn = base_driver(**device, transport=transport)
+    conn = network_driver(**device, transport=transport)
     results = conn.channel.send_inputs(test["inputs"], **test["kwargs"])
     for index, result in enumerate(results):
         cleaned_result = clean_output_data(test, result.result)
@@ -65,11 +65,11 @@ def test_channel_send_inputs(base_driver, transport, test):
     [t for t in CISCO_IOSXE_TEST_CASES["channel.send_inputs_interact"]["tests"]],
     ids=[n["name"] for n in CISCO_IOSXE_TEST_CASES["channel.send_inputs_interact"]["tests"]],
 )
-def test_channel_send_inputs_interact(base_driver, transport, test):
+def test_channel_send_inputs_interact(network_driver, transport, test):
     device = CISCO_IOSXE_DEVICE.copy()
     if transport == "telnet":
         device["port"] = 23
-    conn = base_driver(**device, transport=transport)
+    conn = network_driver(**device, transport=transport)
     results = conn.channel.send_inputs_interact(test["inputs"])
     cleaned_result = clean_output_data(test, results[0].result)
     assert cleaned_result == test["outputs"][0]

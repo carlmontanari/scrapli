@@ -33,7 +33,7 @@ from typing import Optional, Tuple
 from scrapli.driver import Scrape
 from scrapli.netmiko_compatability import connect_handler as ConnectHandler
 
-__version__ = &#34;2020.02.02&#34;
+__version__ = &#34;2020.02.17&#34;
 __all__ = (
     &#34;Scrape&#34;,
     &#34;ConnectHandler&#34;,
@@ -113,6 +113,10 @@ logging.getLogger(&#34;channel&#34;).addHandler(NullHandler())</code></pre>
 <dt><code class="name"><a title="scrapli.response" href="response.html">scrapli.response</a></code></dt>
 <dd>
 <section class="desc"><p>scrapli.response</p></section>
+</dd>
+<dt><code class="name"><a title="scrapli.ssh_config" href="ssh_config.html">scrapli.ssh_config</a></code></dt>
+<dd>
+<section class="desc"><p>scrapli.ssh_config</p></section>
 </dd>
 <dt><code class="name"><a title="scrapli.transport" href="transport/index.html">scrapli.transport</a></code></dt>
 <dd>
@@ -202,7 +206,7 @@ logging.getLogger(&#34;channel&#34;).addHandler(NullHandler())</code></pre>
 <dl>
 <dt id="scrapli.Scrape"><code class="flex name class">
 <span>class <span class="ident">Scrape</span></span>
-<span>(</span><span>host='', port=22, auth_username='', auth_password='', auth_public_key='', auth_strict_key=True, timeout_socket=5, timeout_ssh=5000, timeout_ops=10, comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n', comms_ansi=False, session_pre_login_handler='', session_disable_paging='terminal length 0', ssh_config_file=True, transport='system')</span>
+<span>(</span><span>host='', port=22, auth_username='', auth_password='', auth_public_key='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, timeout_ops=10, comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n', comms_ansi=False, ssh_config_file=False, ssh_known_hosts_file='', transport='system')</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Scrape Object</p>
@@ -225,8 +229,8 @@ that it doesn't know or care about privilege levels, platform types, and things 
 <dd>strict host checking or not &ndash; applicable for system ssh driver only</dd>
 <dt><strong><code>timeout_socket</code></strong></dt>
 <dd>timeout for establishing socket in seconds</dd>
-<dt><strong><code>timeout_ssh</code></strong></dt>
-<dd>timeout for ssh transport in milliseconds</dd>
+<dt><strong><code>timeout_transport</code></strong></dt>
+<dd>timeout for ssh|telnet transport in seconds</dd>
 <dt><strong><code>timeout_ops</code></strong></dt>
 <dd>timeout for ssh channel operations</dd>
 <dt><strong><code>comms_prompt_pattern</code></strong></dt>
@@ -240,15 +244,12 @@ case insensitive is just a convenience factor so i can be lazy.</dd>
 <dd>character to use to send returns to host</dd>
 <dt><strong><code>comms_ansi</code></strong></dt>
 <dd>True/False strip comms_ansi characters from output</dd>
-<dt><strong><code>session_pre_login_handler</code></strong></dt>
-<dd>callable or string that resolves to an importable function to
-handle pre-login (pre disable paging) operations</dd>
-<dt><strong><code>session_disable_paging</code></strong></dt>
-<dd>callable, string that resolves to an importable function, or
-string to send to device to disable paging</dd>
 <dt><strong><code>ssh_config_file</code></strong></dt>
 <dd>string to path for ssh config file, True to use default ssh config file
 or False to ignore default ssh config file</dd>
+<dt><strong><code>ssh_known_hosts_file</code></strong></dt>
+<dd>string to path for ssh known hosts file, True to use default known
+file locations. Only applicable/needed if <code>auth_strict_key</code> is set to True</dd>
 <dt><strong><a title="scrapli.transport" href="transport/index.html"><code>scrapli.transport</code></a></strong></dt>
 <dd>system|ssh2|paramiko|telnet &ndash; type of transport to use
 system uses system available ssh (/usr/bin/ssh)
@@ -288,14 +289,13 @@ features built in (though scrapli does not expose/support them all).</dd>
         auth_public_key: str = &#34;&#34;,
         auth_strict_key: bool = True,
         timeout_socket: int = 5,
-        timeout_ssh: int = 5000,
+        timeout_transport: int = 5,
         timeout_ops: int = 10,
         comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]$&#34;,
         comms_return_char: str = &#34;\n&#34;,
         comms_ansi: bool = False,
-        session_pre_login_handler: Union[str, Callable[..., Any]] = &#34;&#34;,
-        session_disable_paging: Union[str, Callable[..., Any]] = &#34;terminal length 0&#34;,
-        ssh_config_file: Union[str, bool] = True,
+        ssh_config_file: Union[str, bool] = False,
+        ssh_known_hosts_file: str = &#34;&#34;,
         transport: str = &#34;system&#34;,
     ):
         &#34;&#34;&#34;
@@ -313,7 +313,7 @@ features built in (though scrapli does not expose/support them all).</dd>
             auth_password: password for authentication
             auth_strict_key: strict host checking or not -- applicable for system ssh driver only
             timeout_socket: timeout for establishing socket in seconds
-            timeout_ssh: timeout for ssh transport in milliseconds
+            timeout_transport: timeout for ssh|telnet transport in seconds
             timeout_ops: timeout for ssh channel operations
             comms_prompt_pattern: raw string regex pattern -- preferably use `^` and `$` anchors!
                 this is the single most important attribute here! if this does not match a prompt,
@@ -323,12 +323,10 @@ features built in (though scrapli does not expose/support them all).</dd>
                 case insensitive is just a convenience factor so i can be lazy.
             comms_return_char: character to use to send returns to host
             comms_ansi: True/False strip comms_ansi characters from output
-            session_pre_login_handler: callable or string that resolves to an importable function to
-                handle pre-login (pre disable paging) operations
-            session_disable_paging: callable, string that resolves to an importable function, or
-                string to send to device to disable paging
             ssh_config_file: string to path for ssh config file, True to use default ssh config file
                 or False to ignore default ssh config file
+            ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
+                file locations. Only applicable/needed if `auth_strict_key` is set to True
             transport: system|ssh2|paramiko|telnet -- type of transport to use
                 system uses system available ssh (/usr/bin/ssh)
                 ssh2 uses ssh2-python
@@ -361,7 +359,7 @@ features built in (though scrapli does not expose/support them all).</dd>
         self._setup_auth(auth_username, auth_password, auth_public_key)
 
         self.timeout_socket = int(timeout_socket)
-        self.timeout_ssh = int(timeout_ssh)
+        self.timeout_transport = int(timeout_transport)
         self.timeout_ops = int(timeout_ops)
 
         self.comms_prompt_pattern: str = &#34;&#34;
@@ -369,18 +367,16 @@ features built in (though scrapli does not expose/support them all).</dd>
         self.comms_ansi: bool = False
         self._setup_comms(comms_prompt_pattern, comms_return_char, comms_ansi)
 
-        self.session_pre_login_handler: Optional[Callable[..., Any]] = None
-        self.session_disable_paging: Union[str, Callable[..., Any]] = &#34;&#34;
-        self._setup_session(session_pre_login_handler, session_disable_paging)
-
-        if not isinstance(ssh_config_file, (str, bool)):
-            raise TypeError(f&#34;ssh_config_file should be str or bool, got {type(ssh_config_file)}&#34;)
-        self.ssh_config_file = ssh_config_file
-
         if transport not in (&#34;ssh2&#34;, &#34;paramiko&#34;, &#34;system&#34;, &#34;telnet&#34;):
             raise ValueError(
                 f&#34;transport should be one of ssh2|paramiko|system|telnet, got {transport}&#34;
             )
+
+        if transport != &#34;telnet&#34;:
+            self.ssh_config_file = &#34;&#34;
+            self.ssh_known_hosts_file = &#34;&#34;
+            self._setup_ssh_args(ssh_config_file, ssh_known_hosts_file)
+
         self.transport: Transport
         self.transport_class, self.transport_args = self._transport_factory(transport)
 
@@ -519,102 +515,48 @@ features built in (though scrapli does not expose/support them all).</dd>
             raise TypeError(f&#34;comms_ansi should be bool, got {type(comms_ansi)}&#34;)
         self.comms_ansi = comms_ansi
 
-    def _setup_session(
-        self,
-        session_pre_login_handler: Union[str, Callable[..., Any]],
-        session_disable_paging: Union[str, Callable[..., Any]],
+    def _setup_ssh_args(
+        self, ssh_config_file: Union[str, bool], ssh_known_hosts_file: Union[str, bool]
     ) -&gt; None:
         &#34;&#34;&#34;
-        Parse and setup session attributes
+        Parse and setup ssh related arguments
 
         Args:
-            session_pre_login_handler: pre login handler to parse/set
-            session_disable_paging: disable paging to parse/set
+            ssh_config_file: string to path for ssh config file, True to use default ssh config file
+                or False to ignore default ssh config file
+            ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
+                file locations. Only applicable/needed if `auth_strict_key` is set to True
 
         Returns:
             N/A  # noqa: DAR202
 
         Raises:
-            TypeError: if invalid type args provided
+            TypeError: if invalid config file or known hosts file value provided
 
         &#34;&#34;&#34;
-        if session_pre_login_handler:
-            self.session_pre_login_handler = self._set_session_pre_login_handler(
-                session_pre_login_handler
-            )
+        if not isinstance(ssh_config_file, (str, bool)):
+            raise TypeError(f&#34;`ssh_config_file` should be str or bool, got {type(ssh_config_file)}&#34;)
+        if ssh_config_file is not False:
+            if isinstance(ssh_config_file, bool):
+                cfg = &#34;&#34;
+            else:
+                cfg = ssh_config_file
+            self.ssh_config_file = resolve_ssh_config(cfg)
         else:
-            self.session_pre_login_handler = None
-        if callable(session_disable_paging):
-            self.session_disable_paging = session_disable_paging
-        if not isinstance(session_disable_paging, str) and not callable(session_disable_paging):
+            self.ssh_config_file = &#34;&#34;
+
+        if not isinstance(ssh_known_hosts_file, (str, bool)):
             raise TypeError(
-                &#34;session_disable_paging should be str or callable, got &#34;
-                f&#34;{type(session_disable_paging)}&#34;
+                &#34;`ssh_known_hosts_file` should be str or bool, got &#34; f&#34;{type(ssh_known_hosts_file)}&#34;
             )
-        if session_disable_paging != &#34;terminal length 0&#34;:
-            try:
-                self.session_disable_paging = self._set_session_disable_paging(
-                    session_disable_paging
-                )
-            except TypeError:
-                self.session_disable_paging = session_disable_paging
+        if ssh_known_hosts_file is not False:
+            if isinstance(ssh_known_hosts_file, bool):
+                known_hosts = &#34;&#34;
+            else:
+                known_hosts = ssh_known_hosts_file
+            self.ssh_known_hosts_file = resolve_ssh_known_hosts(known_hosts)
         else:
-            self.session_disable_paging = &#34;terminal length 0&#34;
-
-    @staticmethod
-    def _set_session_pre_login_handler(
-        session_pre_login_handler: Union[str, Callable[..., Any]]
-    ) -&gt; Optional[Callable[..., Any]]:
-        &#34;&#34;&#34;
-        Return session_pre_login_handler argument
-
-        Args:
-            session_pre_login_handler: callable function, or string representing a path to
-                a callable
-
-        Returns:
-            session_pre_login_handler: callable or default empty string value
-
-        Raises:
-            TypeError: if provided string does not result in a callable
-
-        &#34;&#34;&#34;
-        if callable(session_pre_login_handler):
-            return session_pre_login_handler
-        if not validate_external_function(session_pre_login_handler):
-            LOG.critical(f&#34;Invalid comms_pre_login_handler: {session_pre_login_handler}&#34;)
-            raise TypeError(
-                f&#34;{session_pre_login_handler} is an invalid session_pre_login_handler function &#34;
-                &#34;or path to a function.&#34;
-            )
-        return get_external_function(session_pre_login_handler)
-
-    @staticmethod
-    def _set_session_disable_paging(
-        session_disable_paging: Union[Callable[..., Any], str]
-    ) -&gt; Union[Callable[..., Any], str]:
-        &#34;&#34;&#34;
-        Return session_disable_paging argument
-
-        Args:
-            session_disable_paging: callable function, string representing a path to
-                a callable, or a string to send to device to disable paging
-
-        Returns:
-            session_disable_paging: callable or string to use to disable paging
-
-        Raises:
-            TypeError: if provided string does not result in a callable
-
-        &#34;&#34;&#34;
-        if callable(session_disable_paging):
-            return session_disable_paging
-        if not validate_external_function(session_disable_paging):
-            raise TypeError(
-                f&#34;{session_disable_paging} is an invalid session_disable_paging function or path &#34;
-                &#34;to a function. Assuming this is string to send to disable paging.&#34;
-            )
-        return get_external_function(session_disable_paging)
+            self.ssh_known_hosts_file = &#34;&#34;
 
     def _transport_factory(self, transport: str) -&gt; Tuple[Callable[..., Any], Dict[str, Any]]:
         &#34;&#34;&#34;
@@ -840,6 +782,7 @@ features built in (though scrapli does not expose/support them all).</dd>
 <li><code><a title="scrapli.helper" href="helper.html">scrapli.helper</a></code></li>
 <li><code><a title="scrapli.netmiko_compatability" href="netmiko_compatability.html">scrapli.netmiko_compatability</a></code></li>
 <li><code><a title="scrapli.response" href="response.html">scrapli.response</a></code></li>
+<li><code><a title="scrapli.ssh_config" href="ssh_config.html">scrapli.ssh_config</a></code></li>
 <li><code><a title="scrapli.transport" href="transport/index.html">scrapli.transport</a></code></li>
 </ul>
 </li>

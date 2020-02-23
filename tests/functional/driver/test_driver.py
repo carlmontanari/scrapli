@@ -21,7 +21,10 @@ TEST_CASES = {"cisco_iosxe": CISCO_IOSXE_TEST_CASES}
     "transport", ["system", "ssh2", "paramiko"], ids=["system", "ssh2", "paramiko"]
 )
 def test_get_prompt(base_driver, transport):
-    conn = base_driver(**CISCO_IOSXE_DEVICE, transport=transport)
+    dev = CISCO_IOSXE_DEVICE.copy()
+    dev.pop("session_pre_login_handler")
+    dev.pop("session_disable_paging")
+    conn = base_driver(**dev, transport=transport)
     result = conn.channel.get_prompt()
     assert result == "csr1000v#"
     conn.close()
@@ -36,7 +39,10 @@ def test_get_prompt(base_driver, transport):
     "transport", ["system", "ssh2", "paramiko"], ids=["system", "ssh2", "paramiko"]
 )
 def test_channel_send_inputs(base_driver, transport, test):
-    conn = base_driver(**CISCO_IOSXE_DEVICE, transport=transport)
+    dev = CISCO_IOSXE_DEVICE.copy()
+    dev.pop("session_pre_login_handler")
+    dev.pop("session_disable_paging")
+    conn = base_driver(**dev, transport=transport)
     results = conn.channel.send_inputs(test["inputs"], **test["kwargs"])
     for index, result in enumerate(results):
         cleaned_result = clean_output_data(test, result.result)
@@ -53,7 +59,10 @@ def test_channel_send_inputs(base_driver, transport, test):
     "transport", ["system", "ssh2", "paramiko"], ids=["system", "ssh2", "paramiko"]
 )
 def test_channel_send_inputs_interact(base_driver, transport, test):
-    conn = base_driver(**CISCO_IOSXE_DEVICE, transport=transport)
+    dev = CISCO_IOSXE_DEVICE.copy()
+    dev.pop("session_pre_login_handler")
+    dev.pop("session_disable_paging")
+    conn = base_driver(**dev, transport=transport)
     results = conn.channel.send_inputs_interact(test["inputs"])
     cleaned_result = clean_output_data(test, results[0].result)
     assert cleaned_result == test["outputs"][0]

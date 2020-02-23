@@ -27,9 +27,11 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.helper&#34;&#34;&#34;
 import importlib
+import os
 import re
 import warnings
 from io import TextIOWrapper
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Pattern, TextIO, Union
 
 import pkg_resources  # pylint: disable=C0411
@@ -219,7 +221,59 @@ def textfsm_parse(
         return structured_output
     except textfsm.parser.TextFSMError:
         pass
-    return None</code></pre>
+    return None
+
+
+def resolve_ssh_config(ssh_config_file: str) -&gt; str:
+    &#34;&#34;&#34;
+    Resolve ssh configuration file from provided string
+
+    If provided string is empty (`&#34;&#34;`) try to resolve system ssh config files located at
+    `~/.ssh/config` or `/etc/ssh/ssh_config`.
+
+    Args:
+        ssh_config_file: string representation of ssh config file to try to use
+
+    Returns:
+        str: string to path fro ssh config file or an empty string
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    if Path(ssh_config_file).is_file():
+        return str(Path(ssh_config_file))
+    if Path(os.path.expanduser(&#34;~/.ssh/config&#34;)).is_file():
+        return str(Path(os.path.expanduser(&#34;~/.ssh/config&#34;)))
+    if Path(&#34;/etc/ssh/ssh_config&#34;).is_file():
+        return str(Path(&#34;/etc/ssh/ssh_config&#34;))
+    return &#34;&#34;
+
+
+def resolve_ssh_known_hosts(ssh_known_hosts: str) -&gt; str:
+    &#34;&#34;&#34;
+    Resolve ssh known hosts file from provided string
+
+    If provided string is empty (`&#34;&#34;`) try to resolve system known hosts files located at
+    `~/.ssh/known_hosts` or `/etc/ssh/ssh_known_hosts`.
+
+    Args:
+        ssh_known_hosts: string representation of ssh config file to try to use
+
+    Returns:
+        str: string to path fro ssh config file or an empty string
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    if Path(ssh_known_hosts).is_file():
+        return str(Path(ssh_known_hosts))
+    if Path(os.path.expanduser(&#34;~/.ssh/known_hosts&#34;)).is_file():
+        return str(Path(os.path.expanduser(&#34;~/.ssh/known_hosts&#34;)))
+    if Path(&#34;/etc/ssh/ssh_known_hosts&#34;).is_file():
+        return str(Path(&#34;/etc/ssh/ssh_known_hosts&#34;))
+    return &#34;&#34;</code></pre>
 </details>
 </section>
 <section>
@@ -371,6 +425,110 @@ def textfsm_parse(
 
     &#34;&#34;&#34;
     return b&#34;\n&#34;.join([line.rstrip() for line in output.splitlines()])</code></pre>
+</details>
+</dd>
+<dt id="scrapli.helper.resolve_ssh_config"><code class="name flex">
+<span>def <span class="ident">resolve_ssh_config</span></span>(<span>ssh_config_file)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Resolve ssh configuration file from provided string</p>
+<p>If provided string is empty (<code>""</code>) try to resolve system ssh config files located at
+<code>~/.ssh/config</code> or <code>/etc/ssh/ssh_config</code>.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>ssh_config_file</code></strong></dt>
+<dd>string representation of ssh config file to try to use</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>str</code></strong></dt>
+<dd>string to path fro ssh config file or an empty string</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def resolve_ssh_config(ssh_config_file: str) -&gt; str:
+    &#34;&#34;&#34;
+    Resolve ssh configuration file from provided string
+
+    If provided string is empty (`&#34;&#34;`) try to resolve system ssh config files located at
+    `~/.ssh/config` or `/etc/ssh/ssh_config`.
+
+    Args:
+        ssh_config_file: string representation of ssh config file to try to use
+
+    Returns:
+        str: string to path fro ssh config file or an empty string
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    if Path(ssh_config_file).is_file():
+        return str(Path(ssh_config_file))
+    if Path(os.path.expanduser(&#34;~/.ssh/config&#34;)).is_file():
+        return str(Path(os.path.expanduser(&#34;~/.ssh/config&#34;)))
+    if Path(&#34;/etc/ssh/ssh_config&#34;).is_file():
+        return str(Path(&#34;/etc/ssh/ssh_config&#34;))
+    return &#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="scrapli.helper.resolve_ssh_known_hosts"><code class="name flex">
+<span>def <span class="ident">resolve_ssh_known_hosts</span></span>(<span>ssh_known_hosts)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Resolve ssh known hosts file from provided string</p>
+<p>If provided string is empty (<code>""</code>) try to resolve system known hosts files located at
+<code>~/.ssh/known_hosts</code> or <code>/etc/ssh/ssh_known_hosts</code>.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>ssh_known_hosts</code></strong></dt>
+<dd>string representation of ssh config file to try to use</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>str</code></strong></dt>
+<dd>string to path fro ssh config file or an empty string</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def resolve_ssh_known_hosts(ssh_known_hosts: str) -&gt; str:
+    &#34;&#34;&#34;
+    Resolve ssh known hosts file from provided string
+
+    If provided string is empty (`&#34;&#34;`) try to resolve system known hosts files located at
+    `~/.ssh/known_hosts` or `/etc/ssh/ssh_known_hosts`.
+
+    Args:
+        ssh_known_hosts: string representation of ssh config file to try to use
+
+    Returns:
+        str: string to path fro ssh config file or an empty string
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    if Path(ssh_known_hosts).is_file():
+        return str(Path(ssh_known_hosts))
+    if Path(os.path.expanduser(&#34;~/.ssh/known_hosts&#34;)).is_file():
+        return str(Path(os.path.expanduser(&#34;~/.ssh/known_hosts&#34;)))
+    if Path(&#34;/etc/ssh/ssh_known_hosts&#34;).is_file():
+        return str(Path(&#34;/etc/ssh/ssh_known_hosts&#34;))
+    return &#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="scrapli.helper.strip_ansi"><code class="name flex">
@@ -549,6 +707,8 @@ def textfsm_parse(
 <li><code><a title="scrapli.helper.get_external_function" href="#scrapli.helper.get_external_function">get_external_function</a></code></li>
 <li><code><a title="scrapli.helper.get_prompt_pattern" href="#scrapli.helper.get_prompt_pattern">get_prompt_pattern</a></code></li>
 <li><code><a title="scrapli.helper.normalize_lines" href="#scrapli.helper.normalize_lines">normalize_lines</a></code></li>
+<li><code><a title="scrapli.helper.resolve_ssh_config" href="#scrapli.helper.resolve_ssh_config">resolve_ssh_config</a></code></li>
+<li><code><a title="scrapli.helper.resolve_ssh_known_hosts" href="#scrapli.helper.resolve_ssh_known_hosts">resolve_ssh_known_hosts</a></code></li>
 <li><code><a title="scrapli.helper.strip_ansi" href="#scrapli.helper.strip_ansi">strip_ansi</a></code></li>
 <li><code><a title="scrapli.helper.textfsm_parse" href="#scrapli.helper.textfsm_parse">textfsm_parse</a></code></li>
 <li><code><a title="scrapli.helper.validate_external_function" href="#scrapli.helper.validate_external_function">validate_external_function</a></code></li>

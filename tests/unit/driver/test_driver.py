@@ -19,7 +19,7 @@ def test__repr():
     conn = Scrape(host="myhost", ssh_known_hosts_file=False)
     assert (
         repr(conn)
-        == f"Scrape {{'host': 'myhost', 'port': 22, 'auth_username': '', 'auth_password': '********', 'auth_strict_key': True, 'auth_public_key': b'', 'timeout_socket': 5, 'timeout_transport': 5, 'timeout_ops': 10, 'comms_prompt_pattern': '^[a-z0-9.\\\\-@()/:]{{1,32}}[#>$]$', 'comms_return_char': '\\n', 'comms_ansi': False, 'session_pre_login_handler': None, 'session_disable_paging': 'terminal length 0', 'ssh_config_file': '', 'ssh_known_hosts_file': '', 'transport_class': <class 'scrapli.transport.systemssh.SystemSSHTransport'>, 'transport_args': {{'host': 'myhost', 'port': 22, 'timeout_socket': 5, 'timeout_transport': 5, 'timeout_ops': 10, 'auth_username': '', 'auth_public_key': b'', 'auth_password': '', 'auth_strict_key': True, 'comms_prompt_pattern': '^[a-z0-9.\\\\-@()/:]{{1,32}}[#>$]$', 'comms_return_char': '\\n', 'ssh_config_file': ''}}, 'channel_args': {{'comms_prompt_pattern': '^[a-z0-9.\\\\-@()/:]{{1,32}}[#>$]$', 'comms_return_char': '\\n', 'comms_ansi': False, 'timeout_ops': 10}}}}"
+        == f"Scrape {{'host': 'myhost', 'port': 22, 'auth_username': '', 'auth_password': '********', 'auth_strict_key': True, 'auth_public_key': b'', 'timeout_socket': 5, 'timeout_transport': 5, 'timeout_ops': 10, 'comms_prompt_pattern': '^[a-z0-9.\\\\-@()/:]{{1,32}}[#>$]$', 'comms_return_char': '\\n', 'comms_ansi': False, 'ssh_config_file': '', 'ssh_known_hosts_file': '', 'transport_class': <class 'scrapli.transport.systemssh.SystemSSHTransport'>, 'transport_args': {{'host': 'myhost', 'port': 22, 'timeout_socket': 5, 'timeout_transport': 5, 'timeout_ops': 10, 'auth_username': '', 'auth_public_key': b'', 'auth_password': '', 'auth_strict_key': True, 'comms_prompt_pattern': '^[a-z0-9.\\\\-@()/:]{{1,32}}[#>$]$', 'comms_return_char': '\\n', 'ssh_config_file': ''}}, 'channel_args': {{'comms_prompt_pattern': '^[a-z0-9.\\\\-@()/:]{{1,32}}[#>$]$', 'comms_return_char': '\\n', 'comms_ansi': False, 'timeout_ops': 10}}}}"
     )
 
 
@@ -164,68 +164,6 @@ def test_valid_comms_prompt_pattern():
 def test_invalid_comms_prompt_pattern():
     with pytest.raises(TypeError):
         Scrape(comms_prompt_pattern=123)
-
-
-def test_valid_session_pre_login_handler_func():
-    def pre_login_handler_func():
-        pass
-
-    login_handler = pre_login_handler_func
-    conn = Scrape(session_pre_login_handler=login_handler)
-    assert callable(conn.session_pre_login_handler)
-
-
-def test_valid_session_pre_login_handler_ext_func():
-    conn = Scrape(
-        session_pre_login_handler="tests.unit.driver.ext_test_funcs.some_pre_login_handler_func"
-    )
-    assert callable(conn.session_pre_login_handler)
-
-
-def test_invalid_session_pre_login_handler():
-    with pytest.raises(TypeError) as e:
-        Scrape(session_pre_login_handler="not.valid.func")
-    assert (
-        str(e.value)
-        == "not.valid.func is an invalid session_pre_login_handler function or path to a function."
-    )
-
-
-def test_valid_session_disable_paging_default():
-    conn = Scrape()
-    assert conn.session_disable_paging == "terminal length 0"
-
-
-def test_valid_session_disable_paging_func():
-    def disable_paging_func():
-        pass
-
-    disable_paging = disable_paging_func
-    conn = Scrape(session_disable_paging=disable_paging)
-    assert callable(conn.session_disable_paging)
-
-
-def test_valid_session_disable_paging_ext_func():
-    conn = Scrape(
-        session_disable_paging="tests.unit.driver.ext_test_funcs.some_disable_paging_func"
-    )
-    assert callable(conn.session_disable_paging)
-
-
-def test_valid_session_disable_paging_str():
-    conn = Scrape(session_disable_paging="disable all the paging")
-    assert conn.session_disable_paging == "disable all the paging"
-
-
-def test_invalid_session_disable_paging_func():
-    conn = Scrape(session_disable_paging="not.valid.func")
-    assert conn.session_disable_paging == "not.valid.func"
-
-
-def test_invalid_session_disable_paging():
-    with pytest.raises(TypeError) as e:
-        Scrape(session_disable_paging=123)
-    assert str(e.value) == "session_disable_paging should be str or callable, got <class 'int'>"
 
 
 def test_isalive(mocked_channel):
