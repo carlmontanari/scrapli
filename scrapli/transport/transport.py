@@ -155,19 +155,3 @@ class Transport(ABC):
             N/A
 
         """
-
-    @abstractmethod
-    def set_blocking(self, blocking: bool = False) -> None:
-        """
-        Set session blocking configuration
-
-        Args:
-            blocking: True/False set session to blocking
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        """

@@ -438,12 +438,27 @@ with IOSXEDriver(**my_device) as conn:
 
 ## Timeouts
 
-scrapli supports several timeout options. The simplest is the `timeout_socket` which controls the timeout for... setting
- up the underlying socket in seconds. Value should be a positive, non-zero number, however ssh2 and paramiko
-  transport options support floats. `timeout_scoket` is not used when using the `telnet` transport option.
+scrapli supports several timeout options:
+
+- `timeout_socket`
+- `timeout_transport`
+- `timeout_ops`
  
-`timeout_transport` sets the timeout for the actual transport session setup (system|paramiko|ssh2|telnet) -- for
- example for `system` transport this is the SSH `ConnectTimeout` value.
+`timeout_socket` is exactly what it sounds where possible. For the ssh2 and paramiko transports we create our own
+ socket and pass this to the created object (paramiko or ssh2 object). The socket is created with the timeout value
+  set in the `timeout_socket` attribute. For telnet and system transports we do not create a socket ourselves so this
+   value is used slightly differently.
+
+For telnet, the `timeout_socket` is used as the timeout for telnet session creation. After the telnet session is
+ created the timeout is reset to the `timeout_transport` value (more on that in a second).
+ 
+For system transport, `timeout_socket` governs the `ConnectTimeout` ssh argument -- which seems to be very similar to
+ socket timeout in paramiko/ssh2.
+
+`timeout_transport` is intended to govern the timeout for the actual transport mechanism itself. For paramiko and
+ ssh2, this is set to the respective libraries timeout attributes. For telnet, this is set to the telnetlib timeout
+  value after the initial telnet session is stood up. For system transport, this value is used as the timeout value
+   for read and write operations (handled by operation timeout decorator). 
  
 Finally, `timeout_ops` sets a timeout value for individual operations -- or put another way, the timeout for each
  send_input operation.
@@ -760,13 +775,15 @@ This section may not get updated much, but will hopefully reflect the priority i
 
 ## Todo
 
-- Paramiko Transport ssh config support -- at least for user/port/identity-file (to match ssh2-python current support)
 - Continue to bring in features from `ssh2net` -- at the moment finishing/adding ssh config support is the priority
 , however it would be good to add keep alives and some other widgets from `ssh2net` in a more optimized, cleaned up
  fashion here in scrapli.
-- Investigate blocking modes and timeouts further. This was reasonably fleshed out in `ssh2net` I think, but less so
- here... it seems to not actually be needed (the ability to flip between blocking and non-blocking reads), so it may
-  be worth removing this from the base Transport class entirely to simplify things.
+- Move some `Scrape` args --> `NetworkDriver` and convert `NetworkDriver` to an ABC... network driver should really
+ never be used by itself so no reason for it to be a "real" class. Moving things that are not 100% necessary in
+  `Scrape` seems like a good thing for cleanliness, however with the auto docs this could make things confusing so
+   need to make sure docs look sane and/or have well documented readme stuff about this.
+- Maybe worth breaking readme up into multiple pages and/or use a wiki -- don't like the fact that wiki pages are not
+ in the repo though...
 - Investigate pre-authentication handling for telnet -- support handling a prompt *before* auth happens i.e. accept
  some banner/message -- does this ever happen for ssh? I don't know! If so, support dealing with that as well.
 - Remove as much as possible from the vendor'd `ptyprocess` code. Type hint it, add docstrings everywhere, add tests

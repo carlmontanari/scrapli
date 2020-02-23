@@ -17,6 +17,7 @@ LOG = getLogger("transport")
 TELNET_TRANSPORT_ARGS = (
     "host",
     "port",
+    "timeout_socket",
     "timeout_transport",
     "timeout_ops",
     "auth_username",
@@ -29,6 +30,7 @@ TELNET_TRANSPORT_ARGS = (
 class ScrapliTelnet(Telnet):
     def __init__(self, host: str, port: int, timeout: int) -> None:
         self.eof: bool
+        self.timeout: int
         super().__init__(host, port, timeout)
 
 
@@ -39,7 +41,8 @@ class TelnetTransport(Transport):
         port: int = 23,
         auth_username: str = "",
         auth_password: str = "",
-        timeout_transport: int = 5000,
+        timeout_socket: int = 5,
+        timeout_transport: int = 5,
         timeout_ops: int = 10,
         comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
         comms_return_char: str = "\n",
@@ -56,7 +59,11 @@ class TelnetTransport(Transport):
             port: port to connect to
             auth_username: username for authentication
             auth_password: password for authentication
-            timeout_transport: timeout for telnet transport in milliseconds
+            timeout_socket: timeout for establishing socket in seconds -- since this is not directly
+                exposed in telnetlib, this is just the initial timeout for the telnet connection.
+                After the connection is established, the timeout is modified to the value of
+                `timeout_transport`.
+            timeout_transport: timeout for telnet transport in seconds
             timeout_ops: timeout for telnet channel operations in seconds -- this is also the
                 timeout for finding and responding to username and password prompts at initial
                 login.
@@ -80,7 +87,8 @@ class TelnetTransport(Transport):
         """
         self.host: str = host
         self.port: int = port
-        self.timeout_transport: int = int(timeout_transport / 1000)
+        self.timeout_socket: int = timeout_socket
+        self.timeout_transport: int = timeout_transport
         self.timeout_ops: int = timeout_ops
         self.session_lock: Lock = Lock()
         self.auth_username: str = auth_username
@@ -110,9 +118,9 @@ class TelnetTransport(Transport):
 
         """
         self.session_lock.acquire()
-        telnet_session = ScrapliTelnet(
-            host=self.host, port=self.port, timeout=self.timeout_transport
-        )
+        # establish session with "socket" timeout, then reset timeout to "transport" timeout
+        telnet_session = ScrapliTelnet(host=self.host, port=self.port, timeout=self.timeout_socket)
+        telnet_session.timeout = self.timeout_transport
         LOG.debug(f"Session to host {self.host} spawned")
         self.session_lock.release()
         self._authenticate(telnet_session)
@@ -308,18 +316,8 @@ class TelnetTransport(Transport):
             N/A
 
         """
-
-    def set_blocking(self, blocking: bool = False) -> None:
-        """
-        Set session blocking configuration
-
-        Args:
-            blocking: True/False set session to blocking
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        """
+        if isinstance(timeout, int):
+            set_timeout = timeout
+        else:
+            set_timeout = self.timeout_transport
+        self.session.timeout = set_timeout

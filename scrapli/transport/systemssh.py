@@ -24,6 +24,7 @@ LOG = getLogger("transport")
 SYSTEM_SSH_TRANSPORT_ARGS = (
     "host",
     "port",
+    "timeout_socket",
     "timeout_transport",
     "timeout_ops",
     "auth_username",
@@ -45,7 +46,8 @@ class SystemSSHTransport(Transport):
         auth_public_key: str = "",
         auth_password: str = "",
         auth_strict_key: bool = True,
-        timeout_transport: int = 5000,
+        timeout_socket: int = 5,
+        timeout_transport: int = 5,
         timeout_ops: int = 10,
         comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
         comms_return_char: str = "\n",
@@ -62,7 +64,9 @@ class SystemSSHTransport(Transport):
 
         SystemSSHTransport *always* prefers public key auth if given the option! If auth_public_key
         is set in the provided arguments OR if ssh_config_file is passed/True and there is a key for
-        ANY match (i.e. `*` has a key in ssh config file!!), we will use that key!
+        ANY match (i.e. `*` has a key in ssh config file!!), we will use that key! If public key
+        auth fails and a username and password is set (manually or by ssh config file), password
+        auth will be attempted.
 
         Args:
             host: host ip/name to connect to
@@ -71,7 +75,11 @@ class SystemSSHTransport(Transport):
             auth_public_key: path to public key for authentication
             auth_password: password for authentication
             auth_strict_key: True/False to enforce strict key checking (default is True)
-            timeout_transport: timeout for ssh transport in milliseconds
+            timeout_socket: timeout for ssh session to start -- this directly maps to ConnectTimeout
+                ssh argument; see `man ssh_config`
+            timeout_transport: timeout for transport in seconds. since system ssh is using popen/pty
+                we can't really set a timeout directly, so this value governs the time timeout
+                decorator for the transport read and write methods
             timeout_ops: timeout for ssh channel operations in seconds -- this is also the
                 timeout for finding and responding to username and password prompts at initial
                 login.
@@ -96,7 +104,8 @@ class SystemSSHTransport(Transport):
         """
         self.host: str = host
         self.port: int = port
-        self.timeout_transport: int = int(timeout_transport / 1000)
+        self.timeout_socket: int = timeout_socket
+        self.timeout_transport: int = timeout_transport
         self.timeout_ops: int = timeout_ops
         self.session_lock: Lock = Lock()
         self.auth_username: str = auth_username
@@ -155,7 +164,7 @@ class SystemSSHTransport(Transport):
 
         """
         self.open_cmd.extend(["-p", str(self.port)])
-        self.open_cmd.extend(["-o", f"ConnectTimeout={self.timeout_transport}"])
+        self.open_cmd.extend(["-o", f"ConnectTimeout={self.timeout_socket}"])
         if self.auth_public_key:
             self.open_cmd.extend(["-i", self.auth_public_key])
         if self.auth_username:
@@ -200,7 +209,7 @@ class SystemSSHTransport(Transport):
             open_pipes_result = self._open_pipes()
             if open_pipes_result:
                 return
-            if not open_pipes_result and not self.auth_password:
+            if not open_pipes_result and (not self.auth_password or not self.auth_username):
                 msg = f"Authentication to host {self.host} failed"
                 LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
@@ -412,6 +421,7 @@ class SystemSSHTransport(Transport):
                 return True
         return False
 
+    @operation_timeout("timeout_transport", "Transport timeout during read operation.")
     def read(self) -> bytes:
         """
         Read data from the channel
@@ -433,6 +443,7 @@ class SystemSSHTransport(Transport):
             return self.session.read(read_bytes)
         return b""
 
+    @operation_timeout("timeout_transport", "Transport timeout during write operation.")
     def write(self, channel_input: str) -> None:
         """
         Write data to the channel
@@ -456,6 +467,11 @@ class SystemSSHTransport(Transport):
         """
         Set session timeout
 
+        Note that this modifies the objects `timeout_transport` value directly as this value is
+        what controls the timeout decorator for read/write methods. This is slightly different
+        behavior from ssh2/paramiko/telnet in that those transports modify the session value and
+        leave the objects `timeout_transport` alone.
+
         Args:
             timeout: timeout in seconds
 
@@ -466,20 +482,8 @@ class SystemSSHTransport(Transport):
             N/A
 
         """
-
-    def set_blocking(self, blocking: bool = False) -> None:
-        """
-        Set session blocking configuration
-
-        Unnecessary when using Popen/system ssh
-
-        Args:
-            blocking: True/False set session to blocking
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        """
+        if isinstance(timeout, int):
+            set_timeout = timeout
+        else:
+            set_timeout = self.timeout_transport
+        self.timeout_transport = set_timeout
