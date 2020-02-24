@@ -126,7 +126,10 @@ class SystemSSHTransport(Transport):
         self.timeout_socket: int = timeout_socket
         self.timeout_transport: int = timeout_transport
         self.timeout_ops: int = timeout_ops
-        self.session_lock: Lock = Lock()
+        self.keepalive: bool = keepalive
+        self.keepalive_interval: int = keepalive_interval
+        self.keepalive_type: str = keepalive_type
+        self.keepalive_pattern: str = keepalive_pattern
         self.auth_username: str = auth_username
         self.auth_public_key: str = auth_public_key
         self.auth_password: str = auth_password
@@ -134,6 +137,8 @@ class SystemSSHTransport(Transport):
         self.comms_prompt_pattern: str = comms_prompt_pattern
         self.comms_return_char: str = comms_return_char
         self._process_ssh_config(ssh_config_file)
+
+        self.session_lock: Lock = Lock()
 
         self.session: Union[Popen[bytes], PtyProcess]  # pylint: disable=E1136
         self.lib_auth_exception = ScrapliAuthenticationFailed
