@@ -225,7 +225,6 @@ class Channel:
         LOG.debug(f&#34;Write (sending return character): {repr(self.comms_return_char)}&#34;)
         while True:
             output = self._read_chunk()
-            output.rstrip(b&#34;\\&#34;)
             channel_match = re.search(prompt_pattern, output)
             if channel_match:
                 self.transport.set_timeout()
@@ -624,7 +623,6 @@ class Channel:
         LOG.debug(f&#34;Write (sending return character): {repr(self.comms_return_char)}&#34;)
         while True:
             output = self._read_chunk()
-            output.rstrip(b&#34;\\&#34;)
             channel_match = re.search(prompt_pattern, output)
             if channel_match:
                 self.transport.set_timeout()

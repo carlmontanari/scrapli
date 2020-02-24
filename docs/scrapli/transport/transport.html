@@ -26,15 +26,25 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.transport.transport&#34;&#34;&#34;
+import time
 from abc import ABC, abstractmethod
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
+from logging import getLogger
 from threading import Lock
 from typing import Dict, Optional, Union
+
+LOG = getLogger(&#34;transport&#34;)
 
 
 class Transport(ABC):
     @abstractmethod
     def __init__(self, *args: Union[str, int], **kwargs: Dict[str, Union[str, int]]) -&gt; None:
         self.host: str = &#34;&#34;
+        self.keepalive: bool = False
+        self.keepalive_interval: int = 30
+        self.keepalive_type: str = &#34;network&#34;
+        self.keepalive_pattern: str = &#34;\005&#34;
         self.session_lock: Lock = Lock()
 
     def __bool__(self) -&gt; bool:
@@ -174,6 +184,84 @@ class Transport(ABC):
 
         Args:
             timeout: timeout in seconds
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+
+    def _session_keepalive(self) -&gt; None:
+        &#34;&#34;&#34;
+        Spawn keepalive thread for transport session
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        if not self.keepalive:
+            return
+        pool = ThreadPoolExecutor()
+        if self.keepalive_type == &#34;network&#34;:
+            pool.submit(self._keepalive_network)
+        else:
+            pool.submit(self._keepalive_standard)
+
+    def _keepalive_network(self) -&gt; None:
+        &#34;&#34;&#34;
+        Send &#34;in band&#34; keepalives to devices.
+
+        Generally used with &#34;network&#34; devices which do not have native keepalive support. This will
+        try to acquire a session lock and send an innocuous character -- such as CTRL+E -- to keep
+        the device &#34;exec-timeout&#34; (in network-y words) from expiring.
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        lock_counter = 0
+        last_keepalive = datetime.now()
+        while True:
+            if not self.isalive():
+                return
+            diff = datetime.now() - last_keepalive
+            if diff.seconds &gt;= self.keepalive_interval:
+                if not self.session_lock.locked():
+                    LOG.debug(
+                        f&#34;Sending &#39;network&#39; keepalive with pattern {repr(self.keepalive_pattern)}.&#34;
+                    )
+                    lock_counter = 0
+                    self.session_lock.acquire()
+                    self.write(self.keepalive_pattern)
+                    self.session_lock.release()
+                    last_keepalive = datetime.now()
+                else:
+                    lock_counter += 1
+                    if lock_counter &gt;= 3:
+                        LOG.error(f&#34;Keepalive thread missed {lock_counter} consecutive keepalives.&#34;)
+            time.sleep(self.keepalive_interval / 10)
+
+    @abstractmethod
+    def _keepalive_standard(self) -&gt; None:
+        &#34;&#34;&#34;
+        Send &#34;out of band&#34; (protocol level) keepalives to devices.
+
+        Args:
+            N/A
 
         Returns:
             N/A  # noqa: DAR202
@@ -208,6 +296,10 @@ inheritance.</p></section>
     @abstractmethod
     def __init__(self, *args: Union[str, int], **kwargs: Dict[str, Union[str, int]]) -&gt; None:
         self.host: str = &#34;&#34;
+        self.keepalive: bool = False
+        self.keepalive_interval: int = 30
+        self.keepalive_type: str = &#34;network&#34;
+        self.keepalive_pattern: str = &#34;\005&#34;
         self.session_lock: Lock = Lock()
 
     def __bool__(self) -&gt; bool:
@@ -347,6 +439,84 @@ inheritance.</p></section>
 
         Args:
             timeout: timeout in seconds
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+
+    def _session_keepalive(self) -&gt; None:
+        &#34;&#34;&#34;
+        Spawn keepalive thread for transport session
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        if not self.keepalive:
+            return
+        pool = ThreadPoolExecutor()
+        if self.keepalive_type == &#34;network&#34;:
+            pool.submit(self._keepalive_network)
+        else:
+            pool.submit(self._keepalive_standard)
+
+    def _keepalive_network(self) -&gt; None:
+        &#34;&#34;&#34;
+        Send &#34;in band&#34; keepalives to devices.
+
+        Generally used with &#34;network&#34; devices which do not have native keepalive support. This will
+        try to acquire a session lock and send an innocuous character -- such as CTRL+E -- to keep
+        the device &#34;exec-timeout&#34; (in network-y words) from expiring.
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        lock_counter = 0
+        last_keepalive = datetime.now()
+        while True:
+            if not self.isalive():
+                return
+            diff = datetime.now() - last_keepalive
+            if diff.seconds &gt;= self.keepalive_interval:
+                if not self.session_lock.locked():
+                    LOG.debug(
+                        f&#34;Sending &#39;network&#39; keepalive with pattern {repr(self.keepalive_pattern)}.&#34;
+                    )
+                    lock_counter = 0
+                    self.session_lock.acquire()
+                    self.write(self.keepalive_pattern)
+                    self.session_lock.release()
+                    last_keepalive = datetime.now()
+                else:
+                    lock_counter += 1
+                    if lock_counter &gt;= 3:
+                        LOG.error(f&#34;Keepalive thread missed {lock_counter} consecutive keepalives.&#34;)
+            time.sleep(self.keepalive_interval / 10)
+
+    @abstractmethod
+    def _keepalive_standard(self) -&gt; None:
+        &#34;&#34;&#34;
+        Send &#34;out of band&#34; (protocol level) keepalives to devices.
+
+        Args:
+            N/A
 
         Returns:
             N/A  # noqa: DAR202

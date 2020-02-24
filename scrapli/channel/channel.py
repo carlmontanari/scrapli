@@ -198,7 +198,6 @@ class Channel:
         LOG.debug(f"Write (sending return character): {repr(self.comms_return_char)}")
         while True:
             output = self._read_chunk()
-            output.rstrip(b"\\")
             channel_match = re.search(prompt_pattern, output)
             if channel_match:
                 self.transport.set_timeout()

@@ -20,6 +20,10 @@ TELNET_TRANSPORT_ARGS = (
     "timeout_socket",
     "timeout_transport",
     "timeout_ops",
+    "keepalive",
+    "keepalive_interval",
+    "keepalive_type",
+    "keepalive_pattern",
     "auth_username",
     "auth_password",
     "comms_prompt_pattern",
@@ -44,6 +48,10 @@ class TelnetTransport(Transport):
         timeout_socket: int = 5,
         timeout_transport: int = 5,
         timeout_ops: int = 10,
+        keepalive: bool = False,
+        keepalive_interval: int = 30,
+        keepalive_type: str = "",
+        keepalive_pattern: str = "\005",
         comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
         comms_return_char: str = "\n",
     ):  # pylint: disable=W0231
@@ -67,6 +75,16 @@ class TelnetTransport(Transport):
             timeout_ops: timeout for telnet channel operations in seconds -- this is also the
                 timeout for finding and responding to username and password prompts at initial
                 login.
+            keepalive: whether or not to try to keep session alive
+            keepalive_interval: interval to use for session keepalives
+            keepalive_type: network|standard -- "network" sends actual characters over the
+                transport channel. This is useful for network-y type devices that may not support
+                "standard" keepalive mechanisms. "standard" is not currently implemented for telnet
+            keepalive_pattern: pattern to send to keep network channel alive. Default is
+                u"\005" which is equivalent to "ctrl+e". This pattern moves cursor to end of the
+                line which should be an innocuous pattern. This will only be entered *if* a lock
+                can be acquired. This is only applicable if using keepalives and if the keepalive
+                type is "network"
             comms_prompt_pattern: prompt pattern expected for device, same as the one provided to
                 channel -- telnet needs to know this to know how to decide if we are properly
                 sending/receiving data -- i.e. we are not stuck at some password prompt or some
@@ -90,11 +108,16 @@ class TelnetTransport(Transport):
         self.timeout_socket: int = timeout_socket
         self.timeout_transport: int = timeout_transport
         self.timeout_ops: int = timeout_ops
-        self.session_lock: Lock = Lock()
+        self.keepalive: bool = keepalive
+        self.keepalive_interval: int = keepalive_interval
+        self.keepalive_type: str = keepalive_type
+        self.keepalive_pattern: str = keepalive_pattern
         self.auth_username: str = auth_username
         self.auth_password: str = auth_password
         self.comms_prompt_pattern: str = comms_prompt_pattern
         self.comms_return_char: str = comms_return_char
+
+        self.session_lock: Lock = Lock()
 
         self.username_prompt: str = "Username:"
         self.password_prompt: str = "Password:"
@@ -321,3 +344,19 @@ class TelnetTransport(Transport):
         else:
             set_timeout = self.timeout_transport
         self.session.timeout = set_timeout
+
+    def _keepalive_standard(self) -> None:
+        """
+        Send "out of band" (protocol level) keepalives to devices.
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            NotImplementedError: always, because this is not implemented for telnet
+
+        """
+        raise NotImplementedError("No 'standard' keepalive mechanism for telnet.")

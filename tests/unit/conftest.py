@@ -17,7 +17,7 @@ from scrapli.netmiko_compatability import (
 from scrapli.transport.transport import Transport
 
 
-class MockNSSH(Scrape):
+class MockScrape(Scrape):
     def __init__(self, channel_ops, initial_bytes, *args, comms_ansi=False, **kwargs):
         self.channel_ops = channel_ops
         self.initial_bytes = initial_bytes
@@ -54,7 +54,7 @@ class MockNSSH(Scrape):
         return transport_class, transport_args
 
 
-class MockNetworkDriver(MockNSSH, NetworkDriver):
+class MockNetworkDriver(MockScrape, NetworkDriver):
     def __init__(self, channel_ops, initial_bytes, *args, comms_ansi=False, **kwargs):
         super().__init__(channel_ops, initial_bytes, *args, comms_ansi=comms_ansi, **kwargs)
         self.privs = PRIVS
@@ -115,7 +115,10 @@ class MockTransport(Transport):
     def set_timeout(self, timeout: Optional[int] = None) -> None:
         return
 
-    def set_blocking(self, blocking: bool = False) -> None:
+    def _session_keepalive(self) -> None:
+        return
+
+    def _keepalive_standard(self) -> None:
         return
 
 
@@ -127,7 +130,7 @@ def mocked_channel():
         comms_ansi=False,
         comms_prompt_pattern=r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
     ):
-        conn = MockNSSH(
+        conn = MockScrape(
             host="localhost",
             port=22,
             timeout_socket=1,

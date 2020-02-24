@@ -47,6 +47,10 @@ class Scrape:
         timeout_socket: int = 5,
         timeout_transport: int = 5,
         timeout_ops: int = 10,
+        keepalive: bool = False,
+        keepalive_interval: int = 30,
+        keepalive_type: str = "network",
+        keepalive_pattern: str = "\005",
         comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
         comms_return_char: str = "\n",
         comms_ansi: bool = False,
@@ -71,6 +75,19 @@ class Scrape:
             timeout_socket: timeout for establishing socket in seconds
             timeout_transport: timeout for ssh|telnet transport in seconds
             timeout_ops: timeout for ssh channel operations
+            keepalive: whether or not to try to keep session alive
+            keepalive_interval: interval to use for session keepalives
+            keepalive_type: network|standard -- "network" sends actual characters over the
+                transport channel. This is useful for network-y type devices that may not support
+                "standard" keepalive mechanisms. "standard" attempts to use whatever "standard"
+                keepalive mechanisms are available in the selected transport mechanism. Check the
+                transport documentation for details on what is supported and/or how it is
+                implemented for any given transport driver
+            keepalive_pattern: pattern to send to keep network channel alive. Default is
+                u"\005" which is equivalent to "ctrl+e". This pattern moves cursor to end of the
+                line which should be an innocuous pattern. This will only be entered *if* a lock
+                can be acquired. This is only applicable if using keepalives and if the keepalive
+                type is "network"
             comms_prompt_pattern: raw string regex pattern -- preferably use `^` and `$` anchors!
                 this is the single most important attribute here! if this does not match a prompt,
                 scrapli will not work!
@@ -98,7 +115,8 @@ class Scrape:
             N/A  # noqa: DAR202
 
         Raises:
-            TypeError: if auth_strict_key is not a bool
+            TypeError: if auth_strict_key/keepalive is not a bool or values cannot be converted to
+                ints where appropriate (ex: timeouts)
             ValueError: if driver value is invalid
 
         """
@@ -117,6 +135,18 @@ class Scrape:
         self.timeout_socket = int(timeout_socket)
         self.timeout_transport = int(timeout_transport)
         self.timeout_ops = int(timeout_ops)
+
+        if not isinstance(keepalive, bool):
+            raise TypeError(f"keepalive should be bool, got {type(keepalive)}")
+        self.keepalive = keepalive
+        self.keepalive_interval = int(keepalive_interval)
+        if keepalive_type not in ["network", "standard"]:
+            raise ValueError(
+                f"{keepalive_type} is an invalid session_keepalive_type; must be 'network' or "
+                "'standard'."
+            )
+        self.keepalive_type = keepalive_type
+        self.keepalive_pattern = keepalive_pattern
 
         self.comms_prompt_pattern: str = ""
         self.comms_return_char: str = ""

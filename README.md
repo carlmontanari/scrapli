@@ -67,14 +67,15 @@ The final piece of scrapli is the actual "driver" -- or the component that binds
   - [Native and Platform Drivers Examples](#native-and-platform-drivers-examples)
   - [Platform Regex](#platform-regex)
   - [Basic Operations -- Sending and Receiving](#basic-operations----sending-and-receiving)
+  - [Disabling Paging](#disabling-paging)
+  - [Login Handlers](#login-handlers)  
   - [Response Objects](#response-objects)
   - [Handling Prompts](#handling-prompts)
   - [Driver Privilege Levels](#driver-privilege-levels)
   - [Sending Configurations](#sending-configurations)
   - [TextFSM/NTC-Templates Integration](#textfsmntc-templates-integration)
   - [Timeouts](#timeouts)
-  - [Disabling Paging](#disabling-paging)
-  - [Login Handlers](#login-handlers)
+  - [Keepalives](#keepalives)
   - [SSH Config Support](#ssh-config-support)
   - [Telnet](#telnet)
 - [FAQ](#faq)
@@ -271,6 +272,39 @@ with IOSXEDriver(**my_device) as conn:
 ```
 
 
+## Disabling Paging
+
+scrapli `Scrape` (the base driver) does not know or care about disabling paging! If you use the base `Scrape` class
+ you will need to handle disabling paging yourself. The `NetworkDriver` and all of its sub-classes (i.e. iosxe/junos
+  drivers) will however attempt to disable paging for you. 
+
+All of the drivers, have a standard/default disable paging string already configured for you, however this is of
+ course user configurable. In addition to passing a string to send to disable paging, scrapli supports passing a
+  callable. This callable should accept the drivers reference to self as the only argument. This allows for users to
+   create a custom function to disable paging however they like. In general it is probably a better idea to handle
+    this by simply passing a string, but the goal is to be flexible so the callable is supported.
+    
+```python
+from scrapli.driver.core import IOSXEDriver
+
+def iosxe_disable_paging(cls):
+    cls.send_commands("term length 0")
+
+my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password": "VR-netlab9", "session_disable_paging": iosxe_disable_paging, "auth_strict_key": False}
+
+with IOSXEDriver(**my_device) as conn:
+    print(conn.get_prompt())
+```
+
+
+## Login Handlers
+
+Some devices have additional prompts or banners at login. This generally causes issues for SSH screen scraping
+ automation. scrapli (`NetworkDriver` and all sub classes) supports -- just like disable paging -- passing a string to
+  send or a callable to execute after successful SSH connection but before disabling paging occurs. By default this
+   is an empty string which does nothing.
+
+
 ## Response Objects
 
 All read operations result in a `Response` object being created. The `Response` object contains attributes for the command
@@ -464,38 +498,20 @@ Finally, `timeout_ops` sets a timeout value for individual operations -- or put 
  send_input operation.
 
 
-## Disabling Paging
+## Keepalives
 
-scrapli `Scrape` (the base driver) does not know or care about disabling paging! If you use the base `Scrape` class
- you will need to handle disabling paging yourself. The `NetworkDriver` and all of its sub-classes (i.e. iosxe/junos
-  drivers) will however attempt to disable paging for you. 
-
-All of the drivers, have a standard/default disable paging string already configured for you, however this is of
- course user configurable. In addition to passing a string to send to disable paging, scrapli supports passing a
-  callable. This callable should accept the drivers reference to self as the only argument. This allows for users to
-   create a custom function to disable paging however they like. In general it is probably a better idea to handle
-    this by simply passing a string, but the goal is to be flexible so the callable is supported.
-    
-```python
-from scrapli.driver.core import IOSXEDriver
-
-def iosxe_disable_paging(cls):
-    cls.send_commands("term length 0")
-
-my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password": "VR-netlab9", "session_disable_paging": iosxe_disable_paging, "auth_strict_key": False}
-
-with IOSXEDriver(**my_device) as conn:
-    print(conn.get_prompt())
-```
-
-
-## Login Handlers
-
-Some devices have additional prompts or banners at login. This generally causes issues for SSH screen scraping
- automation. scrapli (`NetworkDriver` and all sub classes) supports -- just like disable paging -- passing a string to
-  send or a callable to execute after successful SSH connection but before disabling paging occurs. By default this
-   is an empty string which does nothing.
-
+In some cases it may be desirable to have a long running connection to a device, however it is generally a bad idea
+ to allow for very long timeouts/exec sessions on devices. To cope with this scrapli supports sending "keepalives
+ ". For "normal" ssh devices this could be basic SSH keepalives (with ssh2-python and system transports). As scrapli
+  is generally focused on networking devices, and most networking devices don't support standard keepalives, scrapli
+   also has the ability to send "network" keepalives.
+   
+In either case -- "standard" or "network" -- scrapli spawns a keepalive thread. This thread then sends either
+ standard keepalive messages or "in band" keepalive messages in the case of "network" keepalives.
+ 
+"network" keepalives default ot sending u"\005" which is equivalent of sending `CTRL-E` (jump to end (right side) of
+ line). This is generally an innocuous command, and furthermore is never sent unless the keepalive thread can acquire
+  a channel lock. This should allow scrapli to keep sessions alive as long as needed.
 
 ## SSH Config Support
 
@@ -778,9 +794,13 @@ This section may not get updated much, but will hopefully reflect the priority i
 
 ## Todo
 
-- Continue to bring in features from `ssh2net` -- at the moment finishing/adding ssh config support is the priority
-, however it would be good to add keep alives and some other widgets from `ssh2net` in a more optimized, cleaned up
- fashion here in scrapli.
+- need to test further against linux -- looks like may need to adopt some extra cruft (or so i thought) from ssh2net
+ to deal w/ rstripping all lines and rejoining them so the prompt matching works better. for network devices this
+  hasn't seemed to be an issue but for quick testing against ubuntu it may be...
+- Add keepalive support to system, paramiko and telnet (for "out of band"/"standard" keepalives) to get parity w/ ssh2
+- Add tests for keepalive stuff if possible (steal from ssh2net! :D)
+- Create an actual useful init in base transport class and super it from the child transport classes -- setting
+ things like keepalive over and over in each child class is silly.
 - Maybe worth breaking readme up into multiple pages and/or use a wiki -- don't like the fact that wiki pages are not
  in the repo though...
 - Investigate pre-authentication handling for telnet -- support handling a prompt *before* auth happens i.e. accept

@@ -12,4 +12,6 @@ device = {
     "auth_password": password or "scrapli",
     "auth_strict_key": False,
     "transport": "system",
+    "keepalive": True,
+    "keepalive_interval": 1,
 }

@@ -206,7 +206,7 @@ logging.getLogger(&#34;channel&#34;).addHandler(NullHandler())</code></pre>
 <dl>
 <dt id="scrapli.Scrape"><code class="flex name class">
 <span>class <span class="ident">Scrape</span></span>
-<span>(</span><span>host='', port=22, auth_username='', auth_password='', auth_public_key='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, timeout_ops=10, comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n', comms_ansi=False, ssh_config_file=False, ssh_known_hosts_file='', transport='system')</span>
+<span>(</span><span>host='', port=22, auth_username='', auth_password='', auth_public_key='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, timeout_ops=10, keepalive=False, keepalive_interval=30, keepalive_type='network', keepalive_pattern='\x05', comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n', comms_ansi=False, ssh_config_file=False, ssh_known_hosts_file='', transport='system')</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Scrape Object</p>
@@ -233,6 +233,23 @@ that it doesn't know or care about privilege levels, platform types, and things 
 <dd>timeout for ssh|telnet transport in seconds</dd>
 <dt><strong><code>timeout_ops</code></strong></dt>
 <dd>timeout for ssh channel operations</dd>
+<dt><strong><code>keepalive</code></strong></dt>
+<dd>whether or not to try to keep session alive</dd>
+<dt><strong><code>keepalive_interval</code></strong></dt>
+<dd>interval to use for session keepalives</dd>
+<dt><strong><code>keepalive_type</code></strong></dt>
+<dd>network|standard &ndash; "network" sends actual characters over the
+transport channel. This is useful for network-y type devices that may not support
+"standard" keepalive mechanisms. "standard" attempts to use whatever "standard"
+keepalive mechanisms are available in the selected transport mechanism. Check the
+transport documentation for details on what is supported and/or how it is
+implemented for any given transport driver</dd>
+<dt><strong><code>keepalive_pattern</code></strong></dt>
+<dd>pattern to send to keep network channel alive. Default is
+u"" which is equivalent to "ctrl+e". This pattern moves cursor to end of the
+line which should be an innocuous pattern. This will only be entered <em>if</em> a lock
+can be acquired. This is only applicable if using keepalives and if the keepalive
+type is "network"</dd>
 <dt><strong><code>comms_prompt_pattern</code></strong></dt>
 <dd>raw string regex pattern &ndash; preferably use <code>^</code> and <code>$</code> anchors!
 this is the single most important attribute here! if this does not match a prompt,
@@ -271,7 +288,8 @@ features built in (though scrapli does not expose/support them all).</dd>
 <h2 id="raises">Raises</h2>
 <dl>
 <dt><strong><code>TypeError</code></strong></dt>
-<dd>if auth_strict_key is not a bool</dd>
+<dd>if auth_strict_key/keepalive is not a bool or values cannot be converted to
+ints where appropriate (ex: timeouts)</dd>
 <dt><strong><code>ValueError</code></strong></dt>
 <dd>if driver value is invalid</dd>
 </dl></section>
@@ -291,6 +309,10 @@ features built in (though scrapli does not expose/support them all).</dd>
         timeout_socket: int = 5,
         timeout_transport: int = 5,
         timeout_ops: int = 10,
+        keepalive: bool = False,
+        keepalive_interval: int = 30,
+        keepalive_type: str = &#34;network&#34;,
+        keepalive_pattern: str = &#34;\005&#34;,
         comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]$&#34;,
         comms_return_char: str = &#34;\n&#34;,
         comms_ansi: bool = False,
@@ -315,6 +337,19 @@ features built in (though scrapli does not expose/support them all).</dd>
             timeout_socket: timeout for establishing socket in seconds
             timeout_transport: timeout for ssh|telnet transport in seconds
             timeout_ops: timeout for ssh channel operations
+            keepalive: whether or not to try to keep session alive
+            keepalive_interval: interval to use for session keepalives
+            keepalive_type: network|standard -- &#34;network&#34; sends actual characters over the
+                transport channel. This is useful for network-y type devices that may not support
+                &#34;standard&#34; keepalive mechanisms. &#34;standard&#34; attempts to use whatever &#34;standard&#34;
+                keepalive mechanisms are available in the selected transport mechanism. Check the
+                transport documentation for details on what is supported and/or how it is
+                implemented for any given transport driver
+            keepalive_pattern: pattern to send to keep network channel alive. Default is
+                u&#34;\005&#34; which is equivalent to &#34;ctrl+e&#34;. This pattern moves cursor to end of the
+                line which should be an innocuous pattern. This will only be entered *if* a lock
+                can be acquired. This is only applicable if using keepalives and if the keepalive
+                type is &#34;network&#34;
             comms_prompt_pattern: raw string regex pattern -- preferably use `^` and `$` anchors!
                 this is the single most important attribute here! if this does not match a prompt,
                 scrapli will not work!
@@ -342,7 +377,8 @@ features built in (though scrapli does not expose/support them all).</dd>
             N/A  # noqa: DAR202
 
         Raises:
-            TypeError: if auth_strict_key is not a bool
+            TypeError: if auth_strict_key/keepalive is not a bool or values cannot be converted to
+                ints where appropriate (ex: timeouts)
             ValueError: if driver value is invalid
 
         &#34;&#34;&#34;
@@ -361,6 +397,18 @@ features built in (though scrapli does not expose/support them all).</dd>
         self.timeout_socket = int(timeout_socket)
         self.timeout_transport = int(timeout_transport)
         self.timeout_ops = int(timeout_ops)
+
+        if not isinstance(keepalive, bool):
+            raise TypeError(f&#34;keepalive should be bool, got {type(keepalive)}&#34;)
+        self.keepalive = keepalive
+        self.keepalive_interval = int(keepalive_interval)
+        if keepalive_type not in [&#34;network&#34;, &#34;standard&#34;]:
+            raise ValueError(
+                f&#34;{keepalive_type} is an invalid session_keepalive_type; must be &#39;network&#39; or &#34;
+                &#34;&#39;standard&#39;.&#34;
+            )
+        self.keepalive_type = keepalive_type
+        self.keepalive_pattern = keepalive_pattern
 
         self.comms_prompt_pattern: str = &#34;&#34;
         self.comms_return_char: str = &#34;&#34;

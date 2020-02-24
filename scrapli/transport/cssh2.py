@@ -1,5 +1,6 @@
 """scrapli.transport.cssh2"""
 import base64
+import time
 import warnings
 from logging import getLogger
 from threading import Lock
@@ -22,6 +23,10 @@ SSH2_TRANSPORT_ARGS = (
     "port",
     "timeout_transport",
     "timeout_socket",
+    "keepalive",
+    "keepalive_interval",
+    "keepalive_type",
+    "keepalive_pattern",
     "auth_username",
     "auth_public_key",
     "auth_password",
@@ -42,6 +47,10 @@ class SSH2Transport(Socket, Transport):
         auth_strict_key: bool = True,
         timeout_socket: int = 5,
         timeout_transport: int = 5,
+        keepalive: bool = False,
+        keepalive_interval: int = 30,
+        keepalive_type: str = "",
+        keepalive_pattern: str = "\005",
         ssh_config_file: str = "",
         ssh_known_hosts_file: str = "",
     ):
@@ -61,6 +70,17 @@ class SSH2Transport(Socket, Transport):
             auth_strict_key: True/False to enforce strict key checking (default is True)
             timeout_socket: timeout for establishing socket in seconds
             timeout_transport: timeout for ssh2 transport in seconds
+            keepalive: whether or not to try to keep session alive
+            keepalive_interval: interval to use for session keepalives
+            keepalive_type: network|standard -- "network" sends actual characters over the
+                transport channel. This is useful for network-y type devices that may not support
+                "standard" keepalive mechanisms. "standard" attempts to ssh2-python built in
+                keepalive method (using standard openssh keepalive)
+            keepalive_pattern: pattern to send to keep network channel alive. Default is
+                u"\005" which is equivalent to "ctrl+e". This pattern moves cursor to end of the
+                line which should be an innocuous pattern. This will only be entered *if* a lock
+                can be acquired. This is only applicable if using keepalives and if the keepalive
+                type is "network"
             ssh_config_file: string to path for ssh config file
             ssh_known_hosts_file: string to path for ssh known hosts file
 
@@ -81,12 +101,17 @@ class SSH2Transport(Socket, Transport):
             self.port = cfg_port or 22
         self.timeout_socket: int = timeout_socket
         self.timeout_transport: int = timeout_transport
-        self.session_lock: Lock = Lock()
+        self.keepalive: bool = keepalive
+        self.keepalive_interval: int = keepalive_interval
+        self.keepalive_type: str = keepalive_type
+        self.keepalive_pattern: str = keepalive_pattern
         self.auth_username: str = auth_username or cfg_user
         self.auth_public_key: str = auth_public_key or cfg_public_key
         self.auth_password: str = auth_password
         self.auth_strict_key: bool = auth_strict_key
         self.ssh_known_hosts_file: str = ssh_known_hosts_file
+
+        self.session_lock: Lock = Lock()
 
         try:
             # import here so these are optional
@@ -178,6 +203,8 @@ class SSH2Transport(Socket, Transport):
             LOG.critical(msg)
             raise ScrapliAuthenticationFailed(msg)
         self._open_channel()
+        if self.keepalive:
+            self._session_keepalive()
         self.session_lock.release()
 
     def _verify_key(self) -> None:
@@ -454,3 +481,25 @@ class SSH2Transport(Socket, Transport):
             set_timeout = self.timeout_transport
         # ssh2-python expects timeout in milliseconds
         self.session.set_timeout(set_timeout * 1000)
+
+    def _keepalive_standard(self) -> None:
+        """
+        Send "out of band" (protocol level) keepalives to devices.
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+        self.session.keepalive_config(want_reply=False, interval=self.keepalive_interval)
+        while True:
+            if not self.isalive():
+                return
+            LOG.debug("Sending 'standard' keepalive.")
+            self.session.keepalive_send()
+            time.sleep(self.keepalive_interval / 10)

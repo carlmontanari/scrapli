@@ -88,7 +88,7 @@ __all__ = (
 <dl>
 <dt id="scrapli.transport.MikoTransport"><code class="flex name class">
 <span>class <span class="ident">MikoTransport</span></span>
-<span>(</span><span>host, port=-1, auth_username='', auth_public_key='', auth_password='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, ssh_config_file='', ssh_known_hosts_file='')</span>
+<span>(</span><span>host, port=-1, auth_username='', auth_public_key='', auth_password='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, keepalive=False, keepalive_interval=30, keepalive_type='', keepalive_pattern='\x05', ssh_config_file='', ssh_known_hosts_file='')</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -115,6 +115,20 @@ MikoTransport &lt;- Socket</p>
 <dd>timeout for establishing socket in seconds</dd>
 <dt><strong><code>timeout_transport</code></strong></dt>
 <dd>timeout for ssh transport in seconds</dd>
+<dt><strong><code>keepalive</code></strong></dt>
+<dd>whether or not to try to keep session alive</dd>
+<dt><strong><code>keepalive_interval</code></strong></dt>
+<dd>interval to use for session keepalives</dd>
+<dt><strong><code>keepalive_type</code></strong></dt>
+<dd>network|standard &ndash; "network" sends actual characters over the
+transport channel. This is useful for network-y type devices that may not support
+"standard" keepalive mechanisms. "standard" is not currently implemented w/ paramiko</dd>
+<dt><strong><code>keepalive_pattern</code></strong></dt>
+<dd>pattern to send to keep network channel alive. Default is
+u"" which is equivalent to "ctrl+e". This pattern moves cursor to end of the
+line which should be an innocuous pattern. This will only be entered <em>if</em> a lock
+can be acquired. This is only applicable if using keepalives and if the keepalive
+type is "network"</dd>
 <dt><strong><code>ssh_config_file</code></strong></dt>
 <dd>string to path for ssh config file</dd>
 <dt><strong><code>ssh_known_hosts_file</code></strong></dt>
@@ -146,6 +160,10 @@ MikoTransport &lt;- Socket</p>
         auth_strict_key: bool = True,
         timeout_socket: int = 5,
         timeout_transport: int = 5,
+        keepalive: bool = False,
+        keepalive_interval: int = 30,
+        keepalive_type: str = &#34;&#34;,
+        keepalive_pattern: str = &#34;\005&#34;,
         ssh_config_file: str = &#34;&#34;,
         ssh_known_hosts_file: str = &#34;&#34;,
     ):
@@ -165,6 +183,16 @@ MikoTransport &lt;- Socket</p>
             auth_strict_key: True/False to enforce strict key checking (default is True)
             timeout_socket: timeout for establishing socket in seconds
             timeout_transport: timeout for ssh transport in seconds
+            keepalive: whether or not to try to keep session alive
+            keepalive_interval: interval to use for session keepalives
+            keepalive_type: network|standard -- &#34;network&#34; sends actual characters over the
+                transport channel. This is useful for network-y type devices that may not support
+                &#34;standard&#34; keepalive mechanisms. &#34;standard&#34; is not currently implemented w/ paramiko
+            keepalive_pattern: pattern to send to keep network channel alive. Default is
+                u&#34;\005&#34; which is equivalent to &#34;ctrl+e&#34;. This pattern moves cursor to end of the
+                line which should be an innocuous pattern. This will only be entered *if* a lock
+                can be acquired. This is only applicable if using keepalives and if the keepalive
+                type is &#34;network&#34;
             ssh_config_file: string to path for ssh config file
             ssh_known_hosts_file: string to path for ssh known hosts file
 
@@ -185,12 +213,17 @@ MikoTransport &lt;- Socket</p>
             self.port = cfg_port or 22
         self.timeout_socket: int = timeout_socket
         self.timeout_transport: int = timeout_transport
-        self.session_lock: Lock = Lock()
+        self.keepalive: bool = keepalive
+        self.keepalive_interval: int = keepalive_interval
+        self.keepalive_type: str = keepalive_type
+        self.keepalive_pattern: str = keepalive_pattern
         self.auth_username: str = auth_username or cfg_user
         self.auth_public_key: str = auth_public_key or cfg_public_key
         self.auth_password: str = auth_password
         self.auth_strict_key: bool = auth_strict_key
         self.ssh_known_hosts_file: str = ssh_known_hosts_file
+
+        self.session_lock: Lock = Lock()
 
         try:
             # import here so these are optional
@@ -526,7 +559,23 @@ MikoTransport &lt;- Socket</p>
             set_timeout = timeout
         else:
             set_timeout = self.timeout_transport
-        self.channel.settimeout(set_timeout)</code></pre>
+        self.channel.settimeout(set_timeout)
+
+    def _keepalive_standard(self) -&gt; None:
+        &#34;&#34;&#34;
+        Send &#34;out of band&#34; (protocol level) keepalives to devices.
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            NotImplementedError: always, because this is not implemented for telnet
+
+        &#34;&#34;&#34;
+        raise NotImplementedError(&#34;No &#39;standard&#39; keepalive mechanism for telnet.&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -789,7 +838,7 @@ MikoTransport &lt;- Socket</p>
 </dd>
 <dt id="scrapli.transport.SSH2Transport"><code class="flex name class">
 <span>class <span class="ident">SSH2Transport</span></span>
-<span>(</span><span>host, port=-1, auth_username='', auth_public_key='', auth_password='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, ssh_config_file='', ssh_known_hosts_file='')</span>
+<span>(</span><span>host, port=-1, auth_username='', auth_public_key='', auth_password='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, keepalive=False, keepalive_interval=30, keepalive_type='', keepalive_pattern='\x05', ssh_config_file='', ssh_known_hosts_file='')</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -816,6 +865,21 @@ SSH2Transport &lt;- Socket</p>
 <dd>timeout for establishing socket in seconds</dd>
 <dt><strong><code>timeout_transport</code></strong></dt>
 <dd>timeout for ssh2 transport in seconds</dd>
+<dt><strong><code>keepalive</code></strong></dt>
+<dd>whether or not to try to keep session alive</dd>
+<dt><strong><code>keepalive_interval</code></strong></dt>
+<dd>interval to use for session keepalives</dd>
+<dt><strong><code>keepalive_type</code></strong></dt>
+<dd>network|standard &ndash; "network" sends actual characters over the
+transport channel. This is useful for network-y type devices that may not support
+"standard" keepalive mechanisms. "standard" attempts to ssh2-python built in
+keepalive method (using standard openssh keepalive)</dd>
+<dt><strong><code>keepalive_pattern</code></strong></dt>
+<dd>pattern to send to keep network channel alive. Default is
+u"" which is equivalent to "ctrl+e". This pattern moves cursor to end of the
+line which should be an innocuous pattern. This will only be entered <em>if</em> a lock
+can be acquired. This is only applicable if using keepalives and if the keepalive
+type is "network"</dd>
 <dt><strong><code>ssh_config_file</code></strong></dt>
 <dd>string to path for ssh config file</dd>
 <dt><strong><code>ssh_known_hosts_file</code></strong></dt>
@@ -847,6 +911,10 @@ SSH2Transport &lt;- Socket</p>
         auth_strict_key: bool = True,
         timeout_socket: int = 5,
         timeout_transport: int = 5,
+        keepalive: bool = False,
+        keepalive_interval: int = 30,
+        keepalive_type: str = &#34;&#34;,
+        keepalive_pattern: str = &#34;\005&#34;,
         ssh_config_file: str = &#34;&#34;,
         ssh_known_hosts_file: str = &#34;&#34;,
     ):
@@ -866,6 +934,17 @@ SSH2Transport &lt;- Socket</p>
             auth_strict_key: True/False to enforce strict key checking (default is True)
             timeout_socket: timeout for establishing socket in seconds
             timeout_transport: timeout for ssh2 transport in seconds
+            keepalive: whether or not to try to keep session alive
+            keepalive_interval: interval to use for session keepalives
+            keepalive_type: network|standard -- &#34;network&#34; sends actual characters over the
+                transport channel. This is useful for network-y type devices that may not support
+                &#34;standard&#34; keepalive mechanisms. &#34;standard&#34; attempts to ssh2-python built in
+                keepalive method (using standard openssh keepalive)
+            keepalive_pattern: pattern to send to keep network channel alive. Default is
+                u&#34;\005&#34; which is equivalent to &#34;ctrl+e&#34;. This pattern moves cursor to end of the
+                line which should be an innocuous pattern. This will only be entered *if* a lock
+                can be acquired. This is only applicable if using keepalives and if the keepalive
+                type is &#34;network&#34;
             ssh_config_file: string to path for ssh config file
             ssh_known_hosts_file: string to path for ssh known hosts file
 
@@ -886,12 +965,17 @@ SSH2Transport &lt;- Socket</p>
             self.port = cfg_port or 22
         self.timeout_socket: int = timeout_socket
         self.timeout_transport: int = timeout_transport
-        self.session_lock: Lock = Lock()
+        self.keepalive: bool = keepalive
+        self.keepalive_interval: int = keepalive_interval
+        self.keepalive_type: str = keepalive_type
+        self.keepalive_pattern: str = keepalive_pattern
         self.auth_username: str = auth_username or cfg_user
         self.auth_public_key: str = auth_public_key or cfg_public_key
         self.auth_password: str = auth_password
         self.auth_strict_key: bool = auth_strict_key
         self.ssh_known_hosts_file: str = ssh_known_hosts_file
+
+        self.session_lock: Lock = Lock()
 
         try:
             # import here so these are optional
@@ -983,6 +1067,8 @@ SSH2Transport &lt;- Socket</p>
             LOG.critical(msg)
             raise ScrapliAuthenticationFailed(msg)
         self._open_channel()
+        if self.keepalive:
+            self._session_keepalive()
         self.session_lock.release()
 
     def _verify_key(self) -&gt; None:
@@ -1258,7 +1344,29 @@ SSH2Transport &lt;- Socket</p>
         else:
             set_timeout = self.timeout_transport
         # ssh2-python expects timeout in milliseconds
-        self.session.set_timeout(set_timeout * 1000)</code></pre>
+        self.session.set_timeout(set_timeout * 1000)
+
+    def _keepalive_standard(self) -&gt; None:
+        &#34;&#34;&#34;
+        Send &#34;out of band&#34; (protocol level) keepalives to devices.
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.session.keepalive_config(want_reply=False, interval=self.keepalive_interval)
+        while True:
+            if not self.isalive():
+                return
+            LOG.debug(&#34;Sending &#39;standard&#39; keepalive.&#34;)
+            self.session.keepalive_send()
+            time.sleep(self.keepalive_interval / 10)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1463,6 +1571,8 @@ SSH2Transport &lt;- Socket</p>
         LOG.critical(msg)
         raise ScrapliAuthenticationFailed(msg)
     self._open_channel()
+    if self.keepalive:
+        self._session_keepalive()
     self.session_lock.release()</code></pre>
 </details>
 </dd>
@@ -1527,7 +1637,7 @@ SSH2Transport &lt;- Socket</p>
 </dd>
 <dt id="scrapli.transport.SystemSSHTransport"><code class="flex name class">
 <span>class <span class="ident">SystemSSHTransport</span></span>
-<span>(</span><span>host, port=22, auth_username='', auth_public_key='', auth_password='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, timeout_ops=10, comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n', ssh_config_file='')</span>
+<span>(</span><span>host, port=22, auth_username='', auth_public_key='', auth_password='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, timeout_ops=10, keepalive=False, keepalive_interval=30, keepalive_type='', keepalive_pattern='\x05', comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n', ssh_config_file='')</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -1567,6 +1677,21 @@ decorator for the transport read and write methods</dd>
 <dd>timeout for ssh channel operations in seconds &ndash; this is also the
 timeout for finding and responding to username and password prompts at initial
 login.</dd>
+<dt><strong><code>keepalive</code></strong></dt>
+<dd>whether or not to try to keep session alive</dd>
+<dt><strong><code>keepalive_interval</code></strong></dt>
+<dd>interval to use for session keepalives</dd>
+<dt><strong><code>keepalive_type</code></strong></dt>
+<dd>network|standard &ndash; "network" sends actual characters over the
+transport channel. This is useful for network-y type devices that may not support
+"standard" keepalive mechanisms. "standard" is not currently implemented for
+system ssh</dd>
+<dt><strong><code>keepalive_pattern</code></strong></dt>
+<dd>pattern to send to keep network channel alive. Default is
+u"" which is equivalent to "ctrl+e". This pattern moves cursor to end of the
+line which should be an innocuous pattern. This will only be entered <em>if</em> a lock
+can be acquired. This is only applicable if using keepalives and if the keepalive
+type is "network"</dd>
 <dt><strong><code>comms_prompt_pattern</code></strong></dt>
 <dd>prompt pattern expected for device, same as the one provided to
 channel &ndash; system ssh needs to know this to know how to decide if we are properly
@@ -1609,6 +1734,10 @@ class.</dd>
         timeout_socket: int = 5,
         timeout_transport: int = 5,
         timeout_ops: int = 10,
+        keepalive: bool = False,
+        keepalive_interval: int = 30,
+        keepalive_type: str = &#34;&#34;,
+        keepalive_pattern: str = &#34;\005&#34;,
         comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]$&#34;,
         comms_return_char: str = &#34;\n&#34;,
         ssh_config_file: str = &#34;&#34;,
@@ -1643,6 +1772,17 @@ class.</dd>
             timeout_ops: timeout for ssh channel operations in seconds -- this is also the
                 timeout for finding and responding to username and password prompts at initial
                 login.
+            keepalive: whether or not to try to keep session alive
+            keepalive_interval: interval to use for session keepalives
+            keepalive_type: network|standard -- &#34;network&#34; sends actual characters over the
+                transport channel. This is useful for network-y type devices that may not support
+                &#34;standard&#34; keepalive mechanisms. &#34;standard&#34; is not currently implemented for
+                system ssh
+            keepalive_pattern: pattern to send to keep network channel alive. Default is
+                u&#34;\005&#34; which is equivalent to &#34;ctrl+e&#34;. This pattern moves cursor to end of the
+                line which should be an innocuous pattern. This will only be entered *if* a lock
+                can be acquired. This is only applicable if using keepalives and if the keepalive
+                type is &#34;network&#34;
             comms_prompt_pattern: prompt pattern expected for device, same as the one provided to
                 channel -- system ssh needs to know this to know how to decide if we are properly
                 sending/receiving data -- i.e. we are not stuck at some password prompt or some
@@ -2046,7 +2186,23 @@ class.</dd>
             set_timeout = timeout
         else:
             set_timeout = self.timeout_transport
-        self.timeout_transport = set_timeout</code></pre>
+        self.timeout_transport = set_timeout
+
+    def _keepalive_standard(self) -&gt; None:
+        &#34;&#34;&#34;
+        Send &#34;out of band&#34; (protocol level) keepalives to devices.
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            NotImplementedError: always, because this is not implemented for telnet
+
+        &#34;&#34;&#34;
+        raise NotImplementedError(&#34;No &#39;standard&#39; keepalive mechanism for telnet.&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2244,7 +2400,7 @@ leave the objects <code>timeout_transport</code> alone.</p>
 </dd>
 <dt id="scrapli.transport.TelnetTransport"><code class="flex name class">
 <span>class <span class="ident">TelnetTransport</span></span>
-<span>(</span><span>host, port=23, auth_username='', auth_password='', timeout_socket=5, timeout_transport=5, timeout_ops=10, comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n')</span>
+<span>(</span><span>host, port=23, auth_username='', auth_password='', timeout_socket=5, timeout_transport=5, timeout_ops=10, keepalive=False, keepalive_interval=30, keepalive_type='', keepalive_pattern='\x05', comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n')</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -2274,6 +2430,20 @@ After the connection is established, the timeout is modified to the value of
 <dd>timeout for telnet channel operations in seconds &ndash; this is also the
 timeout for finding and responding to username and password prompts at initial
 login.</dd>
+<dt><strong><code>keepalive</code></strong></dt>
+<dd>whether or not to try to keep session alive</dd>
+<dt><strong><code>keepalive_interval</code></strong></dt>
+<dd>interval to use for session keepalives</dd>
+<dt><strong><code>keepalive_type</code></strong></dt>
+<dd>network|standard &ndash; "network" sends actual characters over the
+transport channel. This is useful for network-y type devices that may not support
+"standard" keepalive mechanisms. "standard" is not currently implemented for telnet</dd>
+<dt><strong><code>keepalive_pattern</code></strong></dt>
+<dd>pattern to send to keep network channel alive. Default is
+u"" which is equivalent to "ctrl+e". This pattern moves cursor to end of the
+line which should be an innocuous pattern. This will only be entered <em>if</em> a lock
+can be acquired. This is only applicable if using keepalives and if the keepalive
+type is "network"</dd>
 <dt><strong><code>comms_prompt_pattern</code></strong></dt>
 <dd>prompt pattern expected for device, same as the one provided to
 channel &ndash; telnet needs to know this to know how to decide if we are properly
@@ -2312,6 +2482,10 @@ class.</dd>
         timeout_socket: int = 5,
         timeout_transport: int = 5,
         timeout_ops: int = 10,
+        keepalive: bool = False,
+        keepalive_interval: int = 30,
+        keepalive_type: str = &#34;&#34;,
+        keepalive_pattern: str = &#34;\005&#34;,
         comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]$&#34;,
         comms_return_char: str = &#34;\n&#34;,
     ):  # pylint: disable=W0231
@@ -2335,6 +2509,16 @@ class.</dd>
             timeout_ops: timeout for telnet channel operations in seconds -- this is also the
                 timeout for finding and responding to username and password prompts at initial
                 login.
+            keepalive: whether or not to try to keep session alive
+            keepalive_interval: interval to use for session keepalives
+            keepalive_type: network|standard -- &#34;network&#34; sends actual characters over the
+                transport channel. This is useful for network-y type devices that may not support
+                &#34;standard&#34; keepalive mechanisms. &#34;standard&#34; is not currently implemented for telnet
+            keepalive_pattern: pattern to send to keep network channel alive. Default is
+                u&#34;\005&#34; which is equivalent to &#34;ctrl+e&#34;. This pattern moves cursor to end of the
+                line which should be an innocuous pattern. This will only be entered *if* a lock
+                can be acquired. This is only applicable if using keepalives and if the keepalive
+                type is &#34;network&#34;
             comms_prompt_pattern: prompt pattern expected for device, same as the one provided to
                 channel -- telnet needs to know this to know how to decide if we are properly
                 sending/receiving data -- i.e. we are not stuck at some password prompt or some
@@ -2358,11 +2542,16 @@ class.</dd>
         self.timeout_socket: int = timeout_socket
         self.timeout_transport: int = timeout_transport
         self.timeout_ops: int = timeout_ops
-        self.session_lock: Lock = Lock()
+        self.keepalive: bool = keepalive
+        self.keepalive_interval: int = keepalive_interval
+        self.keepalive_type: str = keepalive_type
+        self.keepalive_pattern: str = keepalive_pattern
         self.auth_username: str = auth_username
         self.auth_password: str = auth_password
         self.comms_prompt_pattern: str = comms_prompt_pattern
         self.comms_return_char: str = comms_return_char
+
+        self.session_lock: Lock = Lock()
 
         self.username_prompt: str = &#34;Username:&#34;
         self.password_prompt: str = &#34;Password:&#34;
@@ -2588,7 +2777,23 @@ class.</dd>
             set_timeout = timeout
         else:
             set_timeout = self.timeout_transport
-        self.session.timeout = set_timeout</code></pre>
+        self.session.timeout = set_timeout
+
+    def _keepalive_standard(self) -&gt; None:
+        &#34;&#34;&#34;
+        Send &#34;out of band&#34; (protocol level) keepalives to devices.
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            NotImplementedError: always, because this is not implemented for telnet
+
+        &#34;&#34;&#34;
+        raise NotImplementedError(&#34;No &#39;standard&#39; keepalive mechanism for telnet.&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2717,6 +2922,10 @@ inheritance.</p></section>
     @abstractmethod
     def __init__(self, *args: Union[str, int], **kwargs: Dict[str, Union[str, int]]) -&gt; None:
         self.host: str = &#34;&#34;
+        self.keepalive: bool = False
+        self.keepalive_interval: int = 30
+        self.keepalive_type: str = &#34;network&#34;
+        self.keepalive_pattern: str = &#34;\005&#34;
         self.session_lock: Lock = Lock()
 
     def __bool__(self) -&gt; bool:
@@ -2856,6 +3065,84 @@ inheritance.</p></section>
 
         Args:
             timeout: timeout in seconds
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+
+    def _session_keepalive(self) -&gt; None:
+        &#34;&#34;&#34;
+        Spawn keepalive thread for transport session
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        if not self.keepalive:
+            return
+        pool = ThreadPoolExecutor()
+        if self.keepalive_type == &#34;network&#34;:
+            pool.submit(self._keepalive_network)
+        else:
+            pool.submit(self._keepalive_standard)
+
+    def _keepalive_network(self) -&gt; None:
+        &#34;&#34;&#34;
+        Send &#34;in band&#34; keepalives to devices.
+
+        Generally used with &#34;network&#34; devices which do not have native keepalive support. This will
+        try to acquire a session lock and send an innocuous character -- such as CTRL+E -- to keep
+        the device &#34;exec-timeout&#34; (in network-y words) from expiring.
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        lock_counter = 0
+        last_keepalive = datetime.now()
+        while True:
+            if not self.isalive():
+                return
+            diff = datetime.now() - last_keepalive
+            if diff.seconds &gt;= self.keepalive_interval:
+                if not self.session_lock.locked():
+                    LOG.debug(
+                        f&#34;Sending &#39;network&#39; keepalive with pattern {repr(self.keepalive_pattern)}.&#34;
+                    )
+                    lock_counter = 0
+                    self.session_lock.acquire()
+                    self.write(self.keepalive_pattern)
+                    self.session_lock.release()
+                    last_keepalive = datetime.now()
+                else:
+                    lock_counter += 1
+                    if lock_counter &gt;= 3:
+                        LOG.error(f&#34;Keepalive thread missed {lock_counter} consecutive keepalives.&#34;)
+            time.sleep(self.keepalive_interval / 10)
+
+    @abstractmethod
+    def _keepalive_standard(self) -&gt; None:
+        &#34;&#34;&#34;
+        Send &#34;out of band&#34; (protocol level) keepalives to devices.
+
+        Args:
+            N/A
 
         Returns:
             N/A  # noqa: DAR202
