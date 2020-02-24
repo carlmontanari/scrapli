@@ -47,7 +47,7 @@ VALID_SCRAPLI_KWARGS = {
     &#34;auth_public_key&#34;,
     &#34;auth_strict_key&#34;,
     &#34;timeout_socket&#34;,
-    &#34;timeout_ssh&#34;,
+    &#34;timeout_transport&#34;,
     &#34;timeout_ops&#34;,
     &#34;comms_prompt_pattern&#34;,
     &#34;comms_return_char&#34;,
@@ -160,11 +160,11 @@ def transform_netmiko_kwargs(kwargs: Dict[str, Any]) -&gt; Dict[str, Any]:
     kwargs[&#34;setup_ssh_config_file&#34;] = kwargs.pop(&#34;ssh_config_file&#34;, False)
     if &#34;global_delay_factor&#34; in kwargs.keys():
         kwargs[&#34;timeout_socket&#34;] = kwargs[&#34;global_delay_factor&#34;] * 5
-        kwargs[&#34;timeout_ssh&#34;] = kwargs[&#34;global_delay_factor&#34;] * 5000
+        kwargs[&#34;timeout_transport&#34;] = kwargs[&#34;global_delay_factor&#34;] * 5000
         kwargs[&#34;timeout_ops&#34;] = kwargs[&#34;global_delay_factor&#34;] * 10
         kwargs.pop(&#34;global_delay_factor&#34;)
     else:
-        kwargs[&#34;timeout_ssh&#34;] = 5000
+        kwargs[&#34;timeout_transport&#34;] = 5000
     kwargs[&#34;auth_username&#34;] = kwargs.pop(&#34;username&#34;)
     kwargs[&#34;auth_password&#34;] = kwargs.pop(&#34;password&#34;, None)
     kwargs[&#34;auth_public_key&#34;] = kwargs.pop(&#34;key_file&#34;, &#34;&#34;)
@@ -735,11 +735,11 @@ types MethodType</dd>
     kwargs[&#34;setup_ssh_config_file&#34;] = kwargs.pop(&#34;ssh_config_file&#34;, False)
     if &#34;global_delay_factor&#34; in kwargs.keys():
         kwargs[&#34;timeout_socket&#34;] = kwargs[&#34;global_delay_factor&#34;] * 5
-        kwargs[&#34;timeout_ssh&#34;] = kwargs[&#34;global_delay_factor&#34;] * 5000
+        kwargs[&#34;timeout_transport&#34;] = kwargs[&#34;global_delay_factor&#34;] * 5000
         kwargs[&#34;timeout_ops&#34;] = kwargs[&#34;global_delay_factor&#34;] * 10
         kwargs.pop(&#34;global_delay_factor&#34;)
     else:
-        kwargs[&#34;timeout_ssh&#34;] = 5000
+        kwargs[&#34;timeout_transport&#34;] = 5000
     kwargs[&#34;auth_username&#34;] = kwargs.pop(&#34;username&#34;)
     kwargs[&#34;auth_password&#34;] = kwargs.pop(&#34;password&#34;, None)
     kwargs[&#34;auth_public_key&#34;] = kwargs.pop(&#34;key_file&#34;, &#34;&#34;)
@@ -762,7 +762,7 @@ types MethodType</dd>
 <dl>
 <dt id="scrapli.netmiko_compatability.NetmikoNetworkDriver"><code class="flex name class">
 <span>class <span class="ident">NetmikoNetworkDriver</span></span>
-<span>(</span><span>auth_secondary='', **kwargs)</span>
+<span>(</span><span>auth_secondary='', session_pre_login_handler='', session_disable_paging='terminal length 0', **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>BaseNetworkDriver Object</p>
@@ -770,6 +770,12 @@ types MethodType</dd>
 <dl>
 <dt><strong><code>auth_secondary</code></strong></dt>
 <dd>password to use for secondary authentication (enable)</dd>
+<dt><strong><code>session_pre_login_handler</code></strong></dt>
+<dd>callable or string that resolves to an importable function to
+handle pre-login (pre disable paging) operations</dd>
+<dt><strong><code>session_disable_paging</code></strong></dt>
+<dd>callable, string that resolves to an importable function, or
+string to send to device to disable paging</dd>
 <dt><strong><code>**kwargs</code></strong></dt>
 <dd>keyword args to pass to inherited class(es)</dd>
 </dl>

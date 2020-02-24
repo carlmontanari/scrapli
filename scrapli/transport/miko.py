@@ -20,6 +20,10 @@ MIKO_TRANSPORT_ARGS = (
     "port",
     "timeout_transport",
     "timeout_socket",
+    "keepalive",
+    "keepalive_interval",
+    "keepalive_type",
+    "keepalive_pattern",
     "auth_username",
     "auth_public_key",
     "auth_password",
@@ -38,8 +42,12 @@ class MikoTransport(Socket, Transport):
         auth_public_key: str = "",
         auth_password: str = "",
         auth_strict_key: bool = True,
-        timeout_transport: int = 5000,
         timeout_socket: int = 5,
+        timeout_transport: int = 5,
+        keepalive: bool = False,
+        keepalive_interval: int = 30,
+        keepalive_type: str = "",
+        keepalive_pattern: str = "\005",
         ssh_config_file: str = "",
         ssh_known_hosts_file: str = "",
     ):
@@ -58,7 +66,17 @@ class MikoTransport(Socket, Transport):
             auth_password: password for authentication
             auth_strict_key: True/False to enforce strict key checking (default is True)
             timeout_socket: timeout for establishing socket in seconds
-            timeout_transport: timeout for ssh transport in milliseconds
+            timeout_transport: timeout for ssh transport in seconds
+            keepalive: whether or not to try to keep session alive
+            keepalive_interval: interval to use for session keepalives
+            keepalive_type: network|standard -- "network" sends actual characters over the
+                transport channel. This is useful for network-y type devices that may not support
+                "standard" keepalive mechanisms. "standard" is not currently implemented w/ paramiko
+            keepalive_pattern: pattern to send to keep network channel alive. Default is
+                u"\005" which is equivalent to "ctrl+e". This pattern moves cursor to end of the
+                line which should be an innocuous pattern. This will only be entered *if* a lock
+                can be acquired. This is only applicable if using keepalives and if the keepalive
+                type is "network"
             ssh_config_file: string to path for ssh config file
             ssh_known_hosts_file: string to path for ssh known hosts file
 
@@ -77,14 +95,19 @@ class MikoTransport(Socket, Transport):
             self.port = port
         else:
             self.port = cfg_port or 22
-        self.timeout_transport: int = timeout_transport
         self.timeout_socket: int = timeout_socket
-        self.session_lock: Lock = Lock()
+        self.timeout_transport: int = timeout_transport
+        self.keepalive: bool = keepalive
+        self.keepalive_interval: int = keepalive_interval
+        self.keepalive_type: str = keepalive_type
+        self.keepalive_pattern: str = keepalive_pattern
         self.auth_username: str = auth_username or cfg_user
         self.auth_public_key: str = auth_public_key or cfg_public_key
         self.auth_password: str = auth_password
         self.auth_strict_key: bool = auth_strict_key
         self.ssh_known_hosts_file: str = ssh_known_hosts_file
+
+        self.session_lock: Lock = Lock()
 
         try:
             # import here so these are optional
@@ -422,19 +445,18 @@ class MikoTransport(Socket, Transport):
             set_timeout = self.timeout_transport
         self.channel.settimeout(set_timeout)
 
-    def set_blocking(self, blocking: bool = False) -> None:
+    def _keepalive_standard(self) -> None:
         """
-        Set session blocking configuration
+        Send "out of band" (protocol level) keepalives to devices.
 
         Args:
-            blocking: True/False set session to blocking
+            N/A
 
         Returns:
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            NotImplementedError: always, because this is not implemented for telnet
 
         """
-        self.channel.setblocking(blocking)
-        self.set_timeout()
+        raise NotImplementedError("No 'standard' keepalive mechanism for telnet.")

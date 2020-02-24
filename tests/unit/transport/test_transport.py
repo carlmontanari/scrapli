@@ -29,7 +29,10 @@ class MockTransport(Transport):
     def set_timeout(self, timeout: Optional[int] = None) -> None:
         return
 
-    def set_blocking(self, blocking: bool = False) -> None:
+    def _session_keepalive(self) -> None:
+        return
+
+    def _keepalive_standard(self) -> None:
         return
 
 

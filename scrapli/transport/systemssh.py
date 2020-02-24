@@ -24,8 +24,13 @@ LOG = getLogger("transport")
 SYSTEM_SSH_TRANSPORT_ARGS = (
     "host",
     "port",
+    "timeout_socket",
     "timeout_transport",
     "timeout_ops",
+    "keepalive",
+    "keepalive_interval",
+    "keepalive_type",
+    "keepalive_pattern",
     "auth_username",
     "auth_public_key",
     "auth_password",
@@ -45,8 +50,13 @@ class SystemSSHTransport(Transport):
         auth_public_key: str = "",
         auth_password: str = "",
         auth_strict_key: bool = True,
-        timeout_transport: int = 5000,
+        timeout_socket: int = 5,
+        timeout_transport: int = 5,
         timeout_ops: int = 10,
+        keepalive: bool = False,
+        keepalive_interval: int = 30,
+        keepalive_type: str = "",
+        keepalive_pattern: str = "\005",
         comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
         comms_return_char: str = "\n",
         ssh_config_file: str = "",
@@ -62,7 +72,9 @@ class SystemSSHTransport(Transport):
 
         SystemSSHTransport *always* prefers public key auth if given the option! If auth_public_key
         is set in the provided arguments OR if ssh_config_file is passed/True and there is a key for
-        ANY match (i.e. `*` has a key in ssh config file!!), we will use that key!
+        ANY match (i.e. `*` has a key in ssh config file!!), we will use that key! If public key
+        auth fails and a username and password is set (manually or by ssh config file), password
+        auth will be attempted.
 
         Args:
             host: host ip/name to connect to
@@ -71,10 +83,25 @@ class SystemSSHTransport(Transport):
             auth_public_key: path to public key for authentication
             auth_password: password for authentication
             auth_strict_key: True/False to enforce strict key checking (default is True)
-            timeout_transport: timeout for ssh transport in milliseconds
+            timeout_socket: timeout for ssh session to start -- this directly maps to ConnectTimeout
+                ssh argument; see `man ssh_config`
+            timeout_transport: timeout for transport in seconds. since system ssh is using popen/pty
+                we can't really set a timeout directly, so this value governs the time timeout
+                decorator for the transport read and write methods
             timeout_ops: timeout for ssh channel operations in seconds -- this is also the
                 timeout for finding and responding to username and password prompts at initial
                 login.
+            keepalive: whether or not to try to keep session alive
+            keepalive_interval: interval to use for session keepalives
+            keepalive_type: network|standard -- "network" sends actual characters over the
+                transport channel. This is useful for network-y type devices that may not support
+                "standard" keepalive mechanisms. "standard" is not currently implemented for
+                system ssh
+            keepalive_pattern: pattern to send to keep network channel alive. Default is
+                u"\005" which is equivalent to "ctrl+e". This pattern moves cursor to end of the
+                line which should be an innocuous pattern. This will only be entered *if* a lock
+                can be acquired. This is only applicable if using keepalives and if the keepalive
+                type is "network"
             comms_prompt_pattern: prompt pattern expected for device, same as the one provided to
                 channel -- system ssh needs to know this to know how to decide if we are properly
                 sending/receiving data -- i.e. we are not stuck at some password prompt or some
@@ -96,9 +123,13 @@ class SystemSSHTransport(Transport):
         """
         self.host: str = host
         self.port: int = port
-        self.timeout_transport: int = int(timeout_transport / 1000)
+        self.timeout_socket: int = timeout_socket
+        self.timeout_transport: int = timeout_transport
         self.timeout_ops: int = timeout_ops
-        self.session_lock: Lock = Lock()
+        self.keepalive: bool = keepalive
+        self.keepalive_interval: int = keepalive_interval
+        self.keepalive_type: str = keepalive_type
+        self.keepalive_pattern: str = keepalive_pattern
         self.auth_username: str = auth_username
         self.auth_public_key: str = auth_public_key
         self.auth_password: str = auth_password
@@ -106,6 +137,8 @@ class SystemSSHTransport(Transport):
         self.comms_prompt_pattern: str = comms_prompt_pattern
         self.comms_return_char: str = comms_return_char
         self._process_ssh_config(ssh_config_file)
+
+        self.session_lock: Lock = Lock()
 
         self.session: Union[Popen[bytes], PtyProcess]  # pylint: disable=E1136
         self.lib_auth_exception = ScrapliAuthenticationFailed
@@ -155,7 +188,7 @@ class SystemSSHTransport(Transport):
 
         """
         self.open_cmd.extend(["-p", str(self.port)])
-        self.open_cmd.extend(["-o", f"ConnectTimeout={self.timeout_transport}"])
+        self.open_cmd.extend(["-o", f"ConnectTimeout={self.timeout_socket}"])
         if self.auth_public_key:
             self.open_cmd.extend(["-i", self.auth_public_key])
         if self.auth_username:
@@ -195,9 +228,15 @@ class SystemSSHTransport(Transport):
 
         # If authenticating with public key prefer to use open pipes
         # _open_pipes uses subprocess Popen which is preferable to opening a pty
+        # if _open_pipes fails and no password available, raise failure, otherwise try password auth
         if self.auth_public_key:
-            if self._open_pipes():
+            open_pipes_result = self._open_pipes()
+            if open_pipes_result:
                 return
+            if not open_pipes_result and (not self.auth_password or not self.auth_username):
+                msg = f"Authentication to host {self.host} failed"
+                LOG.critical(msg)
+                raise ScrapliAuthenticationFailed(msg)
 
         # If public key auth fails or is not configured, open a pty session
         if not self._open_pty():
@@ -219,22 +258,32 @@ class SystemSSHTransport(Transport):
             N/A
 
         """
-        self.open_cmd.append("-v")
+        # copy the open_cmd as we don't want to update the objects open_cmd until we know we can
+        # authenticate. add verbose output and disable batch mode (disables passphrase/password
+        # queries). If auth is successful update the object open_cmd to represent what was used
+        open_cmd = self.open_cmd.copy()
+        open_cmd.append("-v")
+        open_cmd.extend(["-o", "BatchMode=yes"])
+
         pipes_session = Popen(
-            self.open_cmd, bufsize=0, shell=False, stdin=PIPE, stdout=PIPE, stderr=PIPE
+            open_cmd, bufsize=0, shell=False, stdin=PIPE, stdout=PIPE, stderr=PIPE
         )
         LOG.debug(f"Session to host {self.host} spawned")
 
         try:
             self._pipes_isauthenticated(pipes_session)
         except TimeoutError:
+            # If auth fails, kill the popen session
+            pipes_session.kill()
             return False
 
         LOG.debug(f"Authenticated to host {self.host} with public key")
+        self.open_cmd = open_cmd
         self.session_lock.release()
         self.session = pipes_session
         return True
 
+    @operation_timeout("timeout_ops", "Timed out determining if session is authenticated")
     def _pipes_isauthenticated(self, pipes_session: PopenBytes) -> bool:
         """
         Private method to check initial authentication when using subprocess.Popen
@@ -295,18 +344,26 @@ class SystemSSHTransport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            ScrapliAuthenticationFailed: if we receive an EOFError -- this usually indicates that
+                host key checking is enabled and failed.
 
         """
         self.session_lock.acquire()
         while True:
-            output = pty_session.read()
+            try:
+                output = pty_session.read()
+            except EOFError:
+                raise ScrapliAuthenticationFailed(
+                    "PTY Authentication failed, often this means strict host key checking is "
+                    "enabled and is failing!"
+                )
             if b"password" in output.lower():
                 pty_session.write(self.auth_password.encode())
                 pty_session.write(self.comms_return_char.encode())
                 self.session_lock.release()
                 break
 
+    @operation_timeout("timeout_ops", "Timed out determining if session is authenticated")
     def _pty_isauthenticated(self, pty_session: PtyProcess) -> bool:
         """
         Check if session is authenticated
@@ -388,6 +445,7 @@ class SystemSSHTransport(Transport):
                 return True
         return False
 
+    @operation_timeout("timeout_transport", "Transport timeout during read operation.")
     def read(self) -> bytes:
         """
         Read data from the channel
@@ -409,6 +467,7 @@ class SystemSSHTransport(Transport):
             return self.session.read(read_bytes)
         return b""
 
+    @operation_timeout("timeout_transport", "Transport timeout during write operation.")
     def write(self, channel_input: str) -> None:
         """
         Write data to the channel
@@ -432,6 +491,11 @@ class SystemSSHTransport(Transport):
         """
         Set session timeout
 
+        Note that this modifies the objects `timeout_transport` value directly as this value is
+        what controls the timeout decorator for read/write methods. This is slightly different
+        behavior from ssh2/paramiko/telnet in that those transports modify the session value and
+        leave the objects `timeout_transport` alone.
+
         Args:
             timeout: timeout in seconds
 
@@ -442,20 +506,24 @@ class SystemSSHTransport(Transport):
             N/A
 
         """
+        if isinstance(timeout, int):
+            set_timeout = timeout
+        else:
+            set_timeout = self.timeout_transport
+        self.timeout_transport = set_timeout
 
-    def set_blocking(self, blocking: bool = False) -> None:
+    def _keepalive_standard(self) -> None:
         """
-        Set session blocking configuration
-
-        Unnecessary when using Popen/system ssh
+        Send "out of band" (protocol level) keepalives to devices.
 
         Args:
-            blocking: True/False set session to blocking
+            N/A
 
         Returns:
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            NotImplementedError: always, because this is not implemented for telnet
 
         """
+        raise NotImplementedError("No 'standard' keepalive mechanism for telnet.")
