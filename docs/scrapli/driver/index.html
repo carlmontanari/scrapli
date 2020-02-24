@@ -62,7 +62,7 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
 <dl>
 <dt id="scrapli.driver.NetworkDriver"><code class="flex name class">
 <span>class <span class="ident">NetworkDriver</span></span>
-<span>(</span><span>auth_secondary='', **kwargs)</span>
+<span>(</span><span>auth_secondary='', session_pre_login_handler='', session_disable_paging='terminal length 0', **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>BaseNetworkDriver Object</p>
@@ -70,6 +70,12 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
 <dl>
 <dt><strong><code>auth_secondary</code></strong></dt>
 <dd>password to use for secondary authentication (enable)</dd>
+<dt><strong><code>session_pre_login_handler</code></strong></dt>
+<dd>callable or string that resolves to an importable function to
+handle pre-login (pre disable paging) operations</dd>
+<dt><strong><code>session_disable_paging</code></strong></dt>
+<dd>callable, string that resolves to an importable function, or
+string to send to device to disable paging</dd>
 <dt><strong><code>**kwargs</code></strong></dt>
 <dd>keyword args to pass to inherited class(es)</dd>
 </dl>
@@ -89,12 +95,22 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class NetworkDriver(Scrape):
-    def __init__(self, auth_secondary: str = &#34;&#34;, **kwargs: Any):
+    def __init__(
+        self,
+        auth_secondary: str = &#34;&#34;,
+        session_pre_login_handler: Union[str, Callable[..., Any]] = &#34;&#34;,
+        session_disable_paging: Union[str, Callable[..., Any]] = &#34;terminal length 0&#34;,
+        **kwargs: Any,
+    ):
         &#34;&#34;&#34;
         BaseNetworkDriver Object
 
         Args:
             auth_secondary: password to use for secondary authentication (enable)
+            session_pre_login_handler: callable or string that resolves to an importable function to
+                handle pre-login (pre disable paging) operations
+            session_disable_paging: callable, string that resolves to an importable function, or
+                string to send to device to disable paging
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -110,6 +126,107 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
         self.default_desired_priv: Optional[str] = None
         self.textfsm_platform: str = &#34;&#34;
         self.exit_command: str = &#34;exit&#34;
+
+        self.session_pre_login_handler: Optional[Callable[..., Any]] = None
+        self.session_disable_paging: Union[str, Callable[..., Any]] = &#34;&#34;
+        self._setup_session(session_pre_login_handler, session_disable_paging)
+
+    def _setup_session(
+        self,
+        session_pre_login_handler: Union[str, Callable[..., Any]],
+        session_disable_paging: Union[str, Callable[..., Any]],
+    ) -&gt; None:
+        &#34;&#34;&#34;
+        Parse and setup session attributes
+
+        Args:
+            session_pre_login_handler: pre login handler to parse/set
+            session_disable_paging: disable paging to parse/set
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            TypeError: if invalid type args provided
+
+        &#34;&#34;&#34;
+        if session_pre_login_handler:
+            self.session_pre_login_handler = self._set_session_pre_login_handler(
+                session_pre_login_handler
+            )
+        else:
+            self.session_pre_login_handler = None
+        if callable(session_disable_paging):
+            self.session_disable_paging = session_disable_paging
+        if not isinstance(session_disable_paging, str) and not callable(session_disable_paging):
+            raise TypeError(
+                &#34;session_disable_paging should be str or callable, got &#34;
+                f&#34;{type(session_disable_paging)}&#34;
+            )
+        if session_disable_paging != &#34;terminal length 0&#34;:
+            try:
+                self.session_disable_paging = self._set_session_disable_paging(
+                    session_disable_paging
+                )
+            except TypeError:
+                self.session_disable_paging = session_disable_paging
+        else:
+            self.session_disable_paging = &#34;terminal length 0&#34;
+
+    @staticmethod
+    def _set_session_pre_login_handler(
+        session_pre_login_handler: Union[str, Callable[..., Any]]
+    ) -&gt; Optional[Callable[..., Any]]:
+        &#34;&#34;&#34;
+        Return session_pre_login_handler argument
+
+        Args:
+            session_pre_login_handler: callable function, or string representing a path to
+                a callable
+
+        Returns:
+            session_pre_login_handler: callable or default empty string value
+
+        Raises:
+            TypeError: if provided string does not result in a callable
+
+        &#34;&#34;&#34;
+        if callable(session_pre_login_handler):
+            return session_pre_login_handler
+        if not validate_external_function(session_pre_login_handler):
+            LOG.critical(f&#34;Invalid comms_pre_login_handler: {session_pre_login_handler}&#34;)
+            raise TypeError(
+                f&#34;{session_pre_login_handler} is an invalid session_pre_login_handler function &#34;
+                &#34;or path to a function.&#34;
+            )
+        return get_external_function(session_pre_login_handler)
+
+    @staticmethod
+    def _set_session_disable_paging(
+        session_disable_paging: Union[Callable[..., Any], str]
+    ) -&gt; Union[Callable[..., Any], str]:
+        &#34;&#34;&#34;
+        Return session_disable_paging argument
+
+        Args:
+            session_disable_paging: callable function, string representing a path to
+                a callable, or a string to send to device to disable paging
+
+        Returns:
+            session_disable_paging: callable or string to use to disable paging
+
+        Raises:
+            TypeError: if provided string does not result in a callable
+
+        &#34;&#34;&#34;
+        if callable(session_disable_paging):
+            return session_disable_paging
+        if not validate_external_function(session_disable_paging):
+            raise TypeError(
+                f&#34;{session_disable_paging} is an invalid session_disable_paging function or path &#34;
+                &#34;to a function. Assuming this is string to send to disable paging.&#34;
+            )
+        return get_external_function(session_disable_paging)
 
     def _determine_current_priv(self, current_prompt: str) -&gt; PrivilegeLevel:
         &#34;&#34;&#34;
@@ -632,7 +749,7 @@ final_prompt - final prompt to expect</dd>
 </dd>
 <dt id="scrapli.driver.Scrape"><code class="flex name class">
 <span>class <span class="ident">Scrape</span></span>
-<span>(</span><span>host='', port=22, auth_username='', auth_password='', auth_public_key='', auth_strict_key=True, timeout_socket=5, timeout_ssh=5000, timeout_ops=10, comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n', comms_ansi=False, session_pre_login_handler='', session_disable_paging='terminal length 0', ssh_config_file=True, transport='system')</span>
+<span>(</span><span>host='', port=22, auth_username='', auth_password='', auth_public_key='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, timeout_ops=10, keepalive=False, keepalive_interval=30, keepalive_type='network', keepalive_pattern='\x05', comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n', comms_ansi=False, ssh_config_file=False, ssh_known_hosts_file='', transport='system')</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Scrape Object</p>
@@ -655,10 +772,27 @@ that it doesn't know or care about privilege levels, platform types, and things 
 <dd>strict host checking or not &ndash; applicable for system ssh driver only</dd>
 <dt><strong><code>timeout_socket</code></strong></dt>
 <dd>timeout for establishing socket in seconds</dd>
-<dt><strong><code>timeout_ssh</code></strong></dt>
-<dd>timeout for ssh transport in milliseconds</dd>
+<dt><strong><code>timeout_transport</code></strong></dt>
+<dd>timeout for ssh|telnet transport in seconds</dd>
 <dt><strong><code>timeout_ops</code></strong></dt>
 <dd>timeout for ssh channel operations</dd>
+<dt><strong><code>keepalive</code></strong></dt>
+<dd>whether or not to try to keep session alive</dd>
+<dt><strong><code>keepalive_interval</code></strong></dt>
+<dd>interval to use for session keepalives</dd>
+<dt><strong><code>keepalive_type</code></strong></dt>
+<dd>network|standard &ndash; "network" sends actual characters over the
+transport channel. This is useful for network-y type devices that may not support
+"standard" keepalive mechanisms. "standard" attempts to use whatever "standard"
+keepalive mechanisms are available in the selected transport mechanism. Check the
+transport documentation for details on what is supported and/or how it is
+implemented for any given transport driver</dd>
+<dt><strong><code>keepalive_pattern</code></strong></dt>
+<dd>pattern to send to keep network channel alive. Default is
+u"" which is equivalent to "ctrl+e". This pattern moves cursor to end of the
+line which should be an innocuous pattern. This will only be entered <em>if</em> a lock
+can be acquired. This is only applicable if using keepalives and if the keepalive
+type is "network"</dd>
 <dt><strong><code>comms_prompt_pattern</code></strong></dt>
 <dd>raw string regex pattern &ndash; preferably use <code>^</code> and <code>$</code> anchors!
 this is the single most important attribute here! if this does not match a prompt,
@@ -670,15 +804,12 @@ case insensitive is just a convenience factor so i can be lazy.</dd>
 <dd>character to use to send returns to host</dd>
 <dt><strong><code>comms_ansi</code></strong></dt>
 <dd>True/False strip comms_ansi characters from output</dd>
-<dt><strong><code>session_pre_login_handler</code></strong></dt>
-<dd>callable or string that resolves to an importable function to
-handle pre-login (pre disable paging) operations</dd>
-<dt><strong><code>session_disable_paging</code></strong></dt>
-<dd>callable, string that resolves to an importable function, or
-string to send to device to disable paging</dd>
 <dt><strong><code>ssh_config_file</code></strong></dt>
 <dd>string to path for ssh config file, True to use default ssh config file
 or False to ignore default ssh config file</dd>
+<dt><strong><code>ssh_known_hosts_file</code></strong></dt>
+<dd>string to path for ssh known hosts file, True to use default known
+file locations. Only applicable/needed if <code>auth_strict_key</code> is set to True</dd>
 <dt><strong><code>transport</code></strong></dt>
 <dd>system|ssh2|paramiko|telnet &ndash; type of transport to use
 system uses system available ssh (/usr/bin/ssh)
@@ -700,7 +831,8 @@ features built in (though scrapli does not expose/support them all).</dd>
 <h2 id="raises">Raises</h2>
 <dl>
 <dt><strong><code>TypeError</code></strong></dt>
-<dd>if auth_strict_key is not a bool</dd>
+<dd>if auth_strict_key/keepalive is not a bool or values cannot be converted to
+ints where appropriate (ex: timeouts)</dd>
 <dt><strong><code>ValueError</code></strong></dt>
 <dd>if driver value is invalid</dd>
 </dl></section>
@@ -718,14 +850,17 @@ features built in (though scrapli does not expose/support them all).</dd>
         auth_public_key: str = &#34;&#34;,
         auth_strict_key: bool = True,
         timeout_socket: int = 5,
-        timeout_ssh: int = 5000,
+        timeout_transport: int = 5,
         timeout_ops: int = 10,
+        keepalive: bool = False,
+        keepalive_interval: int = 30,
+        keepalive_type: str = &#34;network&#34;,
+        keepalive_pattern: str = &#34;\005&#34;,
         comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]$&#34;,
         comms_return_char: str = &#34;\n&#34;,
         comms_ansi: bool = False,
-        session_pre_login_handler: Union[str, Callable[..., Any]] = &#34;&#34;,
-        session_disable_paging: Union[str, Callable[..., Any]] = &#34;terminal length 0&#34;,
-        ssh_config_file: Union[str, bool] = True,
+        ssh_config_file: Union[str, bool] = False,
+        ssh_known_hosts_file: str = &#34;&#34;,
         transport: str = &#34;system&#34;,
     ):
         &#34;&#34;&#34;
@@ -743,8 +878,21 @@ features built in (though scrapli does not expose/support them all).</dd>
             auth_password: password for authentication
             auth_strict_key: strict host checking or not -- applicable for system ssh driver only
             timeout_socket: timeout for establishing socket in seconds
-            timeout_ssh: timeout for ssh transport in milliseconds
+            timeout_transport: timeout for ssh|telnet transport in seconds
             timeout_ops: timeout for ssh channel operations
+            keepalive: whether or not to try to keep session alive
+            keepalive_interval: interval to use for session keepalives
+            keepalive_type: network|standard -- &#34;network&#34; sends actual characters over the
+                transport channel. This is useful for network-y type devices that may not support
+                &#34;standard&#34; keepalive mechanisms. &#34;standard&#34; attempts to use whatever &#34;standard&#34;
+                keepalive mechanisms are available in the selected transport mechanism. Check the
+                transport documentation for details on what is supported and/or how it is
+                implemented for any given transport driver
+            keepalive_pattern: pattern to send to keep network channel alive. Default is
+                u&#34;\005&#34; which is equivalent to &#34;ctrl+e&#34;. This pattern moves cursor to end of the
+                line which should be an innocuous pattern. This will only be entered *if* a lock
+                can be acquired. This is only applicable if using keepalives and if the keepalive
+                type is &#34;network&#34;
             comms_prompt_pattern: raw string regex pattern -- preferably use `^` and `$` anchors!
                 this is the single most important attribute here! if this does not match a prompt,
                 scrapli will not work!
@@ -753,12 +901,10 @@ features built in (though scrapli does not expose/support them all).</dd>
                 case insensitive is just a convenience factor so i can be lazy.
             comms_return_char: character to use to send returns to host
             comms_ansi: True/False strip comms_ansi characters from output
-            session_pre_login_handler: callable or string that resolves to an importable function to
-                handle pre-login (pre disable paging) operations
-            session_disable_paging: callable, string that resolves to an importable function, or
-                string to send to device to disable paging
             ssh_config_file: string to path for ssh config file, True to use default ssh config file
                 or False to ignore default ssh config file
+            ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
+                file locations. Only applicable/needed if `auth_strict_key` is set to True
             transport: system|ssh2|paramiko|telnet -- type of transport to use
                 system uses system available ssh (/usr/bin/ssh)
                 ssh2 uses ssh2-python
@@ -774,7 +920,8 @@ features built in (though scrapli does not expose/support them all).</dd>
             N/A  # noqa: DAR202
 
         Raises:
-            TypeError: if auth_strict_key is not a bool
+            TypeError: if auth_strict_key/keepalive is not a bool or values cannot be converted to
+                ints where appropriate (ex: timeouts)
             ValueError: if driver value is invalid
 
         &#34;&#34;&#34;
@@ -791,26 +938,36 @@ features built in (though scrapli does not expose/support them all).</dd>
         self._setup_auth(auth_username, auth_password, auth_public_key)
 
         self.timeout_socket = int(timeout_socket)
-        self.timeout_ssh = int(timeout_ssh)
+        self.timeout_transport = int(timeout_transport)
         self.timeout_ops = int(timeout_ops)
+
+        if not isinstance(keepalive, bool):
+            raise TypeError(f&#34;keepalive should be bool, got {type(keepalive)}&#34;)
+        self.keepalive = keepalive
+        self.keepalive_interval = int(keepalive_interval)
+        if keepalive_type not in [&#34;network&#34;, &#34;standard&#34;]:
+            raise ValueError(
+                f&#34;{keepalive_type} is an invalid session_keepalive_type; must be &#39;network&#39; or &#34;
+                &#34;&#39;standard&#39;.&#34;
+            )
+        self.keepalive_type = keepalive_type
+        self.keepalive_pattern = keepalive_pattern
 
         self.comms_prompt_pattern: str = &#34;&#34;
         self.comms_return_char: str = &#34;&#34;
         self.comms_ansi: bool = False
         self._setup_comms(comms_prompt_pattern, comms_return_char, comms_ansi)
 
-        self.session_pre_login_handler: Optional[Callable[..., Any]] = None
-        self.session_disable_paging: Union[str, Callable[..., Any]] = &#34;&#34;
-        self._setup_session(session_pre_login_handler, session_disable_paging)
-
-        if not isinstance(ssh_config_file, (str, bool)):
-            raise TypeError(f&#34;ssh_config_file should be str or bool, got {type(ssh_config_file)}&#34;)
-        self.ssh_config_file = ssh_config_file
-
         if transport not in (&#34;ssh2&#34;, &#34;paramiko&#34;, &#34;system&#34;, &#34;telnet&#34;):
             raise ValueError(
                 f&#34;transport should be one of ssh2|paramiko|system|telnet, got {transport}&#34;
             )
+
+        if transport != &#34;telnet&#34;:
+            self.ssh_config_file = &#34;&#34;
+            self.ssh_known_hosts_file = &#34;&#34;
+            self._setup_ssh_args(ssh_config_file, ssh_known_hosts_file)
+
         self.transport: Transport
         self.transport_class, self.transport_args = self._transport_factory(transport)
 
@@ -949,102 +1106,48 @@ features built in (though scrapli does not expose/support them all).</dd>
             raise TypeError(f&#34;comms_ansi should be bool, got {type(comms_ansi)}&#34;)
         self.comms_ansi = comms_ansi
 
-    def _setup_session(
-        self,
-        session_pre_login_handler: Union[str, Callable[..., Any]],
-        session_disable_paging: Union[str, Callable[..., Any]],
+    def _setup_ssh_args(
+        self, ssh_config_file: Union[str, bool], ssh_known_hosts_file: Union[str, bool]
     ) -&gt; None:
         &#34;&#34;&#34;
-        Parse and setup session attributes
+        Parse and setup ssh related arguments
 
         Args:
-            session_pre_login_handler: pre login handler to parse/set
-            session_disable_paging: disable paging to parse/set
+            ssh_config_file: string to path for ssh config file, True to use default ssh config file
+                or False to ignore default ssh config file
+            ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
+                file locations. Only applicable/needed if `auth_strict_key` is set to True
 
         Returns:
             N/A  # noqa: DAR202
 
         Raises:
-            TypeError: if invalid type args provided
+            TypeError: if invalid config file or known hosts file value provided
 
         &#34;&#34;&#34;
-        if session_pre_login_handler:
-            self.session_pre_login_handler = self._set_session_pre_login_handler(
-                session_pre_login_handler
-            )
+        if not isinstance(ssh_config_file, (str, bool)):
+            raise TypeError(f&#34;`ssh_config_file` should be str or bool, got {type(ssh_config_file)}&#34;)
+        if ssh_config_file is not False:
+            if isinstance(ssh_config_file, bool):
+                cfg = &#34;&#34;
+            else:
+                cfg = ssh_config_file
+            self.ssh_config_file = resolve_ssh_config(cfg)
         else:
-            self.session_pre_login_handler = None
-        if callable(session_disable_paging):
-            self.session_disable_paging = session_disable_paging
-        if not isinstance(session_disable_paging, str) and not callable(session_disable_paging):
+            self.ssh_config_file = &#34;&#34;
+
+        if not isinstance(ssh_known_hosts_file, (str, bool)):
             raise TypeError(
-                &#34;session_disable_paging should be str or callable, got &#34;
-                f&#34;{type(session_disable_paging)}&#34;
+                &#34;`ssh_known_hosts_file` should be str or bool, got &#34; f&#34;{type(ssh_known_hosts_file)}&#34;
             )
-        if session_disable_paging != &#34;terminal length 0&#34;:
-            try:
-                self.session_disable_paging = self._set_session_disable_paging(
-                    session_disable_paging
-                )
-            except TypeError:
-                self.session_disable_paging = session_disable_paging
+        if ssh_known_hosts_file is not False:
+            if isinstance(ssh_known_hosts_file, bool):
+                known_hosts = &#34;&#34;
+            else:
+                known_hosts = ssh_known_hosts_file
+            self.ssh_known_hosts_file = resolve_ssh_known_hosts(known_hosts)
         else:
-            self.session_disable_paging = &#34;terminal length 0&#34;
-
-    @staticmethod
-    def _set_session_pre_login_handler(
-        session_pre_login_handler: Union[str, Callable[..., Any]]
-    ) -&gt; Optional[Callable[..., Any]]:
-        &#34;&#34;&#34;
-        Return session_pre_login_handler argument
-
-        Args:
-            session_pre_login_handler: callable function, or string representing a path to
-                a callable
-
-        Returns:
-            session_pre_login_handler: callable or default empty string value
-
-        Raises:
-            TypeError: if provided string does not result in a callable
-
-        &#34;&#34;&#34;
-        if callable(session_pre_login_handler):
-            return session_pre_login_handler
-        if not validate_external_function(session_pre_login_handler):
-            LOG.critical(f&#34;Invalid comms_pre_login_handler: {session_pre_login_handler}&#34;)
-            raise TypeError(
-                f&#34;{session_pre_login_handler} is an invalid session_pre_login_handler function &#34;
-                &#34;or path to a function.&#34;
-            )
-        return get_external_function(session_pre_login_handler)
-
-    @staticmethod
-    def _set_session_disable_paging(
-        session_disable_paging: Union[Callable[..., Any], str]
-    ) -&gt; Union[Callable[..., Any], str]:
-        &#34;&#34;&#34;
-        Return session_disable_paging argument
-
-        Args:
-            session_disable_paging: callable function, string representing a path to
-                a callable, or a string to send to device to disable paging
-
-        Returns:
-            session_disable_paging: callable or string to use to disable paging
-
-        Raises:
-            TypeError: if provided string does not result in a callable
-
-        &#34;&#34;&#34;
-        if callable(session_disable_paging):
-            return session_disable_paging
-        if not validate_external_function(session_disable_paging):
-            raise TypeError(
-                f&#34;{session_disable_paging} is an invalid session_disable_paging function or path &#34;
-                &#34;to a function. Assuming this is string to send to disable paging.&#34;
-            )
-        return get_external_function(session_disable_paging)
+            self.ssh_known_hosts_file = &#34;&#34;
 
     def _transport_factory(self, transport: str) -&gt; Tuple[Callable[..., Any], Dict[str, Any]]:
         &#34;&#34;&#34;

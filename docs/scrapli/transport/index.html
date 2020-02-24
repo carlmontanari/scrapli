@@ -88,7 +88,7 @@ __all__ = (
 <dl>
 <dt id="scrapli.transport.MikoTransport"><code class="flex name class">
 <span>class <span class="ident">MikoTransport</span></span>
-<span>(</span><span>host, port=22, auth_username='', auth_public_key='', auth_password='', timeout_ssh=5000, timeout_socket=5)</span>
+<span>(</span><span>host, port=-1, auth_username='', auth_public_key='', auth_password='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, keepalive=False, keepalive_interval=30, keepalive_type='', keepalive_pattern='\x05', ssh_config_file='', ssh_known_hosts_file='')</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -109,10 +109,30 @@ MikoTransport &lt;- Socket</p>
 <dd>path to public key for authentication</dd>
 <dt><strong><code>auth_password</code></strong></dt>
 <dd>password for authentication</dd>
+<dt><strong><code>auth_strict_key</code></strong></dt>
+<dd>True/False to enforce strict key checking (default is True)</dd>
 <dt><strong><code>timeout_socket</code></strong></dt>
 <dd>timeout for establishing socket in seconds</dd>
-<dt><strong><code>timeout_ssh</code></strong></dt>
-<dd>timeout for ssh transport in milliseconds</dd>
+<dt><strong><code>timeout_transport</code></strong></dt>
+<dd>timeout for ssh transport in seconds</dd>
+<dt><strong><code>keepalive</code></strong></dt>
+<dd>whether or not to try to keep session alive</dd>
+<dt><strong><code>keepalive_interval</code></strong></dt>
+<dd>interval to use for session keepalives</dd>
+<dt><strong><code>keepalive_type</code></strong></dt>
+<dd>network|standard &ndash; "network" sends actual characters over the
+transport channel. This is useful for network-y type devices that may not support
+"standard" keepalive mechanisms. "standard" is not currently implemented w/ paramiko</dd>
+<dt><strong><code>keepalive_pattern</code></strong></dt>
+<dd>pattern to send to keep network channel alive. Default is
+u"" which is equivalent to "ctrl+e". This pattern moves cursor to end of the
+line which should be an innocuous pattern. This will only be entered <em>if</em> a lock
+can be acquired. This is only applicable if using keepalives and if the keepalive
+type is "network"</dd>
+<dt><strong><code>ssh_config_file</code></strong></dt>
+<dd>string to path for ssh config file</dd>
+<dt><strong><code>ssh_known_hosts_file</code></strong></dt>
+<dd>string to path for ssh known hosts file</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -133,12 +153,19 @@ MikoTransport &lt;- Socket</p>
     def __init__(
         self,
         host: str,
-        port: int = 22,
+        port: int = -1,
         auth_username: str = &#34;&#34;,
         auth_public_key: str = &#34;&#34;,
         auth_password: str = &#34;&#34;,
-        timeout_ssh: int = 5000,
+        auth_strict_key: bool = True,
         timeout_socket: int = 5,
+        timeout_transport: int = 5,
+        keepalive: bool = False,
+        keepalive_interval: int = 30,
+        keepalive_type: str = &#34;&#34;,
+        keepalive_pattern: str = &#34;\005&#34;,
+        ssh_config_file: str = &#34;&#34;,
+        ssh_known_hosts_file: str = &#34;&#34;,
     ):
         &#34;&#34;&#34;
         MikoTransport Object
@@ -153,8 +180,21 @@ MikoTransport &lt;- Socket</p>
             auth_username: username for authentication
             auth_public_key: path to public key for authentication
             auth_password: password for authentication
+            auth_strict_key: True/False to enforce strict key checking (default is True)
             timeout_socket: timeout for establishing socket in seconds
-            timeout_ssh: timeout for ssh transport in milliseconds
+            timeout_transport: timeout for ssh transport in seconds
+            keepalive: whether or not to try to keep session alive
+            keepalive_interval: interval to use for session keepalives
+            keepalive_type: network|standard -- &#34;network&#34; sends actual characters over the
+                transport channel. This is useful for network-y type devices that may not support
+                &#34;standard&#34; keepalive mechanisms. &#34;standard&#34; is not currently implemented w/ paramiko
+            keepalive_pattern: pattern to send to keep network channel alive. Default is
+                u&#34;\005&#34; which is equivalent to &#34;ctrl+e&#34;. This pattern moves cursor to end of the
+                line which should be an innocuous pattern. This will only be entered *if* a lock
+                can be acquired. This is only applicable if using keepalives and if the keepalive
+                type is &#34;network&#34;
+            ssh_config_file: string to path for ssh config file
+            ssh_known_hosts_file: string to path for ssh known hosts file
 
         Returns:
             N/A  # noqa: DAR202
@@ -164,13 +204,26 @@ MikoTransport &lt;- Socket</p>
 
         &#34;&#34;&#34;
         self.host: str = host
-        self.port: int = port
-        self.timeout_ssh: int = timeout_ssh
+
+        cfg_port, cfg_user, cfg_public_key = self._process_ssh_config(self.host, ssh_config_file)
+
+        if port != -1:
+            self.port = port
+        else:
+            self.port = cfg_port or 22
         self.timeout_socket: int = timeout_socket
-        self.session_lock: Lock = Lock()
-        self.auth_username: str = auth_username
-        self.auth_public_key: str = auth_public_key
+        self.timeout_transport: int = timeout_transport
+        self.keepalive: bool = keepalive
+        self.keepalive_interval: int = keepalive_interval
+        self.keepalive_type: str = keepalive_type
+        self.keepalive_pattern: str = keepalive_pattern
+        self.auth_username: str = auth_username or cfg_user
+        self.auth_public_key: str = auth_public_key or cfg_public_key
         self.auth_password: str = auth_password
+        self.auth_strict_key: bool = auth_strict_key
+        self.ssh_known_hosts_file: str = ssh_known_hosts_file
+
+        self.session_lock: Lock = Lock()
 
         try:
             # import here so these are optional
@@ -201,6 +254,31 @@ MikoTransport &lt;- Socket</p>
 
         super().__init__(host=self.host, port=self.port, timeout=self.timeout_socket)
 
+    @staticmethod
+    def _process_ssh_config(host: str, ssh_config_file: str) -&gt; Tuple[Optional[int], str, str]:
+        &#34;&#34;&#34;
+        Method to parse ssh config file
+
+        In the future this may move to be a &#34;helper&#34; function as it should be very similar between
+        paramiko and and ssh2-python... for now it can be a static method as there may be varying
+        supported args between the two transport drivers.
+
+        Args:
+            host: host to lookup in ssh config file
+            ssh_config_file: string path to ssh config file; passed down from `Scrape`, or the
+                `NetworkDriver` or subclasses of it, in most cases.
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        ssh = SSHConfig(ssh_config_file)
+        host_config = ssh.lookup(host)
+        return host_config.port, host_config.user or &#34;&#34;, host_config.identity_file or &#34;&#34;
+
     def open(self) -&gt; None:
         &#34;&#34;&#34;
         Parent method to open session, authenticate and acquire shell
@@ -227,6 +305,11 @@ MikoTransport &lt;- Socket</p>
                 f&#34;Failed to complete handshake with host {self.host}; &#34; f&#34;Exception: {exc}&#34;
             )
             raise exc
+
+        if self.auth_strict_key:
+            LOG.debug(f&#34;Attempting to validate {self.host} public key&#34;)
+            self._verify_key()
+
         LOG.debug(f&#34;Session to host {self.host} opened&#34;)
         self.authenticate()
         if not self.isauthenticated():
@@ -235,6 +318,33 @@ MikoTransport &lt;- Socket</p>
             raise ScrapliAuthenticationFailed(msg)
         self._open_channel()
         self.session_lock.release()
+
+    def _verify_key(self) -&gt; None:
+        &#34;&#34;&#34;
+        Verify target host public key, raise exception if invalid/unknown
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            KeyVerificationFailed: if public key verification fails
+
+        &#34;&#34;&#34;
+        known_hosts = SSHKnownHosts(self.ssh_known_hosts_file)
+
+        if self.host not in known_hosts.hosts.keys():
+            raise KeyVerificationFailed(f&#34;{self.host} not in known_hosts!&#34;)
+
+        remote_server_key = self.session.get_remote_server_key()
+        remote_public_key = remote_server_key.get_base64()
+
+        if known_hosts.hosts[self.host][&#34;public_key&#34;] != remote_public_key:
+            raise KeyVerificationFailed(
+                f&#34;{self.host} in known_hosts but public key does not match!&#34;
+            )
 
     def authenticate(self) -&gt; None:
         &#34;&#34;&#34;
@@ -277,7 +387,12 @@ MikoTransport &lt;- Socket</p>
 
         &#34;&#34;&#34;
         try:
-            self.session.auth_publickey(self.auth_username, self.auth_public_key)
+            # paramiko wants to see its key in a PKey object when crafting the paramiko connection
+            # from Transport and Channel objects
+            from paramiko.rsakey import RSAKey  # pylint: disable=C0415
+
+            paramiko_key = RSAKey(filename=self.auth_public_key)
+            self.session.auth_publickey(self.auth_username, paramiko_key)
         except self.lib_auth_exception as exc:
             LOG.critical(
                 f&#34;Public key authentication with host {self.host} failed. Exception: {exc}.&#34;
@@ -350,7 +465,7 @@ MikoTransport &lt;- Socket</p>
 
         &#34;&#34;&#34;
         self.channel = self.session.open_session()
-        self.set_timeout(self.timeout_ssh)
+        self.set_timeout(self.timeout_transport)
         self.channel.get_pty()
         self.channel.invoke_shell()
         LOG.debug(f&#34;Channel to host {self.host} opened&#34;)
@@ -443,25 +558,24 @@ MikoTransport &lt;- Socket</p>
         if isinstance(timeout, int):
             set_timeout = timeout
         else:
-            set_timeout = self.timeout_ssh
+            set_timeout = self.timeout_transport
         self.channel.settimeout(set_timeout)
 
-    def set_blocking(self, blocking: bool = False) -&gt; None:
+    def _keepalive_standard(self) -&gt; None:
         &#34;&#34;&#34;
-        Set session blocking configuration
+        Send &#34;out of band&#34; (protocol level) keepalives to devices.
 
         Args:
-            blocking: True/False set session to blocking
+            N/A
 
         Returns:
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            NotImplementedError: always, because this is not implemented for telnet
 
         &#34;&#34;&#34;
-        self.channel.setblocking(blocking)
-        self.set_timeout()</code></pre>
+        raise NotImplementedError(&#34;No &#39;standard&#39; keepalive mechanism for telnet.&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -649,6 +763,11 @@ MikoTransport &lt;- Socket</p>
             f&#34;Failed to complete handshake with host {self.host}; &#34; f&#34;Exception: {exc}&#34;
         )
         raise exc
+
+    if self.auth_strict_key:
+        LOG.debug(f&#34;Attempting to validate {self.host} public key&#34;)
+        self._verify_key()
+
     LOG.debug(f&#34;Session to host {self.host} opened&#34;)
     self.authenticate()
     if not self.isauthenticated():
@@ -711,7 +830,6 @@ MikoTransport &lt;- Socket</p>
 <li><code><b><a title="scrapli.transport.transport.Transport" href="transport.html#scrapli.transport.transport.Transport">Transport</a></b></code>:
 <ul class="hlist">
 <li><code><a title="scrapli.transport.transport.Transport.close" href="transport.html#scrapli.transport.transport.Transport.close">close</a></code></li>
-<li><code><a title="scrapli.transport.transport.Transport.set_blocking" href="transport.html#scrapli.transport.transport.Transport.set_blocking">set_blocking</a></code></li>
 <li><code><a title="scrapli.transport.transport.Transport.set_timeout" href="transport.html#scrapli.transport.transport.Transport.set_timeout">set_timeout</a></code></li>
 <li><code><a title="scrapli.transport.transport.Transport.write" href="transport.html#scrapli.transport.transport.Transport.write">write</a></code></li>
 </ul>
@@ -720,7 +838,7 @@ MikoTransport &lt;- Socket</p>
 </dd>
 <dt id="scrapli.transport.SSH2Transport"><code class="flex name class">
 <span>class <span class="ident">SSH2Transport</span></span>
-<span>(</span><span>host, port=22, auth_username='', auth_public_key='', auth_password='', timeout_ssh=5000, timeout_socket=5)</span>
+<span>(</span><span>host, port=-1, auth_username='', auth_public_key='', auth_password='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, keepalive=False, keepalive_interval=30, keepalive_type='', keepalive_pattern='\x05', ssh_config_file='', ssh_known_hosts_file='')</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -741,10 +859,31 @@ SSH2Transport &lt;- Socket</p>
 <dd>path to public key for authentication</dd>
 <dt><strong><code>auth_password</code></strong></dt>
 <dd>password for authentication</dd>
-<dt><strong><code>timeout_ssh</code></strong></dt>
-<dd>timeout for ssh2 transport in milliseconds</dd>
+<dt><strong><code>auth_strict_key</code></strong></dt>
+<dd>True/False to enforce strict key checking (default is True)</dd>
 <dt><strong><code>timeout_socket</code></strong></dt>
 <dd>timeout for establishing socket in seconds</dd>
+<dt><strong><code>timeout_transport</code></strong></dt>
+<dd>timeout for ssh2 transport in seconds</dd>
+<dt><strong><code>keepalive</code></strong></dt>
+<dd>whether or not to try to keep session alive</dd>
+<dt><strong><code>keepalive_interval</code></strong></dt>
+<dd>interval to use for session keepalives</dd>
+<dt><strong><code>keepalive_type</code></strong></dt>
+<dd>network|standard &ndash; "network" sends actual characters over the
+transport channel. This is useful for network-y type devices that may not support
+"standard" keepalive mechanisms. "standard" attempts to ssh2-python built in
+keepalive method (using standard openssh keepalive)</dd>
+<dt><strong><code>keepalive_pattern</code></strong></dt>
+<dd>pattern to send to keep network channel alive. Default is
+u"" which is equivalent to "ctrl+e". This pattern moves cursor to end of the
+line which should be an innocuous pattern. This will only be entered <em>if</em> a lock
+can be acquired. This is only applicable if using keepalives and if the keepalive
+type is "network"</dd>
+<dt><strong><code>ssh_config_file</code></strong></dt>
+<dd>string to path for ssh config file</dd>
+<dt><strong><code>ssh_known_hosts_file</code></strong></dt>
+<dd>string to path for ssh known hosts file</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -765,12 +904,19 @@ SSH2Transport &lt;- Socket</p>
     def __init__(
         self,
         host: str,
-        port: int = 22,
+        port: int = -1,
         auth_username: str = &#34;&#34;,
         auth_public_key: str = &#34;&#34;,
         auth_password: str = &#34;&#34;,
-        timeout_ssh: int = 5000,
+        auth_strict_key: bool = True,
         timeout_socket: int = 5,
+        timeout_transport: int = 5,
+        keepalive: bool = False,
+        keepalive_interval: int = 30,
+        keepalive_type: str = &#34;&#34;,
+        keepalive_pattern: str = &#34;\005&#34;,
+        ssh_config_file: str = &#34;&#34;,
+        ssh_known_hosts_file: str = &#34;&#34;,
     ):
         &#34;&#34;&#34;
         SSH2Transport Object
@@ -785,8 +931,22 @@ SSH2Transport &lt;- Socket</p>
             auth_username: username for authentication
             auth_public_key: path to public key for authentication
             auth_password: password for authentication
-            timeout_ssh: timeout for ssh2 transport in milliseconds
+            auth_strict_key: True/False to enforce strict key checking (default is True)
             timeout_socket: timeout for establishing socket in seconds
+            timeout_transport: timeout for ssh2 transport in seconds
+            keepalive: whether or not to try to keep session alive
+            keepalive_interval: interval to use for session keepalives
+            keepalive_type: network|standard -- &#34;network&#34; sends actual characters over the
+                transport channel. This is useful for network-y type devices that may not support
+                &#34;standard&#34; keepalive mechanisms. &#34;standard&#34; attempts to ssh2-python built in
+                keepalive method (using standard openssh keepalive)
+            keepalive_pattern: pattern to send to keep network channel alive. Default is
+                u&#34;\005&#34; which is equivalent to &#34;ctrl+e&#34;. This pattern moves cursor to end of the
+                line which should be an innocuous pattern. This will only be entered *if* a lock
+                can be acquired. This is only applicable if using keepalives and if the keepalive
+                type is &#34;network&#34;
+            ssh_config_file: string to path for ssh config file
+            ssh_known_hosts_file: string to path for ssh known hosts file
 
         Returns:
             N/A  # noqa: DAR202
@@ -796,13 +956,26 @@ SSH2Transport &lt;- Socket</p>
 
         &#34;&#34;&#34;
         self.host: str = host
-        self.port: int = port
-        self.timeout_ssh: int = timeout_ssh
+
+        cfg_port, cfg_user, cfg_public_key = self._process_ssh_config(self.host, ssh_config_file)
+
+        if port != -1:
+            self.port = port
+        else:
+            self.port = cfg_port or 22
         self.timeout_socket: int = timeout_socket
-        self.session_lock: Lock = Lock()
-        self.auth_username: str = auth_username
-        self.auth_public_key: str = auth_public_key
+        self.timeout_transport: int = timeout_transport
+        self.keepalive: bool = keepalive
+        self.keepalive_interval: int = keepalive_interval
+        self.keepalive_type: str = keepalive_type
+        self.keepalive_pattern: str = keepalive_pattern
+        self.auth_username: str = auth_username or cfg_user
+        self.auth_public_key: str = auth_public_key or cfg_public_key
         self.auth_password: str = auth_password
+        self.auth_strict_key: bool = auth_strict_key
+        self.ssh_known_hosts_file: str = ssh_known_hosts_file
+
+        self.session_lock: Lock = Lock()
 
         try:
             # import here so these are optional
@@ -830,6 +1003,31 @@ SSH2Transport &lt;- Socket</p>
 
         super().__init__(host=self.host, port=self.port, timeout=self.timeout_socket)
 
+    @staticmethod
+    def _process_ssh_config(host: str, ssh_config_file: str) -&gt; Tuple[Optional[int], str, str]:
+        &#34;&#34;&#34;
+        Method to parse ssh config file
+
+        In the future this may move to be a &#34;helper&#34; function as it should be very similar between
+        paramiko and and ssh2-python... for now it can be a static method as there may be varying
+        supported args between the two transport drivers.
+
+        Args:
+            host: host to lookup in ssh config file
+            ssh_config_file: string path to ssh config file; passed down from `Scrape`, or the
+                `NetworkDriver` or subclasses of it, in most cases.
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        ssh = SSHConfig(ssh_config_file)
+        host_config = ssh.lookup(host)
+        return host_config.port, host_config.user or &#34;&#34;, host_config.identity_file or &#34;&#34;
+
     def open(self) -&gt; None:
         &#34;&#34;&#34;
         Parent method to open session, authenticate and acquire shell
@@ -849,7 +1047,7 @@ SSH2Transport &lt;- Socket</p>
             self.socket_open()
         self.session_lock.acquire()
         self.session = self.lib_session()
-        self.set_timeout(self.timeout_ssh)
+        self.set_timeout(self.timeout_transport)
         try:
             self.session.handshake(self.sock)
         except Exception as exc:
@@ -857,6 +1055,11 @@ SSH2Transport &lt;- Socket</p>
                 f&#34;Failed to complete handshake with host {self.host}; &#34; f&#34;Exception: {exc}&#34;
             )
             raise exc
+
+        if self.auth_strict_key:
+            LOG.debug(f&#34;Attempting to validate {self.host} public key&#34;)
+            self._verify_key()
+
         LOG.debug(f&#34;Session to host {self.host} opened&#34;)
         self.authenticate()
         if not self.isauthenticated():
@@ -864,7 +1067,38 @@ SSH2Transport &lt;- Socket</p>
             LOG.critical(msg)
             raise ScrapliAuthenticationFailed(msg)
         self._open_channel()
+        if self.keepalive:
+            self._session_keepalive()
         self.session_lock.release()
+
+    def _verify_key(self) -&gt; None:
+        &#34;&#34;&#34;
+        Verify target host public key, raise exception if invalid/unknown
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            KeyVerificationFailed: if public key verification fails
+
+        &#34;&#34;&#34;
+        known_hosts = SSHKnownHosts(self.ssh_known_hosts_file)
+
+        if self.host not in known_hosts.hosts.keys():
+            raise KeyVerificationFailed(f&#34;{self.host} not in known_hosts!&#34;)
+
+        remote_server_key_info = self.session.hostkey()
+        encoded_remote_server_key = remote_server_key_info[0]
+        raw_remote_public_key = base64.encodebytes(encoded_remote_server_key)
+        remote_public_key = raw_remote_public_key.replace(b&#34;\n&#34;, b&#34;&#34;).decode()
+
+        if known_hosts.hosts[self.host][&#34;public_key&#34;] != remote_public_key:
+            raise KeyVerificationFailed(
+                f&#34;{self.host} in known_hosts but public key does not match!&#34;
+            )
 
     def authenticate(self) -&gt; None:
         &#34;&#34;&#34;
@@ -1108,15 +1342,16 @@ SSH2Transport &lt;- Socket</p>
         if isinstance(timeout, int):
             set_timeout = timeout
         else:
-            set_timeout = self.timeout_ssh
-        self.session.set_timeout(set_timeout)
+            set_timeout = self.timeout_transport
+        # ssh2-python expects timeout in milliseconds
+        self.session.set_timeout(set_timeout * 1000)
 
-    def set_blocking(self, blocking: bool = False) -&gt; None:
+    def _keepalive_standard(self) -&gt; None:
         &#34;&#34;&#34;
-        Set session blocking configuration
+        Send &#34;out of band&#34; (protocol level) keepalives to devices.
 
         Args:
-            blocking: True/False set session to blocking
+            N/A
 
         Returns:
             N/A  # noqa: DAR202
@@ -1125,7 +1360,13 @@ SSH2Transport &lt;- Socket</p>
             N/A
 
         &#34;&#34;&#34;
-        self.session.set_blocking(blocking)</code></pre>
+        self.session.keepalive_config(want_reply=False, interval=self.keepalive_interval)
+        while True:
+            if not self.isalive():
+                return
+            LOG.debug(&#34;Sending &#39;standard&#39; keepalive.&#34;)
+            self.session.keepalive_send()
+            time.sleep(self.keepalive_interval / 10)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1310,7 +1551,7 @@ SSH2Transport &lt;- Socket</p>
         self.socket_open()
     self.session_lock.acquire()
     self.session = self.lib_session()
-    self.set_timeout(self.timeout_ssh)
+    self.set_timeout(self.timeout_transport)
     try:
         self.session.handshake(self.sock)
     except Exception as exc:
@@ -1318,6 +1559,11 @@ SSH2Transport &lt;- Socket</p>
             f&#34;Failed to complete handshake with host {self.host}; &#34; f&#34;Exception: {exc}&#34;
         )
         raise exc
+
+    if self.auth_strict_key:
+        LOG.debug(f&#34;Attempting to validate {self.host} public key&#34;)
+        self._verify_key()
+
     LOG.debug(f&#34;Session to host {self.host} opened&#34;)
     self.authenticate()
     if not self.isauthenticated():
@@ -1325,6 +1571,8 @@ SSH2Transport &lt;- Socket</p>
         LOG.critical(msg)
         raise ScrapliAuthenticationFailed(msg)
     self._open_channel()
+    if self.keepalive:
+        self._session_keepalive()
     self.session_lock.release()</code></pre>
 </details>
 </dd>
@@ -1381,7 +1629,6 @@ SSH2Transport &lt;- Socket</p>
 <li><code><b><a title="scrapli.transport.transport.Transport" href="transport.html#scrapli.transport.transport.Transport">Transport</a></b></code>:
 <ul class="hlist">
 <li><code><a title="scrapli.transport.transport.Transport.close" href="transport.html#scrapli.transport.transport.Transport.close">close</a></code></li>
-<li><code><a title="scrapli.transport.transport.Transport.set_blocking" href="transport.html#scrapli.transport.transport.Transport.set_blocking">set_blocking</a></code></li>
 <li><code><a title="scrapli.transport.transport.Transport.set_timeout" href="transport.html#scrapli.transport.transport.Transport.set_timeout">set_timeout</a></code></li>
 <li><code><a title="scrapli.transport.transport.Transport.write" href="transport.html#scrapli.transport.transport.Transport.write">write</a></code></li>
 </ul>
@@ -1390,7 +1637,7 @@ SSH2Transport &lt;- Socket</p>
 </dd>
 <dt id="scrapli.transport.SystemSSHTransport"><code class="flex name class">
 <span>class <span class="ident">SystemSSHTransport</span></span>
-<span>(</span><span>host, port=22, auth_username='', auth_public_key='', auth_password='', auth_strict_key=True, timeout_socket=5, timeout_ssh=5000, comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n', ssh_config_file=False)</span>
+<span>(</span><span>host, port=22, auth_username='', auth_public_key='', auth_password='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, timeout_ops=10, keepalive=False, keepalive_interval=30, keepalive_type='', keepalive_pattern='\x05', comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n', ssh_config_file='')</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -1398,6 +1645,13 @@ inheritance.</p>
 <p>SystemSSHTransport Object</p>
 <p>Inherit from Transport ABC
 SSH2Transport &lt;- Transport (ABC)</p>
+<p>If using this driver, and passing a ssh_config_file (or setting this argument to <code>True</code>),
+all settings in the ssh config file will be superseded by any arguments passed here!</p>
+<p>SystemSSHTransport <em>always</em> prefers public key auth if given the option! If auth_public_key
+is set in the provided arguments OR if ssh_config_file is passed/True and there is a key for
+ANY match (i.e. <code>*</code> has a key in ssh config file!!), we will use that key! If public key
+auth fails and a username and password is set (manually or by ssh config file), password
+auth will be attempted.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>host</code></strong></dt>
@@ -1413,9 +1667,31 @@ SSH2Transport &lt;- Transport (ABC)</p>
 <dt><strong><code>auth_strict_key</code></strong></dt>
 <dd>True/False to enforce strict key checking (default is True)</dd>
 <dt><strong><code>timeout_socket</code></strong></dt>
-<dd>timeout for establishing socket in seconds</dd>
-<dt><strong><code>timeout_ssh</code></strong></dt>
-<dd>timeout for ssh transport in milliseconds</dd>
+<dd>timeout for ssh session to start &ndash; this directly maps to ConnectTimeout
+ssh argument; see <code>man ssh_config</code></dd>
+<dt><strong><code>timeout_transport</code></strong></dt>
+<dd>timeout for transport in seconds. since system ssh is using popen/pty
+we can't really set a timeout directly, so this value governs the time timeout
+decorator for the transport read and write methods</dd>
+<dt><strong><code>timeout_ops</code></strong></dt>
+<dd>timeout for ssh channel operations in seconds &ndash; this is also the
+timeout for finding and responding to username and password prompts at initial
+login.</dd>
+<dt><strong><code>keepalive</code></strong></dt>
+<dd>whether or not to try to keep session alive</dd>
+<dt><strong><code>keepalive_interval</code></strong></dt>
+<dd>interval to use for session keepalives</dd>
+<dt><strong><code>keepalive_type</code></strong></dt>
+<dd>network|standard &ndash; "network" sends actual characters over the
+transport channel. This is useful for network-y type devices that may not support
+"standard" keepalive mechanisms. "standard" is not currently implemented for
+system ssh</dd>
+<dt><strong><code>keepalive_pattern</code></strong></dt>
+<dd>pattern to send to keep network channel alive. Default is
+u"" which is equivalent to "ctrl+e". This pattern moves cursor to end of the
+line which should be an innocuous pattern. This will only be entered <em>if</em> a lock
+can be acquired. This is only applicable if using keepalives and if the keepalive
+type is "network"</dd>
 <dt><strong><code>comms_prompt_pattern</code></strong></dt>
 <dd>prompt pattern expected for device, same as the one provided to
 channel &ndash; system ssh needs to know this to know how to decide if we are properly
@@ -1429,8 +1705,7 @@ the channel to make sure we are authenticated and sending/receiving data. If usi
 driver, this should be passed from driver (Scrape, or IOSXE, etc.) to this Transport
 class.</dd>
 <dt><strong><code>ssh_config_file</code></strong></dt>
-<dd>string to path for ssh config file, True to use default ssh config file
-or False to ignore default ssh config file</dd>
+<dd>string to path for ssh config file</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -1457,16 +1732,30 @@ or False to ignore default ssh config file</dd>
         auth_password: str = &#34;&#34;,
         auth_strict_key: bool = True,
         timeout_socket: int = 5,
-        timeout_ssh: int = 5000,
+        timeout_transport: int = 5,
+        timeout_ops: int = 10,
+        keepalive: bool = False,
+        keepalive_interval: int = 30,
+        keepalive_type: str = &#34;&#34;,
+        keepalive_pattern: str = &#34;\005&#34;,
         comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]$&#34;,
         comms_return_char: str = &#34;\n&#34;,
-        ssh_config_file: Union[str, bool] = False,
+        ssh_config_file: str = &#34;&#34;,
     ):  # pylint: disable=W0231
         &#34;&#34;&#34;
         SystemSSHTransport Object
 
         Inherit from Transport ABC
         SSH2Transport &lt;- Transport (ABC)
+
+        If using this driver, and passing a ssh_config_file (or setting this argument to `True`),
+        all settings in the ssh config file will be superseded by any arguments passed here!
+
+        SystemSSHTransport *always* prefers public key auth if given the option! If auth_public_key
+        is set in the provided arguments OR if ssh_config_file is passed/True and there is a key for
+        ANY match (i.e. `*` has a key in ssh config file!!), we will use that key! If public key
+        auth fails and a username and password is set (manually or by ssh config file), password
+        auth will be attempted.
 
         Args:
             host: host ip/name to connect to
@@ -1475,8 +1764,25 @@ or False to ignore default ssh config file</dd>
             auth_public_key: path to public key for authentication
             auth_password: password for authentication
             auth_strict_key: True/False to enforce strict key checking (default is True)
-            timeout_socket: timeout for establishing socket in seconds
-            timeout_ssh: timeout for ssh transport in milliseconds
+            timeout_socket: timeout for ssh session to start -- this directly maps to ConnectTimeout
+                ssh argument; see `man ssh_config`
+            timeout_transport: timeout for transport in seconds. since system ssh is using popen/pty
+                we can&#39;t really set a timeout directly, so this value governs the time timeout
+                decorator for the transport read and write methods
+            timeout_ops: timeout for ssh channel operations in seconds -- this is also the
+                timeout for finding and responding to username and password prompts at initial
+                login.
+            keepalive: whether or not to try to keep session alive
+            keepalive_interval: interval to use for session keepalives
+            keepalive_type: network|standard -- &#34;network&#34; sends actual characters over the
+                transport channel. This is useful for network-y type devices that may not support
+                &#34;standard&#34; keepalive mechanisms. &#34;standard&#34; is not currently implemented for
+                system ssh
+            keepalive_pattern: pattern to send to keep network channel alive. Default is
+                u&#34;\005&#34; which is equivalent to &#34;ctrl+e&#34;. This pattern moves cursor to end of the
+                line which should be an innocuous pattern. This will only be entered *if* a lock
+                can be acquired. This is only applicable if using keepalives and if the keepalive
+                type is &#34;network&#34;
             comms_prompt_pattern: prompt pattern expected for device, same as the one provided to
                 channel -- system ssh needs to know this to know how to decide if we are properly
                 sending/receiving data -- i.e. we are not stuck at some password prompt or some
@@ -1487,8 +1793,7 @@ or False to ignore default ssh config file</dd>
                 the channel to make sure we are authenticated and sending/receiving data. If using
                 driver, this should be passed from driver (Scrape, or IOSXE, etc.) to this Transport
                 class.
-            ssh_config_file: string to path for ssh config file, True to use default ssh config file
-                or False to ignore default ssh config file
+            ssh_config_file: string to path for ssh config file
 
         Returns:
             N/A  # noqa: DAR202
@@ -1500,7 +1805,8 @@ or False to ignore default ssh config file</dd>
         self.host: str = host
         self.port: int = port
         self.timeout_socket: int = timeout_socket
-        self.timeout_ssh: int = int(timeout_ssh / 1000)
+        self.timeout_transport: int = timeout_transport
+        self.timeout_ops: int = timeout_ops
         self.session_lock: Lock = Lock()
         self.auth_username: str = auth_username
         self.auth_public_key: str = auth_public_key
@@ -1508,7 +1814,7 @@ or False to ignore default ssh config file</dd>
         self.auth_strict_key: bool = auth_strict_key
         self.comms_prompt_pattern: str = comms_prompt_pattern
         self.comms_return_char: str = comms_return_char
-        self.ssh_config_file: Union[str, bool] = ssh_config_file
+        self._process_ssh_config(ssh_config_file)
 
         self.session: Union[Popen[bytes], PtyProcess]  # pylint: disable=E1136
         self.lib_auth_exception = ScrapliAuthenticationFailed
@@ -1516,6 +1822,32 @@ or False to ignore default ssh config file</dd>
 
         self.open_cmd = [&#34;ssh&#34;, self.host]
         self._build_open_cmd()
+
+    def _process_ssh_config(self, ssh_config_file: str) -&gt; None:
+        &#34;&#34;&#34;
+        Method to parse ssh config file
+
+        Ensure ssh_config_file is valid (if providing a string path to config file), or resolve
+        config file if passed True. Search config file for any public key, if ANY matching key is
+        found and user has not provided a public key, set `auth_public_key` to the value of the
+        found key. This is because we prefer to use `open_pipes` over `open_pty`!
+
+        Args:
+            ssh_config_file: string path to ssh config file; passed down from `Scrape`, or the
+                `NetworkDriver` or subclasses of it, in most cases.
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        ssh = SSHConfig(ssh_config_file)
+        self.ssh_config_file = ssh.ssh_config_file
+        host_config = ssh.lookup(self.host)
+        if not self.auth_public_key and host_config.identity_file:
+            self.auth_public_key = os.path.expanduser(host_config.identity_file.strip())
 
     def _build_open_cmd(self) -&gt; None:
         &#34;&#34;&#34;
@@ -1539,12 +1871,24 @@ or False to ignore default ssh config file</dd>
             self.open_cmd.extend([&#34;-l&#34;, self.auth_username])
         if self.auth_strict_key is False:
             self.open_cmd.extend([&#34;-o&#34;, &#34;StrictHostKeyChecking=no&#34;])
-        if isinstance(self.ssh_config_file, str):
+        else:
+            self.open_cmd.extend([&#34;-o&#34;, &#34;StrictHostKeyChecking=yes&#34;])
+        if self.ssh_config_file:
             self.open_cmd.extend([&#34;-F&#34;, self.ssh_config_file])
 
     def open(self) -&gt; None:
         &#34;&#34;&#34;
         Parent method to open session, authenticate and acquire shell
+
+        If possible it is preferable to use the `_open_pipes` method, but we can only do this IF we
+        can authenticate with public key authorization (because we don&#39;t have to spawn a PTY; if no
+        public key we have to spawn PTY to deal w/ authentication prompts). IF we get a public key
+        provided, use pipes method, we will just deal with `_open_pty`. `_open_pty` is less
+        preferable because we have to spawn a PTY and cannot as easily tell if SSH authentication is
+        successful. With `_open_pipes` we can read stderr which contains the output from the verbose
+        flag for SSH -- this contains a message that indicates success of SSH auth. In the case of
+        `_open_pty` we have to read from the channel directly like in the case of telnet... so it
+        works, but its just a bit less desirable.
 
         Args:
             N/A
@@ -1560,9 +1904,15 @@ or False to ignore default ssh config file</dd>
 
         # If authenticating with public key prefer to use open pipes
         # _open_pipes uses subprocess Popen which is preferable to opening a pty
+        # if _open_pipes fails and no password available, raise failure, otherwise try password auth
         if self.auth_public_key:
-            if self._open_pipes():
+            open_pipes_result = self._open_pipes()
+            if open_pipes_result:
                 return
+            if not open_pipes_result and (not self.auth_password or not self.auth_username):
+                msg = f&#34;Authentication to host {self.host} failed&#34;
+                LOG.critical(msg)
+                raise ScrapliAuthenticationFailed(msg)
 
         # If public key auth fails or is not configured, open a pty session
         if not self._open_pty():
@@ -1584,26 +1934,38 @@ or False to ignore default ssh config file</dd>
             N/A
 
         &#34;&#34;&#34;
-        self.open_cmd.append(&#34;-v&#34;)
+        # copy the open_cmd as we don&#39;t want to update the objects open_cmd until we know we can
+        # authenticate. add verbose output and disable batch mode (disables passphrase/password
+        # queries). If auth is successful update the object open_cmd to represent what was used
+        open_cmd = self.open_cmd.copy()
+        open_cmd.append(&#34;-v&#34;)
+        open_cmd.extend([&#34;-o&#34;, &#34;BatchMode=yes&#34;])
+
         pipes_session = Popen(
-            self.open_cmd, bufsize=0, shell=False, stdin=PIPE, stdout=PIPE, stderr=PIPE
+            open_cmd, bufsize=0, shell=False, stdin=PIPE, stdout=PIPE, stderr=PIPE
         )
         LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
 
         try:
             self._pipes_isauthenticated(pipes_session)
         except TimeoutError:
+            # If auth fails, kill the popen session
+            pipes_session.kill()
             return False
 
         LOG.debug(f&#34;Authenticated to host {self.host} with public key&#34;)
+        self.open_cmd = open_cmd
         self.session_lock.release()
         self.session = pipes_session
         return True
 
-    @operation_timeout(&#34;timeout_ssh&#34;)
+    @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out determining if session is authenticated&#34;)
     def _pipes_isauthenticated(self, pipes_session: PopenBytes) -&gt; bool:
         &#34;&#34;&#34;
         Private method to check initial authentication when using subprocess.Popen
+
+        Since we always run ssh with `-v` we can simply check the stderr (where verbose output goes)
+        to see if `Authenticated to [our host]` is in the output.
 
         Args:
             pipes_session: Popen pipes session object
@@ -1646,6 +2008,7 @@ or False to ignore default ssh config file</dd>
         self.session = pty_session
         return True
 
+    @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out looking for SSH login password prompt&#34;)
     def _pty_authenticate(self, pty_session: PtyProcess) -&gt; None:
         &#34;&#34;&#34;
         Private method to check initial authentication when using pty_session
@@ -1657,33 +2020,26 @@ or False to ignore default ssh config file</dd>
             N/A  # noqa: DAR202
 
         Raises:
-            exc: if unknown (i.e. not auth failed) exception occurs
-            lib_auth_exception: if known auth exception occurs
+            ScrapliAuthenticationFailed: if we receive an EOFError -- this usually indicates that
+                host key checking is enabled and failed.
 
         &#34;&#34;&#34;
         self.session_lock.acquire()
-        try:
-            attempt_count = 0
-            while True:
+        while True:
+            try:
                 output = pty_session.read()
-                if b&#34;password&#34; in output.lower():
-                    pty_session.write(self.auth_password.encode())
-                    pty_session.write(self.comms_return_char.encode())
-                    break
-                attempt_count += 1
-                if attempt_count &gt; 250:
-                    raise self.lib_auth_exception
-        except self.lib_auth_exception as exc:
-            LOG.critical(f&#34;Password authentication with host {self.host} failed. Exception: {exc}.&#34;)
-        except Exception as exc:
-            LOG.critical(
-                &#34;Unknown error occurred during password authentication with host &#34;
-                f&#34;{self.host}; Exception: {exc}&#34;
-            )
-            raise exc
-        finally:
-            self.session_lock.release()
+            except EOFError:
+                raise ScrapliAuthenticationFailed(
+                    &#34;PTY Authentication failed, often this means strict host key checking is &#34;
+                    &#34;enabled and is failing!&#34;
+                )
+            if b&#34;password&#34; in output.lower():
+                pty_session.write(self.auth_password.encode())
+                pty_session.write(self.comms_return_char.encode())
+                self.session_lock.release()
+                break
 
+    @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out determining if session is authenticated&#34;)
     def _pty_isauthenticated(self, pty_session: PtyProcess) -&gt; bool:
         &#34;&#34;&#34;
         Check if session is authenticated
@@ -1765,6 +2121,7 @@ or False to ignore default ssh config file</dd>
                 return True
         return False
 
+    @operation_timeout(&#34;timeout_transport&#34;, &#34;Transport timeout during read operation.&#34;)
     def read(self) -&gt; bytes:
         &#34;&#34;&#34;
         Read data from the channel
@@ -1786,6 +2143,7 @@ or False to ignore default ssh config file</dd>
             return self.session.read(read_bytes)
         return b&#34;&#34;
 
+    @operation_timeout(&#34;timeout_transport&#34;, &#34;Transport timeout during write operation.&#34;)
     def write(self, channel_input: str) -&gt; None:
         &#34;&#34;&#34;
         Write data to the channel
@@ -1809,6 +2167,11 @@ or False to ignore default ssh config file</dd>
         &#34;&#34;&#34;
         Set session timeout
 
+        Note that this modifies the objects `timeout_transport` value directly as this value is
+        what controls the timeout decorator for read/write methods. This is slightly different
+        behavior from ssh2/paramiko/telnet in that those transports modify the session value and
+        leave the objects `timeout_transport` alone.
+
         Args:
             timeout: timeout in seconds
 
@@ -1819,23 +2182,27 @@ or False to ignore default ssh config file</dd>
             N/A
 
         &#34;&#34;&#34;
+        if isinstance(timeout, int):
+            set_timeout = timeout
+        else:
+            set_timeout = self.timeout_transport
+        self.timeout_transport = set_timeout
 
-    def set_blocking(self, blocking: bool = False) -&gt; None:
+    def _keepalive_standard(self) -&gt; None:
         &#34;&#34;&#34;
-        Set session blocking configuration
-
-        Unnecessary when using Popen/system ssh
+        Send &#34;out of band&#34; (protocol level) keepalives to devices.
 
         Args:
-            blocking: True/False set session to blocking
+            N/A
 
         Returns:
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            NotImplementedError: always, because this is not implemented for telnet
 
-        &#34;&#34;&#34;</code></pre>
+        &#34;&#34;&#34;
+        raise NotImplementedError(&#34;No &#39;standard&#39; keepalive mechanism for telnet.&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1893,6 +2260,15 @@ or False to ignore default ssh config file</dd>
 </code></dt>
 <dd>
 <section class="desc"><p>Parent method to open session, authenticate and acquire shell</p>
+<p>If possible it is preferable to use the <code>_open_pipes</code> method, but we can only do this IF we
+can authenticate with public key authorization (because we don't have to spawn a PTY; if no
+public key we have to spawn PTY to deal w/ authentication prompts). IF we get a public key
+provided, use pipes method, we will just deal with <code>_open_pty</code>. <code>_open_pty</code> is less
+preferable because we have to spawn a PTY and cannot as easily tell if SSH authentication is
+successful. With <code>_open_pipes</code> we can read stderr which contains the output from the verbose
+flag for SSH &ndash; this contains a message that indicates success of SSH auth. In the case of
+<code>_open_pty</code> we have to read from the channel directly like in the case of telnet&hellip; so it
+works, but its just a bit less desirable.</p>
 <h2 id="args">Args</h2>
 <p>N/A</p>
 <h2 id="returns">Returns</h2>
@@ -1914,6 +2290,16 @@ or False to ignore default ssh config file</dd>
     &#34;&#34;&#34;
     Parent method to open session, authenticate and acquire shell
 
+    If possible it is preferable to use the `_open_pipes` method, but we can only do this IF we
+    can authenticate with public key authorization (because we don&#39;t have to spawn a PTY; if no
+    public key we have to spawn PTY to deal w/ authentication prompts). IF we get a public key
+    provided, use pipes method, we will just deal with `_open_pty`. `_open_pty` is less
+    preferable because we have to spawn a PTY and cannot as easily tell if SSH authentication is
+    successful. With `_open_pipes` we can read stderr which contains the output from the verbose
+    flag for SSH -- this contains a message that indicates success of SSH auth. In the case of
+    `_open_pty` we have to read from the channel directly like in the case of telnet... so it
+    works, but its just a bit less desirable.
+
     Args:
         N/A
 
@@ -1928,9 +2314,15 @@ or False to ignore default ssh config file</dd>
 
     # If authenticating with public key prefer to use open pipes
     # _open_pipes uses subprocess Popen which is preferable to opening a pty
+    # if _open_pipes fails and no password available, raise failure, otherwise try password auth
     if self.auth_public_key:
-        if self._open_pipes():
+        open_pipes_result = self._open_pipes()
+        if open_pipes_result:
             return
+        if not open_pipes_result and (not self.auth_password or not self.auth_username):
+            msg = f&#34;Authentication to host {self.host} failed&#34;
+            LOG.critical(msg)
+            raise ScrapliAuthenticationFailed(msg)
 
     # If public key auth fails or is not configured, open a pty session
     if not self._open_pty():
@@ -1939,59 +2331,19 @@ or False to ignore default ssh config file</dd>
         raise ScrapliAuthenticationFailed(msg)</code></pre>
 </details>
 </dd>
-<dt id="scrapli.transport.SystemSSHTransport.read"><code class="name flex">
-<span>def <span class="ident">read</span></span>(<span>self)</span>
+<dt id="scrapli.transport.SystemSSHTransport.set_timeout"><code class="name flex">
+<span>def <span class="ident">set_timeout</span></span>(<span>self, timeout=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Read data from the channel</p>
-<h2 id="args">Args</h2>
-<p>N/A</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>bytes</code></strong></dt>
-<dd>bytes output as read from channel</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def read(self) -&gt; bytes:
-    &#34;&#34;&#34;
-    Read data from the channel
-
-    Args:
-        N/A
-
-    Returns:
-        bytes: bytes output as read from channel
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    read_bytes = 65535
-    if isinstance(self.session, Popen):
-        return self.session.stdout.read(read_bytes)
-    if isinstance(self.session, PtyProcess):
-        return self.session.read(read_bytes)
-    return b&#34;&#34;</code></pre>
-</details>
-</dd>
-<dt id="scrapli.transport.SystemSSHTransport.set_blocking"><code class="name flex">
-<span>def <span class="ident">set_blocking</span></span>(<span>self, blocking=False)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Set session blocking configuration</p>
-<p>Unnecessary when using Popen/system ssh</p>
+<section class="desc"><p>Set session timeout</p>
+<p>Note that this modifies the objects <code>timeout_transport</code> value directly as this value is
+what controls the timeout decorator for read/write methods. This is slightly different
+behavior from ssh2/paramiko/telnet in that those transports modify the session value and
+leave the objects <code>timeout_transport</code> alone.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>blocking</code></strong></dt>
-<dd>True/False set session to blocking</dd>
+<dt><strong><code>timeout</code></strong></dt>
+<dd>timeout in seconds</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -2008,14 +2360,17 @@ or False to ignore default ssh config file</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def set_blocking(self, blocking: bool = False) -&gt; None:
+<pre><code class="python">def set_timeout(self, timeout: Optional[int] = None) -&gt; None:
     &#34;&#34;&#34;
-    Set session blocking configuration
+    Set session timeout
 
-    Unnecessary when using Popen/system ssh
+    Note that this modifies the objects `timeout_transport` value directly as this value is
+    what controls the timeout decorator for read/write methods. This is slightly different
+    behavior from ssh2/paramiko/telnet in that those transports modify the session value and
+    leave the objects `timeout_transport` alone.
 
     Args:
-        blocking: True/False set session to blocking
+        timeout: timeout in seconds
 
     Returns:
         N/A  # noqa: DAR202
@@ -2023,7 +2378,12 @@ or False to ignore default ssh config file</dd>
     Raises:
         N/A
 
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+    if isinstance(timeout, int):
+        set_timeout = timeout
+    else:
+        set_timeout = self.timeout_transport
+    self.timeout_transport = set_timeout</code></pre>
 </details>
 </dd>
 </dl>
@@ -2032,7 +2392,7 @@ or False to ignore default ssh config file</dd>
 <li><code><b><a title="scrapli.transport.transport.Transport" href="transport.html#scrapli.transport.transport.Transport">Transport</a></b></code>:
 <ul class="hlist">
 <li><code><a title="scrapli.transport.transport.Transport.close" href="transport.html#scrapli.transport.transport.Transport.close">close</a></code></li>
-<li><code><a title="scrapli.transport.transport.Transport.set_timeout" href="transport.html#scrapli.transport.transport.Transport.set_timeout">set_timeout</a></code></li>
+<li><code><a title="scrapli.transport.transport.Transport.read" href="transport.html#scrapli.transport.transport.Transport.read">read</a></code></li>
 <li><code><a title="scrapli.transport.transport.Transport.write" href="transport.html#scrapli.transport.transport.Transport.write">write</a></code></li>
 </ul>
 </li>
@@ -2040,7 +2400,7 @@ or False to ignore default ssh config file</dd>
 </dd>
 <dt id="scrapli.transport.TelnetTransport"><code class="flex name class">
 <span>class <span class="ident">TelnetTransport</span></span>
-<span>(</span><span>host, port=23, auth_username='', auth_public_key='', auth_password='', timeout_ssh=5000, timeout_socket=5, comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n')</span>
+<span>(</span><span>host, port=23, auth_username='', auth_password='', timeout_socket=5, timeout_transport=5, timeout_ops=10, keepalive=False, keepalive_interval=30, keepalive_type='', keepalive_pattern='\x05', comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n')</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -2057,23 +2417,42 @@ TelnetTransport &lt;- Socket</p>
 <dd>port to connect to</dd>
 <dt><strong><code>auth_username</code></strong></dt>
 <dd>username for authentication</dd>
-<dt><strong><code>auth_public_key</code></strong></dt>
-<dd>path to public key for authentication</dd>
 <dt><strong><code>auth_password</code></strong></dt>
 <dd>password for authentication</dd>
 <dt><strong><code>timeout_socket</code></strong></dt>
-<dd>timeout for establishing socket in seconds</dd>
-<dt><strong><code>timeout_ssh</code></strong></dt>
-<dd>timeout for ssh transport in milliseconds</dd>
+<dd>timeout for establishing socket in seconds &ndash; since this is not directly
+exposed in telnetlib, this is just the initial timeout for the telnet connection.
+After the connection is established, the timeout is modified to the value of
+<code>timeout_transport</code>.</dd>
+<dt><strong><code>timeout_transport</code></strong></dt>
+<dd>timeout for telnet transport in seconds</dd>
+<dt><strong><code>timeout_ops</code></strong></dt>
+<dd>timeout for telnet channel operations in seconds &ndash; this is also the
+timeout for finding and responding to username and password prompts at initial
+login.</dd>
+<dt><strong><code>keepalive</code></strong></dt>
+<dd>whether or not to try to keep session alive</dd>
+<dt><strong><code>keepalive_interval</code></strong></dt>
+<dd>interval to use for session keepalives</dd>
+<dt><strong><code>keepalive_type</code></strong></dt>
+<dd>network|standard &ndash; "network" sends actual characters over the
+transport channel. This is useful for network-y type devices that may not support
+"standard" keepalive mechanisms. "standard" is not currently implemented for telnet</dd>
+<dt><strong><code>keepalive_pattern</code></strong></dt>
+<dd>pattern to send to keep network channel alive. Default is
+u"" which is equivalent to "ctrl+e". This pattern moves cursor to end of the
+line which should be an innocuous pattern. This will only be entered <em>if</em> a lock
+can be acquired. This is only applicable if using keepalives and if the keepalive
+type is "network"</dd>
 <dt><strong><code>comms_prompt_pattern</code></strong></dt>
 <dd>prompt pattern expected for device, same as the one provided to
-channel &ndash; system ssh needs to know this to know how to decide if we are properly
+channel &ndash; telnet needs to know this to know how to decide if we are properly
 sending/receiving data &ndash; i.e. we are not stuck at some password prompt or some
 other failure scenario. If using driver, this should be passed from driver (Scrape,
 or IOSXE, etc.) to this Transport class.</dd>
 <dt><strong><code>comms_return_char</code></strong></dt>
 <dd>return character to use on the channel, same as the one provided to
-channel &ndash; system ssh needs to know this to know what to send so that we can probe
+channel &ndash; telnet needs to know this to know what to send so that we can probe
 the channel to make sure we are authenticated and sending/receiving data. If using
 driver, this should be passed from driver (Scrape, or IOSXE, etc.) to this Transport
 class.</dd>
@@ -2099,10 +2478,14 @@ class.</dd>
         host: str,
         port: int = 23,
         auth_username: str = &#34;&#34;,
-        auth_public_key: str = &#34;&#34;,
         auth_password: str = &#34;&#34;,
-        timeout_ssh: int = 5000,
         timeout_socket: int = 5,
+        timeout_transport: int = 5,
+        timeout_ops: int = 10,
+        keepalive: bool = False,
+        keepalive_interval: int = 30,
+        keepalive_type: str = &#34;&#34;,
+        keepalive_pattern: str = &#34;\005&#34;,
         comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]$&#34;,
         comms_return_char: str = &#34;\n&#34;,
     ):  # pylint: disable=W0231
@@ -2117,17 +2500,32 @@ class.</dd>
             host: host ip/name to connect to
             port: port to connect to
             auth_username: username for authentication
-            auth_public_key: path to public key for authentication
             auth_password: password for authentication
-            timeout_socket: timeout for establishing socket in seconds
-            timeout_ssh: timeout for ssh transport in milliseconds
+            timeout_socket: timeout for establishing socket in seconds -- since this is not directly
+                exposed in telnetlib, this is just the initial timeout for the telnet connection.
+                After the connection is established, the timeout is modified to the value of
+                `timeout_transport`.
+            timeout_transport: timeout for telnet transport in seconds
+            timeout_ops: timeout for telnet channel operations in seconds -- this is also the
+                timeout for finding and responding to username and password prompts at initial
+                login.
+            keepalive: whether or not to try to keep session alive
+            keepalive_interval: interval to use for session keepalives
+            keepalive_type: network|standard -- &#34;network&#34; sends actual characters over the
+                transport channel. This is useful for network-y type devices that may not support
+                &#34;standard&#34; keepalive mechanisms. &#34;standard&#34; is not currently implemented for telnet
+            keepalive_pattern: pattern to send to keep network channel alive. Default is
+                u&#34;\005&#34; which is equivalent to &#34;ctrl+e&#34;. This pattern moves cursor to end of the
+                line which should be an innocuous pattern. This will only be entered *if* a lock
+                can be acquired. This is only applicable if using keepalives and if the keepalive
+                type is &#34;network&#34;
             comms_prompt_pattern: prompt pattern expected for device, same as the one provided to
-                channel -- system ssh needs to know this to know how to decide if we are properly
+                channel -- telnet needs to know this to know how to decide if we are properly
                 sending/receiving data -- i.e. we are not stuck at some password prompt or some
                 other failure scenario. If using driver, this should be passed from driver (Scrape,
                 or IOSXE, etc.) to this Transport class.
             comms_return_char: return character to use on the channel, same as the one provided to
-                channel -- system ssh needs to know this to know what to send so that we can probe
+                channel -- telnet needs to know this to know what to send so that we can probe
                 the channel to make sure we are authenticated and sending/receiving data. If using
                 driver, this should be passed from driver (Scrape, or IOSXE, etc.) to this Transport
                 class.
@@ -2141,14 +2539,22 @@ class.</dd>
         &#34;&#34;&#34;
         self.host: str = host
         self.port: int = port
-        self.timeout_ssh: int = timeout_ssh
         self.timeout_socket: int = timeout_socket
-        self.session_lock: Lock = Lock()
+        self.timeout_transport: int = timeout_transport
+        self.timeout_ops: int = timeout_ops
+        self.keepalive: bool = keepalive
+        self.keepalive_interval: int = keepalive_interval
+        self.keepalive_type: str = keepalive_type
+        self.keepalive_pattern: str = keepalive_pattern
         self.auth_username: str = auth_username
-        self.auth_public_key: str = auth_public_key
         self.auth_password: str = auth_password
         self.comms_prompt_pattern: str = comms_prompt_pattern
         self.comms_return_char: str = comms_return_char
+
+        self.session_lock: Lock = Lock()
+
+        self.username_prompt: str = &#34;Username:&#34;
+        self.password_prompt: str = &#34;Password:&#34;
 
         self.session: ScrapliTelnet
         self.lib_auth_exception = ScrapliAuthenticationFailed
@@ -2169,7 +2575,9 @@ class.</dd>
 
         &#34;&#34;&#34;
         self.session_lock.acquire()
-        telnet_session = ScrapliTelnet(host=self.host, port=self.port)
+        # establish session with &#34;socket&#34; timeout, then reset timeout to &#34;transport&#34; timeout
+        telnet_session = ScrapliTelnet(host=self.host, port=self.port, timeout=self.timeout_socket)
+        telnet_session.timeout = self.timeout_transport
         LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
         self.session_lock.release()
         self._authenticate(telnet_session)
@@ -2178,7 +2586,6 @@ class.</dd>
                 f&#34;Could not authenticate over telnet to host: {self.host}&#34;
             )
         LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
-        print(&#34;SUCH GOOD SUCCESS&#34;)
         self.session = telnet_session
 
     def _authenticate(self, telnet_session: ScrapliTelnet) -&gt; None:
@@ -2198,6 +2605,7 @@ class.</dd>
         self._authenticate_username(telnet_session)
         self._authenticate_password(telnet_session)
 
+    @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out looking for telnet login username prompt&#34;)
     def _authenticate_username(self, telnet_session: ScrapliTelnet) -&gt; None:
         &#34;&#34;&#34;
         Private method to enter username for telnet authentication
@@ -2209,27 +2617,19 @@ class.</dd>
             N/A  # noqa: DAR202
 
         Raises:
-            exc: if unknown (i.e. not auth failed) exception occurs
+            N/A
 
         &#34;&#34;&#34;
         self.session_lock.acquire()
-        try:
-            attempt_count = 0
-            while True:
-                output = telnet_session.read_eager()
-                if b&#34;username:&#34; in output.lower():
-                    telnet_session.write(self.auth_username.encode())
-                    telnet_session.write(self.comms_return_char.encode())
-                    break
-                attempt_count += 1
-                if attempt_count &gt; 1000:
-                    break
-        except self.lib_auth_exception as exc:
-            LOG.critical(f&#34;Did not see username prompt from {self.host} failed. Exception: {exc}.&#34;)
-            raise exc
-        finally:
-            self.session_lock.release()
+        while True:
+            output = telnet_session.read_eager()
+            if self.username_prompt.lower().encode() in output.lower():
+                telnet_session.write(self.auth_username.encode())
+                telnet_session.write(self.comms_return_char.encode())
+                self.session_lock.release()
+                break
 
+    @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out looking for telnet login password prompt&#34;)
     def _authenticate_password(self, telnet_session: ScrapliTelnet) -&gt; None:
         &#34;&#34;&#34;
         Private method to enter password for telnet authentication
@@ -2241,31 +2641,17 @@ class.</dd>
             N/A  # noqa: DAR202
 
         Raises:
-            exc: if unknown (i.e. not auth failed) exception occurs
+            N/A
 
         &#34;&#34;&#34;
         self.session_lock.acquire()
-        try:
-            attempt_count = 0
-            while True:
-                output = telnet_session.read_eager()
-                if b&#34;password&#34; in output.lower():
-                    telnet_session.write(self.auth_password.encode())
-                    telnet_session.write(self.comms_return_char.encode())
-                    break
-                attempt_count += 1
-                if attempt_count &gt; 1000:
-                    break
-        except self.lib_auth_exception as exc:
-            LOG.critical(f&#34;Password authentication with host {self.host} failed. Exception: {exc}.&#34;)
-        except Exception as exc:
-            LOG.critical(
-                &#34;Unknown error occurred during password authentication with host &#34;
-                f&#34;{self.host}; Exception: {exc}&#34;
-            )
-            raise exc
-        finally:
-            self.session_lock.release()
+        while True:
+            output = telnet_session.read_eager()
+            if self.password_prompt.lower().encode() in output.lower():
+                telnet_session.write(self.auth_password.encode())
+                telnet_session.write(self.comms_return_char.encode())
+                self.session_lock.release()
+                break
 
     def _telnet_isauthenticated(self, telnet_session: ScrapliTelnet) -&gt; bool:
         &#34;&#34;&#34;
@@ -2325,7 +2711,7 @@ class.</dd>
 
     def isalive(self) -&gt; bool:
         &#34;&#34;&#34;
-        Check if socket is alive and session is authenticated
+        Check if alive and session is authenticated
 
         Args:
             N/A
@@ -2337,6 +2723,9 @@ class.</dd>
             N/A
 
         &#34;&#34;&#34;
+        if self._isauthenticated and not self.session.eof:
+            return True
+        return False
 
     def read(self) -&gt; bytes:
         &#34;&#34;&#34;
@@ -2384,21 +2773,27 @@ class.</dd>
             N/A
 
         &#34;&#34;&#34;
+        if isinstance(timeout, int):
+            set_timeout = timeout
+        else:
+            set_timeout = self.timeout_transport
+        self.session.timeout = set_timeout
 
-    def set_blocking(self, blocking: bool = False) -&gt; None:
+    def _keepalive_standard(self) -&gt; None:
         &#34;&#34;&#34;
-        Set session blocking configuration
+        Send &#34;out of band&#34; (protocol level) keepalives to devices.
 
         Args:
-            blocking: True/False set session to blocking
+            N/A
 
         Returns:
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            NotImplementedError: always, because this is not implemented for telnet
 
-        &#34;&#34;&#34;</code></pre>
+        &#34;&#34;&#34;
+        raise NotImplementedError(&#34;No &#39;standard&#39; keepalive mechanism for telnet.&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2407,6 +2802,47 @@ class.</dd>
 </ul>
 <h3>Methods</h3>
 <dl>
+<dt id="scrapli.transport.TelnetTransport.isalive"><code class="name flex">
+<span>def <span class="ident">isalive</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Check if alive and session is authenticated</p>
+<h2 id="args">Args</h2>
+<p>N/A</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code>: <code>DAR202</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def isalive(self) -&gt; bool:
+    &#34;&#34;&#34;
+    Check if alive and session is authenticated
+
+    Args:
+        N/A
+
+    Returns:
+        N/A  # noqa: DAR202
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    if self._isauthenticated and not self.session.eof:
+        return True
+    return False</code></pre>
+</details>
+</dd>
 <dt id="scrapli.transport.TelnetTransport.open"><code class="name flex">
 <span>def <span class="ident">open</span></span>(<span>self)</span>
 </code></dt>
@@ -2444,7 +2880,9 @@ class.</dd>
 
     &#34;&#34;&#34;
     self.session_lock.acquire()
-    telnet_session = ScrapliTelnet(host=self.host, port=self.port)
+    # establish session with &#34;socket&#34; timeout, then reset timeout to &#34;transport&#34; timeout
+    telnet_session = ScrapliTelnet(host=self.host, port=self.port, timeout=self.timeout_socket)
+    telnet_session.timeout = self.timeout_transport
     LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
     self.session_lock.release()
     self._authenticate(telnet_session)
@@ -2453,7 +2891,6 @@ class.</dd>
             f&#34;Could not authenticate over telnet to host: {self.host}&#34;
         )
     LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
-    print(&#34;SUCH GOOD SUCCESS&#34;)
     self.session = telnet_session</code></pre>
 </details>
 </dd>
@@ -2463,9 +2900,7 @@ class.</dd>
 <li><code><b><a title="scrapli.transport.transport.Transport" href="transport.html#scrapli.transport.transport.Transport">Transport</a></b></code>:
 <ul class="hlist">
 <li><code><a title="scrapli.transport.transport.Transport.close" href="transport.html#scrapli.transport.transport.Transport.close">close</a></code></li>
-<li><code><a title="scrapli.transport.transport.Transport.isalive" href="transport.html#scrapli.transport.transport.Transport.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.transport.transport.Transport.read" href="transport.html#scrapli.transport.transport.Transport.read">read</a></code></li>
-<li><code><a title="scrapli.transport.transport.Transport.set_blocking" href="transport.html#scrapli.transport.transport.Transport.set_blocking">set_blocking</a></code></li>
 <li><code><a title="scrapli.transport.transport.Transport.set_timeout" href="transport.html#scrapli.transport.transport.Transport.set_timeout">set_timeout</a></code></li>
 <li><code><a title="scrapli.transport.transport.Transport.write" href="transport.html#scrapli.transport.transport.Transport.write">write</a></code></li>
 </ul>
@@ -2487,6 +2922,10 @@ inheritance.</p></section>
     @abstractmethod
     def __init__(self, *args: Union[str, int], **kwargs: Dict[str, Union[str, int]]) -&gt; None:
         self.host: str = &#34;&#34;
+        self.keepalive: bool = False
+        self.keepalive_interval: int = 30
+        self.keepalive_type: str = &#34;network&#34;
+        self.keepalive_pattern: str = &#34;\005&#34;
         self.session_lock: Lock = Lock()
 
     def __bool__(self) -&gt; bool:
@@ -2635,13 +3074,75 @@ inheritance.</p></section>
 
         &#34;&#34;&#34;
 
-    @abstractmethod
-    def set_blocking(self, blocking: bool = False) -&gt; None:
+    def _session_keepalive(self) -&gt; None:
         &#34;&#34;&#34;
-        Set session blocking configuration
+        Spawn keepalive thread for transport session
 
         Args:
-            blocking: True/False set session to blocking
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        if not self.keepalive:
+            return
+        pool = ThreadPoolExecutor()
+        if self.keepalive_type == &#34;network&#34;:
+            pool.submit(self._keepalive_network)
+        else:
+            pool.submit(self._keepalive_standard)
+
+    def _keepalive_network(self) -&gt; None:
+        &#34;&#34;&#34;
+        Send &#34;in band&#34; keepalives to devices.
+
+        Generally used with &#34;network&#34; devices which do not have native keepalive support. This will
+        try to acquire a session lock and send an innocuous character -- such as CTRL+E -- to keep
+        the device &#34;exec-timeout&#34; (in network-y words) from expiring.
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        lock_counter = 0
+        last_keepalive = datetime.now()
+        while True:
+            if not self.isalive():
+                return
+            diff = datetime.now() - last_keepalive
+            if diff.seconds &gt;= self.keepalive_interval:
+                if not self.session_lock.locked():
+                    LOG.debug(
+                        f&#34;Sending &#39;network&#39; keepalive with pattern {repr(self.keepalive_pattern)}.&#34;
+                    )
+                    lock_counter = 0
+                    self.session_lock.acquire()
+                    self.write(self.keepalive_pattern)
+                    self.session_lock.release()
+                    last_keepalive = datetime.now()
+                else:
+                    lock_counter += 1
+                    if lock_counter &gt;= 3:
+                        LOG.error(f&#34;Keepalive thread missed {lock_counter} consecutive keepalives.&#34;)
+            time.sleep(self.keepalive_interval / 10)
+
+    @abstractmethod
+    def _keepalive_standard(self) -&gt; None:
+        &#34;&#34;&#34;
+        Send &#34;out of band&#34; (protocol level) keepalives to devices.
+
+        Args:
+            N/A
 
         Returns:
             N/A  # noqa: DAR202
@@ -2820,48 +3321,6 @@ def read(self) -&gt; bytes:
     &#34;&#34;&#34;</code></pre>
 </details>
 </dd>
-<dt id="scrapli.transport.Transport.set_blocking"><code class="name flex">
-<span>def <span class="ident">set_blocking</span></span>(<span>self, blocking=False)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Set session blocking configuration</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>blocking</code></strong></dt>
-<dd>True/False set session to blocking</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N</code>/<code>A</code>
-# <code>noqa</code>: <code>DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@abstractmethod
-def set_blocking(self, blocking: bool = False) -&gt; None:
-    &#34;&#34;&#34;
-    Set session blocking configuration
-
-    Args:
-        blocking: True/False set session to blocking
-
-    Returns:
-        N/A  # noqa: DAR202
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;</code></pre>
-</details>
-</dd>
 <dt id="scrapli.transport.Transport.set_timeout"><code class="name flex">
 <span>def <span class="ident">set_timeout</span></span>(<span>self, timeout=None)</span>
 </code></dt>
@@ -3000,13 +3459,13 @@ def write(self, channel_input: str) -&gt; None:
 <ul class="">
 <li><code><a title="scrapli.transport.SystemSSHTransport.isalive" href="#scrapli.transport.SystemSSHTransport.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.transport.SystemSSHTransport.open" href="#scrapli.transport.SystemSSHTransport.open">open</a></code></li>
-<li><code><a title="scrapli.transport.SystemSSHTransport.read" href="#scrapli.transport.SystemSSHTransport.read">read</a></code></li>
-<li><code><a title="scrapli.transport.SystemSSHTransport.set_blocking" href="#scrapli.transport.SystemSSHTransport.set_blocking">set_blocking</a></code></li>
+<li><code><a title="scrapli.transport.SystemSSHTransport.set_timeout" href="#scrapli.transport.SystemSSHTransport.set_timeout">set_timeout</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="scrapli.transport.TelnetTransport" href="#scrapli.transport.TelnetTransport">TelnetTransport</a></code></h4>
 <ul class="">
+<li><code><a title="scrapli.transport.TelnetTransport.isalive" href="#scrapli.transport.TelnetTransport.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.transport.TelnetTransport.open" href="#scrapli.transport.TelnetTransport.open">open</a></code></li>
 </ul>
 </li>
@@ -3017,7 +3476,6 @@ def write(self, channel_input: str) -&gt; None:
 <li><code><a title="scrapli.transport.Transport.isalive" href="#scrapli.transport.Transport.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.transport.Transport.open" href="#scrapli.transport.Transport.open">open</a></code></li>
 <li><code><a title="scrapli.transport.Transport.read" href="#scrapli.transport.Transport.read">read</a></code></li>
-<li><code><a title="scrapli.transport.Transport.set_blocking" href="#scrapli.transport.Transport.set_blocking">set_blocking</a></code></li>
 <li><code><a title="scrapli.transport.Transport.set_timeout" href="#scrapli.transport.Transport.set_timeout">set_timeout</a></code></li>
 <li><code><a title="scrapli.transport.Transport.write" href="#scrapli.transport.Transport.write">write</a></code></li>
 </ul>

@@ -32,7 +32,7 @@ from typing import Any, Callable, Dict, Union
 LOG = logging.getLogger(&#34;scrapli&#34;)
 
 
-def operation_timeout(attribute: str) -&gt; Callable[..., Any]:
+def operation_timeout(attribute: str, message: str = &#34;&#34;) -&gt; Callable[..., Any]:
     &#34;&#34;&#34;
     Decorate an &#34;operation&#34; -- raises exception if the operation timeout is exceeded
 
@@ -40,6 +40,8 @@ def operation_timeout(attribute: str) -&gt; Callable[..., Any]:
 
     Args:
         attribute: attribute to inspect in class (to set timeout duration)
+        message: optional message to pass when decorating a non-standard operation such as telnet
+            login (as opposed to &#34;normal&#34; channel operations)
 
     Returns:
         decorate: wrapped function
@@ -51,6 +53,8 @@ def operation_timeout(attribute: str) -&gt; Callable[..., Any]:
     import signal  # noqa
 
     def _raise_exception(signum: Any, frame: Any) -&gt; None:
+        if message:
+            raise TimeoutError(message)
         raise TimeoutError
 
     def decorate(wrapped_func: Callable[..., Any]) -&gt; Callable[..., Any]:
@@ -82,7 +86,7 @@ def operation_timeout(attribute: str) -&gt; Callable[..., Any]:
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="scrapli.decorators.operation_timeout"><code class="name flex">
-<span>def <span class="ident">operation_timeout</span></span>(<span>attribute)</span>
+<span>def <span class="ident">operation_timeout</span></span>(<span>attribute, message='')</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Decorate an "operation" &ndash; raises exception if the operation timeout is exceeded</p>
@@ -91,6 +95,9 @@ def operation_timeout(attribute: str) -&gt; Callable[..., Any]:
 <dl>
 <dt><strong><code>attribute</code></strong></dt>
 <dd>attribute to inspect in class (to set timeout duration)</dd>
+<dt><strong><code>message</code></strong></dt>
+<dd>optional message to pass when decorating a non-standard operation such as telnet
+login (as opposed to "normal" channel operations)</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -106,7 +113,7 @@ def operation_timeout(attribute: str) -&gt; Callable[..., Any]:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def operation_timeout(attribute: str) -&gt; Callable[..., Any]:
+<pre><code class="python">def operation_timeout(attribute: str, message: str = &#34;&#34;) -&gt; Callable[..., Any]:
     &#34;&#34;&#34;
     Decorate an &#34;operation&#34; -- raises exception if the operation timeout is exceeded
 
@@ -114,6 +121,8 @@ def operation_timeout(attribute: str) -&gt; Callable[..., Any]:
 
     Args:
         attribute: attribute to inspect in class (to set timeout duration)
+        message: optional message to pass when decorating a non-standard operation such as telnet
+            login (as opposed to &#34;normal&#34; channel operations)
 
     Returns:
         decorate: wrapped function
@@ -125,6 +134,8 @@ def operation_timeout(attribute: str) -&gt; Callable[..., Any]:
     import signal  # noqa
 
     def _raise_exception(signum: Any, frame: Any) -&gt; None:
+        if message:
+            raise TimeoutError(message)
         raise TimeoutError
 
     def decorate(wrapped_func: Callable[..., Any]) -&gt; Callable[..., Any]:

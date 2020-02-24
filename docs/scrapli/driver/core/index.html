@@ -75,7 +75,7 @@ __all__ = (
 <dl>
 <dt id="scrapli.driver.core.EOSDriver"><code class="flex name class">
 <span>class <span class="ident">EOSDriver</span></span>
-<span>(</span><span>auth_secondary='', **kwargs)</span>
+<span>(</span><span>auth_secondary='', session_pre_login_handler='', session_disable_paging='terminal length 0', **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>EOSDriver Object</p>
@@ -83,6 +83,12 @@ __all__ = (
 <dl>
 <dt><strong><code>auth_secondary</code></strong></dt>
 <dd>password to use for secondary authentication (enable)</dd>
+<dt><strong><code>session_pre_login_handler</code></strong></dt>
+<dd>callable or string that resolves to an importable function to
+handle pre-login (pre disable paging) operations</dd>
+<dt><strong><code>session_disable_paging</code></strong></dt>
+<dd>callable, string that resolves to an importable function, or
+string to send to device to disable paging</dd>
 <dt><strong><code>**kwargs</code></strong></dt>
 <dd>keyword args to pass to inherited class(es)</dd>
 </dl>
@@ -102,12 +108,22 @@ __all__ = (
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class EOSDriver(NetworkDriver):
-    def __init__(self, auth_secondary: str = &#34;&#34;, **kwargs: Dict[str, Any]):
+    def __init__(
+        self,
+        auth_secondary: str = &#34;&#34;,
+        session_pre_login_handler: Union[str, Callable[..., Any]] = &#34;&#34;,
+        session_disable_paging: Union[str, Callable[..., Any]] = &#34;terminal length 0&#34;,
+        **kwargs: Dict[str, Any],
+    ):
         &#34;&#34;&#34;
         EOSDriver Object
 
         Args:
             auth_secondary: password to use for secondary authentication (enable)
+            session_pre_login_handler: callable or string that resolves to an importable function to
+                handle pre-login (pre disable paging) operations
+            session_disable_paging: callable, string that resolves to an importable function, or
+                string to send to device to disable paging
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -116,7 +132,9 @@ __all__ = (
         Raises:
             N/A
         &#34;&#34;&#34;
-        super().__init__(auth_secondary, **kwargs)
+        super().__init__(
+            auth_secondary, session_pre_login_handler, session_disable_paging, **kwargs
+        )
         self.privs = PRIVS
         self.default_desired_priv = &#34;privilege_exec&#34;
         self.textfsm_platform = &#34;arista_eos&#34;
@@ -145,7 +163,7 @@ __all__ = (
 </dd>
 <dt id="scrapli.driver.core.IOSXEDriver"><code class="flex name class">
 <span>class <span class="ident">IOSXEDriver</span></span>
-<span>(</span><span>auth_secondary='', **kwargs)</span>
+<span>(</span><span>auth_secondary='', session_pre_login_handler='', session_disable_paging='terminal length 0', **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>IOSXEDriver Object</p>
@@ -153,6 +171,12 @@ __all__ = (
 <dl>
 <dt><strong><code>auth_secondary</code></strong></dt>
 <dd>password to use for secondary authentication (enable)</dd>
+<dt><strong><code>session_pre_login_handler</code></strong></dt>
+<dd>callable or string that resolves to an importable function to
+handle pre-login (pre disable paging) operations</dd>
+<dt><strong><code>session_disable_paging</code></strong></dt>
+<dd>callable, string that resolves to an importable function, or
+string to send to device to disable paging</dd>
 <dt><strong><code>**kwargs</code></strong></dt>
 <dd>keyword args to pass to inherited class(es)</dd>
 </dl>
@@ -172,12 +196,22 @@ __all__ = (
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class IOSXEDriver(NetworkDriver):
-    def __init__(self, auth_secondary: str = &#34;&#34;, **kwargs: Dict[str, Any]):
+    def __init__(
+        self,
+        auth_secondary: str = &#34;&#34;,
+        session_pre_login_handler: Union[str, Callable[..., Any]] = &#34;&#34;,
+        session_disable_paging: Union[str, Callable[..., Any]] = &#34;terminal length 0&#34;,
+        **kwargs: Dict[str, Any],
+    ):
         &#34;&#34;&#34;
         IOSXEDriver Object
 
         Args:
             auth_secondary: password to use for secondary authentication (enable)
+            session_pre_login_handler: callable or string that resolves to an importable function to
+                handle pre-login (pre disable paging) operations
+            session_disable_paging: callable, string that resolves to an importable function, or
+                string to send to device to disable paging
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -186,7 +220,9 @@ __all__ = (
         Raises:
             N/A
         &#34;&#34;&#34;
-        super().__init__(auth_secondary, **kwargs)
+        super().__init__(
+            auth_secondary, session_pre_login_handler, session_disable_paging, **kwargs
+        )
         self.privs = PRIVS
         self.default_desired_priv = &#34;privilege_exec&#34;
         self.textfsm_platform = &#34;cisco_ios&#34;
@@ -215,7 +251,7 @@ __all__ = (
 </dd>
 <dt id="scrapli.driver.core.IOSXRDriver"><code class="flex name class">
 <span>class <span class="ident">IOSXRDriver</span></span>
-<span>(</span><span>auth_secondary='', **kwargs)</span>
+<span>(</span><span>auth_secondary='', session_pre_login_handler='', session_disable_paging='terminal length 0', **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>IOSXRDriver Object</p>
@@ -223,6 +259,12 @@ __all__ = (
 <dl>
 <dt><strong><code>auth_secondary</code></strong></dt>
 <dd>password to use for secondary authentication (enable)</dd>
+<dt><strong><code>session_pre_login_handler</code></strong></dt>
+<dd>callable or string that resolves to an importable function to
+handle pre-login (pre disable paging) operations</dd>
+<dt><strong><code>session_disable_paging</code></strong></dt>
+<dd>callable, string that resolves to an importable function, or
+string to send to device to disable paging</dd>
 <dt><strong><code>**kwargs</code></strong></dt>
 <dd>keyword args to pass to inherited class(es)</dd>
 </dl>
@@ -242,12 +284,22 @@ __all__ = (
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class IOSXRDriver(NetworkDriver):
-    def __init__(self, auth_secondary: str = &#34;&#34;, **kwargs: Dict[str, Any]):
+    def __init__(
+        self,
+        auth_secondary: str = &#34;&#34;,
+        session_pre_login_handler: Union[str, Callable[..., Any]] = &#34;&#34;,
+        session_disable_paging: Union[str, Callable[..., Any]] = &#34;terminal length 0&#34;,
+        **kwargs: Dict[str, Any],
+    ):
         &#34;&#34;&#34;
         IOSXRDriver Object
 
         Args:
             auth_secondary: password to use for secondary authentication (enable)
+            session_pre_login_handler: callable or string that resolves to an importable function to
+                handle pre-login (pre disable paging) operations
+            session_disable_paging: callable, string that resolves to an importable function, or
+                string to send to device to disable paging
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -256,7 +308,9 @@ __all__ = (
         Raises:
             N/A
         &#34;&#34;&#34;
-        super().__init__(auth_secondary, **kwargs)
+        super().__init__(
+            auth_secondary, session_pre_login_handler, session_disable_paging, **kwargs
+        )
         self.privs = PRIVS
         self.default_desired_priv = &#34;privilege_exec&#34;
         self.textfsm_platform = &#34;cisco_xr&#34;
@@ -285,7 +339,7 @@ __all__ = (
 </dd>
 <dt id="scrapli.driver.core.JunosDriver"><code class="flex name class">
 <span>class <span class="ident">JunosDriver</span></span>
-<span>(</span><span>auth_secondary='', **kwargs)</span>
+<span>(</span><span>auth_secondary='', session_pre_login_handler='', session_disable_paging='terminal length 0', **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>JunosDriver Object</p>
@@ -293,6 +347,12 @@ __all__ = (
 <dl>
 <dt><strong><code>auth_secondary</code></strong></dt>
 <dd>password to use for secondary authentication (enable)</dd>
+<dt><strong><code>session_pre_login_handler</code></strong></dt>
+<dd>callable or string that resolves to an importable function to
+handle pre-login (pre disable paging) operations</dd>
+<dt><strong><code>session_disable_paging</code></strong></dt>
+<dd>callable, string that resolves to an importable function, or
+string to send to device to disable paging</dd>
 <dt><strong><code>**kwargs</code></strong></dt>
 <dd>keyword args to pass to inherited class(es)</dd>
 </dl>
@@ -312,12 +372,22 @@ __all__ = (
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class JunosDriver(NetworkDriver):
-    def __init__(self, auth_secondary: str = &#34;&#34;, **kwargs: Dict[str, Any]):
+    def __init__(
+        self,
+        auth_secondary: str = &#34;&#34;,
+        session_pre_login_handler: Union[str, Callable[..., Any]] = &#34;&#34;,
+        session_disable_paging: Union[str, Callable[..., Any]] = &#34;terminal length 0&#34;,
+        **kwargs: Dict[str, Any],
+    ):
         &#34;&#34;&#34;
         JunosDriver Object
 
         Args:
             auth_secondary: password to use for secondary authentication (enable)
+            session_pre_login_handler: callable or string that resolves to an importable function to
+                handle pre-login (pre disable paging) operations
+            session_disable_paging: callable, string that resolves to an importable function, or
+                string to send to device to disable paging
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -326,7 +396,9 @@ __all__ = (
         Raises:
             N/A
         &#34;&#34;&#34;
-        super().__init__(auth_secondary, **kwargs)
+        super().__init__(
+            auth_secondary, session_pre_login_handler, session_disable_paging, **kwargs
+        )
         self.privs = PRIVS
         self.default_desired_priv = &#34;exec&#34;
         self.textfsm_platform = &#34;juniper_junos&#34;
@@ -355,7 +427,7 @@ __all__ = (
 </dd>
 <dt id="scrapli.driver.core.NXOSDriver"><code class="flex name class">
 <span>class <span class="ident">NXOSDriver</span></span>
-<span>(</span><span>auth_secondary='', **kwargs)</span>
+<span>(</span><span>auth_secondary='', session_pre_login_handler='', session_disable_paging='terminal length 0', **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>NXOSDriver Object</p>
@@ -363,6 +435,12 @@ __all__ = (
 <dl>
 <dt><strong><code>auth_secondary</code></strong></dt>
 <dd>password to use for secondary authentication (enable)</dd>
+<dt><strong><code>session_pre_login_handler</code></strong></dt>
+<dd>callable or string that resolves to an importable function to
+handle pre-login (pre disable paging) operations</dd>
+<dt><strong><code>session_disable_paging</code></strong></dt>
+<dd>callable, string that resolves to an importable function, or
+string to send to device to disable paging</dd>
 <dt><strong><code>**kwargs</code></strong></dt>
 <dd>keyword args to pass to inherited class(es)</dd>
 </dl>
@@ -382,12 +460,22 @@ __all__ = (
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class NXOSDriver(NetworkDriver):
-    def __init__(self, auth_secondary: str = &#34;&#34;, **kwargs: Dict[str, Any]):
+    def __init__(
+        self,
+        auth_secondary: str = &#34;&#34;,
+        session_pre_login_handler: Union[str, Callable[..., Any]] = &#34;&#34;,
+        session_disable_paging: Union[str, Callable[..., Any]] = &#34;terminal length 0&#34;,
+        **kwargs: Dict[str, Any],
+    ):
         &#34;&#34;&#34;
         NXOSDriver Object
 
         Args:
             auth_secondary: password to use for secondary authentication (enable)
+            session_pre_login_handler: callable or string that resolves to an importable function to
+                handle pre-login (pre disable paging) operations
+            session_disable_paging: callable, string that resolves to an importable function, or
+                string to send to device to disable paging
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -396,7 +484,9 @@ __all__ = (
         Raises:
             N/A
         &#34;&#34;&#34;
-        super().__init__(auth_secondary, **kwargs)
+        super().__init__(
+            auth_secondary, session_pre_login_handler, session_disable_paging, **kwargs
+        )
         self.privs = PRIVS
         self.default_desired_priv = &#34;privilege_exec&#34;
         self.textfsm_platform = &#34;cisco_nxos&#34;

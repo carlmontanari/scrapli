@@ -26,7 +26,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.driver.core.cisco_iosxr.driver&#34;&#34;&#34;
-from typing import Any, Dict
+from typing import Any, Callable, Dict, Union
 
 from scrapli.driver import NetworkDriver
 from scrapli.driver.network_driver import PrivilegeLevel
@@ -85,12 +85,22 @@ PRIVS = {
 
 
 class IOSXRDriver(NetworkDriver):
-    def __init__(self, auth_secondary: str = &#34;&#34;, **kwargs: Dict[str, Any]):
+    def __init__(
+        self,
+        auth_secondary: str = &#34;&#34;,
+        session_pre_login_handler: Union[str, Callable[..., Any]] = &#34;&#34;,
+        session_disable_paging: Union[str, Callable[..., Any]] = &#34;terminal length 0&#34;,
+        **kwargs: Dict[str, Any],
+    ):
         &#34;&#34;&#34;
         IOSXRDriver Object
 
         Args:
             auth_secondary: password to use for secondary authentication (enable)
+            session_pre_login_handler: callable or string that resolves to an importable function to
+                handle pre-login (pre disable paging) operations
+            session_disable_paging: callable, string that resolves to an importable function, or
+                string to send to device to disable paging
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -99,7 +109,9 @@ class IOSXRDriver(NetworkDriver):
         Raises:
             N/A
         &#34;&#34;&#34;
-        super().__init__(auth_secondary, **kwargs)
+        super().__init__(
+            auth_secondary, session_pre_login_handler, session_disable_paging, **kwargs
+        )
         self.privs = PRIVS
         self.default_desired_priv = &#34;privilege_exec&#34;
         self.textfsm_platform = &#34;cisco_xr&#34;
@@ -117,7 +129,7 @@ class IOSXRDriver(NetworkDriver):
 <dl>
 <dt id="scrapli.driver.core.cisco_iosxr.driver.IOSXRDriver"><code class="flex name class">
 <span>class <span class="ident">IOSXRDriver</span></span>
-<span>(</span><span>auth_secondary='', **kwargs)</span>
+<span>(</span><span>auth_secondary='', session_pre_login_handler='', session_disable_paging='terminal length 0', **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>IOSXRDriver Object</p>
@@ -125,6 +137,12 @@ class IOSXRDriver(NetworkDriver):
 <dl>
 <dt><strong><code>auth_secondary</code></strong></dt>
 <dd>password to use for secondary authentication (enable)</dd>
+<dt><strong><code>session_pre_login_handler</code></strong></dt>
+<dd>callable or string that resolves to an importable function to
+handle pre-login (pre disable paging) operations</dd>
+<dt><strong><code>session_disable_paging</code></strong></dt>
+<dd>callable, string that resolves to an importable function, or
+string to send to device to disable paging</dd>
 <dt><strong><code>**kwargs</code></strong></dt>
 <dd>keyword args to pass to inherited class(es)</dd>
 </dl>
@@ -144,12 +162,22 @@ class IOSXRDriver(NetworkDriver):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class IOSXRDriver(NetworkDriver):
-    def __init__(self, auth_secondary: str = &#34;&#34;, **kwargs: Dict[str, Any]):
+    def __init__(
+        self,
+        auth_secondary: str = &#34;&#34;,
+        session_pre_login_handler: Union[str, Callable[..., Any]] = &#34;&#34;,
+        session_disable_paging: Union[str, Callable[..., Any]] = &#34;terminal length 0&#34;,
+        **kwargs: Dict[str, Any],
+    ):
         &#34;&#34;&#34;
         IOSXRDriver Object
 
         Args:
             auth_secondary: password to use for secondary authentication (enable)
+            session_pre_login_handler: callable or string that resolves to an importable function to
+                handle pre-login (pre disable paging) operations
+            session_disable_paging: callable, string that resolves to an importable function, or
+                string to send to device to disable paging
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -158,7 +186,9 @@ class IOSXRDriver(NetworkDriver):
         Raises:
             N/A
         &#34;&#34;&#34;
-        super().__init__(auth_secondary, **kwargs)
+        super().__init__(
+            auth_secondary, session_pre_login_handler, session_disable_paging, **kwargs
+        )
         self.privs = PRIVS
         self.default_desired_priv = &#34;privilege_exec&#34;
         self.textfsm_platform = &#34;cisco_xr&#34;

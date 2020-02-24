@@ -1,5 +1,5 @@
 """scrapli.driver.core.juniper_junos.driver"""
-from typing import Any, Dict
+from typing import Any, Callable, Dict, Union
 
 from scrapli.driver import NetworkDriver
 from scrapli.driver.network_driver import PrivilegeLevel
@@ -44,12 +44,22 @@ PRIVS = {
 
 
 class JunosDriver(NetworkDriver):
-    def __init__(self, auth_secondary: str = "", **kwargs: Dict[str, Any]):
+    def __init__(
+        self,
+        auth_secondary: str = "",
+        session_pre_login_handler: Union[str, Callable[..., Any]] = "",
+        session_disable_paging: Union[str, Callable[..., Any]] = "terminal length 0",
+        **kwargs: Dict[str, Any],
+    ):
         """
         JunosDriver Object
 
         Args:
             auth_secondary: password to use for secondary authentication (enable)
+            session_pre_login_handler: callable or string that resolves to an importable function to
+                handle pre-login (pre disable paging) operations
+            session_disable_paging: callable, string that resolves to an importable function, or
+                string to send to device to disable paging
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -58,7 +68,9 @@ class JunosDriver(NetworkDriver):
         Raises:
             N/A
         """
-        super().__init__(auth_secondary, **kwargs)
+        super().__init__(
+            auth_secondary, session_pre_login_handler, session_disable_paging, **kwargs
+        )
         self.privs = PRIVS
         self.default_desired_priv = "exec"
         self.textfsm_platform = "juniper_junos"
