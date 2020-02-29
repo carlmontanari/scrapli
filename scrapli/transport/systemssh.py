@@ -407,7 +407,6 @@ class SystemSSHTransport(Transport):
                     output = re.sub(b"\r", b"", output)
                     if self.comms_ansi:
                         output = strip_ansi(output)
-                    print(output)
                     channel_match = re.search(prompt_pattern, output)
                     if channel_match:
                         self.session_lock.release()

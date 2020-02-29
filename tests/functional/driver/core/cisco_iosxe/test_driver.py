@@ -34,8 +34,8 @@ def test_send_commands(cisco_iosxe_driver, transport, test):
         cleaned_result = clean_output_data(test, result.result)
         assert cleaned_result == test["outputs"][index]
         if try_textfsm:
-            result.textfsm_parse_output()
-            assert isinstance(result.structured_result, (list, dict))
+            structured_result = result.textfsm_parse_output()
+            assert isinstance(structured_result, (list, dict))
 
 
 @pytest.mark.parametrize(
