@@ -203,6 +203,9 @@ class MikoTransport(Socket, Transport):
         self._open_channel()
         self.session_lock.release()
 
+        if self.keepalive:
+            self._session_keepalive()
+
     def _verify_key(self) -> None:
         """
         Verify target host public key, raise exception if invalid/unknown

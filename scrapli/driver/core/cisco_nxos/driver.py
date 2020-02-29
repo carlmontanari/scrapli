@@ -5,7 +5,7 @@ from scrapli.driver import NetworkDriver
 from scrapli.driver.network_driver import PrivilegeLevel
 
 NXOS_ARG_MAPPER = {
-    "comms_prompt_regex": r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
+    "comms_prompt_regex": r"^[a-z0-9.\-@()/:]{1,32}[#>$]\s*$",
     "comms_return_char": "\n",
     "comms_pre_login_handler": "",
     "comms_disable_paging": "terminal length 0",
@@ -14,7 +14,7 @@ NXOS_ARG_MAPPER = {
 PRIVS = {
     "exec": (
         PrivilegeLevel(
-            r"^[a-z0-9.\-@()/:]{1,32}>$",
+            r"^[a-z0-9.\-@()/:]{1,32}>\s*$",
             "exec",
             "",
             "",
@@ -28,7 +28,7 @@ PRIVS = {
     ),
     "privilege_exec": (
         PrivilegeLevel(
-            r"^[a-z0-9.\-@/:]{1,32}#$",
+            r"^[a-z0-9.\-@/:]{1,32}#\s*$",
             "privilege_exec",
             "exec",
             "disable",
@@ -42,7 +42,7 @@ PRIVS = {
     ),
     "configuration": (
         PrivilegeLevel(
-            r"^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{0,16}\)#$",
+            r"^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{0,16}\)#\s*$",
             "configuration",
             "priv",
             "end",
@@ -56,7 +56,7 @@ PRIVS = {
     ),
     "special_configuration": (
         PrivilegeLevel(
-            r"^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{1,16}\)#$",
+            r"^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{1,16}\)#\s*$",
             "special_configuration",
             "priv",
             "end",
@@ -77,6 +77,7 @@ class NXOSDriver(NetworkDriver):
         auth_secondary: str = "",
         session_pre_login_handler: Union[str, Callable[..., Any]] = "",
         session_disable_paging: Union[str, Callable[..., Any]] = "terminal length 0",
+        comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]\s*$",
         **kwargs: Dict[str, Any],
     ):
         """
@@ -88,6 +89,14 @@ class NXOSDriver(NetworkDriver):
                 handle pre-login (pre disable paging) operations
             session_disable_paging: callable, string that resolves to an importable function, or
                 string to send to device to disable paging
+            comms_prompt_pattern: raw string regex pattern -- preferably use `^` and `$` anchors!
+                this is the single most important attribute here! if this does not match a prompt,
+                scrapli will not work!
+                IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
+                for highly reliably matching for prompts however we do NOT strip trailing whitespace
+                for each line, so be sure to add `\\s*` if your device needs that. This should be
+                mostly sorted for you if using network drivers (i.e. `IOSXEDriver`). Lastly, the
+                case insensitive is just a convenience factor so i can be lazy.
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -97,7 +106,11 @@ class NXOSDriver(NetworkDriver):
             N/A
         """
         super().__init__(
-            auth_secondary, session_pre_login_handler, session_disable_paging, **kwargs
+            auth_secondary,
+            session_pre_login_handler,
+            session_disable_paging,
+            comms_prompt_pattern=comms_prompt_pattern,
+            **kwargs,
         )
         self.privs = PRIVS
         self.default_desired_priv = "privilege_exec"

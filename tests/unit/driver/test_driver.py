@@ -28,9 +28,9 @@ def test__repr():
         "'myhost', 'port': 22, 'timeout_socket': 5, 'timeout_transport': 5, 'timeout_ops': 10, 'keepalive': False, "
         "'keepalive_interval': 30, 'keepalive_type': 'network', 'keepalive_pattern': '\\x05', 'auth_username': '', "
         "'auth_public_key': b'', 'auth_password': '', 'auth_strict_key': True, 'comms_prompt_pattern': '^["
-        "a-z0-9.\\\\-@()/:]{1,32}[#>$]$', 'comms_return_char': '\\n', 'ssh_config_file': ''}, 'channel_args': {"
-        "'comms_prompt_pattern': '^[a-z0-9.\\\\-@()/:]{1,32}[#>$]$', 'comms_return_char': '\\n', 'comms_ansi': "
-        "False, 'timeout_ops': 10}}"
+        "a-z0-9.\\\\-@()/:]{1,32}[#>$]$', 'comms_return_char': '\\n', 'comms_ansi': False, 'ssh_config_file': ''}, "
+        "'channel_args': {'comms_prompt_pattern': '^[a-z0-9.\\\\-@()/:]{1,32}[#>$]$', 'comms_return_char': '\\n', "
+        "'comms_ansi': False, 'timeout_ops': 10}}"
     )
 
 

@@ -129,6 +129,7 @@ class Channel:
 
         """
         new_output = self.transport.read()
+        new_output = re.sub(b"\r", b"", new_output)
         if self.comms_ansi:
             new_output = strip_ansi(new_output)
         LOG.debug(f"Read: {repr(new_output)}")
@@ -172,7 +173,6 @@ class Channel:
 
         while True:
             output += self._read_chunk()
-            output = re.sub(b"\r", b"", output)
             channel_match = re.search(prompt_pattern, output)
             if channel_match:
                 return output

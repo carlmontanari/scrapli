@@ -72,7 +72,7 @@ def strip_ansi(output: bytes) -> bytes:
         N/A
 
     """
-    ansi_escape_pattern = re.compile(rb"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+    ansi_escape_pattern = re.compile(rb"\x1b(\[.*?[@-~]|\].*?(\x07|\x1b\\))")
     output = re.sub(ansi_escape_pattern, b"", output)
     return output
 

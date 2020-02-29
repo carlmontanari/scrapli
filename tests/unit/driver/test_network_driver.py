@@ -501,9 +501,9 @@ Configuration register is 0xF
     conn.default_desired_priv = "privilege_exec"
     conn.textfsm_platform = "cisco_ios"
     results = conn.send_commands(channel_input_2)
-    results[0].textfsm_parse_output()
-    assert isinstance(results[0].structured_result, list)
-    assert results[0].structured_result[0][0] == "15.2(4)E7"
+    parsed_results = results[0].textfsm_parse_output()
+    assert isinstance(parsed_results, list)
+    assert parsed_results[0][0] == "15.2(4)E7"
 
 
 @pytest.mark.skipif(textfsm_avail is False, reason="textfsm and/or ntc_templates are not installed")
@@ -583,6 +583,6 @@ Configuration register is 0xF
     conn.default_desired_priv = "privilege_exec"
     conn.textfsm_platform = "not_real"
     results = conn.send_commands(channel_input_2)
-    results[0].textfsm_parse_output()
-    assert isinstance(results[0].structured_result, list)
-    assert results[0].structured_result == []
+    parsed_results = results[0].textfsm_parse_output()
+    assert isinstance(parsed_results, list)
+    assert parsed_results == []

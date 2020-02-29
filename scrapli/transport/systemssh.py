@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Optional, Union
 
 from scrapli.decorators import operation_timeout
 from scrapli.exceptions import ScrapliAuthenticationFailed
-from scrapli.helper import get_prompt_pattern
+from scrapli.helper import get_prompt_pattern, strip_ansi
 from scrapli.ssh_config import SSHConfig
 from scrapli.transport.ptyprocess import PtyProcess
 from scrapli.transport.transport import Transport
@@ -37,6 +37,7 @@ SYSTEM_SSH_TRANSPORT_ARGS = (
     "auth_strict_key",
     "comms_prompt_pattern",
     "comms_return_char",
+    "comms_ansi",
     "ssh_config_file",
 )
 
@@ -59,6 +60,7 @@ class SystemSSHTransport(Transport):
         keepalive_pattern: str = "\005",
         comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
         comms_return_char: str = "\n",
+        comms_ansi: bool = False,
         ssh_config_file: str = "",
     ):  # pylint: disable=W0231
         """
@@ -112,6 +114,7 @@ class SystemSSHTransport(Transport):
                 the channel to make sure we are authenticated and sending/receiving data. If using
                 driver, this should be passed from driver (Scrape, or IOSXE, etc.) to this Transport
                 class.
+            comms_ansi: True/False strip comms_ansi characters from output
             ssh_config_file: string to path for ssh config file
 
         Returns:
@@ -136,6 +139,7 @@ class SystemSSHTransport(Transport):
         self.auth_strict_key: bool = auth_strict_key
         self.comms_prompt_pattern: str = comms_prompt_pattern
         self.comms_return_char: str = comms_return_char
+        self.comms_ansi: bool = comms_ansi
         self._process_ssh_config(ssh_config_file)
 
         self.session_lock: Lock = Lock()
@@ -199,6 +203,8 @@ class SystemSSHTransport(Transport):
             self.open_cmd.extend(["-o", "StrictHostKeyChecking=yes"])
         if self.ssh_config_file:
             self.open_cmd.extend(["-F", self.ssh_config_file])
+        else:
+            self.open_cmd.extend(["-F", "/dev/null"])
 
     def open(self) -> None:
         """
@@ -243,6 +249,9 @@ class SystemSSHTransport(Transport):
             msg = f"Authentication to host {self.host} failed"
             LOG.critical(msg)
             raise ScrapliAuthenticationFailed(msg)
+
+        if self.keepalive:
+            self._session_keepalive()
 
     def _open_pipes(self) -> bool:
         """
@@ -357,6 +366,9 @@ class SystemSSHTransport(Transport):
                     "PTY Authentication failed, often this means strict host key checking is "
                     "enabled and is failing!"
                 )
+            output = strip_ansi(output)
+            if self.comms_ansi:
+                output = strip_ansi(output)
             if b"password" in output.lower():
                 pty_session.write(self.auth_password.encode())
                 pty_session.write(self.comms_return_char.encode())
@@ -387,17 +399,20 @@ class SystemSSHTransport(Transport):
             pty_session.write(self.comms_return_char.encode())
             fd_ready, _, _ = select([pty_session.fd], [], [], 0)
             if pty_session.fd in fd_ready:
-                # unclear as to why there needs to be two read operations here, but fails w/out it
-                pty_session.read()
-                output = pty_session.read()
-                # we do not need to deal w/ line replacement for the actual output, only for
-                # parsing if a prompt-like thing is at the end of the output
-                output = re.sub(b"\r", b"\n", output.strip())
-                channel_match = re.search(prompt_pattern, output)
-                if channel_match:
-                    self.session_lock.release()
-                    self._isauthenticated = True
-                    return True
+                output = b""
+                while True:
+                    output += pty_session.read()
+                    # we do not need to deal w/ line replacement for the actual output, only for
+                    # parsing if a prompt-like thing is at the end of the output
+                    output = re.sub(b"\r", b"", output)
+                    if self.comms_ansi:
+                        output = strip_ansi(output)
+                    print(output)
+                    channel_match = re.search(prompt_pattern, output)
+                    if channel_match:
+                        self.session_lock.release()
+                        self._isauthenticated = True
+                        return True
         self.session_lock.release()
         return False
 

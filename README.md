@@ -437,8 +437,8 @@ scrapli supports parsing output with TextFSM. This of course requires installing
  somewhere on your system. When using a platform driver (i.e. `IOSXEDriver`) the textfsm-platform will be set for you
  . If you wish to parse the output of your send commands, you can use the `textfsm_parse_output` method of the
   response object. This method will attempt to find the template for you -- based on the textfsm-platform and the
-   channel-input. If textfsm parsing succeeds, the structured result is assigned to the `structed_result` attribute
-    of the response object. If textfsm parsing fails, an empty list is assigned to the `structured_result` attribute.
+   channel-input. If textfsm parsing succeeds, the structured result is returned. If textfsm parsing fails, an empty
+    list is returned.
 
 ```python
 from scrapli.driver.core import IOSXEDriver
@@ -447,8 +447,8 @@ my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password"
 
 with IOSXEDriver(**my_device) as conn:
     results = conn.send_commands("show version")
-    results[0].textfsm_parse_output()
-    print(results[0].structured_result)
+    structured_result = results[0].textfsm_parse_output()
+    print(structured_result)
 ```
 
 scrapli also supports passing in templates manually (meaning not using the pip installed ntc-templates directory to
@@ -632,6 +632,14 @@ If telnet for some reason becomes an important use case, the telnet Transport la
   on MacOS at least. More to come on this as I have time to poke it more! I believe this is only occurring on the
    latest branch/update (i.e. not on the pip installable version).
   
+
+## System-SSH
+
+- Connecting to linux hosts (tested w/ Ubuntu, but presumably on all linux hosts?) when using system-ssh and a public
+ key for authentication (thus forcing using sub process with pipes -- `_open_pipes`) successfully auths, but gets no
+  read data back after reading the banner. I have no idea why. Testing to the same server w/ password authentication
+   things work as expected. As linux is not a priority target for scrapli this may go unresolved for a while...
+  
  
 # Linting and Testing
 
@@ -794,6 +802,7 @@ This section may not get updated much, but will hopefully reflect the priority i
 
 ## Todo
 
+- update transport notes to reflect reality! (mostly ssh config supported things)
 - need to test further against linux -- looks like may need to adopt some extra cruft (or so i thought) from ssh2net
  to deal w/ rstripping all lines and rejoining them so the prompt matching works better. for network devices this
   hasn't seemed to be an issue but for quick testing against ubuntu it may be...
