@@ -804,10 +804,10 @@ This section may not get updated much, but will hopefully reflect the priority i
 ## Todo
 
 - update transport notes to reflect reality! (mostly ssh config supported things)
-- need to test further against linux -- looks like may need to adopt some extra cruft (or so i thought) from ssh2net
- to deal w/ rstripping all lines and rejoining them so the prompt matching works better. for network devices this
-  hasn't seemed to be an issue but for quick testing against ubuntu it may be...
-- Add keepalive support to system, paramiko and telnet (for "out of band"/"standard" keepalives) to get parity w/ ssh2
+- Figure out a better solution for timeout decorator -- had to switch from signals to multiprocessing; when timeouts
+ happen timeout is raised but the script doesnt terminate because the keepalive thread continues. The keepalive
+  thread has only reference to the transport while the timeout has reference to the channel -- so the two things dont
+   really know about each other -- so when one fails the other cannot be notified... (as it sits right now)
 - Add tests for keepalive stuff if possible (steal from ssh2net! :D)
 - Create an actual useful init in base transport class and super it from the child transport classes -- setting
  things like keepalive over and over in each child class is silly.
@@ -822,7 +822,7 @@ This section may not get updated much, but will hopefully reflect the priority i
 - Add a dummy container (like nornir maybe?) to use for functional testing -- its very likely folks won't have a
  vrnetlab setup or compute to set that up... it'd be nice to have a lightweight container that can be used for basic
   testing of `Scrape` and for testing auth with keys and such.
-- Improve logging -- especially in the transport classes.
+- Improve logging -- especially in the transport classes and surrounding authentication (mostly in systemssh).
 
 ## Roadmap
 
@@ -830,6 +830,8 @@ This section may not get updated much, but will hopefully reflect the priority i
 , and have no real current use case... that said I think it would be cool if for no other reason than to learn!
 - Plugins -- make the drivers all plugins!
 - Nonrir plugin -- make scrapli a Nornir plugin!
+- Ensure v6 stuff works as expected.
+- Continue to add/support ssh config file things.
 
 ## Things that may or may not happen
 

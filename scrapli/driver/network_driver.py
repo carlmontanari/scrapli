@@ -190,23 +190,50 @@ class NetworkDriver(Scrape):
                 self._escalate()
             priv_attempt_counter += 1
 
-    def send_commands(
-        self, commands: Union[str, List[str]], strip_prompt: bool = True
-    ) -> List[Response]:
+    def send_command(self, command: str, strip_prompt: bool = True) -> Response:
         """
-        Send command(s)
+        Send a command
 
         Args:
-            commands: string or list of strings to send to device in privilege exec mode
+            command: string to send to device in privilege exec mode
             strip_prompt: True/False strip prompt from returned output
 
         Returns:
-            responses: list of Scrape Response objects
+            response: Scrapli Response object
 
         Raises:
             N/A
 
         """
+        self.acquire_priv(str(self.default_desired_priv))
+        response = self.channel.send_inputs(command, strip_prompt)[0]
+
+        # update the response objects with textfsm platform; we do this here because the underlying
+        #  channel doesn't know or care about platforms
+        response.textfsm_platform = self.textfsm_platform
+
+        return response
+
+    def send_commands(self, commands: List[str], strip_prompt: bool = True) -> List[Response]:
+        """
+        Send multiple commands
+
+        Args:
+            commands: list of strings to send to device in privilege exec mode
+            strip_prompt: True/False strip prompt from returned output
+
+        Returns:
+            responses: list of Scrapli Response objects
+
+        Raises:
+            N/A
+
+        """
+        if not isinstance(commands, list):
+            raise TypeError(
+                f"`send_commands` expects a list of strings, got {type(commands)}. "
+                "to send a single command use the `send_command` method instead."
+            )
         self.acquire_priv(str(self.default_desired_priv))
         responses = self.channel.send_inputs(commands, strip_prompt)
 

@@ -316,8 +316,8 @@ def test_send_commands(mocked_network_driver):
     test_operations = [(channel_input_1, channel_output_1), (channel_input_2, channel_output_2)]
     conn = mocked_network_driver(test_operations)
     conn.default_desired_priv = "privilege_exec"
-    output = conn.send_commands(channel_input_2, strip_prompt=False)
-    assert output[0].result == channel_output_2
+    output = conn.send_command(channel_input_2, strip_prompt=False)
+    assert output.result == channel_output_2
 
 
 def test_send_inputs_interact(mocked_network_driver):
@@ -452,8 +452,8 @@ Configuration register is 0xF
     conn = mocked_network_driver(test_operations)
     conn.default_desired_priv = "privilege_exec"
     conn.textfsm_platform = "cisco_ios"
-    results = conn.send_commands(channel_input_2)
-    parsed_results = results[0].textfsm_parse_output()
+    results = conn.send_command(channel_input_2)
+    parsed_results = results.textfsm_parse_output()
     assert isinstance(parsed_results, list)
     assert parsed_results[0][0] == "15.2(4)E7"
 
@@ -534,7 +534,7 @@ Configuration register is 0xF
     conn = mocked_network_driver(test_operations)
     conn.default_desired_priv = "privilege_exec"
     conn.textfsm_platform = "not_real"
-    results = conn.send_commands(channel_input_2)
-    parsed_results = results[0].textfsm_parse_output()
+    results = conn.send_command(channel_input_2)
+    parsed_results = results.textfsm_parse_output()
     assert isinstance(parsed_results, list)
     assert parsed_results == []

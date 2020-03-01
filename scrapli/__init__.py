@@ -4,13 +4,9 @@ from logging import NullHandler
 from typing import Optional, Tuple
 
 from scrapli.driver import Scrape
-from scrapli.netmiko_compatability import connect_handler as ConnectHandler
 
 __version__ = "2020.02.23"
-__all__ = (
-    "Scrape",
-    "ConnectHandler",
-)
+__all__ = ("Scrape",)
 
 
 class DuplicateFilter(logging.Filter):
