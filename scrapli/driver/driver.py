@@ -47,6 +47,7 @@ class Scrape:
         timeout_socket: int = 5,
         timeout_transport: int = 5,
         timeout_ops: int = 10,
+        timeout_exit: bool = True,
         keepalive: bool = False,
         keepalive_interval: int = 30,
         keepalive_type: str = "network",
@@ -76,6 +77,9 @@ class Scrape:
             timeout_socket: timeout for establishing socket in seconds
             timeout_transport: timeout for ssh|telnet transport in seconds
             timeout_ops: timeout for ssh channel operations
+            timeout_exit: True/False close transport if timeout encountered. If False and keepalives
+                are in use, keepalives will prevent program from exiting so you should be sure to
+                catch Timeout exceptions and handle them appropriately
             keepalive: whether or not to try to keep session alive
             keepalive_interval: interval to use for session keepalives
             keepalive_type: network|standard -- 'network' sends actual characters over the
@@ -114,9 +118,9 @@ class Scrape:
                 telnet uses telnetlib
                 choice of driver depends on the features you need. in general system is easiest as
                 it will just 'auto-magically' use your ssh config file ('~/.ssh/config' or
-                '/etc/ssh/config_file'). ssh2 is very very fast as it is a thin wrapper around libssh2
-                however it is slightly feature limited. paramiko is slower than ssh2, but has more
-                features built in (though scrapli does not expose/support them all).
+                '/etc/ssh/config_file'). ssh2 is very very fast as it is a thin wrapper around
+                libssh2 however it is slightly feature limited. paramiko is slower than ssh2, but
+                has more features built in (though scrapli does not expose/support them all).
 
         Returns:
             N/A  # noqa: DAR202
@@ -140,9 +144,11 @@ class Scrape:
         self.auth_strict_key = auth_strict_key
         self._setup_auth(auth_username, auth_password, auth_public_key)
 
-        self.timeout_socket = int(timeout_socket)
-        self.timeout_transport = int(timeout_transport)
-        self.timeout_ops = int(timeout_ops)
+        self.timeout_socket: int = 5
+        self.timeout_transport: int = 5
+        self.timeout_ops: int = 10
+        self.timeout_exit: bool = True
+        self._setup_timeouts(timeout_socket, timeout_transport, timeout_ops, timeout_exit)
 
         if not isinstance(keepalive, bool):
             raise TypeError(f"keepalive should be bool, got {type(keepalive)}")
@@ -284,6 +290,32 @@ class Scrape:
             self.auth_password = auth_password.strip()
         else:
             self.auth_password = auth_password
+
+    def _setup_timeouts(
+        self, timeout_socket: int, timeout_transport: int, timeout_ops: int, timeout_exit: bool
+    ) -> None:
+        """
+        Parse and setup timeout attributes
+
+        Args:
+            timeout_socket: socket timeout to parse/set
+            timeout_transport: transport timoeut to parse/set
+            timeout_ops: ops timeout to parse/set
+            timeout_exit: timeout exit bool to parse/set
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            TypeError: if invalid type args provided
+
+        """
+        self.timeout_socket = int(timeout_socket)
+        self.timeout_transport = int(timeout_transport)
+        self.timeout_ops = int(timeout_ops)
+        if not isinstance(timeout_exit, bool):
+            raise TypeError(f"timeout_exit should be bool, got {type(timeout_exit)}")
+        self.timeout_exit = timeout_exit
 
     def _setup_comms(
         self, comms_prompt_pattern: str, comms_return_char: str, comms_ansi: bool

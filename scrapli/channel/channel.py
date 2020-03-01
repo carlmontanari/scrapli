@@ -17,6 +17,7 @@ CHANNEL_ARGS = (
     "comms_return_char",
     "comms_ansi",
     "timeout_ops",
+    "timeout_exit",
 )
 
 
@@ -28,6 +29,7 @@ class Channel:
         comms_return_char: str = "\n",
         comms_ansi: bool = False,
         timeout_ops: int = 10,
+        timeout_exit: bool = True,
     ):
         """
         Channel Object
@@ -38,6 +40,9 @@ class Channel:
             comms_return_char: character to use to send returns to host
             comms_ansi: True/False strip comms_ansi characters from output
             timeout_ops: timeout in seconds for channel operations (reads/writes)
+            timeout_exit: True/False close transport if timeout encountered. If False and keepalives
+                are in use, keepalives will prevent program from exiting so you should be sure to
+                catch Timeout exceptions and handle them appropriately
 
         Args:
             N/A
@@ -54,6 +59,7 @@ class Channel:
         self.comms_return_char = comms_return_char
         self.comms_ansi = comms_ansi
         self.timeout_ops = timeout_ops
+        self.timeout_exit = timeout_exit
 
     def __str__(self) -> str:
         """
@@ -177,7 +183,7 @@ class Channel:
             if channel_match:
                 return output
 
-    @operation_timeout("timeout_ops")
+    @operation_timeout("timeout_ops", "Timed out determining prompt on device.")
     def get_prompt(self) -> str:
         """
         Get current channel prompt
@@ -234,7 +240,7 @@ class Channel:
             responses.append(response)
         return responses
 
-    @operation_timeout("timeout_ops")
+    @operation_timeout("timeout_ops", "Timed out sending input to device.")
     def _send_input(self, channel_input: str, strip_prompt: bool) -> Tuple[bytes, bytes]:
         """
         Send input to device and return results
@@ -299,7 +305,7 @@ class Channel:
             responses.append(response)
         return responses
 
-    @operation_timeout("timeout_ops")
+    @operation_timeout("timeout_ops", "Timed out sending interactive input to device.")
     def _send_input_interact(
         self,
         channel_input: str,

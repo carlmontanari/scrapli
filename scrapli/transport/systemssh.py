@@ -27,6 +27,7 @@ SYSTEM_SSH_TRANSPORT_ARGS = (
     "timeout_socket",
     "timeout_transport",
     "timeout_ops",
+    "timeout_exit",
     "keepalive",
     "keepalive_interval",
     "keepalive_type",
@@ -54,6 +55,7 @@ class SystemSSHTransport(Transport):
         timeout_socket: int = 5,
         timeout_transport: int = 5,
         timeout_ops: int = 10,
+        timeout_exit: bool = True,
         keepalive: bool = False,
         keepalive_interval: int = 30,
         keepalive_type: str = "",
@@ -93,6 +95,9 @@ class SystemSSHTransport(Transport):
             timeout_ops: timeout for ssh channel operations in seconds -- this is also the
                 timeout for finding and responding to username and password prompts at initial
                 login.
+            timeout_exit: True/False close transport if timeout encountered. If False and keepalives
+                are in use, keepalives will prevent program from exiting so you should be sure to
+                catch Timeout exceptions and handle them appropriately
             keepalive: whether or not to try to keep session alive
             keepalive_interval: interval to use for session keepalives
             keepalive_type: network|standard -- 'network' sends actual characters over the
@@ -129,6 +134,7 @@ class SystemSSHTransport(Transport):
         self.timeout_socket: int = timeout_socket
         self.timeout_transport: int = timeout_transport
         self.timeout_ops: int = timeout_ops
+        self.timeout_exit: bool = timeout_exit
         self.keepalive: bool = keepalive
         self.keepalive_interval: int = keepalive_interval
         self.keepalive_type: str = keepalive_type
@@ -199,6 +205,7 @@ class SystemSSHTransport(Transport):
             self.open_cmd.extend(["-l", self.auth_username])
         if self.auth_strict_key is False:
             self.open_cmd.extend(["-o", "StrictHostKeyChecking=no"])
+            self.open_cmd.extend(["-o", "UserKnownHostsFile=/dev/null"])
         else:
             self.open_cmd.extend(["-o", "StrictHostKeyChecking=yes"])
         if self.ssh_config_file:
@@ -274,22 +281,19 @@ class SystemSSHTransport(Transport):
         open_cmd.append("-v")
         open_cmd.extend(["-o", "BatchMode=yes"])
 
-        pipes_session = Popen(
-            open_cmd, bufsize=0, shell=False, stdin=PIPE, stdout=PIPE, stderr=PIPE
-        )
+        self.session = Popen(open_cmd, bufsize=0, shell=False, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         LOG.debug(f"Session to host {self.host} spawned")
 
         try:
-            self._pipes_isauthenticated(pipes_session)
+            self._pipes_isauthenticated(self.session)
         except TimeoutError:
             # If auth fails, kill the popen session
-            pipes_session.kill()
+            self.session.kill()
             return False
 
         LOG.debug(f"Authenticated to host {self.host} with public key")
         self.open_cmd = open_cmd
         self.session_lock.release()
-        self.session = pipes_session
         return True
 
     @operation_timeout("timeout_ops", "Timed out determining if session is authenticated")
@@ -331,14 +335,13 @@ class SystemSSHTransport(Transport):
             N/A
 
         """
-        pty_session = PtyProcess.spawn(self.open_cmd)
+        self.session = PtyProcess.spawn(self.open_cmd)
         LOG.debug(f"Session to host {self.host} spawned")
         self.session_lock.release()
-        self._pty_authenticate(pty_session)
-        if not self._pty_isauthenticated(pty_session):
+        self._pty_authenticate(self.session)
+        if not self._pty_isauthenticated(self.session):
             return False
         LOG.debug(f"Authenticated to host {self.host} with password")
-        self.session = pty_session
         return True
 
     @operation_timeout("timeout_ops", "Timed out looking for SSH login password prompt")
@@ -369,7 +372,14 @@ class SystemSSHTransport(Transport):
             output = strip_ansi(output)
             if self.comms_ansi:
                 output = strip_ansi(output)
+            if b"WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!" in output:
+                raise ScrapliAuthenticationFailed(
+                    "PTY Authentication failed! It looks like the remote host identification has"
+                    "changed. Fix this or disable `auth_strict_key` or pass a "
+                    "`ssh_known_hosts_file` containing the hosts identification."
+                )
             if b"password" in output.lower():
+                LOG.debug("Found password prompt, sending password")
                 pty_session.write(self.auth_password.encode())
                 pty_session.write(self.comms_return_char.encode())
                 self.session_lock.release()

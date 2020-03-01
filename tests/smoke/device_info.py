@@ -6,10 +6,10 @@ user = os.getenv("SCRAPLI_SMOKE_USER", None)
 password = os.getenv("SCRAPLI_SMOKE_PASS", None)
 
 iosxe_device = {
-    "host": host or "172.31.254.1",
+    "host": host or "172.18.0.11",
     "port": port or 22,
-    "auth_username": user or "scrapli",
-    "auth_password": password or "scrapli",
+    "auth_username": user or "vrnetlab",
+    "auth_password": password or "VR-netlab9",
     "auth_strict_key": False,
     "transport": "system",
     "keepalive": True,

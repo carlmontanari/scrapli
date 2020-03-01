@@ -20,6 +20,7 @@ TELNET_TRANSPORT_ARGS = (
     "timeout_socket",
     "timeout_transport",
     "timeout_ops",
+    "timeout_exit",
     "keepalive",
     "keepalive_interval",
     "keepalive_type",
@@ -48,6 +49,7 @@ class TelnetTransport(Transport):
         timeout_socket: int = 5,
         timeout_transport: int = 5,
         timeout_ops: int = 10,
+        timeout_exit: bool = True,
         keepalive: bool = False,
         keepalive_interval: int = 30,
         keepalive_type: str = "",
@@ -75,6 +77,9 @@ class TelnetTransport(Transport):
             timeout_ops: timeout for telnet channel operations in seconds -- this is also the
                 timeout for finding and responding to username and password prompts at initial
                 login.
+            timeout_exit: True/False close transport if timeout encountered. If False and keepalives
+                are in use, keepalives will prevent program from exiting so you should be sure to
+                catch Timeout exceptions and handle them appropriately
             keepalive: whether or not to try to keep session alive
             keepalive_interval: interval to use for session keepalives
             keepalive_type: network|standard -- 'network' sends actual characters over the
@@ -108,6 +113,7 @@ class TelnetTransport(Transport):
         self.timeout_socket: int = timeout_socket
         self.timeout_transport: int = timeout_transport
         self.timeout_ops: int = timeout_ops
+        self.timeout_exit: bool = timeout_exit
         self.keepalive: bool = keepalive
         self.keepalive_interval: int = keepalive_interval
         self.keepalive_type: str = keepalive_type

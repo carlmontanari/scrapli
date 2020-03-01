@@ -4,10 +4,14 @@ import pytest
 
 from scrapli.decorators import operation_timeout
 
+from .conftest import MockTransport
+
 
 class SlowClass:
     def __init__(self):
         self.timeout_test = 0.5
+        self.timeout_exit = True
+        self.transport = MockTransport("1.1.1.1", 22, 1, "\n", b"", [])
 
     @operation_timeout("timeout_test")
     def slow_function(self):

@@ -5,10 +5,10 @@ from pathlib import Path
 from device_info import iosxe_device
 from scrapli.driver.core import IOSXEDriver
 
-# logging.basicConfig(
-#     filename=f"{Path(__file__).resolve().parents[0]}/iosxe_driver.log", level=logging.DEBUG
-# )
-# logger = logging.getLogger("scrapli")
+logging.basicConfig(
+    filename=f"{Path(__file__).resolve().parents[0]}/iosxe_driver.log", level=logging.DEBUG
+)
+logger = logging.getLogger("scrapli")
 
 args = {
     "host": iosxe_device["host"],
