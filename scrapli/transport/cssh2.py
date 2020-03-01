@@ -57,7 +57,7 @@ class SSH2Transport(Socket, Transport):
         """
         SSH2Transport Object
 
-        Inherit from Transport ABC and Socket base class:
+        Inherit from Transport ABC and Socket base class
         SSH2Transport <- Transport (ABC)
         SSH2Transport <- Socket
 
@@ -72,15 +72,15 @@ class SSH2Transport(Socket, Transport):
             timeout_transport: timeout for ssh2 transport in seconds
             keepalive: whether or not to try to keep session alive
             keepalive_interval: interval to use for session keepalives
-            keepalive_type: network|standard -- "network" sends actual characters over the
+            keepalive_type: network|standard -- 'network' sends actual characters over the
                 transport channel. This is useful for network-y type devices that may not support
-                "standard" keepalive mechanisms. "standard" attempts to ssh2-python built in
+                'standard' keepalive mechanisms. 'standard' attempts to ssh2-python built in
                 keepalive method (using standard openssh keepalive)
             keepalive_pattern: pattern to send to keep network channel alive. Default is
-                u"\005" which is equivalent to "ctrl+e". This pattern moves cursor to end of the
+                u'\005' which is equivalent to 'ctrl+e'. This pattern moves cursor to end of the
                 line which should be an innocuous pattern. This will only be entered *if* a lock
                 can be acquired. This is only applicable if using keepalives and if the keepalive
-                type is "network"
+                type is 'network'
             ssh_config_file: string to path for ssh config file
             ssh_known_hosts_file: string to path for ssh known hosts file
 

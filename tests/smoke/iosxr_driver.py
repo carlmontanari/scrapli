@@ -2,8 +2,8 @@ import logging
 import time
 from pathlib import Path
 
-from device_info import iosxe_device
-from scrapli.driver.core import IOSXEDriver
+from device_info import iosxr_device
+from scrapli.driver.core import IOSXRDriver
 
 # logging.basicConfig(
 #     filename=f"{Path(__file__).resolve().parents[0]}/iosxe_driver.log", level=logging.DEBUG
@@ -11,18 +11,20 @@ from scrapli.driver.core import IOSXEDriver
 # logger = logging.getLogger("scrapli")
 
 args = {
-    "host": iosxe_device["host"],
-    "port": iosxe_device["port"],
-    "auth_username": iosxe_device["auth_username"],
-    "auth_password": iosxe_device["auth_password"],
+    "host": iosxr_device["host"],
+    "port": iosxr_device["port"],
+    "auth_username": iosxr_device["auth_username"],
+    "auth_password": iosxr_device["auth_password"],
     "auth_strict_key": False,
-    "keepalive_interval": iosxe_device["keepalive_interval"],
-    "transport": iosxe_device["transport"],
-    "keepalive": iosxe_device["keepalive"],
+    "keepalive_interval": iosxr_device["keepalive_interval"],
+    "transport": iosxr_device["transport"],
+    "keepalive": iosxr_device["keepalive"],
 }
 
-conn = IOSXEDriver(**args)
+conn = IOSXRDriver(**args)
 conn.open()
+breakpoint()
+conn.channel.comms_prompt_pattern = r"tacocat"
 
 print("***** Get Prompt:")
 prompt = conn.get_prompt()
@@ -41,7 +43,7 @@ print("***** Show run:")
 result = conn.send_command("show run")
 print(result, result.result)
 
-if iosxe_device["keepalive"]:
+if iosxr_device["keepalive"]:
     print("***** Waiting for keepalive....")
     time.sleep(5)
 

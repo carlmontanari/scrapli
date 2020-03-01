@@ -1,6 +1,6 @@
 """scrapli.decorators"""
 import logging
-import multiprocessing.pool
+from concurrent.futures import ThreadPoolExecutor, wait
 from typing import Any, Callable, Dict, Union
 
 LOG = logging.getLogger("scrapli")
@@ -12,8 +12,8 @@ def operation_timeout(attribute: str, message: str = "") -> Callable[..., Any]:
 
     Wrap an operation, check class for given attribute and use that for the timeout duration.
 
-    Historically this operation timeout decorator used signals instead of the multiprocessing seen
-    here. The signals method was probably a bit more elegant, however there were issues with
+    Historically this operation timeout decorator used signals instead of the concurrent_futures
+    seen here. The signals method was probably a bit more elegant, however there were issues with
     supporting the system transport as system transport subprocess/ptyprocess components spawn
     threads of their own, and signals must operate in the main thread.
 
@@ -38,14 +38,12 @@ def operation_timeout(attribute: str, message: str = "") -> Callable[..., Any]:
             if not timeout_duration:
                 return wrapped_func(self, *args, **kwargs)
 
-            wrapped_args = [self, *args]
-            pool = multiprocessing.pool.ThreadPool(processes=1)
-            async_result = pool.apply_async(wrapped_func, wrapped_args, kwargs)
-
-            try:
-                return async_result.get(timeout_duration)
-            except multiprocessing.context.TimeoutError:
+            pool = ThreadPoolExecutor(max_workers=1)
+            future = pool.submit(wrapped_func, self, *args, **kwargs)
+            wait([future], timeout=timeout_duration)
+            if not future.done():
                 raise TimeoutError(message)
+            return future.result()
 
         return timeout_wrapper
 

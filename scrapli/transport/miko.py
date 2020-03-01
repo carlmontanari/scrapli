@@ -54,7 +54,7 @@ class MikoTransport(Socket, Transport):
         """
         MikoTransport Object
 
-        Inherit from Transport ABC and Socket base class:
+        Inherit from Transport ABC and Socket base class
         MikoTransport <- Transport (ABC)
         MikoTransport <- Socket
 
@@ -69,14 +69,14 @@ class MikoTransport(Socket, Transport):
             timeout_transport: timeout for ssh transport in seconds
             keepalive: whether or not to try to keep session alive
             keepalive_interval: interval to use for session keepalives
-            keepalive_type: network|standard -- "network" sends actual characters over the
+            keepalive_type: network|standard -- 'network' sends actual characters over the
                 transport channel. This is useful for network-y type devices that may not support
-                "standard" keepalive mechanisms. "standard" is not currently implemented w/ paramiko
+                'standard' keepalive mechanisms. 'standard' is not currently implemented w/ paramiko
             keepalive_pattern: pattern to send to keep network channel alive. Default is
-                u"\005" which is equivalent to "ctrl+e". This pattern moves cursor to end of the
+                u'\005' which is equivalent to 'ctrl+e'. This pattern moves cursor to end of the
                 line which should be an innocuous pattern. This will only be entered *if* a lock
                 can be acquired. This is only applicable if using keepalives and if the keepalive
-                type is "network"
+                type is 'network'
             ssh_config_file: string to path for ssh config file
             ssh_known_hosts_file: string to path for ssh known hosts file
 
@@ -143,7 +143,7 @@ class MikoTransport(Socket, Transport):
         """
         Method to parse ssh config file
 
-        In the future this may move to be a "helper" function as it should be very similar between
+        In the future this may move to be a 'helper' function as it should be very similar between
         paramiko and and ssh2-python... for now it can be a static method as there may be varying
         supported args between the two transport drivers.
 
@@ -450,7 +450,7 @@ class MikoTransport(Socket, Transport):
 
     def _keepalive_standard(self) -> None:
         """
-        Send "out of band" (protocol level) keepalives to devices.
+        Send 'out of band' (protocol level) keepalives to devices.
 
         Args:
             N/A

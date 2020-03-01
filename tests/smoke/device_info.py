@@ -5,7 +5,7 @@ port = os.getenv("SCRAPLI_SMOKE_PORT", None)
 user = os.getenv("SCRAPLI_SMOKE_USER", None)
 password = os.getenv("SCRAPLI_SMOKE_PASS", None)
 
-device = {
+iosxe_device = {
     "host": host or "172.31.254.1",
     "port": port or 22,
     "auth_username": user or "scrapli",
@@ -18,6 +18,17 @@ device = {
 
 nxos_device = {
     "host": "172.18.0.12",
+    "port": 22,
+    "auth_username": "vrnetlab",
+    "auth_password": "VR-netlab9",
+    "auth_strict_key": False,
+    "transport": "system",
+    "keepalive": True,
+    "keepalive_interval": 1,
+}
+
+iosxr_device = {
+    "host": "172.18.0.13",
     "port": 22,
     "auth_username": "vrnetlab",
     "auth_password": "VR-netlab9",

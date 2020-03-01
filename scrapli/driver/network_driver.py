@@ -226,7 +226,7 @@ class NetworkDriver(Scrape):
             responses: list of Scrapli Response objects
 
         Raises:
-            N/A
+            TypeError: if commands is anything but a list
 
         """
         if not isinstance(commands, list):
