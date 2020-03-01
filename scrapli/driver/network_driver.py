@@ -6,7 +6,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from scrapli.driver.driver import Scrape
 from scrapli.exceptions import CouldNotAcquirePrivLevel, UnknownPrivLevel
-from scrapli.helper import get_external_function, get_prompt_pattern, validate_external_function
+from scrapli.helper import get_prompt_pattern
 from scrapli.response import Response
 from scrapli.transport import (
     MIKO_TRANSPORT_ARGS,
@@ -52,21 +52,13 @@ LOG = logging.getLogger("scrapli_base")
 
 class NetworkDriver(Scrape):
     def __init__(
-        self,
-        auth_secondary: str = "",
-        session_pre_login_handler: Union[str, Callable[..., Any]] = "",
-        session_disable_paging: Union[str, Callable[..., Any]] = "terminal length 0",
-        **kwargs: Any,
+        self, auth_secondary: str = "", **kwargs: Any,
     ):
         """
         BaseNetworkDriver Object
 
         Args:
             auth_secondary: password to use for secondary authentication (enable)
-            session_pre_login_handler: callable or string that resolves to an importable function to
-                handle pre-login (pre disable paging) operations
-            session_disable_paging: callable, string that resolves to an importable function, or
-                string to send to device to disable paging
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -82,107 +74,6 @@ class NetworkDriver(Scrape):
         self.default_desired_priv: Optional[str] = None
         self.textfsm_platform: str = ""
         self.exit_command: str = "exit"
-
-        self.session_pre_login_handler: Optional[Callable[..., Any]] = None
-        self.session_disable_paging: Union[str, Callable[..., Any]] = ""
-        self._setup_session(session_pre_login_handler, session_disable_paging)
-
-    def _setup_session(
-        self,
-        session_pre_login_handler: Union[str, Callable[..., Any]],
-        session_disable_paging: Union[str, Callable[..., Any]],
-    ) -> None:
-        """
-        Parse and setup session attributes
-
-        Args:
-            session_pre_login_handler: pre login handler to parse/set
-            session_disable_paging: disable paging to parse/set
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            TypeError: if invalid type args provided
-
-        """
-        if session_pre_login_handler:
-            self.session_pre_login_handler = self._set_session_pre_login_handler(
-                session_pre_login_handler
-            )
-        else:
-            self.session_pre_login_handler = None
-        if callable(session_disable_paging):
-            self.session_disable_paging = session_disable_paging
-        if not isinstance(session_disable_paging, str) and not callable(session_disable_paging):
-            raise TypeError(
-                "session_disable_paging should be str or callable, got "
-                f"{type(session_disable_paging)}"
-            )
-        if session_disable_paging != "terminal length 0":
-            try:
-                self.session_disable_paging = self._set_session_disable_paging(
-                    session_disable_paging
-                )
-            except TypeError:
-                self.session_disable_paging = session_disable_paging
-        else:
-            self.session_disable_paging = "terminal length 0"
-
-    @staticmethod
-    def _set_session_pre_login_handler(
-        session_pre_login_handler: Union[str, Callable[..., Any]]
-    ) -> Optional[Callable[..., Any]]:
-        """
-        Return session_pre_login_handler argument
-
-        Args:
-            session_pre_login_handler: callable function, or string representing a path to
-                a callable
-
-        Returns:
-            session_pre_login_handler: callable or default empty string value
-
-        Raises:
-            TypeError: if provided string does not result in a callable
-
-        """
-        if callable(session_pre_login_handler):
-            return session_pre_login_handler
-        if not validate_external_function(session_pre_login_handler):
-            LOG.critical(f"Invalid comms_pre_login_handler: {session_pre_login_handler}")
-            raise TypeError(
-                f"{session_pre_login_handler} is an invalid session_pre_login_handler function "
-                "or path to a function."
-            )
-        return get_external_function(session_pre_login_handler)
-
-    @staticmethod
-    def _set_session_disable_paging(
-        session_disable_paging: Union[Callable[..., Any], str]
-    ) -> Union[Callable[..., Any], str]:
-        """
-        Return session_disable_paging argument
-
-        Args:
-            session_disable_paging: callable function, string representing a path to
-                a callable, or a string to send to device to disable paging
-
-        Returns:
-            session_disable_paging: callable or string to use to disable paging
-
-        Raises:
-            TypeError: if provided string does not result in a callable
-
-        """
-        if callable(session_disable_paging):
-            return session_disable_paging
-        if not validate_external_function(session_disable_paging):
-            raise TypeError(
-                f"{session_disable_paging} is an invalid session_disable_paging function or path "
-                "to a function. Assuming this is string to send to disable paging."
-            )
-        return get_external_function(session_disable_paging)
 
     def _determine_current_priv(self, current_prompt: str) -> PrivilegeLevel:
         """
@@ -395,17 +286,6 @@ class NetworkDriver(Scrape):
         """
         prompt: str = self.channel.get_prompt()
         return prompt
-
-    def open(self) -> None:
-        super().open()
-        if self.session_pre_login_handler:
-            self.session_pre_login_handler(self)
-        # send disable paging if needed
-        if self.session_disable_paging:
-            if callable(self.session_disable_paging):
-                self.session_disable_paging(self)
-            else:
-                self.channel.send_inputs(self.session_disable_paging)
 
     def close(self) -> None:
         self.transport.write(f"{self.exit_command}{self.comms_return_char}")

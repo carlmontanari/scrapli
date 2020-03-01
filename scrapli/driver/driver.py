@@ -56,6 +56,7 @@ class Scrape:
         comms_ansi: bool = False,
         ssh_config_file: Union[str, bool] = False,
         ssh_known_hosts_file: str = "",
+        on_connect: Optional[Callable[..., Any]] = None,
         transport: str = "system",
     ):
         """
@@ -102,7 +103,11 @@ class Scrape:
                 or False to ignore default ssh config file
             ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
                 file locations. Only applicable/needed if `auth_strict_key` is set to True
-            transport: system|ssh2|paramiko|telnet -- type of transport to use
+            on_connect: callable that accepts the class instance as its only argument. this callable
+                if provided is executed immediately after authentication is completed. Common use
+                cases for this callable would be to disable paging or accept any kind of banner
+                message that prompts a user upon connection
+            transport: system|ssh2|paramiko|telnet -- type of transport to use for connection
                 system uses system available ssh (/usr/bin/ssh)
                 ssh2 uses ssh2-python
                 paramiko uses... paramiko
@@ -117,8 +122,10 @@ class Scrape:
             N/A  # noqa: DAR202
 
         Raises:
-            TypeError: if auth_strict_key/keepalive is not a bool or values cannot be converted to
+            TypeError:
+                - auth_strict_key/keepalive is not a bool or values cannot be converted to
                 ints where appropriate (ex: timeouts)
+                - on_connect is not a callable
             ValueError: if driver value is invalid
 
         """
@@ -154,6 +161,10 @@ class Scrape:
         self.comms_return_char: str = ""
         self.comms_ansi: bool = False
         self._setup_comms(comms_prompt_pattern, comms_return_char, comms_ansi)
+
+        if on_connect is not None and not callable(on_connect):
+            raise TypeError(f"on_connect must be a callable, got {type(on_connect)}")
+        self.on_connect = on_connect
 
         if transport not in ("ssh2", "paramiko", "system", "telnet"):
             raise ValueError(
@@ -372,6 +383,8 @@ class Scrape:
         """
         Open Transport (socket/session) and establish channel
 
+        If on_connect callable provided, execute that callable after opening connection
+
         Args:
             N/A
 
@@ -385,6 +398,8 @@ class Scrape:
         self.transport = self.transport_class(**self.transport_args)
         self.transport.open()
         self.channel = Channel(self.transport, **self.channel_args)
+        if self.on_connect:
+            self.on_connect(self)
 
     def close(self) -> None:
         """

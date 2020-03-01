@@ -14,66 +14,21 @@ except ImportError:
     textfsm_avail = False
 
 
-def test_valid_session_pre_login_handler_func():
-    def pre_login_handler_func():
+def test_valid_on_connect_func():
+    def on_connect_func():
         pass
 
-    login_handler = pre_login_handler_func
-    conn = NetworkDriver(session_pre_login_handler=login_handler)
-    assert callable(conn.session_pre_login_handler)
+    conn = NetworkDriver(on_connect=on_connect_func)
+    assert callable(conn.on_connect)
 
 
-def test_valid_session_pre_login_handler_ext_func():
-    conn = NetworkDriver(
-        session_pre_login_handler="tests.unit.driver.ext_test_funcs.some_pre_login_handler_func"
-    )
-    assert callable(conn.session_pre_login_handler)
-
-
-def test_invalid_session_pre_login_handler():
+def test_invalid_on_connect_func():
     with pytest.raises(TypeError) as e:
-        NetworkDriver(session_pre_login_handler="not.valid.func")
+        NetworkDriver(on_connect="not a callable")
     assert (
         str(e.value)
-        == "not.valid.func is an invalid session_pre_login_handler function or path to a function."
+        == "on_connect must be a callable, got <class 'str'>"
     )
-
-
-def test_valid_session_disable_paging_default():
-    conn = NetworkDriver()
-    assert conn.session_disable_paging == "terminal length 0"
-
-
-def test_valid_session_disable_paging_func():
-    def disable_paging_func():
-        pass
-
-    disable_paging = disable_paging_func
-    conn = NetworkDriver(session_disable_paging=disable_paging)
-    assert callable(conn.session_disable_paging)
-
-
-def test_valid_session_disable_paging_ext_func():
-    conn = NetworkDriver(
-        session_disable_paging="tests.unit.driver.ext_test_funcs.some_disable_paging_func"
-    )
-    assert callable(conn.session_disable_paging)
-
-
-def test_valid_session_disable_paging_str():
-    conn = NetworkDriver(session_disable_paging="disable all the paging")
-    assert conn.session_disable_paging == "disable all the paging"
-
-
-def test_invalid_session_disable_paging_func():
-    conn = NetworkDriver(session_disable_paging="not.valid.func")
-    assert conn.session_disable_paging == "not.valid.func"
-
-
-def test_invalid_session_disable_paging():
-    with pytest.raises(TypeError) as e:
-        NetworkDriver(session_disable_paging=123)
-    assert str(e.value) == "session_disable_paging should be str or callable, got <class 'int'>"
 
 
 def test__determine_current_priv(mocked_network_driver):

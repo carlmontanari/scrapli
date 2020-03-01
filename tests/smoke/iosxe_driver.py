@@ -37,10 +37,6 @@ interact = ("clear logg", "Clear logging buffer [confirm]", "", prompt)
 result = conn.send_interactive(interact)
 print(result, result[0].result)
 
-print("***** Disable Paging:")
-result = conn.send_commands("term length 0")
-print(result, result[0].result)
-
 print("***** Show run:")
 result = conn.send_commands("show run")
 print(result, result[0].result)

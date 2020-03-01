@@ -67,8 +67,7 @@ The final piece of scrapli is the actual "driver" -- or the component that binds
   - [Native and Platform Drivers Examples](#native-and-platform-drivers-examples)
   - [Platform Regex](#platform-regex)
   - [Basic Operations -- Sending and Receiving](#basic-operations----sending-and-receiving)
-  - [Disabling Paging](#disabling-paging)
-  - [Login Handlers](#login-handlers)  
+  - [On Connect](#on-connect) 
   - [Response Objects](#response-objects)
   - [Handling Prompts](#handling-prompts)
   - [Driver Privilege Levels](#driver-privilege-levels)
@@ -272,38 +271,40 @@ with IOSXEDriver(**my_device) as conn:
 ```
 
 
-## Disabling Paging
+## On Connect
 
-scrapli `Scrape` (the base driver) does not know or care about disabling paging! If you use the base `Scrape` class
- you will need to handle disabling paging yourself. The `NetworkDriver` and all of its sub-classes (i.e. iosxe/junos
-  drivers) will however attempt to disable paging for you. 
+Lots of times when connecting to a device there are "things" that need to happen immediately after getting connected
+. In the context of network devices the most obvious/common example would be disabling paging (i.e. sending `terminal
+ length 0` on a Cisco-type device). While scrapli `Scrape` (the base driver) does not know or care about disabling
+  paging or any other on connect type activities, scrapli of course provides a mechanism for allowing users to handle
+   these types of tasks. Even better yet, if you are using the `NetworkDriver` or its sub-classes (i.e. iosxe/junos
+    drivers), scrapli will automatically have some sane default "on connect" actions (namely disabling paging).
 
-All of the drivers, have a standard/default disable paging string already configured for you, however this is of
- course user configurable. In addition to passing a string to send to disable paging, scrapli supports passing a
-  callable. This callable should accept the drivers reference to self as the only argument. This allows for users to
-   create a custom function to disable paging however they like. In general it is probably a better idea to handle
-    this by simply passing a string, but the goal is to be flexible so the callable is supported.
+If you were so inclined to create some of your own "on connect" actions, you can simply pass those to the `on_connect
+` argument of `Scrape` or any of its sub-classes (`NetworkDriver`, `IOSXEDriver`, etc.). The value of this argument
+ must be a callable that accepts the reference to the connection object. This allows for the user to send commands or
+  do really anything that needs to happen prior to "normal" operations.
+  
+Below is an example of creating an "on connect" function and passing it to scrapli. Immediately after authentication
+ is handled this function will be called and disable paging (in this example):
     
 ```python
 from scrapli.driver.core import IOSXEDriver
 
-def iosxe_disable_paging(cls):
-    cls.send_commands("term length 0")
+def iosxe_disable_paging(conn):
+    conn.send_commands("term length 0")
 
-my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password": "VR-netlab9", "session_disable_paging": iosxe_disable_paging, "auth_strict_key": False}
+my_device = {"host": "172.18.0.11", "auth_username": "vrnetlab", "auth_password": "VR-netlab9", "on_connect"": iosxe_disable_paging, "auth_strict_key": False}
 
 with IOSXEDriver(**my_device) as conn:
     print(conn.get_prompt())
 ```
 
-
-## Login Handlers
-
-Some devices have additional prompts or banners at login. This generally causes issues for SSH screen scraping
- automation. scrapli (`NetworkDriver` and all sub classes) supports -- just like disable paging -- passing a string to
-  send or a callable to execute after successful SSH connection but before disabling paging occurs. By default this
-   is an empty string which does nothing.
-
+Note that this section has talked almost exclusively about disabling paging, but any other "things" that need to
+ happen in the channel can be handled here. If there is a prompt/banner to accept you should be able to handle it
+  here. The goal of this "on connect" function is to allow for lots of flexibility for dealing with whatever needs to
+   happen for devices -- thus decoupling the challenge of addressing all of the possible options from scrapli itself
+    and allowing users to handle things specific for their environment.
 
 ## Response Objects
 
