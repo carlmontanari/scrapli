@@ -1,11 +1,10 @@
 """scrapli.helper"""
-import importlib
 import os
 import re
 import warnings
 from io import TextIOWrapper
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Pattern, TextIO, Union
+from typing import Any, Dict, List, Optional, Pattern, TextIO, Union
 
 import pkg_resources  # pylint: disable=C0411
 

@@ -25,10 +25,7 @@ def test_valid_on_connect_func():
 def test_invalid_on_connect_func():
     with pytest.raises(TypeError) as e:
         NetworkDriver(on_connect="not a callable")
-    assert (
-        str(e.value)
-        == "on_connect must be a callable, got <class 'str'>"
-    )
+    assert str(e.value) == "on_connect must be a callable, got <class 'str'>"
 
 
 def test__determine_current_priv(mocked_network_driver):
