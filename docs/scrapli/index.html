@@ -33,7 +33,7 @@ from typing import Optional, Tuple
 from scrapli.driver import Scrape
 from scrapli.netmiko_compatability import connect_handler as ConnectHandler
 
-__version__ = &#34;2020.02.17&#34;
+__version__ = &#34;2020.02.23&#34;
 __all__ = (
     &#34;Scrape&#34;,
     &#34;ConnectHandler&#34;,
@@ -184,19 +184,14 @@ logging.getLogger(&#34;channel&#34;).addHandler(NullHandler())</code></pre>
     transformed_kwargs = transform_netmiko_kwargs(kwargs)
 
     final_kwargs = {**transformed_kwargs, **driver_args}
-    driver = driver_class(**final_kwargs)
+    scrapli_driver = driver_class(auth_strict_key=False, **final_kwargs)
 
     if auto_open:
-        driver.open()
+        scrapli_driver.driver.open()
 
-    # Below is a dirty way to patch netmiko methods into scrapli without having a factory function
-    # and a million classes... as this is just for testing interoperability we&#39;ll let this slide...
-    driver.find_prompt = types.MethodType(netmiko_find_prompt, driver)
-    driver.send_command = types.MethodType(netmiko_send_command, driver)
-    driver.send_command_timing = types.MethodType(netmiko_send_command_timing, driver)
-    driver.send_config_set = types.MethodType(netmiko_send_config_set, driver)
+    netmiko_driver = NetmikoNetworkDriver(scrapli_driver)
 
-    return driver</code></pre>
+    return netmiko_driver</code></pre>
 </details>
 </dd>
 </dl>
@@ -206,7 +201,7 @@ logging.getLogger(&#34;channel&#34;).addHandler(NullHandler())</code></pre>
 <dl>
 <dt id="scrapli.Scrape"><code class="flex name class">
 <span>class <span class="ident">Scrape</span></span>
-<span>(</span><span>host='', port=22, auth_username='', auth_password='', auth_public_key='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, timeout_ops=10, keepalive=False, keepalive_interval=30, keepalive_type='network', keepalive_pattern='\x05', comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n', comms_ansi=False, ssh_config_file=False, ssh_known_hosts_file='', transport='system')</span>
+<span>(</span><span>host='', port=22, auth_username='', auth_password='', auth_public_key='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, timeout_ops=10, keepalive=False, keepalive_interval=30, keepalive_type='network', keepalive_pattern='\x05', comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n', comms_ansi=False, ssh_config_file=False, ssh_known_hosts_file='', on_connect=None, transport='system')</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Scrape Object</p>
@@ -255,7 +250,9 @@ type is "network"</dd>
 this is the single most important attribute here! if this does not match a prompt,
 scrapli will not work!
 IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
-for highly reliably matching for prompts after stripping trailing white space,
+for highly reliably matching for prompts however we do NOT strip trailing whitespace
+for each line, so be sure to add <code>\s*</code> if your device needs that. This should be
+mostly sorted for you if using network drivers (i.e. <code>IOSXEDriver</code>). Lastly, the
 case insensitive is just a convenience factor so i can be lazy.</dd>
 <dt><strong><code>comms_return_char</code></strong></dt>
 <dd>character to use to send returns to host</dd>
@@ -267,8 +264,13 @@ or False to ignore default ssh config file</dd>
 <dt><strong><code>ssh_known_hosts_file</code></strong></dt>
 <dd>string to path for ssh known hosts file, True to use default known
 file locations. Only applicable/needed if <code>auth_strict_key</code> is set to True</dd>
+<dt><strong><code>on_connect</code></strong></dt>
+<dd>callable that accepts the class instance as its only argument. this callable
+if provided is executed immediately after authentication is completed. Common use
+cases for this callable would be to disable paging or accept any kind of banner
+message that prompts a user upon connection</dd>
 <dt><strong><a title="scrapli.transport" href="transport/index.html"><code>scrapli.transport</code></a></strong></dt>
-<dd>system|ssh2|paramiko|telnet &ndash; type of transport to use
+<dd>system|ssh2|paramiko|telnet &ndash; type of transport to use for connection
 system uses system available ssh (/usr/bin/ssh)
 ssh2 uses ssh2-python
 paramiko uses&hellip; paramiko
@@ -287,9 +289,14 @@ features built in (though scrapli does not expose/support them all).</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><strong><code>TypeError</code></strong></dt>
-<dd>if auth_strict_key/keepalive is not a bool or values cannot be converted to
-ints where appropriate (ex: timeouts)</dd>
+<dt><code>TypeError</code>:</dt>
+<dd>
+<ul>
+<li>auth_strict_key/keepalive is not a bool or values cannot be converted to
+ints where appropriate (ex: timeouts)</li>
+<li>on_connect is not a callable</li>
+</ul>
+</dd>
 <dt><strong><code>ValueError</code></strong></dt>
 <dd>if driver value is invalid</dd>
 </dl></section>
@@ -318,6 +325,7 @@ ints where appropriate (ex: timeouts)</dd>
         comms_ansi: bool = False,
         ssh_config_file: Union[str, bool] = False,
         ssh_known_hosts_file: str = &#34;&#34;,
+        on_connect: Optional[Callable[..., Any]] = None,
         transport: str = &#34;system&#34;,
     ):
         &#34;&#34;&#34;
@@ -354,7 +362,9 @@ ints where appropriate (ex: timeouts)</dd>
                 this is the single most important attribute here! if this does not match a prompt,
                 scrapli will not work!
                 IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
-                for highly reliably matching for prompts after stripping trailing white space,
+                for highly reliably matching for prompts however we do NOT strip trailing whitespace
+                for each line, so be sure to add `\\s*` if your device needs that. This should be
+                mostly sorted for you if using network drivers (i.e. `IOSXEDriver`). Lastly, the
                 case insensitive is just a convenience factor so i can be lazy.
             comms_return_char: character to use to send returns to host
             comms_ansi: True/False strip comms_ansi characters from output
@@ -362,7 +372,11 @@ ints where appropriate (ex: timeouts)</dd>
                 or False to ignore default ssh config file
             ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
                 file locations. Only applicable/needed if `auth_strict_key` is set to True
-            transport: system|ssh2|paramiko|telnet -- type of transport to use
+            on_connect: callable that accepts the class instance as its only argument. this callable
+                if provided is executed immediately after authentication is completed. Common use
+                cases for this callable would be to disable paging or accept any kind of banner
+                message that prompts a user upon connection
+            transport: system|ssh2|paramiko|telnet -- type of transport to use for connection
                 system uses system available ssh (/usr/bin/ssh)
                 ssh2 uses ssh2-python
                 paramiko uses... paramiko
@@ -377,8 +391,10 @@ ints where appropriate (ex: timeouts)</dd>
             N/A  # noqa: DAR202
 
         Raises:
-            TypeError: if auth_strict_key/keepalive is not a bool or values cannot be converted to
+            TypeError:
+                - auth_strict_key/keepalive is not a bool or values cannot be converted to
                 ints where appropriate (ex: timeouts)
+                - on_connect is not a callable
             ValueError: if driver value is invalid
 
         &#34;&#34;&#34;
@@ -414,6 +430,10 @@ ints where appropriate (ex: timeouts)</dd>
         self.comms_return_char: str = &#34;&#34;
         self.comms_ansi: bool = False
         self._setup_comms(comms_prompt_pattern, comms_return_char, comms_ansi)
+
+        if on_connect is not None and not callable(on_connect):
+            raise TypeError(f&#34;on_connect must be a callable, got {type(on_connect)}&#34;)
+        self.on_connect = on_connect
 
         if transport not in (&#34;ssh2&#34;, &#34;paramiko&#34;, &#34;system&#34;, &#34;telnet&#34;):
             raise ValueError(
@@ -632,6 +652,8 @@ ints where appropriate (ex: timeouts)</dd>
         &#34;&#34;&#34;
         Open Transport (socket/session) and establish channel
 
+        If on_connect callable provided, execute that callable after opening connection
+
         Args:
             N/A
 
@@ -645,6 +667,8 @@ ints where appropriate (ex: timeouts)</dd>
         self.transport = self.transport_class(**self.transport_args)
         self.transport.open()
         self.channel = Channel(self.transport, **self.channel_args)
+        if self.on_connect:
+            self.on_connect(self)
 
     def close(self) -&gt; None:
         &#34;&#34;&#34;
@@ -774,6 +798,7 @@ ints where appropriate (ex: timeouts)</dd>
 </code></dt>
 <dd>
 <section class="desc"><p>Open Transport (socket/session) and establish channel</p>
+<p>If on_connect callable provided, execute that callable after opening connection</p>
 <h2 id="args">Args</h2>
 <p>N/A</p>
 <h2 id="returns">Returns</h2>
@@ -795,6 +820,8 @@ ints where appropriate (ex: timeouts)</dd>
     &#34;&#34;&#34;
     Open Transport (socket/session) and establish channel
 
+    If on_connect callable provided, execute that callable after opening connection
+
     Args:
         N/A
 
@@ -807,7 +834,9 @@ ints where appropriate (ex: timeouts)</dd>
     &#34;&#34;&#34;
     self.transport = self.transport_class(**self.transport_args)
     self.transport.open()
-    self.channel = Channel(self.transport, **self.channel_args)</code></pre>
+    self.channel = Channel(self.transport, **self.channel_args)
+    if self.on_connect:
+        self.on_connect(self)</code></pre>
 </details>
 </dd>
 </dl>

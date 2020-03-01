@@ -156,6 +156,7 @@ class Channel:
 
         &#34;&#34;&#34;
         new_output = self.transport.read()
+        new_output = re.sub(b&#34;\r&#34;, b&#34;&#34;, new_output)
         if self.comms_ansi:
             new_output = strip_ansi(new_output)
         LOG.debug(f&#34;Read: {repr(new_output)}&#34;)
@@ -199,7 +200,6 @@ class Channel:
 
         while True:
             output += self._read_chunk()
-            output = re.sub(b&#34;\r&#34;, b&#34;&#34;, output)
             channel_match = re.search(prompt_pattern, output)
             if channel_match:
                 return output
@@ -554,6 +554,7 @@ class Channel:
 
         &#34;&#34;&#34;
         new_output = self.transport.read()
+        new_output = re.sub(b&#34;\r&#34;, b&#34;&#34;, new_output)
         if self.comms_ansi:
             new_output = strip_ansi(new_output)
         LOG.debug(f&#34;Read: {repr(new_output)}&#34;)
@@ -597,7 +598,6 @@ class Channel:
 
         while True:
             output += self._read_chunk()
-            output = re.sub(b&#34;\r&#34;, b&#34;&#34;, output)
             channel_match = re.search(prompt_pattern, output)
             if channel_match:
                 return output
@@ -814,14 +814,15 @@ class Channel:
     timeout_duration = getattr(self, attribute, None)
     if not timeout_duration:
         return wrapped_func(self, *args, **kwargs)
-    old = signal.signal(signal.SIGALRM, _raise_exception)
-    signal.setitimer(signal.ITIMER_REAL, timeout_duration)
+
+    wrapped_args = [self, *args]
+    pool = multiprocessing.pool.ThreadPool(processes=1)
+    async_result = pool.apply_async(wrapped_func, wrapped_args, kwargs)
+
     try:
-        return wrapped_func(self, *args, **kwargs)
-    finally:
-        if timeout_duration:
-            signal.setitimer(signal.ITIMER_REAL, 0)
-            signal.signal(signal.SIGALRM, old)</code></pre>
+        return async_result.get(timeout_duration)
+    except multiprocessing.context.TimeoutError:
+        raise TimeoutError(message)</code></pre>
 </details>
 </dd>
 <dt id="scrapli.channel.channel.Channel.send_inputs"><code class="name flex">

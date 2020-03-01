@@ -75,7 +75,7 @@ __all__ = (
 <dl>
 <dt id="scrapli.driver.core.EOSDriver"><code class="flex name class">
 <span>class <span class="ident">EOSDriver</span></span>
-<span>(</span><span>auth_secondary='', session_pre_login_handler='', session_disable_paging='terminal length 0', **kwargs)</span>
+<span>(</span><span>auth_secondary='', on_connect=None, **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>EOSDriver Object</p>
@@ -83,12 +83,11 @@ __all__ = (
 <dl>
 <dt><strong><code>auth_secondary</code></strong></dt>
 <dd>password to use for secondary authentication (enable)</dd>
-<dt><strong><code>session_pre_login_handler</code></strong></dt>
-<dd>callable or string that resolves to an importable function to
-handle pre-login (pre disable paging) operations</dd>
-<dt><strong><code>session_disable_paging</code></strong></dt>
-<dd>callable, string that resolves to an importable function, or
-string to send to device to disable paging</dd>
+<dt><strong><code>on_connect</code></strong></dt>
+<dd>callable that accepts the class instance as its only argument. this callable
+if provided is executed immediately after authentication is completed. Common use
+cases for this callable would be to disable paging or accept any kind of banner
+message that prompts a user upon connection</dd>
 <dt><strong><code>**kwargs</code></strong></dt>
 <dd>keyword args to pass to inherited class(es)</dd>
 </dl>
@@ -111,8 +110,7 @@ string to send to device to disable paging</dd>
     def __init__(
         self,
         auth_secondary: str = &#34;&#34;,
-        session_pre_login_handler: Union[str, Callable[..., Any]] = &#34;&#34;,
-        session_disable_paging: Union[str, Callable[..., Any]] = &#34;terminal length 0&#34;,
+        on_connect: Optional[Callable[..., Any]] = None,
         **kwargs: Dict[str, Any],
     ):
         &#34;&#34;&#34;
@@ -120,10 +118,10 @@ string to send to device to disable paging</dd>
 
         Args:
             auth_secondary: password to use for secondary authentication (enable)
-            session_pre_login_handler: callable or string that resolves to an importable function to
-                handle pre-login (pre disable paging) operations
-            session_disable_paging: callable, string that resolves to an importable function, or
-                string to send to device to disable paging
+            on_connect: callable that accepts the class instance as its only argument. this callable
+                if provided is executed immediately after authentication is completed. Common use
+                cases for this callable would be to disable paging or accept any kind of banner
+                message that prompts a user upon connection
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -132,9 +130,9 @@ string to send to device to disable paging</dd>
         Raises:
             N/A
         &#34;&#34;&#34;
-        super().__init__(
-            auth_secondary, session_pre_login_handler, session_disable_paging, **kwargs
-        )
+        if on_connect is None:
+            on_connect = eos_on_connect
+        super().__init__(auth_secondary, on_connect=on_connect, **kwargs)
         self.privs = PRIVS
         self.default_desired_priv = &#34;privilege_exec&#34;
         self.textfsm_platform = &#34;arista_eos&#34;
@@ -154,6 +152,7 @@ string to send to device to disable paging</dd>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.get_prompt" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.get_prompt">get_prompt</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.isalive" href="../driver.html#scrapli.driver.driver.Scrape.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.open" href="../driver.html#scrapli.driver.driver.Scrape.open">open</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_command" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_command">send_command</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_commands" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_commands">send_commands</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_configs" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_configs">send_configs</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_interactive" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_interactive">send_interactive</a></code></li>
@@ -163,7 +162,7 @@ string to send to device to disable paging</dd>
 </dd>
 <dt id="scrapli.driver.core.IOSXEDriver"><code class="flex name class">
 <span>class <span class="ident">IOSXEDriver</span></span>
-<span>(</span><span>auth_secondary='', session_pre_login_handler='', session_disable_paging='terminal length 0', **kwargs)</span>
+<span>(</span><span>auth_secondary='', on_connect=None, **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>IOSXEDriver Object</p>
@@ -171,12 +170,11 @@ string to send to device to disable paging</dd>
 <dl>
 <dt><strong><code>auth_secondary</code></strong></dt>
 <dd>password to use for secondary authentication (enable)</dd>
-<dt><strong><code>session_pre_login_handler</code></strong></dt>
-<dd>callable or string that resolves to an importable function to
-handle pre-login (pre disable paging) operations</dd>
-<dt><strong><code>session_disable_paging</code></strong></dt>
-<dd>callable, string that resolves to an importable function, or
-string to send to device to disable paging</dd>
+<dt><strong><code>on_connect</code></strong></dt>
+<dd>callable that accepts the class instance as its only argument. this callable
+if provided is executed immediately after authentication is completed. Common use
+cases for this callable would be to disable paging or accept any kind of banner
+message that prompts a user upon connection</dd>
 <dt><strong><code>**kwargs</code></strong></dt>
 <dd>keyword args to pass to inherited class(es)</dd>
 </dl>
@@ -199,8 +197,7 @@ string to send to device to disable paging</dd>
     def __init__(
         self,
         auth_secondary: str = &#34;&#34;,
-        session_pre_login_handler: Union[str, Callable[..., Any]] = &#34;&#34;,
-        session_disable_paging: Union[str, Callable[..., Any]] = &#34;terminal length 0&#34;,
+        on_connect: Optional[Callable[..., Any]] = None,
         **kwargs: Dict[str, Any],
     ):
         &#34;&#34;&#34;
@@ -208,10 +205,10 @@ string to send to device to disable paging</dd>
 
         Args:
             auth_secondary: password to use for secondary authentication (enable)
-            session_pre_login_handler: callable or string that resolves to an importable function to
-                handle pre-login (pre disable paging) operations
-            session_disable_paging: callable, string that resolves to an importable function, or
-                string to send to device to disable paging
+            on_connect: callable that accepts the class instance as its only argument. this callable
+                if provided is executed immediately after authentication is completed. Common use
+                cases for this callable would be to disable paging or accept any kind of banner
+                message that prompts a user upon connection
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -220,9 +217,9 @@ string to send to device to disable paging</dd>
         Raises:
             N/A
         &#34;&#34;&#34;
-        super().__init__(
-            auth_secondary, session_pre_login_handler, session_disable_paging, **kwargs
-        )
+        if on_connect is None:
+            on_connect = iosxe_on_connect
+        super().__init__(auth_secondary, on_connect=on_connect, **kwargs)
         self.privs = PRIVS
         self.default_desired_priv = &#34;privilege_exec&#34;
         self.textfsm_platform = &#34;cisco_ios&#34;
@@ -242,6 +239,7 @@ string to send to device to disable paging</dd>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.get_prompt" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.get_prompt">get_prompt</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.isalive" href="../driver.html#scrapli.driver.driver.Scrape.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.open" href="../driver.html#scrapli.driver.driver.Scrape.open">open</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_command" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_command">send_command</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_commands" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_commands">send_commands</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_configs" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_configs">send_configs</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_interactive" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_interactive">send_interactive</a></code></li>
@@ -251,7 +249,7 @@ string to send to device to disable paging</dd>
 </dd>
 <dt id="scrapli.driver.core.IOSXRDriver"><code class="flex name class">
 <span>class <span class="ident">IOSXRDriver</span></span>
-<span>(</span><span>auth_secondary='', session_pre_login_handler='', session_disable_paging='terminal length 0', **kwargs)</span>
+<span>(</span><span>auth_secondary='', on_connect=None, **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>IOSXRDriver Object</p>
@@ -259,12 +257,11 @@ string to send to device to disable paging</dd>
 <dl>
 <dt><strong><code>auth_secondary</code></strong></dt>
 <dd>password to use for secondary authentication (enable)</dd>
-<dt><strong><code>session_pre_login_handler</code></strong></dt>
-<dd>callable or string that resolves to an importable function to
-handle pre-login (pre disable paging) operations</dd>
-<dt><strong><code>session_disable_paging</code></strong></dt>
-<dd>callable, string that resolves to an importable function, or
-string to send to device to disable paging</dd>
+<dt><strong><code>on_connect</code></strong></dt>
+<dd>callable that accepts the class instance as its only argument. this callable
+if provided is executed immediately after authentication is completed. Common use
+cases for this callable would be to disable paging or accept any kind of banner
+message that prompts a user upon connection</dd>
 <dt><strong><code>**kwargs</code></strong></dt>
 <dd>keyword args to pass to inherited class(es)</dd>
 </dl>
@@ -287,8 +284,7 @@ string to send to device to disable paging</dd>
     def __init__(
         self,
         auth_secondary: str = &#34;&#34;,
-        session_pre_login_handler: Union[str, Callable[..., Any]] = &#34;&#34;,
-        session_disable_paging: Union[str, Callable[..., Any]] = &#34;terminal length 0&#34;,
+        on_connect: Optional[Callable[..., Any]] = None,
         **kwargs: Dict[str, Any],
     ):
         &#34;&#34;&#34;
@@ -296,10 +292,10 @@ string to send to device to disable paging</dd>
 
         Args:
             auth_secondary: password to use for secondary authentication (enable)
-            session_pre_login_handler: callable or string that resolves to an importable function to
-                handle pre-login (pre disable paging) operations
-            session_disable_paging: callable, string that resolves to an importable function, or
-                string to send to device to disable paging
+            on_connect: callable that accepts the class instance as its only argument. this callable
+                if provided is executed immediately after authentication is completed. Common use
+                cases for this callable would be to disable paging or accept any kind of banner
+                message that prompts a user upon connection
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -308,9 +304,9 @@ string to send to device to disable paging</dd>
         Raises:
             N/A
         &#34;&#34;&#34;
-        super().__init__(
-            auth_secondary, session_pre_login_handler, session_disable_paging, **kwargs
-        )
+        if on_connect is None:
+            on_connect = iosxr_on_connect
+        super().__init__(auth_secondary, on_connect=on_connect, **kwargs)
         self.privs = PRIVS
         self.default_desired_priv = &#34;privilege_exec&#34;
         self.textfsm_platform = &#34;cisco_xr&#34;
@@ -330,6 +326,7 @@ string to send to device to disable paging</dd>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.get_prompt" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.get_prompt">get_prompt</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.isalive" href="../driver.html#scrapli.driver.driver.Scrape.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.open" href="../driver.html#scrapli.driver.driver.Scrape.open">open</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_command" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_command">send_command</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_commands" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_commands">send_commands</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_configs" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_configs">send_configs</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_interactive" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_interactive">send_interactive</a></code></li>
@@ -339,7 +336,7 @@ string to send to device to disable paging</dd>
 </dd>
 <dt id="scrapli.driver.core.JunosDriver"><code class="flex name class">
 <span>class <span class="ident">JunosDriver</span></span>
-<span>(</span><span>auth_secondary='', session_pre_login_handler='', session_disable_paging='terminal length 0', **kwargs)</span>
+<span>(</span><span>auth_secondary='', on_connect=None, **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>JunosDriver Object</p>
@@ -347,12 +344,11 @@ string to send to device to disable paging</dd>
 <dl>
 <dt><strong><code>auth_secondary</code></strong></dt>
 <dd>password to use for secondary authentication (enable)</dd>
-<dt><strong><code>session_pre_login_handler</code></strong></dt>
-<dd>callable or string that resolves to an importable function to
-handle pre-login (pre disable paging) operations</dd>
-<dt><strong><code>session_disable_paging</code></strong></dt>
-<dd>callable, string that resolves to an importable function, or
-string to send to device to disable paging</dd>
+<dt><strong><code>on_connect</code></strong></dt>
+<dd>callable that accepts the class instance as its only argument. this callable
+if provided is executed immediately after authentication is completed. Common use
+cases for this callable would be to disable paging or accept any kind of banner
+message that prompts a user upon connection</dd>
 <dt><strong><code>**kwargs</code></strong></dt>
 <dd>keyword args to pass to inherited class(es)</dd>
 </dl>
@@ -375,8 +371,7 @@ string to send to device to disable paging</dd>
     def __init__(
         self,
         auth_secondary: str = &#34;&#34;,
-        session_pre_login_handler: Union[str, Callable[..., Any]] = &#34;&#34;,
-        session_disable_paging: Union[str, Callable[..., Any]] = &#34;terminal length 0&#34;,
+        on_connect: Optional[Callable[..., Any]] = None,
         **kwargs: Dict[str, Any],
     ):
         &#34;&#34;&#34;
@@ -384,10 +379,10 @@ string to send to device to disable paging</dd>
 
         Args:
             auth_secondary: password to use for secondary authentication (enable)
-            session_pre_login_handler: callable or string that resolves to an importable function to
-                handle pre-login (pre disable paging) operations
-            session_disable_paging: callable, string that resolves to an importable function, or
-                string to send to device to disable paging
+            on_connect: callable that accepts the class instance as its only argument. this callable
+                if provided is executed immediately after authentication is completed. Common use
+                cases for this callable would be to disable paging or accept any kind of banner
+                message that prompts a user upon connection
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -396,9 +391,9 @@ string to send to device to disable paging</dd>
         Raises:
             N/A
         &#34;&#34;&#34;
-        super().__init__(
-            auth_secondary, session_pre_login_handler, session_disable_paging, **kwargs
-        )
+        if on_connect is None:
+            on_connect = junos_on_connect
+        super().__init__(auth_secondary, on_connect=on_connect, **kwargs)
         self.privs = PRIVS
         self.default_desired_priv = &#34;exec&#34;
         self.textfsm_platform = &#34;juniper_junos&#34;
@@ -418,6 +413,7 @@ string to send to device to disable paging</dd>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.get_prompt" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.get_prompt">get_prompt</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.isalive" href="../driver.html#scrapli.driver.driver.Scrape.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.open" href="../driver.html#scrapli.driver.driver.Scrape.open">open</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_command" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_command">send_command</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_commands" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_commands">send_commands</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_configs" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_configs">send_configs</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_interactive" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_interactive">send_interactive</a></code></li>
@@ -427,7 +423,7 @@ string to send to device to disable paging</dd>
 </dd>
 <dt id="scrapli.driver.core.NXOSDriver"><code class="flex name class">
 <span>class <span class="ident">NXOSDriver</span></span>
-<span>(</span><span>auth_secondary='', session_pre_login_handler='', session_disable_paging='terminal length 0', **kwargs)</span>
+<span>(</span><span>auth_secondary='', comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]\\s*$&#x27;, on_connect=None, **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>NXOSDriver Object</p>
@@ -435,12 +431,20 @@ string to send to device to disable paging</dd>
 <dl>
 <dt><strong><code>auth_secondary</code></strong></dt>
 <dd>password to use for secondary authentication (enable)</dd>
-<dt><strong><code>session_pre_login_handler</code></strong></dt>
-<dd>callable or string that resolves to an importable function to
-handle pre-login (pre disable paging) operations</dd>
-<dt><strong><code>session_disable_paging</code></strong></dt>
-<dd>callable, string that resolves to an importable function, or
-string to send to device to disable paging</dd>
+<dt><strong><code>comms_prompt_pattern</code></strong></dt>
+<dd>raw string regex pattern &ndash; preferably use <code>^</code> and <code>$</code> anchors!
+this is the single most important attribute here! if this does not match a prompt,
+scrapli will not work!
+IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
+for highly reliably matching for prompts however we do NOT strip trailing whitespace
+for each line, so be sure to add <code>\s*</code> if your device needs that. This should be
+mostly sorted for you if using network drivers (i.e. <a title="scrapli.driver.core.IOSXEDriver" href="#scrapli.driver.core.IOSXEDriver"><code>IOSXEDriver</code></a>). Lastly, the
+case insensitive is just a convenience factor so i can be lazy.</dd>
+<dt><strong><code>on_connect</code></strong></dt>
+<dd>callable that accepts the class instance as its only argument. this callable
+if provided is executed immediately after authentication is completed. Common use
+cases for this callable would be to disable paging or accept any kind of banner
+message that prompts a user upon connection</dd>
 <dt><strong><code>**kwargs</code></strong></dt>
 <dd>keyword args to pass to inherited class(es)</dd>
 </dl>
@@ -463,8 +467,8 @@ string to send to device to disable paging</dd>
     def __init__(
         self,
         auth_secondary: str = &#34;&#34;,
-        session_pre_login_handler: Union[str, Callable[..., Any]] = &#34;&#34;,
-        session_disable_paging: Union[str, Callable[..., Any]] = &#34;terminal length 0&#34;,
+        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]\s*$&#34;,
+        on_connect: Optional[Callable[..., Any]] = None,
         **kwargs: Dict[str, Any],
     ):
         &#34;&#34;&#34;
@@ -472,10 +476,18 @@ string to send to device to disable paging</dd>
 
         Args:
             auth_secondary: password to use for secondary authentication (enable)
-            session_pre_login_handler: callable or string that resolves to an importable function to
-                handle pre-login (pre disable paging) operations
-            session_disable_paging: callable, string that resolves to an importable function, or
-                string to send to device to disable paging
+            comms_prompt_pattern: raw string regex pattern -- preferably use `^` and `$` anchors!
+                this is the single most important attribute here! if this does not match a prompt,
+                scrapli will not work!
+                IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
+                for highly reliably matching for prompts however we do NOT strip trailing whitespace
+                for each line, so be sure to add `\\s*` if your device needs that. This should be
+                mostly sorted for you if using network drivers (i.e. `IOSXEDriver`). Lastly, the
+                case insensitive is just a convenience factor so i can be lazy.
+            on_connect: callable that accepts the class instance as its only argument. this callable
+                if provided is executed immediately after authentication is completed. Common use
+                cases for this callable would be to disable paging or accept any kind of banner
+                message that prompts a user upon connection
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -484,8 +496,13 @@ string to send to device to disable paging</dd>
         Raises:
             N/A
         &#34;&#34;&#34;
+        if on_connect is None:
+            on_connect = nxos_on_connect
         super().__init__(
-            auth_secondary, session_pre_login_handler, session_disable_paging, **kwargs
+            auth_secondary,
+            comms_prompt_pattern=comms_prompt_pattern,
+            on_connect=on_connect,
+            **kwargs,
         )
         self.privs = PRIVS
         self.default_desired_priv = &#34;privilege_exec&#34;
@@ -506,6 +523,7 @@ string to send to device to disable paging</dd>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.get_prompt" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.get_prompt">get_prompt</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.isalive" href="../driver.html#scrapli.driver.driver.Scrape.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.open" href="../driver.html#scrapli.driver.driver.Scrape.open">open</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_command" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_command">send_command</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_commands" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_commands">send_commands</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_configs" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_configs">send_configs</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_interactive" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_interactive">send_interactive</a></code></li>

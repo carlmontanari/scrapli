@@ -319,6 +319,9 @@ type is "network"</dd>
         self._open_channel()
         self.session_lock.release()
 
+        if self.keepalive:
+            self._session_keepalive()
+
     def _verify_key(self) -&gt; None:
         &#34;&#34;&#34;
         Verify target host public key, raise exception if invalid/unknown
@@ -775,7 +778,10 @@ type is "network"</dd>
         LOG.critical(msg)
         raise ScrapliAuthenticationFailed(msg)
     self._open_channel()
-    self.session_lock.release()</code></pre>
+    self.session_lock.release()
+
+    if self.keepalive:
+        self._session_keepalive()</code></pre>
 </details>
 </dd>
 <dt id="scrapli.transport.MikoTransport.read"><code class="name flex">
@@ -1637,7 +1643,7 @@ type is "network"</dd>
 </dd>
 <dt id="scrapli.transport.SystemSSHTransport"><code class="flex name class">
 <span>class <span class="ident">SystemSSHTransport</span></span>
-<span>(</span><span>host, port=22, auth_username='', auth_public_key='', auth_password='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, timeout_ops=10, keepalive=False, keepalive_interval=30, keepalive_type='', keepalive_pattern='\x05', comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n', ssh_config_file='')</span>
+<span>(</span><span>host, port=22, auth_username='', auth_public_key='', auth_password='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, timeout_ops=10, keepalive=False, keepalive_interval=30, keepalive_type='', keepalive_pattern='\x05', comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n', comms_ansi=False, ssh_config_file='')</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -1704,6 +1710,8 @@ channel &ndash; system ssh needs to know this to know what to send so that we ca
 the channel to make sure we are authenticated and sending/receiving data. If using
 driver, this should be passed from driver (Scrape, or IOSXE, etc.) to this Transport
 class.</dd>
+<dt><strong><code>comms_ansi</code></strong></dt>
+<dd>True/False strip comms_ansi characters from output</dd>
 <dt><strong><code>ssh_config_file</code></strong></dt>
 <dd>string to path for ssh config file</dd>
 </dl>
@@ -1740,6 +1748,7 @@ class.</dd>
         keepalive_pattern: str = &#34;\005&#34;,
         comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]$&#34;,
         comms_return_char: str = &#34;\n&#34;,
+        comms_ansi: bool = False,
         ssh_config_file: str = &#34;&#34;,
     ):  # pylint: disable=W0231
         &#34;&#34;&#34;
@@ -1793,6 +1802,7 @@ class.</dd>
                 the channel to make sure we are authenticated and sending/receiving data. If using
                 driver, this should be passed from driver (Scrape, or IOSXE, etc.) to this Transport
                 class.
+            comms_ansi: True/False strip comms_ansi characters from output
             ssh_config_file: string to path for ssh config file
 
         Returns:
@@ -1807,14 +1817,20 @@ class.</dd>
         self.timeout_socket: int = timeout_socket
         self.timeout_transport: int = timeout_transport
         self.timeout_ops: int = timeout_ops
-        self.session_lock: Lock = Lock()
+        self.keepalive: bool = keepalive
+        self.keepalive_interval: int = keepalive_interval
+        self.keepalive_type: str = keepalive_type
+        self.keepalive_pattern: str = keepalive_pattern
         self.auth_username: str = auth_username
         self.auth_public_key: str = auth_public_key
         self.auth_password: str = auth_password
         self.auth_strict_key: bool = auth_strict_key
         self.comms_prompt_pattern: str = comms_prompt_pattern
         self.comms_return_char: str = comms_return_char
+        self.comms_ansi: bool = comms_ansi
         self._process_ssh_config(ssh_config_file)
+
+        self.session_lock: Lock = Lock()
 
         self.session: Union[Popen[bytes], PtyProcess]  # pylint: disable=E1136
         self.lib_auth_exception = ScrapliAuthenticationFailed
@@ -1875,6 +1891,8 @@ class.</dd>
             self.open_cmd.extend([&#34;-o&#34;, &#34;StrictHostKeyChecking=yes&#34;])
         if self.ssh_config_file:
             self.open_cmd.extend([&#34;-F&#34;, self.ssh_config_file])
+        else:
+            self.open_cmd.extend([&#34;-F&#34;, &#34;/dev/null&#34;])
 
     def open(self) -&gt; None:
         &#34;&#34;&#34;
@@ -1919,6 +1937,9 @@ class.</dd>
             msg = f&#34;Authentication to host {self.host} failed&#34;
             LOG.critical(msg)
             raise ScrapliAuthenticationFailed(msg)
+
+        if self.keepalive:
+            self._session_keepalive()
 
     def _open_pipes(self) -&gt; bool:
         &#34;&#34;&#34;
@@ -2033,6 +2054,9 @@ class.</dd>
                     &#34;PTY Authentication failed, often this means strict host key checking is &#34;
                     &#34;enabled and is failing!&#34;
                 )
+            output = strip_ansi(output)
+            if self.comms_ansi:
+                output = strip_ansi(output)
             if b&#34;password&#34; in output.lower():
                 pty_session.write(self.auth_password.encode())
                 pty_session.write(self.comms_return_char.encode())
@@ -2063,17 +2087,19 @@ class.</dd>
             pty_session.write(self.comms_return_char.encode())
             fd_ready, _, _ = select([pty_session.fd], [], [], 0)
             if pty_session.fd in fd_ready:
-                # unclear as to why there needs to be two read operations here, but fails w/out it
-                pty_session.read()
-                output = pty_session.read()
-                # we do not need to deal w/ line replacement for the actual output, only for
-                # parsing if a prompt-like thing is at the end of the output
-                output = re.sub(b&#34;\r&#34;, b&#34;\n&#34;, output.strip())
-                channel_match = re.search(prompt_pattern, output)
-                if channel_match:
-                    self.session_lock.release()
-                    self._isauthenticated = True
-                    return True
+                output = b&#34;&#34;
+                while True:
+                    output += pty_session.read()
+                    # we do not need to deal w/ line replacement for the actual output, only for
+                    # parsing if a prompt-like thing is at the end of the output
+                    output = re.sub(b&#34;\r&#34;, b&#34;&#34;, output)
+                    if self.comms_ansi:
+                        output = strip_ansi(output)
+                    channel_match = re.search(prompt_pattern, output)
+                    if channel_match:
+                        self.session_lock.release()
+                        self._isauthenticated = True
+                        return True
         self.session_lock.release()
         return False
 
@@ -2328,7 +2354,10 @@ works, but its just a bit less desirable.</p>
     if not self._open_pty():
         msg = f&#34;Authentication to host {self.host} failed&#34;
         LOG.critical(msg)
-        raise ScrapliAuthenticationFailed(msg)</code></pre>
+        raise ScrapliAuthenticationFailed(msg)
+
+    if self.keepalive:
+        self._session_keepalive()</code></pre>
 </details>
 </dd>
 <dt id="scrapli.transport.SystemSSHTransport.set_timeout"><code class="name flex">

@@ -10,7 +10,7 @@ import pkg_resources  # pylint: disable=C0411
 
 
 def get_prompt_pattern(prompt: str, class_prompt: str) -> Pattern[bytes]:
-    r"""
+    """
     Return compiled prompt pattern
 
     Given a potential prompt and the Channel class' prompt, return compiled prompt pattern

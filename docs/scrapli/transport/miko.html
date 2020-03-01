@@ -230,6 +230,9 @@ class MikoTransport(Socket, Transport):
         self._open_channel()
         self.session_lock.release()
 
+        if self.keepalive:
+            self._session_keepalive()
+
     def _verify_key(self) -&gt; None:
         &#34;&#34;&#34;
         Verify target host public key, raise exception if invalid/unknown
@@ -731,6 +734,9 @@ type is "network"</dd>
         self._open_channel()
         self.session_lock.release()
 
+        if self.keepalive:
+            self._session_keepalive()
+
     def _verify_key(self) -&gt; None:
         &#34;&#34;&#34;
         Verify target host public key, raise exception if invalid/unknown
@@ -1187,7 +1193,10 @@ type is "network"</dd>
         LOG.critical(msg)
         raise ScrapliAuthenticationFailed(msg)
     self._open_channel()
-    self.session_lock.release()</code></pre>
+    self.session_lock.release()
+
+    if self.keepalive:
+        self._session_keepalive()</code></pre>
 </details>
 </dd>
 <dt id="scrapli.transport.miko.MikoTransport.read"><code class="name flex">

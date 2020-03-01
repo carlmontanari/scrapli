@@ -62,7 +62,7 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
 <dl>
 <dt id="scrapli.driver.NetworkDriver"><code class="flex name class">
 <span>class <span class="ident">NetworkDriver</span></span>
-<span>(</span><span>auth_secondary='', session_pre_login_handler='', session_disable_paging='terminal length 0', **kwargs)</span>
+<span>(</span><span>auth_secondary='', **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>BaseNetworkDriver Object</p>
@@ -70,12 +70,6 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
 <dl>
 <dt><strong><code>auth_secondary</code></strong></dt>
 <dd>password to use for secondary authentication (enable)</dd>
-<dt><strong><code>session_pre_login_handler</code></strong></dt>
-<dd>callable or string that resolves to an importable function to
-handle pre-login (pre disable paging) operations</dd>
-<dt><strong><code>session_disable_paging</code></strong></dt>
-<dd>callable, string that resolves to an importable function, or
-string to send to device to disable paging</dd>
 <dt><strong><code>**kwargs</code></strong></dt>
 <dd>keyword args to pass to inherited class(es)</dd>
 </dl>
@@ -96,21 +90,13 @@ string to send to device to disable paging</dd>
 </summary>
 <pre><code class="python">class NetworkDriver(Scrape):
     def __init__(
-        self,
-        auth_secondary: str = &#34;&#34;,
-        session_pre_login_handler: Union[str, Callable[..., Any]] = &#34;&#34;,
-        session_disable_paging: Union[str, Callable[..., Any]] = &#34;terminal length 0&#34;,
-        **kwargs: Any,
+        self, auth_secondary: str = &#34;&#34;, **kwargs: Any,
     ):
         &#34;&#34;&#34;
         BaseNetworkDriver Object
 
         Args:
             auth_secondary: password to use for secondary authentication (enable)
-            session_pre_login_handler: callable or string that resolves to an importable function to
-                handle pre-login (pre disable paging) operations
-            session_disable_paging: callable, string that resolves to an importable function, or
-                string to send to device to disable paging
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -126,107 +112,6 @@ string to send to device to disable paging</dd>
         self.default_desired_priv: Optional[str] = None
         self.textfsm_platform: str = &#34;&#34;
         self.exit_command: str = &#34;exit&#34;
-
-        self.session_pre_login_handler: Optional[Callable[..., Any]] = None
-        self.session_disable_paging: Union[str, Callable[..., Any]] = &#34;&#34;
-        self._setup_session(session_pre_login_handler, session_disable_paging)
-
-    def _setup_session(
-        self,
-        session_pre_login_handler: Union[str, Callable[..., Any]],
-        session_disable_paging: Union[str, Callable[..., Any]],
-    ) -&gt; None:
-        &#34;&#34;&#34;
-        Parse and setup session attributes
-
-        Args:
-            session_pre_login_handler: pre login handler to parse/set
-            session_disable_paging: disable paging to parse/set
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            TypeError: if invalid type args provided
-
-        &#34;&#34;&#34;
-        if session_pre_login_handler:
-            self.session_pre_login_handler = self._set_session_pre_login_handler(
-                session_pre_login_handler
-            )
-        else:
-            self.session_pre_login_handler = None
-        if callable(session_disable_paging):
-            self.session_disable_paging = session_disable_paging
-        if not isinstance(session_disable_paging, str) and not callable(session_disable_paging):
-            raise TypeError(
-                &#34;session_disable_paging should be str or callable, got &#34;
-                f&#34;{type(session_disable_paging)}&#34;
-            )
-        if session_disable_paging != &#34;terminal length 0&#34;:
-            try:
-                self.session_disable_paging = self._set_session_disable_paging(
-                    session_disable_paging
-                )
-            except TypeError:
-                self.session_disable_paging = session_disable_paging
-        else:
-            self.session_disable_paging = &#34;terminal length 0&#34;
-
-    @staticmethod
-    def _set_session_pre_login_handler(
-        session_pre_login_handler: Union[str, Callable[..., Any]]
-    ) -&gt; Optional[Callable[..., Any]]:
-        &#34;&#34;&#34;
-        Return session_pre_login_handler argument
-
-        Args:
-            session_pre_login_handler: callable function, or string representing a path to
-                a callable
-
-        Returns:
-            session_pre_login_handler: callable or default empty string value
-
-        Raises:
-            TypeError: if provided string does not result in a callable
-
-        &#34;&#34;&#34;
-        if callable(session_pre_login_handler):
-            return session_pre_login_handler
-        if not validate_external_function(session_pre_login_handler):
-            LOG.critical(f&#34;Invalid comms_pre_login_handler: {session_pre_login_handler}&#34;)
-            raise TypeError(
-                f&#34;{session_pre_login_handler} is an invalid session_pre_login_handler function &#34;
-                &#34;or path to a function.&#34;
-            )
-        return get_external_function(session_pre_login_handler)
-
-    @staticmethod
-    def _set_session_disable_paging(
-        session_disable_paging: Union[Callable[..., Any], str]
-    ) -&gt; Union[Callable[..., Any], str]:
-        &#34;&#34;&#34;
-        Return session_disable_paging argument
-
-        Args:
-            session_disable_paging: callable function, string representing a path to
-                a callable, or a string to send to device to disable paging
-
-        Returns:
-            session_disable_paging: callable or string to use to disable paging
-
-        Raises:
-            TypeError: if provided string does not result in a callable
-
-        &#34;&#34;&#34;
-        if callable(session_disable_paging):
-            return session_disable_paging
-        if not validate_external_function(session_disable_paging):
-            raise TypeError(
-                f&#34;{session_disable_paging} is an invalid session_disable_paging function or path &#34;
-                &#34;to a function. Assuming this is string to send to disable paging.&#34;
-            )
-        return get_external_function(session_disable_paging)
 
     def _determine_current_priv(self, current_prompt: str) -&gt; PrivilegeLevel:
         &#34;&#34;&#34;
@@ -343,23 +228,50 @@ string to send to device to disable paging</dd>
                 self._escalate()
             priv_attempt_counter += 1
 
-    def send_commands(
-        self, commands: Union[str, List[str]], strip_prompt: bool = True
-    ) -&gt; List[Response]:
+    def send_command(self, command: str, strip_prompt: bool = True) -&gt; Response:
         &#34;&#34;&#34;
-        Send command(s)
+        Send a command
 
         Args:
-            commands: string or list of strings to send to device in privilege exec mode
+            command: string to send to device in privilege exec mode
             strip_prompt: True/False strip prompt from returned output
 
         Returns:
-            responses: list of Scrape Response objects
+            Response: Scrapli Response object
 
         Raises:
             N/A
 
         &#34;&#34;&#34;
+        self.acquire_priv(str(self.default_desired_priv))
+        response = self.channel.send_inputs(command, strip_prompt)[0]
+
+        # update the response objects with textfsm platform; we do this here because the underlying
+        #  channel doesn&#39;t know or care about platforms
+        response.textfsm_platform = self.textfsm_platform
+
+        return response
+
+    def send_commands(self, commands: List[str], strip_prompt: bool = True) -&gt; List[Response]:
+        &#34;&#34;&#34;
+        Send multiple commands
+
+        Args:
+            commands: list of strings to send to device in privilege exec mode
+            strip_prompt: True/False strip prompt from returned output
+
+        Returns:
+            responses: list of Scrapli Response objects
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        if not isinstance(commands, list):
+            raise TypeError(
+                f&#34;`send_commands` expects a list of strings, got {type(commands)}. &#34;
+                &#34;to send a single command use the `send_command` method instead.&#34;
+            )
         self.acquire_priv(str(self.default_desired_priv))
         responses = self.channel.send_inputs(commands, strip_prompt)
 
@@ -440,17 +352,6 @@ string to send to device to disable paging</dd>
         prompt: str = self.channel.get_prompt()
         return prompt
 
-    def open(self) -&gt; None:
-        super().open()
-        if self.session_pre_login_handler:
-            self.session_pre_login_handler(self)
-        # send disable paging if needed
-        if self.session_disable_paging:
-            if callable(self.session_disable_paging):
-                self.session_disable_paging(self)
-            else:
-                self.channel.send_inputs(self.session_disable_paging)
-
     def close(self) -&gt; None:
         self.transport.write(f&#34;{self.exit_command}{self.comms_return_char}&#34;)
         super().close()</code></pre>
@@ -466,7 +367,6 @@ string to send to device to disable paging</dd>
 <li><a title="scrapli.driver.core.cisco_iosxr.driver.IOSXRDriver" href="core/cisco_iosxr/driver.html#scrapli.driver.core.cisco_iosxr.driver.IOSXRDriver">IOSXRDriver</a></li>
 <li><a title="scrapli.driver.core.cisco_nxos.driver.NXOSDriver" href="core/cisco_nxos/driver.html#scrapli.driver.core.cisco_nxos.driver.NXOSDriver">NXOSDriver</a></li>
 <li><a title="scrapli.driver.core.juniper_junos.driver.JunosDriver" href="core/juniper_junos/driver.html#scrapli.driver.core.juniper_junos.driver.JunosDriver">JunosDriver</a></li>
-<li><a title="scrapli.netmiko_compatability.NetmikoNetworkDriver" href="../netmiko_compatability.html#scrapli.netmiko_compatability.NetmikoNetworkDriver">NetmikoNetworkDriver</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -566,22 +466,22 @@ string to send to device to disable paging</dd>
     return prompt</code></pre>
 </details>
 </dd>
-<dt id="scrapli.driver.NetworkDriver.send_commands"><code class="name flex">
-<span>def <span class="ident">send_commands</span></span>(<span>self, commands, strip_prompt=True)</span>
+<dt id="scrapli.driver.NetworkDriver.send_command"><code class="name flex">
+<span>def <span class="ident">send_command</span></span>(<span>self, command, strip_prompt=True)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Send command(s)</p>
+<section class="desc"><p>Send a command</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>commands</code></strong></dt>
-<dd>string or list of strings to send to device in privilege exec mode</dd>
+<dt><strong><code>command</code></strong></dt>
+<dd>string to send to device in privilege exec mode</dd>
 <dt><strong><code>strip_prompt</code></strong></dt>
 <dd>True/False strip prompt from returned output</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>responses</code></strong></dt>
-<dd>list of Scrape Response objects</dd>
+<dt><strong><code>Response</code></strong></dt>
+<dd>Scrapli Response object</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
@@ -592,23 +492,77 @@ string to send to device to disable paging</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def send_commands(
-    self, commands: Union[str, List[str]], strip_prompt: bool = True
-) -&gt; List[Response]:
+<pre><code class="python">def send_command(self, command: str, strip_prompt: bool = True) -&gt; Response:
     &#34;&#34;&#34;
-    Send command(s)
+    Send a command
 
     Args:
-        commands: string or list of strings to send to device in privilege exec mode
+        command: string to send to device in privilege exec mode
         strip_prompt: True/False strip prompt from returned output
 
     Returns:
-        responses: list of Scrape Response objects
+        Response: Scrapli Response object
 
     Raises:
         N/A
 
     &#34;&#34;&#34;
+    self.acquire_priv(str(self.default_desired_priv))
+    response = self.channel.send_inputs(command, strip_prompt)[0]
+
+    # update the response objects with textfsm platform; we do this here because the underlying
+    #  channel doesn&#39;t know or care about platforms
+    response.textfsm_platform = self.textfsm_platform
+
+    return response</code></pre>
+</details>
+</dd>
+<dt id="scrapli.driver.NetworkDriver.send_commands"><code class="name flex">
+<span>def <span class="ident">send_commands</span></span>(<span>self, commands, strip_prompt=True)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Send multiple commands</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>commands</code></strong></dt>
+<dd>list of strings to send to device in privilege exec mode</dd>
+<dt><strong><code>strip_prompt</code></strong></dt>
+<dd>True/False strip prompt from returned output</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>responses</code></strong></dt>
+<dd>list of Scrapli Response objects</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def send_commands(self, commands: List[str], strip_prompt: bool = True) -&gt; List[Response]:
+    &#34;&#34;&#34;
+    Send multiple commands
+
+    Args:
+        commands: list of strings to send to device in privilege exec mode
+        strip_prompt: True/False strip prompt from returned output
+
+    Returns:
+        responses: list of Scrapli Response objects
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    if not isinstance(commands, list):
+        raise TypeError(
+            f&#34;`send_commands` expects a list of strings, got {type(commands)}. &#34;
+            &#34;to send a single command use the `send_command` method instead.&#34;
+        )
     self.acquire_priv(str(self.default_desired_priv))
     responses = self.channel.send_inputs(commands, strip_prompt)
 
@@ -749,7 +703,7 @@ final_prompt - final prompt to expect</dd>
 </dd>
 <dt id="scrapli.driver.Scrape"><code class="flex name class">
 <span>class <span class="ident">Scrape</span></span>
-<span>(</span><span>host='', port=22, auth_username='', auth_password='', auth_public_key='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, timeout_ops=10, keepalive=False, keepalive_interval=30, keepalive_type='network', keepalive_pattern='\x05', comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n', comms_ansi=False, ssh_config_file=False, ssh_known_hosts_file='', transport='system')</span>
+<span>(</span><span>host='', port=22, auth_username='', auth_password='', auth_public_key='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, timeout_ops=10, keepalive=False, keepalive_interval=30, keepalive_type='network', keepalive_pattern='\x05', comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n', comms_ansi=False, ssh_config_file=False, ssh_known_hosts_file='', on_connect=None, transport='system')</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Scrape Object</p>
@@ -798,7 +752,9 @@ type is "network"</dd>
 this is the single most important attribute here! if this does not match a prompt,
 scrapli will not work!
 IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
-for highly reliably matching for prompts after stripping trailing white space,
+for highly reliably matching for prompts however we do NOT strip trailing whitespace
+for each line, so be sure to add <code>\s*</code> if your device needs that. This should be
+mostly sorted for you if using network drivers (i.e. <code>IOSXEDriver</code>). Lastly, the
 case insensitive is just a convenience factor so i can be lazy.</dd>
 <dt><strong><code>comms_return_char</code></strong></dt>
 <dd>character to use to send returns to host</dd>
@@ -810,8 +766,13 @@ or False to ignore default ssh config file</dd>
 <dt><strong><code>ssh_known_hosts_file</code></strong></dt>
 <dd>string to path for ssh known hosts file, True to use default known
 file locations. Only applicable/needed if <code>auth_strict_key</code> is set to True</dd>
+<dt><strong><code>on_connect</code></strong></dt>
+<dd>callable that accepts the class instance as its only argument. this callable
+if provided is executed immediately after authentication is completed. Common use
+cases for this callable would be to disable paging or accept any kind of banner
+message that prompts a user upon connection</dd>
 <dt><strong><code>transport</code></strong></dt>
-<dd>system|ssh2|paramiko|telnet &ndash; type of transport to use
+<dd>system|ssh2|paramiko|telnet &ndash; type of transport to use for connection
 system uses system available ssh (/usr/bin/ssh)
 ssh2 uses ssh2-python
 paramiko uses&hellip; paramiko
@@ -830,9 +791,14 @@ features built in (though scrapli does not expose/support them all).</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><strong><code>TypeError</code></strong></dt>
-<dd>if auth_strict_key/keepalive is not a bool or values cannot be converted to
-ints where appropriate (ex: timeouts)</dd>
+<dt><code>TypeError</code>:</dt>
+<dd>
+<ul>
+<li>auth_strict_key/keepalive is not a bool or values cannot be converted to
+ints where appropriate (ex: timeouts)</li>
+<li>on_connect is not a callable</li>
+</ul>
+</dd>
 <dt><strong><code>ValueError</code></strong></dt>
 <dd>if driver value is invalid</dd>
 </dl></section>
@@ -861,6 +827,7 @@ ints where appropriate (ex: timeouts)</dd>
         comms_ansi: bool = False,
         ssh_config_file: Union[str, bool] = False,
         ssh_known_hosts_file: str = &#34;&#34;,
+        on_connect: Optional[Callable[..., Any]] = None,
         transport: str = &#34;system&#34;,
     ):
         &#34;&#34;&#34;
@@ -897,7 +864,9 @@ ints where appropriate (ex: timeouts)</dd>
                 this is the single most important attribute here! if this does not match a prompt,
                 scrapli will not work!
                 IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
-                for highly reliably matching for prompts after stripping trailing white space,
+                for highly reliably matching for prompts however we do NOT strip trailing whitespace
+                for each line, so be sure to add `\\s*` if your device needs that. This should be
+                mostly sorted for you if using network drivers (i.e. `IOSXEDriver`). Lastly, the
                 case insensitive is just a convenience factor so i can be lazy.
             comms_return_char: character to use to send returns to host
             comms_ansi: True/False strip comms_ansi characters from output
@@ -905,7 +874,11 @@ ints where appropriate (ex: timeouts)</dd>
                 or False to ignore default ssh config file
             ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
                 file locations. Only applicable/needed if `auth_strict_key` is set to True
-            transport: system|ssh2|paramiko|telnet -- type of transport to use
+            on_connect: callable that accepts the class instance as its only argument. this callable
+                if provided is executed immediately after authentication is completed. Common use
+                cases for this callable would be to disable paging or accept any kind of banner
+                message that prompts a user upon connection
+            transport: system|ssh2|paramiko|telnet -- type of transport to use for connection
                 system uses system available ssh (/usr/bin/ssh)
                 ssh2 uses ssh2-python
                 paramiko uses... paramiko
@@ -920,8 +893,10 @@ ints where appropriate (ex: timeouts)</dd>
             N/A  # noqa: DAR202
 
         Raises:
-            TypeError: if auth_strict_key/keepalive is not a bool or values cannot be converted to
+            TypeError:
+                - auth_strict_key/keepalive is not a bool or values cannot be converted to
                 ints where appropriate (ex: timeouts)
+                - on_connect is not a callable
             ValueError: if driver value is invalid
 
         &#34;&#34;&#34;
@@ -957,6 +932,10 @@ ints where appropriate (ex: timeouts)</dd>
         self.comms_return_char: str = &#34;&#34;
         self.comms_ansi: bool = False
         self._setup_comms(comms_prompt_pattern, comms_return_char, comms_ansi)
+
+        if on_connect is not None and not callable(on_connect):
+            raise TypeError(f&#34;on_connect must be a callable, got {type(on_connect)}&#34;)
+        self.on_connect = on_connect
 
         if transport not in (&#34;ssh2&#34;, &#34;paramiko&#34;, &#34;system&#34;, &#34;telnet&#34;):
             raise ValueError(
@@ -1175,6 +1154,8 @@ ints where appropriate (ex: timeouts)</dd>
         &#34;&#34;&#34;
         Open Transport (socket/session) and establish channel
 
+        If on_connect callable provided, execute that callable after opening connection
+
         Args:
             N/A
 
@@ -1188,6 +1169,8 @@ ints where appropriate (ex: timeouts)</dd>
         self.transport = self.transport_class(**self.transport_args)
         self.transport.open()
         self.channel = Channel(self.transport, **self.channel_args)
+        if self.on_connect:
+            self.on_connect(self)
 
     def close(self) -&gt; None:
         &#34;&#34;&#34;
@@ -1317,6 +1300,7 @@ ints where appropriate (ex: timeouts)</dd>
 </code></dt>
 <dd>
 <section class="desc"><p>Open Transport (socket/session) and establish channel</p>
+<p>If on_connect callable provided, execute that callable after opening connection</p>
 <h2 id="args">Args</h2>
 <p>N/A</p>
 <h2 id="returns">Returns</h2>
@@ -1338,6 +1322,8 @@ ints where appropriate (ex: timeouts)</dd>
     &#34;&#34;&#34;
     Open Transport (socket/session) and establish channel
 
+    If on_connect callable provided, execute that callable after opening connection
+
     Args:
         N/A
 
@@ -1350,7 +1336,9 @@ ints where appropriate (ex: timeouts)</dd>
     &#34;&#34;&#34;
     self.transport = self.transport_class(**self.transport_args)
     self.transport.open()
-    self.channel = Channel(self.transport, **self.channel_args)</code></pre>
+    self.channel = Channel(self.transport, **self.channel_args)
+    if self.on_connect:
+        self.on_connect(self)</code></pre>
 </details>
 </dd>
 </dl>
@@ -1381,9 +1369,10 @@ ints where appropriate (ex: timeouts)</dd>
 <ul>
 <li>
 <h4><code><a title="scrapli.driver.NetworkDriver" href="#scrapli.driver.NetworkDriver">NetworkDriver</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="scrapli.driver.NetworkDriver.acquire_priv" href="#scrapli.driver.NetworkDriver.acquire_priv">acquire_priv</a></code></li>
 <li><code><a title="scrapli.driver.NetworkDriver.get_prompt" href="#scrapli.driver.NetworkDriver.get_prompt">get_prompt</a></code></li>
+<li><code><a title="scrapli.driver.NetworkDriver.send_command" href="#scrapli.driver.NetworkDriver.send_command">send_command</a></code></li>
 <li><code><a title="scrapli.driver.NetworkDriver.send_commands" href="#scrapli.driver.NetworkDriver.send_commands">send_commands</a></code></li>
 <li><code><a title="scrapli.driver.NetworkDriver.send_configs" href="#scrapli.driver.NetworkDriver.send_configs">send_configs</a></code></li>
 <li><code><a title="scrapli.driver.NetworkDriver.send_interactive" href="#scrapli.driver.NetworkDriver.send_interactive">send_interactive</a></code></li>

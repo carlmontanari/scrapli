@@ -8,6 +8,7 @@ import pytest
 from scrapli.channel import Channel
 from scrapli.driver import NetworkDriver, Scrape
 from scrapli.driver.core.cisco_iosxe.driver import PRIVS
+from scrapli.netmiko_compatability import NetmikoNetworkDriver
 from scrapli.transport.transport import Transport
 
 
@@ -160,3 +161,27 @@ def mocked_network_driver():
         return conn
 
     return _create_mocked_network_driver
+
+
+@pytest.fixture(scope="module")
+def mocked_netmiko_driver():
+    def _create_mocked_netmiko_driver(
+        test_operations,
+        initial_bytes=b"3560CX#",
+        comms_ansi=False,
+        comms_prompt_pattern=r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
+    ):
+        conn = MockNetworkDriver(
+            host="localhost",
+            port=22,
+            timeout_socket=1,
+            channel_ops=test_operations,
+            initial_bytes=initial_bytes,
+            comms_ansi=comms_ansi,
+            comms_prompt_pattern=comms_prompt_pattern,
+        )
+        netmiko_driver = NetmikoNetworkDriver(conn)
+        netmiko_driver.open()
+        return netmiko_driver
+
+    return _create_mocked_netmiko_driver

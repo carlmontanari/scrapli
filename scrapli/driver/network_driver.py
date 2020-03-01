@@ -199,7 +199,7 @@ class NetworkDriver(Scrape):
             strip_prompt: True/False strip prompt from returned output
 
         Returns:
-            response: Scrapli Response object
+            Response: Scrapli Response object
 
         Raises:
             N/A
