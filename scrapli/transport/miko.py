@@ -217,7 +217,8 @@ class MikoTransport(Socket, Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            KeyVerificationFailed: if public key verification fails
+            KeyVerificationFailed: if host is not in known hosts
+            KeyVerificationFailed: if host is in known hosts but public key does not match
 
         """
         known_hosts = SSHKnownHosts(self.ssh_known_hosts_file)

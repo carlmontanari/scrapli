@@ -78,23 +78,23 @@ class Scrape:
             timeout_ops: timeout for ssh channel operations
             keepalive: whether or not to try to keep session alive
             keepalive_interval: interval to use for session keepalives
-            keepalive_type: network|standard -- "network" sends actual characters over the
+            keepalive_type: network|standard -- 'network' sends actual characters over the
                 transport channel. This is useful for network-y type devices that may not support
-                "standard" keepalive mechanisms. "standard" attempts to use whatever "standard"
+                'standard' keepalive mechanisms. 'standard' attempts to use whatever 'standard'
                 keepalive mechanisms are available in the selected transport mechanism. Check the
                 transport documentation for details on what is supported and/or how it is
                 implemented for any given transport driver
             keepalive_pattern: pattern to send to keep network channel alive. Default is
-                u"\005" which is equivalent to "ctrl+e". This pattern moves cursor to end of the
+                u'\005' which is equivalent to 'ctrl+e'. This pattern moves cursor to end of the
                 line which should be an innocuous pattern. This will only be entered *if* a lock
                 can be acquired. This is only applicable if using keepalives and if the keepalive
-                type is "network"
+                type is 'network'
             comms_prompt_pattern: raw string regex pattern -- preferably use `^` and `$` anchors!
                 this is the single most important attribute here! if this does not match a prompt,
                 scrapli will not work!
                 IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
                 for highly reliably matching for prompts however we do NOT strip trailing whitespace
-                for each line, so be sure to add `\\s*` if your device needs that. This should be
+                for each line, so be sure to add '\\s*' if your device needs that. This should be
                 mostly sorted for you if using network drivers (i.e. `IOSXEDriver`). Lastly, the
                 case insensitive is just a convenience factor so i can be lazy.
             comms_return_char: character to use to send returns to host
@@ -113,8 +113,8 @@ class Scrape:
                 paramiko uses... paramiko
                 telnet uses telnetlib
                 choice of driver depends on the features you need. in general system is easiest as
-                it will just "auto-magically" use your ssh config file (~/.ssh/config or
-                /etc/ssh/config_file). ssh2 is very very fast as it is a thin wrapper around libssh2
+                it will just 'auto-magically' use your ssh config file ('~/.ssh/config' or
+                '/etc/ssh/config_file'). ssh2 is very very fast as it is a thin wrapper around libssh2
                 however it is slightly feature limited. paramiko is slower than ssh2, but has more
                 features built in (though scrapli does not expose/support them all).
 
@@ -122,11 +122,10 @@ class Scrape:
             N/A  # noqa: DAR202
 
         Raises:
-            TypeError:
-                - auth_strict_key/keepalive is not a bool or values cannot be converted to
-                ints where appropriate (ex: timeouts)
-                - on_connect is not a callable
             ValueError: if driver value is invalid
+            TypeError: if auth_strict_key/keepalive is not a bool or values cannot be converted to
+                ints where appropriate (i.e. timeouts)
+            TypeError: if on_connect is not a callable
 
         """
         self.host = host.strip()

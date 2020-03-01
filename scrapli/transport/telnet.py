@@ -58,7 +58,7 @@ class TelnetTransport(Transport):
         """
         TelnetTransport Object
 
-        Inherit from Transport ABC and Socket base class:
+        Inherit from Transport ABC and Socket base class
         TelnetTransport <- Transport (ABC)
         TelnetTransport <- Socket
 
@@ -77,14 +77,14 @@ class TelnetTransport(Transport):
                 login.
             keepalive: whether or not to try to keep session alive
             keepalive_interval: interval to use for session keepalives
-            keepalive_type: network|standard -- "network" sends actual characters over the
+            keepalive_type: network|standard -- 'network' sends actual characters over the
                 transport channel. This is useful for network-y type devices that may not support
-                "standard" keepalive mechanisms. "standard" is not currently implemented for telnet
+                "standard" keepalive mechanisms. 'standard' is not currently implemented for telnet
             keepalive_pattern: pattern to send to keep network channel alive. Default is
-                u"\005" which is equivalent to "ctrl+e". This pattern moves cursor to end of the
+                u'\005' which is equivalent to 'ctrl+e'. This pattern moves cursor to end of the
                 line which should be an innocuous pattern. This will only be entered *if* a lock
                 can be acquired. This is only applicable if using keepalives and if the keepalive
-                type is "network"
+                type is 'network'
             comms_prompt_pattern: prompt pattern expected for device, same as the one provided to
                 channel -- telnet needs to know this to know how to decide if we are properly
                 sending/receiving data -- i.e. we are not stuck at some password prompt or some

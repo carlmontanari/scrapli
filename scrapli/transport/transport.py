@@ -225,7 +225,7 @@ class Transport(ABC):
                 else:
                     lock_counter += 1
                     if lock_counter >= 3:
-                        LOG.error(f"Keepalive thread missed {lock_counter} consecutive keepalives.")
+                        LOG.info(f"Keepalive thread missed {lock_counter} consecutive keepalives.")
             time.sleep(self.keepalive_interval / 10)
 
     @abstractmethod

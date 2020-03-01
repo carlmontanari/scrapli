@@ -5,10 +5,10 @@ from pathlib import Path
 from device_info import iosxr_device
 from scrapli.driver.core import IOSXRDriver
 
-# logging.basicConfig(
-#     filename=f"{Path(__file__).resolve().parents[0]}/iosxe_driver.log", level=logging.DEBUG
-# )
-# logger = logging.getLogger("scrapli")
+logging.basicConfig(
+    filename=f"{Path(__file__).resolve().parents[0]}/iosxr_driver.log", level=logging.DEBUG
+)
+logger = logging.getLogger("scrapli")
 
 args = {
     "host": iosxr_device["host"],
@@ -23,8 +23,6 @@ args = {
 
 conn = IOSXRDriver(**args)
 conn.open()
-breakpoint()
-conn.channel.comms_prompt_pattern = r"tacocat"
 
 print("***** Get Prompt:")
 prompt = conn.get_prompt()
@@ -33,11 +31,6 @@ print(prompt)
 print("***** Show run | i hostname:")
 result = conn.send_command("show run | i hostname")
 print(result, result.result)
-
-print("***** Clear logging buffer:")
-interact = ("clear logg", "Clear logging buffer [confirm]", "", prompt)
-result = conn.send_interactive(interact)
-print(result, result[0].result)
 
 print("***** Show run:")
 result = conn.send_command("show run")
