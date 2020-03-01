@@ -29,16 +29,16 @@ prompt = conn.get_prompt()
 print(prompt)
 
 print("***** Show run | i hostname:")
-result = conn.send_commands("show run | i hostname")
-print(result, result[0].result)
+result = conn.send_command("show run | i hostname")
+print(result, result.result)
 
 print("***** Disable Paging:")
-result = conn.send_commands("term length 0")
-print(result, result[0].result)
+result = conn.send_command("term length 0")
+print(result, result.result)
 
 print("***** Show run:")
-result = conn.send_commands("show run")
-print(result, result[0].result)
+result = conn.send_command("show run")
+print(result, result.result)
 
 if nxos_device["keepalive"]:
     print("***** Waiting for keepalive....")

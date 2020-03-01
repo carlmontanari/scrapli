@@ -363,8 +363,8 @@ class SystemSSHTransport(Transport):
                 output = pty_session.read()
             except EOFError:
                 raise ScrapliAuthenticationFailed(
-                    "PTY Authentication failed, often this means strict host key checking is "
-                    "enabled and is failing!"
+                    "PTY Authentication failed to find password prompt, often this means strict "
+                    "host key checking is enabled and is failing!"
                 )
             output = strip_ansi(output)
             if self.comms_ansi:
