@@ -17,7 +17,6 @@ CHANNEL_ARGS = (
     "comms_return_char",
     "comms_ansi",
     "timeout_ops",
-    "timeout_exit",
 )
 
 
@@ -29,20 +28,18 @@ class Channel:
         comms_return_char: str = "\n",
         comms_ansi: bool = False,
         timeout_ops: int = 10,
-        timeout_exit: bool = True,
     ):
         """
         Channel Object
 
         Args:
-            transport: Transport object of any transport provider (ssh2|paramiko|system)
+            transport: Transport object of any transport provider (ssh2|paramiko|system|telnetlib)
+                transport could in theory be any transport as long as it provides a read and a write
+                method... obviously its probably always going to be scrapli transport though
             comms_prompt_pattern: raw string regex pattern -- use `^` and `$` for multi-line!
             comms_return_char: character to use to send returns to host
             comms_ansi: True/False strip comms_ansi characters from output
             timeout_ops: timeout in seconds for channel operations (reads/writes)
-            timeout_exit: True/False close transport if timeout encountered. If False and keepalives
-                are in use, keepalives will prevent program from exiting so you should be sure to
-                catch Timeout exceptions and handle them appropriately
 
         Args:
             N/A
@@ -59,7 +56,6 @@ class Channel:
         self.comms_return_char = comms_return_char
         self.comms_ansi = comms_ansi
         self.timeout_ops = timeout_ops
-        self.timeout_exit = timeout_exit
 
     def __str__(self) -> str:
         """

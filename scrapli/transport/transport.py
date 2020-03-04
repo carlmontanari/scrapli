@@ -5,19 +5,66 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from logging import getLogger
 from threading import Lock
-from typing import Dict, Optional, Union
+from typing import Optional
 
 LOG = getLogger("transport")
 
 
 class Transport(ABC):
-    @abstractmethod
-    def __init__(self, *args: Union[str, int], **kwargs: Dict[str, Union[str, int]]) -> None:
-        self.host: str = ""
-        self.keepalive: bool = False
-        self.keepalive_interval: int = 30
-        self.keepalive_type: str = "network"
-        self.keepalive_pattern: str = "\005"
+    def __init__(
+        self,
+        host: str = "",
+        port: int = 22,
+        timeout_socket: int = 5,
+        timeout_transport: int = 5,
+        timeout_exit: bool = True,
+        keepalive: bool = False,
+        keepalive_interval: int = 30,
+        keepalive_type: str = "network",
+        keepalive_pattern: str = "\005",
+    ) -> None:
+        """
+        Transport Base Object
+
+        Args:
+            host: host ip/name to connect to
+            port: port to connect to
+            timeout_socket: timeout for establishing socket in seconds
+            timeout_transport: timeout for ssh|telnet transport in seconds
+            timeout_exit: True/False close transport if timeout encountered. If False and keepalives
+                are in use, keepalives will prevent program from exiting so you should be sure to
+                catch Timeout exceptions and handle them appropriately
+            keepalive: whether or not to try to keep session alive
+            keepalive_interval: interval to use for session keepalives
+            keepalive_type: network|standard -- 'network' sends actual characters over the
+                transport channel. This is useful for network-y type devices that may not support
+                'standard' keepalive mechanisms. 'standard' attempts to use whatever 'standard'
+                keepalive mechanisms are available in the selected transport mechanism. Check the
+                transport documentation for details on what is supported and/or how it is
+                implemented for any given transport driver
+            keepalive_pattern: pattern to send to keep network channel alive. Default is
+                u'\005' which is equivalent to 'ctrl+e'. This pattern moves cursor to end of the
+                line which should be an innocuous pattern. This will only be entered *if* a lock
+                can be acquired. This is only applicable if using keepalives and if the keepalive
+                type is 'network'
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+        self.host: str = host
+        self.port: int = port
+        self.timeout_socket: int = timeout_socket
+        self.timeout_transport: int = timeout_transport
+        self.timeout_exit: bool = timeout_exit
+        self.keepalive: bool = keepalive
+        self.keepalive_interval: int = keepalive_interval
+        self.keepalive_type: str = keepalive_type
+        self.keepalive_pattern: str = keepalive_pattern
+
         self.session_lock: Lock = Lock()
 
     def __bool__(self) -> bool:

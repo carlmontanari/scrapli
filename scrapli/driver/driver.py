@@ -31,7 +31,17 @@ TRANSPORT_ARGS: Dict[str, Tuple[str, ...]] = {
     "paramiko": MIKO_TRANSPORT_ARGS,
     "telnet": TELNET_TRANSPORT_ARGS,
 }
-
+TRANSPORT_BASE_ARGS = [
+    "host",
+    "port",
+    "keepalive",
+    "keepalive_interval",
+    "keepalive_type",
+    "keepalive_pattern",
+    "timeout_socket",
+    "timeout_transport",
+    "timeout_exit",
+]
 LOG = logging.getLogger("scrapli_base")
 
 
@@ -406,6 +416,8 @@ class Scrape:
         required_transport_args = TRANSPORT_ARGS[transport]
 
         transport_args = {}
+        for arg in TRANSPORT_BASE_ARGS:
+            transport_args[arg] = getattr(self, arg)
         for arg in required_transport_args:
             transport_args[arg] = getattr(self, arg)
         return transport_class, transport_args

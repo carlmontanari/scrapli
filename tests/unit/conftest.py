@@ -67,6 +67,7 @@ class MockTransport(Transport):
         self.host = host
         self.port = port
         self.timeout_socket = timeout_socket
+        self.timeout_exit = True
         self.comms_return_char = comms_return_char
         self.session_lock = Lock()
         self.channel_ops = channel_ops

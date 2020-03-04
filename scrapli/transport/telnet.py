@@ -4,31 +4,22 @@ import time
 from logging import getLogger
 from select import select
 from telnetlib import Telnet
-from threading import Lock
 from typing import Optional
 
 from scrapli.decorators import operation_timeout
 from scrapli.exceptions import ScrapliAuthenticationFailed
-from scrapli.helper import get_prompt_pattern
+from scrapli.helper import get_prompt_pattern, strip_ansi
 from scrapli.transport.transport import Transport
 
 LOG = getLogger("transport")
 
 TELNET_TRANSPORT_ARGS = (
-    "host",
-    "port",
-    "timeout_socket",
-    "timeout_transport",
-    "timeout_ops",
-    "timeout_exit",
-    "keepalive",
-    "keepalive_interval",
-    "keepalive_type",
-    "keepalive_pattern",
     "auth_username",
     "auth_password",
     "comms_prompt_pattern",
     "comms_return_char",
+    "comms_ansi",
+    "timeout_ops",
 )
 
 
@@ -56,13 +47,21 @@ class TelnetTransport(Transport):
         keepalive_pattern: str = "\005",
         comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
         comms_return_char: str = "\n",
-    ):  # pylint: disable=W0231
+        comms_ansi: bool = False,
+    ) -> None:
         """
         TelnetTransport Object
 
-        Inherit from Transport ABC and Socket base class
+        Inherit from Transport ABC
         TelnetTransport <- Transport (ABC)
-        TelnetTransport <- Socket
+
+        Note that comms_prompt_pattern, comms_return_char and comms_ansi are only passed here to
+        handle "in channel" authentication required by SystemSSH -- these are assigned to private
+        attributes in this class and ignored after authentication. If you wish to modify these
+        values on a "live" scrapli connection, modify them in the Channel object, i.e.
+        `conn.channel.comms_prompt_pattern`. Additionally timeout_ops is passed and assigned to
+        _timeout_ops to use the same timeout_ops that is used in Channel to decorate the
+        authentication methods here.
 
         Args:
             host: host ip/name to connect to
@@ -76,7 +75,8 @@ class TelnetTransport(Transport):
             timeout_transport: timeout for telnet transport in seconds
             timeout_ops: timeout for telnet channel operations in seconds -- this is also the
                 timeout for finding and responding to username and password prompts at initial
-                login.
+                login. This is assigned to a private attribute and is ignored after authentication
+                is completed.
             timeout_exit: True/False close transport if timeout encountered. If False and keepalives
                 are in use, keepalives will prevent program from exiting so you should be sure to
                 catch Timeout exceptions and handle them appropriately
@@ -94,12 +94,20 @@ class TelnetTransport(Transport):
                 channel -- telnet needs to know this to know how to decide if we are properly
                 sending/receiving data -- i.e. we are not stuck at some password prompt or some
                 other failure scenario. If using driver, this should be passed from driver (Scrape,
-                or IOSXE, etc.) to this Transport class.
+                or IOSXE, etc.) to this Transport class. This is assigned to a private attribute and
+                is ignored after authentication is completed.
             comms_return_char: return character to use on the channel, same as the one provided to
                 channel -- telnet needs to know this to know what to send so that we can probe
                 the channel to make sure we are authenticated and sending/receiving data. If using
                 driver, this should be passed from driver (Scrape, or IOSXE, etc.) to this Transport
-                class.
+                class. This is assigned to a private attribute and is ignored after authentication
+                is completed.
+            comms_ansi: True/False strip comms_ansi characters from output; this value is assigned
+                self._comms_ansi and is ignored after authentication. We only need it for transport
+                on the off chance (maybe never, especially here in telnet land?) that
+                username/password prompts contain ansi characters, otherwise "comms_ansi" is really
+                a channel attribute and is treated as such. This is assigned to a private attribute
+                and is ignored after authentication is completed.
 
         Returns:
             N/A  # noqa: DAR202
@@ -108,22 +116,24 @@ class TelnetTransport(Transport):
             N/A
 
         """
-        self.host: str = host
-        self.port: int = port
-        self.timeout_socket: int = timeout_socket
-        self.timeout_transport: int = timeout_transport
-        self.timeout_ops: int = timeout_ops
-        self.timeout_exit: bool = timeout_exit
-        self.keepalive: bool = keepalive
-        self.keepalive_interval: int = keepalive_interval
-        self.keepalive_type: str = keepalive_type
-        self.keepalive_pattern: str = keepalive_pattern
+        super().__init__(
+            host,
+            port,
+            timeout_socket,
+            timeout_transport,
+            timeout_exit,
+            keepalive,
+            keepalive_interval,
+            keepalive_type,
+            keepalive_pattern,
+        )
         self.auth_username: str = auth_username
         self.auth_password: str = auth_password
-        self.comms_prompt_pattern: str = comms_prompt_pattern
-        self.comms_return_char: str = comms_return_char
 
-        self.session_lock: Lock = Lock()
+        self._timeout_ops: int = timeout_ops
+        self._comms_prompt_pattern: str = comms_prompt_pattern
+        self._comms_return_char: str = comms_return_char
+        self._comms_ansi: bool = comms_ansi
 
         self.username_prompt: str = "Username:"
         self.password_prompt: str = "Password:"
@@ -177,7 +187,7 @@ class TelnetTransport(Transport):
         self._authenticate_username(telnet_session)
         self._authenticate_password(telnet_session)
 
-    @operation_timeout("timeout_ops", "Timed out looking for telnet login username prompt")
+    @operation_timeout("_timeout_ops", "Timed out looking for telnet login username prompt")
     def _authenticate_username(self, telnet_session: ScrapliTelnet) -> None:
         """
         Private method to enter username for telnet authentication
@@ -197,7 +207,7 @@ class TelnetTransport(Transport):
             output = telnet_session.read_eager()
             if self.username_prompt.lower().encode() in output.lower():
                 telnet_session.write(self.auth_username.encode())
-                telnet_session.write(self.comms_return_char.encode())
+                telnet_session.write(self._comms_return_char.encode())
                 self.session_lock.release()
                 break
 
@@ -221,7 +231,7 @@ class TelnetTransport(Transport):
             output = telnet_session.read_eager()
             if self.password_prompt.lower().encode() in output.lower():
                 telnet_session.write(self.auth_password.encode())
-                telnet_session.write(self.comms_return_char.encode())
+                telnet_session.write(self._comms_return_char.encode())
                 self.session_lock.release()
                 break
 
@@ -243,17 +253,19 @@ class TelnetTransport(Transport):
 
         """
         if not telnet_session.eof:
-            prompt_pattern = get_prompt_pattern("", self.comms_prompt_pattern)
+            prompt_pattern = get_prompt_pattern("", self._comms_prompt_pattern)
             telnet_session_fd = telnet_session.fileno()
             self.session_lock.acquire()
-            telnet_session.write(self.comms_return_char.encode())
+            telnet_session.write(self._comms_return_char.encode())
             time.sleep(0.25)
             fd_ready, _, _ = select([telnet_session_fd], [], [], 0)
             if telnet_session_fd in fd_ready:
                 output = telnet_session.read_eager()
                 # we do not need to deal w/ line replacement for the actual output, only for
                 # parsing if a prompt-like thing is at the end of the output
-                output = re.sub(b"\r", b"\n", output.strip())
+                output = re.sub(b"\r", b"", output)
+                if self._comms_ansi:
+                    output = strip_ansi(output)
                 channel_match = re.search(prompt_pattern, output)
                 if channel_match:
                     self.session_lock.release()
@@ -299,6 +311,7 @@ class TelnetTransport(Transport):
             return True
         return False
 
+    @operation_timeout("timeout_transport", "Transport timeout during read operation.")
     def read(self) -> bytes:
         """
         Read data from the channel
