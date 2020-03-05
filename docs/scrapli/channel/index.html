@@ -56,7 +56,9 @@ __all__ = (&#34;Channel&#34;, &#34;CHANNEL_ARGS&#34;)</code></pre>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>transport</code></strong></dt>
-<dd>Transport object of any transport provider (ssh2|paramiko|system)</dd>
+<dd>Transport object of any transport provider (ssh2|paramiko|system|telnetlib)
+transport could in theory be any transport as long as it provides a read and a write
+method&hellip; obviously its probably always going to be scrapli transport though</dd>
 <dt><strong><code>comms_prompt_pattern</code></strong></dt>
 <dd>raw string regex pattern &ndash; use <code>^</code> and <code>$</code> for multi-line!</dd>
 <dt><strong><code>comms_return_char</code></strong></dt>
@@ -96,7 +98,9 @@ __all__ = (&#34;Channel&#34;, &#34;CHANNEL_ARGS&#34;)</code></pre>
         Channel Object
 
         Args:
-            transport: Transport object of any transport provider (ssh2|paramiko|system)
+            transport: Transport object of any transport provider (ssh2|paramiko|system|telnetlib)
+                transport could in theory be any transport as long as it provides a read and a write
+                method... obviously its probably always going to be scrapli transport though
             comms_prompt_pattern: raw string regex pattern -- use `^` and `$` for multi-line!
             comms_return_char: character to use to send returns to host
             comms_ansi: True/False strip comms_ansi characters from output
@@ -192,6 +196,7 @@ __all__ = (&#34;Channel&#34;, &#34;CHANNEL_ARGS&#34;)</code></pre>
 
         &#34;&#34;&#34;
         new_output = self.transport.read()
+        new_output = re.sub(b&#34;\r&#34;, b&#34;&#34;, new_output)
         if self.comms_ansi:
             new_output = strip_ansi(new_output)
         LOG.debug(f&#34;Read: {repr(new_output)}&#34;)
@@ -235,12 +240,11 @@ __all__ = (&#34;Channel&#34;, &#34;CHANNEL_ARGS&#34;)</code></pre>
 
         while True:
             output += self._read_chunk()
-            output = re.sub(b&#34;\r&#34;, b&#34;&#34;, output)
             channel_match = re.search(prompt_pattern, output)
             if channel_match:
                 return output
 
-    @operation_timeout(&#34;timeout_ops&#34;)
+    @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out determining prompt on device.&#34;)
     def get_prompt(self) -&gt; str:
         &#34;&#34;&#34;
         Get current channel prompt
@@ -297,7 +301,7 @@ __all__ = (&#34;Channel&#34;, &#34;CHANNEL_ARGS&#34;)</code></pre>
             responses.append(response)
         return responses
 
-    @operation_timeout(&#34;timeout_ops&#34;)
+    @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out sending input to device.&#34;)
     def _send_input(self, channel_input: str, strip_prompt: bool) -&gt; Tuple[bytes, bytes]:
         &#34;&#34;&#34;
         Send input to device and return results
@@ -362,7 +366,7 @@ __all__ = (&#34;Channel&#34;, &#34;CHANNEL_ARGS&#34;)</code></pre>
             responses.append(response)
         return responses
 
-    @operation_timeout(&#34;timeout_ops&#34;)
+    @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out sending interactive input to device.&#34;)
     def _send_input_interact(
         self,
         channel_input: str,
@@ -438,7 +442,7 @@ __all__ = (&#34;Channel&#34;, &#34;CHANNEL_ARGS&#34;)</code></pre>
 <h3>Methods</h3>
 <dl>
 <dt id="scrapli.channel.Channel.get_prompt"><code class="name flex">
-<span>def <span class="ident">get_prompt</span></span>(<span>self, *args, **kwargs)</span>
+<span>def <span class="ident">get_prompt</span></span>(<span>channel_or_transport, *args, **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"></section>
@@ -447,19 +451,46 @@ __all__ = (&#34;Channel&#34;, &#34;CHANNEL_ARGS&#34;)</code></pre>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def timeout_wrapper(
-    self: object, *args: Union[str, int], **kwargs: Dict[str, Union[str, int]]
+    channel_or_transport: Union[&#34;Channel&#34;, &#34;Transport&#34;],
+    *args: Union[str, int],
+    **kwargs: Dict[str, Union[str, int]],
 ) -&gt; Any:
-    timeout_duration = getattr(self, attribute, None)
+    # import here to avoid circular dependency
+    from scrapli.channel import Channel  # pylint: disable=C0415
+
+    timeout_duration = getattr(channel_or_transport, attribute, None)
     if not timeout_duration:
-        return wrapped_func(self, *args, **kwargs)
-    old = signal.signal(signal.SIGALRM, _raise_exception)
-    signal.setitimer(signal.ITIMER_REAL, timeout_duration)
-    try:
-        return wrapped_func(self, *args, **kwargs)
-    finally:
-        if timeout_duration:
-            signal.setitimer(signal.ITIMER_REAL, 0)
-            signal.signal(signal.SIGALRM, old)</code></pre>
+        LOG.error(
+            f&#34;Could not find {attribute} value of {channel_or_transport}, continuing &#34;
+            &#34;without timeout decorator&#34;
+        )
+        return wrapped_func(channel_or_transport, *args, **kwargs)
+
+    # as this can be called from transport or channel get the appropriate objects
+    # to unlock and close the session. we need to unlock as the close will block
+    # forever if the session is locked, and the session very likely is locked while
+    # waiting for output from the device
+    if isinstance(channel_or_transport, Channel):
+        timeout_exit = channel_or_transport.transport.timeout_exit
+        session_lock = channel_or_transport.transport.session_lock
+        close = channel_or_transport.transport.close
+    else:
+        timeout_exit = channel_or_transport.timeout_exit
+        session_lock = channel_or_transport.session_lock
+        close = channel_or_transport.close
+
+    pool = ThreadPoolExecutor(max_workers=1)
+    future = pool.submit(wrapped_func, channel_or_transport, *args, **kwargs)
+    wait([future], timeout=timeout_duration)
+    if not future.done():
+        LOG.info(message)
+        if timeout_exit:
+            LOG.info(&#34;timeout_exit is True, closing transport&#34;)
+            if session_lock.locked():
+                session_lock.release()
+            close()
+        raise TimeoutError(message)
+    return future.result()</code></pre>
 </details>
 </dd>
 <dt id="scrapli.channel.Channel.send_inputs"><code class="name flex">

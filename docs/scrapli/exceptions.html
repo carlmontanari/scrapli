@@ -32,6 +32,10 @@ class ScrapliTimeout(Exception):
     &#34;&#34;&#34;Exception for any scrapli timeouts&#34;&#34;&#34;
 
 
+class ScrapliKeepaliveFailure(Exception):
+    &#34;&#34;&#34;Exception for scrapli missing keepalives&#34;&#34;&#34;
+
+
 class MissingDependencies(Exception):
     &#34;&#34;&#34;Exception for any missing (probably optional) dependencies&#34;&#34;&#34;
 
@@ -137,6 +141,25 @@ class CouldNotAcquirePrivLevel(Exception):
 <li>builtins.BaseException</li>
 </ul>
 </dd>
+<dt id="scrapli.exceptions.ScrapliKeepaliveFailure"><code class="flex name class">
+<span>class <span class="ident">ScrapliKeepaliveFailure</span></span>
+<span>(</span><span>...)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Exception for scrapli missing keepalives</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ScrapliKeepaliveFailure(Exception):
+    &#34;&#34;&#34;Exception for scrapli missing keepalives&#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
 <dt id="scrapli.exceptions.ScrapliTimeout"><code class="flex name class">
 <span>class <span class="ident">ScrapliTimeout</span></span>
 <span>(</span><span>...)</span>
@@ -202,6 +225,9 @@ class CouldNotAcquirePrivLevel(Exception):
 </li>
 <li>
 <h4><code><a title="scrapli.exceptions.ScrapliAuthenticationFailed" href="#scrapli.exceptions.ScrapliAuthenticationFailed">ScrapliAuthenticationFailed</a></code></h4>
+</li>
+<li>
+<h4><code><a title="scrapli.exceptions.ScrapliKeepaliveFailure" href="#scrapli.exceptions.ScrapliKeepaliveFailure">ScrapliKeepaliveFailure</a></code></h4>
 </li>
 <li>
 <h4><code><a title="scrapli.exceptions.ScrapliTimeout" href="#scrapli.exceptions.ScrapliTimeout">ScrapliTimeout</a></code></h4>

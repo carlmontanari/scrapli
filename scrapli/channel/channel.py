@@ -33,7 +33,9 @@ class Channel:
         Channel Object
 
         Args:
-            transport: Transport object of any transport provider (ssh2|paramiko|system)
+            transport: Transport object of any transport provider (ssh2|paramiko|system|telnetlib)
+                transport could in theory be any transport as long as it provides a read and a write
+                method... obviously its probably always going to be scrapli transport though
             comms_prompt_pattern: raw string regex pattern -- use `^` and `$` for multi-line!
             comms_return_char: character to use to send returns to host
             comms_ansi: True/False strip comms_ansi characters from output
@@ -129,6 +131,7 @@ class Channel:
 
         """
         new_output = self.transport.read()
+        new_output = re.sub(b"\r", b"", new_output)
         if self.comms_ansi:
             new_output = strip_ansi(new_output)
         LOG.debug(f"Read: {repr(new_output)}")
@@ -172,12 +175,11 @@ class Channel:
 
         while True:
             output += self._read_chunk()
-            output = re.sub(b"\r", b"", output)
             channel_match = re.search(prompt_pattern, output)
             if channel_match:
                 return output
 
-    @operation_timeout("timeout_ops")
+    @operation_timeout("timeout_ops", "Timed out determining prompt on device.")
     def get_prompt(self) -> str:
         """
         Get current channel prompt
@@ -234,7 +236,7 @@ class Channel:
             responses.append(response)
         return responses
 
-    @operation_timeout("timeout_ops")
+    @operation_timeout("timeout_ops", "Timed out sending input to device.")
     def _send_input(self, channel_input: str, strip_prompt: bool) -> Tuple[bytes, bytes]:
         """
         Send input to device and return results
@@ -299,7 +301,7 @@ class Channel:
             responses.append(response)
         return responses
 
-    @operation_timeout("timeout_ops")
+    @operation_timeout("timeout_ops", "Timed out sending interactive input to device.")
     def _send_input_interact(
         self,
         channel_input: str,

@@ -43,24 +43,17 @@ from scrapli.transport.transport import Transport
 LOG = getLogger(&#34;transport&#34;)
 
 MIKO_TRANSPORT_ARGS = (
-    &#34;host&#34;,
-    &#34;port&#34;,
-    &#34;timeout_transport&#34;,
-    &#34;timeout_socket&#34;,
-    &#34;keepalive&#34;,
-    &#34;keepalive_interval&#34;,
-    &#34;keepalive_type&#34;,
-    &#34;keepalive_pattern&#34;,
     &#34;auth_username&#34;,
     &#34;auth_public_key&#34;,
     &#34;auth_password&#34;,
     &#34;auth_strict_key&#34;,
     &#34;ssh_config_file&#34;,
     &#34;ssh_known_hosts_file&#34;,
+    &#34;timeout_socket&#34;,
 )
 
 
-class MikoTransport(Socket, Transport):
+class MikoTransport(Transport):
     def __init__(
         self,
         host: str,
@@ -71,19 +64,19 @@ class MikoTransport(Socket, Transport):
         auth_strict_key: bool = True,
         timeout_socket: int = 5,
         timeout_transport: int = 5,
+        timeout_exit: bool = True,
         keepalive: bool = False,
         keepalive_interval: int = 30,
         keepalive_type: str = &#34;&#34;,
         keepalive_pattern: str = &#34;\005&#34;,
         ssh_config_file: str = &#34;&#34;,
         ssh_known_hosts_file: str = &#34;&#34;,
-    ):
+    ) -&gt; None:
         &#34;&#34;&#34;
         MikoTransport Object
 
-        Inherit from Transport ABC and Socket base class:
+        Inherit from Transport ABC
         MikoTransport &lt;- Transport (ABC)
-        MikoTransport &lt;- Socket
 
         Args:
             host: host ip/name to connect to
@@ -94,16 +87,19 @@ class MikoTransport(Socket, Transport):
             auth_strict_key: True/False to enforce strict key checking (default is True)
             timeout_socket: timeout for establishing socket in seconds
             timeout_transport: timeout for ssh transport in seconds
+            timeout_exit: True/False close transport if timeout encountered. If False and keepalives
+                are in use, keepalives will prevent program from exiting so you should be sure to
+                catch Timeout exceptions and handle them appropriately
             keepalive: whether or not to try to keep session alive
             keepalive_interval: interval to use for session keepalives
-            keepalive_type: network|standard -- &#34;network&#34; sends actual characters over the
+            keepalive_type: network|standard -- &#39;network&#39; sends actual characters over the
                 transport channel. This is useful for network-y type devices that may not support
-                &#34;standard&#34; keepalive mechanisms. &#34;standard&#34; is not currently implemented w/ paramiko
+                &#39;standard&#39; keepalive mechanisms. &#39;standard&#39; is not currently implemented w/ paramiko
             keepalive_pattern: pattern to send to keep network channel alive. Default is
-                u&#34;\005&#34; which is equivalent to &#34;ctrl+e&#34;. This pattern moves cursor to end of the
+                u&#39;\005&#39; which is equivalent to &#39;ctrl+e&#39;. This pattern moves cursor to end of the
                 line which should be an innocuous pattern. This will only be entered *if* a lock
                 can be acquired. This is only applicable if using keepalives and if the keepalive
-                type is &#34;network&#34;
+                type is &#39;network&#39;
             ssh_config_file: string to path for ssh config file
             ssh_known_hosts_file: string to path for ssh known hosts file
 
@@ -114,20 +110,23 @@ class MikoTransport(Socket, Transport):
             MissingDependencies: if paramiko is not installed
 
         &#34;&#34;&#34;
-        self.host: str = host
+        cfg_port, cfg_user, cfg_public_key = self._process_ssh_config(host, ssh_config_file)
 
-        cfg_port, cfg_user, cfg_public_key = self._process_ssh_config(self.host, ssh_config_file)
+        if port == -1:
+            port = cfg_port or 22
 
-        if port != -1:
-            self.port = port
-        else:
-            self.port = cfg_port or 22
-        self.timeout_socket: int = timeout_socket
-        self.timeout_transport: int = timeout_transport
-        self.keepalive: bool = keepalive
-        self.keepalive_interval: int = keepalive_interval
-        self.keepalive_type: str = keepalive_type
-        self.keepalive_pattern: str = keepalive_pattern
+        super().__init__(
+            host,
+            port,
+            timeout_socket,
+            timeout_transport,
+            timeout_exit,
+            keepalive,
+            keepalive_interval,
+            keepalive_type,
+            keepalive_pattern,
+        )
+
         self.auth_username: str = auth_username or cfg_user
         self.auth_public_key: str = auth_public_key or cfg_public_key
         self.auth_password: str = auth_password
@@ -163,14 +162,14 @@ class MikoTransport(Socket, Transport):
             LOG.warning(warning)
             raise MissingDependencies
 
-        super().__init__(host=self.host, port=self.port, timeout=self.timeout_socket)
+        self.socket = Socket(host=self.host, port=self.port, timeout=self.timeout_socket)
 
     @staticmethod
     def _process_ssh_config(host: str, ssh_config_file: str) -&gt; Tuple[Optional[int], str, str]:
         &#34;&#34;&#34;
         Method to parse ssh config file
 
-        In the future this may move to be a &#34;helper&#34; function as it should be very similar between
+        In the future this may move to be a &#39;helper&#39; function as it should be very similar between
         paramiko and and ssh2-python... for now it can be a static method as there may be varying
         supported args between the two transport drivers.
 
@@ -205,11 +204,11 @@ class MikoTransport(Socket, Transport):
             ScrapliAuthenticationFailed: if all authentication means fail
 
         &#34;&#34;&#34;
-        if not self.socket_isalive():
-            self.socket_open()
+        if not self.socket.socket_isalive():
+            self.socket.socket_open()
         self.session_lock.acquire()
         try:
-            self.session = self.lib_session(self.sock)
+            self.session = self.lib_session(self.socket.sock)
             self.session.start_client()
         except Exception as exc:
             LOG.critical(
@@ -230,6 +229,9 @@ class MikoTransport(Socket, Transport):
         self._open_channel()
         self.session_lock.release()
 
+        if self.keepalive:
+            self._session_keepalive()
+
     def _verify_key(self) -&gt; None:
         &#34;&#34;&#34;
         Verify target host public key, raise exception if invalid/unknown
@@ -241,7 +243,8 @@ class MikoTransport(Socket, Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            KeyVerificationFailed: if public key verification fails
+            KeyVerificationFailed: if host is not in known hosts
+            KeyVerificationFailed: if host is in known hosts but public key does not match
 
         &#34;&#34;&#34;
         known_hosts = SSHKnownHosts(self.ssh_known_hosts_file)
@@ -398,7 +401,7 @@ class MikoTransport(Socket, Transport):
         self.session_lock.acquire()
         self.channel.close()
         LOG.debug(f&#34;Channel to host {self.host} closed&#34;)
-        self.socket_close()
+        self.socket.socket_close()
         self.session_lock.release()
 
     def isalive(self) -&gt; bool:
@@ -415,7 +418,7 @@ class MikoTransport(Socket, Transport):
             N/A
 
         &#34;&#34;&#34;
-        if self.socket_isalive() and self.session.is_alive() and self.isauthenticated():
+        if self.socket.socket_isalive() and self.session.is_alive() and self.isauthenticated():
             return True
         return False
 
@@ -474,7 +477,7 @@ class MikoTransport(Socket, Transport):
 
     def _keepalive_standard(self) -&gt; None:
         &#34;&#34;&#34;
-        Send &#34;out of band&#34; (protocol level) keepalives to devices.
+        Send &#39;out of band&#39; (protocol level) keepalives to devices.
 
         Args:
             N/A
@@ -500,15 +503,14 @@ class MikoTransport(Socket, Transport):
 <dl>
 <dt id="scrapli.transport.miko.MikoTransport"><code class="flex name class">
 <span>class <span class="ident">MikoTransport</span></span>
-<span>(</span><span>host, port=-1, auth_username='', auth_public_key='', auth_password='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, keepalive=False, keepalive_interval=30, keepalive_type='', keepalive_pattern='\x05', ssh_config_file='', ssh_known_hosts_file='')</span>
+<span>(</span><span>host, port=-1, auth_username='', auth_public_key='', auth_password='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, timeout_exit=True, keepalive=False, keepalive_interval=30, keepalive_type='', keepalive_pattern='\x05', ssh_config_file='', ssh_known_hosts_file='')</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Helper class that provides a standard way to create an ABC using
 inheritance.</p>
 <p>MikoTransport Object</p>
-<p>Inherit from Transport ABC and Socket base class:
-MikoTransport &lt;- Transport (ABC)
-MikoTransport &lt;- Socket</p>
+<p>Inherit from Transport ABC
+MikoTransport &lt;- Transport (ABC)</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>host</code></strong></dt>
@@ -527,20 +529,24 @@ MikoTransport &lt;- Socket</p>
 <dd>timeout for establishing socket in seconds</dd>
 <dt><strong><code>timeout_transport</code></strong></dt>
 <dd>timeout for ssh transport in seconds</dd>
+<dt><strong><code>timeout_exit</code></strong></dt>
+<dd>True/False close transport if timeout encountered. If False and keepalives
+are in use, keepalives will prevent program from exiting so you should be sure to
+catch Timeout exceptions and handle them appropriately</dd>
 <dt><strong><code>keepalive</code></strong></dt>
 <dd>whether or not to try to keep session alive</dd>
 <dt><strong><code>keepalive_interval</code></strong></dt>
 <dd>interval to use for session keepalives</dd>
 <dt><strong><code>keepalive_type</code></strong></dt>
-<dd>network|standard &ndash; "network" sends actual characters over the
+<dd>network|standard &ndash; 'network' sends actual characters over the
 transport channel. This is useful for network-y type devices that may not support
-"standard" keepalive mechanisms. "standard" is not currently implemented w/ paramiko</dd>
+'standard' keepalive mechanisms. 'standard' is not currently implemented w/ paramiko</dd>
 <dt><strong><code>keepalive_pattern</code></strong></dt>
 <dd>pattern to send to keep network channel alive. Default is
-u"" which is equivalent to "ctrl+e". This pattern moves cursor to end of the
+u'' which is equivalent to 'ctrl+e'. This pattern moves cursor to end of the
 line which should be an innocuous pattern. This will only be entered <em>if</em> a lock
 can be acquired. This is only applicable if using keepalives and if the keepalive
-type is "network"</dd>
+type is 'network'</dd>
 <dt><strong><code>ssh_config_file</code></strong></dt>
 <dd>string to path for ssh config file</dd>
 <dt><strong><code>ssh_known_hosts_file</code></strong></dt>
@@ -561,7 +567,7 @@ type is "network"</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class MikoTransport(Socket, Transport):
+<pre><code class="python">class MikoTransport(Transport):
     def __init__(
         self,
         host: str,
@@ -572,19 +578,19 @@ type is "network"</dd>
         auth_strict_key: bool = True,
         timeout_socket: int = 5,
         timeout_transport: int = 5,
+        timeout_exit: bool = True,
         keepalive: bool = False,
         keepalive_interval: int = 30,
         keepalive_type: str = &#34;&#34;,
         keepalive_pattern: str = &#34;\005&#34;,
         ssh_config_file: str = &#34;&#34;,
         ssh_known_hosts_file: str = &#34;&#34;,
-    ):
+    ) -&gt; None:
         &#34;&#34;&#34;
         MikoTransport Object
 
-        Inherit from Transport ABC and Socket base class:
+        Inherit from Transport ABC
         MikoTransport &lt;- Transport (ABC)
-        MikoTransport &lt;- Socket
 
         Args:
             host: host ip/name to connect to
@@ -595,16 +601,19 @@ type is "network"</dd>
             auth_strict_key: True/False to enforce strict key checking (default is True)
             timeout_socket: timeout for establishing socket in seconds
             timeout_transport: timeout for ssh transport in seconds
+            timeout_exit: True/False close transport if timeout encountered. If False and keepalives
+                are in use, keepalives will prevent program from exiting so you should be sure to
+                catch Timeout exceptions and handle them appropriately
             keepalive: whether or not to try to keep session alive
             keepalive_interval: interval to use for session keepalives
-            keepalive_type: network|standard -- &#34;network&#34; sends actual characters over the
+            keepalive_type: network|standard -- &#39;network&#39; sends actual characters over the
                 transport channel. This is useful for network-y type devices that may not support
-                &#34;standard&#34; keepalive mechanisms. &#34;standard&#34; is not currently implemented w/ paramiko
+                &#39;standard&#39; keepalive mechanisms. &#39;standard&#39; is not currently implemented w/ paramiko
             keepalive_pattern: pattern to send to keep network channel alive. Default is
-                u&#34;\005&#34; which is equivalent to &#34;ctrl+e&#34;. This pattern moves cursor to end of the
+                u&#39;\005&#39; which is equivalent to &#39;ctrl+e&#39;. This pattern moves cursor to end of the
                 line which should be an innocuous pattern. This will only be entered *if* a lock
                 can be acquired. This is only applicable if using keepalives and if the keepalive
-                type is &#34;network&#34;
+                type is &#39;network&#39;
             ssh_config_file: string to path for ssh config file
             ssh_known_hosts_file: string to path for ssh known hosts file
 
@@ -615,20 +624,23 @@ type is "network"</dd>
             MissingDependencies: if paramiko is not installed
 
         &#34;&#34;&#34;
-        self.host: str = host
+        cfg_port, cfg_user, cfg_public_key = self._process_ssh_config(host, ssh_config_file)
 
-        cfg_port, cfg_user, cfg_public_key = self._process_ssh_config(self.host, ssh_config_file)
+        if port == -1:
+            port = cfg_port or 22
 
-        if port != -1:
-            self.port = port
-        else:
-            self.port = cfg_port or 22
-        self.timeout_socket: int = timeout_socket
-        self.timeout_transport: int = timeout_transport
-        self.keepalive: bool = keepalive
-        self.keepalive_interval: int = keepalive_interval
-        self.keepalive_type: str = keepalive_type
-        self.keepalive_pattern: str = keepalive_pattern
+        super().__init__(
+            host,
+            port,
+            timeout_socket,
+            timeout_transport,
+            timeout_exit,
+            keepalive,
+            keepalive_interval,
+            keepalive_type,
+            keepalive_pattern,
+        )
+
         self.auth_username: str = auth_username or cfg_user
         self.auth_public_key: str = auth_public_key or cfg_public_key
         self.auth_password: str = auth_password
@@ -664,14 +676,14 @@ type is "network"</dd>
             LOG.warning(warning)
             raise MissingDependencies
 
-        super().__init__(host=self.host, port=self.port, timeout=self.timeout_socket)
+        self.socket = Socket(host=self.host, port=self.port, timeout=self.timeout_socket)
 
     @staticmethod
     def _process_ssh_config(host: str, ssh_config_file: str) -&gt; Tuple[Optional[int], str, str]:
         &#34;&#34;&#34;
         Method to parse ssh config file
 
-        In the future this may move to be a &#34;helper&#34; function as it should be very similar between
+        In the future this may move to be a &#39;helper&#39; function as it should be very similar between
         paramiko and and ssh2-python... for now it can be a static method as there may be varying
         supported args between the two transport drivers.
 
@@ -706,11 +718,11 @@ type is "network"</dd>
             ScrapliAuthenticationFailed: if all authentication means fail
 
         &#34;&#34;&#34;
-        if not self.socket_isalive():
-            self.socket_open()
+        if not self.socket.socket_isalive():
+            self.socket.socket_open()
         self.session_lock.acquire()
         try:
-            self.session = self.lib_session(self.sock)
+            self.session = self.lib_session(self.socket.sock)
             self.session.start_client()
         except Exception as exc:
             LOG.critical(
@@ -731,6 +743,9 @@ type is "network"</dd>
         self._open_channel()
         self.session_lock.release()
 
+        if self.keepalive:
+            self._session_keepalive()
+
     def _verify_key(self) -&gt; None:
         &#34;&#34;&#34;
         Verify target host public key, raise exception if invalid/unknown
@@ -742,7 +757,8 @@ type is "network"</dd>
             N/A  # noqa: DAR202
 
         Raises:
-            KeyVerificationFailed: if public key verification fails
+            KeyVerificationFailed: if host is not in known hosts
+            KeyVerificationFailed: if host is in known hosts but public key does not match
 
         &#34;&#34;&#34;
         known_hosts = SSHKnownHosts(self.ssh_known_hosts_file)
@@ -899,7 +915,7 @@ type is "network"</dd>
         self.session_lock.acquire()
         self.channel.close()
         LOG.debug(f&#34;Channel to host {self.host} closed&#34;)
-        self.socket_close()
+        self.socket.socket_close()
         self.session_lock.release()
 
     def isalive(self) -&gt; bool:
@@ -916,7 +932,7 @@ type is "network"</dd>
             N/A
 
         &#34;&#34;&#34;
-        if self.socket_isalive() and self.session.is_alive() and self.isauthenticated():
+        if self.socket.socket_isalive() and self.session.is_alive() and self.isauthenticated():
             return True
         return False
 
@@ -975,7 +991,7 @@ type is "network"</dd>
 
     def _keepalive_standard(self) -&gt; None:
         &#34;&#34;&#34;
-        Send &#34;out of band&#34; (protocol level) keepalives to devices.
+        Send &#39;out of band&#39; (protocol level) keepalives to devices.
 
         Args:
             N/A
@@ -991,7 +1007,6 @@ type is "network"</dd>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="scrapli.transport.socket.Socket" href="socket.html#scrapli.transport.socket.Socket">Socket</a></li>
 <li><a title="scrapli.transport.transport.Transport" href="transport.html#scrapli.transport.transport.Transport">Transport</a></li>
 <li>abc.ABC</li>
 </ul>
@@ -1081,7 +1096,7 @@ type is "network"</dd>
         N/A
 
     &#34;&#34;&#34;
-    if self.socket_isalive() and self.session.is_alive() and self.isauthenticated():
+    if self.socket.socket_isalive() and self.session.is_alive() and self.isauthenticated():
         return True
     return False</code></pre>
 </details>
@@ -1164,11 +1179,11 @@ type is "network"</dd>
         ScrapliAuthenticationFailed: if all authentication means fail
 
     &#34;&#34;&#34;
-    if not self.socket_isalive():
-        self.socket_open()
+    if not self.socket.socket_isalive():
+        self.socket.socket_open()
     self.session_lock.acquire()
     try:
-        self.session = self.lib_session(self.sock)
+        self.session = self.lib_session(self.socket.sock)
         self.session.start_client()
     except Exception as exc:
         LOG.critical(
@@ -1187,7 +1202,10 @@ type is "network"</dd>
         LOG.critical(msg)
         raise ScrapliAuthenticationFailed(msg)
     self._open_channel()
-    self.session_lock.release()</code></pre>
+    self.session_lock.release()
+
+    if self.keepalive:
+        self._session_keepalive()</code></pre>
 </details>
 </dd>
 <dt id="scrapli.transport.miko.MikoTransport.read"><code class="name flex">
@@ -1232,13 +1250,6 @@ type is "network"</dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="scrapli.transport.socket.Socket" href="socket.html#scrapli.transport.socket.Socket">Socket</a></b></code>:
-<ul class="hlist">
-<li><code><a title="scrapli.transport.socket.Socket.socket_close" href="socket.html#scrapli.transport.socket.Socket.socket_close">socket_close</a></code></li>
-<li><code><a title="scrapli.transport.socket.Socket.socket_isalive" href="socket.html#scrapli.transport.socket.Socket.socket_isalive">socket_isalive</a></code></li>
-<li><code><a title="scrapli.transport.socket.Socket.socket_open" href="socket.html#scrapli.transport.socket.Socket.socket_open">socket_open</a></code></li>
-</ul>
-</li>
 <li><code><b><a title="scrapli.transport.transport.Transport" href="transport.html#scrapli.transport.transport.Transport">Transport</a></b></code>:
 <ul class="hlist">
 <li><code><a title="scrapli.transport.transport.Transport.close" href="transport.html#scrapli.transport.transport.Transport.close">close</a></code></li>

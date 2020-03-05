@@ -3,7 +3,6 @@ import base64
 import time
 import warnings
 from logging import getLogger
-from threading import Lock
 from typing import Optional, Tuple
 
 from scrapli.exceptions import (
@@ -19,24 +18,17 @@ LOG = getLogger("transport")
 
 
 SSH2_TRANSPORT_ARGS = (
-    "host",
-    "port",
-    "timeout_transport",
-    "timeout_socket",
-    "keepalive",
-    "keepalive_interval",
-    "keepalive_type",
-    "keepalive_pattern",
     "auth_username",
     "auth_public_key",
     "auth_password",
     "auth_strict_key",
     "ssh_config_file",
     "ssh_known_hosts_file",
+    "timeout_socket",
 )
 
 
-class SSH2Transport(Socket, Transport):
+class SSH2Transport(Transport):
     def __init__(
         self,
         host: str,
@@ -47,19 +39,19 @@ class SSH2Transport(Socket, Transport):
         auth_strict_key: bool = True,
         timeout_socket: int = 5,
         timeout_transport: int = 5,
+        timeout_exit: bool = True,
         keepalive: bool = False,
         keepalive_interval: int = 30,
         keepalive_type: str = "",
         keepalive_pattern: str = "\005",
         ssh_config_file: str = "",
         ssh_known_hosts_file: str = "",
-    ):
+    ) -> None:
         """
         SSH2Transport Object
 
-        Inherit from Transport ABC and Socket base class:
+        Inherit from Transport ABC
         SSH2Transport <- Transport (ABC)
-        SSH2Transport <- Socket
 
         Args:
             host: host ip/name to connect to
@@ -70,17 +62,20 @@ class SSH2Transport(Socket, Transport):
             auth_strict_key: True/False to enforce strict key checking (default is True)
             timeout_socket: timeout for establishing socket in seconds
             timeout_transport: timeout for ssh2 transport in seconds
+            timeout_exit: True/False close transport if timeout encountered. If False and keepalives
+                are in use, keepalives will prevent program from exiting so you should be sure to
+                catch Timeout exceptions and handle them appropriately
             keepalive: whether or not to try to keep session alive
             keepalive_interval: interval to use for session keepalives
-            keepalive_type: network|standard -- "network" sends actual characters over the
+            keepalive_type: network|standard -- 'network' sends actual characters over the
                 transport channel. This is useful for network-y type devices that may not support
-                "standard" keepalive mechanisms. "standard" attempts to ssh2-python built in
+                'standard' keepalive mechanisms. 'standard' attempts to ssh2-python built in
                 keepalive method (using standard openssh keepalive)
             keepalive_pattern: pattern to send to keep network channel alive. Default is
-                u"\005" which is equivalent to "ctrl+e". This pattern moves cursor to end of the
+                u'\005' which is equivalent to 'ctrl+e'. This pattern moves cursor to end of the
                 line which should be an innocuous pattern. This will only be entered *if* a lock
                 can be acquired. This is only applicable if using keepalives and if the keepalive
-                type is "network"
+                type is 'network'
             ssh_config_file: string to path for ssh config file
             ssh_known_hosts_file: string to path for ssh known hosts file
 
@@ -91,27 +86,28 @@ class SSH2Transport(Socket, Transport):
             MissingDependencies: if ssh2-python is not installed
 
         """
-        self.host: str = host
+        cfg_port, cfg_user, cfg_public_key = self._process_ssh_config(host, ssh_config_file)
 
-        cfg_port, cfg_user, cfg_public_key = self._process_ssh_config(self.host, ssh_config_file)
+        if port == -1:
+            port = cfg_port or 22
 
-        if port != -1:
-            self.port = port
-        else:
-            self.port = cfg_port or 22
-        self.timeout_socket: int = timeout_socket
-        self.timeout_transport: int = timeout_transport
-        self.keepalive: bool = keepalive
-        self.keepalive_interval: int = keepalive_interval
-        self.keepalive_type: str = keepalive_type
-        self.keepalive_pattern: str = keepalive_pattern
+        super().__init__(
+            host,
+            port,
+            timeout_socket,
+            timeout_transport,
+            timeout_exit,
+            keepalive,
+            keepalive_interval,
+            keepalive_type,
+            keepalive_pattern,
+        )
+
         self.auth_username: str = auth_username or cfg_user
         self.auth_public_key: str = auth_public_key or cfg_public_key
         self.auth_password: str = auth_password
         self.auth_strict_key: bool = auth_strict_key
         self.ssh_known_hosts_file: str = ssh_known_hosts_file
-
-        self.session_lock: Lock = Lock()
 
         try:
             # import here so these are optional
@@ -137,7 +133,7 @@ class SSH2Transport(Socket, Transport):
             LOG.warning(warning)
             raise MissingDependencies
 
-        super().__init__(host=self.host, port=self.port, timeout=self.timeout_socket)
+        self.socket = Socket(host=self.host, port=self.port, timeout=self.timeout_socket)
 
     @staticmethod
     def _process_ssh_config(host: str, ssh_config_file: str) -> Tuple[Optional[int], str, str]:
@@ -179,13 +175,13 @@ class SSH2Transport(Socket, Transport):
             ScrapliAuthenticationFailed: if all authentication means fail
 
         """
-        if not self.socket_isalive():
-            self.socket_open()
+        if not self.socket.socket_isalive():
+            self.socket.socket_open()
         self.session_lock.acquire()
         self.session = self.lib_session()
         self.set_timeout(self.timeout_transport)
         try:
-            self.session.handshake(self.sock)
+            self.session.handshake(self.socket.sock)
         except Exception as exc:
             LOG.critical(
                 f"Failed to complete handshake with host {self.host}; " f"Exception: {exc}"
@@ -406,7 +402,7 @@ class SSH2Transport(Socket, Transport):
         self.session_lock.acquire()
         self.channel.close()
         LOG.debug(f"Channel to host {self.host} closed")
-        self.socket_close()
+        self.socket.socket_close()
         self.session_lock.release()
 
     def isalive(self) -> bool:
@@ -423,7 +419,7 @@ class SSH2Transport(Socket, Transport):
             N/A
 
         """
-        if self.socket_isalive() and not self.channel.eof() and self.isauthenticated():
+        if self.socket.socket_isalive() and not self.channel.eof() and self.isauthenticated():
             return True
         return False
 

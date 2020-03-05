@@ -54,7 +54,6 @@ class Response:
         self.finale = finale
         self.raw_result: str = ""
         self.result: str = ""
-        self.structured_result: Optional[Union[Dict[Any, Any], List[Any]]] = None
 
         # for future use -- could add failed when terms in each driver, then check for those strings
         # in results to determine if the command failed, could also set this at send_inputs level
@@ -129,7 +128,7 @@ class Response:
         # update failed to false after recording results
         self.failed = False
 
-    def textfsm_parse_output(self) -> None:
+    def textfsm_parse_output(self) -> Union[Dict[str, Any], List[Any]]:
         """
         Parse results with textfsm, assign result to `structured_result`
 
@@ -145,6 +144,7 @@ class Response:
         """
         template = _textfsm_get_template(self.textfsm_platform, self.channel_input)
         if isinstance(template, TextIOWrapper):
-            self.structured_result = textfsm_parse(template, self.result)
+            structured_result = textfsm_parse(template, self.result) or []
         else:
-            self.structured_result = []
+            structured_result = []
+        return structured_result

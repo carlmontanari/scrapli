@@ -5,6 +5,10 @@ class ScrapliTimeout(Exception):
     """Exception for any scrapli timeouts"""
 
 
+class ScrapliKeepaliveFailure(Exception):
+    """Exception for scrapli missing keepalives"""
+
+
 class MissingDependencies(Exception):
     """Exception for any missing (probably optional) dependencies"""
 

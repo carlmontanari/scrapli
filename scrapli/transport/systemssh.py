@@ -4,47 +4,38 @@ import re
 from logging import getLogger
 from select import select
 from subprocess import PIPE, Popen
-from threading import Lock
 from typing import TYPE_CHECKING, Optional, Union
 
 from scrapli.decorators import operation_timeout
 from scrapli.exceptions import ScrapliAuthenticationFailed
-from scrapli.helper import get_prompt_pattern
+from scrapli.helper import get_prompt_pattern, strip_ansi
 from scrapli.ssh_config import SSHConfig
 from scrapli.transport.ptyprocess import PtyProcess
 from scrapli.transport.transport import Transport
 
 if TYPE_CHECKING:
     PopenBytes = Popen[bytes]  # pylint: disable=E1136
-else:
-    PopenBytes = Popen
 
 LOG = getLogger("transport")
 
 SYSTEM_SSH_TRANSPORT_ARGS = (
-    "host",
-    "port",
-    "timeout_socket",
-    "timeout_transport",
-    "timeout_ops",
-    "keepalive",
-    "keepalive_interval",
-    "keepalive_type",
-    "keepalive_pattern",
     "auth_username",
     "auth_public_key",
     "auth_password",
     "auth_strict_key",
+    "ssh_config_file",
+    "ssh_known_hosts_file",
     "comms_prompt_pattern",
     "comms_return_char",
-    "ssh_config_file",
+    "comms_ansi",
+    "timeout_ops",
 )
 
 
 class SystemSSHTransport(Transport):
     def __init__(
         self,
-        host: str,
+        host: str = "",
         port: int = 22,
         auth_username: str = "",
         auth_public_key: str = "",
@@ -53,14 +44,17 @@ class SystemSSHTransport(Transport):
         timeout_socket: int = 5,
         timeout_transport: int = 5,
         timeout_ops: int = 10,
+        timeout_exit: bool = True,
         keepalive: bool = False,
         keepalive_interval: int = 30,
         keepalive_type: str = "",
         keepalive_pattern: str = "\005",
         comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
         comms_return_char: str = "\n",
+        comms_ansi: bool = False,
         ssh_config_file: str = "",
-    ):  # pylint: disable=W0231
+        ssh_known_hosts_file: str = "",
+    ) -> None:
         """
         SystemSSHTransport Object
 
@@ -76,6 +70,14 @@ class SystemSSHTransport(Transport):
         auth fails and a username and password is set (manually or by ssh config file), password
         auth will be attempted.
 
+        Note that comms_prompt_pattern, comms_return_char and comms_ansi are only passed here to
+        handle "in channel" authentication required by SystemSSH -- these are assigned to private
+        attributes in this class and ignored after authentication. If you wish to modify these
+        values on a "live" scrapli connection, modify them in the Channel object, i.e.
+        `conn.channel.comms_prompt_pattern`. Additionally timeout_ops is passed and assigned to
+        _timeout_ops to use the same timeout_ops that is used in Channel to decorate the
+        authentication methods here.
+
         Args:
             host: host ip/name to connect to
             port: port to connect to
@@ -88,31 +90,44 @@ class SystemSSHTransport(Transport):
             timeout_transport: timeout for transport in seconds. since system ssh is using popen/pty
                 we can't really set a timeout directly, so this value governs the time timeout
                 decorator for the transport read and write methods
-            timeout_ops: timeout for ssh channel operations in seconds -- this is also the
+            timeout_ops: timeout for telnet channel operations in seconds -- this is also the
                 timeout for finding and responding to username and password prompts at initial
-                login.
+                login. This is assigned to a private attribute and is ignored after authentication
+                is completed.
+            timeout_exit: True/False close transport if timeout encountered. If False and keepalives
+                are in use, keepalives will prevent program from exiting so you should be sure to
+                catch Timeout exceptions and handle them appropriately
             keepalive: whether or not to try to keep session alive
             keepalive_interval: interval to use for session keepalives
-            keepalive_type: network|standard -- "network" sends actual characters over the
+            keepalive_type: network|standard -- 'network' sends actual characters over the
                 transport channel. This is useful for network-y type devices that may not support
-                "standard" keepalive mechanisms. "standard" is not currently implemented for
+                'standard' keepalive mechanisms. 'standard' is not currently implemented for
                 system ssh
             keepalive_pattern: pattern to send to keep network channel alive. Default is
-                u"\005" which is equivalent to "ctrl+e". This pattern moves cursor to end of the
+                u'\005' which is equivalent to 'ctrl+e'. This pattern moves cursor to end of the
                 line which should be an innocuous pattern. This will only be entered *if* a lock
                 can be acquired. This is only applicable if using keepalives and if the keepalive
-                type is "network"
+                type is 'network'
             comms_prompt_pattern: prompt pattern expected for device, same as the one provided to
                 channel -- system ssh needs to know this to know how to decide if we are properly
                 sending/receiving data -- i.e. we are not stuck at some password prompt or some
                 other failure scenario. If using driver, this should be passed from driver (Scrape,
-                or IOSXE, etc.) to this Transport class.
+                or IOSXE, etc.) to this Transport class. This is assigned to a private attribute and
+                is ignored after authentication is completed.
             comms_return_char: return character to use on the channel, same as the one provided to
                 channel -- system ssh needs to know this to know what to send so that we can probe
                 the channel to make sure we are authenticated and sending/receiving data. If using
                 driver, this should be passed from driver (Scrape, or IOSXE, etc.) to this Transport
-                class.
+                class. This is assigned to a private attribute and is ignored after authentication
+                is completed.
+            comms_ansi: True/False strip comms_ansi characters from output; this value is assigned
+                self._comms_ansi and is ignored after authentication. We only need it for transport
+                on the off chance (maybe never?) that username/password prompts contain ansi
+                characters, otherwise "comms_ansi" is really a channel attribute and is treated as
+                such. This is assigned to a private attribute and is ignored after authentication
+                is completed.
             ssh_config_file: string to path for ssh config file
+            ssh_known_hosts_file: string to path for ssh known hosts file
 
         Returns:
             N/A  # noqa: DAR202
@@ -121,24 +136,29 @@ class SystemSSHTransport(Transport):
             N/A
 
         """
-        self.host: str = host
-        self.port: int = port
-        self.timeout_socket: int = timeout_socket
-        self.timeout_transport: int = timeout_transport
-        self.timeout_ops: int = timeout_ops
-        self.keepalive: bool = keepalive
-        self.keepalive_interval: int = keepalive_interval
-        self.keepalive_type: str = keepalive_type
-        self.keepalive_pattern: str = keepalive_pattern
+        super().__init__(
+            host,
+            port,
+            timeout_socket,
+            timeout_transport,
+            timeout_exit,
+            keepalive,
+            keepalive_interval,
+            keepalive_type,
+            keepalive_pattern,
+        )
+
         self.auth_username: str = auth_username
         self.auth_public_key: str = auth_public_key
         self.auth_password: str = auth_password
         self.auth_strict_key: bool = auth_strict_key
-        self.comms_prompt_pattern: str = comms_prompt_pattern
-        self.comms_return_char: str = comms_return_char
-        self._process_ssh_config(ssh_config_file)
 
-        self.session_lock: Lock = Lock()
+        self._timeout_ops: int = timeout_ops
+        self._comms_prompt_pattern: str = comms_prompt_pattern
+        self._comms_return_char: str = comms_return_char
+        self._comms_ansi: bool = comms_ansi
+        self._process_ssh_config(ssh_config_file)
+        self.ssh_known_hosts_file: str = ssh_known_hosts_file
 
         self.session: Union[Popen[bytes], PtyProcess]  # pylint: disable=E1136
         self.lib_auth_exception = ScrapliAuthenticationFailed
@@ -195,10 +215,15 @@ class SystemSSHTransport(Transport):
             self.open_cmd.extend(["-l", self.auth_username])
         if self.auth_strict_key is False:
             self.open_cmd.extend(["-o", "StrictHostKeyChecking=no"])
+            self.open_cmd.extend(["-o", "UserKnownHostsFile=/dev/null"])
         else:
             self.open_cmd.extend(["-o", "StrictHostKeyChecking=yes"])
+            if self.ssh_known_hosts_file:
+                self.open_cmd.extend(["-o", f"UserKnownHostsFile={self.ssh_known_hosts_file}"])
         if self.ssh_config_file:
             self.open_cmd.extend(["-F", self.ssh_config_file])
+        else:
+            self.open_cmd.extend(["-F", "/dev/null"])
 
     def open(self) -> None:
         """
@@ -244,6 +269,9 @@ class SystemSSHTransport(Transport):
             LOG.critical(msg)
             raise ScrapliAuthenticationFailed(msg)
 
+        if self.keepalive:
+            self._session_keepalive()
+
     def _open_pipes(self) -> bool:
         """
         Private method to open session with subprocess.Popen
@@ -265,26 +293,23 @@ class SystemSSHTransport(Transport):
         open_cmd.append("-v")
         open_cmd.extend(["-o", "BatchMode=yes"])
 
-        pipes_session = Popen(
-            open_cmd, bufsize=0, shell=False, stdin=PIPE, stdout=PIPE, stderr=PIPE
-        )
+        self.session = Popen(open_cmd, bufsize=0, shell=False, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         LOG.debug(f"Session to host {self.host} spawned")
 
         try:
-            self._pipes_isauthenticated(pipes_session)
+            self._pipes_isauthenticated(self.session)
         except TimeoutError:
             # If auth fails, kill the popen session
-            pipes_session.kill()
+            self.session.kill()
             return False
 
         LOG.debug(f"Authenticated to host {self.host} with public key")
         self.open_cmd = open_cmd
         self.session_lock.release()
-        self.session = pipes_session
         return True
 
-    @operation_timeout("timeout_ops", "Timed out determining if session is authenticated")
-    def _pipes_isauthenticated(self, pipes_session: PopenBytes) -> bool:
+    @operation_timeout("_timeout_ops", "Timed out determining if session is authenticated")
+    def _pipes_isauthenticated(self, pipes_session: "PopenBytes") -> bool:
         """
         Private method to check initial authentication when using subprocess.Popen
 
@@ -322,17 +347,16 @@ class SystemSSHTransport(Transport):
             N/A
 
         """
-        pty_session = PtyProcess.spawn(self.open_cmd)
+        self.session = PtyProcess.spawn(self.open_cmd)
         LOG.debug(f"Session to host {self.host} spawned")
         self.session_lock.release()
-        self._pty_authenticate(pty_session)
-        if not self._pty_isauthenticated(pty_session):
+        self._pty_authenticate(self.session)
+        if not self._pty_isauthenticated(self.session):
             return False
         LOG.debug(f"Authenticated to host {self.host} with password")
-        self.session = pty_session
         return True
 
-    @operation_timeout("timeout_ops", "Timed out looking for SSH login password prompt")
+    @operation_timeout("_timeout_ops", "Timed out looking for SSH login password prompt")
     def _pty_authenticate(self, pty_session: PtyProcess) -> None:
         """
         Private method to check initial authentication when using pty_session
@@ -354,16 +378,25 @@ class SystemSSHTransport(Transport):
                 output = pty_session.read()
             except EOFError:
                 raise ScrapliAuthenticationFailed(
-                    "PTY Authentication failed, often this means strict host key checking is "
-                    "enabled and is failing!"
+                    "PTY Authentication failed to find password prompt, often this means strict "
+                    "host key checking is enabled and is failing!"
+                )
+            if self._comms_ansi:
+                output = strip_ansi(output)
+            if b"WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!" in output:
+                raise ScrapliAuthenticationFailed(
+                    "PTY Authentication failed! It looks like the remote host identification has"
+                    "changed. Fix this or disable `auth_strict_key` or pass a "
+                    "`ssh_known_hosts_file` containing the hosts identification."
                 )
             if b"password" in output.lower():
+                LOG.debug("Found password prompt, sending password")
                 pty_session.write(self.auth_password.encode())
-                pty_session.write(self.comms_return_char.encode())
+                pty_session.write(self._comms_return_char.encode())
                 self.session_lock.release()
                 break
 
-    @operation_timeout("timeout_ops", "Timed out determining if session is authenticated")
+    @operation_timeout("_timeout_ops", "Timed out determining if session is authenticated")
     def _pty_isauthenticated(self, pty_session: PtyProcess) -> bool:
         """
         Check if session is authenticated
@@ -382,22 +415,24 @@ class SystemSSHTransport(Transport):
 
         """
         if pty_session.isalive() and not pty_session.eof():
-            prompt_pattern = get_prompt_pattern("", self.comms_prompt_pattern)
+            prompt_pattern = get_prompt_pattern("", self._comms_prompt_pattern)
             self.session_lock.acquire()
-            pty_session.write(self.comms_return_char.encode())
+            pty_session.write(self._comms_return_char.encode())
             fd_ready, _, _ = select([pty_session.fd], [], [], 0)
             if pty_session.fd in fd_ready:
-                # unclear as to why there needs to be two read operations here, but fails w/out it
-                pty_session.read()
-                output = pty_session.read()
-                # we do not need to deal w/ line replacement for the actual output, only for
-                # parsing if a prompt-like thing is at the end of the output
-                output = re.sub(b"\r", b"\n", output.strip())
-                channel_match = re.search(prompt_pattern, output)
-                if channel_match:
-                    self.session_lock.release()
-                    self._isauthenticated = True
-                    return True
+                output = b""
+                while True:
+                    output += pty_session.read()
+                    # we do not need to deal w/ line replacement for the actual output, only for
+                    # parsing if a prompt-like thing is at the end of the output
+                    output = re.sub(b"\r", b"", output)
+                    if self._comms_ansi:
+                        output = strip_ansi(output)
+                    channel_match = re.search(prompt_pattern, output)
+                    if channel_match:
+                        self.session_lock.release()
+                        self._isauthenticated = True
+                        return True
         self.session_lock.release()
         return False
 
