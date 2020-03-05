@@ -5,9 +5,9 @@ from scrapli.driver import NetworkDriver
 from scrapli.driver.network_driver import PrivilegeLevel
 
 
-def nxos_on_connect(conn: NetworkDriver) -> None:
+def nxos_on_open(conn: NetworkDriver) -> None:
     """
-    NXOSDriver default on_connect callable
+    NXOSDriver default on_open callable
 
     Args:
         conn: NetworkDriver object
@@ -21,11 +21,27 @@ def nxos_on_connect(conn: NetworkDriver) -> None:
     conn.channel.send_inputs("terminal length 0")
 
 
+def nxos_on_close(conn: NetworkDriver) -> None:
+    """
+    NXOSDriver default on_close callable
+
+    Args:
+        conn: NetworkDriver object
+
+    Returns:
+        N/A  # noqa: DAR202
+
+    Raises:
+        N/A
+    """
+    conn.channel.send_inputs("exit")
+
+
 NXOS_ARG_MAPPER = {
     "comms_prompt_regex": r"^[a-z0-9.\-@()/:]{1,32}[#>$]\s*$",
     "comms_return_char": "\n",
-    "comms_pre_login_handler": "",
-    "comms_disable_paging": nxos_on_connect,
+    "on_open": nxos_on_open,
+    "on_close": nxos_on_close,
 }
 
 PRIVS = {
@@ -93,7 +109,8 @@ class NXOSDriver(NetworkDriver):
         self,
         auth_secondary: str = "",
         comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]\s*$",
-        on_connect: Optional[Callable[..., Any]] = None,
+        on_open: Optional[Callable[..., Any]] = None,
+        on_close: Optional[Callable[..., Any]] = None,
         **kwargs: Dict[str, Any],
     ):
         """
@@ -109,10 +126,14 @@ class NXOSDriver(NetworkDriver):
                 for each line, so be sure to add `\\s*` if your device needs that. This should be
                 mostly sorted for you if using network drivers (i.e. `IOSXEDriver`). Lastly, the
                 case insensitive is just a convenience factor so i can be lazy.
-            on_connect: callable that accepts the class instance as its only argument. this callable
-                if provided is executed immediately after authentication is completed. Common use
+            on_open: callable that accepts the class instance as its only argument. this callable,
+                if provided, is executed immediately after authentication is completed. Common use
                 cases for this callable would be to disable paging or accept any kind of banner
                 message that prompts a user upon connection
+            on_close: callable that accepts the class instance as its only argument. this callable,
+                if provided, is executed immediately prior to closing the underlying transport.
+                Common use cases for this callable would be to save configurations prior to exiting,
+                or to logout properly to free up vtys or similar.
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -121,15 +142,17 @@ class NXOSDriver(NetworkDriver):
         Raises:
             N/A
         """
-        if on_connect is None:
-            on_connect = nxos_on_connect
+        if on_open is None:
+            on_open = nxos_on_open
+        if on_close is None:
+            on_close = nxos_on_close
         super().__init__(
             auth_secondary,
             comms_prompt_pattern=comms_prompt_pattern,
-            on_connect=on_connect,
+            on_open=on_open,
+            on_close=on_close,
             **kwargs,
         )
         self.privs = PRIVS
         self.default_desired_priv = "privilege_exec"
         self.textfsm_platform = "cisco_nxos"
-        self.exit_command = "exit"

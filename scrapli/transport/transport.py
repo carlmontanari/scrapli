@@ -7,6 +7,8 @@ from logging import getLogger
 from threading import Lock
 from typing import Optional
 
+from scrapli.exceptions import ScrapliKeepaliveFailure
+
 LOG = getLogger("transport")
 
 
@@ -273,6 +275,13 @@ class Transport(ABC):
                     lock_counter += 1
                     if lock_counter >= 3:
                         LOG.info(f"Keepalive thread missed {lock_counter} consecutive keepalives.")
+            if diff.seconds > self.keepalive_interval * 3:
+                msg = (
+                    "Keepalive thread has failed to send a keepalive in greater than three "
+                    "times the keepalive interval!"
+                )
+                LOG.critical(msg)
+                raise ScrapliKeepaliveFailure(msg)
             time.sleep(self.keepalive_interval / 10)
 
     @abstractmethod

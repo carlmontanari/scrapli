@@ -2,6 +2,7 @@
 import logging
 import os
 import re
+from pathlib import Path
 from types import TracebackType
 from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
 
@@ -67,7 +68,8 @@ class Scrape:
         comms_ansi: bool = False,
         ssh_config_file: Union[str, bool] = False,
         ssh_known_hosts_file: str = "",
-        on_connect: Optional[Callable[..., Any]] = None,
+        on_open: Optional[Callable[..., Any]] = None,
+        on_close: Optional[Callable[..., Any]] = None,
         transport: str = "system",
     ):
         """
@@ -121,10 +123,14 @@ class Scrape:
                 or False to ignore default ssh config file
             ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
                 file locations. Only applicable/needed if `auth_strict_key` is set to True
-            on_connect: callable that accepts the class instance as its only argument. this callable
-                if provided is executed immediately after authentication is completed. Common use
+            on_open: callable that accepts the class instance as its only argument. this callable,
+                if provided, is executed immediately after authentication is completed. Common use
                 cases for this callable would be to disable paging or accept any kind of banner
                 message that prompts a user upon connection
+            on_close: callable that accepts the class instance as its only argument. this callable,
+                if provided, is executed immediately prior to closing the underlying transport.
+                Common use cases for this callable would be to save configurations prior to exiting,
+                or to logout properly to free up vtys or similar.
             transport: system|ssh2|paramiko|telnet -- type of transport to use for connection
                 system uses system available ssh (/usr/bin/ssh)
                 ssh2 uses ssh2-python
@@ -143,7 +149,8 @@ class Scrape:
             ValueError: if driver value is invalid
             TypeError: if auth_strict_key/keepalive is not a bool or values cannot be converted to
                 ints where appropriate (i.e. timeouts)
-            TypeError: if on_connect is not a callable
+            TypeError: if on_open is not a callable
+            TypeError: if on_close is not a callable
 
         """
         # create a dict of all "initialization" args for posterity and for passing to Transport
@@ -156,10 +163,7 @@ class Scrape:
         self._initialization_args["host"] = host.strip()
         self._initialization_args["port"] = port
 
-        if not isinstance(auth_strict_key, bool):
-            raise TypeError(f"auth_strict_key should be bool, got {type(auth_strict_key)}")
-        self._initialization_args["auth_strict_key"] = auth_strict_key
-        self._setup_auth(auth_username, auth_password, auth_public_key)
+        self._setup_auth(auth_username, auth_password, auth_public_key, auth_strict_key)
 
         self._setup_timeouts(timeout_socket, timeout_transport, timeout_ops, timeout_exit)
 
@@ -177,15 +181,20 @@ class Scrape:
 
         self._setup_comms(comms_prompt_pattern, comms_return_char, comms_ansi)
 
-        if on_connect is not None and not callable(on_connect):
-            raise TypeError(f"on_connect must be a callable, got {type(on_connect)}")
-        self.on_connect = on_connect
-        self._initialization_args["on_connect"] = on_connect
+        if on_open is not None and not callable(on_open):
+            raise TypeError(f"on_open must be a callable, got {type(on_open)}")
+        if on_close is not None and not callable(on_close):
+            raise TypeError(f"on_close must be a callable, got {type(on_close)}")
+        self.on_open = on_open
+        self.on_close = on_close
+        self._initialization_args["on_open"] = on_open
+        self._initialization_args["on_close"] = on_open
 
         if transport not in ("ssh2", "paramiko", "system", "telnet"):
             raise ValueError(
                 f"transport should be one of ssh2|paramiko|system|telnet, got {transport}"
             )
+        self._transport = transport
 
         if transport != "telnet":
             self._setup_ssh_args(ssh_config_file, ssh_known_hosts_file)
@@ -270,11 +279,35 @@ class Scrape:
             N/A
 
         """
-        class_dict = self.__dict__.copy()
-        class_dict["auth_password"] = "********"
-        return f"Scrape {class_dict}"
+        return (
+            f"{self.__class__.__name__}("
+            f"host={self._initialization_args['host']!r}, "
+            f"port={self._initialization_args['port']!r}, "
+            f"auth_username={self._initialization_args['auth_username']!r}, "
+            f"auth_password={self._initialization_args['auth_password']!r}, "
+            f"auth_public_key={self._initialization_args['auth_public_key']!r}, "
+            f"auth_strict_key={self._initialization_args['auth_strict_key']!r}, "
+            f"timeout_socket={self._initialization_args['timeout_socket']!r}, "
+            f"timeout_transport={self._initialization_args['timeout_transport']!r}, "
+            f"timeout_ops={self._initialization_args['timeout_ops']!r}, "
+            f"timeout_exit={self._initialization_args['timeout_exit']!r}, "
+            f"keepalive={self._initialization_args['keepalive']!r}, "
+            f"keepalive_interval={self._initialization_args['keepalive_interval']!r}, "
+            f"keepalive_type={self._initialization_args['keepalive_type']!r}, "
+            f"keepalive_pattern={self._initialization_args['keepalive_pattern']!r}, "
+            f"comms_prompt_pattern={self._initialization_args['comms_prompt_pattern']!r}, "
+            f"comms_return_char={self._initialization_args['comms_return_char']!r}, "
+            f"comms_ansi={self._initialization_args['comms_ansi']!r}, "
+            f"ssh_config_file={self._initialization_args['ssh_config_file']!r}, "
+            f"ssh_known_hosts_file={self._initialization_args['ssh_known_hosts_file']!r}, "
+            f"on_open={self.on_open!r}, "
+            f"on_close={self.on_close!r}, "
+            f"transport={self._transport!r})"
+        )
 
-    def _setup_auth(self, auth_username: str, auth_password: str, auth_public_key: str) -> None:
+    def _setup_auth(
+        self, auth_username: str, auth_password: str, auth_public_key: str, auth_strict_key: bool
+    ) -> None:
         """
         Parse and setup auth attributes
 
@@ -287,12 +320,19 @@ class Scrape:
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            ValueError: if auth_public_key is not a valid file
 
         """
+        if not isinstance(auth_strict_key, bool):
+            raise TypeError(f"auth_strict_key should be bool, got {type(auth_strict_key)}")
+        self._initialization_args["auth_strict_key"] = auth_strict_key
+
         self._initialization_args["auth_username"] = auth_username.strip()
 
         if auth_public_key:
+            public_key_path = Path.expanduser(Path(auth_public_key.strip()))
+            if not public_key_path.is_file():
+                raise ValueError(f"Provided public key `{auth_public_key}` is not a file")
             self._initialization_args["auth_public_key"] = os.path.expanduser(
                 auth_public_key.strip().encode()
             )
@@ -433,7 +473,7 @@ class Scrape:
         """
         Open Transport (socket/session) and establish channel
 
-        If on_connect callable provided, execute that callable after opening connection
+        If on_open callable provided, execute that callable after opening connection
 
         Args:
             N/A
@@ -448,8 +488,8 @@ class Scrape:
         self.transport = self.transport_class(**self.transport_args)
         self.transport.open()
         self.channel = Channel(self.transport, **self.channel_args)
-        if self.on_connect:
-            self.on_connect(self)
+        if self.on_open:
+            self.on_open(self)
 
     def close(self) -> None:
         """

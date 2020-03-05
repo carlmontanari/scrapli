@@ -15,17 +15,17 @@ except ImportError:
 
 
 def test_valid_on_connect_func():
-    def on_connect_func():
+    def on_open_func():
         pass
 
-    conn = NetworkDriver(on_connect=on_connect_func)
-    assert callable(conn.on_connect)
+    conn = NetworkDriver(on_open=on_open_func)
+    assert callable(conn.on_open)
 
 
 def test_invalid_on_connect_func():
     with pytest.raises(TypeError) as e:
-        NetworkDriver(on_connect="not a callable")
-    assert str(e.value) == "on_connect must be a callable, got <class 'str'>"
+        NetworkDriver(on_open="not a callable")
+    assert str(e.value) == "on_open must be a callable, got <class 'str'>"
 
 
 def test__determine_current_priv(mocked_network_driver):

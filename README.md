@@ -816,11 +816,6 @@ This section may not get updated much, but will hopefully reflect the priority i
 
 ## Todo
 
-- Convert "exit_command"/exit stuff to an "on_exit" callable similar to the "on_connect" setup.
-- Make repr actually useful (particularily for scrape)
-- Figure out a reasonable (configurable?) value to raise an exception if X number of attempted  unlocks are missed in
- the keepalive thread -- or perhaps better yet do this via time (i.e. 3x the keepalive interval no lock acquired then
-  raise an exception)
 - Add tests for keepalive stuff if possible (steal from ssh2net! :D)
 - Maybe worth breaking readme up into multiple pages and/or use a wiki -- don't like the fact that wiki pages are not
  in the repo though...
