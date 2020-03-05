@@ -252,7 +252,8 @@ class Transport(ABC):
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            ScrapliKeepaliveFailure: if scrapli cant unlock and send keepalive in less than 3 *
+                the keepalive_interval
 
         """
         lock_counter = 0

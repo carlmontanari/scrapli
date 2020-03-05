@@ -315,11 +315,13 @@ class Scrape:
             auth_username: username to parse/set
             auth_password: password to parse/set
             auth_public_key: public key to parse/set
+            auth_strict_key: strict key to parse/set
 
         Returns:
             N/A  # noqa: DAR202
 
         Raises:
+            TypeError: if auth_strict_key is not a bool
             ValueError: if auth_public_key is not a valid file
 
         """
