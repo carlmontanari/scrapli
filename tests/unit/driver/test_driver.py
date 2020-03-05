@@ -112,7 +112,7 @@ def test_valid_ssh_config_file_path():
 
 def test_ssh_config_file_path_system_no_file(fs):
     conn = Scrape(ssh_config_file=True)
-    assert conn.ssh_config_file == ""
+    assert conn._initialization_args["ssh_config_file"] == ""
 
 
 def test_invalid_ssh_known_hosts():
