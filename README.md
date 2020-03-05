@@ -28,9 +28,9 @@ There are four available "transports" for the transport layer -- all of which in
 
 A good question to ask at this point is probably "why?". Why multiple transport options? Why not just use paramiko
  like most folks do? Historically the reason for moving away from paramiko was simply speed. ssh2-python is a wrapper
-  around the libssh2 C library, and as such is very very fast. In a prior project ([ssh2net]()), of which scrapli is the
-   successor/evolution, ssh2-python was used with great success, however, it is a bit feature-limited, and development
-    seems to have stalled.
+  around the libssh2 C library, and as such is very very fast. In a prior project
+   ([ssh2net](https://github.com/carlmontanari/ssh2net)), of which scrapli is the successor/evolution, ssh2-python
+    was used with great success, however, it is a bit feature-limited, and development seems to have stalled.
 
 This led to moving back to paramiko, which of course is a fantastic project with tons and tons of feature support
 . Paramiko, however, does not provide "direct" OpenSSH support (as in -- auto-magically like when you ssh on your
@@ -38,7 +38,7 @@ This led to moving back to paramiko, which of course is a fantastic project with
   supporting an OpenSSH config file would be an ideal end goal for scrapli, something that may not be possible with
    Paramiko - ControlPersist in particular is very interesting to me.
 
-With the goal of supporting all of the OpenSSH configuration options the final transport driver option is simply
+With the goal of supporting all of the OpenSSH configuration options the primary transport driver option is simply
  native system local SSH (almost certainly this won't work on Windows, but I don't have a Windows box to test on, or
   any particular interest in doing so). The implementation of using system SSH is of course a little bit messy
   , however scrapli takes care of that for you so you don't need to care about it! The payoff of using system SSH is of
@@ -47,14 +47,19 @@ With the goal of supporting all of the OpenSSH configuration options the final t
       will likely be the focus of most development for this project, though I will try to keep the other transport
        drivers -- in particular ssh2-python -- as close to parity as is possible/practical.
 
+The last transport is telnet via telnetlib. This was trivial to add in as the interface is basically the same as
+ SystemSSH, and it turns out telnet is still actually useful for things like terminal servers and the like!
+
 The final piece of scrapli is the actual "driver" -- or the component that binds the transport and channel together and
  deals with instantiation of an scrapli object. There is a "base" driver object -- `Scrape` -- which provides essentially
-  a "raw" SSH connection with read and write methods (provided by the channel object), and not much else. More
-   specific "drivers" can inherit from this class to extend functionality of the driver to make it more friendly for
-    network devices. In fact, there is a `NetworkDriver` which does just that. This `NetworkDriver` isn't really
-     meant to be used directly though, but to be further extended and built upon instead. As this library is focused on
-     interacting with network devices, an example scrapli driver (built on the `NetworkDriver`) would be the `IOSXE
-     ` driver -- to, as you may have guessed, interact with devices running Cisco's IOS-XE operating system.
+  a "raw" SSH (or telnet) connection that is created by instantiating a Transport object, and a Channel object
+  . `Scrape` provides (via Channel) read/write methods and not much else -- this should feel familiar if you have
+   used paramiko in the past. More specific "drivers" can inherit from this class to extend functionality of the
+    driver to make it more friendly for network devices. In fact, there is a `NetworkDriver` which does just that
+    . This `NetworkDriver` isn't really meant to be used directly though, but to be further extended and built upon
+     instead. As this library is focused on interacting with network devices, an example scrapli driver (built on the
+      `NetworkDriver`) would be the `IOSXE` driver -- to, as you may have guessed, interact with devices running
+       Cisco's IOS-XE operating system.
 
 
 # Table of Contents
@@ -152,8 +157,8 @@ python setup.py install
 ```
 
 scrapli has made an effort to have as few dependencies as possible -- in fact to have ZERO dependencies! The "core" of
- scrapli can run with nothing other than standard library! If you wish to use paramiko or ssh2-python as a driver
- , however, you of course need to install those. This can be done with pip:
+ scrapli can run with nothing other than standard library! If for any reason you wish to use paramiko or ssh2-python
+  as a driver, however, you of course need to install those. This can be done with pip:
 
 ```
 pip install scrapli[paramiko]
@@ -220,7 +225,7 @@ The "base" (default, but changeable) pattern is:
 `"^[a-z0-9.\-@()/:]{1,20}[#>$]$"`
 
 *NOTE* all `comms_prompt_pattern` should use the start and end of line anchors as all regex searches in scrapli are
- multline (this is an important piece to making this all work!). While you don't *need* to use the line anchors its
+ multi-line (this is an important piece to making this all work!). While you don't *need* to use the line anchors its
   probably a really good idea!
 
 The above pattern works on all "core" platforms listed above for at the very least basic usage. Custom prompts or
@@ -381,7 +386,7 @@ In some cases you may need to run an "interactive" command on your device. The `
     basically). This method accepts a tuple containing the initial input (command) to send, the expected prompt after
      the initial send, the response to that prompt, and the final expected prompt -- basically telling scrapli when it
       is done with the interactive command. In the second example below (using the `IOSXEDriver`) the expectation is
-       that the current /base prompt is the final expected prompt, so we can simply call the `get_prompt` method to
+       that the current/base prompt is the final expected prompt, so we can simply call the `get_prompt` method to
         snag that directly off the router.
 
 ```python
@@ -811,14 +816,12 @@ This section may not get updated much, but will hopefully reflect the priority i
 
 ## Todo
 
-- update transport notes to reflect reality! (mostly ssh config supported things)
-- Figure out a better solution for timeout decorator -- had to switch from signals to multiprocessing; when timeouts
- happen timeout is raised but the script doesnt terminate because the keepalive thread continues. The keepalive
-  thread has only reference to the transport while the timeout has reference to the channel -- so the two things dont
-   really know about each other -- so when one fails the other cannot be notified... (as it sits right now)
+- Convert "exit_command"/exit stuff to an "on_exit" callable similar to the "on_connect" setup.
+- Make repr actually useful (particularily for scrape)
+- Figure out a reasonable (configurable?) value to raise an exception if X number of attempted  unlocks are missed in
+ the keepalive thread -- or perhaps better yet do this via time (i.e. 3x the keepalive interval no lock acquired then
+  raise an exception)
 - Add tests for keepalive stuff if possible (steal from ssh2net! :D)
-- Create an actual useful init in base transport class and super it from the child transport classes -- setting
- things like keepalive over and over in each child class is silly.
 - Maybe worth breaking readme up into multiple pages and/or use a wiki -- don't like the fact that wiki pages are not
  in the repo though...
 - Investigate pre-authentication handling for telnet -- support handling a prompt *before* auth happens i.e. accept
