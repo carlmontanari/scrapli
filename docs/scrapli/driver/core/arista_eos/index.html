@@ -49,7 +49,7 @@ __all__ = (&#34;EOSDriver&#34;,)</code></pre>
 <dl>
 <dt id="scrapli.driver.core.arista_eos.EOSDriver"><code class="flex name class">
 <span>class <span class="ident">EOSDriver</span></span>
-<span>(</span><span>auth_secondary='', on_connect=None, **kwargs)</span>
+<span>(</span><span>auth_secondary='', on_open=None, on_close=None, **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>EOSDriver Object</p>
@@ -57,11 +57,16 @@ __all__ = (&#34;EOSDriver&#34;,)</code></pre>
 <dl>
 <dt><strong><code>auth_secondary</code></strong></dt>
 <dd>password to use for secondary authentication (enable)</dd>
-<dt><strong><code>on_connect</code></strong></dt>
-<dd>callable that accepts the class instance as its only argument. this callable
-if provided is executed immediately after authentication is completed. Common use
+<dt><strong><code>on_open</code></strong></dt>
+<dd>callable that accepts the class instance as its only argument. this callable,
+if provided, is executed immediately after authentication is completed. Common use
 cases for this callable would be to disable paging or accept any kind of banner
 message that prompts a user upon connection</dd>
+<dt><strong><code>on_close</code></strong></dt>
+<dd>callable that accepts the class instance as its only argument. this callable,
+if provided, is executed immediately prior to closing the underlying transport.
+Common use cases for this callable would be to save configurations prior to exiting,
+or to logout properly to free up vtys or similar.</dd>
 <dt><strong><code>**kwargs</code></strong></dt>
 <dd>keyword args to pass to inherited class(es)</dd>
 </dl>
@@ -84,7 +89,8 @@ message that prompts a user upon connection</dd>
     def __init__(
         self,
         auth_secondary: str = &#34;&#34;,
-        on_connect: Optional[Callable[..., Any]] = None,
+        on_open: Optional[Callable[..., Any]] = None,
+        on_close: Optional[Callable[..., Any]] = None,
         **kwargs: Dict[str, Any],
     ):
         &#34;&#34;&#34;
@@ -92,10 +98,14 @@ message that prompts a user upon connection</dd>
 
         Args:
             auth_secondary: password to use for secondary authentication (enable)
-            on_connect: callable that accepts the class instance as its only argument. this callable
-                if provided is executed immediately after authentication is completed. Common use
+            on_open: callable that accepts the class instance as its only argument. this callable,
+                if provided, is executed immediately after authentication is completed. Common use
                 cases for this callable would be to disable paging or accept any kind of banner
                 message that prompts a user upon connection
+            on_close: callable that accepts the class instance as its only argument. this callable,
+                if provided, is executed immediately prior to closing the underlying transport.
+                Common use cases for this callable would be to save configurations prior to exiting,
+                or to logout properly to free up vtys or similar.
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -104,13 +114,14 @@ message that prompts a user upon connection</dd>
         Raises:
             N/A
         &#34;&#34;&#34;
-        if on_connect is None:
-            on_connect = eos_on_connect
-        super().__init__(auth_secondary, on_connect=on_connect, **kwargs)
+        if on_open is None:
+            on_open = eos_on_open
+        if on_close is None:
+            on_close = eos_on_close
+        super().__init__(auth_secondary, on_open=on_open, on_close=on_close, **kwargs)
         self.privs = PRIVS
         self.default_desired_priv = &#34;privilege_exec&#34;
-        self.textfsm_platform = &#34;arista_eos&#34;
-        self.exit_command = &#34;exit&#34;</code></pre>
+        self.textfsm_platform = &#34;arista_eos&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">

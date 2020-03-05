@@ -253,7 +253,7 @@ class NetworkDriver(Scrape):
             responses: list of Scrapli Response objects
 
         Raises:
-            N/A
+            TypeError: if commands is anything but a list
 
         &#34;&#34;&#34;
         if not isinstance(commands, list):
@@ -342,7 +342,7 @@ class NetworkDriver(Scrape):
         return prompt
 
     def close(self) -&gt; None:
-        self.transport.write(f&#34;{self.exit_command}{self.comms_return_char}&#34;)
+        self.transport.write(f&#34;{self.exit_command}{self.channel.comms_return_char}&#34;)
         super().close()</code></pre>
 </details>
 </section>
@@ -559,7 +559,7 @@ class NetworkDriver(Scrape):
             responses: list of Scrapli Response objects
 
         Raises:
-            N/A
+            TypeError: if commands is anything but a list
 
         &#34;&#34;&#34;
         if not isinstance(commands, list):
@@ -648,7 +648,7 @@ class NetworkDriver(Scrape):
         return prompt
 
     def close(self) -&gt; None:
-        self.transport.write(f&#34;{self.exit_command}{self.comms_return_char}&#34;)
+        self.transport.write(f&#34;{self.exit_command}{self.channel.comms_return_char}&#34;)
         super().close()</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -831,8 +831,8 @@ class NetworkDriver(Scrape):
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
+<dt><strong><code>TypeError</code></strong></dt>
+<dd>if commands is anything but a list</dd>
 </dl></section>
 <details class="source">
 <summary>
@@ -850,7 +850,7 @@ class NetworkDriver(Scrape):
         responses: list of Scrapli Response objects
 
     Raises:
-        N/A
+        TypeError: if commands is anything but a list
 
     &#34;&#34;&#34;
     if not isinstance(commands, list):

@@ -33,9 +33,9 @@ from scrapli.driver import NetworkDriver
 from scrapli.driver.network_driver import PrivilegeLevel
 
 
-def iosxr_on_connect(conn: NetworkDriver) -&gt; None:
+def iosxr_on_open(conn: NetworkDriver) -&gt; None:
     &#34;&#34;&#34;
-    IOSXRDriver default on_connect callable
+    IOSXRDriver default on_open callable
 
     Args:
         conn: NetworkDriver object
@@ -46,16 +46,34 @@ def iosxr_on_connect(conn: NetworkDriver) -&gt; None:
     Raises:
         N/A
     &#34;&#34;&#34;
-    # sleep for session to establish; without this we never find base prompt
+    # sleep for session to establish; without this we never find base prompt for some reason?
+    # maybe this is an artifact from previous iterations/tests and can be done away with...
     time.sleep(1)
     conn.channel.send_inputs(&#34;terminal length 0&#34;)
+
+
+def iosxr_on_close(conn: NetworkDriver) -&gt; None:
+    &#34;&#34;&#34;
+    IOSXRDriver default on_close callable
+
+    Args:
+        conn: NetworkDriver object
+
+    Returns:
+        N/A  # noqa: DAR202
+
+    Raises:
+        N/A
+    &#34;&#34;&#34;
+    conn.channel.send_inputs(&#34;end&#34;)
+    conn.channel.send_inputs(&#34;exit&#34;)
 
 
 IOSXR_ARG_MAPPER = {
     &#34;comms_prompt_regex&#34;: r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]$&#34;,
     &#34;comms_return_char&#34;: &#34;\n&#34;,
-    &#34;comms_pre_login_handler&#34;: &#34;scrapli.driver.core.cisco_iosxr.helper.comms_pre_login_handler&#34;,
-    &#34;comms_disable_paging&#34;: iosxr_on_connect,
+    &#34;on_open&#34;: iosxr_on_open,
+    &#34;on_close&#34;: iosxr_on_close,
 }
 
 PRIVS = {
@@ -108,7 +126,8 @@ class IOSXRDriver(NetworkDriver):
     def __init__(
         self,
         auth_secondary: str = &#34;&#34;,
-        on_connect: Optional[Callable[..., Any]] = None,
+        on_open: Optional[Callable[..., Any]] = None,
+        on_close: Optional[Callable[..., Any]] = None,
         **kwargs: Dict[str, Any],
     ):
         &#34;&#34;&#34;
@@ -116,10 +135,14 @@ class IOSXRDriver(NetworkDriver):
 
         Args:
             auth_secondary: password to use for secondary authentication (enable)
-            on_connect: callable that accepts the class instance as its only argument. this callable
-                if provided is executed immediately after authentication is completed. Common use
+            on_open: callable that accepts the class instance as its only argument. this callable,
+                if provided, is executed immediately after authentication is completed. Common use
                 cases for this callable would be to disable paging or accept any kind of banner
                 message that prompts a user upon connection
+            on_close: callable that accepts the class instance as its only argument. this callable,
+                if provided, is executed immediately prior to closing the underlying transport.
+                Common use cases for this callable would be to save configurations prior to exiting,
+                or to logout properly to free up vtys or similar.
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -128,13 +151,14 @@ class IOSXRDriver(NetworkDriver):
         Raises:
             N/A
         &#34;&#34;&#34;
-        if on_connect is None:
-            on_connect = iosxr_on_connect
-        super().__init__(auth_secondary, on_connect=on_connect, **kwargs)
+        if on_open is None:
+            on_open = iosxr_on_open
+        if on_close is None:
+            on_close = iosxr_on_close
+        super().__init__(auth_secondary, on_open=on_open, on_close=on_close, **kwargs)
         self.privs = PRIVS
         self.default_desired_priv = &#34;privilege_exec&#34;
-        self.textfsm_platform = &#34;cisco_xr&#34;
-        self.exit_command = &#34;exit&#34;</code></pre>
+        self.textfsm_platform = &#34;cisco_xr&#34;</code></pre>
 </details>
 </section>
 <section>
@@ -144,11 +168,11 @@ class IOSXRDriver(NetworkDriver):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="scrapli.driver.core.cisco_iosxr.driver.iosxr_on_connect"><code class="name flex">
-<span>def <span class="ident">iosxr_on_connect</span></span>(<span>conn)</span>
+<dt id="scrapli.driver.core.cisco_iosxr.driver.iosxr_on_close"><code class="name flex">
+<span>def <span class="ident">iosxr_on_close</span></span>(<span>conn)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>IOSXRDriver default on_connect callable</p>
+<section class="desc"><p>IOSXRDriver default on_close callable</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>conn</code></strong></dt>
@@ -169,9 +193,9 @@ class IOSXRDriver(NetworkDriver):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def iosxr_on_connect(conn: NetworkDriver) -&gt; None:
+<pre><code class="python">def iosxr_on_close(conn: NetworkDriver) -&gt; None:
     &#34;&#34;&#34;
-    IOSXRDriver default on_connect callable
+    IOSXRDriver default on_close callable
 
     Args:
         conn: NetworkDriver object
@@ -182,7 +206,50 @@ class IOSXRDriver(NetworkDriver):
     Raises:
         N/A
     &#34;&#34;&#34;
-    # sleep for session to establish; without this we never find base prompt
+    conn.channel.send_inputs(&#34;end&#34;)
+    conn.channel.send_inputs(&#34;exit&#34;)</code></pre>
+</details>
+</dd>
+<dt id="scrapli.driver.core.cisco_iosxr.driver.iosxr_on_open"><code class="name flex">
+<span>def <span class="ident">iosxr_on_open</span></span>(<span>conn)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>IOSXRDriver default on_open callable</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>conn</code></strong></dt>
+<dd>NetworkDriver object</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code>: <code>DAR202</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def iosxr_on_open(conn: NetworkDriver) -&gt; None:
+    &#34;&#34;&#34;
+    IOSXRDriver default on_open callable
+
+    Args:
+        conn: NetworkDriver object
+
+    Returns:
+        N/A  # noqa: DAR202
+
+    Raises:
+        N/A
+    &#34;&#34;&#34;
+    # sleep for session to establish; without this we never find base prompt for some reason?
+    # maybe this is an artifact from previous iterations/tests and can be done away with...
     time.sleep(1)
     conn.channel.send_inputs(&#34;terminal length 0&#34;)</code></pre>
 </details>
@@ -194,7 +261,7 @@ class IOSXRDriver(NetworkDriver):
 <dl>
 <dt id="scrapli.driver.core.cisco_iosxr.driver.IOSXRDriver"><code class="flex name class">
 <span>class <span class="ident">IOSXRDriver</span></span>
-<span>(</span><span>auth_secondary='', on_connect=None, **kwargs)</span>
+<span>(</span><span>auth_secondary='', on_open=None, on_close=None, **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>IOSXRDriver Object</p>
@@ -202,11 +269,16 @@ class IOSXRDriver(NetworkDriver):
 <dl>
 <dt><strong><code>auth_secondary</code></strong></dt>
 <dd>password to use for secondary authentication (enable)</dd>
-<dt><strong><code>on_connect</code></strong></dt>
-<dd>callable that accepts the class instance as its only argument. this callable
-if provided is executed immediately after authentication is completed. Common use
+<dt><strong><code>on_open</code></strong></dt>
+<dd>callable that accepts the class instance as its only argument. this callable,
+if provided, is executed immediately after authentication is completed. Common use
 cases for this callable would be to disable paging or accept any kind of banner
 message that prompts a user upon connection</dd>
+<dt><strong><code>on_close</code></strong></dt>
+<dd>callable that accepts the class instance as its only argument. this callable,
+if provided, is executed immediately prior to closing the underlying transport.
+Common use cases for this callable would be to save configurations prior to exiting,
+or to logout properly to free up vtys or similar.</dd>
 <dt><strong><code>**kwargs</code></strong></dt>
 <dd>keyword args to pass to inherited class(es)</dd>
 </dl>
@@ -229,7 +301,8 @@ message that prompts a user upon connection</dd>
     def __init__(
         self,
         auth_secondary: str = &#34;&#34;,
-        on_connect: Optional[Callable[..., Any]] = None,
+        on_open: Optional[Callable[..., Any]] = None,
+        on_close: Optional[Callable[..., Any]] = None,
         **kwargs: Dict[str, Any],
     ):
         &#34;&#34;&#34;
@@ -237,10 +310,14 @@ message that prompts a user upon connection</dd>
 
         Args:
             auth_secondary: password to use for secondary authentication (enable)
-            on_connect: callable that accepts the class instance as its only argument. this callable
-                if provided is executed immediately after authentication is completed. Common use
+            on_open: callable that accepts the class instance as its only argument. this callable,
+                if provided, is executed immediately after authentication is completed. Common use
                 cases for this callable would be to disable paging or accept any kind of banner
                 message that prompts a user upon connection
+            on_close: callable that accepts the class instance as its only argument. this callable,
+                if provided, is executed immediately prior to closing the underlying transport.
+                Common use cases for this callable would be to save configurations prior to exiting,
+                or to logout properly to free up vtys or similar.
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -249,13 +326,14 @@ message that prompts a user upon connection</dd>
         Raises:
             N/A
         &#34;&#34;&#34;
-        if on_connect is None:
-            on_connect = iosxr_on_connect
-        super().__init__(auth_secondary, on_connect=on_connect, **kwargs)
+        if on_open is None:
+            on_open = iosxr_on_open
+        if on_close is None:
+            on_close = iosxr_on_close
+        super().__init__(auth_secondary, on_open=on_open, on_close=on_close, **kwargs)
         self.privs = PRIVS
         self.default_desired_priv = &#34;privilege_exec&#34;
-        self.textfsm_platform = &#34;cisco_xr&#34;
-        self.exit_command = &#34;exit&#34;</code></pre>
+        self.textfsm_platform = &#34;cisco_xr&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -295,7 +373,8 @@ message that prompts a user upon connection</dd>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="scrapli.driver.core.cisco_iosxr.driver.iosxr_on_connect" href="#scrapli.driver.core.cisco_iosxr.driver.iosxr_on_connect">iosxr_on_connect</a></code></li>
+<li><code><a title="scrapli.driver.core.cisco_iosxr.driver.iosxr_on_close" href="#scrapli.driver.core.cisco_iosxr.driver.iosxr_on_close">iosxr_on_close</a></code></li>
+<li><code><a title="scrapli.driver.core.cisco_iosxr.driver.iosxr_on_open" href="#scrapli.driver.core.cisco_iosxr.driver.iosxr_on_open">iosxr_on_open</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>

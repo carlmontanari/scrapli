@@ -27,8 +27,12 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.decorators&#34;&#34;&#34;
 import logging
-import multiprocessing.pool
-from typing import Any, Callable, Dict, Union
+from concurrent.futures import ThreadPoolExecutor, wait
+from typing import TYPE_CHECKING, Any, Callable, Dict, Union
+
+if TYPE_CHECKING:
+    from scrapli.channel import Channel
+    from scrapli.transport import Transport
 
 LOG = logging.getLogger(&#34;scrapli&#34;)
 
@@ -39,8 +43,8 @@ def operation_timeout(attribute: str, message: str = &#34;&#34;) -&gt; Callable[
 
     Wrap an operation, check class for given attribute and use that for the timeout duration.
 
-    Historically this operation timeout decorator used signals instead of the multiprocessing seen
-    here. The signals method was probably a bit more elegant, however there were issues with
+    Historically this operation timeout decorator used signals instead of the concurrent_futures
+    seen here. The signals method was probably a bit more elegant, however there were issues with
     supporting the system transport as system transport subprocess/ptyprocess components spawn
     threads of their own, and signals must operate in the main thread.
 
@@ -59,20 +63,46 @@ def operation_timeout(attribute: str, message: str = &#34;&#34;) -&gt; Callable[
 
     def decorate(wrapped_func: Callable[..., Any]) -&gt; Callable[..., Any]:
         def timeout_wrapper(
-            self: object, *args: Union[str, int], **kwargs: Dict[str, Union[str, int]]
+            channel_or_transport: Union[&#34;Channel&#34;, &#34;Transport&#34;],
+            *args: Union[str, int],
+            **kwargs: Dict[str, Union[str, int]],
         ) -&gt; Any:
-            timeout_duration = getattr(self, attribute, None)
+            # import here to avoid circular dependency
+            from scrapli.channel import Channel  # pylint: disable=C0415
+
+            timeout_duration = getattr(channel_or_transport, attribute, None)
             if not timeout_duration:
-                return wrapped_func(self, *args, **kwargs)
+                LOG.error(
+                    f&#34;Could not find {attribute} value of {channel_or_transport}, continuing &#34;
+                    &#34;without timeout decorator&#34;
+                )
+                return wrapped_func(channel_or_transport, *args, **kwargs)
 
-            wrapped_args = [self, *args]
-            pool = multiprocessing.pool.ThreadPool(processes=1)
-            async_result = pool.apply_async(wrapped_func, wrapped_args, kwargs)
+            # as this can be called from transport or channel get the appropriate objects
+            # to unlock and close the session. we need to unlock as the close will block
+            # forever if the session is locked, and the session very likely is locked while
+            # waiting for output from the device
+            if isinstance(channel_or_transport, Channel):
+                timeout_exit = channel_or_transport.transport.timeout_exit
+                session_lock = channel_or_transport.transport.session_lock
+                close = channel_or_transport.transport.close
+            else:
+                timeout_exit = channel_or_transport.timeout_exit
+                session_lock = channel_or_transport.session_lock
+                close = channel_or_transport.close
 
-            try:
-                return async_result.get(timeout_duration)
-            except multiprocessing.context.TimeoutError:
+            pool = ThreadPoolExecutor(max_workers=1)
+            future = pool.submit(wrapped_func, channel_or_transport, *args, **kwargs)
+            wait([future], timeout=timeout_duration)
+            if not future.done():
+                LOG.info(message)
+                if timeout_exit:
+                    LOG.info(&#34;timeout_exit is True, closing transport&#34;)
+                    if session_lock.locked():
+                        session_lock.release()
+                    close()
                 raise TimeoutError(message)
+            return future.result()
 
         return timeout_wrapper
 
@@ -92,8 +122,8 @@ def operation_timeout(attribute: str, message: str = &#34;&#34;) -&gt; Callable[
 <dd>
 <section class="desc"><p>Decorate an "operation" &ndash; raises exception if the operation timeout is exceeded</p>
 <p>Wrap an operation, check class for given attribute and use that for the timeout duration.</p>
-<p>Historically this operation timeout decorator used signals instead of the multiprocessing seen
-here. The signals method was probably a bit more elegant, however there were issues with
+<p>Historically this operation timeout decorator used signals instead of the concurrent_futures
+seen here. The signals method was probably a bit more elegant, however there were issues with
 supporting the system transport as system transport subprocess/ptyprocess components spawn
 threads of their own, and signals must operate in the main thread.</p>
 <h2 id="args">Args</h2>
@@ -124,8 +154,8 @@ login (as opposed to "normal" channel operations)</dd>
 
     Wrap an operation, check class for given attribute and use that for the timeout duration.
 
-    Historically this operation timeout decorator used signals instead of the multiprocessing seen
-    here. The signals method was probably a bit more elegant, however there were issues with
+    Historically this operation timeout decorator used signals instead of the concurrent_futures
+    seen here. The signals method was probably a bit more elegant, however there were issues with
     supporting the system transport as system transport subprocess/ptyprocess components spawn
     threads of their own, and signals must operate in the main thread.
 
@@ -144,20 +174,46 @@ login (as opposed to "normal" channel operations)</dd>
 
     def decorate(wrapped_func: Callable[..., Any]) -&gt; Callable[..., Any]:
         def timeout_wrapper(
-            self: object, *args: Union[str, int], **kwargs: Dict[str, Union[str, int]]
+            channel_or_transport: Union[&#34;Channel&#34;, &#34;Transport&#34;],
+            *args: Union[str, int],
+            **kwargs: Dict[str, Union[str, int]],
         ) -&gt; Any:
-            timeout_duration = getattr(self, attribute, None)
+            # import here to avoid circular dependency
+            from scrapli.channel import Channel  # pylint: disable=C0415
+
+            timeout_duration = getattr(channel_or_transport, attribute, None)
             if not timeout_duration:
-                return wrapped_func(self, *args, **kwargs)
+                LOG.error(
+                    f&#34;Could not find {attribute} value of {channel_or_transport}, continuing &#34;
+                    &#34;without timeout decorator&#34;
+                )
+                return wrapped_func(channel_or_transport, *args, **kwargs)
 
-            wrapped_args = [self, *args]
-            pool = multiprocessing.pool.ThreadPool(processes=1)
-            async_result = pool.apply_async(wrapped_func, wrapped_args, kwargs)
+            # as this can be called from transport or channel get the appropriate objects
+            # to unlock and close the session. we need to unlock as the close will block
+            # forever if the session is locked, and the session very likely is locked while
+            # waiting for output from the device
+            if isinstance(channel_or_transport, Channel):
+                timeout_exit = channel_or_transport.transport.timeout_exit
+                session_lock = channel_or_transport.transport.session_lock
+                close = channel_or_transport.transport.close
+            else:
+                timeout_exit = channel_or_transport.timeout_exit
+                session_lock = channel_or_transport.session_lock
+                close = channel_or_transport.close
 
-            try:
-                return async_result.get(timeout_duration)
-            except multiprocessing.context.TimeoutError:
+            pool = ThreadPoolExecutor(max_workers=1)
+            future = pool.submit(wrapped_func, channel_or_transport, *args, **kwargs)
+            wait([future], timeout=timeout_duration)
+            if not future.done():
+                LOG.info(message)
+                if timeout_exit:
+                    LOG.info(&#34;timeout_exit is True, closing transport&#34;)
+                    if session_lock.locked():
+                        session_lock.release()
+                    close()
                 raise TimeoutError(message)
+            return future.result()
 
         return timeout_wrapper
 

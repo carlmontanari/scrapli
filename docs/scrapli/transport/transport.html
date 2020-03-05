@@ -32,19 +32,68 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from logging import getLogger
 from threading import Lock
-from typing import Dict, Optional, Union
+from typing import Optional
+
+from scrapli.exceptions import ScrapliKeepaliveFailure
 
 LOG = getLogger(&#34;transport&#34;)
 
 
 class Transport(ABC):
-    @abstractmethod
-    def __init__(self, *args: Union[str, int], **kwargs: Dict[str, Union[str, int]]) -&gt; None:
-        self.host: str = &#34;&#34;
-        self.keepalive: bool = False
-        self.keepalive_interval: int = 30
-        self.keepalive_type: str = &#34;network&#34;
-        self.keepalive_pattern: str = &#34;\005&#34;
+    def __init__(
+        self,
+        host: str = &#34;&#34;,
+        port: int = 22,
+        timeout_socket: int = 5,
+        timeout_transport: int = 5,
+        timeout_exit: bool = True,
+        keepalive: bool = False,
+        keepalive_interval: int = 30,
+        keepalive_type: str = &#34;network&#34;,
+        keepalive_pattern: str = &#34;\005&#34;,
+    ) -&gt; None:
+        &#34;&#34;&#34;
+        Transport Base Object
+
+        Args:
+            host: host ip/name to connect to
+            port: port to connect to
+            timeout_socket: timeout for establishing socket in seconds
+            timeout_transport: timeout for ssh|telnet transport in seconds
+            timeout_exit: True/False close transport if timeout encountered. If False and keepalives
+                are in use, keepalives will prevent program from exiting so you should be sure to
+                catch Timeout exceptions and handle them appropriately
+            keepalive: whether or not to try to keep session alive
+            keepalive_interval: interval to use for session keepalives
+            keepalive_type: network|standard -- &#39;network&#39; sends actual characters over the
+                transport channel. This is useful for network-y type devices that may not support
+                &#39;standard&#39; keepalive mechanisms. &#39;standard&#39; attempts to use whatever &#39;standard&#39;
+                keepalive mechanisms are available in the selected transport mechanism. Check the
+                transport documentation for details on what is supported and/or how it is
+                implemented for any given transport driver
+            keepalive_pattern: pattern to send to keep network channel alive. Default is
+                u&#39;\005&#39; which is equivalent to &#39;ctrl+e&#39;. This pattern moves cursor to end of the
+                line which should be an innocuous pattern. This will only be entered *if* a lock
+                can be acquired. This is only applicable if using keepalives and if the keepalive
+                type is &#39;network&#39;
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.host: str = host
+        self.port: int = port
+        self.timeout_socket: int = timeout_socket
+        self.timeout_transport: int = timeout_transport
+        self.timeout_exit: bool = timeout_exit
+        self.keepalive: bool = keepalive
+        self.keepalive_interval: int = keepalive_interval
+        self.keepalive_type: str = keepalive_type
+        self.keepalive_pattern: str = keepalive_pattern
+
         self.session_lock: Lock = Lock()
 
     def __bool__(self) -&gt; bool:
@@ -252,7 +301,14 @@ class Transport(ABC):
                 else:
                     lock_counter += 1
                     if lock_counter &gt;= 3:
-                        LOG.error(f&#34;Keepalive thread missed {lock_counter} consecutive keepalives.&#34;)
+                        LOG.info(f&#34;Keepalive thread missed {lock_counter} consecutive keepalives.&#34;)
+            if diff.seconds &gt; self.keepalive_interval * 3:
+                msg = (
+                    &#34;Keepalive thread has failed to send a keepalive in greater than three &#34;
+                    &#34;times the keepalive interval!&#34;
+                )
+                LOG.critical(msg)
+                raise ScrapliKeepaliveFailure(msg)
             time.sleep(self.keepalive_interval / 10)
 
     @abstractmethod
@@ -283,23 +339,114 @@ class Transport(ABC):
 <dl>
 <dt id="scrapli.transport.transport.Transport"><code class="flex name class">
 <span>class <span class="ident">Transport</span></span>
-<span>(</span><span>*args, **kwargs)</span>
+<span>(</span><span>host='', port=22, timeout_socket=5, timeout_transport=5, timeout_exit=True, keepalive=False, keepalive_interval=30, keepalive_type='network', keepalive_pattern='\x05')</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Helper class that provides a standard way to create an ABC using
-inheritance.</p></section>
+inheritance.</p>
+<p>Transport Base Object</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>host</code></strong></dt>
+<dd>host ip/name to connect to</dd>
+<dt><strong><code>port</code></strong></dt>
+<dd>port to connect to</dd>
+<dt><strong><code>timeout_socket</code></strong></dt>
+<dd>timeout for establishing socket in seconds</dd>
+<dt><strong><code>timeout_transport</code></strong></dt>
+<dd>timeout for ssh|telnet transport in seconds</dd>
+<dt><strong><code>timeout_exit</code></strong></dt>
+<dd>True/False close transport if timeout encountered. If False and keepalives
+are in use, keepalives will prevent program from exiting so you should be sure to
+catch Timeout exceptions and handle them appropriately</dd>
+<dt><strong><code>keepalive</code></strong></dt>
+<dd>whether or not to try to keep session alive</dd>
+<dt><strong><code>keepalive_interval</code></strong></dt>
+<dd>interval to use for session keepalives</dd>
+<dt><strong><code>keepalive_type</code></strong></dt>
+<dd>network|standard &ndash; 'network' sends actual characters over the
+transport channel. This is useful for network-y type devices that may not support
+'standard' keepalive mechanisms. 'standard' attempts to use whatever 'standard'
+keepalive mechanisms are available in the selected transport mechanism. Check the
+transport documentation for details on what is supported and/or how it is
+implemented for any given transport driver</dd>
+<dt><strong><code>keepalive_pattern</code></strong></dt>
+<dd>pattern to send to keep network channel alive. Default is
+u'' which is equivalent to 'ctrl+e'. This pattern moves cursor to end of the
+line which should be an innocuous pattern. This will only be entered <em>if</em> a lock
+can be acquired. This is only applicable if using keepalives and if the keepalive
+type is 'network'</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code>: <code>DAR202</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Transport(ABC):
-    @abstractmethod
-    def __init__(self, *args: Union[str, int], **kwargs: Dict[str, Union[str, int]]) -&gt; None:
-        self.host: str = &#34;&#34;
-        self.keepalive: bool = False
-        self.keepalive_interval: int = 30
-        self.keepalive_type: str = &#34;network&#34;
-        self.keepalive_pattern: str = &#34;\005&#34;
+    def __init__(
+        self,
+        host: str = &#34;&#34;,
+        port: int = 22,
+        timeout_socket: int = 5,
+        timeout_transport: int = 5,
+        timeout_exit: bool = True,
+        keepalive: bool = False,
+        keepalive_interval: int = 30,
+        keepalive_type: str = &#34;network&#34;,
+        keepalive_pattern: str = &#34;\005&#34;,
+    ) -&gt; None:
+        &#34;&#34;&#34;
+        Transport Base Object
+
+        Args:
+            host: host ip/name to connect to
+            port: port to connect to
+            timeout_socket: timeout for establishing socket in seconds
+            timeout_transport: timeout for ssh|telnet transport in seconds
+            timeout_exit: True/False close transport if timeout encountered. If False and keepalives
+                are in use, keepalives will prevent program from exiting so you should be sure to
+                catch Timeout exceptions and handle them appropriately
+            keepalive: whether or not to try to keep session alive
+            keepalive_interval: interval to use for session keepalives
+            keepalive_type: network|standard -- &#39;network&#39; sends actual characters over the
+                transport channel. This is useful for network-y type devices that may not support
+                &#39;standard&#39; keepalive mechanisms. &#39;standard&#39; attempts to use whatever &#39;standard&#39;
+                keepalive mechanisms are available in the selected transport mechanism. Check the
+                transport documentation for details on what is supported and/or how it is
+                implemented for any given transport driver
+            keepalive_pattern: pattern to send to keep network channel alive. Default is
+                u&#39;\005&#39; which is equivalent to &#39;ctrl+e&#39;. This pattern moves cursor to end of the
+                line which should be an innocuous pattern. This will only be entered *if* a lock
+                can be acquired. This is only applicable if using keepalives and if the keepalive
+                type is &#39;network&#39;
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.host: str = host
+        self.port: int = port
+        self.timeout_socket: int = timeout_socket
+        self.timeout_transport: int = timeout_transport
+        self.timeout_exit: bool = timeout_exit
+        self.keepalive: bool = keepalive
+        self.keepalive_interval: int = keepalive_interval
+        self.keepalive_type: str = keepalive_type
+        self.keepalive_pattern: str = keepalive_pattern
+
         self.session_lock: Lock = Lock()
 
     def __bool__(self) -&gt; bool:
@@ -507,7 +654,14 @@ inheritance.</p></section>
                 else:
                     lock_counter += 1
                     if lock_counter &gt;= 3:
-                        LOG.error(f&#34;Keepalive thread missed {lock_counter} consecutive keepalives.&#34;)
+                        LOG.info(f&#34;Keepalive thread missed {lock_counter} consecutive keepalives.&#34;)
+            if diff.seconds &gt; self.keepalive_interval * 3:
+                msg = (
+                    &#34;Keepalive thread has failed to send a keepalive in greater than three &#34;
+                    &#34;times the keepalive interval!&#34;
+                )
+                LOG.critical(msg)
+                raise ScrapliKeepaliveFailure(msg)
             time.sleep(self.keepalive_interval / 10)
 
     @abstractmethod

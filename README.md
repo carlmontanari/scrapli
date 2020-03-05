@@ -816,6 +816,9 @@ This section may not get updated much, but will hopefully reflect the priority i
 
 ## Todo
 
+- Make a quick diagram of initial arguments (to scrape/network drivers) and where they "go" -- i.e
+. comms_prompt_pattern gets stored in `_initialization_arguments`, then passed to and stored as a private arg for
+ some transport classes (for auth setup only), and gets ultimately assigned to the Channel.
 - Add tests for keepalive stuff if possible (steal from ssh2net! :D)
 - Maybe worth breaking readme up into multiple pages and/or use a wiki -- don't like the fact that wiki pages are not
  in the repo though...
