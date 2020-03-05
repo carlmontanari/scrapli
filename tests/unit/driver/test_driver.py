@@ -19,34 +19,27 @@ def test__repr():
     conn = Scrape(host="myhost", ssh_known_hosts_file=False)
     assert (
         repr(conn)
-        == "Scrape {'host': 'myhost', 'port': 22, 'auth_username': '', 'auth_password': '********', "
-        "'auth_strict_key': True, 'auth_public_key': b'', 'timeout_socket': 5, 'timeout_transport': 5, "
-        "'timeout_ops': 10, 'keepalive': False, 'keepalive_interval': 30, 'keepalive_type': 'network', "
-        "'keepalive_pattern': '\\x05', 'comms_prompt_pattern': '^[a-z0-9.\\\\-@()/:]{1,32}[#>$]$', "
-        "'comms_return_char': '\\n', 'comms_ansi': False, 'ssh_config_file': '', 'ssh_known_hosts_file': '', "
-        "'transport_class': <class 'scrapli.transport.systemssh.SystemSSHTransport'>, 'transport_args': {'host': "
-        "'myhost', 'port': 22, 'timeout_socket': 5, 'timeout_transport': 5, 'timeout_ops': 10, 'keepalive': False, "
-        "'keepalive_interval': 30, 'keepalive_type': 'network', 'keepalive_pattern': '\\x05', 'auth_username': '', "
-        "'auth_public_key': b'', 'auth_password': '', 'auth_strict_key': True, 'comms_prompt_pattern': '^["
-        "a-z0-9.\\\\-@()/:]{1,32}[#>$]$', 'comms_return_char': '\\n', 'ssh_config_file': ''}, 'channel_args': {"
-        "'comms_prompt_pattern': '^[a-z0-9.\\\\-@()/:]{1,32}[#>$]$', 'comms_return_char': '\\n', 'comms_ansi': "
-        "False, 'timeout_ops': 10}}"
+        == "Scrape(host='myhost', port=22, auth_username='', auth_password='', auth_public_key=b'', "
+        "auth_strict_key=True, timeout_socket=5, timeout_transport=5, timeout_ops=10, timeout_exit=True, "
+        "keepalive=False, keepalive_interval=30, keepalive_type='network', keepalive_pattern='\\x05', "
+        "comms_prompt_pattern='^[a-z0-9.\\\\-@()/:]{1,32}[#>$]$', comms_return_char='\\n', comms_ansi=False, "
+        "ssh_config_file='', ssh_known_hosts_file='', on_open=None, on_close=None, transport='system')"
     )
 
 
 def test_host():
     conn = Scrape(host="myhost")
-    assert conn.host == "myhost"
+    assert conn._host == "myhost"
 
 
 def test_host_strip():
     conn = Scrape(host=" whitespace ")
-    assert conn.host == "whitespace"
+    assert conn._host == "whitespace"
 
 
 def test_port():
     conn = Scrape(port=123)
-    assert conn.port == 123
+    assert conn._initialization_args["port"] == 123
 
 
 def test_port_invalid():
@@ -57,12 +50,12 @@ def test_port_invalid():
 
 def test_user():
     conn = Scrape(auth_username="scrapli")
-    assert conn.auth_username == "scrapli"
+    assert conn._initialization_args["auth_username"] == "scrapli"
 
 
 def test_user_strip():
     conn = Scrape(auth_username=" scrapli ")
-    assert conn.auth_username == "scrapli"
+    assert conn._initialization_args["auth_username"] == "scrapli"
 
 
 def test_user_invalid():
@@ -91,10 +84,10 @@ def test_invalid_driver():
     assert str(e.value) == "transport should be one of ssh2|paramiko|system|telnet, got notreal"
 
 
-def test_auth_ssh_key_strip():
-    conn = Scrape(auth_public_key="~/some_neat_path ")
-    user_path = os.path.expanduser("~/")
-    assert conn.auth_public_key == f"{user_path}some_neat_path".encode()
+def test_auth_ssh_key_not_a_file():
+    with pytest.raises(ValueError) as e:
+        Scrape(auth_public_key="~/some_neat_file")
+    assert str(e.value) == "Provided public key `~/some_neat_file` is not a file"
 
 
 def test_invalid_ssh_config_file():
@@ -105,12 +98,12 @@ def test_invalid_ssh_config_file():
 
 def test_valid_ssh_config_file_path():
     conn = Scrape(ssh_config_file=f"{UNIT_TEST_DIR}_ssh_config")
-    assert conn.ssh_config_file == f"{UNIT_TEST_DIR}_ssh_config"
+    assert conn._initialization_args["ssh_config_file"] == f"{UNIT_TEST_DIR}_ssh_config"
 
 
 def test_ssh_config_file_path_system_no_file(fs):
     conn = Scrape(ssh_config_file=True)
-    assert conn.ssh_config_file == ""
+    assert conn._initialization_args["ssh_config_file"] == ""
 
 
 def test_invalid_ssh_known_hosts():
@@ -121,22 +114,22 @@ def test_invalid_ssh_known_hosts():
 
 def test_valid_ssh_known_hosts_path():
     conn = Scrape(ssh_known_hosts_file=f"{UNIT_TEST_DIR}_ssh_known_hosts")
-    assert conn.ssh_known_hosts_file == f"{UNIT_TEST_DIR}_ssh_known_hosts"
+    assert conn._initialization_args["ssh_known_hosts_file"] == f"{UNIT_TEST_DIR}_ssh_known_hosts"
 
 
 def test_ssh_known_hosts_file_path_false(fs):
     conn = Scrape(ssh_known_hosts_file=False)
-    assert conn.ssh_known_hosts_file == ""
+    assert conn._initialization_args["ssh_known_hosts_file"] == ""
 
 
 def test_ssh_known_hosts_path_system_no_file(fs):
     conn = Scrape(ssh_known_hosts_file=True)
-    assert conn.ssh_config_file == ""
+    assert conn._initialization_args["ssh_config_file"] == ""
 
 
 def test_auth_password_strip():
     conn = Scrape(auth_password=" password ")
-    assert conn.auth_password == "password"
+    assert conn._initialization_args["auth_password"] == "password"
 
 
 def test_auth_strict_key_invalid():
@@ -147,7 +140,7 @@ def test_auth_strict_key_invalid():
 
 def test_valid_comms_return_char():
     conn = Scrape(comms_return_char="\rn")
-    assert conn.comms_return_char == "\rn"
+    assert conn._initialization_args["comms_return_char"] == "\rn"
 
 
 def test_invalid_comms_return_char():
@@ -158,7 +151,7 @@ def test_invalid_comms_return_char():
 
 def test_valid_comms_ansi():
     conn = Scrape(comms_ansi=True)
-    assert conn.comms_ansi is True
+    assert conn._initialization_args["comms_ansi"] is True
 
 
 def test_invalid_comms_ansi():
@@ -169,7 +162,7 @@ def test_invalid_comms_ansi():
 
 def test_valid_comms_prompt_pattern():
     conn = Scrape(comms_prompt_pattern="somestr")
-    assert conn.comms_prompt_pattern == "somestr"
+    assert conn._initialization_args["comms_prompt_pattern"] == "somestr"
 
 
 def test_invalid_comms_prompt_pattern():

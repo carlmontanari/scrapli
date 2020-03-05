@@ -34,7 +34,7 @@ def test_connect_handler_ip_no_hostname():
         "device_type": "cisco_xe",
     }
     conn = connect_handler(auto_open=False, **netmiko_args)
-    assert conn.textfsm_platform == "cisco_ios"
+    assert conn.scrapli_driver.textfsm_platform == "cisco_ios"
 
 
 def test_connect_handler_valid_connection():
@@ -47,7 +47,7 @@ def test_connect_handler_valid_connection():
         "device_type": "cisco_xe",
     }
     conn = connect_handler(auto_open=False, **netmiko_args)
-    assert conn.textfsm_platform == "cisco_ios"
+    assert conn.scrapli_driver.textfsm_platform == "cisco_ios"
 
 
 def test_transform_netmiko_args():
@@ -61,13 +61,6 @@ def test_transform_netmiko_args():
     transformed_args = transform_netmiko_kwargs(netmiko_args)
     assert transformed_args["host"] == "1.2.3.4"
     assert transformed_args["timeout_transport"] == 25000
-
-
-def test_transform_netmiko_args_setup_timeout():
-    netmiko_args = {"host": "1.2.3.4", "username": "person", "password": "password", "port": 123}
-    transformed_args = transform_netmiko_kwargs(netmiko_args)
-    assert transformed_args["host"] == "1.2.3.4"
-    assert transformed_args["timeout_transport"] == 5000
 
 
 def test_netmiko_find_prompt(mocked_netmiko_driver):
@@ -102,7 +95,7 @@ def test_netmiko_send_command(mocked_netmiko_driver):
 3560CX#"""
     test_operations = [(channel_input_1, channel_output_1), (channel_input_2, channel_output_2)]
     conn = mocked_netmiko_driver(test_operations)
-    conn.default_desired_priv = "privilege_exec"
+    conn.scrapli_driver.default_desired_priv = "privilege_exec"
     result = conn.send_command(channel_input_2, strip_prompt=False)
     assert result == channel_output_2
 
@@ -129,7 +122,7 @@ def test_netmiko_send_command_timing(mocked_netmiko_driver):
 3560CX#"""
     test_operations = [(channel_input_1, channel_output_1), (channel_input_2, channel_output_2)]
     conn = mocked_netmiko_driver(test_operations)
-    conn.default_desired_priv = "privilege_exec"
+    conn.scrapli_driver.default_desired_priv = "privilege_exec"
     result = conn.send_command_timing(channel_input_2, strip_prompt=False)
     assert result == channel_output_2
 
@@ -156,7 +149,7 @@ def test_netmiko_send_command_strip_prompt(mocked_netmiko_driver):
 3560CX#"""
     test_operations = [(channel_input_1, channel_output_1), (channel_input_2, channel_output_2)]
     conn = mocked_netmiko_driver(test_operations)
-    conn.default_desired_priv = "privilege_exec"
+    conn.scrapli_driver.default_desired_priv = "privilege_exec"
     result = conn.send_command(channel_input_2, strip_prompt=True)
     assert result == channel_output_2[:-8]
 
@@ -183,7 +176,7 @@ def test_netmiko_send_command_strip_prompt_not_provided(mocked_netmiko_driver):
 3560CX#"""
     test_operations = [(channel_input_1, channel_output_1), (channel_input_2, channel_output_2)]
     conn = mocked_netmiko_driver(test_operations)
-    conn.default_desired_priv = "privilege_exec"
+    conn.scrapli_driver.default_desired_priv = "privilege_exec"
     result = conn.send_command(channel_input_2)
     assert result == channel_output_2[:-8]
 
@@ -210,7 +203,7 @@ def test_netmiko_send_command_expect_string(mocked_netmiko_driver):
 3560CX#"""
     test_operations = [(channel_input_1, channel_output_1), (channel_input_2, channel_output_2)]
     conn = mocked_netmiko_driver(test_operations)
-    conn.default_desired_priv = "privilege_exec"
+    conn.scrapli_driver.default_desired_priv = "privilege_exec"
     with pytest.warns(UserWarning) as record:
         result = conn.send_command(channel_input_2, strip_prompt=False, expect_string="something")
     assert (
@@ -245,7 +238,7 @@ def test_netmiko_send_command_list_of_commands(mocked_netmiko_driver):
 3560CX#"""
     test_operations = [(channel_input_1, channel_output_1), (channel_input_2, channel_output_2)]
     conn = mocked_netmiko_driver(test_operations)
-    conn.default_desired_priv = "privilege_exec"
+    conn.scrapli_driver.default_desired_priv = "privilege_exec"
     with pytest.warns(UserWarning) as record:
         result = conn.send_command([channel_input_2], strip_prompt=False)
     assert (
@@ -332,8 +325,8 @@ Configuration register is 0xF
 3560CX#"""
     test_operations = [(channel_input_1, channel_output_1), (channel_input_2, channel_output_2)]
     conn = mocked_netmiko_driver(test_operations)
-    conn.default_desired_priv = "privilege_exec"
-    conn.textfsm_platform = "cisco_ios"
+    conn.scrapli_driver.default_desired_priv = "privilege_exec"
+    conn.scrapli_driver.textfsm_platform = "cisco_ios"
     result = conn.send_command(channel_input_2, use_textfsm=True)
     assert isinstance(result, list)
     assert result[0][0] == "15.2(4)E7"
@@ -413,12 +406,12 @@ Configuration register is 0xF
 3560CX#"""
     test_operations = [(channel_input_1, channel_output_1), (channel_input_2, channel_output_2)]
     conn = mocked_netmiko_driver(test_operations)
-    conn.default_desired_priv = "privilege_exec"
-    conn.textfsm_platform = "cisco_ios"
+    conn.scrapli_driver.default_desired_priv = "privilege_exec"
+    conn.scrapli_driver.textfsm_platform = "cisco_ios"
     template_dir = pkg_resources.resource_filename("ntc_templates", "templates")
     cli_table = textfsm.clitable.CliTable("index", template_dir)
     template_index = cli_table.index.GetRowMatch(
-        {"Platform": conn.textfsm_platform, "Command": channel_input_2}
+        {"Platform": conn.scrapli_driver.textfsm_platform, "Command": channel_input_2}
     )
     template_name = cli_table.index.index[template_index]["Template"]
     template = open(f"{template_dir}/{template_name}")
@@ -459,6 +452,6 @@ def test_netmiko_send_configs(mocked_netmiko_driver):
         (channel_input_9, channel_output_9),
     ]
     conn = mocked_netmiko_driver(test_operations)
-    conn.default_desired_priv = "privilege_exec"
+    conn.scrapli_driver.default_desired_priv = "privilege_exec"
     result = conn.send_config_set(channel_input_5, strip_prompt=False)
     assert result == channel_output_5

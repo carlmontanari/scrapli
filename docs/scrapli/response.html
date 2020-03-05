@@ -81,7 +81,6 @@ class Response:
         self.finale = finale
         self.raw_result: str = &#34;&#34;
         self.result: str = &#34;&#34;
-        self.structured_result: Optional[Union[Dict[Any, Any], List[Any]]] = None
 
         # for future use -- could add failed when terms in each driver, then check for those strings
         # in results to determine if the command failed, could also set this at send_inputs level
@@ -156,7 +155,7 @@ class Response:
         # update failed to false after recording results
         self.failed = False
 
-    def textfsm_parse_output(self) -&gt; None:
+    def textfsm_parse_output(self) -&gt; Union[Dict[str, Any], List[Any]]:
         &#34;&#34;&#34;
         Parse results with textfsm, assign result to `structured_result`
 
@@ -172,9 +171,10 @@ class Response:
         &#34;&#34;&#34;
         template = _textfsm_get_template(self.textfsm_platform, self.channel_input)
         if isinstance(template, TextIOWrapper):
-            self.structured_result = textfsm_parse(template, self.result)
+            structured_result = textfsm_parse(template, self.result) or []
         else:
-            self.structured_result = []</code></pre>
+            structured_result = []
+        return structured_result</code></pre>
 </details>
 </section>
 <section>
@@ -278,7 +278,6 @@ failed command/interaction</dd>
         self.finale = finale
         self.raw_result: str = &#34;&#34;
         self.result: str = &#34;&#34;
-        self.structured_result: Optional[Union[Dict[Any, Any], List[Any]]] = None
 
         # for future use -- could add failed when terms in each driver, then check for those strings
         # in results to determine if the command failed, could also set this at send_inputs level
@@ -353,7 +352,7 @@ failed command/interaction</dd>
         # update failed to false after recording results
         self.failed = False
 
-    def textfsm_parse_output(self) -&gt; None:
+    def textfsm_parse_output(self) -&gt; Union[Dict[str, Any], List[Any]]:
         &#34;&#34;&#34;
         Parse results with textfsm, assign result to `structured_result`
 
@@ -369,9 +368,10 @@ failed command/interaction</dd>
         &#34;&#34;&#34;
         template = _textfsm_get_template(self.textfsm_platform, self.channel_input)
         if isinstance(template, TextIOWrapper):
-            self.structured_result = textfsm_parse(template, self.result)
+            structured_result = textfsm_parse(template, self.result) or []
         else:
-            self.structured_result = []</code></pre>
+            structured_result = []
+        return structured_result</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -443,7 +443,7 @@ failed command/interaction</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def textfsm_parse_output(self) -&gt; None:
+<pre><code class="python">def textfsm_parse_output(self) -&gt; Union[Dict[str, Any], List[Any]]:
     &#34;&#34;&#34;
     Parse results with textfsm, assign result to `structured_result`
 
@@ -459,9 +459,10 @@ failed command/interaction</dd>
     &#34;&#34;&#34;
     template = _textfsm_get_template(self.textfsm_platform, self.channel_input)
     if isinstance(template, TextIOWrapper):
-        self.structured_result = textfsm_parse(template, self.result)
+        structured_result = textfsm_parse(template, self.result) or []
     else:
-        self.structured_result = []</code></pre>
+        structured_result = []
+    return structured_result</code></pre>
 </details>
 </dd>
 </dl>

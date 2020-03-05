@@ -26,9 +26,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.netmiko_compatibility&#34;&#34;&#34;
-import types
 import warnings
-from io import TextIOWrapper
 from typing import Any, Dict, List, Union
 
 from scrapli.driver import NetworkDriver
@@ -37,7 +35,6 @@ from scrapli.driver.core.cisco_iosxe.driver import IOSXE_ARG_MAPPER, IOSXEDriver
 from scrapli.driver.core.cisco_iosxr.driver import IOSXR_ARG_MAPPER, IOSXRDriver
 from scrapli.driver.core.cisco_nxos.driver import NXOS_ARG_MAPPER, NXOSDriver
 from scrapli.driver.core.juniper_junos.driver import JUNOS_ARG_MAPPER, JunosDriver
-from scrapli.helper import _textfsm_get_template, textfsm_parse
 
 VALID_SCRAPLI_KWARGS = {
     &#34;host&#34;,
@@ -58,7 +55,6 @@ VALID_SCRAPLI_KWARGS = {
     &#34;driver&#34;,
 }
 
-
 NETMIKO_DEVICE_TYPE_MAPPER = {
     &#34;arista_eos&#34;: {&#34;driver&#34;: EOSDriver, &#34;arg_mapper&#34;: EOS_ARG_MAPPER},
     &#34;cisco_ios&#34;: {&#34;driver&#34;: IOSXEDriver, &#34;arg_mapper&#34;: IOSXE_ARG_MAPPER},
@@ -69,21 +65,14 @@ NETMIKO_DEVICE_TYPE_MAPPER = {
 }
 
 
-class NetmikoNetworkDriver(NetworkDriver):
-    def send_command(
-        self: NetworkDriver, command_string: Union[str, List[str]], **kwargs: Dict[str, Any]
-    ) -&gt; Union[str, List[Any], Dict[str, Any]]:
+class NetmikoNetworkDriver:
+    def __init__(self, scrapli_driver: NetworkDriver) -&gt; None:
         &#34;&#34;&#34;
-        Netmiko style NetworkDriver with send_command method to appease typing
-
-        Patch `send_command_timing` in netmiko connect handler
-
-        Really just a shim to send_command, scrapli doesnt support/need timing mechanics -- adjust
-        the timers on the connection object if needed, or adjust them on the fly in your code.
+        Scrapli NetmikoNetworkDriver
 
         Args:
-            command_string: string or list of strings to send as commands
-            **kwargs: keyword arguments to support other netmiko args without blowing up
+            scrapli_driver: string command to send to device
+
 
         Returns:
             N/A  # noqa: DAR202
@@ -92,6 +81,173 @@ class NetmikoNetworkDriver(NetworkDriver):
             N/A
 
         &#34;&#34;&#34;
+        self.scrapli_driver = scrapli_driver
+
+    def open(self) -&gt; None:
+        &#34;&#34;&#34;
+        Open scrapli connection
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.scrapli_driver.open()
+
+    def find_prompt(self) -&gt; str:
+        &#34;&#34;&#34;
+        Scrapli netmiko find_prompt
+
+        Map netmiko find_prompt to scrapli get_prompt
+
+        Args:
+            N/A
+
+        Returns:
+            str: string representing the device prompt
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        return self.scrapli_driver.get_prompt()
+
+    def send_command(
+        self, command_string: str, strip_prompt: bool = True, **kwargs: Dict[str, Any]
+    ) -&gt; Union[str, List[Any], Dict[str, Any]]:
+        &#34;&#34;&#34;
+        Scrapli netmiko send_command
+
+        Map some netmiko send_command args into scrapli; used for allowing folks to test scrapli
+        more easily if they are already using netmiko
+
+        Args:
+            command_string: string command to send to device
+            strip_prompt: True/False strip prompt -- same in scrapli as in netmiko
+            kwargs: allows for not blowing up will letting users pass in netmiko args that can
+                safely be ignored
+
+        Returns:
+            result: text result or structured result if `use_textfsm` is true and parsing successful
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        expect_string = kwargs.pop(&#34;expect_string&#34;, None)
+        use_textfsm = kwargs.pop(&#34;use_textfsm&#34;, False)
+
+        if expect_string:
+            err = &#34;scrapli netmiko interoperability does not support expect_string!&#34;
+            msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
+            fix = (
+                f&#34;To resolve this issue, use native or driver mode with `send_inputs_interact` &#34;
+                &#34; method.&#34;
+            )
+            warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
+            warnings.warn(warning)
+
+        if isinstance(command_string, list):
+            err = &#34;netmiko does not support sending list of commands, using only the first command!&#34;
+            msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
+            fix = f&#34;To resolve this issue, use native or driver mode with `send_inputs` method.&#34;
+            warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
+            warnings.warn(warning)
+            command = command_string[0]
+        else:
+            command = command_string
+
+        scrapli_result = self.scrapli_driver.send_command(command, strip_prompt=strip_prompt)
+
+        if use_textfsm:
+            structured_result = scrapli_result.textfsm_parse_output()
+            if structured_result:
+                return structured_result
+
+        return scrapli_result.result
+
+    def send_command_timing(
+        self, command_string: str, strip_prompt: bool = True, **kwargs: Dict[str, Any]
+    ) -&gt; Union[str, List[Any], Dict[str, Any]]:
+        &#34;&#34;&#34;
+        Scrapli netmiko send_command_timing
+
+        Map some netmiko send_command args into scrapli; used for allowing folks to test scrapli
+        more easily if they are already using netmiko
+
+        Args:
+            command_string: string command to send to device
+            strip_prompt: True/False strip prompt -- same in scrapli as in netmiko
+            kwargs: allows for not blowing up will letting users pass in netmiko args that can
+                safely be ignored
+
+        Returns:
+            result: text result or structured result if `use_textfsm` is true and parsing successful
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        if isinstance(command_string, list):
+            err = &#34;netmiko does not support sending list of commands, using only the first command!&#34;
+            msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
+            fix = f&#34;To resolve this issue, use native or driver mode with `send_inputs` method.&#34;
+            warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
+            warnings.warn(warning)
+            command = command_string[0]
+        else:
+            command = command_string
+
+        return self.send_command(command, strip_prompt=strip_prompt, **kwargs)
+
+    def send_config_set(
+        self, config_commands: Union[str, List[str]], **kwargs: Dict[str, Any]
+    ) -&gt; str:
+        &#34;&#34;&#34;
+        Scrapli netmiko send_config_set
+
+        Map some netmiko send_config_set args into scrapli; used for allowing folks to test scrapli
+        more easily if they are already using netmiko
+
+        Args:
+            config_commands: string or list of strings of config commands to send
+            kwargs: allows for not blowing up will letting users pass in netmiko args that can
+                safely be ignored
+
+        Returns:
+            str: text result or structured result if `use_textfsm` is true and parsing successful
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        provided_strip_prompt = kwargs.pop(&#34;strip_prompt&#34;, None)
+        if not isinstance(provided_strip_prompt, bool):
+            strip_prompt = True
+        else:
+            strip_prompt = provided_strip_prompt
+        enter_config_mode = kwargs.pop(&#34;enter_config_mode&#34;, True)
+        exit_config_mode = kwargs.pop(&#34;exit_config_mode&#34;, True)
+
+        if not enter_config_mode:
+            if isinstance(config_commands, str):
+                configs = [config_commands]
+            else:
+                configs = config_commands
+            results = self.scrapli_driver.send_commands(configs, strip_prompt)
+        elif not exit_config_mode:
+            self.scrapli_driver.acquire_priv(&#34;configuration&#34;)
+            results = self.scrapli_driver.channel.send_inputs(config_commands, strip_prompt)
+        else:
+            results = self.scrapli_driver.send_configs(config_commands, strip_prompt)
+        # scrapli always strips command, so there isn&#39;t typically anything useful coming back
+        result = &#34;\n&#34;.join([r.result for r in results])
+        return result
 
 
 def connect_handler(auto_open: bool = True, **kwargs: Dict[str, Any]) -&gt; NetmikoNetworkDriver:
@@ -123,19 +279,14 @@ def connect_handler(auto_open: bool = True, **kwargs: Dict[str, Any]) -&gt; Netm
     transformed_kwargs = transform_netmiko_kwargs(kwargs)
 
     final_kwargs = {**transformed_kwargs, **driver_args}
-    driver = driver_class(**final_kwargs)
+    scrapli_driver = driver_class(auth_strict_key=False, **final_kwargs)
 
     if auto_open:
-        driver.open()
+        scrapli_driver.driver.open()
 
-    # Below is a dirty way to patch netmiko methods into scrapli without having a factory function
-    # and a million classes... as this is just for testing interoperability we&#39;ll let this slide...
-    driver.find_prompt = types.MethodType(netmiko_find_prompt, driver)
-    driver.send_command = types.MethodType(netmiko_send_command, driver)
-    driver.send_command_timing = types.MethodType(netmiko_send_command_timing, driver)
-    driver.send_config_set = types.MethodType(netmiko_send_config_set, driver)
+    netmiko_driver = NetmikoNetworkDriver(scrapli_driver)
 
-    return driver
+    return netmiko_driver
 
 
 def transform_netmiko_kwargs(kwargs: Dict[str, Any]) -&gt; Dict[str, Any]:
@@ -156,183 +307,20 @@ def transform_netmiko_kwargs(kwargs: Dict[str, Any]) -&gt; Dict[str, Any]:
     ip = kwargs.pop(&#34;ip&#34;, None)
     kwargs[&#34;host&#34;] = host if host is not None else ip
     kwargs[&#34;port&#34;] = kwargs.pop(&#34;port&#34;, 22)
-    kwargs[&#34;setup_timeout&#34;] = 5
-    kwargs[&#34;setup_ssh_config_file&#34;] = kwargs.pop(&#34;ssh_config_file&#34;, False)
+    kwargs[&#34;ssh_config_file&#34;] = kwargs.pop(&#34;ssh_config_file&#34;, False)
     if &#34;global_delay_factor&#34; in kwargs.keys():
         kwargs[&#34;timeout_socket&#34;] = kwargs[&#34;global_delay_factor&#34;] * 5
         kwargs[&#34;timeout_transport&#34;] = kwargs[&#34;global_delay_factor&#34;] * 5000
         kwargs[&#34;timeout_ops&#34;] = kwargs[&#34;global_delay_factor&#34;] * 10
         kwargs.pop(&#34;global_delay_factor&#34;)
-    else:
-        kwargs[&#34;timeout_transport&#34;] = 5000
     kwargs[&#34;auth_username&#34;] = kwargs.pop(&#34;username&#34;)
     kwargs[&#34;auth_password&#34;] = kwargs.pop(&#34;password&#34;, None)
     kwargs[&#34;auth_public_key&#34;] = kwargs.pop(&#34;key_file&#34;, &#34;&#34;)
     kwargs[&#34;auth_secondary&#34;] = kwargs.pop(&#34;secret&#34;, &#34;&#34;)
-    kwargs[&#34;comms_prompt_pattern&#34;] = &#34;&#34;
-    kwargs[&#34;comms_operation_timeout&#34;] = 10
-    kwargs[&#34;comms_return_char&#34;] = &#34;&#34;
-    kwargs[&#34;session_pre_login_handler&#34;] = &#34;&#34;
-    kwargs[&#34;session_disable_paging&#34;] = &#34;&#34;
 
     transformed_kwargs = {k: v for (k, v) in kwargs.items() if k in VALID_SCRAPLI_KWARGS}
 
-    return transformed_kwargs
-
-
-def netmiko_find_prompt(self: NetmikoNetworkDriver) -&gt; str:
-    &#34;&#34;&#34;
-    Patch `find_prompt` in netmiko connect handler to `get_prompt` in scrapli
-
-    Args:
-        self: NetmikoNetworkDriver object -- `self` as this gets shoe-horned into NetworkDriver via
-            types MethodType
-
-    Returns:
-        N/A  # noqa: DAR202
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    return self.get_prompt()
-
-
-def netmiko_send_command(
-    self: NetmikoNetworkDriver, command_string: Union[str, List[str]], **kwargs: Dict[str, Any]
-) -&gt; Union[str, List[Any], Dict[str, Any]]:
-    &#34;&#34;&#34;
-    Patch `send_command` in netmiko connect handler
-
-    Patch and support strip_prompt, use_textfsm, and textfsm_template args. Return a single
-    string to match netmiko functionality (instead of scrapli result object)
-
-    Args:
-        self: NetmikoNetworkDriver object -- `self` as this gets shoe-horned into NetworkDriver via
-            types MethodType
-        command_string: string or list of strings to send as commands
-        **kwargs: keyword arguments to support other netmiko args without blowing up
-
-    Returns:
-        N/A  # noqa: DAR202
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    provided_strip_prompt = kwargs.pop(&#34;strip_prompt&#34;, None)
-    if not isinstance(provided_strip_prompt, bool):
-        strip_prompt = True
-    else:
-        strip_prompt = provided_strip_prompt
-    expect_string = kwargs.pop(&#34;expect_string&#34;, None)
-    use_textfsm = kwargs.pop(&#34;use_textfsm&#34;, False)
-    textfsm_template = kwargs.pop(&#34;textfsm_template&#34;, None)
-
-    if expect_string:
-        err = &#34;scrapli netmiko interoperability does not support expect_string!&#34;
-        msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
-        fix = (
-            f&#34;To resolve this issue, use native or driver mode with `send_inputs_interact` &#34;
-            &#34; method.&#34;
-        )
-        warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
-        warnings.warn(warning)
-
-    if isinstance(command_string, list):
-        err = &#34;netmiko does not support sending list of commands, using only the first command!&#34;
-        msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
-        fix = f&#34;To resolve this issue, use native or driver mode with `send_inputs` method.&#34;
-        warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
-        warnings.warn(warning)
-        command = command_string[0]
-    else:
-        command = command_string
-
-    results = self.send_commands(command, strip_prompt)
-    # netmiko supports sending single commands only and has no &#34;result&#34; object
-    # peel out just result
-    result = results[0].result
-
-    if use_textfsm:
-        structured_result = None
-        if isinstance(textfsm_template, (str, TextIOWrapper)):
-            structured_result = textfsm_parse(textfsm_template, result)
-        else:
-            gathered_textfsm_template = _textfsm_get_template(self.textfsm_platform, command)
-            if isinstance(gathered_textfsm_template, TextIOWrapper):
-                structured_result = textfsm_parse(gathered_textfsm_template, result)
-        # netmiko returns unstructured data if no structured data was generated
-        if structured_result:
-            return structured_result
-    return result
-
-
-def netmiko_send_command_timing(
-    self: NetmikoNetworkDriver, command_string: Union[str, List[str]], **kwargs: Dict[str, Any]
-) -&gt; Union[str, List[Any], Dict[str, Any]]:
-    &#34;&#34;&#34;
-    Patch `send_command_timing` in netmiko connect handler
-
-    Really just a shim to send_command, scrapli doesnt support/need timing mechanics -- adjust the
-    timers on the connection object if needed, or adjust them on the fly in your code.
-
-    Args:
-        self: NetmikoNetworkDriver object -- `self` as this gets shoe-horned into NetworkDriver via
-            types MethodType
-        command_string: string or list of strings to send as commands
-        **kwargs: keyword arguments to support other netmiko args without blowing up
-
-    Returns:
-        N/A  # noqa: DAR202
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    return self.send_command(command_string, **kwargs)
-
-
-def netmiko_send_config_set(
-    self: NetmikoNetworkDriver, config_commands: Union[str, List[str]], **kwargs: Dict[str, Any]
-) -&gt; str:
-    &#34;&#34;&#34;
-    Patch `send_config_set` in netmiko connect handler
-
-    Note: scrapli strips commands always (as it retains them in the result object anyway), so there
-    is no interesting output from this as there would be in netmiko.
-
-    Args:
-        self: NetmikoNetworkDriver object -- `self` as this gets shoe-horned into NetworkDriver via
-            types MethodType
-        config_commands: configuration command(s) to send to device
-        **kwargs: keyword arguments to support other netmiko args without blowing up
-
-    Returns:
-        N/A  # noqa: DAR202
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    provided_strip_prompt = kwargs.pop(&#34;strip_prompt&#34;, None)
-    if not isinstance(provided_strip_prompt, bool):
-        strip_prompt = True
-    else:
-        strip_prompt = provided_strip_prompt
-    enter_config_mode = kwargs.pop(&#34;enter_config_mode&#34;, True)
-    exit_config_mode = kwargs.pop(&#34;exit_config_mode&#34;, True)
-
-    if not enter_config_mode:
-        results = self.send_commands(config_commands, strip_prompt)
-    elif not exit_config_mode:
-        self.acquire_priv(&#34;configuration&#34;)
-        results = self.channel.send_inputs(config_commands, strip_prompt)
-    else:
-        results = self.send_configs(config_commands, strip_prompt)
-    # scrapli always strips command, so there isn&#39;t typically anything useful coming back from this
-    result = &#34;\n&#34;.join([r.result for r in results])
-    return result</code></pre>
+    return transformed_kwargs</code></pre>
 </details>
 </section>
 <section>
@@ -397,296 +385,14 @@ def netmiko_send_config_set(
     transformed_kwargs = transform_netmiko_kwargs(kwargs)
 
     final_kwargs = {**transformed_kwargs, **driver_args}
-    driver = driver_class(**final_kwargs)
+    scrapli_driver = driver_class(auth_strict_key=False, **final_kwargs)
 
     if auto_open:
-        driver.open()
+        scrapli_driver.driver.open()
 
-    # Below is a dirty way to patch netmiko methods into scrapli without having a factory function
-    # and a million classes... as this is just for testing interoperability we&#39;ll let this slide...
-    driver.find_prompt = types.MethodType(netmiko_find_prompt, driver)
-    driver.send_command = types.MethodType(netmiko_send_command, driver)
-    driver.send_command_timing = types.MethodType(netmiko_send_command_timing, driver)
-    driver.send_config_set = types.MethodType(netmiko_send_config_set, driver)
+    netmiko_driver = NetmikoNetworkDriver(scrapli_driver)
 
-    return driver</code></pre>
-</details>
-</dd>
-<dt id="scrapli.netmiko_compatability.netmiko_find_prompt"><code class="name flex">
-<span>def <span class="ident">netmiko_find_prompt</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Patch <code>find_prompt</code> in netmiko connect handler to <code>get_prompt</code> in scrapli</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>self</code></strong></dt>
-<dd>NetmikoNetworkDriver object &ndash; <code>self</code> as this gets shoe-horned into NetworkDriver via
-types MethodType</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N</code>/<code>A</code>
-# <code>noqa</code>: <code>DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def netmiko_find_prompt(self: NetmikoNetworkDriver) -&gt; str:
-    &#34;&#34;&#34;
-    Patch `find_prompt` in netmiko connect handler to `get_prompt` in scrapli
-
-    Args:
-        self: NetmikoNetworkDriver object -- `self` as this gets shoe-horned into NetworkDriver via
-            types MethodType
-
-    Returns:
-        N/A  # noqa: DAR202
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    return self.get_prompt()</code></pre>
-</details>
-</dd>
-<dt id="scrapli.netmiko_compatability.netmiko_send_command"><code class="name flex">
-<span>def <span class="ident">netmiko_send_command</span></span>(<span>self, command_string, **kwargs)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Patch <code>send_command</code> in netmiko connect handler</p>
-<p>Patch and support strip_prompt, use_textfsm, and textfsm_template args. Return a single
-string to match netmiko functionality (instead of scrapli result object)</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>self</code></strong></dt>
-<dd>NetmikoNetworkDriver object &ndash; <code>self</code> as this gets shoe-horned into NetworkDriver via
-types MethodType</dd>
-<dt><strong><code>command_string</code></strong></dt>
-<dd>string or list of strings to send as commands</dd>
-<dt><strong><code>**kwargs</code></strong></dt>
-<dd>keyword arguments to support other netmiko args without blowing up</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N</code>/<code>A</code>
-# <code>noqa</code>: <code>DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def netmiko_send_command(
-    self: NetmikoNetworkDriver, command_string: Union[str, List[str]], **kwargs: Dict[str, Any]
-) -&gt; Union[str, List[Any], Dict[str, Any]]:
-    &#34;&#34;&#34;
-    Patch `send_command` in netmiko connect handler
-
-    Patch and support strip_prompt, use_textfsm, and textfsm_template args. Return a single
-    string to match netmiko functionality (instead of scrapli result object)
-
-    Args:
-        self: NetmikoNetworkDriver object -- `self` as this gets shoe-horned into NetworkDriver via
-            types MethodType
-        command_string: string or list of strings to send as commands
-        **kwargs: keyword arguments to support other netmiko args without blowing up
-
-    Returns:
-        N/A  # noqa: DAR202
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    provided_strip_prompt = kwargs.pop(&#34;strip_prompt&#34;, None)
-    if not isinstance(provided_strip_prompt, bool):
-        strip_prompt = True
-    else:
-        strip_prompt = provided_strip_prompt
-    expect_string = kwargs.pop(&#34;expect_string&#34;, None)
-    use_textfsm = kwargs.pop(&#34;use_textfsm&#34;, False)
-    textfsm_template = kwargs.pop(&#34;textfsm_template&#34;, None)
-
-    if expect_string:
-        err = &#34;scrapli netmiko interoperability does not support expect_string!&#34;
-        msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
-        fix = (
-            f&#34;To resolve this issue, use native or driver mode with `send_inputs_interact` &#34;
-            &#34; method.&#34;
-        )
-        warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
-        warnings.warn(warning)
-
-    if isinstance(command_string, list):
-        err = &#34;netmiko does not support sending list of commands, using only the first command!&#34;
-        msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
-        fix = f&#34;To resolve this issue, use native or driver mode with `send_inputs` method.&#34;
-        warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
-        warnings.warn(warning)
-        command = command_string[0]
-    else:
-        command = command_string
-
-    results = self.send_commands(command, strip_prompt)
-    # netmiko supports sending single commands only and has no &#34;result&#34; object
-    # peel out just result
-    result = results[0].result
-
-    if use_textfsm:
-        structured_result = None
-        if isinstance(textfsm_template, (str, TextIOWrapper)):
-            structured_result = textfsm_parse(textfsm_template, result)
-        else:
-            gathered_textfsm_template = _textfsm_get_template(self.textfsm_platform, command)
-            if isinstance(gathered_textfsm_template, TextIOWrapper):
-                structured_result = textfsm_parse(gathered_textfsm_template, result)
-        # netmiko returns unstructured data if no structured data was generated
-        if structured_result:
-            return structured_result
-    return result</code></pre>
-</details>
-</dd>
-<dt id="scrapli.netmiko_compatability.netmiko_send_command_timing"><code class="name flex">
-<span>def <span class="ident">netmiko_send_command_timing</span></span>(<span>self, command_string, **kwargs)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Patch <code>send_command_timing</code> in netmiko connect handler</p>
-<p>Really just a shim to send_command, scrapli doesnt support/need timing mechanics &ndash; adjust the
-timers on the connection object if needed, or adjust them on the fly in your code.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>self</code></strong></dt>
-<dd>NetmikoNetworkDriver object &ndash; <code>self</code> as this gets shoe-horned into NetworkDriver via
-types MethodType</dd>
-<dt><strong><code>command_string</code></strong></dt>
-<dd>string or list of strings to send as commands</dd>
-<dt><strong><code>**kwargs</code></strong></dt>
-<dd>keyword arguments to support other netmiko args without blowing up</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N</code>/<code>A</code>
-# <code>noqa</code>: <code>DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def netmiko_send_command_timing(
-    self: NetmikoNetworkDriver, command_string: Union[str, List[str]], **kwargs: Dict[str, Any]
-) -&gt; Union[str, List[Any], Dict[str, Any]]:
-    &#34;&#34;&#34;
-    Patch `send_command_timing` in netmiko connect handler
-
-    Really just a shim to send_command, scrapli doesnt support/need timing mechanics -- adjust the
-    timers on the connection object if needed, or adjust them on the fly in your code.
-
-    Args:
-        self: NetmikoNetworkDriver object -- `self` as this gets shoe-horned into NetworkDriver via
-            types MethodType
-        command_string: string or list of strings to send as commands
-        **kwargs: keyword arguments to support other netmiko args without blowing up
-
-    Returns:
-        N/A  # noqa: DAR202
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    return self.send_command(command_string, **kwargs)</code></pre>
-</details>
-</dd>
-<dt id="scrapli.netmiko_compatability.netmiko_send_config_set"><code class="name flex">
-<span>def <span class="ident">netmiko_send_config_set</span></span>(<span>self, config_commands, **kwargs)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Patch <code>send_config_set</code> in netmiko connect handler</p>
-<p>Note: scrapli strips commands always (as it retains them in the result object anyway), so there
-is no interesting output from this as there would be in netmiko.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>self</code></strong></dt>
-<dd>NetmikoNetworkDriver object &ndash; <code>self</code> as this gets shoe-horned into NetworkDriver via
-types MethodType</dd>
-<dt><strong><code>config_commands</code></strong></dt>
-<dd>configuration command(s) to send to device</dd>
-<dt><strong><code>**kwargs</code></strong></dt>
-<dd>keyword arguments to support other netmiko args without blowing up</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N</code>/<code>A</code>
-# <code>noqa</code>: <code>DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def netmiko_send_config_set(
-    self: NetmikoNetworkDriver, config_commands: Union[str, List[str]], **kwargs: Dict[str, Any]
-) -&gt; str:
-    &#34;&#34;&#34;
-    Patch `send_config_set` in netmiko connect handler
-
-    Note: scrapli strips commands always (as it retains them in the result object anyway), so there
-    is no interesting output from this as there would be in netmiko.
-
-    Args:
-        self: NetmikoNetworkDriver object -- `self` as this gets shoe-horned into NetworkDriver via
-            types MethodType
-        config_commands: configuration command(s) to send to device
-        **kwargs: keyword arguments to support other netmiko args without blowing up
-
-    Returns:
-        N/A  # noqa: DAR202
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    provided_strip_prompt = kwargs.pop(&#34;strip_prompt&#34;, None)
-    if not isinstance(provided_strip_prompt, bool):
-        strip_prompt = True
-    else:
-        strip_prompt = provided_strip_prompt
-    enter_config_mode = kwargs.pop(&#34;enter_config_mode&#34;, True)
-    exit_config_mode = kwargs.pop(&#34;exit_config_mode&#34;, True)
-
-    if not enter_config_mode:
-        results = self.send_commands(config_commands, strip_prompt)
-    elif not exit_config_mode:
-        self.acquire_priv(&#34;configuration&#34;)
-        results = self.channel.send_inputs(config_commands, strip_prompt)
-    else:
-        results = self.send_configs(config_commands, strip_prompt)
-    # scrapli always strips command, so there isn&#39;t typically anything useful coming back from this
-    result = &#34;\n&#34;.join([r.result for r in results])
-    return result</code></pre>
+    return netmiko_driver</code></pre>
 </details>
 </dd>
 <dt id="scrapli.netmiko_compatability.transform_netmiko_kwargs"><code class="name flex">
@@ -731,24 +437,16 @@ types MethodType</dd>
     ip = kwargs.pop(&#34;ip&#34;, None)
     kwargs[&#34;host&#34;] = host if host is not None else ip
     kwargs[&#34;port&#34;] = kwargs.pop(&#34;port&#34;, 22)
-    kwargs[&#34;setup_timeout&#34;] = 5
-    kwargs[&#34;setup_ssh_config_file&#34;] = kwargs.pop(&#34;ssh_config_file&#34;, False)
+    kwargs[&#34;ssh_config_file&#34;] = kwargs.pop(&#34;ssh_config_file&#34;, False)
     if &#34;global_delay_factor&#34; in kwargs.keys():
         kwargs[&#34;timeout_socket&#34;] = kwargs[&#34;global_delay_factor&#34;] * 5
         kwargs[&#34;timeout_transport&#34;] = kwargs[&#34;global_delay_factor&#34;] * 5000
         kwargs[&#34;timeout_ops&#34;] = kwargs[&#34;global_delay_factor&#34;] * 10
         kwargs.pop(&#34;global_delay_factor&#34;)
-    else:
-        kwargs[&#34;timeout_transport&#34;] = 5000
     kwargs[&#34;auth_username&#34;] = kwargs.pop(&#34;username&#34;)
     kwargs[&#34;auth_password&#34;] = kwargs.pop(&#34;password&#34;, None)
     kwargs[&#34;auth_public_key&#34;] = kwargs.pop(&#34;key_file&#34;, &#34;&#34;)
     kwargs[&#34;auth_secondary&#34;] = kwargs.pop(&#34;secret&#34;, &#34;&#34;)
-    kwargs[&#34;comms_prompt_pattern&#34;] = &#34;&#34;
-    kwargs[&#34;comms_operation_timeout&#34;] = 10
-    kwargs[&#34;comms_return_char&#34;] = &#34;&#34;
-    kwargs[&#34;session_pre_login_handler&#34;] = &#34;&#34;
-    kwargs[&#34;session_disable_paging&#34;] = &#34;&#34;
 
     transformed_kwargs = {k: v for (k, v) in kwargs.items() if k in VALID_SCRAPLI_KWARGS}
 
@@ -762,22 +460,14 @@ types MethodType</dd>
 <dl>
 <dt id="scrapli.netmiko_compatability.NetmikoNetworkDriver"><code class="flex name class">
 <span>class <span class="ident">NetmikoNetworkDriver</span></span>
-<span>(</span><span>auth_secondary='', session_pre_login_handler='', session_disable_paging='terminal length 0', **kwargs)</span>
+<span>(</span><span>scrapli_driver)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>BaseNetworkDriver Object</p>
+<section class="desc"><p>Scrapli NetmikoNetworkDriver</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>auth_secondary</code></strong></dt>
-<dd>password to use for secondary authentication (enable)</dd>
-<dt><strong><code>session_pre_login_handler</code></strong></dt>
-<dd>callable or string that resolves to an importable function to
-handle pre-login (pre disable paging) operations</dd>
-<dt><strong><code>session_disable_paging</code></strong></dt>
-<dd>callable, string that resolves to an importable function, or
-string to send to device to disable paging</dd>
-<dt><strong><code>**kwargs</code></strong></dt>
-<dd>keyword args to pass to inherited class(es)</dd>
+<dt><strong><code>scrapli_driver</code></strong></dt>
+<dd>string command to send to device</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -794,21 +484,14 @@ string to send to device to disable paging</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class NetmikoNetworkDriver(NetworkDriver):
-    def send_command(
-        self: NetworkDriver, command_string: Union[str, List[str]], **kwargs: Dict[str, Any]
-    ) -&gt; Union[str, List[Any], Dict[str, Any]]:
+<pre><code class="python">class NetmikoNetworkDriver:
+    def __init__(self, scrapli_driver: NetworkDriver) -&gt; None:
         &#34;&#34;&#34;
-        Netmiko style NetworkDriver with send_command method to appease typing
-
-        Patch `send_command_timing` in netmiko connect handler
-
-        Really just a shim to send_command, scrapli doesnt support/need timing mechanics -- adjust
-        the timers on the connection object if needed, or adjust them on the fly in your code.
+        Scrapli NetmikoNetworkDriver
 
         Args:
-            command_string: string or list of strings to send as commands
-            **kwargs: keyword arguments to support other netmiko args without blowing up
+            scrapli_driver: string command to send to device
+
 
         Returns:
             N/A  # noqa: DAR202
@@ -816,35 +499,278 @@ string to send to device to disable paging</dd>
         Raises:
             N/A
 
-        &#34;&#34;&#34;</code></pre>
+        &#34;&#34;&#34;
+        self.scrapli_driver = scrapli_driver
+
+    def open(self) -&gt; None:
+        &#34;&#34;&#34;
+        Open scrapli connection
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.scrapli_driver.open()
+
+    def find_prompt(self) -&gt; str:
+        &#34;&#34;&#34;
+        Scrapli netmiko find_prompt
+
+        Map netmiko find_prompt to scrapli get_prompt
+
+        Args:
+            N/A
+
+        Returns:
+            str: string representing the device prompt
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        return self.scrapli_driver.get_prompt()
+
+    def send_command(
+        self, command_string: str, strip_prompt: bool = True, **kwargs: Dict[str, Any]
+    ) -&gt; Union[str, List[Any], Dict[str, Any]]:
+        &#34;&#34;&#34;
+        Scrapli netmiko send_command
+
+        Map some netmiko send_command args into scrapli; used for allowing folks to test scrapli
+        more easily if they are already using netmiko
+
+        Args:
+            command_string: string command to send to device
+            strip_prompt: True/False strip prompt -- same in scrapli as in netmiko
+            kwargs: allows for not blowing up will letting users pass in netmiko args that can
+                safely be ignored
+
+        Returns:
+            result: text result or structured result if `use_textfsm` is true and parsing successful
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        expect_string = kwargs.pop(&#34;expect_string&#34;, None)
+        use_textfsm = kwargs.pop(&#34;use_textfsm&#34;, False)
+
+        if expect_string:
+            err = &#34;scrapli netmiko interoperability does not support expect_string!&#34;
+            msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
+            fix = (
+                f&#34;To resolve this issue, use native or driver mode with `send_inputs_interact` &#34;
+                &#34; method.&#34;
+            )
+            warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
+            warnings.warn(warning)
+
+        if isinstance(command_string, list):
+            err = &#34;netmiko does not support sending list of commands, using only the first command!&#34;
+            msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
+            fix = f&#34;To resolve this issue, use native or driver mode with `send_inputs` method.&#34;
+            warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
+            warnings.warn(warning)
+            command = command_string[0]
+        else:
+            command = command_string
+
+        scrapli_result = self.scrapli_driver.send_command(command, strip_prompt=strip_prompt)
+
+        if use_textfsm:
+            structured_result = scrapli_result.textfsm_parse_output()
+            if structured_result:
+                return structured_result
+
+        return scrapli_result.result
+
+    def send_command_timing(
+        self, command_string: str, strip_prompt: bool = True, **kwargs: Dict[str, Any]
+    ) -&gt; Union[str, List[Any], Dict[str, Any]]:
+        &#34;&#34;&#34;
+        Scrapli netmiko send_command_timing
+
+        Map some netmiko send_command args into scrapli; used for allowing folks to test scrapli
+        more easily if they are already using netmiko
+
+        Args:
+            command_string: string command to send to device
+            strip_prompt: True/False strip prompt -- same in scrapli as in netmiko
+            kwargs: allows for not blowing up will letting users pass in netmiko args that can
+                safely be ignored
+
+        Returns:
+            result: text result or structured result if `use_textfsm` is true and parsing successful
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        if isinstance(command_string, list):
+            err = &#34;netmiko does not support sending list of commands, using only the first command!&#34;
+            msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
+            fix = f&#34;To resolve this issue, use native or driver mode with `send_inputs` method.&#34;
+            warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
+            warnings.warn(warning)
+            command = command_string[0]
+        else:
+            command = command_string
+
+        return self.send_command(command, strip_prompt=strip_prompt, **kwargs)
+
+    def send_config_set(
+        self, config_commands: Union[str, List[str]], **kwargs: Dict[str, Any]
+    ) -&gt; str:
+        &#34;&#34;&#34;
+        Scrapli netmiko send_config_set
+
+        Map some netmiko send_config_set args into scrapli; used for allowing folks to test scrapli
+        more easily if they are already using netmiko
+
+        Args:
+            config_commands: string or list of strings of config commands to send
+            kwargs: allows for not blowing up will letting users pass in netmiko args that can
+                safely be ignored
+
+        Returns:
+            str: text result or structured result if `use_textfsm` is true and parsing successful
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        provided_strip_prompt = kwargs.pop(&#34;strip_prompt&#34;, None)
+        if not isinstance(provided_strip_prompt, bool):
+            strip_prompt = True
+        else:
+            strip_prompt = provided_strip_prompt
+        enter_config_mode = kwargs.pop(&#34;enter_config_mode&#34;, True)
+        exit_config_mode = kwargs.pop(&#34;exit_config_mode&#34;, True)
+
+        if not enter_config_mode:
+            if isinstance(config_commands, str):
+                configs = [config_commands]
+            else:
+                configs = config_commands
+            results = self.scrapli_driver.send_commands(configs, strip_prompt)
+        elif not exit_config_mode:
+            self.scrapli_driver.acquire_priv(&#34;configuration&#34;)
+            results = self.scrapli_driver.channel.send_inputs(config_commands, strip_prompt)
+        else:
+            results = self.scrapli_driver.send_configs(config_commands, strip_prompt)
+        # scrapli always strips command, so there isn&#39;t typically anything useful coming back
+        result = &#34;\n&#34;.join([r.result for r in results])
+        return result</code></pre>
 </details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="scrapli.driver.network_driver.NetworkDriver" href="driver/network_driver.html#scrapli.driver.network_driver.NetworkDriver">NetworkDriver</a></li>
-<li><a title="scrapli.driver.driver.Scrape" href="driver/driver.html#scrapli.driver.driver.Scrape">Scrape</a></li>
-</ul>
 <h3>Methods</h3>
 <dl>
-<dt id="scrapli.netmiko_compatability.NetmikoNetworkDriver.send_command"><code class="name flex">
-<span>def <span class="ident">send_command</span></span>(<span>self, command_string, **kwargs)</span>
+<dt id="scrapli.netmiko_compatability.NetmikoNetworkDriver.find_prompt"><code class="name flex">
+<span>def <span class="ident">find_prompt</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Netmiko style NetworkDriver with send_command method to appease typing</p>
-<p>Patch <code>send_command_timing</code> in netmiko connect handler</p>
-<p>Really just a shim to send_command, scrapli doesnt support/need timing mechanics &ndash; adjust
-the timers on the connection object if needed, or adjust them on the fly in your code.</p>
+<section class="desc"><p>Scrapli netmiko find_prompt</p>
+<p>Map netmiko find_prompt to scrapli get_prompt</p>
 <h2 id="args">Args</h2>
+<p>N/A</p>
+<h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>command_string</code></strong></dt>
-<dd>string or list of strings to send as commands</dd>
-<dt><strong><code>**kwargs</code></strong></dt>
-<dd>keyword arguments to support other netmiko args without blowing up</dd>
+<dt><strong><code>str</code></strong></dt>
+<dd>string representing the device prompt</dd>
 </dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def find_prompt(self) -&gt; str:
+    &#34;&#34;&#34;
+    Scrapli netmiko find_prompt
+
+    Map netmiko find_prompt to scrapli get_prompt
+
+    Args:
+        N/A
+
+    Returns:
+        str: string representing the device prompt
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    return self.scrapli_driver.get_prompt()</code></pre>
+</details>
+</dd>
+<dt id="scrapli.netmiko_compatability.NetmikoNetworkDriver.open"><code class="name flex">
+<span>def <span class="ident">open</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Open scrapli connection</p>
+<h2 id="args">Args</h2>
+<p>N/A</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>N</code>/<code>A</code>
 # <code>noqa</code>: <code>DAR202</code></dt>
 <dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def open(self) -&gt; None:
+    &#34;&#34;&#34;
+    Open scrapli connection
+
+    Args:
+        N/A
+
+    Returns:
+        N/A  # noqa: DAR202
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    self.scrapli_driver.open()</code></pre>
+</details>
+</dd>
+<dt id="scrapli.netmiko_compatability.NetmikoNetworkDriver.send_command"><code class="name flex">
+<span>def <span class="ident">send_command</span></span>(<span>self, command_string, strip_prompt=True, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Scrapli netmiko send_command</p>
+<p>Map some netmiko send_command args into scrapli; used for allowing folks to test scrapli
+more easily if they are already using netmiko</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>command_string</code></strong></dt>
+<dd>string command to send to device</dd>
+<dt><strong><code>strip_prompt</code></strong></dt>
+<dd>True/False strip prompt &ndash; same in scrapli as in netmiko</dd>
+<dt><strong><code>kwargs</code></strong></dt>
+<dd>allows for not blowing up will letting users pass in netmiko args that can
+safely be ignored</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>result</code></strong></dt>
+<dd>text result or structured result if <code>use_textfsm</code> is true and parsing successful</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
@@ -856,45 +782,201 @@ the timers on the connection object if needed, or adjust them on the fly in your
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def send_command(
-    self: NetworkDriver, command_string: Union[str, List[str]], **kwargs: Dict[str, Any]
+    self, command_string: str, strip_prompt: bool = True, **kwargs: Dict[str, Any]
 ) -&gt; Union[str, List[Any], Dict[str, Any]]:
     &#34;&#34;&#34;
-    Netmiko style NetworkDriver with send_command method to appease typing
+    Scrapli netmiko send_command
 
-    Patch `send_command_timing` in netmiko connect handler
-
-    Really just a shim to send_command, scrapli doesnt support/need timing mechanics -- adjust
-    the timers on the connection object if needed, or adjust them on the fly in your code.
+    Map some netmiko send_command args into scrapli; used for allowing folks to test scrapli
+    more easily if they are already using netmiko
 
     Args:
-        command_string: string or list of strings to send as commands
-        **kwargs: keyword arguments to support other netmiko args without blowing up
+        command_string: string command to send to device
+        strip_prompt: True/False strip prompt -- same in scrapli as in netmiko
+        kwargs: allows for not blowing up will letting users pass in netmiko args that can
+            safely be ignored
 
     Returns:
-        N/A  # noqa: DAR202
+        result: text result or structured result if `use_textfsm` is true and parsing successful
 
     Raises:
         N/A
 
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+    expect_string = kwargs.pop(&#34;expect_string&#34;, None)
+    use_textfsm = kwargs.pop(&#34;use_textfsm&#34;, False)
+
+    if expect_string:
+        err = &#34;scrapli netmiko interoperability does not support expect_string!&#34;
+        msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
+        fix = (
+            f&#34;To resolve this issue, use native or driver mode with `send_inputs_interact` &#34;
+            &#34; method.&#34;
+        )
+        warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
+        warnings.warn(warning)
+
+    if isinstance(command_string, list):
+        err = &#34;netmiko does not support sending list of commands, using only the first command!&#34;
+        msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
+        fix = f&#34;To resolve this issue, use native or driver mode with `send_inputs` method.&#34;
+        warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
+        warnings.warn(warning)
+        command = command_string[0]
+    else:
+        command = command_string
+
+    scrapli_result = self.scrapli_driver.send_command(command, strip_prompt=strip_prompt)
+
+    if use_textfsm:
+        structured_result = scrapli_result.textfsm_parse_output()
+        if structured_result:
+            return structured_result
+
+    return scrapli_result.result</code></pre>
+</details>
+</dd>
+<dt id="scrapli.netmiko_compatability.NetmikoNetworkDriver.send_command_timing"><code class="name flex">
+<span>def <span class="ident">send_command_timing</span></span>(<span>self, command_string, strip_prompt=True, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Scrapli netmiko send_command_timing</p>
+<p>Map some netmiko send_command args into scrapli; used for allowing folks to test scrapli
+more easily if they are already using netmiko</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>command_string</code></strong></dt>
+<dd>string command to send to device</dd>
+<dt><strong><code>strip_prompt</code></strong></dt>
+<dd>True/False strip prompt &ndash; same in scrapli as in netmiko</dd>
+<dt><strong><code>kwargs</code></strong></dt>
+<dd>allows for not blowing up will letting users pass in netmiko args that can
+safely be ignored</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>result</code></strong></dt>
+<dd>text result or structured result if <code>use_textfsm</code> is true and parsing successful</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def send_command_timing(
+    self, command_string: str, strip_prompt: bool = True, **kwargs: Dict[str, Any]
+) -&gt; Union[str, List[Any], Dict[str, Any]]:
+    &#34;&#34;&#34;
+    Scrapli netmiko send_command_timing
+
+    Map some netmiko send_command args into scrapli; used for allowing folks to test scrapli
+    more easily if they are already using netmiko
+
+    Args:
+        command_string: string command to send to device
+        strip_prompt: True/False strip prompt -- same in scrapli as in netmiko
+        kwargs: allows for not blowing up will letting users pass in netmiko args that can
+            safely be ignored
+
+    Returns:
+        result: text result or structured result if `use_textfsm` is true and parsing successful
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    if isinstance(command_string, list):
+        err = &#34;netmiko does not support sending list of commands, using only the first command!&#34;
+        msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
+        fix = f&#34;To resolve this issue, use native or driver mode with `send_inputs` method.&#34;
+        warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
+        warnings.warn(warning)
+        command = command_string[0]
+    else:
+        command = command_string
+
+    return self.send_command(command, strip_prompt=strip_prompt, **kwargs)</code></pre>
+</details>
+</dd>
+<dt id="scrapli.netmiko_compatability.NetmikoNetworkDriver.send_config_set"><code class="name flex">
+<span>def <span class="ident">send_config_set</span></span>(<span>self, config_commands, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Scrapli netmiko send_config_set</p>
+<p>Map some netmiko send_config_set args into scrapli; used for allowing folks to test scrapli
+more easily if they are already using netmiko</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>config_commands</code></strong></dt>
+<dd>string or list of strings of config commands to send</dd>
+<dt><strong><code>kwargs</code></strong></dt>
+<dd>allows for not blowing up will letting users pass in netmiko args that can
+safely be ignored</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>str</code></strong></dt>
+<dd>text result or structured result if <code>use_textfsm</code> is true and parsing successful</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def send_config_set(
+    self, config_commands: Union[str, List[str]], **kwargs: Dict[str, Any]
+) -&gt; str:
+    &#34;&#34;&#34;
+    Scrapli netmiko send_config_set
+
+    Map some netmiko send_config_set args into scrapli; used for allowing folks to test scrapli
+    more easily if they are already using netmiko
+
+    Args:
+        config_commands: string or list of strings of config commands to send
+        kwargs: allows for not blowing up will letting users pass in netmiko args that can
+            safely be ignored
+
+    Returns:
+        str: text result or structured result if `use_textfsm` is true and parsing successful
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    provided_strip_prompt = kwargs.pop(&#34;strip_prompt&#34;, None)
+    if not isinstance(provided_strip_prompt, bool):
+        strip_prompt = True
+    else:
+        strip_prompt = provided_strip_prompt
+    enter_config_mode = kwargs.pop(&#34;enter_config_mode&#34;, True)
+    exit_config_mode = kwargs.pop(&#34;exit_config_mode&#34;, True)
+
+    if not enter_config_mode:
+        if isinstance(config_commands, str):
+            configs = [config_commands]
+        else:
+            configs = config_commands
+        results = self.scrapli_driver.send_commands(configs, strip_prompt)
+    elif not exit_config_mode:
+        self.scrapli_driver.acquire_priv(&#34;configuration&#34;)
+        results = self.scrapli_driver.channel.send_inputs(config_commands, strip_prompt)
+    else:
+        results = self.scrapli_driver.send_configs(config_commands, strip_prompt)
+    # scrapli always strips command, so there isn&#39;t typically anything useful coming back
+    result = &#34;\n&#34;.join([r.result for r in results])
+    return result</code></pre>
 </details>
 </dd>
 </dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="scrapli.driver.network_driver.NetworkDriver" href="driver/network_driver.html#scrapli.driver.network_driver.NetworkDriver">NetworkDriver</a></b></code>:
-<ul class="hlist">
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.acquire_priv" href="driver/network_driver.html#scrapli.driver.network_driver.NetworkDriver.acquire_priv">acquire_priv</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.close" href="driver/driver.html#scrapli.driver.driver.Scrape.close">close</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.get_prompt" href="driver/network_driver.html#scrapli.driver.network_driver.NetworkDriver.get_prompt">get_prompt</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.isalive" href="driver/driver.html#scrapli.driver.driver.Scrape.isalive">isalive</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.open" href="driver/driver.html#scrapli.driver.driver.Scrape.open">open</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_commands" href="driver/network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_commands">send_commands</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_configs" href="driver/network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_configs">send_configs</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_interactive" href="driver/network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_interactive">send_interactive</a></code></li>
-</ul>
-</li>
-</ul>
 </dd>
 </dl>
 </section>
@@ -913,10 +995,6 @@ the timers on the connection object if needed, or adjust them on the fly in your
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="scrapli.netmiko_compatability.connect_handler" href="#scrapli.netmiko_compatability.connect_handler">connect_handler</a></code></li>
-<li><code><a title="scrapli.netmiko_compatability.netmiko_find_prompt" href="#scrapli.netmiko_compatability.netmiko_find_prompt">netmiko_find_prompt</a></code></li>
-<li><code><a title="scrapli.netmiko_compatability.netmiko_send_command" href="#scrapli.netmiko_compatability.netmiko_send_command">netmiko_send_command</a></code></li>
-<li><code><a title="scrapli.netmiko_compatability.netmiko_send_command_timing" href="#scrapli.netmiko_compatability.netmiko_send_command_timing">netmiko_send_command_timing</a></code></li>
-<li><code><a title="scrapli.netmiko_compatability.netmiko_send_config_set" href="#scrapli.netmiko_compatability.netmiko_send_config_set">netmiko_send_config_set</a></code></li>
 <li><code><a title="scrapli.netmiko_compatability.transform_netmiko_kwargs" href="#scrapli.netmiko_compatability.transform_netmiko_kwargs">transform_netmiko_kwargs</a></code></li>
 </ul>
 </li>
@@ -925,7 +1003,11 @@ the timers on the connection object if needed, or adjust them on the fly in your
 <li>
 <h4><code><a title="scrapli.netmiko_compatability.NetmikoNetworkDriver" href="#scrapli.netmiko_compatability.NetmikoNetworkDriver">NetmikoNetworkDriver</a></code></h4>
 <ul class="">
+<li><code><a title="scrapli.netmiko_compatability.NetmikoNetworkDriver.find_prompt" href="#scrapli.netmiko_compatability.NetmikoNetworkDriver.find_prompt">find_prompt</a></code></li>
+<li><code><a title="scrapli.netmiko_compatability.NetmikoNetworkDriver.open" href="#scrapli.netmiko_compatability.NetmikoNetworkDriver.open">open</a></code></li>
 <li><code><a title="scrapli.netmiko_compatability.NetmikoNetworkDriver.send_command" href="#scrapli.netmiko_compatability.NetmikoNetworkDriver.send_command">send_command</a></code></li>
+<li><code><a title="scrapli.netmiko_compatability.NetmikoNetworkDriver.send_command_timing" href="#scrapli.netmiko_compatability.NetmikoNetworkDriver.send_command_timing">send_command_timing</a></code></li>
+<li><code><a title="scrapli.netmiko_compatability.NetmikoNetworkDriver.send_config_set" href="#scrapli.netmiko_compatability.NetmikoNetworkDriver.send_config_set">send_config_set</a></code></li>
 </ul>
 </li>
 </ul>

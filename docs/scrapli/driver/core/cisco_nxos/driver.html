@@ -26,22 +26,55 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.driver.core.cisco_nxos.driver&#34;&#34;&#34;
-from typing import Any, Callable, Dict, Union
+from typing import Any, Callable, Dict, Optional
 
 from scrapli.driver import NetworkDriver
 from scrapli.driver.network_driver import PrivilegeLevel
 
+
+def nxos_on_open(conn: NetworkDriver) -&gt; None:
+    &#34;&#34;&#34;
+    NXOSDriver default on_open callable
+
+    Args:
+        conn: NetworkDriver object
+
+    Returns:
+        N/A  # noqa: DAR202
+
+    Raises:
+        N/A
+    &#34;&#34;&#34;
+    conn.channel.send_inputs(&#34;terminal length 0&#34;)
+
+
+def nxos_on_close(conn: NetworkDriver) -&gt; None:
+    &#34;&#34;&#34;
+    NXOSDriver default on_close callable
+
+    Args:
+        conn: NetworkDriver object
+
+    Returns:
+        N/A  # noqa: DAR202
+
+    Raises:
+        N/A
+    &#34;&#34;&#34;
+    conn.channel.send_inputs(&#34;exit&#34;)
+
+
 NXOS_ARG_MAPPER = {
-    &#34;comms_prompt_regex&#34;: r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]$&#34;,
+    &#34;comms_prompt_regex&#34;: r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]\s*$&#34;,
     &#34;comms_return_char&#34;: &#34;\n&#34;,
-    &#34;comms_pre_login_handler&#34;: &#34;&#34;,
-    &#34;comms_disable_paging&#34;: &#34;terminal length 0&#34;,
+    &#34;on_open&#34;: nxos_on_open,
+    &#34;on_close&#34;: nxos_on_close,
 }
 
 PRIVS = {
     &#34;exec&#34;: (
         PrivilegeLevel(
-            r&#34;^[a-z0-9.\-@()/:]{1,32}&gt;$&#34;,
+            r&#34;^[a-z0-9.\-@()/:]{1,32}&gt;\s*$&#34;,
             &#34;exec&#34;,
             &#34;&#34;,
             &#34;&#34;,
@@ -55,7 +88,7 @@ PRIVS = {
     ),
     &#34;privilege_exec&#34;: (
         PrivilegeLevel(
-            r&#34;^[a-z0-9.\-@/:]{1,32}#$&#34;,
+            r&#34;^[a-z0-9.\-@/:]{1,32}#\s*$&#34;,
             &#34;privilege_exec&#34;,
             &#34;exec&#34;,
             &#34;disable&#34;,
@@ -69,7 +102,7 @@ PRIVS = {
     ),
     &#34;configuration&#34;: (
         PrivilegeLevel(
-            r&#34;^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{0,16}\)#$&#34;,
+            r&#34;^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{0,16}\)#\s*$&#34;,
             &#34;configuration&#34;,
             &#34;priv&#34;,
             &#34;end&#34;,
@@ -83,7 +116,7 @@ PRIVS = {
     ),
     &#34;special_configuration&#34;: (
         PrivilegeLevel(
-            r&#34;^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{1,16}\)#$&#34;,
+            r&#34;^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{1,16}\)#\s*$&#34;,
             &#34;special_configuration&#34;,
             &#34;priv&#34;,
             &#34;end&#34;,
@@ -102,8 +135,9 @@ class NXOSDriver(NetworkDriver):
     def __init__(
         self,
         auth_secondary: str = &#34;&#34;,
-        session_pre_login_handler: Union[str, Callable[..., Any]] = &#34;&#34;,
-        session_disable_paging: Union[str, Callable[..., Any]] = &#34;terminal length 0&#34;,
+        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]\s*$&#34;,
+        on_open: Optional[Callable[..., Any]] = None,
+        on_close: Optional[Callable[..., Any]] = None,
         **kwargs: Dict[str, Any],
     ):
         &#34;&#34;&#34;
@@ -111,10 +145,22 @@ class NXOSDriver(NetworkDriver):
 
         Args:
             auth_secondary: password to use for secondary authentication (enable)
-            session_pre_login_handler: callable or string that resolves to an importable function to
-                handle pre-login (pre disable paging) operations
-            session_disable_paging: callable, string that resolves to an importable function, or
-                string to send to device to disable paging
+            comms_prompt_pattern: raw string regex pattern -- preferably use `^` and `$` anchors!
+                this is the single most important attribute here! if this does not match a prompt,
+                scrapli will not work!
+                IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
+                for highly reliably matching for prompts however we do NOT strip trailing whitespace
+                for each line, so be sure to add `\\s*` if your device needs that. This should be
+                mostly sorted for you if using network drivers (i.e. `IOSXEDriver`). Lastly, the
+                case insensitive is just a convenience factor so i can be lazy.
+            on_open: callable that accepts the class instance as its only argument. this callable,
+                if provided, is executed immediately after authentication is completed. Common use
+                cases for this callable would be to disable paging or accept any kind of banner
+                message that prompts a user upon connection
+            on_close: callable that accepts the class instance as its only argument. this callable,
+                if provided, is executed immediately prior to closing the underlying transport.
+                Common use cases for this callable would be to save configurations prior to exiting,
+                or to logout properly to free up vtys or similar.
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -123,13 +169,20 @@ class NXOSDriver(NetworkDriver):
         Raises:
             N/A
         &#34;&#34;&#34;
+        if on_open is None:
+            on_open = nxos_on_open
+        if on_close is None:
+            on_close = nxos_on_close
         super().__init__(
-            auth_secondary, session_pre_login_handler, session_disable_paging, **kwargs
+            auth_secondary,
+            comms_prompt_pattern=comms_prompt_pattern,
+            on_open=on_open,
+            on_close=on_close,
+            **kwargs,
         )
         self.privs = PRIVS
         self.default_desired_priv = &#34;privilege_exec&#34;
-        self.textfsm_platform = &#34;cisco_nxos&#34;
-        self.exit_command = &#34;exit&#34;</code></pre>
+        self.textfsm_platform = &#34;cisco_nxos&#34;</code></pre>
 </details>
 </section>
 <section>
@@ -137,13 +190,98 @@ class NXOSDriver(NetworkDriver):
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="scrapli.driver.core.cisco_nxos.driver.nxos_on_close"><code class="name flex">
+<span>def <span class="ident">nxos_on_close</span></span>(<span>conn)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>NXOSDriver default on_close callable</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>conn</code></strong></dt>
+<dd>NetworkDriver object</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code>: <code>DAR202</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def nxos_on_close(conn: NetworkDriver) -&gt; None:
+    &#34;&#34;&#34;
+    NXOSDriver default on_close callable
+
+    Args:
+        conn: NetworkDriver object
+
+    Returns:
+        N/A  # noqa: DAR202
+
+    Raises:
+        N/A
+    &#34;&#34;&#34;
+    conn.channel.send_inputs(&#34;exit&#34;)</code></pre>
+</details>
+</dd>
+<dt id="scrapli.driver.core.cisco_nxos.driver.nxos_on_open"><code class="name flex">
+<span>def <span class="ident">nxos_on_open</span></span>(<span>conn)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>NXOSDriver default on_open callable</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>conn</code></strong></dt>
+<dd>NetworkDriver object</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code>: <code>DAR202</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def nxos_on_open(conn: NetworkDriver) -&gt; None:
+    &#34;&#34;&#34;
+    NXOSDriver default on_open callable
+
+    Args:
+        conn: NetworkDriver object
+
+    Returns:
+        N/A  # noqa: DAR202
+
+    Raises:
+        N/A
+    &#34;&#34;&#34;
+    conn.channel.send_inputs(&#34;terminal length 0&#34;)</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
 <dt id="scrapli.driver.core.cisco_nxos.driver.NXOSDriver"><code class="flex name class">
 <span>class <span class="ident">NXOSDriver</span></span>
-<span>(</span><span>auth_secondary='', session_pre_login_handler='', session_disable_paging='terminal length 0', **kwargs)</span>
+<span>(</span><span>auth_secondary='', comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]\\s*$&#x27;, on_open=None, on_close=None, **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>NXOSDriver Object</p>
@@ -151,12 +289,25 @@ class NXOSDriver(NetworkDriver):
 <dl>
 <dt><strong><code>auth_secondary</code></strong></dt>
 <dd>password to use for secondary authentication (enable)</dd>
-<dt><strong><code>session_pre_login_handler</code></strong></dt>
-<dd>callable or string that resolves to an importable function to
-handle pre-login (pre disable paging) operations</dd>
-<dt><strong><code>session_disable_paging</code></strong></dt>
-<dd>callable, string that resolves to an importable function, or
-string to send to device to disable paging</dd>
+<dt><strong><code>comms_prompt_pattern</code></strong></dt>
+<dd>raw string regex pattern &ndash; preferably use <code>^</code> and <code>$</code> anchors!
+this is the single most important attribute here! if this does not match a prompt,
+scrapli will not work!
+IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
+for highly reliably matching for prompts however we do NOT strip trailing whitespace
+for each line, so be sure to add <code>\s*</code> if your device needs that. This should be
+mostly sorted for you if using network drivers (i.e. <code>IOSXEDriver</code>). Lastly, the
+case insensitive is just a convenience factor so i can be lazy.</dd>
+<dt><strong><code>on_open</code></strong></dt>
+<dd>callable that accepts the class instance as its only argument. this callable,
+if provided, is executed immediately after authentication is completed. Common use
+cases for this callable would be to disable paging or accept any kind of banner
+message that prompts a user upon connection</dd>
+<dt><strong><code>on_close</code></strong></dt>
+<dd>callable that accepts the class instance as its only argument. this callable,
+if provided, is executed immediately prior to closing the underlying transport.
+Common use cases for this callable would be to save configurations prior to exiting,
+or to logout properly to free up vtys or similar.</dd>
 <dt><strong><code>**kwargs</code></strong></dt>
 <dd>keyword args to pass to inherited class(es)</dd>
 </dl>
@@ -179,8 +330,9 @@ string to send to device to disable paging</dd>
     def __init__(
         self,
         auth_secondary: str = &#34;&#34;,
-        session_pre_login_handler: Union[str, Callable[..., Any]] = &#34;&#34;,
-        session_disable_paging: Union[str, Callable[..., Any]] = &#34;terminal length 0&#34;,
+        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]\s*$&#34;,
+        on_open: Optional[Callable[..., Any]] = None,
+        on_close: Optional[Callable[..., Any]] = None,
         **kwargs: Dict[str, Any],
     ):
         &#34;&#34;&#34;
@@ -188,10 +340,22 @@ string to send to device to disable paging</dd>
 
         Args:
             auth_secondary: password to use for secondary authentication (enable)
-            session_pre_login_handler: callable or string that resolves to an importable function to
-                handle pre-login (pre disable paging) operations
-            session_disable_paging: callable, string that resolves to an importable function, or
-                string to send to device to disable paging
+            comms_prompt_pattern: raw string regex pattern -- preferably use `^` and `$` anchors!
+                this is the single most important attribute here! if this does not match a prompt,
+                scrapli will not work!
+                IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
+                for highly reliably matching for prompts however we do NOT strip trailing whitespace
+                for each line, so be sure to add `\\s*` if your device needs that. This should be
+                mostly sorted for you if using network drivers (i.e. `IOSXEDriver`). Lastly, the
+                case insensitive is just a convenience factor so i can be lazy.
+            on_open: callable that accepts the class instance as its only argument. this callable,
+                if provided, is executed immediately after authentication is completed. Common use
+                cases for this callable would be to disable paging or accept any kind of banner
+                message that prompts a user upon connection
+            on_close: callable that accepts the class instance as its only argument. this callable,
+                if provided, is executed immediately prior to closing the underlying transport.
+                Common use cases for this callable would be to save configurations prior to exiting,
+                or to logout properly to free up vtys or similar.
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -200,13 +364,20 @@ string to send to device to disable paging</dd>
         Raises:
             N/A
         &#34;&#34;&#34;
+        if on_open is None:
+            on_open = nxos_on_open
+        if on_close is None:
+            on_close = nxos_on_close
         super().__init__(
-            auth_secondary, session_pre_login_handler, session_disable_paging, **kwargs
+            auth_secondary,
+            comms_prompt_pattern=comms_prompt_pattern,
+            on_open=on_open,
+            on_close=on_close,
+            **kwargs,
         )
         self.privs = PRIVS
         self.default_desired_priv = &#34;privilege_exec&#34;
-        self.textfsm_platform = &#34;cisco_nxos&#34;
-        self.exit_command = &#34;exit&#34;</code></pre>
+        self.textfsm_platform = &#34;cisco_nxos&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -222,6 +393,7 @@ string to send to device to disable paging</dd>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.get_prompt" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.get_prompt">get_prompt</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.isalive" href="../../driver.html#scrapli.driver.driver.Scrape.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.open" href="../../driver.html#scrapli.driver.driver.Scrape.open">open</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_command" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_command">send_command</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_commands" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_commands">send_commands</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_configs" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_configs">send_configs</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_interactive" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_interactive">send_interactive</a></code></li>
@@ -241,6 +413,12 @@ string to send to device to disable paging</dd>
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="scrapli.driver.core.cisco_nxos" href="index.html">scrapli.driver.core.cisco_nxos</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="scrapli.driver.core.cisco_nxos.driver.nxos_on_close" href="#scrapli.driver.core.cisco_nxos.driver.nxos_on_close">nxos_on_close</a></code></li>
+<li><code><a title="scrapli.driver.core.cisco_nxos.driver.nxos_on_open" href="#scrapli.driver.core.cisco_nxos.driver.nxos_on_open">nxos_on_open</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>

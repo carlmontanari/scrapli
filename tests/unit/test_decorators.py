@@ -1,13 +1,20 @@
 import time
+from threading import Lock
 
 import pytest
 
 from scrapli.decorators import operation_timeout
 
+from .conftest import MockTransport
+
 
 class SlowClass:
     def __init__(self):
         self.timeout_test = 0.5
+        self.timeout_exit = True
+        self.session_lock = Lock()
+        self.session_lock.acquire()
+        self.transport = MockTransport("1.1.1.1", 22, 1, "\n", b"", [])
 
     @operation_timeout("timeout_test")
     def slow_function(self):
@@ -20,6 +27,9 @@ class SlowClass:
     @operation_timeout("non_existent_class_attr")
     def confused_function(self):
         return "fast"
+
+    def close(self):
+        return
 
 
 def test_operation_timeout_timeout():

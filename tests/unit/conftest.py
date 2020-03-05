@@ -8,12 +8,7 @@ import pytest
 from scrapli.channel import Channel
 from scrapli.driver import NetworkDriver, Scrape
 from scrapli.driver.core.cisco_iosxe.driver import PRIVS
-from scrapli.netmiko_compatability import (
-    netmiko_find_prompt,
-    netmiko_send_command,
-    netmiko_send_command_timing,
-    netmiko_send_config_set,
-)
+from scrapli.netmiko_compatability import NetmikoNetworkDriver
 from scrapli.transport.transport import Transport
 
 
@@ -47,10 +42,11 @@ class MockScrape(Scrape):
             "comms_return_char",
             "initial_bytes",
         )
-
         transport_args = {}
         for arg in required_transport_args:
-            transport_args[arg] = getattr(self, arg)
+            transport_args[arg] = self._initialization_args.get(arg)
+        transport_args["channel_ops"] = self.channel_ops
+        transport_args["initial_bytes"] = self.initial_bytes
         return transport_class, transport_args
 
 
@@ -69,11 +65,12 @@ class MockNetworkDriver(MockScrape, NetworkDriver):
 
 class MockTransport(Transport):
     def __init__(self, host, port, timeout_socket, comms_return_char, initial_bytes, channel_ops):
+        super().__init__(host, port, timeout_socket, keepalive=False)
         self.host = host
         self.port = port
         self.timeout_socket = timeout_socket
+        self.timeout_exit = True
         self.comms_return_char = comms_return_char
-        self.session_lock = Lock()
         self.channel_ops = channel_ops
 
         self.fd = BytesIO(initial_bytes=initial_bytes)
@@ -185,11 +182,8 @@ def mocked_netmiko_driver():
             comms_ansi=comms_ansi,
             comms_prompt_pattern=comms_prompt_pattern,
         )
-        conn.open()
-        conn.find_prompt = types.MethodType(netmiko_find_prompt, conn)
-        conn.send_command = types.MethodType(netmiko_send_command, conn)
-        conn.send_command_timing = types.MethodType(netmiko_send_command_timing, conn)
-        conn.send_config_set = types.MethodType(netmiko_send_config_set, conn)
-        return conn
+        netmiko_driver = NetmikoNetworkDriver(conn)
+        netmiko_driver.open()
+        return netmiko_driver
 
     return _create_mocked_netmiko_driver

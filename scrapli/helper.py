@@ -1,17 +1,16 @@
 """scrapli.helper"""
-import importlib
 import os
 import re
 import warnings
 from io import TextIOWrapper
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Pattern, TextIO, Union
+from typing import Any, Dict, List, Optional, Pattern, TextIO, Union
 
 import pkg_resources  # pylint: disable=C0411
 
 
 def get_prompt_pattern(prompt: str, class_prompt: str) -> Pattern[bytes]:
-    r"""
+    """
     Return compiled prompt pattern
 
     Given a potential prompt and the Channel class' prompt, return compiled prompt pattern
@@ -72,58 +71,9 @@ def strip_ansi(output: bytes) -> bytes:
         N/A
 
     """
-    ansi_escape_pattern = re.compile(rb"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+    ansi_escape_pattern = re.compile(rb"\x1b(\[.*?[@-~]|\].*?(\x07|\x1b\\))")
     output = re.sub(ansi_escape_pattern, b"", output)
     return output
-
-
-def validate_external_function(possible_function: Union[Callable[..., Any], str]) -> bool:
-    """
-    Validate string representing external function is a callable
-
-    Args:
-        possible_function: string "pointing" to external function
-
-    Returns:
-        bool: True if provided string/callable is valid function, else False
-
-    Raises:
-        N/A
-
-    """
-    try:
-        if not isinstance(possible_function, str):
-            return False
-        if "." not in possible_function:
-            return False
-        ext_func_path = possible_function.split(".")
-        ext_module = ".".join(ext_func_path[:-1])
-        importlib.import_module(ext_module)
-        return True
-    except ModuleNotFoundError:
-        return False
-
-
-def get_external_function(external_function_path: str) -> Callable[..., Any]:
-    """
-    Return callable from external file
-
-    Args:
-        external_function_path: string "pointing" to external function
-
-    Returns:
-        ext_func: callable imported from external_function_path
-
-    Raises:
-        N/A
-
-    """
-    ext_func_path = external_function_path.split(".")
-    ext_module_name = ".".join(ext_func_path[:-1])
-    ext_function = ext_func_path[-1]
-    ext_module = importlib.import_module(ext_module_name)
-    ext_func: Callable[..., Any] = getattr(ext_module, ext_function)
-    return ext_func
 
 
 def _textfsm_get_template(platform: str, command: str) -> Optional[TextIO]:

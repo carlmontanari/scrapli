@@ -53,8 +53,6 @@ def network_driver():
         timeout_ops=5,
         comms_prompt_pattern=r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
         comms_ansi=False,
-        session_pre_login_handler="",
-        session_disable_paging="terminal length 0",
         transport="system",
     ):
         conn = NetworkDriver(
@@ -69,8 +67,6 @@ def network_driver():
             timeout_ops=timeout_ops,
             comms_prompt_pattern=comms_prompt_pattern,
             comms_ansi=comms_ansi,
-            session_pre_login_handler=session_pre_login_handler,
-            session_disable_paging=session_disable_paging,
             transport=transport,
         )
         conn.open()
@@ -92,8 +88,6 @@ def cisco_iosxe_driver():
         timeout_ops=5,
         comms_prompt_pattern=r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
         comms_ansi=False,
-        session_pre_login_handler="",
-        session_disable_paging="terminal length 0",
         transport="system",
     ):
         conn = IOSXEDriver(
@@ -108,8 +102,6 @@ def cisco_iosxe_driver():
             timeout_ops=timeout_ops,
             comms_prompt_pattern=comms_prompt_pattern,
             comms_ansi=comms_ansi,
-            session_pre_login_handler=session_pre_login_handler,
-            session_disable_paging=session_disable_paging,
             transport=transport,
         )
         conn.open()

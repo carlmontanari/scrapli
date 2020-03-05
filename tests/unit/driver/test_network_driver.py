@@ -14,66 +14,18 @@ except ImportError:
     textfsm_avail = False
 
 
-def test_valid_session_pre_login_handler_func():
-    def pre_login_handler_func():
+def test_valid_on_connect_func():
+    def on_open_func():
         pass
 
-    login_handler = pre_login_handler_func
-    conn = NetworkDriver(session_pre_login_handler=login_handler)
-    assert callable(conn.session_pre_login_handler)
+    conn = NetworkDriver(on_open=on_open_func)
+    assert callable(conn.on_open)
 
 
-def test_valid_session_pre_login_handler_ext_func():
-    conn = NetworkDriver(
-        session_pre_login_handler="tests.unit.driver.ext_test_funcs.some_pre_login_handler_func"
-    )
-    assert callable(conn.session_pre_login_handler)
-
-
-def test_invalid_session_pre_login_handler():
+def test_invalid_on_connect_func():
     with pytest.raises(TypeError) as e:
-        NetworkDriver(session_pre_login_handler="not.valid.func")
-    assert (
-        str(e.value)
-        == "not.valid.func is an invalid session_pre_login_handler function or path to a function."
-    )
-
-
-def test_valid_session_disable_paging_default():
-    conn = NetworkDriver()
-    assert conn.session_disable_paging == "terminal length 0"
-
-
-def test_valid_session_disable_paging_func():
-    def disable_paging_func():
-        pass
-
-    disable_paging = disable_paging_func
-    conn = NetworkDriver(session_disable_paging=disable_paging)
-    assert callable(conn.session_disable_paging)
-
-
-def test_valid_session_disable_paging_ext_func():
-    conn = NetworkDriver(
-        session_disable_paging="tests.unit.driver.ext_test_funcs.some_disable_paging_func"
-    )
-    assert callable(conn.session_disable_paging)
-
-
-def test_valid_session_disable_paging_str():
-    conn = NetworkDriver(session_disable_paging="disable all the paging")
-    assert conn.session_disable_paging == "disable all the paging"
-
-
-def test_invalid_session_disable_paging_func():
-    conn = NetworkDriver(session_disable_paging="not.valid.func")
-    assert conn.session_disable_paging == "not.valid.func"
-
-
-def test_invalid_session_disable_paging():
-    with pytest.raises(TypeError) as e:
-        NetworkDriver(session_disable_paging=123)
-    assert str(e.value) == "session_disable_paging should be str or callable, got <class 'int'>"
+        NetworkDriver(on_open="not a callable")
+    assert str(e.value) == "on_open must be a callable, got <class 'str'>"
 
 
 def test__determine_current_priv(mocked_network_driver):
@@ -364,8 +316,8 @@ def test_send_commands(mocked_network_driver):
     test_operations = [(channel_input_1, channel_output_1), (channel_input_2, channel_output_2)]
     conn = mocked_network_driver(test_operations)
     conn.default_desired_priv = "privilege_exec"
-    output = conn.send_commands(channel_input_2, strip_prompt=False)
-    assert output[0].result == channel_output_2
+    output = conn.send_command(channel_input_2, strip_prompt=False)
+    assert output.result == channel_output_2
 
 
 def test_send_inputs_interact(mocked_network_driver):
@@ -500,10 +452,10 @@ Configuration register is 0xF
     conn = mocked_network_driver(test_operations)
     conn.default_desired_priv = "privilege_exec"
     conn.textfsm_platform = "cisco_ios"
-    results = conn.send_commands(channel_input_2)
-    results[0].textfsm_parse_output()
-    assert isinstance(results[0].structured_result, list)
-    assert results[0].structured_result[0][0] == "15.2(4)E7"
+    results = conn.send_command(channel_input_2)
+    parsed_results = results.textfsm_parse_output()
+    assert isinstance(parsed_results, list)
+    assert parsed_results[0][0] == "15.2(4)E7"
 
 
 @pytest.mark.skipif(textfsm_avail is False, reason="textfsm and/or ntc_templates are not installed")
@@ -582,7 +534,7 @@ Configuration register is 0xF
     conn = mocked_network_driver(test_operations)
     conn.default_desired_priv = "privilege_exec"
     conn.textfsm_platform = "not_real"
-    results = conn.send_commands(channel_input_2)
-    results[0].textfsm_parse_output()
-    assert isinstance(results[0].structured_result, list)
-    assert results[0].structured_result == []
+    results = conn.send_command(channel_input_2)
+    parsed_results = results.textfsm_parse_output()
+    assert isinstance(parsed_results, list)
+    assert parsed_results == []

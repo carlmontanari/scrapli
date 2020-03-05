@@ -26,19 +26,18 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.helper&#34;&#34;&#34;
-import importlib
 import os
 import re
 import warnings
 from io import TextIOWrapper
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Pattern, TextIO, Union
+from typing import Any, Dict, List, Optional, Pattern, TextIO, Union
 
 import pkg_resources  # pylint: disable=C0411
 
 
 def get_prompt_pattern(prompt: str, class_prompt: str) -&gt; Pattern[bytes]:
-    r&#34;&#34;&#34;
+    &#34;&#34;&#34;
     Return compiled prompt pattern
 
     Given a potential prompt and the Channel class&#39; prompt, return compiled prompt pattern
@@ -99,58 +98,9 @@ def strip_ansi(output: bytes) -&gt; bytes:
         N/A
 
     &#34;&#34;&#34;
-    ansi_escape_pattern = re.compile(rb&#34;\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])&#34;)
+    ansi_escape_pattern = re.compile(rb&#34;\x1b(\[.*?[@-~]|\].*?(\x07|\x1b\\))&#34;)
     output = re.sub(ansi_escape_pattern, b&#34;&#34;, output)
     return output
-
-
-def validate_external_function(possible_function: Union[Callable[..., Any], str]) -&gt; bool:
-    &#34;&#34;&#34;
-    Validate string representing external function is a callable
-
-    Args:
-        possible_function: string &#34;pointing&#34; to external function
-
-    Returns:
-        bool: True if provided string/callable is valid function, else False
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    try:
-        if not isinstance(possible_function, str):
-            return False
-        if &#34;.&#34; not in possible_function:
-            return False
-        ext_func_path = possible_function.split(&#34;.&#34;)
-        ext_module = &#34;.&#34;.join(ext_func_path[:-1])
-        importlib.import_module(ext_module)
-        return True
-    except ModuleNotFoundError:
-        return False
-
-
-def get_external_function(external_function_path: str) -&gt; Callable[..., Any]:
-    &#34;&#34;&#34;
-    Return callable from external file
-
-    Args:
-        external_function_path: string &#34;pointing&#34; to external function
-
-    Returns:
-        ext_func: callable imported from external_function_path
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    ext_func_path = external_function_path.split(&#34;.&#34;)
-    ext_module_name = &#34;.&#34;.join(ext_func_path[:-1])
-    ext_function = ext_func_path[-1]
-    ext_module = importlib.import_module(ext_module_name)
-    ext_func: Callable[..., Any] = getattr(ext_module, ext_function)
-    return ext_func
 
 
 def _textfsm_get_template(platform: str, command: str) -&gt; Optional[TextIO]:
@@ -283,52 +233,6 @@ def resolve_ssh_known_hosts(ssh_known_hosts: str) -&gt; str:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="scrapli.helper.get_external_function"><code class="name flex">
-<span>def <span class="ident">get_external_function</span></span>(<span>external_function_path)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Return callable from external file</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>external_function_path</code></strong></dt>
-<dd>string "pointing" to external function</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>ext_func</code></strong></dt>
-<dd>callable imported from external_function_path</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_external_function(external_function_path: str) -&gt; Callable[..., Any]:
-    &#34;&#34;&#34;
-    Return callable from external file
-
-    Args:
-        external_function_path: string &#34;pointing&#34; to external function
-
-    Returns:
-        ext_func: callable imported from external_function_path
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    ext_func_path = external_function_path.split(&#34;.&#34;)
-    ext_module_name = &#34;.&#34;.join(ext_func_path[:-1])
-    ext_function = ext_func_path[-1]
-    ext_module = importlib.import_module(ext_module_name)
-    ext_func: Callable[..., Any] = getattr(ext_module, ext_function)
-    return ext_func</code></pre>
-</details>
-</dd>
 <dt id="scrapli.helper.get_prompt_pattern"><code class="name flex">
 <span>def <span class="ident">get_prompt_pattern</span></span>(<span>prompt, class_prompt)</span>
 </code></dt>
@@ -357,7 +261,7 @@ def resolve_ssh_known_hosts(ssh_known_hosts: str) -&gt; str:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_prompt_pattern(prompt: str, class_prompt: str) -&gt; Pattern[bytes]:
-    r&#34;&#34;&#34;
+    &#34;&#34;&#34;
     Return compiled prompt pattern
 
     Given a potential prompt and the Channel class&#39; prompt, return compiled prompt pattern
@@ -572,7 +476,7 @@ def resolve_ssh_known_hosts(ssh_known_hosts: str) -&gt; str:
         N/A
 
     &#34;&#34;&#34;
-    ansi_escape_pattern = re.compile(rb&#34;\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])&#34;)
+    ansi_escape_pattern = re.compile(rb&#34;\x1b(\[.*?[@-~]|\].*?(\x07|\x1b\\))&#34;)
     output = re.sub(ansi_escape_pattern, b&#34;&#34;, output)
     return output</code></pre>
 </details>
@@ -635,57 +539,6 @@ def resolve_ssh_known_hosts(ssh_known_hosts: str) -&gt; str:
     return None</code></pre>
 </details>
 </dd>
-<dt id="scrapli.helper.validate_external_function"><code class="name flex">
-<span>def <span class="ident">validate_external_function</span></span>(<span>possible_function)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Validate string representing external function is a callable</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>possible_function</code></strong></dt>
-<dd>string "pointing" to external function</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>bool</code></strong></dt>
-<dd>True if provided string/callable is valid function, else False</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def validate_external_function(possible_function: Union[Callable[..., Any], str]) -&gt; bool:
-    &#34;&#34;&#34;
-    Validate string representing external function is a callable
-
-    Args:
-        possible_function: string &#34;pointing&#34; to external function
-
-    Returns:
-        bool: True if provided string/callable is valid function, else False
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    try:
-        if not isinstance(possible_function, str):
-            return False
-        if &#34;.&#34; not in possible_function:
-            return False
-        ext_func_path = possible_function.split(&#34;.&#34;)
-        ext_module = &#34;.&#34;.join(ext_func_path[:-1])
-        importlib.import_module(ext_module)
-        return True
-    except ModuleNotFoundError:
-        return False</code></pre>
-</details>
-</dd>
 </dl>
 </section>
 <section>
@@ -704,14 +557,12 @@ def resolve_ssh_known_hosts(ssh_known_hosts: str) -&gt; str:
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="scrapli.helper.get_external_function" href="#scrapli.helper.get_external_function">get_external_function</a></code></li>
 <li><code><a title="scrapli.helper.get_prompt_pattern" href="#scrapli.helper.get_prompt_pattern">get_prompt_pattern</a></code></li>
 <li><code><a title="scrapli.helper.normalize_lines" href="#scrapli.helper.normalize_lines">normalize_lines</a></code></li>
 <li><code><a title="scrapli.helper.resolve_ssh_config" href="#scrapli.helper.resolve_ssh_config">resolve_ssh_config</a></code></li>
 <li><code><a title="scrapli.helper.resolve_ssh_known_hosts" href="#scrapli.helper.resolve_ssh_known_hosts">resolve_ssh_known_hosts</a></code></li>
 <li><code><a title="scrapli.helper.strip_ansi" href="#scrapli.helper.strip_ansi">strip_ansi</a></code></li>
 <li><code><a title="scrapli.helper.textfsm_parse" href="#scrapli.helper.textfsm_parse">textfsm_parse</a></code></li>
-<li><code><a title="scrapli.helper.validate_external_function" href="#scrapli.helper.validate_external_function">validate_external_function</a></code></li>
 </ul>
 </li>
 </ul>
