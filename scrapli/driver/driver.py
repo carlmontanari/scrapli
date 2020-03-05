@@ -31,7 +31,7 @@ TRANSPORT_ARGS: Dict[str, Tuple[str, ...]] = {
     "paramiko": MIKO_TRANSPORT_ARGS,
     "telnet": TELNET_TRANSPORT_ARGS,
 }
-TRANSPORT_BASE_ARGS = [
+TRANSPORT_BASE_ARGS = (
     "host",
     "port",
     "keepalive",
@@ -41,7 +41,7 @@ TRANSPORT_BASE_ARGS = [
     "timeout_socket",
     "timeout_transport",
     "timeout_exit",
-]
+)
 LOG = logging.getLogger("scrapli_base")
 
 
@@ -76,6 +76,10 @@ class Scrape:
         Scrape is the base class for NetworkDriver, and subsequent platform specific drivers (i.e.
         IOSXEDriver). Scrape can be used on its own and offers a semi-pexpect like experience in
         that it doesn't know or care about privilege levels, platform types, and things like that.
+
+        *Note* most arguments passed to Scrape do not actually get assigned to the scrape object
+        itself, but instead are used to construct the Transport and Channel classes that Scrape
+        relies on, see Transport and Channel docs for details.
 
         Args:
             host: host ip/name to connect to
@@ -142,44 +146,41 @@ class Scrape:
             TypeError: if on_connect is not a callable
 
         """
-        self.host = host.strip()
+        # create a dict of all "initialization" args for posterity and for passing to Transport
+        # and Channel objects
+        self._initialization_args: Dict[str, Any] = {}
+
         if not isinstance(port, int):
             raise TypeError(f"port should be int, got {type(port)}")
-        self.port = port
+        self._host = host.strip()
+        self._initialization_args["host"] = host.strip()
+        self._initialization_args["port"] = port
 
-        self.auth_username: str = ""
-        self.auth_password: str = ""
         if not isinstance(auth_strict_key, bool):
             raise TypeError(f"auth_strict_key should be bool, got {type(auth_strict_key)}")
-        self.auth_strict_key = auth_strict_key
+        self._initialization_args["auth_strict_key"] = auth_strict_key
         self._setup_auth(auth_username, auth_password, auth_public_key)
 
-        self.timeout_socket: int = 5
-        self.timeout_transport: int = 5
-        self.timeout_ops: int = 10
-        self.timeout_exit: bool = True
         self._setup_timeouts(timeout_socket, timeout_transport, timeout_ops, timeout_exit)
 
         if not isinstance(keepalive, bool):
             raise TypeError(f"keepalive should be bool, got {type(keepalive)}")
-        self.keepalive = keepalive
-        self.keepalive_interval = int(keepalive_interval)
         if keepalive_type not in ["network", "standard"]:
             raise ValueError(
                 f"{keepalive_type} is an invalid session_keepalive_type; must be 'network' or "
                 "'standard'."
             )
-        self.keepalive_type = keepalive_type
-        self.keepalive_pattern = keepalive_pattern
+        self._initialization_args["keepalive"] = keepalive
+        self._initialization_args["keepalive_interval"] = int(keepalive_interval)
+        self._initialization_args["keepalive_type"] = keepalive_type
+        self._initialization_args["keepalive_pattern"] = keepalive_pattern
 
-        self.comms_prompt_pattern: str = ""
-        self.comms_return_char: str = ""
-        self.comms_ansi: bool = False
         self._setup_comms(comms_prompt_pattern, comms_return_char, comms_ansi)
 
         if on_connect is not None and not callable(on_connect):
             raise TypeError(f"on_connect must be a callable, got {type(on_connect)}")
         self.on_connect = on_connect
+        self._initialization_args["on_connect"] = on_connect
 
         if transport not in ("ssh2", "paramiko", "system", "telnet"):
             raise ValueError(
@@ -187,19 +188,17 @@ class Scrape:
             )
 
         if transport != "telnet":
-            self.ssh_config_file = ""
-            self.ssh_known_hosts_file = ""
             self._setup_ssh_args(ssh_config_file, ssh_known_hosts_file)
 
         self.transport: Transport
         self.transport_class, self.transport_args = self._transport_factory(transport)
 
         self.channel: Channel
-        self.channel_args = {}
+        self.channel_args: Dict[str, Any] = {}
         for arg in CHANNEL_ARGS:
             if arg == "transport":
                 continue
-            self.channel_args[arg] = getattr(self, arg)
+            self.channel_args[arg] = self._initialization_args.get(arg)
 
     def __enter__(self) -> "Scrape":
         """
@@ -255,7 +254,7 @@ class Scrape:
             N/A
 
         """
-        return f"Scrape Object for host {self.host}"
+        return f"Scrape Object for host {self._host}"
 
     def __repr__(self) -> str:
         """
@@ -291,15 +290,19 @@ class Scrape:
             N/A
 
         """
-        self.auth_username = auth_username.strip()
+        self._initialization_args["auth_username"] = auth_username.strip()
+
         if auth_public_key:
-            self.auth_public_key = os.path.expanduser(auth_public_key.strip().encode())
+            self._initialization_args["auth_public_key"] = os.path.expanduser(
+                auth_public_key.strip().encode()
+            )
         else:
-            self.auth_public_key = auth_public_key.encode()
+            self._initialization_args["auth_public_key"] = auth_public_key.encode()
+
         if auth_password:
-            self.auth_password = auth_password.strip()
+            self._initialization_args["auth_password"] = auth_password.strip()
         else:
-            self.auth_password = auth_password
+            self._initialization_args["auth_password"] = auth_password
 
     def _setup_timeouts(
         self, timeout_socket: int, timeout_transport: int, timeout_ops: int, timeout_exit: bool
@@ -309,7 +312,7 @@ class Scrape:
 
         Args:
             timeout_socket: socket timeout to parse/set
-            timeout_transport: transport timoeut to parse/set
+            timeout_transport: transport timeout to parse/set
             timeout_ops: ops timeout to parse/set
             timeout_exit: timeout exit bool to parse/set
 
@@ -320,12 +323,13 @@ class Scrape:
             TypeError: if invalid type args provided
 
         """
-        self.timeout_socket = int(timeout_socket)
-        self.timeout_transport = int(timeout_transport)
-        self.timeout_ops = int(timeout_ops)
         if not isinstance(timeout_exit, bool):
             raise TypeError(f"timeout_exit should be bool, got {type(timeout_exit)}")
-        self.timeout_exit = timeout_exit
+
+        self._initialization_args["timeout_socket"] = int(timeout_socket)
+        self._initialization_args["timeout_transport"] = int(timeout_transport)
+        self._initialization_args["timeout_ops"] = int(timeout_ops)
+        self._initialization_args["timeout_exit"] = timeout_exit
 
     def _setup_comms(
         self, comms_prompt_pattern: str, comms_return_char: str, comms_ansi: bool
@@ -347,13 +351,15 @@ class Scrape:
         """
         # try to compile prompt to raise TypeError before opening any connections
         re.compile(comms_prompt_pattern, flags=re.M | re.I)
-        self.comms_prompt_pattern = comms_prompt_pattern
+
         if not isinstance(comms_return_char, str):
             raise TypeError(f"comms_return_char should be str, got {type(comms_return_char)}")
-        self.comms_return_char = comms_return_char
         if not isinstance(comms_ansi, bool):
             raise TypeError(f"comms_ansi should be bool, got {type(comms_ansi)}")
-        self.comms_ansi = comms_ansi
+
+        self._initialization_args["comms_prompt_pattern"] = comms_prompt_pattern
+        self._initialization_args["comms_return_char"] = comms_return_char
+        self._initialization_args["comms_ansi"] = comms_ansi
 
     def _setup_ssh_args(
         self, ssh_config_file: Union[str, bool], ssh_known_hosts_file: Union[str, bool]
@@ -376,27 +382,28 @@ class Scrape:
         """
         if not isinstance(ssh_config_file, (str, bool)):
             raise TypeError(f"`ssh_config_file` should be str or bool, got {type(ssh_config_file)}")
+        if not isinstance(ssh_known_hosts_file, (str, bool)):
+            raise TypeError(
+                "`ssh_known_hosts_file` should be str or bool, got " f"{type(ssh_known_hosts_file)}"
+            )
+
         if ssh_config_file is not False:
             if isinstance(ssh_config_file, bool):
                 cfg = ""
             else:
                 cfg = ssh_config_file
-            self.ssh_config_file = resolve_ssh_config(cfg)
+            self._initialization_args["ssh_config_file"] = resolve_ssh_config(cfg)
         else:
-            self.ssh_config_file = ""
+            self._initialization_args["ssh_config_file"] = ""
 
-        if not isinstance(ssh_known_hosts_file, (str, bool)):
-            raise TypeError(
-                "`ssh_known_hosts_file` should be str or bool, got " f"{type(ssh_known_hosts_file)}"
-            )
         if ssh_known_hosts_file is not False:
             if isinstance(ssh_known_hosts_file, bool):
                 known_hosts = ""
             else:
                 known_hosts = ssh_known_hosts_file
-            self.ssh_known_hosts_file = resolve_ssh_known_hosts(known_hosts)
+            self._initialization_args["ssh_known_hosts_file"] = resolve_ssh_known_hosts(known_hosts)
         else:
-            self.ssh_known_hosts_file = ""
+            self._initialization_args["ssh_known_hosts_file"] = ""
 
     def _transport_factory(self, transport: str) -> Tuple[Callable[..., Any], Dict[str, Any]]:
         """
@@ -417,9 +424,9 @@ class Scrape:
 
         transport_args = {}
         for arg in TRANSPORT_BASE_ARGS:
-            transport_args[arg] = getattr(self, arg)
+            transport_args[arg] = self._initialization_args.get(arg)
         for arg in required_transport_args:
-            transport_args[arg] = getattr(self, arg)
+            transport_args[arg] = self._initialization_args.get(arg)
         return transport_class, transport_args
 
     def open(self) -> None:

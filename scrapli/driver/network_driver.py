@@ -315,5 +315,5 @@ class NetworkDriver(Scrape):
         return prompt
 
     def close(self) -> None:
-        self.transport.write(f"{self.exit_command}{self.comms_return_char}")
+        self.transport.write(f"{self.exit_command}{self.channel.comms_return_char}")
         super().close()

@@ -42,10 +42,11 @@ class MockScrape(Scrape):
             "comms_return_char",
             "initial_bytes",
         )
-
         transport_args = {}
         for arg in required_transport_args:
-            transport_args[arg] = getattr(self, arg)
+            transport_args[arg] = self._initialization_args.get(arg)
+        transport_args["channel_ops"] = self.channel_ops
+        transport_args["initial_bytes"] = self.initial_bytes
         return transport_class, transport_args
 
 
@@ -64,12 +65,12 @@ class MockNetworkDriver(MockScrape, NetworkDriver):
 
 class MockTransport(Transport):
     def __init__(self, host, port, timeout_socket, comms_return_char, initial_bytes, channel_ops):
+        super().__init__(host, port, timeout_socket, keepalive=False)
         self.host = host
         self.port = port
         self.timeout_socket = timeout_socket
         self.timeout_exit = True
         self.comms_return_char = comms_return_char
-        self.session_lock = Lock()
         self.channel_ops = channel_ops
 
         self.fd = BytesIO(initial_bytes=initial_bytes)
