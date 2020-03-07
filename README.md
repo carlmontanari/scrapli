@@ -180,7 +180,7 @@ As for platforms to *run* scrapli on -- it has and will be tested on MacOS and U
 - [Basic "driver" Scrape operations](/examples/basic_usage/iosxe_driver.py)
 - [Setting up basic logging](/examples/logging/basic_logging.py)
 - [Using SSH Key for authentication](/examples/ssh_keys/ssh_keys.py)
-- [Using SSH config file](/)
+- [Using SSH config file](/examples/ssh_config_files/ssh_config_file.py)
 
 
 # Basic Usage
