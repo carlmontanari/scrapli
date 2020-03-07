@@ -301,7 +301,7 @@ class TelnetTransport(Transport):
             N/A
 
         Returns:
-            N/A  # noqa: DAR202
+           bool: True/False connection alive
 
         Raises:
             N/A
@@ -320,7 +320,7 @@ class TelnetTransport(Transport):
             N/A
 
         Returns:
-            N/A  # noqa: DAR202
+            bytes: bytes read from the telnet channel
 
         Raises:
             N/A

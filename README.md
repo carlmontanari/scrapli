@@ -63,7 +63,7 @@ scrapli -- scrap(e c)li --  is a python library focused on connecting to devices
 ## Installation
 
 In most cases installation via pip is the simplest and best way to install scrapli.
-See the [in-depth readme](docs/README.md) for more details.
+See the below or [here](#advanced-installation) for advanced installation details.
 
 ```
 pip install scrapli
@@ -206,7 +206,7 @@ In the future it would be possible for folks to contribute additional "community
 The "driver" pattern is pretty much exactly like the implementation in NAPALM. The driver extends the base class
  (`Scrape`) and the base networking driver class (`NetworkDriver`) with device specific functionality such as privilege
   escalation/de-escalation, setting appropriate prompts to search for, and picking out appropriate
-  [ntc templates](https://github.com/napalm-automation/napalm) for use with TextFSM, and so on.
+  [ntc templates](https://github.com/networktocode/ntc-templates) for use with TextFSM, and so on.
 
 All of this is focused on network device type Telnet/SSH cli interfaces, but should work on pretty much any SSH
  connection (though there are almost certainly better options for non-network type devices!). The "base" (`Scrape
