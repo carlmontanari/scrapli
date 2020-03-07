@@ -69,11 +69,11 @@ class NetworkDriver(Scrape):
 
         """
         super().__init__(**kwargs)
+
         self.auth_secondary = auth_secondary
         self.privs = PRIVS
         self.default_desired_priv: Optional[str] = None
         self.textfsm_platform: str = ""
-        self.exit_command: str = "exit"
 
     def _determine_current_priv(self, current_prompt: str) -> PrivilegeLevel:
         """
@@ -313,7 +313,3 @@ class NetworkDriver(Scrape):
         """
         prompt: str = self.channel.get_prompt()
         return prompt
-
-    def close(self) -> None:
-        self.transport.write(f"{self.exit_command}{self.channel.comms_return_char}")
-        super().close()

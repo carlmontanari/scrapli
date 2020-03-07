@@ -114,9 +114,9 @@ class Scrape:
                 scrapli will not work!
                 IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
                 for highly reliably matching for prompts however we do NOT strip trailing whitespace
-                for each line, so be sure to add '\\s*' if your device needs that. This should be
-                mostly sorted for you if using network drivers (i.e. `IOSXEDriver`). Lastly, the
-                case insensitive is just a convenience factor so i can be lazy.
+                for each line, so be sure to add '\\s?' or similar if your device needs that. This
+                should be mostly sorted for you if using network drivers (i.e. `IOSXEDriver`).
+                Lastly, the case insensitive is just a convenience factor so i can be lazy.
             comms_return_char: character to use to send returns to host
             comms_ansi: True/False strip comms_ansi characters from output
             ssh_config_file: string to path for ssh config file, True to use default ssh config file
@@ -507,6 +507,8 @@ class Scrape:
             N/A
 
         """
+        if self.on_close:
+            self.on_close(self)
         self.transport.close()
 
     def isalive(self) -> bool:
