@@ -14,20 +14,6 @@ except ImportError:
     textfsm_avail = False
 
 
-def test_valid_on_connect_func():
-    def on_open_func():
-        pass
-
-    conn = NetworkDriver(on_open=on_open_func)
-    assert callable(conn.on_open)
-
-
-def test_invalid_on_connect_func():
-    with pytest.raises(TypeError) as e:
-        NetworkDriver(on_open="not a callable")
-    assert str(e.value) == "on_open must be a callable, got <class 'str'>"
-
-
 def test__determine_current_priv(mocked_network_driver):
     conn = mocked_network_driver([])
     current_priv = conn._determine_current_priv("execprompt>")

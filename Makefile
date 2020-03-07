@@ -73,6 +73,7 @@ test_junos:
 
 .PHONY: docs
 docs:
+	rm -rf docs/scrapli
 	python -m pdoc \
 	--html \
 	--output-dir docs \

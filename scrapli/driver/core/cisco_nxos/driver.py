@@ -37,6 +37,7 @@ def nxos_on_close(conn: NetworkDriver) -> None:
     # write exit directly to the transport as channel would fail to find the prompt after sending
     # the exit command!
     conn.transport.write("exit")
+    conn.acquire_priv(conn.default_desired_priv)
     conn.transport.write(conn.channel.comms_prompt_pattern)
 
 

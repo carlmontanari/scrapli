@@ -1,8 +1,9 @@
 """scrapli.driver.network_driver"""
 import logging
 import re
+from abc import ABC, abstractmethod
 from collections import namedtuple
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Tuple, Union
 
 from scrapli.driver.driver import Scrape
 from scrapli.exceptions import CouldNotAcquirePrivLevel, UnknownPrivLevel
@@ -44,13 +45,16 @@ PrivilegeLevel = namedtuple(
     "level",
 )
 
+NoPrivLevel = PrivilegeLevel("", "", "", "", "", "", "", "", "", "")
+
 
 PRIVS: Dict[str, PrivilegeLevel] = {}
 
 LOG = logging.getLogger("scrapli_base")
 
 
-class NetworkDriver(Scrape):
+class NetworkDriver(Scrape, ABC):
+    @abstractmethod
     def __init__(
         self, auth_secondary: str = "", **kwargs: Any,
     ):
@@ -70,10 +74,11 @@ class NetworkDriver(Scrape):
         """
         super().__init__(**kwargs)
 
+        self.textfsm_platform: str = ""
         self.auth_secondary = auth_secondary
         self.privs = PRIVS
-        self.default_desired_priv: Optional[str] = None
-        self.textfsm_platform: str = ""
+        self.default_desired_priv: str = ""
+        self._current_priv_level = NoPrivLevel
 
     def _determine_current_priv(self, current_prompt: str) -> PrivilegeLevel:
         """
@@ -111,30 +116,31 @@ class NetworkDriver(Scrape):
 
         """
         current_priv = self._determine_current_priv(self.channel.get_prompt())
-        if current_priv.escalate:
-            next_priv = self.privs.get(current_priv.escalate_priv, None)
-            if next_priv is None:
-                raise UnknownPrivLevel(
-                    f"Could not get next priv level, current priv is {current_priv.name}"
+        if not current_priv.escalate:
+            return
+
+        next_priv = self.privs.get(current_priv.escalate_priv, None)
+        if next_priv is None:
+            raise UnknownPrivLevel(
+                f"Could not get next priv level, current priv is {current_priv.name}"
+            )
+        next_prompt = next_priv.pattern
+        if current_priv.escalate_auth:
+            escalate_cmd: str = current_priv.escalate
+            escalate_prompt: str = current_priv.escalate_prompt
+            escalate_auth = self.auth_secondary
+            if not isinstance(next_prompt, str):
+                raise TypeError(
+                    f"got {type(next_prompt)} for {current_priv.name} escalate priv, "
+                    "expected str"
                 )
-            next_prompt = next_priv.pattern
-            if current_priv.escalate_auth:
-                escalate_cmd: str = current_priv.escalate
-                escalate_prompt: str = current_priv.escalate_prompt
-                escalate_auth = self.auth_secondary
-                if not isinstance(next_prompt, str):
-                    raise TypeError(
-                        f"got {type(next_prompt)} for {current_priv.name} escalate priv, "
-                        "expected str"
-                    )
-                self.channel.send_inputs_interact(
-                    (escalate_cmd, escalate_prompt, escalate_auth, next_prompt),
-                    hidden_response=True,
-                )
-                self.channel.comms_prompt_pattern = next_priv.pattern
-            else:
-                self.channel.comms_prompt_pattern = next_priv.pattern
-                self.channel.send_inputs(current_priv.escalate)
+            self.channel.send_inputs_interact(
+                (escalate_cmd, escalate_prompt, escalate_auth, next_prompt), hidden_response=True,
+            )
+            self.channel.comms_prompt_pattern = next_priv.pattern
+        else:
+            self.channel.comms_prompt_pattern = next_priv.pattern
+            self.channel.send_inputs(current_priv.escalate)
 
     def _deescalate(self) -> None:
         """
@@ -179,6 +185,7 @@ class NetworkDriver(Scrape):
         while True:
             current_priv = self._determine_current_priv(self.channel.get_prompt())
             if current_priv == self.privs[desired_priv]:
+                self._current_priv_level = current_priv
                 return
             if priv_attempt_counter > len(self.privs):
                 raise CouldNotAcquirePrivLevel(
@@ -205,7 +212,8 @@ class NetworkDriver(Scrape):
             N/A
 
         """
-        self.acquire_priv(str(self.default_desired_priv))
+        if self._current_priv_level.name != self.default_desired_priv:
+            self.acquire_priv(self.default_desired_priv)
         response = self.channel.send_inputs(command, strip_prompt)[0]
 
         # update the response objects with textfsm platform; we do this here because the underlying
@@ -234,7 +242,9 @@ class NetworkDriver(Scrape):
                 f"`send_commands` expects a list of strings, got {type(commands)}. "
                 "to send a single command use the `send_command` method instead."
             )
-        self.acquire_priv(str(self.default_desired_priv))
+
+        if self._current_priv_level.name != self.default_desired_priv:
+            self.acquire_priv(self.default_desired_priv)
         responses = self.channel.send_inputs(commands, strip_prompt)
 
         # update the response objects with textfsm platform; we do this here because the underlying
@@ -271,7 +281,8 @@ class NetworkDriver(Scrape):
             N/A
 
         """
-        self.acquire_priv(str(self.default_desired_priv))
+        if self._current_priv_level.name != self.default_desired_priv:
+            self.acquire_priv(self.default_desired_priv)
         responses = self.channel.send_inputs_interact(inputs, hidden_response)
         return responses
 

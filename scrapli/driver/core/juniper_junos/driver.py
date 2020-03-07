@@ -18,6 +18,7 @@ def junos_on_open(conn: NetworkDriver) -> None:
     Raises:
         N/A
     """
+    conn.acquire_priv(conn.default_desired_priv)
     conn.channel.send_inputs("set cli complete-on-space off")
     conn.channel.send_inputs("set cli screen-length 0")
     conn.channel.send_inputs("set cli screen-width 511")

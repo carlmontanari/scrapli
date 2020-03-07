@@ -18,6 +18,7 @@ def iosxe_on_open(conn: NetworkDriver) -> None:
     Raises:
         N/A
     """
+    conn.acquire_priv(conn.default_desired_priv)
     conn.channel.send_inputs("terminal length 0")
 
 

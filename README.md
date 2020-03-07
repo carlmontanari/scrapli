@@ -55,11 +55,11 @@ The final piece of scrapli is the actual "driver" -- or the component that binds
   a "raw" SSH (or telnet) connection that is created by instantiating a Transport object, and a Channel object
   . `Scrape` provides (via Channel) read/write methods and not much else -- this should feel familiar if you have
    used paramiko in the past. More specific "drivers" can inherit from this class to extend functionality of the
-    driver to make it more friendly for network devices. In fact, there is a `NetworkDriver` which does just that
-    . This `NetworkDriver` isn't really meant to be used directly though, but to be further extended and built upon
-     instead. As this library is focused on interacting with network devices, an example scrapli driver (built on the
-      `NetworkDriver`) would be the `IOSXE` driver -- to, as you may have guessed, interact with devices running
-       Cisco's IOS-XE operating system.
+    driver to make it more friendly for network devices. In fact, there is a `NetworkDriver` abstract base class which
+     does just that. This `NetworkDriver` isn't really meant to be used directly though (hence why it is an ABC), but
+      to be further extended and built upon instead. As this library is focused on interacting with network devices
+      , an example scrapli driver (built on the `NetworkDriver`) would be the `IOSXE` driver -- to, as you may have
+       guessed, interact with devices running Cisco's IOS-XE operating system.
 
 
 # Table of Contents
