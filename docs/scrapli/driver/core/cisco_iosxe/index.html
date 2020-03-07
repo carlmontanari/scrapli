@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.7.4" />
+<meta name="generator" content="pdoc 0.7.5" />
 <title>scrapli.driver.core.cisco_iosxe API documentation</title>
 <meta name="description" content="scrapli.driver.core.cisco_iosxe" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
@@ -49,14 +49,23 @@ __all__ = (&#34;IOSXEDriver&#34;,)</code></pre>
 <dl>
 <dt id="scrapli.driver.core.cisco_iosxe.IOSXEDriver"><code class="flex name class">
 <span>class <span class="ident">IOSXEDriver</span></span>
-<span>(</span><span>auth_secondary='', on_open=None, on_close=None, **kwargs)</span>
+<span>(</span><span>comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, on_open=None, on_close=None, auth_secondary='', **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>IOSXEDriver Object</p>
+<section class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<p>IOSXEDriver Object</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>auth_secondary</code></strong></dt>
-<dd>password to use for secondary authentication (enable)</dd>
+<dt><strong><code>comms_prompt_pattern</code></strong></dt>
+<dd>raw string regex pattern &ndash; preferably use <code>^</code> and <code>$</code> anchors!
+this is the single most important attribute here! if this does not match a prompt,
+scrapli will not work!
+IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
+for highly reliably matching for prompts however we do NOT strip trailing whitespace
+for each line, so be sure to add '\s*' if your device needs that. This should be
+mostly sorted for you if using network drivers (i.e. <a title="scrapli.driver.core.cisco_iosxe.IOSXEDriver" href="#scrapli.driver.core.cisco_iosxe.IOSXEDriver"><code>IOSXEDriver</code></a>). Lastly, the
+case insensitive is just a convenience factor so i can be lazy.</dd>
 <dt><strong><code>on_open</code></strong></dt>
 <dd>callable that accepts the class instance as its only argument. this callable,
 if provided, is executed immediately after authentication is completed. Common use
@@ -67,6 +76,8 @@ message that prompts a user upon connection</dd>
 if provided, is executed immediately prior to closing the underlying transport.
 Common use cases for this callable would be to save configurations prior to exiting,
 or to logout properly to free up vtys or similar.</dd>
+<dt><strong><code>auth_secondary</code></strong></dt>
+<dd>password to use for secondary authentication (enable)</dd>
 <dt><strong><code>**kwargs</code></strong></dt>
 <dd>keyword args to pass to inherited class(es)</dd>
 </dl>
@@ -88,16 +99,24 @@ or to logout properly to free up vtys or similar.</dd>
 <pre><code class="python">class IOSXEDriver(NetworkDriver):
     def __init__(
         self,
-        auth_secondary: str = &#34;&#34;,
+        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]$&#34;,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
+        auth_secondary: str = &#34;&#34;,
         **kwargs: Dict[str, Any],
     ):
         &#34;&#34;&#34;
         IOSXEDriver Object
 
         Args:
-            auth_secondary: password to use for secondary authentication (enable)
+            comms_prompt_pattern: raw string regex pattern -- preferably use `^` and `$` anchors!
+                this is the single most important attribute here! if this does not match a prompt,
+                scrapli will not work!
+                IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
+                for highly reliably matching for prompts however we do NOT strip trailing whitespace
+                for each line, so be sure to add &#39;\\s*&#39; if your device needs that. This should be
+                mostly sorted for you if using network drivers (i.e. `IOSXEDriver`). Lastly, the
+                case insensitive is just a convenience factor so i can be lazy.
             on_open: callable that accepts the class instance as its only argument. this callable,
                 if provided, is executed immediately after authentication is completed. Common use
                 cases for this callable would be to disable paging or accept any kind of banner
@@ -106,6 +125,7 @@ or to logout properly to free up vtys or similar.</dd>
                 if provided, is executed immediately prior to closing the underlying transport.
                 Common use cases for this callable would be to save configurations prior to exiting,
                 or to logout properly to free up vtys or similar.
+            auth_secondary: password to use for secondary authentication (enable)
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -118,7 +138,15 @@ or to logout properly to free up vtys or similar.</dd>
             on_open = iosxe_on_open
         if on_close is None:
             on_close = iosxe_on_close
-        super().__init__(auth_secondary, on_open=on_open, on_close=on_close, **kwargs)
+
+        super().__init__(
+            auth_secondary,
+            comms_prompt_pattern=comms_prompt_pattern,
+            on_open=on_open,
+            on_close=on_close,
+            **kwargs,
+        )
+
         self.privs = PRIVS
         self.default_desired_priv = &#34;privilege_exec&#34;
         self.textfsm_platform = &#34;cisco_ios&#34;</code></pre>
@@ -127,6 +155,7 @@ or to logout properly to free up vtys or similar.</dd>
 <ul class="hlist">
 <li><a title="scrapli.driver.network_driver.NetworkDriver" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver">NetworkDriver</a></li>
 <li><a title="scrapli.driver.driver.Scrape" href="../../driver.html#scrapli.driver.driver.Scrape">Scrape</a></li>
+<li>abc.ABC</li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -175,7 +204,7 @@ or to logout properly to free up vtys or similar.</dd>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.4</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.5</a>.</p>
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad()</script>

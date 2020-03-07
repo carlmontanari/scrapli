@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.7.4" />
+<meta name="generator" content="pdoc 0.7.5" />
 <title>scrapli.driver.core.cisco_nxos.driver API documentation</title>
 <meta name="description" content="scrapli.driver.core.cisco_nxos.driver" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
@@ -61,7 +61,11 @@ def nxos_on_close(conn: NetworkDriver) -&gt; None:
     Raises:
         N/A
     &#34;&#34;&#34;
-    conn.channel.send_inputs(&#34;exit&#34;)
+    # write exit directly to the transport as channel would fail to find the prompt after sending
+    # the exit command!
+    conn.transport.write(&#34;exit&#34;)
+    conn.acquire_priv(conn.default_desired_priv)
+    conn.transport.write(conn.channel.comms_prompt_pattern)
 
 
 NXOS_ARG_MAPPER = {
@@ -74,7 +78,7 @@ NXOS_ARG_MAPPER = {
 PRIVS = {
     &#34;exec&#34;: (
         PrivilegeLevel(
-            r&#34;^[a-z0-9.\-@()/:]{1,32}&gt;\s*$&#34;,
+            r&#34;^[a-z0-9.\-@()/:]{1,32}&gt;\s?$&#34;,
             &#34;exec&#34;,
             &#34;&#34;,
             &#34;&#34;,
@@ -88,7 +92,7 @@ PRIVS = {
     ),
     &#34;privilege_exec&#34;: (
         PrivilegeLevel(
-            r&#34;^[a-z0-9.\-@/:]{1,32}#\s*$&#34;,
+            r&#34;^[a-z0-9.\-@/:]{1,32}#\s?$&#34;,
             &#34;privilege_exec&#34;,
             &#34;exec&#34;,
             &#34;disable&#34;,
@@ -102,7 +106,7 @@ PRIVS = {
     ),
     &#34;configuration&#34;: (
         PrivilegeLevel(
-            r&#34;^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{0,16}\)#\s*$&#34;,
+            r&#34;^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{0,16}\)#\s?$&#34;,
             &#34;configuration&#34;,
             &#34;priv&#34;,
             &#34;end&#34;,
@@ -116,7 +120,7 @@ PRIVS = {
     ),
     &#34;special_configuration&#34;: (
         PrivilegeLevel(
-            r&#34;^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{1,16}\)#\s*$&#34;,
+            r&#34;^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{1,16}\)#\s?$&#34;,
             &#34;special_configuration&#34;,
             &#34;priv&#34;,
             &#34;end&#34;,
@@ -134,17 +138,16 @@ PRIVS = {
 class NXOSDriver(NetworkDriver):
     def __init__(
         self,
-        auth_secondary: str = &#34;&#34;,
-        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]\s*$&#34;,
+        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]\s?$&#34;,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
+        auth_secondary: str = &#34;&#34;,
         **kwargs: Dict[str, Any],
     ):
         &#34;&#34;&#34;
         NXOSDriver Object
 
         Args:
-            auth_secondary: password to use for secondary authentication (enable)
             comms_prompt_pattern: raw string regex pattern -- preferably use `^` and `$` anchors!
                 this is the single most important attribute here! if this does not match a prompt,
                 scrapli will not work!
@@ -161,6 +164,7 @@ class NXOSDriver(NetworkDriver):
                 if provided, is executed immediately prior to closing the underlying transport.
                 Common use cases for this callable would be to save configurations prior to exiting,
                 or to logout properly to free up vtys or similar.
+            auth_secondary: password to use for secondary authentication (enable)
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -173,6 +177,7 @@ class NXOSDriver(NetworkDriver):
             on_open = nxos_on_open
         if on_close is None:
             on_close = nxos_on_close
+
         super().__init__(
             auth_secondary,
             comms_prompt_pattern=comms_prompt_pattern,
@@ -180,6 +185,7 @@ class NXOSDriver(NetworkDriver):
             on_close=on_close,
             **kwargs,
         )
+
         self.privs = PRIVS
         self.default_desired_priv = &#34;privilege_exec&#34;
         self.textfsm_platform = &#34;cisco_nxos&#34;</code></pre>
@@ -230,7 +236,11 @@ class NXOSDriver(NetworkDriver):
     Raises:
         N/A
     &#34;&#34;&#34;
-    conn.channel.send_inputs(&#34;exit&#34;)</code></pre>
+    # write exit directly to the transport as channel would fail to find the prompt after sending
+    # the exit command!
+    conn.transport.write(&#34;exit&#34;)
+    conn.acquire_priv(conn.default_desired_priv)
+    conn.transport.write(conn.channel.comms_prompt_pattern)</code></pre>
 </details>
 </dd>
 <dt id="scrapli.driver.core.cisco_nxos.driver.nxos_on_open"><code class="name flex">
@@ -281,14 +291,14 @@ class NXOSDriver(NetworkDriver):
 <dl>
 <dt id="scrapli.driver.core.cisco_nxos.driver.NXOSDriver"><code class="flex name class">
 <span>class <span class="ident">NXOSDriver</span></span>
-<span>(</span><span>auth_secondary='', comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]\\s*$&#x27;, on_open=None, on_close=None, **kwargs)</span>
+<span>(</span><span>comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]\\s?$&#x27;, on_open=None, on_close=None, auth_secondary='', **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>NXOSDriver Object</p>
+<section class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<p>NXOSDriver Object</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>auth_secondary</code></strong></dt>
-<dd>password to use for secondary authentication (enable)</dd>
 <dt><strong><code>comms_prompt_pattern</code></strong></dt>
 <dd>raw string regex pattern &ndash; preferably use <code>^</code> and <code>$</code> anchors!
 this is the single most important attribute here! if this does not match a prompt,
@@ -308,6 +318,8 @@ message that prompts a user upon connection</dd>
 if provided, is executed immediately prior to closing the underlying transport.
 Common use cases for this callable would be to save configurations prior to exiting,
 or to logout properly to free up vtys or similar.</dd>
+<dt><strong><code>auth_secondary</code></strong></dt>
+<dd>password to use for secondary authentication (enable)</dd>
 <dt><strong><code>**kwargs</code></strong></dt>
 <dd>keyword args to pass to inherited class(es)</dd>
 </dl>
@@ -329,17 +341,16 @@ or to logout properly to free up vtys or similar.</dd>
 <pre><code class="python">class NXOSDriver(NetworkDriver):
     def __init__(
         self,
-        auth_secondary: str = &#34;&#34;,
-        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]\s*$&#34;,
+        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]\s?$&#34;,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
+        auth_secondary: str = &#34;&#34;,
         **kwargs: Dict[str, Any],
     ):
         &#34;&#34;&#34;
         NXOSDriver Object
 
         Args:
-            auth_secondary: password to use for secondary authentication (enable)
             comms_prompt_pattern: raw string regex pattern -- preferably use `^` and `$` anchors!
                 this is the single most important attribute here! if this does not match a prompt,
                 scrapli will not work!
@@ -356,6 +367,7 @@ or to logout properly to free up vtys or similar.</dd>
                 if provided, is executed immediately prior to closing the underlying transport.
                 Common use cases for this callable would be to save configurations prior to exiting,
                 or to logout properly to free up vtys or similar.
+            auth_secondary: password to use for secondary authentication (enable)
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -368,6 +380,7 @@ or to logout properly to free up vtys or similar.</dd>
             on_open = nxos_on_open
         if on_close is None:
             on_close = nxos_on_close
+
         super().__init__(
             auth_secondary,
             comms_prompt_pattern=comms_prompt_pattern,
@@ -375,6 +388,7 @@ or to logout properly to free up vtys or similar.</dd>
             on_close=on_close,
             **kwargs,
         )
+
         self.privs = PRIVS
         self.default_desired_priv = &#34;privilege_exec&#34;
         self.textfsm_platform = &#34;cisco_nxos&#34;</code></pre>
@@ -383,6 +397,7 @@ or to logout properly to free up vtys or similar.</dd>
 <ul class="hlist">
 <li><a title="scrapli.driver.network_driver.NetworkDriver" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver">NetworkDriver</a></li>
 <li><a title="scrapli.driver.driver.Scrape" href="../../driver.html#scrapli.driver.driver.Scrape">Scrape</a></li>
+<li>abc.ABC</li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -432,7 +447,7 @@ or to logout properly to free up vtys or similar.</dd>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.4</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.5</a>.</p>
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad()</script>

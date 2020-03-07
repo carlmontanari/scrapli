@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.7.4" />
+<meta name="generator" content="pdoc 0.7.5" />
 <title>scrapli.driver API documentation</title>
 <meta name="description" content="scrapli.driver" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
@@ -65,7 +65,9 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
 <span>(</span><span>auth_secondary='', **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>BaseNetworkDriver Object</p>
+<section class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<p>BaseNetworkDriver Object</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>auth_secondary</code></strong></dt>
@@ -88,7 +90,8 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class NetworkDriver(Scrape):
+<pre><code class="python">class NetworkDriver(Scrape, ABC):
+    @abstractmethod
     def __init__(
         self, auth_secondary: str = &#34;&#34;, **kwargs: Any,
     ):
@@ -107,11 +110,12 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
 
         &#34;&#34;&#34;
         super().__init__(**kwargs)
+
+        self.textfsm_platform: str = &#34;&#34;
         self.auth_secondary = auth_secondary
         self.privs = PRIVS
-        self.default_desired_priv: Optional[str] = None
-        self.textfsm_platform: str = &#34;&#34;
-        self.exit_command: str = &#34;exit&#34;
+        self.default_desired_priv: str = &#34;&#34;
+        self._current_priv_level = NoPrivLevel
 
     def _determine_current_priv(self, current_prompt: str) -&gt; PrivilegeLevel:
         &#34;&#34;&#34;
@@ -149,30 +153,31 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
 
         &#34;&#34;&#34;
         current_priv = self._determine_current_priv(self.channel.get_prompt())
-        if current_priv.escalate:
-            next_priv = self.privs.get(current_priv.escalate_priv, None)
-            if next_priv is None:
-                raise UnknownPrivLevel(
-                    f&#34;Could not get next priv level, current priv is {current_priv.name}&#34;
+        if not current_priv.escalate:
+            return
+
+        next_priv = self.privs.get(current_priv.escalate_priv, None)
+        if next_priv is None:
+            raise UnknownPrivLevel(
+                f&#34;Could not get next priv level, current priv is {current_priv.name}&#34;
+            )
+        next_prompt = next_priv.pattern
+        if current_priv.escalate_auth:
+            escalate_cmd: str = current_priv.escalate
+            escalate_prompt: str = current_priv.escalate_prompt
+            escalate_auth = self.auth_secondary
+            if not isinstance(next_prompt, str):
+                raise TypeError(
+                    f&#34;got {type(next_prompt)} for {current_priv.name} escalate priv, &#34;
+                    &#34;expected str&#34;
                 )
-            next_prompt = next_priv.pattern
-            if current_priv.escalate_auth:
-                escalate_cmd: str = current_priv.escalate
-                escalate_prompt: str = current_priv.escalate_prompt
-                escalate_auth = self.auth_secondary
-                if not isinstance(next_prompt, str):
-                    raise TypeError(
-                        f&#34;got {type(next_prompt)} for {current_priv.name} escalate priv, &#34;
-                        &#34;expected str&#34;
-                    )
-                self.channel.send_inputs_interact(
-                    (escalate_cmd, escalate_prompt, escalate_auth, next_prompt),
-                    hidden_response=True,
-                )
-                self.channel.comms_prompt_pattern = next_priv.pattern
-            else:
-                self.channel.comms_prompt_pattern = next_priv.pattern
-                self.channel.send_inputs(current_priv.escalate)
+            self.channel.send_inputs_interact(
+                (escalate_cmd, escalate_prompt, escalate_auth, next_prompt), hidden_response=True,
+            )
+            self.channel.comms_prompt_pattern = next_priv.pattern
+        else:
+            self.channel.comms_prompt_pattern = next_priv.pattern
+            self.channel.send_inputs(current_priv.escalate)
 
     def _deescalate(self) -&gt; None:
         &#34;&#34;&#34;
@@ -217,6 +222,7 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
         while True:
             current_priv = self._determine_current_priv(self.channel.get_prompt())
             if current_priv == self.privs[desired_priv]:
+                self._current_priv_level = current_priv
                 return
             if priv_attempt_counter &gt; len(self.privs):
                 raise CouldNotAcquirePrivLevel(
@@ -243,7 +249,8 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
             N/A
 
         &#34;&#34;&#34;
-        self.acquire_priv(str(self.default_desired_priv))
+        if self._current_priv_level.name != self.default_desired_priv:
+            self.acquire_priv(self.default_desired_priv)
         response = self.channel.send_inputs(command, strip_prompt)[0]
 
         # update the response objects with textfsm platform; we do this here because the underlying
@@ -272,7 +279,9 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
                 f&#34;`send_commands` expects a list of strings, got {type(commands)}. &#34;
                 &#34;to send a single command use the `send_command` method instead.&#34;
             )
-        self.acquire_priv(str(self.default_desired_priv))
+
+        if self._current_priv_level.name != self.default_desired_priv:
+            self.acquire_priv(self.default_desired_priv)
         responses = self.channel.send_inputs(commands, strip_prompt)
 
         # update the response objects with textfsm platform; we do this here because the underlying
@@ -309,7 +318,8 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
             N/A
 
         &#34;&#34;&#34;
-        self.acquire_priv(str(self.default_desired_priv))
+        if self._current_priv_level.name != self.default_desired_priv:
+            self.acquire_priv(self.default_desired_priv)
         responses = self.channel.send_inputs_interact(inputs, hidden_response)
         return responses
 
@@ -350,15 +360,12 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
 
         &#34;&#34;&#34;
         prompt: str = self.channel.get_prompt()
-        return prompt
-
-    def close(self) -&gt; None:
-        self.transport.write(f&#34;{self.exit_command}{self.channel.comms_return_char}&#34;)
-        super().close()</code></pre>
+        return prompt</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="scrapli.driver.driver.Scrape" href="driver.html#scrapli.driver.driver.Scrape">Scrape</a></li>
+<li>abc.ABC</li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -415,6 +422,7 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
     while True:
         current_priv = self._determine_current_priv(self.channel.get_prompt())
         if current_priv == self.privs[desired_priv]:
+            self._current_priv_level = current_priv
             return
         if priv_attempt_counter &gt; len(self.privs):
             raise CouldNotAcquirePrivLevel(
@@ -507,7 +515,8 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
         N/A
 
     &#34;&#34;&#34;
-    self.acquire_priv(str(self.default_desired_priv))
+    if self._current_priv_level.name != self.default_desired_priv:
+        self.acquire_priv(self.default_desired_priv)
     response = self.channel.send_inputs(command, strip_prompt)[0]
 
     # update the response objects with textfsm platform; we do this here because the underlying
@@ -563,7 +572,9 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
             f&#34;`send_commands` expects a list of strings, got {type(commands)}. &#34;
             &#34;to send a single command use the `send_command` method instead.&#34;
         )
-    self.acquire_priv(str(self.default_desired_priv))
+
+    if self._current_priv_level.name != self.default_desired_priv:
+        self.acquire_priv(self.default_desired_priv)
     responses = self.channel.send_inputs(commands, strip_prompt)
 
     # update the response objects with textfsm platform; we do this here because the underlying
@@ -684,7 +695,8 @@ final_prompt - final prompt to expect</dd>
         N/A
 
     &#34;&#34;&#34;
-    self.acquire_priv(str(self.default_desired_priv))
+    if self._current_priv_level.name != self.default_desired_priv:
+        self.acquire_priv(self.default_desired_priv)
     responses = self.channel.send_inputs_interact(inputs, hidden_response)
     return responses</code></pre>
 </details>
@@ -760,9 +772,9 @@ this is the single most important attribute here! if this does not match a promp
 scrapli will not work!
 IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
 for highly reliably matching for prompts however we do NOT strip trailing whitespace
-for each line, so be sure to add '\s*' if your device needs that. This should be
-mostly sorted for you if using network drivers (i.e. <code>IOSXEDriver</code>). Lastly, the
-case insensitive is just a convenience factor so i can be lazy.</dd>
+for each line, so be sure to add '\s?' or similar if your device needs that. This
+should be mostly sorted for you if using network drivers (i.e. <code>IOSXEDriver</code>).
+Lastly, the case insensitive is just a convenience factor so i can be lazy.</dd>
 <dt><strong><code>comms_return_char</code></strong></dt>
 <dd>character to use to send returns to host</dd>
 <dt><strong><code>comms_ansi</code></strong></dt>
@@ -885,9 +897,9 @@ ints where appropriate (i.e. timeouts)</dd>
                 scrapli will not work!
                 IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
                 for highly reliably matching for prompts however we do NOT strip trailing whitespace
-                for each line, so be sure to add &#39;\\s*&#39; if your device needs that. This should be
-                mostly sorted for you if using network drivers (i.e. `IOSXEDriver`). Lastly, the
-                case insensitive is just a convenience factor so i can be lazy.
+                for each line, so be sure to add &#39;\\s?&#39; or similar if your device needs that. This
+                should be mostly sorted for you if using network drivers (i.e. `IOSXEDriver`).
+                Lastly, the case insensitive is just a convenience factor so i can be lazy.
             comms_return_char: character to use to send returns to host
             comms_ansi: True/False strip comms_ansi characters from output
             ssh_config_file: string to path for ssh config file, True to use default ssh config file
@@ -1278,6 +1290,8 @@ ints where appropriate (i.e. timeouts)</dd>
             N/A
 
         &#34;&#34;&#34;
+        if self.on_close:
+            self.on_close(self)
         self.transport.close()
 
     def isalive(self) -&gt; bool:
@@ -1342,6 +1356,8 @@ ints where appropriate (i.e. timeouts)</dd>
         N/A
 
     &#34;&#34;&#34;
+    if self.on_close:
+        self.on_close(self)
     self.transport.close()</code></pre>
 </details>
 </dd>
@@ -1484,7 +1500,7 @@ ints where appropriate (i.e. timeouts)</dd>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.4</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.5</a>.</p>
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad()</script>
