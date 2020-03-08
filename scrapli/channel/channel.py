@@ -215,10 +215,10 @@ class Channel:
             strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
 
         Returns:
-            responses: list of Response object(s)
+            Response: list of Response object(s)
 
         Raises:
-            N/A
+            TypeError: if input is anything but a string
 
         """
         if not isinstance(channel_input, str):

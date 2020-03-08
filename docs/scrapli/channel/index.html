@@ -280,10 +280,10 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
             strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
 
         Returns:
-            responses: list of Response object(s)
+            Response: list of Response object(s)
 
         Raises:
-            N/A
+            TypeError: if input is anything but a string
 
         &#34;&#34;&#34;
         if not isinstance(channel_input, str):
@@ -533,13 +533,13 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>responses</code></strong></dt>
+<dt><strong><code>Response</code></strong></dt>
 <dd>list of Response object(s)</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
+<dt><strong><code>TypeError</code></strong></dt>
+<dd>if input is anything but a string</dd>
 </dl></section>
 <details class="source">
 <summary>
@@ -554,10 +554,10 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
         strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
 
     Returns:
-        responses: list of Response object(s)
+        Response: list of Response object(s)
 
     Raises:
-        N/A
+        TypeError: if input is anything but a string
 
     &#34;&#34;&#34;
     if not isinstance(channel_input, str):
