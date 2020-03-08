@@ -63,7 +63,7 @@ class Scrape:
         keepalive_interval: int = 30,
         keepalive_type: str = "network",
         keepalive_pattern: str = "\005",
-        comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
+        comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]\s*$",
         comms_return_char: str = "\n",
         comms_ansi: bool = False,
         ssh_config_file: Union[str, bool] = False,
