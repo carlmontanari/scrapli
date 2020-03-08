@@ -287,7 +287,7 @@ class NetworkDriver(Scrape, ABC):
 
         return responses
 
-    def send_interactive(self, inputs: List[str], hidden_response: bool = False) -&gt; List[Response]:
+    def send_interactive(self, inputs: List[str], hidden_response: bool = False) -&gt; Response:
         &#34;&#34;&#34;
         Send inputs in an interactive fashion; used to handle prompts
 
@@ -306,7 +306,7 @@ class NetworkDriver(Scrape, ABC):
             hidden_response: True/False response is hidden (i.e. password input)
 
         Returns:
-            responses: List of Scrape Response objects
+            Response: scrapli Response object
 
         Raises:
             N/A
@@ -314,8 +314,8 @@ class NetworkDriver(Scrape, ABC):
         &#34;&#34;&#34;
         if self._current_priv_level.name != self.default_desired_priv:
             self.acquire_priv(self.default_desired_priv)
-        responses = self.channel.send_inputs_interact(inputs, hidden_response)
-        return responses
+        response = self.channel.send_inputs_interact(inputs, hidden_response)
+        return response
 
     def send_configs(
         self, configs: Union[str, List[str]], strip_prompt: bool = True
@@ -606,7 +606,7 @@ inheritance.</p>
 
         return responses
 
-    def send_interactive(self, inputs: List[str], hidden_response: bool = False) -&gt; List[Response]:
+    def send_interactive(self, inputs: List[str], hidden_response: bool = False) -&gt; Response:
         &#34;&#34;&#34;
         Send inputs in an interactive fashion; used to handle prompts
 
@@ -625,7 +625,7 @@ inheritance.</p>
             hidden_response: True/False response is hidden (i.e. password input)
 
         Returns:
-            responses: List of Scrape Response objects
+            Response: scrapli Response object
 
         Raises:
             N/A
@@ -633,8 +633,8 @@ inheritance.</p>
         &#34;&#34;&#34;
         if self._current_priv_level.name != self.default_desired_priv:
             self.acquire_priv(self.default_desired_priv)
-        responses = self.channel.send_inputs_interact(inputs, hidden_response)
-        return responses
+        response = self.channel.send_inputs_interact(inputs, hidden_response)
+        return response
 
     def send_configs(
         self, configs: Union[str, List[str]], strip_prompt: bool = True
@@ -981,8 +981,8 @@ final_prompt - final prompt to expect</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>responses</code></strong></dt>
-<dd>List of Scrape Response objects</dd>
+<dt><strong><code>Response</code></strong></dt>
+<dd>scrapli Response object</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
@@ -993,7 +993,7 @@ final_prompt - final prompt to expect</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def send_interactive(self, inputs: List[str], hidden_response: bool = False) -&gt; List[Response]:
+<pre><code class="python">def send_interactive(self, inputs: List[str], hidden_response: bool = False) -&gt; Response:
     &#34;&#34;&#34;
     Send inputs in an interactive fashion; used to handle prompts
 
@@ -1012,7 +1012,7 @@ final_prompt - final prompt to expect</dd>
         hidden_response: True/False response is hidden (i.e. password input)
 
     Returns:
-        responses: List of Scrape Response objects
+        Response: scrapli Response object
 
     Raises:
         N/A
@@ -1020,8 +1020,8 @@ final_prompt - final prompt to expect</dd>
     &#34;&#34;&#34;
     if self._current_priv_level.name != self.default_desired_priv:
         self.acquire_priv(self.default_desired_priv)
-    responses = self.channel.send_inputs_interact(inputs, hidden_response)
-    return responses</code></pre>
+    response = self.channel.send_inputs_interact(inputs, hidden_response)
+    return response</code></pre>
 </details>
 </dd>
 </dl>

@@ -260,7 +260,7 @@ class NetworkDriver(Scrape, ABC):
 
         return responses
 
-    def send_interactive(self, inputs: List[str], hidden_response: bool = False) -> List[Response]:
+    def send_interactive(self, inputs: List[str], hidden_response: bool = False) -> Response:
         """
         Send inputs in an interactive fashion; used to handle prompts
 
@@ -279,7 +279,7 @@ class NetworkDriver(Scrape, ABC):
             hidden_response: True/False response is hidden (i.e. password input)
 
         Returns:
-            responses: List of Scrape Response objects
+            Response: scrapli Response object
 
         Raises:
             N/A
@@ -287,8 +287,8 @@ class NetworkDriver(Scrape, ABC):
         """
         if self._current_priv_level.name != self.default_desired_priv:
             self.acquire_priv(self.default_desired_priv)
-        responses = self.channel.send_inputs_interact(inputs, hidden_response)
-        return responses
+        response = self.channel.send_inputs_interact(inputs, hidden_response)
+        return response
 
     def send_configs(
         self, configs: Union[str, List[str]], strip_prompt: bool = True

@@ -67,7 +67,7 @@ class Scrape:
         comms_return_char: str = "\n",
         comms_ansi: bool = False,
         ssh_config_file: Union[str, bool] = False,
-        ssh_known_hosts_file: str = "",
+        ssh_known_hosts_file: Union[str, bool] = False,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         transport: str = "system",
@@ -146,53 +146,23 @@ class Scrape:
             N/A  # noqa: DAR202
 
         Raises:
-            ValueError: if driver value is invalid
-            TypeError: if auth_strict_key/keepalive is not a bool or values cannot be converted to
-                ints where appropriate (i.e. timeouts)
-            TypeError: if on_open is not a callable
-            TypeError: if on_close is not a callable
+            ValueError: if transport value is invalid
 
         """
         # create a dict of all "initialization" args for posterity and for passing to Transport
         # and Channel objects
         self._initialization_args: Dict[str, Any] = {}
 
-        if not isinstance(port, int):
-            raise TypeError(f"port should be int, got {type(port)}")
-        self._host = host.strip()
-        self._initialization_args["host"] = host.strip()
-        self._initialization_args["port"] = port
-
+        self._setup_host(host, port)
         self._setup_auth(auth_username, auth_password, auth_public_key, auth_strict_key)
-
         self._setup_timeouts(timeout_socket, timeout_transport, timeout_ops, timeout_exit)
-
-        if not isinstance(keepalive, bool):
-            raise TypeError(f"keepalive should be bool, got {type(keepalive)}")
-        if keepalive_type not in ["network", "standard"]:
-            raise ValueError(
-                f"{keepalive_type} is an invalid session_keepalive_type; must be 'network' or "
-                "'standard'."
-            )
-        self._initialization_args["keepalive"] = keepalive
-        self._initialization_args["keepalive_interval"] = int(keepalive_interval)
-        self._initialization_args["keepalive_type"] = keepalive_type
-        self._initialization_args["keepalive_pattern"] = keepalive_pattern
-
+        self._setup_keepalive(keepalive, keepalive_type, keepalive_interval, keepalive_pattern)
         self._setup_comms(comms_prompt_pattern, comms_return_char, comms_ansi)
-
-        if on_open is not None and not callable(on_open):
-            raise TypeError(f"on_open must be a callable, got {type(on_open)}")
-        if on_close is not None and not callable(on_close):
-            raise TypeError(f"on_close must be a callable, got {type(on_close)}")
-        self.on_open = on_open
-        self.on_close = on_close
-        self._initialization_args["on_open"] = on_open
-        self._initialization_args["on_close"] = on_open
+        self._setup_callables(on_open, on_close)
 
         if transport not in ("ssh2", "paramiko", "system", "telnet"):
             raise ValueError(
-                f"transport should be one of ssh2|paramiko|system|telnet, got {transport}"
+                f"`transport` should be one of ssh2|paramiko|system|telnet, got `{transport}`"
             )
         self._transport = transport
 
@@ -305,6 +275,30 @@ class Scrape:
             f"transport={self._transport!r})"
         )
 
+    def _setup_host(self, host: str, port: int) -> None:
+        """
+        Parse and setup host attributes
+
+        Args:
+            host: host to parse/set
+            port: port to parse/set
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            ValueError: if host is not provided
+            TypeError: if port is not an integer
+
+        """
+        if not host:
+            raise ValueError("`host` should be a hostname/ip address, got nothing!")
+        if not isinstance(port, int):
+            raise TypeError(f"`port` should be int, got {type(port)}")
+        self._host = host.strip()
+        self._initialization_args["host"] = host.strip()
+        self._initialization_args["port"] = port
+
     def _setup_auth(
         self, auth_username: str, auth_password: str, auth_public_key: str, auth_strict_key: bool
     ) -> None:
@@ -326,10 +320,11 @@ class Scrape:
 
         """
         if not isinstance(auth_strict_key, bool):
-            raise TypeError(f"auth_strict_key should be bool, got {type(auth_strict_key)}")
-        self._initialization_args["auth_strict_key"] = auth_strict_key
+            raise TypeError(f"`auth_strict_key` should be bool, got {type(auth_strict_key)}")
 
+        self._initialization_args["auth_strict_key"] = auth_strict_key
         self._initialization_args["auth_username"] = auth_username.strip()
+        self._initialization_args["auth_password"] = auth_password.strip()
 
         if auth_public_key:
             public_key_path = Path.expanduser(Path(auth_public_key.strip()))
@@ -340,11 +335,6 @@ class Scrape:
             )
         else:
             self._initialization_args["auth_public_key"] = auth_public_key.encode()
-
-        if auth_password:
-            self._initialization_args["auth_password"] = auth_password.strip()
-        else:
-            self._initialization_args["auth_password"] = auth_password
 
     def _setup_timeouts(
         self, timeout_socket: int, timeout_transport: int, timeout_ops: int, timeout_exit: bool
@@ -366,12 +356,43 @@ class Scrape:
 
         """
         if not isinstance(timeout_exit, bool):
-            raise TypeError(f"timeout_exit should be bool, got {type(timeout_exit)}")
+            raise TypeError(f"`timeout_exit` should be bool, got {type(timeout_exit)}")
 
         self._initialization_args["timeout_socket"] = int(timeout_socket)
         self._initialization_args["timeout_transport"] = int(timeout_transport)
         self._initialization_args["timeout_ops"] = int(timeout_ops)
         self._initialization_args["timeout_exit"] = timeout_exit
+
+    def _setup_keepalive(
+        self, keepalive: bool, keepalive_type: str, keepalive_interval: int, keepalive_pattern: str
+    ) -> None:
+        """
+        Parse and setup keepalive attributes
+
+        Args:
+            keepalive: keepalive to parse/set
+            keepalive_type: keepalive_type to parse/set
+            keepalive_interval: keepalive_interval to parse/set
+            keepalive_pattern: keepalive_pattern to parse/set
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            TypeError: if keepalive is not a bool
+            ValueError: if keepalive_type is not valid
+
+        """
+        if not isinstance(keepalive, bool):
+            raise TypeError(f"`keepalive` should be bool, got {type(keepalive)}")
+        if keepalive_type not in ["network", "standard"]:
+            raise ValueError(
+                f"`{keepalive_type}` is an invalid keepalive_type; must be 'network' or 'standard'"
+            )
+        self._initialization_args["keepalive"] = keepalive
+        self._initialization_args["keepalive_interval"] = int(keepalive_interval)
+        self._initialization_args["keepalive_type"] = keepalive_type
+        self._initialization_args["keepalive_pattern"] = keepalive_pattern
 
     def _setup_comms(
         self, comms_prompt_pattern: str, comms_return_char: str, comms_ansi: bool
@@ -395,13 +416,39 @@ class Scrape:
         re.compile(comms_prompt_pattern, flags=re.M | re.I)
 
         if not isinstance(comms_return_char, str):
-            raise TypeError(f"comms_return_char should be str, got {type(comms_return_char)}")
+            raise TypeError(f"`comms_return_char` should be str, got {type(comms_return_char)}")
         if not isinstance(comms_ansi, bool):
-            raise TypeError(f"comms_ansi should be bool, got {type(comms_ansi)}")
+            raise TypeError(f"`comms_ansi` should be bool, got {type(comms_ansi)}")
 
         self._initialization_args["comms_prompt_pattern"] = comms_prompt_pattern
         self._initialization_args["comms_return_char"] = comms_return_char
         self._initialization_args["comms_ansi"] = comms_ansi
+
+    def _setup_callables(
+        self, on_open: Optional[Callable[..., Any]], on_close: Optional[Callable[..., Any]]
+    ) -> None:
+        """
+        Parse and setup callables (on_open/on_close)
+
+        Args:
+            on_open: on_open to parse/set
+            on_close: on_close to parse/set
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            TypeError: if port is not an integer
+
+        """
+        if on_open is not None and not callable(on_open):
+            raise TypeError(f"`on_open` must be a callable, got {type(on_open)}")
+        if on_close is not None and not callable(on_close):
+            raise TypeError(f"`on_close` must be a callable, got {type(on_close)}")
+        self.on_open = on_open
+        self.on_close = on_close
+        self._initialization_args["on_open"] = on_open
+        self._initialization_args["on_close"] = on_close
 
     def _setup_ssh_args(
         self, ssh_config_file: Union[str, bool], ssh_known_hosts_file: Union[str, bool]
@@ -423,10 +470,10 @@ class Scrape:
 
         """
         if not isinstance(ssh_config_file, (str, bool)):
-            raise TypeError(f"`ssh_config_file` should be str or bool, got {type(ssh_config_file)}")
+            raise TypeError(f"`ssh_config_file` must be str or bool, got {type(ssh_config_file)}")
         if not isinstance(ssh_known_hosts_file, (str, bool)):
             raise TypeError(
-                "`ssh_known_hosts_file` should be str or bool, got " f"{type(ssh_known_hosts_file)}"
+                "`ssh_known_hosts_file` must be str or bool, got " f"{type(ssh_known_hosts_file)}"
             )
 
         if ssh_config_file is not False:

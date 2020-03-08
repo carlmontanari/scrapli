@@ -156,6 +156,6 @@ def test_channel_send_inputs_interact(cisco_iosxe_driver, transport, test):
         device["port"] = 23
     conn = cisco_iosxe_driver(**device, transport=transport)
     results = conn.send_interactive(test["inputs"])
-    cleaned_result = clean_output_data(test, results[0].result)
+    cleaned_result = clean_output_data(test, results.result)
     assert cleaned_result == test["outputs"][0]
     conn.close()

@@ -58,6 +58,6 @@ def test_channel_send_inputs_interact(base_driver, transport, test):
     dev = CISCO_IOSXE_DEVICE.copy()
     conn = base_driver(**dev, transport=transport)
     results = conn.channel.send_inputs_interact(test["inputs"])
-    cleaned_result = clean_output_data(test, results[0].result)
+    cleaned_result = clean_output_data(test, results.result)
     assert cleaned_result == test["outputs"][0]
     conn.close()

@@ -1,6 +1,4 @@
-import types
 from io import BytesIO
-from threading import Lock
 from typing import Any, Callable, Dict, Optional, Tuple
 
 import pytest
@@ -8,20 +6,18 @@ import pytest
 from scrapli.channel import Channel
 from scrapli.driver import NetworkDriver, Scrape
 from scrapli.driver.core.cisco_iosxe.driver import PRIVS
-from scrapli.netmiko_compatability import NetmikoNetworkDriver
 from scrapli.transport.transport import Transport
 
 
 class MockScrape(Scrape):
-    def __init__(self, channel_ops, initial_bytes, *args, comms_ansi=False, **kwargs):
+    def __init__(self, channel_ops, initial_bytes, *args, **kwargs):
         self.channel_ops = channel_ops
         self.initial_bytes = initial_bytes
-        self.comms_ansi = comms_ansi
-        super().__init__(*args, comms_ansi=comms_ansi, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _transport_factory(self, transport: str) -> Tuple[Callable[..., Any], Dict[str, Any]]:
         """
-        Private factory method to produce transport class
+        Private factory method to produce mock transport class
 
         Args:
             transport: string name of transport class to use
@@ -35,11 +31,8 @@ class MockScrape(Scrape):
         """
         transport_class = MockTransport
         required_transport_args = (
-            "host",
-            "port",
-            "timeout_socket",
-            "channel_ops",
             "comms_return_char",
+            "channel_ops",
             "initial_bytes",
         )
         transport_args = {}
@@ -50,29 +43,11 @@ class MockScrape(Scrape):
         return transport_class, transport_args
 
 
-class MockNetworkDriver(MockScrape, NetworkDriver):
-    def __init__(self, channel_ops, initial_bytes, *args, comms_ansi=False, **kwargs):
-        super().__init__(channel_ops, initial_bytes, *args, comms_ansi=comms_ansi, **kwargs)
-        self.privs = PRIVS
-
-    def open(self):
-        # Overriding "normal" network driver open method as we don't need to worry about disable
-        # paging or pre login handles; ignoring this makes the mocked file read/write pieces simpler
-        self.transport = self.transport_class(**self.transport_args)
-        self.transport.open()
-        self.channel = Channel(self.transport, **self.channel_args)
-
-
 class MockTransport(Transport):
-    def __init__(self, host, port, timeout_socket, comms_return_char, initial_bytes, channel_ops):
-        super().__init__(host, port, timeout_socket, keepalive=False)
-        self.host = host
-        self.port = port
-        self.timeout_socket = timeout_socket
-        self.timeout_exit = True
+    def __init__(self, comms_return_char, initial_bytes, channel_ops):
+        super().__init__()
         self.comms_return_char = comms_return_char
         self.channel_ops = channel_ops
-
         self.fd = BytesIO(initial_bytes=initial_bytes)
         self.input_counter = 0
         self.return_counter = 0
@@ -106,35 +81,31 @@ class MockTransport(Transport):
         self.fd.write(channel_input.encode())
         self.fd.seek(-seek_offset, 1)
 
-    def flush(self) -> None:
-        return
-
     def set_timeout(self, timeout: Optional[int] = None) -> None:
-        return
-
-    def _session_keepalive(self) -> None:
         return
 
     def _keepalive_standard(self) -> None:
         return
 
 
+class MockNetworkDriver(MockScrape, NetworkDriver):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.privs = PRIVS
+
+    def open(self):
+        # Overriding "normal" network driver open method as we don't need to worry about disable
+        # paging or pre login handles; ignoring this makes the mocked file read/write pieces simpler
+        self.transport = self.transport_class(**self.transport_args)
+        self.transport.open()
+        self.channel = Channel(self.transport, **self.channel_args)
+
+
 @pytest.fixture(scope="module")
 def mocked_channel():
-    def _create_mocked_channel(
-        test_operations,
-        initial_bytes=b"3560CX#",
-        comms_ansi=False,
-        comms_prompt_pattern=r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
-    ):
+    def _create_mocked_channel(test_operations, initial_bytes=b"3560CX#", **kwargs):
         conn = MockScrape(
-            host="localhost",
-            port=22,
-            timeout_socket=1,
-            channel_ops=test_operations,
-            initial_bytes=initial_bytes,
-            comms_ansi=comms_ansi,
-            comms_prompt_pattern=comms_prompt_pattern,
+            host="localhost", channel_ops=test_operations, initial_bytes=initial_bytes, **kwargs
         )
         conn.open()
         return conn
@@ -144,46 +115,11 @@ def mocked_channel():
 
 @pytest.fixture(scope="module")
 def mocked_network_driver():
-    def _create_mocked_network_driver(
-        test_operations,
-        initial_bytes=b"3560CX#",
-        comms_ansi=False,
-        comms_prompt_pattern=r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
-    ):
+    def _create_mocked_network_driver(test_operations, initial_bytes=b"3560CX#", **kwargs):
         conn = MockNetworkDriver(
-            host="localhost",
-            port=22,
-            timeout_socket=1,
-            channel_ops=test_operations,
-            initial_bytes=initial_bytes,
-            comms_ansi=comms_ansi,
-            comms_prompt_pattern=comms_prompt_pattern,
+            host="localhost", channel_ops=test_operations, initial_bytes=initial_bytes, **kwargs
         )
         conn.open()
         return conn
 
     return _create_mocked_network_driver
-
-
-@pytest.fixture(scope="module")
-def mocked_netmiko_driver():
-    def _create_mocked_netmiko_driver(
-        test_operations,
-        initial_bytes=b"3560CX#",
-        comms_ansi=False,
-        comms_prompt_pattern=r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
-    ):
-        conn = MockNetworkDriver(
-            host="localhost",
-            port=22,
-            timeout_socket=1,
-            channel_ops=test_operations,
-            initial_bytes=initial_bytes,
-            comms_ansi=comms_ansi,
-            comms_prompt_pattern=comms_prompt_pattern,
-        )
-        netmiko_driver = NetmikoNetworkDriver(conn)
-        netmiko_driver.open()
-        return netmiko_driver
-
-    return _create_mocked_netmiko_driver

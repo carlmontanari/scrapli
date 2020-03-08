@@ -599,6 +599,9 @@ The basic usage section outlined the most commonly used driver arguments, this o
 | on_close             | callable to execute "on exit"                               |
 | transport            | system (default), paramiko, ssh2, or telnet                 |
 
+Most of these attributes actually get passed from the `Scrape` (or sub-class such as `NXOSDriver`) into the
+ `Transport` and `Channel` classes, so if you need to modify any of these values after instantiation you should do so
+  on the appropriate object -- i.e. `conn.channel.comms_prompt_pattern`.
 
 ## Platform Regex
 
@@ -1093,10 +1096,7 @@ This section may not get updated much, but will hopefully reflect the priority i
 
 ## Todo
 
-- Make a quick diagram of initial arguments (to scrape/network drivers) and where they "go" -- i.e
-. comms_prompt_pattern gets stored in `_initialization_arguments`, then passed to and stored as a private arg for
- some transport classes (for auth setup only), and gets ultimately assigned to the Channel.
-- Add tests for keepalive stuff if possible (steal from ssh2net! :D)
+- Add tests for keepalive stuff if possible
 - Investigate pre-authentication handling for telnet -- support handling a prompt *before* auth happens i.e. accept
  some banner/message -- does this ever happen for ssh? I don't know! If so, support dealing with that as well.
 - Remove as much as possible from the vendor'd `ptyprocess` code. Type hint it, add docstrings everywhere, add tests

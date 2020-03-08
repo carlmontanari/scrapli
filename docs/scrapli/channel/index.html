@@ -289,7 +289,7 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
         if not isinstance(channel_input, str):
             raise TypeError(
                 f&#34;`send_input` expects a single string, got {type(channel_input)}. &#34;
-                &#34;to send a list of inputs use the `send_inputs` method instead.&#34;
+                &#34;to send a list of inputs use the `send_inputs` method instead&#34;
             )
         response = Response(self.transport.host, channel_input)
         raw_result, processed_result = self._send_input(channel_input, strip_prompt)
@@ -309,13 +309,13 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
             responses: list of Response object(s)
 
         Raises:
-            N/A
+            TypeError: if anything but a list is passed for channel_inputs
 
         &#34;&#34;&#34;
         if not isinstance(channel_inputs, list):
             raise TypeError(
                 f&#34;`send_inputs` expects a list of strings, got {type(channel_inputs)}. &#34;
-                &#34;to send a single input use the `send_input` method instead.&#34;
+                &#34;to send a single input use the `send_input` method instead&#34;
             )
 
         responses = []
@@ -356,13 +356,13 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
         return output, processed_output
 
     def send_inputs_interact(
-        self, inputs: List[str], hidden_response: bool = False
-    ) -&gt; List[Response]:
+        self, channel_inputs: List[str], hidden_response: bool = False
+    ) -&gt; Response:
         &#34;&#34;&#34;
         Send inputs in an interactive fashion, used to handle prompts that occur after an input.
 
         Args:
-            inputs: list of four string elements representing...
+            channel_inputs: list of four string elements representing...
                 channel_input - initial input to send
                 expected_prompt - prompt to expect after initial input
                 response - response to prompt
@@ -370,27 +370,28 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
             hidden_response: True/False response is hidden (i.e. password input)
 
         Returns:
-            responses: list of scrapli Response objects
+            Response: scrapli Response object
 
         Raises:
             TypeError: if inputs is not tuple or list
 
         &#34;&#34;&#34;
-        if not isinstance(inputs, list):
-            raise TypeError(f&#34;send_inputs_interact expects a List, got {type(inputs)}&#34;)
-        input_stages = (inputs,)
-        responses = []
-        for channel_input, expectation, channel_response, finale in input_stages:
-            response = Response(
-                self.transport.host, channel_input, expectation, channel_response, finale
-            )
-            raw_result, processed_result = self._send_input_interact(
-                channel_input, expectation, channel_response, finale, hidden_response
-            )
-            response.raw_result = raw_result.decode()
-            response.record_response(processed_result.decode().strip())
-            responses.append(response)
-        return responses
+        if not isinstance(channel_inputs, list):
+            raise TypeError(f&#34;`send_inputs_interact` expects a List, got {type(channel_inputs)}&#34;)
+        channel_input, expectation, channel_response, finale = channel_inputs
+        response = Response(
+            self.transport.host,
+            channel_input,
+            expectation=expectation,
+            channel_response=channel_response,
+            finale=finale,
+        )
+        raw_result, processed_result = self._send_input_interact(
+            channel_input, expectation, channel_response, finale, hidden_response
+        )
+        response.raw_result = raw_result.decode()
+        response.record_response(processed_result.decode().strip())
+        return response
 
     @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out sending interactive input to device.&#34;)
     def _send_input_interact(
@@ -435,12 +436,10 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
         output = self._read_until_prompt(prompt=expectation)
         # if response is simply a return; add that so it shows in output likewise if response is
         # &#34;hidden&#34; (i.e. password input), add return, otherwise, skip
-        if not channel_response:
-            output += self.comms_return_char.encode()
-        elif hidden_response is True:
+        if not channel_response or hidden_response is True:
             output += self.comms_return_char.encode()
         self.transport.write(channel_response)
-        LOG.debug(f&#34;Write: {repr(channel_input)}&#34;)
+        LOG.debug(f&#34;Write: {repr(channel_response)}&#34;)
         self._send_return()
         LOG.debug(f&#34;Write (sending return character): {repr(self.comms_return_char)}&#34;)
         output += self._read_until_prompt(prompt=finale)
@@ -563,7 +562,7 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
     if not isinstance(channel_input, str):
         raise TypeError(
             f&#34;`send_input` expects a single string, got {type(channel_input)}. &#34;
-            &#34;to send a list of inputs use the `send_inputs` method instead.&#34;
+            &#34;to send a list of inputs use the `send_inputs` method instead&#34;
         )
     response = Response(self.transport.host, channel_input)
     raw_result, processed_result = self._send_input(channel_input, strip_prompt)
@@ -591,8 +590,8 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
+<dt><strong><code>TypeError</code></strong></dt>
+<dd>if anything but a list is passed for channel_inputs</dd>
 </dl></section>
 <details class="source">
 <summary>
@@ -610,13 +609,13 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
         responses: list of Response object(s)
 
     Raises:
-        N/A
+        TypeError: if anything but a list is passed for channel_inputs
 
     &#34;&#34;&#34;
     if not isinstance(channel_inputs, list):
         raise TypeError(
             f&#34;`send_inputs` expects a list of strings, got {type(channel_inputs)}. &#34;
-            &#34;to send a single input use the `send_input` method instead.&#34;
+            &#34;to send a single input use the `send_input` method instead&#34;
         )
 
     responses = []
@@ -630,13 +629,13 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
 </details>
 </dd>
 <dt id="scrapli.channel.Channel.send_inputs_interact"><code class="name flex">
-<span>def <span class="ident">send_inputs_interact</span></span>(<span>self, inputs, hidden_response=False)</span>
+<span>def <span class="ident">send_inputs_interact</span></span>(<span>self, channel_inputs, hidden_response=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Send inputs in an interactive fashion, used to handle prompts that occur after an input.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>inputs</code></strong></dt>
+<dt><strong><code>channel_inputs</code></strong></dt>
 <dd>list of four string elements representing&hellip;
 channel_input - initial input to send
 expected_prompt - prompt to expect after initial input
@@ -647,8 +646,8 @@ final_prompt - final prompt to expect</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>responses</code></strong></dt>
-<dd>list of scrapli Response objects</dd>
+<dt><strong><code>Response</code></strong></dt>
+<dd>scrapli Response object</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
@@ -660,13 +659,13 @@ final_prompt - final prompt to expect</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def send_inputs_interact(
-    self, inputs: List[str], hidden_response: bool = False
-) -&gt; List[Response]:
+    self, channel_inputs: List[str], hidden_response: bool = False
+) -&gt; Response:
     &#34;&#34;&#34;
     Send inputs in an interactive fashion, used to handle prompts that occur after an input.
 
     Args:
-        inputs: list of four string elements representing...
+        channel_inputs: list of four string elements representing...
             channel_input - initial input to send
             expected_prompt - prompt to expect after initial input
             response - response to prompt
@@ -674,27 +673,28 @@ final_prompt - final prompt to expect</dd>
         hidden_response: True/False response is hidden (i.e. password input)
 
     Returns:
-        responses: list of scrapli Response objects
+        Response: scrapli Response object
 
     Raises:
         TypeError: if inputs is not tuple or list
 
     &#34;&#34;&#34;
-    if not isinstance(inputs, list):
-        raise TypeError(f&#34;send_inputs_interact expects a List, got {type(inputs)}&#34;)
-    input_stages = (inputs,)
-    responses = []
-    for channel_input, expectation, channel_response, finale in input_stages:
-        response = Response(
-            self.transport.host, channel_input, expectation, channel_response, finale
-        )
-        raw_result, processed_result = self._send_input_interact(
-            channel_input, expectation, channel_response, finale, hidden_response
-        )
-        response.raw_result = raw_result.decode()
-        response.record_response(processed_result.decode().strip())
-        responses.append(response)
-    return responses</code></pre>
+    if not isinstance(channel_inputs, list):
+        raise TypeError(f&#34;`send_inputs_interact` expects a List, got {type(channel_inputs)}&#34;)
+    channel_input, expectation, channel_response, finale = channel_inputs
+    response = Response(
+        self.transport.host,
+        channel_input,
+        expectation=expectation,
+        channel_response=channel_response,
+        finale=finale,
+    )
+    raw_result, processed_result = self._send_input_interact(
+        channel_input, expectation, channel_response, finale, hidden_response
+    )
+    response.raw_result = raw_result.decode()
+    response.record_response(processed_result.decode().strip())
+    return response</code></pre>
 </details>
 </dd>
 </dl>

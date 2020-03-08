@@ -224,7 +224,7 @@ class Channel:
         if not isinstance(channel_input, str):
             raise TypeError(
                 f"`send_input` expects a single string, got {type(channel_input)}. "
-                "to send a list of inputs use the `send_inputs` method instead."
+                "to send a list of inputs use the `send_inputs` method instead"
             )
         response = Response(self.transport.host, channel_input)
         raw_result, processed_result = self._send_input(channel_input, strip_prompt)
@@ -244,13 +244,13 @@ class Channel:
             responses: list of Response object(s)
 
         Raises:
-            N/A
+            TypeError: if anything but a list is passed for channel_inputs
 
         """
         if not isinstance(channel_inputs, list):
             raise TypeError(
                 f"`send_inputs` expects a list of strings, got {type(channel_inputs)}. "
-                "to send a single input use the `send_input` method instead."
+                "to send a single input use the `send_input` method instead"
             )
 
         responses = []
@@ -291,13 +291,13 @@ class Channel:
         return output, processed_output
 
     def send_inputs_interact(
-        self, inputs: List[str], hidden_response: bool = False
-    ) -> List[Response]:
+        self, channel_inputs: List[str], hidden_response: bool = False
+    ) -> Response:
         """
         Send inputs in an interactive fashion, used to handle prompts that occur after an input.
 
         Args:
-            inputs: list of four string elements representing...
+            channel_inputs: list of four string elements representing...
                 channel_input - initial input to send
                 expected_prompt - prompt to expect after initial input
                 response - response to prompt
@@ -305,27 +305,28 @@ class Channel:
             hidden_response: True/False response is hidden (i.e. password input)
 
         Returns:
-            responses: list of scrapli Response objects
+            Response: scrapli Response object
 
         Raises:
             TypeError: if inputs is not tuple or list
 
         """
-        if not isinstance(inputs, list):
-            raise TypeError(f"send_inputs_interact expects a List, got {type(inputs)}")
-        input_stages = (inputs,)
-        responses = []
-        for channel_input, expectation, channel_response, finale in input_stages:
-            response = Response(
-                self.transport.host, channel_input, expectation, channel_response, finale
-            )
-            raw_result, processed_result = self._send_input_interact(
-                channel_input, expectation, channel_response, finale, hidden_response
-            )
-            response.raw_result = raw_result.decode()
-            response.record_response(processed_result.decode().strip())
-            responses.append(response)
-        return responses
+        if not isinstance(channel_inputs, list):
+            raise TypeError(f"`send_inputs_interact` expects a List, got {type(channel_inputs)}")
+        channel_input, expectation, channel_response, finale = channel_inputs
+        response = Response(
+            self.transport.host,
+            channel_input,
+            expectation=expectation,
+            channel_response=channel_response,
+            finale=finale,
+        )
+        raw_result, processed_result = self._send_input_interact(
+            channel_input, expectation, channel_response, finale, hidden_response
+        )
+        response.raw_result = raw_result.decode()
+        response.record_response(processed_result.decode().strip())
+        return response
 
     @operation_timeout("timeout_ops", "Timed out sending interactive input to device.")
     def _send_input_interact(
@@ -370,12 +371,10 @@ class Channel:
         output = self._read_until_prompt(prompt=expectation)
         # if response is simply a return; add that so it shows in output likewise if response is
         # "hidden" (i.e. password input), add return, otherwise, skip
-        if not channel_response:
-            output += self.comms_return_char.encode()
-        elif hidden_response is True:
+        if not channel_response or hidden_response is True:
             output += self.comms_return_char.encode()
         self.transport.write(channel_response)
-        LOG.debug(f"Write: {repr(channel_input)}")
+        LOG.debug(f"Write: {repr(channel_response)}")
         self._send_return()
         LOG.debug(f"Write (sending return character): {repr(self.comms_return_char)}")
         output += self._read_until_prompt(prompt=finale)

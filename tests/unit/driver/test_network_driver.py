@@ -2,7 +2,7 @@ import types
 
 import pytest
 
-from scrapli.driver.network_driver import NetworkDriver, PrivilegeLevel
+from scrapli.driver.network_driver import PrivilegeLevel
 from scrapli.exceptions import CouldNotAcquirePrivLevel, UnknownPrivLevel
 
 try:
@@ -322,7 +322,7 @@ def test_send_inputs_interact(mocked_network_driver):
     conn = mocked_network_driver(test_operations)
     conn.default_desired_priv = "privilege_exec"
     output = conn.send_interactive(interact, hidden_response=False)
-    assert output[0].result == "Clear logging buffer [confirm]\n\n3560CX#"
+    assert output.result == "Clear logging buffer [confirm]\n\n3560CX#"
 
 
 def test_send_configs(mocked_network_driver):

@@ -15,7 +15,6 @@ from scrapli.helper import (
     strip_ansi,
     textfsm_parse,
 )
-from scrapli.ssh_config import SSHConfig
 
 UNIT_TEST_DIR = f"{Path(scrapli.__file__).parents[1]}/tests/unit/"
 

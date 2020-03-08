@@ -28,3 +28,27 @@ drwxr-xr-x  12 carl  staff    384 Jan 27 19:13 .git/"""
     response.record_response(response_str)
     assert str(response.finish_time)[:-7] == response_end_time
     assert response.result == response_str
+
+
+def test_response_parse_textfsm():
+    response = Response("localhost", "show ip arp", "cisco_ios")
+    response_str = """Protocol  Address          Age (min)  Hardware Addr   Type   Interface
+Internet  172.31.254.1            -   0000.0c07.acfe  ARPA   Vlan254
+Internet  172.31.254.2            -   c800.84b2.e9c2  ARPA   Vlan254
+"""
+    response.record_response(response_str)
+    assert response.textfsm_parse_output()[0] == [
+        "Internet",
+        "172.31.254.1",
+        "-",
+        "0000.0c07.acfe",
+        "ARPA",
+        "Vlan254",
+    ]
+
+
+def test_response_parse_textfsm_fail():
+    response = Response("localhost", "show ip arp", "cisco_ios")
+    response_str = ""
+    response.record_response(response_str)
+    assert response.textfsm_parse_output() == []

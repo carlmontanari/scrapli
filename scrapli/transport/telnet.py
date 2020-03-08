@@ -301,7 +301,7 @@ class TelnetTransport(Transport):
             N/A
 
         Returns:
-           bool: True/False connection alive
+           bool: True if alive, else False
 
         Raises:
             N/A
