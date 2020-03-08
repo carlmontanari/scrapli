@@ -37,6 +37,7 @@ scrapli -- scrap(e c)li --  is a python library focused on connecting to devices
   - [Telnet](#telnet)
   - [SSH Config Support](#ssh-config-support)
 - [Advanced Usage](#advanced-usage)
+  - [All Driver Arguments](#all-driver-arguments)
   - [Platform Regex](#platform-regex)
   - [On Connect](#on-connect)
   - [On Exit](#on-exit)
@@ -565,6 +566,39 @@ with IOSXEDriver(**my_device) as conn:
 
 
 # Advanced Usage
+
+## All Driver Arguments
+
+The basic usage section outlined the most commonly used driver arguments, this outlines all of the base driver
+ arguments -- note that in the future there may be additional driver specific (i.e. JunosDriver) arguments not listed
+  here -- check your specific driver in the docs for more details.
+ 
+| Argument             | Purpose/Value                                               |
+|----------------------|-------------------------------------------------------------|
+| host                 | name/ip of host to connect to                               |
+| port                 | port of host to connect to (defaults to port 22)            |
+| auth_username        | username for authentication                                 |
+| auth_password        | password for authentication                                 |
+| auth_secondary       | password for secondary authentication (enable password)     |
+| auth_public_key      | public key for authentication                               |
+| auth_strict_key      | strict key checking -- TRUE by default!                     |
+| timeout_socket       | timeout value for initial socket connection                 |
+| timeout_transport    | timeout value for transport (i.e. paramiko)                 |
+| timeout_ops          | timeout value for individual operations                     |
+| timeout_exit         | True/False exit on timeout ops exceeded                     |
+| keepalive            | True/False send keepalives to the remote host               |
+| keepalive_interval   | interval in seconds for keepalives                          |
+| keepalive_type       | network or standard; see keepalive section for details      |
+| keepalive_pattern    | if network keepalive; pattern to send                       |
+| comms_prompt_pattern | regex pattern for matching prompt(s); see platform regex    |
+| comms_return_char    | return char to use on the channel; default `\n`             |
+| comms_ansi           | True/False strip ansi from returned output                  |
+| ssh_config_file      | True/False or path to ssh config file to use                |
+| ssh_known_hosts_file | True/False or path to ssh known hosts file to use           |
+| on_open              | callable to execute "on open"                               |
+| on_close             | callable to execute "on exit"                               |
+| transport            | system (default), paramiko, ssh2, or telnet                 |
+
 
 ## Platform Regex
 
