@@ -18,7 +18,7 @@ def nxos_on_open(conn: NetworkDriver) -> None:
     Raises:
         N/A
     """
-    conn.channel.send_inputs("terminal length 0")
+    conn.channel.send_input("terminal length 0")
 
 
 def nxos_on_close(conn: NetworkDriver) -> None:
@@ -34,7 +34,11 @@ def nxos_on_close(conn: NetworkDriver) -> None:
     Raises:
         N/A
     """
-    conn.channel.send_inputs("exit")
+    # write exit directly to the transport as channel would fail to find the prompt after sending
+    # the exit command!
+    conn.transport.write("exit")
+    conn.acquire_priv(conn.default_desired_priv)
+    conn.transport.write(conn.channel.comms_prompt_pattern)
 
 
 NXOS_ARG_MAPPER = {
@@ -47,7 +51,7 @@ NXOS_ARG_MAPPER = {
 PRIVS = {
     "exec": (
         PrivilegeLevel(
-            r"^[a-z0-9.\-@()/:]{1,32}>\s*$",
+            r"^[a-z0-9.\-@()/:]{1,32}>\s?$",
             "exec",
             "",
             "",
@@ -61,7 +65,7 @@ PRIVS = {
     ),
     "privilege_exec": (
         PrivilegeLevel(
-            r"^[a-z0-9.\-@/:]{1,32}#\s*$",
+            r"^[a-z0-9.\-@/:]{1,32}#\s?$",
             "privilege_exec",
             "exec",
             "disable",
@@ -75,7 +79,7 @@ PRIVS = {
     ),
     "configuration": (
         PrivilegeLevel(
-            r"^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{0,16}\)#\s*$",
+            r"^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{0,16}\)#\s?$",
             "configuration",
             "priv",
             "end",
@@ -89,7 +93,7 @@ PRIVS = {
     ),
     "special_configuration": (
         PrivilegeLevel(
-            r"^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{1,16}\)#\s*$",
+            r"^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{1,16}\)#\s?$",
             "special_configuration",
             "priv",
             "end",
@@ -107,17 +111,16 @@ PRIVS = {
 class NXOSDriver(NetworkDriver):
     def __init__(
         self,
-        auth_secondary: str = "",
-        comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]\s*$",
+        comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]\s?$",
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
+        auth_secondary: str = "",
         **kwargs: Dict[str, Any],
     ):
         """
         NXOSDriver Object
 
         Args:
-            auth_secondary: password to use for secondary authentication (enable)
             comms_prompt_pattern: raw string regex pattern -- preferably use `^` and `$` anchors!
                 this is the single most important attribute here! if this does not match a prompt,
                 scrapli will not work!
@@ -134,6 +137,7 @@ class NXOSDriver(NetworkDriver):
                 if provided, is executed immediately prior to closing the underlying transport.
                 Common use cases for this callable would be to save configurations prior to exiting,
                 or to logout properly to free up vtys or similar.
+            auth_secondary: password to use for secondary authentication (enable)
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -146,6 +150,7 @@ class NXOSDriver(NetworkDriver):
             on_open = nxos_on_open
         if on_close is None:
             on_close = nxos_on_close
+
         super().__init__(
             auth_secondary,
             comms_prompt_pattern=comms_prompt_pattern,
@@ -153,6 +158,7 @@ class NXOSDriver(NetworkDriver):
             on_close=on_close,
             **kwargs,
         )
+
         self.privs = PRIVS
         self.default_desired_priv = "privilege_exec"
         self.textfsm_platform = "cisco_nxos"

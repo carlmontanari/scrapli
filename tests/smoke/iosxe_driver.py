@@ -33,9 +33,9 @@ result = conn.send_command("show run | i hostname")
 print(result, result.result)
 
 print("***** Clear logging buffer:")
-interact = ("clear logg", "Clear logging buffer [confirm]", "", prompt)
+interact = ["clear logg", "Clear logging buffer [confirm]", "", prompt]
 result = conn.send_interactive(interact)
-print(result, result[0].result)
+print(result, result.result)
 
 print("***** Show run:")
 result = conn.send_command("show run")

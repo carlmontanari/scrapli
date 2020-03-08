@@ -9,6 +9,6 @@ args = {
 
 with IOSXEDriver(**args) as conn:
     # Platform drivers will auto-magically handle disabling paging for you
-    result = conn.channel.send_inputs("show run")
+    result = conn.send_command("show run")
 
-print(result[0].result)
+print(result.result)

@@ -452,7 +452,7 @@ class SystemSSHTransport(Transport):
         """
         self.session_lock.acquire()
         if isinstance(self.session, Popen):
-            self.session.kill(1)
+            self.session.kill()
         elif isinstance(self.session, PtyProcess):
             self.session.kill(1)
         LOG.debug(f"Channel to host {self.host} closed")
