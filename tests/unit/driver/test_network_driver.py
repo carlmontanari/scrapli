@@ -2,7 +2,7 @@ import types
 
 import pytest
 
-from scrapli.driver.network_driver import NetworkDriver, PrivilegeLevel
+from scrapli.driver.network_driver import PrivilegeLevel
 from scrapli.exceptions import CouldNotAcquirePrivLevel, UnknownPrivLevel
 
 try:
@@ -12,20 +12,6 @@ try:
     textfsm_avail = True
 except ImportError:
     textfsm_avail = False
-
-
-def test_valid_on_connect_func():
-    def on_open_func():
-        pass
-
-    conn = NetworkDriver(on_open=on_open_func)
-    assert callable(conn.on_open)
-
-
-def test_invalid_on_connect_func():
-    with pytest.raises(TypeError) as e:
-        NetworkDriver(on_open="not a callable")
-    assert str(e.value) == "on_open must be a callable, got <class 'str'>"
 
 
 def test__determine_current_priv(mocked_network_driver):
@@ -327,7 +313,7 @@ def test_send_inputs_interact(mocked_network_driver):
     channel_output_2 = "Clear logging buffer [confirm]"
     channel_input_3 = "\n"
     channel_output_3 = "3560CX#"
-    interact = (channel_input_2, channel_output_2, "", channel_output_3)
+    interact = [channel_input_2, channel_output_2, "", channel_output_3]
     test_operations = [
         (channel_input_1, channel_output_1),
         (channel_input_2, channel_output_2),
@@ -336,7 +322,7 @@ def test_send_inputs_interact(mocked_network_driver):
     conn = mocked_network_driver(test_operations)
     conn.default_desired_priv = "privilege_exec"
     output = conn.send_interactive(interact, hidden_response=False)
-    assert output[0].result == "Clear logging buffer [confirm]\n\n3560CX#"
+    assert output.result == "Clear logging buffer [confirm]\n\n3560CX#"
 
 
 def test_send_configs(mocked_network_driver):

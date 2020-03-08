@@ -117,7 +117,7 @@ def _textfsm_get_template(platform: str, command: str) -> Optional[TextIO]:
 
 def textfsm_parse(
     template: Union[str, TextIOWrapper], output: str
-) -> Optional[Union[List[Any], Dict[str, Any]]]:
+) -> Union[List[Any], Dict[str, Any]]:
     """
     Parse output with TextFSM and ntc-templates, try to return structured output
 
@@ -144,7 +144,7 @@ def textfsm_parse(
         return structured_output
     except textfsm.parser.TextFSMError:
         pass
-    return None
+    return []
 
 
 def resolve_ssh_config(ssh_config_file: str) -> str:

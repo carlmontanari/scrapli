@@ -47,32 +47,33 @@ test_functional:
 	python -m pytest tests/functional/
 
 test_iosxe:
-	python -m pytest -v \
+	python -m pytest \
 	tests/unit \
 	tests/functional/driver/core/cisco_iosxe
 
 test_nxos:
-	python -m pytest -v \
+	python -m pytest \
 	tests/unit \
 	tests/functional/driver/core/cisco_nxos
 
 test_iosxr:
-	python -m pytest -v \
+	python -m pytest \
 	tests/unit \
 	tests/functional/driver/core/cisco_iosxr
 
 test_eos:
-	python -m pytest -v \
+	python -m pytest \
 	tests/unit \
 	tests/functional/driver/core/arista_eos
 
 test_junos:
-	python -m pytest -v \
+	python -m pytest \
 	tests/unit \
 	tests/functional/driver/core/juniper_junos
 
 .PHONY: docs
 docs:
+	rm -rf docs/scrapli
 	python -m pdoc \
 	--html \
 	--output-dir docs \

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.7.4" />
+<meta name="generator" content="pdoc 0.7.5" />
 <title>scrapli.driver API documentation</title>
 <meta name="description" content="scrapli.driver" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
@@ -65,7 +65,9 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
 <span>(</span><span>auth_secondary='', **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>BaseNetworkDriver Object</p>
+<section class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<p>BaseNetworkDriver Object</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>auth_secondary</code></strong></dt>
@@ -88,7 +90,8 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class NetworkDriver(Scrape):
+<pre><code class="python">class NetworkDriver(Scrape, ABC):
+    @abstractmethod
     def __init__(
         self, auth_secondary: str = &#34;&#34;, **kwargs: Any,
     ):
@@ -107,11 +110,12 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
 
         &#34;&#34;&#34;
         super().__init__(**kwargs)
+
+        self.textfsm_platform: str = &#34;&#34;
         self.auth_secondary = auth_secondary
         self.privs = PRIVS
-        self.default_desired_priv: Optional[str] = None
-        self.textfsm_platform: str = &#34;&#34;
-        self.exit_command: str = &#34;exit&#34;
+        self.default_desired_priv: str = &#34;&#34;
+        self._current_priv_level = NoPrivLevel
 
     def _determine_current_priv(self, current_prompt: str) -&gt; PrivilegeLevel:
         &#34;&#34;&#34;
@@ -149,30 +153,31 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
 
         &#34;&#34;&#34;
         current_priv = self._determine_current_priv(self.channel.get_prompt())
-        if current_priv.escalate:
-            next_priv = self.privs.get(current_priv.escalate_priv, None)
-            if next_priv is None:
-                raise UnknownPrivLevel(
-                    f&#34;Could not get next priv level, current priv is {current_priv.name}&#34;
+        if not current_priv.escalate:
+            return
+
+        next_priv = self.privs.get(current_priv.escalate_priv, None)
+        if next_priv is None:
+            raise UnknownPrivLevel(
+                f&#34;Could not get next priv level, current priv is {current_priv.name}&#34;
+            )
+        next_prompt = next_priv.pattern
+        if current_priv.escalate_auth:
+            escalate_cmd: str = current_priv.escalate
+            escalate_prompt: str = current_priv.escalate_prompt
+            escalate_auth = self.auth_secondary
+            if not isinstance(next_prompt, str):
+                raise TypeError(
+                    f&#34;got {type(next_prompt)} for {current_priv.name} escalate priv, &#34;
+                    &#34;expected str&#34;
                 )
-            next_prompt = next_priv.pattern
-            if current_priv.escalate_auth:
-                escalate_cmd: str = current_priv.escalate
-                escalate_prompt: str = current_priv.escalate_prompt
-                escalate_auth = self.auth_secondary
-                if not isinstance(next_prompt, str):
-                    raise TypeError(
-                        f&#34;got {type(next_prompt)} for {current_priv.name} escalate priv, &#34;
-                        &#34;expected str&#34;
-                    )
-                self.channel.send_inputs_interact(
-                    (escalate_cmd, escalate_prompt, escalate_auth, next_prompt),
-                    hidden_response=True,
-                )
-                self.channel.comms_prompt_pattern = next_priv.pattern
-            else:
-                self.channel.comms_prompt_pattern = next_priv.pattern
-                self.channel.send_inputs(current_priv.escalate)
+            self.channel.send_inputs_interact(
+                [escalate_cmd, escalate_prompt, escalate_auth, next_prompt], hidden_response=True,
+            )
+            self.channel.comms_prompt_pattern = next_priv.pattern
+        else:
+            self.channel.comms_prompt_pattern = next_priv.pattern
+            self.channel.send_input(current_priv.escalate)
 
     def _deescalate(self) -&gt; None:
         &#34;&#34;&#34;
@@ -196,7 +201,7 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
                     &#34;NetworkDriver has no default priv levels, set them or use a network driver&#34;
                 )
             self.channel.comms_prompt_pattern = next_priv.pattern
-            self.channel.send_inputs(current_priv.deescalate)
+            self.channel.send_input(current_priv.deescalate)
 
     def acquire_priv(self, desired_priv: str) -&gt; None:
         &#34;&#34;&#34;
@@ -217,6 +222,7 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
         while True:
             current_priv = self._determine_current_priv(self.channel.get_prompt())
             if current_priv == self.privs[desired_priv]:
+                self._current_priv_level = current_priv
                 return
             if priv_attempt_counter &gt; len(self.privs):
                 raise CouldNotAcquirePrivLevel(
@@ -240,11 +246,18 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
             Response: Scrapli Response object
 
         Raises:
-            N/A
+            TypeError: if command is anything but a string
 
         &#34;&#34;&#34;
-        self.acquire_priv(str(self.default_desired_priv))
-        response = self.channel.send_inputs(command, strip_prompt)[0]
+        if not isinstance(command, str):
+            raise TypeError(
+                f&#34;`send_command` expects a single string, got {type(command)}. &#34;
+                &#34;to send a list of commands use the `send_commands` method instead.&#34;
+            )
+
+        if self._current_priv_level.name != self.default_desired_priv:
+            self.acquire_priv(self.default_desired_priv)
+        response = self.channel.send_input(command, strip_prompt)
 
         # update the response objects with textfsm platform; we do this here because the underlying
         #  channel doesn&#39;t know or care about platforms
@@ -272,7 +285,9 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
                 f&#34;`send_commands` expects a list of strings, got {type(commands)}. &#34;
                 &#34;to send a single command use the `send_command` method instead.&#34;
             )
-        self.acquire_priv(str(self.default_desired_priv))
+
+        if self._current_priv_level.name != self.default_desired_priv:
+            self.acquire_priv(self.default_desired_priv)
         responses = self.channel.send_inputs(commands, strip_prompt)
 
         # update the response objects with textfsm platform; we do this here because the underlying
@@ -282,9 +297,7 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
 
         return responses
 
-    def send_interactive(
-        self, inputs: Union[List[str], Tuple[str, str, str, str]], hidden_response: bool = False,
-    ) -&gt; List[Response]:
+    def send_interactive(self, inputs: List[str], hidden_response: bool = False) -&gt; Response:
         &#34;&#34;&#34;
         Send inputs in an interactive fashion; used to handle prompts
 
@@ -295,7 +308,7 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
         could be &#34;chained&#34; together to respond to more than a &#34;single&#34; staged prompt
 
         Args:
-            inputs: list or tuple containing strings representing
+            inputs: list of four string elements representing...
                 channel_input - initial input to send
                 expected_prompt - prompt to expect after initial input
                 response - response to prompt
@@ -303,15 +316,16 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
             hidden_response: True/False response is hidden (i.e. password input)
 
         Returns:
-            responses: List of Scrape Response objects
+            Response: scrapli Response object
 
         Raises:
             N/A
 
         &#34;&#34;&#34;
-        self.acquire_priv(str(self.default_desired_priv))
-        responses = self.channel.send_inputs_interact(inputs, hidden_response)
-        return responses
+        if self._current_priv_level.name != self.default_desired_priv:
+            self.acquire_priv(self.default_desired_priv)
+        response = self.channel.send_inputs_interact(inputs, hidden_response)
+        return response
 
     def send_configs(
         self, configs: Union[str, List[str]], strip_prompt: bool = True
@@ -330,9 +344,12 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
             N/A
 
         &#34;&#34;&#34;
+        if isinstance(configs, str):
+            configs = [configs]
+
         self.acquire_priv(&#34;configuration&#34;)
         responses = self.channel.send_inputs(configs, strip_prompt)
-        self.acquire_priv(str(self.default_desired_priv))
+        self.acquire_priv(self.default_desired_priv)
         return responses
 
     def get_prompt(self) -&gt; str:
@@ -350,15 +367,12 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
 
         &#34;&#34;&#34;
         prompt: str = self.channel.get_prompt()
-        return prompt
-
-    def close(self) -&gt; None:
-        self.transport.write(f&#34;{self.exit_command}{self.channel.comms_return_char}&#34;)
-        super().close()</code></pre>
+        return prompt</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="scrapli.driver.driver.Scrape" href="driver.html#scrapli.driver.driver.Scrape">Scrape</a></li>
+<li>abc.ABC</li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -415,6 +429,7 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
     while True:
         current_priv = self._determine_current_priv(self.channel.get_prompt())
         if current_priv == self.privs[desired_priv]:
+            self._current_priv_level = current_priv
             return
         if priv_attempt_counter &gt; len(self.privs):
             raise CouldNotAcquirePrivLevel(
@@ -485,8 +500,8 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
+<dt><strong><code>TypeError</code></strong></dt>
+<dd>if command is anything but a string</dd>
 </dl></section>
 <details class="source">
 <summary>
@@ -504,11 +519,18 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
         Response: Scrapli Response object
 
     Raises:
-        N/A
+        TypeError: if command is anything but a string
 
     &#34;&#34;&#34;
-    self.acquire_priv(str(self.default_desired_priv))
-    response = self.channel.send_inputs(command, strip_prompt)[0]
+    if not isinstance(command, str):
+        raise TypeError(
+            f&#34;`send_command` expects a single string, got {type(command)}. &#34;
+            &#34;to send a list of commands use the `send_commands` method instead.&#34;
+        )
+
+    if self._current_priv_level.name != self.default_desired_priv:
+        self.acquire_priv(self.default_desired_priv)
+    response = self.channel.send_input(command, strip_prompt)
 
     # update the response objects with textfsm platform; we do this here because the underlying
     #  channel doesn&#39;t know or care about platforms
@@ -563,7 +585,9 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
             f&#34;`send_commands` expects a list of strings, got {type(commands)}. &#34;
             &#34;to send a single command use the `send_command` method instead.&#34;
         )
-    self.acquire_priv(str(self.default_desired_priv))
+
+    if self._current_priv_level.name != self.default_desired_priv:
+        self.acquire_priv(self.default_desired_priv)
     responses = self.channel.send_inputs(commands, strip_prompt)
 
     # update the response objects with textfsm platform; we do this here because the underlying
@@ -617,9 +641,12 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
         N/A
 
     &#34;&#34;&#34;
+    if isinstance(configs, str):
+        configs = [configs]
+
     self.acquire_priv(&#34;configuration&#34;)
     responses = self.channel.send_inputs(configs, strip_prompt)
-    self.acquire_priv(str(self.default_desired_priv))
+    self.acquire_priv(self.default_desired_priv)
     return responses</code></pre>
 </details>
 </dd>
@@ -635,7 +662,7 @@ returns the results of the interaction</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>inputs</code></strong></dt>
-<dd>list or tuple containing strings representing
+<dd>list of four string elements representing&hellip;
 channel_input - initial input to send
 expected_prompt - prompt to expect after initial input
 response - response to prompt
@@ -645,8 +672,8 @@ final_prompt - final prompt to expect</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>responses</code></strong></dt>
-<dd>List of Scrape Response objects</dd>
+<dt><strong><code>Response</code></strong></dt>
+<dd>scrapli Response object</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
@@ -657,9 +684,7 @@ final_prompt - final prompt to expect</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def send_interactive(
-    self, inputs: Union[List[str], Tuple[str, str, str, str]], hidden_response: bool = False,
-) -&gt; List[Response]:
+<pre><code class="python">def send_interactive(self, inputs: List[str], hidden_response: bool = False) -&gt; Response:
     &#34;&#34;&#34;
     Send inputs in an interactive fashion; used to handle prompts
 
@@ -670,7 +695,7 @@ final_prompt - final prompt to expect</dd>
     could be &#34;chained&#34; together to respond to more than a &#34;single&#34; staged prompt
 
     Args:
-        inputs: list or tuple containing strings representing
+        inputs: list of four string elements representing...
             channel_input - initial input to send
             expected_prompt - prompt to expect after initial input
             response - response to prompt
@@ -678,15 +703,16 @@ final_prompt - final prompt to expect</dd>
         hidden_response: True/False response is hidden (i.e. password input)
 
     Returns:
-        responses: List of Scrape Response objects
+        Response: scrapli Response object
 
     Raises:
         N/A
 
     &#34;&#34;&#34;
-    self.acquire_priv(str(self.default_desired_priv))
-    responses = self.channel.send_inputs_interact(inputs, hidden_response)
-    return responses</code></pre>
+    if self._current_priv_level.name != self.default_desired_priv:
+        self.acquire_priv(self.default_desired_priv)
+    response = self.channel.send_inputs_interact(inputs, hidden_response)
+    return response</code></pre>
 </details>
 </dd>
 </dl>
@@ -703,7 +729,7 @@ final_prompt - final prompt to expect</dd>
 </dd>
 <dt id="scrapli.driver.Scrape"><code class="flex name class">
 <span>class <span class="ident">Scrape</span></span>
-<span>(</span><span>host='', port=22, auth_username='', auth_password='', auth_public_key='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, timeout_ops=10, timeout_exit=True, keepalive=False, keepalive_interval=30, keepalive_type='network', keepalive_pattern='\x05', comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n', comms_ansi=False, ssh_config_file=False, ssh_known_hosts_file='', on_open=None, on_close=None, transport='system')</span>
+<span>(</span><span>host='', port=22, auth_username='', auth_password='', auth_public_key='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, timeout_ops=10, timeout_exit=True, keepalive=False, keepalive_interval=30, keepalive_type='network', keepalive_pattern='\x05', comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]\\s*$&#x27;, comms_return_char='\n', comms_ansi=False, ssh_config_file=False, ssh_known_hosts_file=False, on_open=None, on_close=None, transport='system')</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Scrape Object</p>
@@ -760,9 +786,9 @@ this is the single most important attribute here! if this does not match a promp
 scrapli will not work!
 IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
 for highly reliably matching for prompts however we do NOT strip trailing whitespace
-for each line, so be sure to add '\s*' if your device needs that. This should be
-mostly sorted for you if using network drivers (i.e. <code>IOSXEDriver</code>). Lastly, the
-case insensitive is just a convenience factor so i can be lazy.</dd>
+for each line, so be sure to add '\s?' or similar if your device needs that. This
+should be mostly sorted for you if using network drivers (i.e. <code>IOSXEDriver</code>).
+Lastly, the case insensitive is just a convenience factor so i can be lazy.</dd>
 <dt><strong><code>comms_return_char</code></strong></dt>
 <dd>character to use to send returns to host</dd>
 <dt><strong><code>comms_ansi</code></strong></dt>
@@ -804,14 +830,7 @@ has more features built in (though scrapli does not expose/support them all).</d
 <h2 id="raises">Raises</h2>
 <dl>
 <dt><strong><code>ValueError</code></strong></dt>
-<dd>if driver value is invalid</dd>
-<dt><strong><code>TypeError</code></strong></dt>
-<dd>if auth_strict_key/keepalive is not a bool or values cannot be converted to
-ints where appropriate (i.e. timeouts)</dd>
-<dt><strong><code>TypeError</code></strong></dt>
-<dd>if on_open is not a callable</dd>
-<dt><strong><code>TypeError</code></strong></dt>
-<dd>if on_close is not a callable</dd>
+<dd>if transport value is invalid</dd>
 </dl></section>
 <details class="source">
 <summary>
@@ -834,11 +853,11 @@ ints where appropriate (i.e. timeouts)</dd>
         keepalive_interval: int = 30,
         keepalive_type: str = &#34;network&#34;,
         keepalive_pattern: str = &#34;\005&#34;,
-        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]$&#34;,
+        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]\s*$&#34;,
         comms_return_char: str = &#34;\n&#34;,
         comms_ansi: bool = False,
         ssh_config_file: Union[str, bool] = False,
-        ssh_known_hosts_file: str = &#34;&#34;,
+        ssh_known_hosts_file: Union[str, bool] = False,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         transport: str = &#34;system&#34;,
@@ -885,9 +904,9 @@ ints where appropriate (i.e. timeouts)</dd>
                 scrapli will not work!
                 IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
                 for highly reliably matching for prompts however we do NOT strip trailing whitespace
-                for each line, so be sure to add &#39;\\s*&#39; if your device needs that. This should be
-                mostly sorted for you if using network drivers (i.e. `IOSXEDriver`). Lastly, the
-                case insensitive is just a convenience factor so i can be lazy.
+                for each line, so be sure to add &#39;\\s?&#39; or similar if your device needs that. This
+                should be mostly sorted for you if using network drivers (i.e. `IOSXEDriver`).
+                Lastly, the case insensitive is just a convenience factor so i can be lazy.
             comms_return_char: character to use to send returns to host
             comms_ansi: True/False strip comms_ansi characters from output
             ssh_config_file: string to path for ssh config file, True to use default ssh config file
@@ -917,53 +936,23 @@ ints where appropriate (i.e. timeouts)</dd>
             N/A  # noqa: DAR202
 
         Raises:
-            ValueError: if driver value is invalid
-            TypeError: if auth_strict_key/keepalive is not a bool or values cannot be converted to
-                ints where appropriate (i.e. timeouts)
-            TypeError: if on_open is not a callable
-            TypeError: if on_close is not a callable
+            ValueError: if transport value is invalid
 
         &#34;&#34;&#34;
         # create a dict of all &#34;initialization&#34; args for posterity and for passing to Transport
         # and Channel objects
         self._initialization_args: Dict[str, Any] = {}
 
-        if not isinstance(port, int):
-            raise TypeError(f&#34;port should be int, got {type(port)}&#34;)
-        self._host = host.strip()
-        self._initialization_args[&#34;host&#34;] = host.strip()
-        self._initialization_args[&#34;port&#34;] = port
-
+        self._setup_host(host, port)
         self._setup_auth(auth_username, auth_password, auth_public_key, auth_strict_key)
-
         self._setup_timeouts(timeout_socket, timeout_transport, timeout_ops, timeout_exit)
-
-        if not isinstance(keepalive, bool):
-            raise TypeError(f&#34;keepalive should be bool, got {type(keepalive)}&#34;)
-        if keepalive_type not in [&#34;network&#34;, &#34;standard&#34;]:
-            raise ValueError(
-                f&#34;{keepalive_type} is an invalid session_keepalive_type; must be &#39;network&#39; or &#34;
-                &#34;&#39;standard&#39;.&#34;
-            )
-        self._initialization_args[&#34;keepalive&#34;] = keepalive
-        self._initialization_args[&#34;keepalive_interval&#34;] = int(keepalive_interval)
-        self._initialization_args[&#34;keepalive_type&#34;] = keepalive_type
-        self._initialization_args[&#34;keepalive_pattern&#34;] = keepalive_pattern
-
+        self._setup_keepalive(keepalive, keepalive_type, keepalive_interval, keepalive_pattern)
         self._setup_comms(comms_prompt_pattern, comms_return_char, comms_ansi)
-
-        if on_open is not None and not callable(on_open):
-            raise TypeError(f&#34;on_open must be a callable, got {type(on_open)}&#34;)
-        if on_close is not None and not callable(on_close):
-            raise TypeError(f&#34;on_close must be a callable, got {type(on_close)}&#34;)
-        self.on_open = on_open
-        self.on_close = on_close
-        self._initialization_args[&#34;on_open&#34;] = on_open
-        self._initialization_args[&#34;on_close&#34;] = on_open
+        self._setup_callables(on_open, on_close)
 
         if transport not in (&#34;ssh2&#34;, &#34;paramiko&#34;, &#34;system&#34;, &#34;telnet&#34;):
             raise ValueError(
-                f&#34;transport should be one of ssh2|paramiko|system|telnet, got {transport}&#34;
+                f&#34;`transport` should be one of ssh2|paramiko|system|telnet, got `{transport}`&#34;
             )
         self._transport = transport
 
@@ -1076,6 +1065,30 @@ ints where appropriate (i.e. timeouts)</dd>
             f&#34;transport={self._transport!r})&#34;
         )
 
+    def _setup_host(self, host: str, port: int) -&gt; None:
+        &#34;&#34;&#34;
+        Parse and setup host attributes
+
+        Args:
+            host: host to parse/set
+            port: port to parse/set
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            ValueError: if host is not provided
+            TypeError: if port is not an integer
+
+        &#34;&#34;&#34;
+        if not host:
+            raise ValueError(&#34;`host` should be a hostname/ip address, got nothing!&#34;)
+        if not isinstance(port, int):
+            raise TypeError(f&#34;`port` should be int, got {type(port)}&#34;)
+        self._host = host.strip()
+        self._initialization_args[&#34;host&#34;] = host.strip()
+        self._initialization_args[&#34;port&#34;] = port
+
     def _setup_auth(
         self, auth_username: str, auth_password: str, auth_public_key: str, auth_strict_key: bool
     ) -&gt; None:
@@ -1097,10 +1110,11 @@ ints where appropriate (i.e. timeouts)</dd>
 
         &#34;&#34;&#34;
         if not isinstance(auth_strict_key, bool):
-            raise TypeError(f&#34;auth_strict_key should be bool, got {type(auth_strict_key)}&#34;)
-        self._initialization_args[&#34;auth_strict_key&#34;] = auth_strict_key
+            raise TypeError(f&#34;`auth_strict_key` should be bool, got {type(auth_strict_key)}&#34;)
 
+        self._initialization_args[&#34;auth_strict_key&#34;] = auth_strict_key
         self._initialization_args[&#34;auth_username&#34;] = auth_username.strip()
+        self._initialization_args[&#34;auth_password&#34;] = auth_password.strip()
 
         if auth_public_key:
             public_key_path = Path.expanduser(Path(auth_public_key.strip()))
@@ -1111,11 +1125,6 @@ ints where appropriate (i.e. timeouts)</dd>
             )
         else:
             self._initialization_args[&#34;auth_public_key&#34;] = auth_public_key.encode()
-
-        if auth_password:
-            self._initialization_args[&#34;auth_password&#34;] = auth_password.strip()
-        else:
-            self._initialization_args[&#34;auth_password&#34;] = auth_password
 
     def _setup_timeouts(
         self, timeout_socket: int, timeout_transport: int, timeout_ops: int, timeout_exit: bool
@@ -1137,12 +1146,43 @@ ints where appropriate (i.e. timeouts)</dd>
 
         &#34;&#34;&#34;
         if not isinstance(timeout_exit, bool):
-            raise TypeError(f&#34;timeout_exit should be bool, got {type(timeout_exit)}&#34;)
+            raise TypeError(f&#34;`timeout_exit` should be bool, got {type(timeout_exit)}&#34;)
 
         self._initialization_args[&#34;timeout_socket&#34;] = int(timeout_socket)
         self._initialization_args[&#34;timeout_transport&#34;] = int(timeout_transport)
         self._initialization_args[&#34;timeout_ops&#34;] = int(timeout_ops)
         self._initialization_args[&#34;timeout_exit&#34;] = timeout_exit
+
+    def _setup_keepalive(
+        self, keepalive: bool, keepalive_type: str, keepalive_interval: int, keepalive_pattern: str
+    ) -&gt; None:
+        &#34;&#34;&#34;
+        Parse and setup keepalive attributes
+
+        Args:
+            keepalive: keepalive to parse/set
+            keepalive_type: keepalive_type to parse/set
+            keepalive_interval: keepalive_interval to parse/set
+            keepalive_pattern: keepalive_pattern to parse/set
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            TypeError: if keepalive is not a bool
+            ValueError: if keepalive_type is not valid
+
+        &#34;&#34;&#34;
+        if not isinstance(keepalive, bool):
+            raise TypeError(f&#34;`keepalive` should be bool, got {type(keepalive)}&#34;)
+        if keepalive_type not in [&#34;network&#34;, &#34;standard&#34;]:
+            raise ValueError(
+                f&#34;`{keepalive_type}` is an invalid keepalive_type; must be &#39;network&#39; or &#39;standard&#39;&#34;
+            )
+        self._initialization_args[&#34;keepalive&#34;] = keepalive
+        self._initialization_args[&#34;keepalive_interval&#34;] = int(keepalive_interval)
+        self._initialization_args[&#34;keepalive_type&#34;] = keepalive_type
+        self._initialization_args[&#34;keepalive_pattern&#34;] = keepalive_pattern
 
     def _setup_comms(
         self, comms_prompt_pattern: str, comms_return_char: str, comms_ansi: bool
@@ -1166,13 +1206,39 @@ ints where appropriate (i.e. timeouts)</dd>
         re.compile(comms_prompt_pattern, flags=re.M | re.I)
 
         if not isinstance(comms_return_char, str):
-            raise TypeError(f&#34;comms_return_char should be str, got {type(comms_return_char)}&#34;)
+            raise TypeError(f&#34;`comms_return_char` should be str, got {type(comms_return_char)}&#34;)
         if not isinstance(comms_ansi, bool):
-            raise TypeError(f&#34;comms_ansi should be bool, got {type(comms_ansi)}&#34;)
+            raise TypeError(f&#34;`comms_ansi` should be bool, got {type(comms_ansi)}&#34;)
 
         self._initialization_args[&#34;comms_prompt_pattern&#34;] = comms_prompt_pattern
         self._initialization_args[&#34;comms_return_char&#34;] = comms_return_char
         self._initialization_args[&#34;comms_ansi&#34;] = comms_ansi
+
+    def _setup_callables(
+        self, on_open: Optional[Callable[..., Any]], on_close: Optional[Callable[..., Any]]
+    ) -&gt; None:
+        &#34;&#34;&#34;
+        Parse and setup callables (on_open/on_close)
+
+        Args:
+            on_open: on_open to parse/set
+            on_close: on_close to parse/set
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            TypeError: if port is not an integer
+
+        &#34;&#34;&#34;
+        if on_open is not None and not callable(on_open):
+            raise TypeError(f&#34;`on_open` must be a callable, got {type(on_open)}&#34;)
+        if on_close is not None and not callable(on_close):
+            raise TypeError(f&#34;`on_close` must be a callable, got {type(on_close)}&#34;)
+        self.on_open = on_open
+        self.on_close = on_close
+        self._initialization_args[&#34;on_open&#34;] = on_open
+        self._initialization_args[&#34;on_close&#34;] = on_close
 
     def _setup_ssh_args(
         self, ssh_config_file: Union[str, bool], ssh_known_hosts_file: Union[str, bool]
@@ -1194,10 +1260,10 @@ ints where appropriate (i.e. timeouts)</dd>
 
         &#34;&#34;&#34;
         if not isinstance(ssh_config_file, (str, bool)):
-            raise TypeError(f&#34;`ssh_config_file` should be str or bool, got {type(ssh_config_file)}&#34;)
+            raise TypeError(f&#34;`ssh_config_file` must be str or bool, got {type(ssh_config_file)}&#34;)
         if not isinstance(ssh_known_hosts_file, (str, bool)):
             raise TypeError(
-                &#34;`ssh_known_hosts_file` should be str or bool, got &#34; f&#34;{type(ssh_known_hosts_file)}&#34;
+                &#34;`ssh_known_hosts_file` must be str or bool, got &#34; f&#34;{type(ssh_known_hosts_file)}&#34;
             )
 
         if ssh_config_file is not False:
@@ -1278,6 +1344,8 @@ ints where appropriate (i.e. timeouts)</dd>
             N/A
 
         &#34;&#34;&#34;
+        if self.on_close:
+            self.on_close(self)
         self.transport.close()
 
     def isalive(self) -&gt; bool:
@@ -1342,6 +1410,8 @@ ints where appropriate (i.e. timeouts)</dd>
         N/A
 
     &#34;&#34;&#34;
+    if self.on_close:
+        self.on_close(self)
     self.transport.close()</code></pre>
 </details>
 </dd>
@@ -1484,7 +1554,7 @@ ints where appropriate (i.e. timeouts)</dd>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.4</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.5</a>.</p>
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad()</script>

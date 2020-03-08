@@ -15,7 +15,6 @@ from scrapli.helper import (
     strip_ansi,
     textfsm_parse,
 )
-from scrapli.ssh_config import SSHConfig
 
 UNIT_TEST_DIR = f"{Path(scrapli.__file__).parents[1]}/tests/unit/"
 
@@ -88,7 +87,7 @@ def test_text_textfsm_parse_success_string_path():
 def test_text_textfsm_parse_failure():
     template = _textfsm_get_template("cisco_ios", "show ip arp")
     result = textfsm_parse(template, "not really arp data")
-    assert result is None
+    assert result == []
 
 
 def test_resolve_ssh_config_file_explicit():

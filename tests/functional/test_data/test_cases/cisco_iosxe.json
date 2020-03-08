@@ -75,6 +75,72 @@
         }
       ]
     },
+    "send_command": {
+      "tests": [
+        {
+          "name": "send command simple",
+          "notes": "should always work, no disable paging required, if this is broken things are in bad shape!",
+          "replace_bytes": false,
+          "replace_timestamps": false,
+          "replace_cfg_by": false,
+          "replace_crypto": false,
+          "kwargs": {},
+          "inputs": [
+            "show run | i hostname"
+          ],
+          "outputs": [
+            "hostname csr1000v"
+          ]
+        },
+        {
+          "name": "send command simple, don't strip prompt",
+          "notes": "should always work, no disable paging required, if this is broken things are in bad shape!",
+          "replace_bytes": false,
+          "replace_timestamps": false,
+          "replace_cfg_by": false,
+          "replace_crypto": false,
+          "kwargs": {
+            "strip_prompt": false
+          },
+          "inputs": [
+            "show run | i hostname"
+          ],
+          "outputs": [
+            "hostname csr1000v\ncsr1000v#"
+          ]
+        },
+        {
+          "name": "send command long output",
+          "notes": "send input test that would require disable paging to have succeeded, base network driver automatically disables paging",
+          "replace_bytes": true,
+          "replace_timestamps": true,
+          "replace_cfg_by": true,
+          "replace_crypto": true,
+          "kwargs": {},
+          "inputs": [
+            "show run"
+          ],
+          "outputs": [
+            "Building configuration...\n\nCurrent configuration : CONFIG_BYTES\n!\n! Last configuration change at TIME_STAMP_REPLACED\n!\nversion 16.4\nservice timestamps debug datetime msec\nservice timestamps log datetime msec\nno platform punt-keepalive disable-kernel-core\nplatform console serial\n!\nhostname csr1000v\n!\nboot-start-marker\nboot-end-marker\n!\n!\n!\nno aaa new-model\n!\n!\n!\n!\n!\n!\n!\n!\n!\n\n\n\nip domain name example.com\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\nsubscriber templating\n!\n!\n!\nmultilink bundle-name authenticated\n!\n!\n!\n!\n!\n!\n\n\n!\n!\n!\n!\n!\n!\n!\nlicense udi pid CSR1000V sn 9FKLJWM5EB0\ndiagnostic bootup level minimal\n!\nspanning-tree extend system-id\nnetconf-yang cisco-odm actions ACL\nnetconf-yang cisco-odm actions BGP\nnetconf-yang cisco-odm actions OSPF\nnetconf-yang cisco-odm actions Archive\nnetconf-yang cisco-odm actions IPRoute\nnetconf-yang cisco-odm actions EFPStats\nnetconf-yang cisco-odm actions IPSLAStats\nnetconf-yang cisco-odm actions Interfaces\nnetconf-yang cisco-odm actions Environment\nnetconf-yang cisco-odm actions FlowMonitor\nnetconf-yang cisco-odm actions MemoryStats\nnetconf-yang cisco-odm actions BFDNeighbors\nnetconf-yang cisco-odm actions BridgeDomain\nnetconf-yang cisco-odm actions CPUProcesses\nnetconf-yang cisco-odm actions LLDPNeighbors\nnetconf-yang cisco-odm actions VirtualService\nnetconf-yang cisco-odm actions MemoryProcesses\nnetconf-yang cisco-odm actions EthernetCFMStats\nnetconf-yang cisco-odm actions MPLSLDPNeighbors\nnetconf-yang cisco-odm actions PlatformSoftware\nnetconf-yang cisco-odm actions MPLSStaticBinding\nnetconf-yang cisco-odm actions MPLSForwardingTable\nnetconf-yang\n!\nrestconf\n!\nusername vrnetlab privilege 15 password 0 VR-netlab9\n!\nredundancy\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\ninterface GigabitEthernet1\n ip address 10.0.0.15 255.255.255.0\n negotiation auto\n no mop enabled\n no mop sysid\n!\ninterface GigabitEthernet2\n no ip address\n shutdown\n negotiation auto\n no mop enabled\n no mop sysid\n!\ninterface GigabitEthernet3\n no ip address\n shutdown\n negotiation auto\n no mop enabled\n no mop sysid\n!\ninterface GigabitEthernet4\n no ip address\n shutdown\n negotiation auto\n no mop enabled\n no mop sysid\n!\ninterface GigabitEthernet5\n no ip address\n shutdown\n negotiation auto\n no mop enabled\n no mop sysid\n!\ninterface GigabitEthernet6\n no ip address\n shutdown\n negotiation auto\n no mop enabled\n no mop sysid\n!\ninterface GigabitEthernet7\n no ip address\n shutdown\n negotiation auto\n no mop enabled\n no mop sysid\n!\ninterface GigabitEthernet8\n no ip address\n shutdown\n negotiation auto\n no mop enabled\n no mop sysid\n!\ninterface GigabitEthernet9\n no ip address\n shutdown\n negotiation auto\n no mop enabled\n no mop sysid\n!\ninterface GigabitEthernet10\n no ip address\n shutdown\n negotiation auto\n no mop enabled\n no mop sysid\n!\n!\nvirtual-service csr_mgmt\n!\nip forward-protocol nd\nno ip http server\nno ip http secure-server\n!\n!\n!\n!\n!\n!\n!\ncontrol-plane\n!\n !\n !\n !\n !\n!\n!\n!\n!\n!\nline con 0\n stopbits 1\nline vty 0 4\n login local\n transport input all\nline vty 5 98\n login local\n transport input all\n!\n!\n!\n!\n!\n!\nend"
+          ]
+        },
+        {
+          "name": "send command get structured output",
+          "notes": "send input and ask for textfsm parsed response in result object",
+          "replace_bytes": false,
+          "replace_timestamps": false,
+          "replace_cfg_by": false,
+          "replace_crypto": false,
+          "kwargs": {"textfsm":  true},
+          "inputs": [
+            "show ip route"
+          ],
+          "outputs": [
+            "Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP\n       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area\n       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2\n       E1 - OSPF external type 1, E2 - OSPF external type 2\n       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2\n       ia - IS-IS inter area, * - candidate default, U - per-user static route\n       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP\n       a - application route\n       + - replicated route, % - next hop override, p - overrides from PfR\n\nGateway of last resort is not set\n\n      10.0.0.0/8 is variably subnetted, 2 subnets, 2 masks\nC        10.0.0.0/24 is directly connected, GigabitEthernet1\nL        10.0.0.15/32 is directly connected, GigabitEthernet1"
+          ]
+        }
+      ]
+    },
     "send_commands": {
       "tests": [
         {
