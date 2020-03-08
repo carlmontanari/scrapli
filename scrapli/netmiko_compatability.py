@@ -207,15 +207,16 @@ class NetmikoNetworkDriver:
         enter_config_mode = kwargs.pop("enter_config_mode", True)
         exit_config_mode = kwargs.pop("exit_config_mode", True)
 
+        if isinstance(config_commands, str):
+            configs = [config_commands]
+        else:
+            configs = config_commands
+
         if not enter_config_mode:
-            if isinstance(config_commands, str):
-                configs = [config_commands]
-            else:
-                configs = config_commands
             results = self.scrapli_driver.send_commands(configs, strip_prompt)
         elif not exit_config_mode:
             self.scrapli_driver.acquire_priv("configuration")
-            results = self.scrapli_driver.channel.send_inputs(config_commands, strip_prompt)
+            results = self.scrapli_driver.channel.send_inputs(configs, strip_prompt)
         else:
             results = self.scrapli_driver.send_configs(config_commands, strip_prompt)
         # scrapli always strips command, so there isn't typically anything useful coming back

@@ -50,7 +50,7 @@ def iosxr_on_open(conn: NetworkDriver) -&gt; None:
     # maybe this is an artifact from previous iterations/tests and can be done away with...
     time.sleep(1)
     conn.acquire_priv(conn.default_desired_priv)
-    conn.channel.send_inputs(&#34;terminal length 0&#34;)
+    conn.channel.send_input(&#34;terminal length 0&#34;)
 
 
 def iosxr_on_close(conn: NetworkDriver) -&gt; None:
@@ -274,7 +274,7 @@ class IOSXRDriver(NetworkDriver):
     # maybe this is an artifact from previous iterations/tests and can be done away with...
     time.sleep(1)
     conn.acquire_priv(conn.default_desired_priv)
-    conn.channel.send_inputs(&#34;terminal length 0&#34;)</code></pre>
+    conn.channel.send_input(&#34;terminal length 0&#34;)</code></pre>
 </details>
 </dd>
 </dl>

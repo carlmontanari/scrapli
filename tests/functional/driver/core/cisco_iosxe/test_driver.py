@@ -36,7 +36,9 @@ def test_get_prompt(cisco_iosxe_driver, transport):
     ids=[n["name"] for n in CISCO_IOSXE_TEST_CASES["send_commands"]["tests"]],
 )
 @pytest.mark.parametrize(
-    "transport", ["system", "ssh2", "paramiko", "telnet"], ids=["system", "ssh2", "paramiko", "telnet"]
+    "transport",
+    ["system", "ssh2", "paramiko", "telnet"],
+    ids=["system", "ssh2", "paramiko", "telnet"],
 )
 def test_send_command(cisco_iosxe_driver, transport, test):
     device = CISCO_IOSXE_DEVICE.copy()
@@ -59,7 +61,9 @@ def test_send_command(cisco_iosxe_driver, transport, test):
     ids=[n["name"] for n in CISCO_IOSXE_TEST_CASES["send_commands"]["tests"]],
 )
 @pytest.mark.parametrize(
-    "transport", ["system", "ssh2", "paramiko", "telnet"], ids=["system", "ssh2", "paramiko", "telnet"]
+    "transport",
+    ["system", "ssh2", "paramiko", "telnet"],
+    ids=["system", "ssh2", "paramiko", "telnet"],
 )
 def test_send_commands(cisco_iosxe_driver, transport, test):
     device = CISCO_IOSXE_DEVICE.copy()
@@ -83,7 +87,9 @@ def test_send_commands(cisco_iosxe_driver, transport, test):
     ids=[n["name"] for n in CISCO_IOSXE_TEST_CASES["send_configs"]["tests"]],
 )
 @pytest.mark.parametrize(
-    "transport", ["system", "ssh2", "paramiko", "telnet"], ids=["system", "ssh2", "paramiko", "telnet"]
+    "transport",
+    ["system", "ssh2", "paramiko", "telnet"],
+    ids=["system", "ssh2", "paramiko", "telnet"],
 )
 def test_send_configs(cisco_iosxe_driver, transport, test):
     device = CISCO_IOSXE_DEVICE.copy()
@@ -103,7 +109,9 @@ def test_send_configs(cisco_iosxe_driver, transport, test):
 
 
 @pytest.mark.parametrize(
-    "transport", ["system", "ssh2", "paramiko", "telnet"], ids=["system", "ssh2", "paramiko", "telnet"]
+    "transport",
+    ["system", "ssh2", "paramiko", "telnet"],
+    ids=["system", "ssh2", "paramiko", "telnet"],
 )
 def test__acquire_priv_escalate(cisco_iosxe_driver, transport):
     device = CISCO_IOSXE_DEVICE.copy()
@@ -117,7 +125,9 @@ def test__acquire_priv_escalate(cisco_iosxe_driver, transport):
 
 
 @pytest.mark.parametrize(
-    "transport", ["system", "ssh2", "paramiko", "telnet"], ids=["system", "ssh2", "paramiko", "telnet"]
+    "transport",
+    ["system", "ssh2", "paramiko", "telnet"],
+    ids=["system", "ssh2", "paramiko", "telnet"],
 )
 def test__acquire_priv_deescalate(cisco_iosxe_driver, transport):
     device = CISCO_IOSXE_DEVICE.copy()
@@ -149,4 +159,3 @@ def test_channel_send_inputs_interact(cisco_iosxe_driver, transport, test):
     cleaned_result = clean_output_data(test, results[0].result)
     assert cleaned_result == test["outputs"][0]
     conn.close()
-

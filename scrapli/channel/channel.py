@@ -1,7 +1,7 @@
 """scrapli.channel.channel"""
 import re
 from logging import getLogger
-from typing import List, Tuple, Union
+from typing import List, Tuple
 
 from scrapli.decorators import operation_timeout
 from scrapli.helper import get_prompt_pattern, normalize_lines, strip_ansi
@@ -206,14 +206,12 @@ class Channel:
                 current_prompt = channel_match.group(0)
                 return current_prompt.decode()
 
-    def send_inputs(
-        self, inputs: Union[str, List[str], Tuple[str]], strip_prompt: bool = True
-    ) -> List[Response]:
+    def send_input(self, channel_input: str, strip_prompt: bool = True) -> Response:
         """
-        Primary entry point to send data to devices in shell mode; accept inputs and return results
+        Primary entry point to send data to devices in shell mode; accept input and returns result
 
         Args:
-            inputs: list of strings or string of inputs to send to channel
+            channel_input: string input to send to channel
             strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
 
         Returns:
@@ -223,12 +221,40 @@ class Channel:
             N/A
 
         """
-        if isinstance(inputs, (list, tuple)):
-            raw_inputs = tuple(inputs)
-        else:
-            raw_inputs = (inputs,)
+        if not isinstance(channel_input, str):
+            raise TypeError(
+                f"`send_input` expects a single string, got {type(channel_input)}. "
+                "to send a list of inputs use the `send_inputs` method instead."
+            )
+        response = Response(self.transport.host, channel_input)
+        raw_result, processed_result = self._send_input(channel_input, strip_prompt)
+        response.raw_result = raw_result.decode()
+        response.record_response(processed_result.decode().strip())
+        return response
+
+    def send_inputs(self, channel_inputs: List[str], strip_prompt: bool = True) -> List[Response]:
+        """
+        Primary entry point to send data to devices in shell mode; accept inputs and return results
+
+        Args:
+            channel_inputs: list of string inputs to send to channel
+            strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
+
+        Returns:
+            responses: list of Response object(s)
+
+        Raises:
+            N/A
+
+        """
+        if not isinstance(channel_inputs, list):
+            raise TypeError(
+                f"`send_inputs` expects a list of strings, got {type(channel_inputs)}. "
+                "to send a single input use the `send_input` method instead."
+            )
+
         responses = []
-        for channel_input in raw_inputs:
+        for channel_input in channel_inputs:
             response = Response(self.transport.host, channel_input)
             raw_result, processed_result = self._send_input(channel_input, strip_prompt)
             response.raw_result = raw_result.decode()
@@ -265,13 +291,13 @@ class Channel:
         return output, processed_output
 
     def send_inputs_interact(
-        self, inputs: Union[List[str], Tuple[str, str, str, str]], hidden_response: bool = False,
+        self, inputs: List[str], hidden_response: bool = False
     ) -> List[Response]:
         """
         Send inputs in an interactive fashion, used to handle prompts that occur after an input.
 
         Args:
-            inputs: list or tuple containing strings representing
+            inputs: list of four string elements representing...
                 channel_input - initial input to send
                 expected_prompt - prompt to expect after initial input
                 response - response to prompt
@@ -285,8 +311,8 @@ class Channel:
             TypeError: if inputs is not tuple or list
 
         """
-        if not isinstance(inputs, (list, tuple)):
-            raise TypeError(f"send_inputs_interact expects a List or Tuple, got {type(inputs)}")
+        if not isinstance(inputs, list):
+            raise TypeError(f"send_inputs_interact expects a List, got {type(inputs)}")
         input_stages = (inputs,)
         responses = []
         for channel_input, expectation, channel_response, finale in input_stages:

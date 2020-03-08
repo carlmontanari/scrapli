@@ -328,7 +328,7 @@ class TelnetTransport(Transport):
             N/A
 
         Returns:
-            N/A  # noqa: DAR202
+           bool: True/False connection alive
 
         Raises:
             N/A
@@ -347,7 +347,7 @@ class TelnetTransport(Transport):
             N/A
 
         Returns:
-            N/A  # noqa: DAR202
+            bytes: bytes read from the telnet channel
 
         Raises:
             N/A
@@ -848,7 +848,7 @@ and is ignored after authentication is completed.</dd>
             N/A
 
         Returns:
-            N/A  # noqa: DAR202
+           bool: True/False connection alive
 
         Raises:
             N/A
@@ -867,7 +867,7 @@ and is ignored after authentication is completed.</dd>
             N/A
 
         Returns:
-            N/A  # noqa: DAR202
+            bytes: bytes read from the telnet channel
 
         Raises:
             N/A
@@ -943,9 +943,8 @@ and is ignored after authentication is completed.</dd>
 <p>N/A</p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>N</code>/<code>A</code>
-# <code>noqa</code>: <code>DAR202</code></dt>
-<dd>&nbsp;</dd>
+<dt><strong><code>bool</code></strong></dt>
+<dd>True/False connection alive</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
@@ -964,7 +963,7 @@ and is ignored after authentication is completed.</dd>
         N/A
 
     Returns:
-        N/A  # noqa: DAR202
+       bool: True/False connection alive
 
     Raises:
         N/A

@@ -92,7 +92,7 @@ def test__send_input(mocked_channel):
     assert processed_output.lstrip().decode() == channel_output_1
 
 
-def test_send_inputs(mocked_channel):
+def test_send_input(mocked_channel):
     channel_input_1 = "show ip access-lists"
     channel_output_1 = """Extended IP access list ext_acl_fw
     10 deny ip 0.0.0.0 0.255.255.255 any
@@ -112,8 +112,8 @@ def test_send_inputs(mocked_channel):
 3560CX#"""
     test_operations = [(channel_input_1, channel_output_1)]
     conn = mocked_channel(test_operations)
-    output = conn.channel.send_inputs(channel_input_1, strip_prompt=False)
-    assert output[0].result == channel_output_1
+    output = conn.channel.send_input(channel_input_1, strip_prompt=False)
+    assert output.result == channel_output_1
 
 
 def test_send_inputs_multiple(mocked_channel):
@@ -140,14 +140,14 @@ def test_send_inputs_multiple(mocked_channel):
 3560CX#"""
     test_operations = [(channel_input_1, channel_output_1), (channel_input_2, channel_output_2)]
     conn = mocked_channel(test_operations)
-    output = conn.channel.send_inputs((channel_input_1, channel_input_2), strip_prompt=False)
+    output = conn.channel.send_inputs([channel_input_1, channel_input_2], strip_prompt=False)
     assert output[0].result == channel_output_1
     assert output[1].result == channel_output_2
 
 
 def test_send_inputs_interact(mocked_channel):
-    interact = ("clear logg", "Clear logging buffer [confirm]", "", "3560CX#")
-    test_operations = [(interact[0], interact[1]), (interact[2], interact[3])]
+    interact = ["clear logg", "Clear logging buffer [confirm]", "", "3560CX#"]
+    test_operations = [[interact[0], interact[1]], [interact[2], interact[3]]]
     conn = mocked_channel(test_operations)
     output = conn.channel.send_inputs_interact(interact, hidden_response=False)
     assert output[0].result == "Clear logging buffer [confirm]\n\n3560CX#"
@@ -158,7 +158,7 @@ def test_send_inputs_interact_invalid_input(mocked_channel):
     conn = mocked_channel([])
     with pytest.raises(TypeError) as exc:
         conn.channel.send_inputs_interact(interact, hidden_response=False)
-    assert str(exc.value) == "send_inputs_interact expects a List or Tuple, got <class 'str'>"
+    assert str(exc.value) == "send_inputs_interact expects a List, got <class 'str'>"
 
 
 def test__send_return(mocked_channel):

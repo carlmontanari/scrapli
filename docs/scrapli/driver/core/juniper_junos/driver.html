@@ -46,9 +46,9 @@ def junos_on_open(conn: NetworkDriver) -&gt; None:
         N/A
     &#34;&#34;&#34;
     conn.acquire_priv(conn.default_desired_priv)
-    conn.channel.send_inputs(&#34;set cli complete-on-space off&#34;)
-    conn.channel.send_inputs(&#34;set cli screen-length 0&#34;)
-    conn.channel.send_inputs(&#34;set cli screen-width 511&#34;)
+    conn.channel.send_input(&#34;set cli complete-on-space off&#34;)
+    conn.channel.send_input(&#34;set cli screen-length 0&#34;)
+    conn.channel.send_input(&#34;set cli screen-width 511&#34;)
 
 
 def junos_on_close(conn: NetworkDriver) -&gt; None:
@@ -255,9 +255,9 @@ class JunosDriver(NetworkDriver):
         N/A
     &#34;&#34;&#34;
     conn.acquire_priv(conn.default_desired_priv)
-    conn.channel.send_inputs(&#34;set cli complete-on-space off&#34;)
-    conn.channel.send_inputs(&#34;set cli screen-length 0&#34;)
-    conn.channel.send_inputs(&#34;set cli screen-width 511&#34;)</code></pre>
+    conn.channel.send_input(&#34;set cli complete-on-space off&#34;)
+    conn.channel.send_input(&#34;set cli screen-length 0&#34;)
+    conn.channel.send_input(&#34;set cli screen-width 511&#34;)</code></pre>
 </details>
 </dd>
 </dl>

@@ -28,7 +28,7 @@
 <pre><code class="python">&#34;&#34;&#34;scrapli.channel.channel&#34;&#34;&#34;
 import re
 from logging import getLogger
-from typing import List, Tuple, Union
+from typing import List, Tuple
 
 from scrapli.decorators import operation_timeout
 from scrapli.helper import get_prompt_pattern, normalize_lines, strip_ansi
@@ -233,14 +233,12 @@ class Channel:
                 current_prompt = channel_match.group(0)
                 return current_prompt.decode()
 
-    def send_inputs(
-        self, inputs: Union[str, List[str], Tuple[str]], strip_prompt: bool = True
-    ) -&gt; List[Response]:
+    def send_input(self, channel_input: str, strip_prompt: bool = True) -&gt; Response:
         &#34;&#34;&#34;
-        Primary entry point to send data to devices in shell mode; accept inputs and return results
+        Primary entry point to send data to devices in shell mode; accept input and returns result
 
         Args:
-            inputs: list of strings or string of inputs to send to channel
+            channel_input: string input to send to channel
             strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
 
         Returns:
@@ -250,12 +248,40 @@ class Channel:
             N/A
 
         &#34;&#34;&#34;
-        if isinstance(inputs, (list, tuple)):
-            raw_inputs = tuple(inputs)
-        else:
-            raw_inputs = (inputs,)
+        if not isinstance(channel_input, str):
+            raise TypeError(
+                f&#34;`send_input` expects a single string, got {type(channel_input)}. &#34;
+                &#34;to send a list of inputs use the `send_inputs` method instead.&#34;
+            )
+        response = Response(self.transport.host, channel_input)
+        raw_result, processed_result = self._send_input(channel_input, strip_prompt)
+        response.raw_result = raw_result.decode()
+        response.record_response(processed_result.decode().strip())
+        return response
+
+    def send_inputs(self, channel_inputs: List[str], strip_prompt: bool = True) -&gt; List[Response]:
+        &#34;&#34;&#34;
+        Primary entry point to send data to devices in shell mode; accept inputs and return results
+
+        Args:
+            channel_inputs: list of string inputs to send to channel
+            strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
+
+        Returns:
+            responses: list of Response object(s)
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        if not isinstance(channel_inputs, list):
+            raise TypeError(
+                f&#34;`send_inputs` expects a list of strings, got {type(channel_inputs)}. &#34;
+                &#34;to send a single input use the `send_input` method instead.&#34;
+            )
+
         responses = []
-        for channel_input in raw_inputs:
+        for channel_input in channel_inputs:
             response = Response(self.transport.host, channel_input)
             raw_result, processed_result = self._send_input(channel_input, strip_prompt)
             response.raw_result = raw_result.decode()
@@ -292,13 +318,13 @@ class Channel:
         return output, processed_output
 
     def send_inputs_interact(
-        self, inputs: Union[List[str], Tuple[str, str, str, str]], hidden_response: bool = False,
+        self, inputs: List[str], hidden_response: bool = False
     ) -&gt; List[Response]:
         &#34;&#34;&#34;
         Send inputs in an interactive fashion, used to handle prompts that occur after an input.
 
         Args:
-            inputs: list or tuple containing strings representing
+            inputs: list of four string elements representing...
                 channel_input - initial input to send
                 expected_prompt - prompt to expect after initial input
                 response - response to prompt
@@ -312,8 +338,8 @@ class Channel:
             TypeError: if inputs is not tuple or list
 
         &#34;&#34;&#34;
-        if not isinstance(inputs, (list, tuple)):
-            raise TypeError(f&#34;send_inputs_interact expects a List or Tuple, got {type(inputs)}&#34;)
+        if not isinstance(inputs, list):
+            raise TypeError(f&#34;send_inputs_interact expects a List, got {type(inputs)}&#34;)
         input_stages = (inputs,)
         responses = []
         for channel_input, expectation, channel_response, finale in input_stages:
@@ -635,14 +661,12 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
                 current_prompt = channel_match.group(0)
                 return current_prompt.decode()
 
-    def send_inputs(
-        self, inputs: Union[str, List[str], Tuple[str]], strip_prompt: bool = True
-    ) -&gt; List[Response]:
+    def send_input(self, channel_input: str, strip_prompt: bool = True) -&gt; Response:
         &#34;&#34;&#34;
-        Primary entry point to send data to devices in shell mode; accept inputs and return results
+        Primary entry point to send data to devices in shell mode; accept input and returns result
 
         Args:
-            inputs: list of strings or string of inputs to send to channel
+            channel_input: string input to send to channel
             strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
 
         Returns:
@@ -652,12 +676,40 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
             N/A
 
         &#34;&#34;&#34;
-        if isinstance(inputs, (list, tuple)):
-            raw_inputs = tuple(inputs)
-        else:
-            raw_inputs = (inputs,)
+        if not isinstance(channel_input, str):
+            raise TypeError(
+                f&#34;`send_input` expects a single string, got {type(channel_input)}. &#34;
+                &#34;to send a list of inputs use the `send_inputs` method instead.&#34;
+            )
+        response = Response(self.transport.host, channel_input)
+        raw_result, processed_result = self._send_input(channel_input, strip_prompt)
+        response.raw_result = raw_result.decode()
+        response.record_response(processed_result.decode().strip())
+        return response
+
+    def send_inputs(self, channel_inputs: List[str], strip_prompt: bool = True) -&gt; List[Response]:
+        &#34;&#34;&#34;
+        Primary entry point to send data to devices in shell mode; accept inputs and return results
+
+        Args:
+            channel_inputs: list of string inputs to send to channel
+            strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
+
+        Returns:
+            responses: list of Response object(s)
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        if not isinstance(channel_inputs, list):
+            raise TypeError(
+                f&#34;`send_inputs` expects a list of strings, got {type(channel_inputs)}. &#34;
+                &#34;to send a single input use the `send_input` method instead.&#34;
+            )
+
         responses = []
-        for channel_input in raw_inputs:
+        for channel_input in channel_inputs:
             response = Response(self.transport.host, channel_input)
             raw_result, processed_result = self._send_input(channel_input, strip_prompt)
             response.raw_result = raw_result.decode()
@@ -694,13 +746,13 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
         return output, processed_output
 
     def send_inputs_interact(
-        self, inputs: Union[List[str], Tuple[str, str, str, str]], hidden_response: bool = False,
+        self, inputs: List[str], hidden_response: bool = False
     ) -&gt; List[Response]:
         &#34;&#34;&#34;
         Send inputs in an interactive fashion, used to handle prompts that occur after an input.
 
         Args:
-            inputs: list or tuple containing strings representing
+            inputs: list of four string elements representing...
                 channel_input - initial input to send
                 expected_prompt - prompt to expect after initial input
                 response - response to prompt
@@ -714,8 +766,8 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
             TypeError: if inputs is not tuple or list
 
         &#34;&#34;&#34;
-        if not isinstance(inputs, (list, tuple)):
-            raise TypeError(f&#34;send_inputs_interact expects a List or Tuple, got {type(inputs)}&#34;)
+        if not isinstance(inputs, list):
+            raise TypeError(f&#34;send_inputs_interact expects a List, got {type(inputs)}&#34;)
         input_stages = (inputs,)
         responses = []
         for channel_input, expectation, channel_response, finale in input_stages:
@@ -857,15 +909,15 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
     return future.result()</code></pre>
 </details>
 </dd>
-<dt id="scrapli.channel.channel.Channel.send_inputs"><code class="name flex">
-<span>def <span class="ident">send_inputs</span></span>(<span>self, inputs, strip_prompt=True)</span>
+<dt id="scrapli.channel.channel.Channel.send_input"><code class="name flex">
+<span>def <span class="ident">send_input</span></span>(<span>self, channel_input, strip_prompt=True)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Primary entry point to send data to devices in shell mode; accept inputs and return results</p>
+<section class="desc"><p>Primary entry point to send data to devices in shell mode; accept input and returns result</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>inputs</code></strong></dt>
-<dd>list of strings or string of inputs to send to channel</dd>
+<dt><strong><code>channel_input</code></strong></dt>
+<dd>string input to send to channel</dd>
 <dt><strong><code>strip_prompt</code></strong></dt>
 <dd>strip prompt or not, defaults to True (yes, strip the prompt)</dd>
 </dl>
@@ -883,14 +935,12 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def send_inputs(
-    self, inputs: Union[str, List[str], Tuple[str]], strip_prompt: bool = True
-) -&gt; List[Response]:
+<pre><code class="python">def send_input(self, channel_input: str, strip_prompt: bool = True) -&gt; Response:
     &#34;&#34;&#34;
-    Primary entry point to send data to devices in shell mode; accept inputs and return results
+    Primary entry point to send data to devices in shell mode; accept input and returns result
 
     Args:
-        inputs: list of strings or string of inputs to send to channel
+        channel_input: string input to send to channel
         strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
 
     Returns:
@@ -900,12 +950,67 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
         N/A
 
     &#34;&#34;&#34;
-    if isinstance(inputs, (list, tuple)):
-        raw_inputs = tuple(inputs)
-    else:
-        raw_inputs = (inputs,)
+    if not isinstance(channel_input, str):
+        raise TypeError(
+            f&#34;`send_input` expects a single string, got {type(channel_input)}. &#34;
+            &#34;to send a list of inputs use the `send_inputs` method instead.&#34;
+        )
+    response = Response(self.transport.host, channel_input)
+    raw_result, processed_result = self._send_input(channel_input, strip_prompt)
+    response.raw_result = raw_result.decode()
+    response.record_response(processed_result.decode().strip())
+    return response</code></pre>
+</details>
+</dd>
+<dt id="scrapli.channel.channel.Channel.send_inputs"><code class="name flex">
+<span>def <span class="ident">send_inputs</span></span>(<span>self, channel_inputs, strip_prompt=True)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Primary entry point to send data to devices in shell mode; accept inputs and return results</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>channel_inputs</code></strong></dt>
+<dd>list of string inputs to send to channel</dd>
+<dt><strong><code>strip_prompt</code></strong></dt>
+<dd>strip prompt or not, defaults to True (yes, strip the prompt)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>responses</code></strong></dt>
+<dd>list of Response object(s)</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def send_inputs(self, channel_inputs: List[str], strip_prompt: bool = True) -&gt; List[Response]:
+    &#34;&#34;&#34;
+    Primary entry point to send data to devices in shell mode; accept inputs and return results
+
+    Args:
+        channel_inputs: list of string inputs to send to channel
+        strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
+
+    Returns:
+        responses: list of Response object(s)
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    if not isinstance(channel_inputs, list):
+        raise TypeError(
+            f&#34;`send_inputs` expects a list of strings, got {type(channel_inputs)}. &#34;
+            &#34;to send a single input use the `send_input` method instead.&#34;
+        )
+
     responses = []
-    for channel_input in raw_inputs:
+    for channel_input in channel_inputs:
         response = Response(self.transport.host, channel_input)
         raw_result, processed_result = self._send_input(channel_input, strip_prompt)
         response.raw_result = raw_result.decode()
@@ -922,7 +1027,7 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>inputs</code></strong></dt>
-<dd>list or tuple containing strings representing
+<dd>list of four string elements representing&hellip;
 channel_input - initial input to send
 expected_prompt - prompt to expect after initial input
 response - response to prompt
@@ -945,13 +1050,13 @@ final_prompt - final prompt to expect</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def send_inputs_interact(
-    self, inputs: Union[List[str], Tuple[str, str, str, str]], hidden_response: bool = False,
+    self, inputs: List[str], hidden_response: bool = False
 ) -&gt; List[Response]:
     &#34;&#34;&#34;
     Send inputs in an interactive fashion, used to handle prompts that occur after an input.
 
     Args:
-        inputs: list or tuple containing strings representing
+        inputs: list of four string elements representing...
             channel_input - initial input to send
             expected_prompt - prompt to expect after initial input
             response - response to prompt
@@ -965,8 +1070,8 @@ final_prompt - final prompt to expect</dd>
         TypeError: if inputs is not tuple or list
 
     &#34;&#34;&#34;
-    if not isinstance(inputs, (list, tuple)):
-        raise TypeError(f&#34;send_inputs_interact expects a List or Tuple, got {type(inputs)}&#34;)
+    if not isinstance(inputs, list):
+        raise TypeError(f&#34;send_inputs_interact expects a List, got {type(inputs)}&#34;)
     input_stages = (inputs,)
     responses = []
     for channel_input, expectation, channel_response, finale in input_stages:
@@ -1004,6 +1109,7 @@ final_prompt - final prompt to expect</dd>
 <h4><code><a title="scrapli.channel.channel.Channel" href="#scrapli.channel.channel.Channel">Channel</a></code></h4>
 <ul class="">
 <li><code><a title="scrapli.channel.channel.Channel.get_prompt" href="#scrapli.channel.channel.Channel.get_prompt">get_prompt</a></code></li>
+<li><code><a title="scrapli.channel.channel.Channel.send_input" href="#scrapli.channel.channel.Channel.send_input">send_input</a></code></li>
 <li><code><a title="scrapli.channel.channel.Channel.send_inputs" href="#scrapli.channel.channel.Channel.send_inputs">send_inputs</a></code></li>
 <li><code><a title="scrapli.channel.channel.Channel.send_inputs_interact" href="#scrapli.channel.channel.Channel.send_inputs_interact">send_inputs_interact</a></code></li>
 </ul>

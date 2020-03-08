@@ -313,7 +313,7 @@ def test_send_inputs_interact(mocked_network_driver):
     channel_output_2 = "Clear logging buffer [confirm]"
     channel_input_3 = "\n"
     channel_output_3 = "3560CX#"
-    interact = (channel_input_2, channel_output_2, "", channel_output_3)
+    interact = [channel_input_2, channel_output_2, "", channel_output_3]
     test_operations = [
         (channel_input_1, channel_output_1),
         (channel_input_2, channel_output_2),

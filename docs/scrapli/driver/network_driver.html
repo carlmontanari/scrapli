@@ -162,12 +162,12 @@ class NetworkDriver(Scrape, ABC):
                     &#34;expected str&#34;
                 )
             self.channel.send_inputs_interact(
-                (escalate_cmd, escalate_prompt, escalate_auth, next_prompt), hidden_response=True,
+                [escalate_cmd, escalate_prompt, escalate_auth, next_prompt], hidden_response=True,
             )
             self.channel.comms_prompt_pattern = next_priv.pattern
         else:
             self.channel.comms_prompt_pattern = next_priv.pattern
-            self.channel.send_inputs(current_priv.escalate)
+            self.channel.send_input(current_priv.escalate)
 
     def _deescalate(self) -&gt; None:
         &#34;&#34;&#34;
@@ -191,7 +191,7 @@ class NetworkDriver(Scrape, ABC):
                     &#34;NetworkDriver has no default priv levels, set them or use a network driver&#34;
                 )
             self.channel.comms_prompt_pattern = next_priv.pattern
-            self.channel.send_inputs(current_priv.deescalate)
+            self.channel.send_input(current_priv.deescalate)
 
     def acquire_priv(self, desired_priv: str) -&gt; None:
         &#34;&#34;&#34;
@@ -236,12 +236,18 @@ class NetworkDriver(Scrape, ABC):
             Response: Scrapli Response object
 
         Raises:
-            N/A
+            TypeError: if command is anything but a string
 
         &#34;&#34;&#34;
+        if not isinstance(command, str):
+            raise TypeError(
+                f&#34;`send_command` expects a single string, got {type(command)}. &#34;
+                &#34;to send a list of commands use the `send_commands` method instead.&#34;
+            )
+
         if self._current_priv_level.name != self.default_desired_priv:
             self.acquire_priv(self.default_desired_priv)
-        response = self.channel.send_inputs(command, strip_prompt)[0]
+        response = self.channel.send_input(command, strip_prompt)
 
         # update the response objects with textfsm platform; we do this here because the underlying
         #  channel doesn&#39;t know or care about platforms
@@ -281,9 +287,7 @@ class NetworkDriver(Scrape, ABC):
 
         return responses
 
-    def send_interactive(
-        self, inputs: Union[List[str], Tuple[str, str, str, str]], hidden_response: bool = False,
-    ) -&gt; List[Response]:
+    def send_interactive(self, inputs: List[str], hidden_response: bool = False) -&gt; List[Response]:
         &#34;&#34;&#34;
         Send inputs in an interactive fashion; used to handle prompts
 
@@ -294,7 +298,7 @@ class NetworkDriver(Scrape, ABC):
         could be &#34;chained&#34; together to respond to more than a &#34;single&#34; staged prompt
 
         Args:
-            inputs: list or tuple containing strings representing
+            inputs: list of four string elements representing...
                 channel_input - initial input to send
                 expected_prompt - prompt to expect after initial input
                 response - response to prompt
@@ -330,9 +334,12 @@ class NetworkDriver(Scrape, ABC):
             N/A
 
         &#34;&#34;&#34;
+        if isinstance(configs, str):
+            configs = [configs]
+
         self.acquire_priv(&#34;configuration&#34;)
         responses = self.channel.send_inputs(configs, strip_prompt)
-        self.acquire_priv(str(self.default_desired_priv))
+        self.acquire_priv(self.default_desired_priv)
         return responses
 
     def get_prompt(self) -&gt; str:
@@ -474,12 +481,12 @@ inheritance.</p>
                     &#34;expected str&#34;
                 )
             self.channel.send_inputs_interact(
-                (escalate_cmd, escalate_prompt, escalate_auth, next_prompt), hidden_response=True,
+                [escalate_cmd, escalate_prompt, escalate_auth, next_prompt], hidden_response=True,
             )
             self.channel.comms_prompt_pattern = next_priv.pattern
         else:
             self.channel.comms_prompt_pattern = next_priv.pattern
-            self.channel.send_inputs(current_priv.escalate)
+            self.channel.send_input(current_priv.escalate)
 
     def _deescalate(self) -&gt; None:
         &#34;&#34;&#34;
@@ -503,7 +510,7 @@ inheritance.</p>
                     &#34;NetworkDriver has no default priv levels, set them or use a network driver&#34;
                 )
             self.channel.comms_prompt_pattern = next_priv.pattern
-            self.channel.send_inputs(current_priv.deescalate)
+            self.channel.send_input(current_priv.deescalate)
 
     def acquire_priv(self, desired_priv: str) -&gt; None:
         &#34;&#34;&#34;
@@ -548,12 +555,18 @@ inheritance.</p>
             Response: Scrapli Response object
 
         Raises:
-            N/A
+            TypeError: if command is anything but a string
 
         &#34;&#34;&#34;
+        if not isinstance(command, str):
+            raise TypeError(
+                f&#34;`send_command` expects a single string, got {type(command)}. &#34;
+                &#34;to send a list of commands use the `send_commands` method instead.&#34;
+            )
+
         if self._current_priv_level.name != self.default_desired_priv:
             self.acquire_priv(self.default_desired_priv)
-        response = self.channel.send_inputs(command, strip_prompt)[0]
+        response = self.channel.send_input(command, strip_prompt)
 
         # update the response objects with textfsm platform; we do this here because the underlying
         #  channel doesn&#39;t know or care about platforms
@@ -593,9 +606,7 @@ inheritance.</p>
 
         return responses
 
-    def send_interactive(
-        self, inputs: Union[List[str], Tuple[str, str, str, str]], hidden_response: bool = False,
-    ) -&gt; List[Response]:
+    def send_interactive(self, inputs: List[str], hidden_response: bool = False) -&gt; List[Response]:
         &#34;&#34;&#34;
         Send inputs in an interactive fashion; used to handle prompts
 
@@ -606,7 +617,7 @@ inheritance.</p>
         could be &#34;chained&#34; together to respond to more than a &#34;single&#34; staged prompt
 
         Args:
-            inputs: list or tuple containing strings representing
+            inputs: list of four string elements representing...
                 channel_input - initial input to send
                 expected_prompt - prompt to expect after initial input
                 response - response to prompt
@@ -642,9 +653,12 @@ inheritance.</p>
             N/A
 
         &#34;&#34;&#34;
+        if isinstance(configs, str):
+            configs = [configs]
+
         self.acquire_priv(&#34;configuration&#34;)
         responses = self.channel.send_inputs(configs, strip_prompt)
-        self.acquire_priv(str(self.default_desired_priv))
+        self.acquire_priv(self.default_desired_priv)
         return responses
 
     def get_prompt(self) -&gt; str:
@@ -795,8 +809,8 @@ inheritance.</p>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
+<dt><strong><code>TypeError</code></strong></dt>
+<dd>if command is anything but a string</dd>
 </dl></section>
 <details class="source">
 <summary>
@@ -814,12 +828,18 @@ inheritance.</p>
         Response: Scrapli Response object
 
     Raises:
-        N/A
+        TypeError: if command is anything but a string
 
     &#34;&#34;&#34;
+    if not isinstance(command, str):
+        raise TypeError(
+            f&#34;`send_command` expects a single string, got {type(command)}. &#34;
+            &#34;to send a list of commands use the `send_commands` method instead.&#34;
+        )
+
     if self._current_priv_level.name != self.default_desired_priv:
         self.acquire_priv(self.default_desired_priv)
-    response = self.channel.send_inputs(command, strip_prompt)[0]
+    response = self.channel.send_input(command, strip_prompt)
 
     # update the response objects with textfsm platform; we do this here because the underlying
     #  channel doesn&#39;t know or care about platforms
@@ -930,9 +950,12 @@ inheritance.</p>
         N/A
 
     &#34;&#34;&#34;
+    if isinstance(configs, str):
+        configs = [configs]
+
     self.acquire_priv(&#34;configuration&#34;)
     responses = self.channel.send_inputs(configs, strip_prompt)
-    self.acquire_priv(str(self.default_desired_priv))
+    self.acquire_priv(self.default_desired_priv)
     return responses</code></pre>
 </details>
 </dd>
@@ -948,7 +971,7 @@ returns the results of the interaction</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>inputs</code></strong></dt>
-<dd>list or tuple containing strings representing
+<dd>list of four string elements representing&hellip;
 channel_input - initial input to send
 expected_prompt - prompt to expect after initial input
 response - response to prompt
@@ -970,9 +993,7 @@ final_prompt - final prompt to expect</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def send_interactive(
-    self, inputs: Union[List[str], Tuple[str, str, str, str]], hidden_response: bool = False,
-) -&gt; List[Response]:
+<pre><code class="python">def send_interactive(self, inputs: List[str], hidden_response: bool = False) -&gt; List[Response]:
     &#34;&#34;&#34;
     Send inputs in an interactive fashion; used to handle prompts
 
@@ -983,7 +1004,7 @@ final_prompt - final prompt to expect</dd>
     could be &#34;chained&#34; together to respond to more than a &#34;single&#34; staged prompt
 
     Args:
-        inputs: list or tuple containing strings representing
+        inputs: list of four string elements representing...
             channel_input - initial input to send
             expected_prompt - prompt to expect after initial input
             response - response to prompt

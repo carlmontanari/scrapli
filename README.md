@@ -432,7 +432,7 @@ In addition to containing the input and output of the command(s) that you sent, 
 ## Sending Configurations
 
 When using any of the core drivers, you can send configurations via the `send_configs` method which will handle
- privilege escalation and de-escalation for you. `send_configs` accepts a single string or a list/tuple of strings to
+ privilege escalation and de-escalation for you. `send_configs` accepts a single string or a list of strings to
   send in "config mode".
 
 ```python
@@ -500,7 +500,7 @@ with IOSXEDriver(**my_device) as conn:
 ## Handling Prompts
 
 In some cases you may need to run an "interactive" command on your device. The `send_interactive` method can be used
- to accomplish this. This method accepts a tuple containing the initial input (command) to send, the expected prompt
+ to accomplish this. This method accepts a list containing the initial input (command) to send, the expected prompt
   after the initial send, the response to that prompt, and the final expected prompt -- basically telling scrapli
    when it is done with the interactive command. In the example below the expectation is that the current/base prompt
     is the final expected prompt, so we can simply call the `get_prompt` method to snag that directly off the router.
@@ -1063,8 +1063,6 @@ This section may not get updated much, but will hopefully reflect the priority i
 . comms_prompt_pattern gets stored in `_initialization_arguments`, then passed to and stored as a private arg for
  some transport classes (for auth setup only), and gets ultimately assigned to the Channel.
 - Add tests for keepalive stuff if possible (steal from ssh2net! :D)
-- Maybe worth breaking readme up into multiple pages and/or use a wiki -- don't like the fact that wiki pages are not
- in the repo though...
 - Investigate pre-authentication handling for telnet -- support handling a prompt *before* auth happens i.e. accept
  some banner/message -- does this ever happen for ssh? I don't know! If so, support dealing with that as well.
 - Remove as much as possible from the vendor'd `ptyprocess` code. Type hint it, add docstrings everywhere, add tests

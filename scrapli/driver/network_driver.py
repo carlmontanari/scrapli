@@ -135,12 +135,12 @@ class NetworkDriver(Scrape, ABC):
                     "expected str"
                 )
             self.channel.send_inputs_interact(
-                (escalate_cmd, escalate_prompt, escalate_auth, next_prompt), hidden_response=True,
+                [escalate_cmd, escalate_prompt, escalate_auth, next_prompt], hidden_response=True,
             )
             self.channel.comms_prompt_pattern = next_priv.pattern
         else:
             self.channel.comms_prompt_pattern = next_priv.pattern
-            self.channel.send_inputs(current_priv.escalate)
+            self.channel.send_input(current_priv.escalate)
 
     def _deescalate(self) -> None:
         """
@@ -164,7 +164,7 @@ class NetworkDriver(Scrape, ABC):
                     "NetworkDriver has no default priv levels, set them or use a network driver"
                 )
             self.channel.comms_prompt_pattern = next_priv.pattern
-            self.channel.send_inputs(current_priv.deescalate)
+            self.channel.send_input(current_priv.deescalate)
 
     def acquire_priv(self, desired_priv: str) -> None:
         """
@@ -209,12 +209,18 @@ class NetworkDriver(Scrape, ABC):
             Response: Scrapli Response object
 
         Raises:
-            N/A
+            TypeError: if command is anything but a string
 
         """
+        if not isinstance(command, str):
+            raise TypeError(
+                f"`send_command` expects a single string, got {type(command)}. "
+                "to send a list of commands use the `send_commands` method instead."
+            )
+
         if self._current_priv_level.name != self.default_desired_priv:
             self.acquire_priv(self.default_desired_priv)
-        response = self.channel.send_inputs(command, strip_prompt)[0]
+        response = self.channel.send_input(command, strip_prompt)
 
         # update the response objects with textfsm platform; we do this here because the underlying
         #  channel doesn't know or care about platforms
@@ -254,9 +260,7 @@ class NetworkDriver(Scrape, ABC):
 
         return responses
 
-    def send_interactive(
-        self, inputs: Union[List[str], Tuple[str, str, str, str]], hidden_response: bool = False,
-    ) -> List[Response]:
+    def send_interactive(self, inputs: List[str], hidden_response: bool = False) -> List[Response]:
         """
         Send inputs in an interactive fashion; used to handle prompts
 
@@ -267,7 +271,7 @@ class NetworkDriver(Scrape, ABC):
         could be "chained" together to respond to more than a "single" staged prompt
 
         Args:
-            inputs: list or tuple containing strings representing
+            inputs: list of four string elements representing...
                 channel_input - initial input to send
                 expected_prompt - prompt to expect after initial input
                 response - response to prompt
@@ -303,9 +307,12 @@ class NetworkDriver(Scrape, ABC):
             N/A
 
         """
+        if isinstance(configs, str):
+            configs = [configs]
+
         self.acquire_priv("configuration")
         responses = self.channel.send_inputs(configs, strip_prompt)
-        self.acquire_priv(str(self.default_desired_priv))
+        self.acquire_priv(self.default_desired_priv)
         return responses
 
     def get_prompt(self) -> str:
