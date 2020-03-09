@@ -414,6 +414,7 @@ class SystemSSHTransport(Transport):
             N/A
 
         """
+        LOG.debug("Attempting to determine if PTY authentication was successful")
         if pty_session.isalive() and not pty_session.eof():
             prompt_pattern = get_prompt_pattern("", self._comms_prompt_pattern)
             self.session_lock.acquire()
@@ -422,7 +423,8 @@ class SystemSSHTransport(Transport):
             if pty_session.fd in fd_ready:
                 output = b""
                 while True:
-                    output += pty_session.read()
+                    new_output = pty_session.read()
+                    output += new_output
                     # we do not need to deal w/ line replacement for the actual output, only for
                     # parsing if a prompt-like thing is at the end of the output
                     output = re.sub(b"\r", b"", output)
@@ -433,6 +435,11 @@ class SystemSSHTransport(Transport):
                         self.session_lock.release()
                         self._isauthenticated = True
                         return True
+                    if b"password" in new_output.lower():
+                        # if we see "password" we know auth failed (hopefully true in all scenarios!)
+                        return False
+                    if new_output:
+                        LOG.debug(f"Cannot determine if authenticated, \n\tRead: {new_output}")
         self.session_lock.release()
         return False
 

@@ -518,7 +518,7 @@ my_device = {
 
 with IOSXEDriver(**my_device) as conn:
     interactive = conn.send_interactive(
-                ("clear logging", "Clear logging buffer [confirm]", "\n", conn.get_prompt())
+                ["clear logging", "Clear logging buffer [confirm]", "\n", conn.get_prompt()]
             )
 ```
 
@@ -543,11 +543,13 @@ If telnet for some reason becomes an important use case, the telnet Transport la
 scrapli supports using OpenSSH configuration files in a few ways. For "system" SSH transport (default setting
 ), passing a path to a config file will simply make scrapli "point" to that file, and therefore use that
  configuration files attributes (because it is just exec'ing system SSH!). See the [Transport Notes](#transport-notes
- -caveats-and-known-issues) section for details about what Transport supports what configuration options.
+ -caveats-and-known-issues) section for details about what Transport supports what configuration options. You can
+  also pass `True` to let scrapli search in system default locations for an ssh config file (`~/.ssh/config` and
+   `/etc/ssh/ssh_config`.)
    
-*NOTE* -- when using the system (default) SSH transport driver scrapli does NOT disable strict host checking by default
-. Obviously this is the "smart" behavior, but it can be overridden on a per host basis in your SSH config file, or by
- passing `False` to the "auth_strict_key" argument on object instantiation.
+*NOTE* -- scrapli does NOT disable strict host checking by default. Obviously this is the "smart" behavior, but it
+ can be overridden on a per host basis in your SSH config file, or by passing `False` to the "auth_strict_key
+ " argument on object instantiation.
 
 ```python
 from scrapli.driver.core import IOSXEDriver
@@ -615,12 +617,12 @@ This pattern is contained in the `comms_prompt_pattern` setting, and is perhaps 
 
 The "base" (default, but changeable) pattern is:
 
-`"^[a-z0-9.\-@()/:]{1,20}[#>$]$"`
+`"^[a-z0-9.\-@()/:]{1,20}[#>$]\s*$"`
 
 *NOTE* all `comms_prompt_pattern` should use the start and end of line anchors as all regex searches in scrapli are
  multi-line (this is an important piece to making this all work!). While you don't *need* to use the line anchors its
   probably a really good idea! Also note that most devices seem to leave at least one white space after the final
-   character of the prompt, so make sure to account for this! Last important note -- the core drivers all of reliable
+   character of the prompt, so make sure to account for this! Last important note -- the core drivers all have reliable
     patterns set for you, so you hopefully don't need to bother with this too much!
 
 The above pattern works on all "core" platforms listed above for at the very least basic usage. Custom prompts or
@@ -628,7 +630,7 @@ The above pattern works on all "core" platforms listed above for at the very lea
 
 If you do not wish to match Cisco "config" level prompts you could use a `comms_prompt_pattern` such as:
 
-`"^[a-z0-9.-@]{1,20}[#>$]$"`
+`"^[a-z0-9.-@]{1,20}[#>$]\s*$"`
 
 If you use a platform driver, the base prompt is set in the driver so you don't really need to worry about this!
 
@@ -747,10 +749,10 @@ Each privilege level has the following attributes:
 
 - pattern: regex pattern to associate prompt to privilege level with
 - name: name of the priv level, i.e. "exec"
-- deescalate_priv: name of next lower privilege or None
-- deescalate: command to deescalate to next lower privilege or None
-- escalate: name of next higher privilege or None
-- escalate_auth: command to escalate to next higher privilege or None
+- deescalate_priv: name of next lower privilege or "" (to evaluate False)
+- deescalate: command to deescalate to next lower privilege or "" (to evaluate False)
+- escalate: name of next higher privilege or "" (to evaluate False)
+- escalate_auth: command to escalate to next higher privilege or "" (to evaluate False)
 - escalate_prompt: False or pattern to expect for escalation -- i.e. "Password:"
 - requestable: True/False if the privilege level is requestable
 - level: integer value of level i.e. 1
@@ -793,12 +795,12 @@ my_device = {
 }
 
 with Scrape(**my_device) as conn:
-    conn.channel.send_inputs("terminal length 0")
-    response = conn.channel.send_inputs("show version")
-    responses = conn.channel.send_inputs(("show version", "show run"))
+    conn.channel.send_input("terminal length 0")
+    response = conn.channel.send_input("show version")
+    responses = conn.channel.send_inputs(["show version", "show run"])
 ```
 
-Without the `send_command` and similar methods, you must directly acccess the `Channel` object when sending inputs
+Without the `send_command` and similar methods, you must directly access the `Channel` object when sending inputs
  with `Scrape`.
 
 
@@ -856,11 +858,11 @@ Currently the only reason I can think of to use anything other than "system" as 
    adapt to any other network-y type CLI by virtue of flexible prompt finding and easily modifiable on connect
     functions.
 - Question: Is this easy to use?
-  - Answer: Yep! The "native" usage is pretty straight forward -- the thing to remember is that it doesn't do "things
-  " for you like Netmiko does for example, so its a lot more like Paramiko in that regard this just means that you
-   need to disable paging yourself (or pass an `on_connect` callable to do so), handle privilege modes and things like
-    that. That said you can use one of the available drivers to have a more Netmiko-like experience -OR- write your
-     own driver as this has been built with the thought of being easily extended.
+  - Answer: Yep! The base usage with `Scrape` is pretty straight forward -- the thing to remember is that it doesn't
+   do "things" for you like Netmiko does for example, so its a lot more like Paramiko in that regard this just means
+    that you need to disable paging yourself (or pass an `on_open` callable to do so), handle privilege modes and
+     things like that. That said you can use one of the available drivers to have a more Netmiko-like experience -OR
+     - write your own driver as this has been built with the thought of being easily extended.
 - Why do I get a "conn (or your object name here) has no attribute channel" exception?
   - Answer: Connection objects do not "auto open", and the channel attribute is not assigned until opening the
    connection. Call `conn.open()` (or your object name in place of conn) to open the session and assign the channel
@@ -909,8 +911,6 @@ Currently the only reason I can think of to use anything other than "system" as 
 - Any arguments passed to the `SystemSSHTransport` class will override arguments in your ssh config file. This is
  because the arguments get crafted into an "open_cmd" (the command that actually fires off the ssh session), and
   these cli arguments take precedence over the config file arguments.
-- strict key checking is ENABLED by default! If you see weird EOF errors immediately after opening a connection, you
- probably did not disable strict key checking!
 - If you set `ssh_config_file` to `False` the `SystemSSHTransport` class will set the config file used to `/dev/null
 ` so that no ssh config file configs are accidentally used.
 

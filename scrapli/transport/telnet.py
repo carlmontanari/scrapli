@@ -252,6 +252,7 @@ class TelnetTransport(Transport):
             N/A
 
         """
+        LOG.debug("Attempting to determine if telnet authentication was successful")
         if not telnet_session.eof:
             prompt_pattern = get_prompt_pattern("", self._comms_prompt_pattern)
             telnet_session_fd = telnet_session.fileno()
@@ -271,6 +272,9 @@ class TelnetTransport(Transport):
                     self.session_lock.release()
                     self._isauthenticated = True
                     return True
+                if b"password" in output.lower():
+                    # if we see "password" we know auth failed (hopefully true in all scenarios!)
+                    return False
         self.session_lock.release()
         return False
 
