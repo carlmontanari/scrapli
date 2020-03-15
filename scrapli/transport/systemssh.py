@@ -349,13 +349,16 @@ class SystemSSHTransport(Transport):
             ScrapliTimeout: if `Operation timed out` in stderr output
 
         """
+        if pipes_session.stderr is None:
+            raise ScrapliTimeout(f"Couldn't read stderr while connecting to host {self.host}")
+
         output = b""
         while True:
             output += pipes_session.stderr.read(65535)
             if f"Authenticated to {self.host}".encode() in output:
                 self._isauthenticated = True
                 return True
-            elif "Operation timed out".encode() in output:
+            if "Operation timed out".encode() in output:
                 raise ScrapliTimeout(f"Timed opening connection to host {self.host}")
 
     def _open_pty(self) -> bool:
@@ -405,14 +408,6 @@ class SystemSSHTransport(Transport):
                 raise ScrapliAuthenticationFailed(f"Failed to open connection to host {self.host}")
             if self._comms_ansi:
                 output = strip_ansi(output)
-            # TODO probably remove this and update the above EOF exception message to reflect that
-            #  the EOF could be caused by either connection timed out or host key checking
-            if b"WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!" in output:
-                raise ScrapliAuthenticationFailed(
-                    "PTY Authentication failed! It looks like the remote host identification has"
-                    "changed. Fix this or disable `auth_strict_key` or pass a "
-                    "`ssh_known_hosts_file` containing the hosts identification."
-                )
             if b"password" in output.lower():
                 LOG.debug("Found password prompt, sending password")
                 pty_session.write(self.auth_password.encode())
