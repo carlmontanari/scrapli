@@ -64,7 +64,7 @@ scrapli -- scrap(e c)li --  is a python library focused on connecting to devices
 ## Installation
 
 In most cases installation via pip is the simplest and best way to install scrapli.
-See the below or [here](#advanced-installation) for advanced installation details.
+See below or [here](#advanced-installation) for advanced installation details.
 
 ```
 pip install scrapli

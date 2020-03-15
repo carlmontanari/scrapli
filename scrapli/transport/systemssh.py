@@ -1,5 +1,6 @@
 """scrapli.transport.systemssh"""
 import os
+import pty
 import re
 from logging import getLogger
 from select import select
@@ -7,7 +8,7 @@ from subprocess import PIPE, Popen
 from typing import TYPE_CHECKING, Optional, Union
 
 from scrapli.decorators import operation_timeout
-from scrapli.exceptions import ScrapliAuthenticationFailed
+from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliTimeout
 from scrapli.helper import get_prompt_pattern, strip_ansi
 from scrapli.ssh_config import SSHConfig
 from scrapli.transport.ptyprocess import PtyProcess
@@ -167,6 +168,10 @@ class SystemSSHTransport(Transport):
         self.open_cmd = ["ssh", self.host]
         self._build_open_cmd()
 
+        # create stdin/stdout fd in case we can use pipes for session
+        self._stdin_fd = -1
+        self._stdout_fd = -1
+
     def _process_ssh_config(self, ssh_config_file: str) -> None:
         """
         Method to parse ssh config file
@@ -293,7 +298,20 @@ class SystemSSHTransport(Transport):
         open_cmd.append("-v")
         open_cmd.extend(["-o", "BatchMode=yes"])
 
-        self.session = Popen(open_cmd, bufsize=0, shell=False, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        stdout_master_pty, stdout_slave_pty = pty.openpty()
+        stdin_master_pty, stdin_slave_pty = pty.openpty()
+
+        self.session = Popen(
+            open_cmd,
+            bufsize=0,
+            shell=False,
+            stdin=stdin_slave_pty,
+            stdout=stdout_slave_pty,
+            stderr=PIPE,
+        )
+        # close the slave fds, don't need them anymore
+        os.close(stdin_slave_pty)
+        os.close(stdout_slave_pty)
         LOG.debug(f"Session to host {self.host} spawned")
 
         try:
@@ -304,6 +322,11 @@ class SystemSSHTransport(Transport):
             return False
 
         LOG.debug(f"Authenticated to host {self.host} with public key")
+
+        # set stdin/stdout to the new master pty fds
+        self._stdin_fd = stdin_master_pty
+        self._stdout_fd = stdout_master_pty
+
         self.open_cmd = open_cmd
         self.session_lock.release()
         return True
@@ -323,15 +346,17 @@ class SystemSSHTransport(Transport):
             bool: True/False session was authenticated
 
         Raises:
-            N/A
+            ScrapliTimeout: if `Operation timed out` in stderr output
 
         """
         output = b""
         while True:
-            output += pipes_session.stderr.read(1024)
+            output += pipes_session.stderr.read(65535)
             if f"Authenticated to {self.host}".encode() in output:
                 self._isauthenticated = True
                 return True
+            elif "Operation timed out".encode() in output:
+                raise ScrapliTimeout(f"Timed opening connection to host {self.host}")
 
     def _open_pty(self) -> bool:
         """
@@ -377,12 +402,11 @@ class SystemSSHTransport(Transport):
             try:
                 output = pty_session.read()
             except EOFError:
-                raise ScrapliAuthenticationFailed(
-                    "PTY Authentication failed to find password prompt, often this means strict "
-                    "host key checking is enabled and is failing!"
-                )
+                raise ScrapliAuthenticationFailed(f"Failed to open connection to host {self.host}")
             if self._comms_ansi:
                 output = strip_ansi(output)
+            # TODO probably remove this and update the above EOF exception message to reflect that
+            #  the EOF could be caused by either connection timed out or host key checking
             if b"WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!" in output:
                 raise ScrapliAuthenticationFailed(
                     "PTY Authentication failed! It looks like the remote host identification has"
@@ -436,10 +460,12 @@ class SystemSSHTransport(Transport):
                         self._isauthenticated = True
                         return True
                     if b"password" in new_output.lower():
-                        # if we see "password" we know auth failed (hopefully true in all scenarios!)
+                        # if we see "password" we know auth failed (hopefully in all scenarios!)
                         return False
                     if new_output:
-                        LOG.debug(f"Cannot determine if authenticated, \n\tRead: {new_output}")
+                        LOG.debug(
+                            f"Cannot determine if authenticated, \n\tRead: {repr(new_output)}"
+                        )
         self.session_lock.release()
         return False
 
@@ -504,7 +530,7 @@ class SystemSSHTransport(Transport):
         """
         read_bytes = 65535
         if isinstance(self.session, Popen):
-            return self.session.stdout.read(read_bytes)
+            return os.read(self._stdout_fd, read_bytes)
         if isinstance(self.session, PtyProcess):
             return self.session.read(read_bytes)
         return b""
@@ -525,7 +551,7 @@ class SystemSSHTransport(Transport):
 
         """
         if isinstance(self.session, Popen):
-            self.session.stdin.write(channel_input.encode())
+            os.write(self._stdin_fd, channel_input.encode())
         elif isinstance(self.session, PtyProcess):
             self.session.write(channel_input.encode())
 
