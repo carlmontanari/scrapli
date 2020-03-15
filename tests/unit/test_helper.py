@@ -59,7 +59,7 @@ def test__textfsm_get_template_valid_template():
     template = _textfsm_get_template("cisco_nxos", "show ip arp")
     template_dir = pkg_resources.resource_filename("ntc_templates", "templates")
     assert isinstance(template, TextIOWrapper)
-    assert template.name == f"{template_dir}/cisco_nxos_show_ip_arp.template"
+    assert template.name == f"{template_dir}/cisco_nxos_show_ip_arp.textfsm"
 
 
 def test__textfsm_get_template_invalid_template():
