@@ -92,6 +92,7 @@ class MockNetworkDriver(MockScrape, NetworkDriver):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.privs = PRIVS
+        self.auth_secondary = "password"
 
     def open(self):
         # Overriding "normal" network driver open method as we don't need to worry about disable

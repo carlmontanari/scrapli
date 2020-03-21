@@ -53,7 +53,7 @@ class Scrape:
         port: int = 22,
         auth_username: str = "",
         auth_password: str = "",
-        auth_public_key: str = "",
+        auth_private_key: str = "",
         auth_strict_key: bool = True,
         timeout_socket: int = 5,
         timeout_transport: int = 5,
@@ -87,7 +87,7 @@ class Scrape:
             host: host ip/name to connect to
             port: port to connect to
             auth_username: username for authentication
-            auth_public_key: path to public key for authentication
+            auth_private_key: path to private key for authentication
             auth_password: password for authentication
             auth_strict_key: strict host checking or not -- applicable for system ssh driver only
             timeout_socket: timeout for establishing socket in seconds
@@ -154,7 +154,7 @@ class Scrape:
         self._initialization_args: Dict[str, Any] = {}
 
         self._setup_host(host, port)
-        self._setup_auth(auth_username, auth_password, auth_public_key, auth_strict_key)
+        self._setup_auth(auth_username, auth_password, auth_private_key, auth_strict_key)
         self._setup_timeouts(timeout_socket, timeout_transport, timeout_ops, timeout_exit)
         self._setup_keepalive(keepalive, keepalive_type, keepalive_interval, keepalive_pattern)
         self._setup_comms(comms_prompt_pattern, comms_return_char, comms_ansi)
@@ -169,15 +169,15 @@ class Scrape:
         if transport != "telnet":
             self._setup_ssh_args(ssh_config_file, ssh_known_hosts_file)
 
-        self.transport: Transport
         self.transport_class, self.transport_args = self._transport_factory(transport)
+        self.transport = self.transport_class(**self.transport_args)
 
-        self.channel: Channel
         self.channel_args: Dict[str, Any] = {}
         for arg in CHANNEL_ARGS:
             if arg == "transport":
                 continue
             self.channel_args[arg] = self._initialization_args.get(arg)
+        self.channel = Channel(self.transport, **self.channel_args)
 
     def __enter__(self) -> "Scrape":
         """
@@ -255,7 +255,7 @@ class Scrape:
             f"port={self._initialization_args['port']!r}, "
             f"auth_username={self._initialization_args['auth_username']!r}, "
             f"auth_password={self._initialization_args['auth_password']!r}, "
-            f"auth_public_key={self._initialization_args['auth_public_key']!r}, "
+            f"auth_private_key={self._initialization_args['auth_private_key']!r}, "
             f"auth_strict_key={self._initialization_args['auth_strict_key']!r}, "
             f"timeout_socket={self._initialization_args['timeout_socket']!r}, "
             f"timeout_transport={self._initialization_args['timeout_transport']!r}, "
@@ -300,7 +300,7 @@ class Scrape:
         self._initialization_args["port"] = port
 
     def _setup_auth(
-        self, auth_username: str, auth_password: str, auth_public_key: str, auth_strict_key: bool
+        self, auth_username: str, auth_password: str, auth_private_key: str, auth_strict_key: bool
     ) -> None:
         """
         Parse and setup auth attributes
@@ -308,7 +308,7 @@ class Scrape:
         Args:
             auth_username: username to parse/set
             auth_password: password to parse/set
-            auth_public_key: public key to parse/set
+            auth_private_key: public key to parse/set
             auth_strict_key: strict key to parse/set
 
         Returns:
@@ -316,7 +316,7 @@ class Scrape:
 
         Raises:
             TypeError: if auth_strict_key is not a bool
-            ValueError: if auth_public_key is not a valid file
+            ValueError: if auth_private_key is not a valid file
 
         """
         if not isinstance(auth_strict_key, bool):
@@ -326,15 +326,15 @@ class Scrape:
         self._initialization_args["auth_username"] = auth_username.strip()
         self._initialization_args["auth_password"] = auth_password.strip()
 
-        if auth_public_key:
-            public_key_path = Path.expanduser(Path(auth_public_key.strip()))
+        if auth_private_key:
+            public_key_path = Path.expanduser(Path(auth_private_key.strip()))
             if not public_key_path.is_file():
-                raise ValueError(f"Provided public key `{auth_public_key}` is not a file")
-            self._initialization_args["auth_public_key"] = os.path.expanduser(
-                auth_public_key.strip().encode()
+                raise ValueError(f"Provided public key `{auth_private_key}` is not a file")
+            self._initialization_args["auth_private_key"] = os.path.expanduser(
+                auth_private_key.strip().encode()
             )
         else:
-            self._initialization_args["auth_public_key"] = auth_public_key.encode()
+            self._initialization_args["auth_private_key"] = auth_private_key.encode()
 
     def _setup_timeouts(
         self, timeout_socket: int, timeout_transport: int, timeout_ops: int, timeout_exit: bool
@@ -534,9 +534,7 @@ class Scrape:
             N/A
 
         """
-        self.transport = self.transport_class(**self.transport_args)
         self.transport.open()
-        self.channel = Channel(self.transport, **self.channel_args)
         if self.on_open:
             self.on_open(self)
 
@@ -572,8 +570,9 @@ class Scrape:
             N/A
 
         """
+        alive = False
         try:
             alive = self.transport.isalive()
         except AttributeError:
-            alive = False
+            pass
         return alive

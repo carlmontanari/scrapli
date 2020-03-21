@@ -89,6 +89,7 @@ class JunosDriver(NetworkDriver):
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         auth_secondary: str = "",
+        transport: str = "system",
         **kwargs: Dict[str, Any],
     ):
         """
@@ -112,6 +113,17 @@ class JunosDriver(NetworkDriver):
                 Common use cases for this callable would be to save configurations prior to exiting,
                 or to logout properly to free up vtys or similar.
             auth_secondary: password to use for secondary authentication (enable)
+            transport: system|ssh2|paramiko|telnet -- type of transport to use for connection
+                system uses system available ssh (/usr/bin/ssh)
+                ssh2 uses ssh2-python
+                paramiko uses... paramiko
+                telnet uses telnetlib
+                choice of driver depends on the features you need. in general system is easiest as
+                it will just 'auto-magically' use your ssh config file ('~/.ssh/config' or
+                '/etc/ssh/config_file'). ssh2 is very very fast as it is a thin wrapper around
+                libssh2 however it is slightly feature limited. paramiko is slower than ssh2, but
+                has more features built in (though scrapli does not expose/support them all).
+                explicitly added here to allow for nicely checking if transport is telnet.
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -125,14 +137,22 @@ class JunosDriver(NetworkDriver):
         if on_close is None:
             on_close = junos_on_close
 
+        _telnet = False
+        if transport == "telnet":
+            _telnet = True
+
         super().__init__(
             auth_secondary,
             comms_prompt_pattern=comms_prompt_pattern,
             on_open=on_open,
             on_close=on_close,
+            transport=transport,
             **kwargs,
         )
 
         self.privs = PRIVS
         self.default_desired_priv = "exec"
         self.textfsm_platform = "juniper_junos"
+
+        if _telnet:
+            self.transport.username_prompt = "login:"

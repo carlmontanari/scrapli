@@ -198,13 +198,14 @@ class Channel:
         self.transport.set_timeout(1000)
         self.transport.write(self.comms_return_char)
         LOG.debug(f"Write (sending return character): {repr(self.comms_return_char)}")
+        output = b""
         while True:
-            output = self._read_chunk()
+            output += self._read_chunk()
             channel_match = re.search(prompt_pattern, output)
             if channel_match:
                 self.transport.set_timeout()
                 current_prompt = channel_match.group(0)
-                return current_prompt.decode()
+                return current_prompt.decode().strip()
 
     def send_input(self, channel_input: str, strip_prompt: bool = True) -> Response:
         """
@@ -229,7 +230,7 @@ class Channel:
         response = Response(self.transport.host, channel_input)
         raw_result, processed_result = self._send_input(channel_input, strip_prompt)
         response.raw_result = raw_result.decode()
-        response.record_response(processed_result.decode().strip())
+        response.record_response(processed_result.decode())
         return response
 
     def send_inputs(self, channel_inputs: List[str], strip_prompt: bool = True) -> List[Response]:
@@ -258,7 +259,7 @@ class Channel:
             response = Response(self.transport.host, channel_input)
             raw_result, processed_result = self._send_input(channel_input, strip_prompt)
             response.raw_result = raw_result.decode()
-            response.record_response(processed_result.decode().strip())
+            response.record_response(processed_result.decode())
             responses.append(response)
         return responses
 
@@ -288,6 +289,9 @@ class Channel:
         output = self._read_until_prompt()
         self.transport.session_lock.release()
         processed_output = self._restructure_output(output, strip_prompt=strip_prompt)
+        # lstrip the return character out of the final result before storing, also remove any extra
+        # whitespace to the right if any
+        processed_output = processed_output.lstrip(self.comms_return_char.encode()).rstrip()
         return output, processed_output
 
     def send_inputs_interact(

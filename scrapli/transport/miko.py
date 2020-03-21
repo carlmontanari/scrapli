@@ -17,7 +17,7 @@ LOG = getLogger("transport")
 
 MIKO_TRANSPORT_ARGS = (
     "auth_username",
-    "auth_public_key",
+    "auth_private_key",
     "auth_password",
     "auth_strict_key",
     "ssh_config_file",
@@ -32,7 +32,7 @@ class MikoTransport(Transport):
         host: str,
         port: int = -1,
         auth_username: str = "",
-        auth_public_key: str = "",
+        auth_private_key: str = "",
         auth_password: str = "",
         auth_strict_key: bool = True,
         timeout_socket: int = 5,
@@ -55,7 +55,7 @@ class MikoTransport(Transport):
             host: host ip/name to connect to
             port: port to connect to
             auth_username: username for authentication
-            auth_public_key: path to public key for authentication
+            auth_private_key: path to private key for authentication
             auth_password: password for authentication
             auth_strict_key: True/False to enforce strict key checking (default is True)
             timeout_socket: timeout for establishing socket in seconds
@@ -83,7 +83,7 @@ class MikoTransport(Transport):
             MissingDependencies: if paramiko is not installed
 
         """
-        cfg_port, cfg_user, cfg_public_key = self._process_ssh_config(host, ssh_config_file)
+        cfg_port, cfg_user, cfg_private_key = self._process_ssh_config(host, ssh_config_file)
 
         if port == -1:
             port = cfg_port or 22
@@ -101,7 +101,7 @@ class MikoTransport(Transport):
         )
 
         self.auth_username: str = auth_username or cfg_user
-        self.auth_public_key: str = auth_public_key or cfg_public_key
+        self.auth_private_key: str = auth_private_key or cfg_private_key
         self.auth_password: str = auth_password
         self.auth_strict_key: bool = auth_strict_key
         self.ssh_known_hosts_file: str = ssh_known_hosts_file
@@ -152,7 +152,8 @@ class MikoTransport(Transport):
                 `NetworkDriver` or subclasses of it, in most cases.
 
         Returns:
-            N/A  # noqa: DAR202
+            Tuple: port to use for ssh, username to use for ssh, identity file (private key) to
+                use for ssh auth
 
         Raises:
             N/A
@@ -184,20 +185,19 @@ class MikoTransport(Transport):
             self.session = self.lib_session(self.socket.sock)
             self.session.start_client()
         except Exception as exc:
-            LOG.critical(
-                f"Failed to complete handshake with host {self.host}; " f"Exception: {exc}"
-            )
+            LOG.critical(f"Failed to complete handshake with host {self.host}; Exception: {exc}")
+            self.session_lock.release()
             raise exc
 
         if self.auth_strict_key:
             LOG.debug(f"Attempting to validate {self.host} public key")
             self._verify_key()
 
-        LOG.debug(f"Session to host {self.host} opened")
         self.authenticate()
         if not self.isauthenticated():
             msg = f"Authentication to host {self.host} failed"
             LOG.critical(msg)
+            self.session_lock.release()
             raise ScrapliAuthenticationFailed(msg)
         self._open_channel()
         self.session_lock.release()
@@ -247,17 +247,21 @@ class MikoTransport(Transport):
             N/A
 
         """
-        if self.auth_public_key:
+        if self.auth_private_key:
             self._authenticate_public_key()
             if self.isauthenticated():
-                LOG.debug(f"Authenticated to host {self.host} with public key")
+                LOG.debug(f"Authenticated to host {self.host} with public key auth")
                 return
-        if self.auth_password:
-            self._authenticate_password()
-            if self.isauthenticated():
-                LOG.debug(f"Authenticated to host {self.host} with password")
-                return
-        return
+            if not self.auth_password or not self.auth_username:
+                msg = (
+                    f"Public key authentication to host {self.host} failed. Missing username or"
+                    " password unable to attempt password authentication."
+                )
+                LOG.critical(msg)
+                raise ScrapliAuthenticationFailed(msg)
+        self._authenticate_password()
+        if self.isauthenticated():
+            LOG.debug(f"Authenticated to host {self.host} with password")
 
     def _authenticate_public_key(self) -> None:
         """
@@ -278,18 +282,17 @@ class MikoTransport(Transport):
             # from Transport and Channel objects
             from paramiko.rsakey import RSAKey  # pylint: disable=C0415
 
-            paramiko_key = RSAKey(filename=self.auth_public_key)
+            paramiko_key = RSAKey(filename=self.auth_private_key)
             self.session.auth_publickey(self.auth_username, paramiko_key)
         except self.lib_auth_exception as exc:
             LOG.critical(
                 f"Public key authentication with host {self.host} failed. Exception: {exc}."
             )
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=W0703
             LOG.critical(
                 "Unknown error occurred during public key authentication with host "
                 f"{self.host}; Exception: {exc}"
             )
-            raise exc
 
     def _authenticate_password(self) -> None:
         """

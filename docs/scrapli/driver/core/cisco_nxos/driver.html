@@ -63,8 +63,8 @@ def nxos_on_close(conn: NetworkDriver) -&gt; None:
     &#34;&#34;&#34;
     # write exit directly to the transport as channel would fail to find the prompt after sending
     # the exit command!
-    conn.transport.write(&#34;exit&#34;)
     conn.acquire_priv(conn.default_desired_priv)
+    conn.transport.write(&#34;exit&#34;)
     conn.transport.write(conn.channel.comms_prompt_pattern)
 
 
@@ -108,7 +108,7 @@ PRIVS = {
         PrivilegeLevel(
             r&#34;^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{0,16}\)#\s?$&#34;,
             &#34;configuration&#34;,
-            &#34;priv&#34;,
+            &#34;privilege_exec&#34;,
             &#34;end&#34;,
             &#34;&#34;,
             &#34;&#34;,
@@ -122,7 +122,7 @@ PRIVS = {
         PrivilegeLevel(
             r&#34;^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{1,16}\)#\s?$&#34;,
             &#34;special_configuration&#34;,
-            &#34;priv&#34;,
+            &#34;privilege_exec&#34;,
             &#34;end&#34;,
             &#34;&#34;,
             &#34;&#34;,
@@ -142,6 +142,7 @@ class NXOSDriver(NetworkDriver):
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         auth_secondary: str = &#34;&#34;,
+        transport: str = &#34;system&#34;,
         **kwargs: Dict[str, Any],
     ):
         &#34;&#34;&#34;
@@ -165,6 +166,17 @@ class NXOSDriver(NetworkDriver):
                 Common use cases for this callable would be to save configurations prior to exiting,
                 or to logout properly to free up vtys or similar.
             auth_secondary: password to use for secondary authentication (enable)
+            transport: system|ssh2|paramiko|telnet -- type of transport to use for connection
+                system uses system available ssh (/usr/bin/ssh)
+                ssh2 uses ssh2-python
+                paramiko uses... paramiko
+                telnet uses telnetlib
+                choice of driver depends on the features you need. in general system is easiest as
+                it will just &#39;auto-magically&#39; use your ssh config file (&#39;~/.ssh/config&#39; or
+                &#39;/etc/ssh/config_file&#39;). ssh2 is very very fast as it is a thin wrapper around
+                libssh2 however it is slightly feature limited. paramiko is slower than ssh2, but
+                has more features built in (though scrapli does not expose/support them all).
+                explicitly added here to allow for nicely checking if transport is telnet.
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -178,17 +190,25 @@ class NXOSDriver(NetworkDriver):
         if on_close is None:
             on_close = nxos_on_close
 
+        _telnet = False
+        if transport == &#34;telnet&#34;:
+            _telnet = True
+
         super().__init__(
             auth_secondary,
             comms_prompt_pattern=comms_prompt_pattern,
             on_open=on_open,
             on_close=on_close,
+            transport=transport,
             **kwargs,
         )
 
         self.privs = PRIVS
         self.default_desired_priv = &#34;privilege_exec&#34;
-        self.textfsm_platform = &#34;cisco_nxos&#34;</code></pre>
+        self.textfsm_platform = &#34;cisco_nxos&#34;
+
+        if _telnet:
+            self.transport.username_prompt = &#34;login:&#34;</code></pre>
 </details>
 </section>
 <section>
@@ -238,8 +258,8 @@ class NXOSDriver(NetworkDriver):
     &#34;&#34;&#34;
     # write exit directly to the transport as channel would fail to find the prompt after sending
     # the exit command!
-    conn.transport.write(&#34;exit&#34;)
     conn.acquire_priv(conn.default_desired_priv)
+    conn.transport.write(&#34;exit&#34;)
     conn.transport.write(conn.channel.comms_prompt_pattern)</code></pre>
 </details>
 </dd>
@@ -291,7 +311,7 @@ class NXOSDriver(NetworkDriver):
 <dl>
 <dt id="scrapli.driver.core.cisco_nxos.driver.NXOSDriver"><code class="flex name class">
 <span>class <span class="ident">NXOSDriver</span></span>
-<span>(</span><span>comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]\\s?$&#x27;, on_open=None, on_close=None, auth_secondary='', **kwargs)</span>
+<span>(</span><span>comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]\\s?$&#x27;, on_open=None, on_close=None, auth_secondary='', transport='system', **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -320,6 +340,18 @@ Common use cases for this callable would be to save configurations prior to exit
 or to logout properly to free up vtys or similar.</dd>
 <dt><strong><code>auth_secondary</code></strong></dt>
 <dd>password to use for secondary authentication (enable)</dd>
+<dt><strong><code>transport</code></strong></dt>
+<dd>system|ssh2|paramiko|telnet &ndash; type of transport to use for connection
+system uses system available ssh (/usr/bin/ssh)
+ssh2 uses ssh2-python
+paramiko uses&hellip; paramiko
+telnet uses telnetlib
+choice of driver depends on the features you need. in general system is easiest as
+it will just 'auto-magically' use your ssh config file ('~/.ssh/config' or
+'/etc/ssh/config_file'). ssh2 is very very fast as it is a thin wrapper around
+libssh2 however it is slightly feature limited. paramiko is slower than ssh2, but
+has more features built in (though scrapli does not expose/support them all).
+explicitly added here to allow for nicely checking if transport is telnet.</dd>
 <dt><strong><code>**kwargs</code></strong></dt>
 <dd>keyword args to pass to inherited class(es)</dd>
 </dl>
@@ -345,6 +377,7 @@ or to logout properly to free up vtys or similar.</dd>
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         auth_secondary: str = &#34;&#34;,
+        transport: str = &#34;system&#34;,
         **kwargs: Dict[str, Any],
     ):
         &#34;&#34;&#34;
@@ -368,6 +401,17 @@ or to logout properly to free up vtys or similar.</dd>
                 Common use cases for this callable would be to save configurations prior to exiting,
                 or to logout properly to free up vtys or similar.
             auth_secondary: password to use for secondary authentication (enable)
+            transport: system|ssh2|paramiko|telnet -- type of transport to use for connection
+                system uses system available ssh (/usr/bin/ssh)
+                ssh2 uses ssh2-python
+                paramiko uses... paramiko
+                telnet uses telnetlib
+                choice of driver depends on the features you need. in general system is easiest as
+                it will just &#39;auto-magically&#39; use your ssh config file (&#39;~/.ssh/config&#39; or
+                &#39;/etc/ssh/config_file&#39;). ssh2 is very very fast as it is a thin wrapper around
+                libssh2 however it is slightly feature limited. paramiko is slower than ssh2, but
+                has more features built in (though scrapli does not expose/support them all).
+                explicitly added here to allow for nicely checking if transport is telnet.
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -381,17 +425,25 @@ or to logout properly to free up vtys or similar.</dd>
         if on_close is None:
             on_close = nxos_on_close
 
+        _telnet = False
+        if transport == &#34;telnet&#34;:
+            _telnet = True
+
         super().__init__(
             auth_secondary,
             comms_prompt_pattern=comms_prompt_pattern,
             on_open=on_open,
             on_close=on_close,
+            transport=transport,
             **kwargs,
         )
 
         self.privs = PRIVS
         self.default_desired_priv = &#34;privilege_exec&#34;
-        self.textfsm_platform = &#34;cisco_nxos&#34;</code></pre>
+        self.textfsm_platform = &#34;cisco_nxos&#34;
+
+        if _telnet:
+            self.transport.username_prompt = &#34;login:&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
