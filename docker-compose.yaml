@@ -42,6 +42,13 @@ services:
       net1:
         ipv4_address: 172.18.0.15
 
+  linux:
+    hostname: linux
+    image: dbarroso/stupid_ssh_container
+    networks:
+      net1:
+        ipv4_address: 172.18.0.20
+
 networks:
   net1:
     driver: bridge
@@ -49,5 +56,5 @@ networks:
       config:
         - subnet: 172.18.0.0/26
     driver_opts:
-      com.docker.network.bridge.name: br_nssh
+      com.docker.network.bridge.name: br_scrapli
 

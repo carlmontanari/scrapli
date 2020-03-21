@@ -940,9 +940,6 @@ Currently the only reason I can think of to use anything other than "system" as 
 
 # Linting and Testing
 
-*NOTE* Currently there are no unit/functional tests for IOSXR/NXOS/EOS/Junos, however as this part of scrapli is largely
- a port of ssh2net, they should work :) 
-
 ## Linting
 
 This project uses [black](https://github.com/psf/black) for auto-formatting. In addition to black, tox will execute
@@ -998,14 +995,24 @@ Executing the functional tests is a bit more complicated! First, thank you to Kr
  [vrnetlab](https://github.com/plajjan/vrnetlab)! All functional tests are built on this awesome platform that allows
   for easy creation of containerized network devices.
 
-Basic functional tests exist for all "core" platform types (IOSXE, NXOS, IOSXR, EOS, Junos). Vrnetlab currently only
- supports the older emulation style NX-OS devices, and *not* the newer VM image n9kv. I have made some very minor
-  tweaks to vrnetlab locally in order to get the n9kv image running -- I have raised a PR to add this to vrnetlab
-   proper. Minus the n9kv tweaks, getting going with vrnetlab is fairly straightforward -- simply follow Kristian's
-    great readme docs. For the Arista EOS image -- prior to creating the container you should boot the device and
-     enter the `zerotouch disable` command. This allows for the config to actually be saved and prevents the
-      interfaces from cycling through interface types in the container (I'm not clear why it does that but executing
-       this command before building the container "fixes" this!).
+Basic functional tests exist for all "core" platform types (IOSXE, NXOS, IOSXR, EOS, Junos) as well as basic testing
+ for Linux. Vrnetlab currently only supports the older emulation style NX-OS devices, and *not* the newer VM image
+  n9kv. I have made some very minor tweaks to vrnetlab locally in order to get the n9kv image running. I also have
+   made some changes to enable scp-server for IOSXE/NXOS devices to allow for config replaces with NAPALM right out
+    of the box. You can get these tweaks in my fork of vrnetlab. Getting going with vrnetlab is fairly
+     straightforward -- simply follow Kristian's great readme docs.
+     
+For the Arista EOS image -- prior to creating the container you should boot the device and enter the `zerotouch
+ disable` command. This allows for the config to actually be saved and prevents the interfaces from cycling through
+  interface types in the container (I'm not clear why it does that but executing this command before building the
+   container "fixes" this!). An example qemu command to boot up the EOS device is:
+         
+```
+qemu-system-x86_64 -enable-kvm -display none -machine pc -monitor tcp:0.0.0.0:4999,server,nowait -m 4096 -serial telnet:0.0.0.0:5999,server,nowait -drive if=ide,file=vEOS-lab-4.22.1F.vmdk -device pci-bridge,chassis_nr=1,id=pci.1 -device e1000,netdev=p00,mac=52:54:00:54:e9:00 -netdev user,id=p00,net=10.0.0.0/24,tftp=/tftpboot,hostfwd=tcp::2022-10.0.0.15:22,hostfwd=tcp::2023-10.0.0.15:23,hostfwd=udp::2161-10.0.0.15:161,hostfwd=tcp::2830-10.0.0.15:830,hostfwd=tcp::2080-10.0.0.15:80,hostfwd=tcp::2443-10.0.0.15:443
+```
+
+Once booted, connect to the device (telnet to container IP on port 5999 if using above command), issue the command
+ `zerotouch disable`, save the config and then you can shut it down, and make the container.
 
 The docker-compose file here will be looking for the container images matching this pattern, so this is an important
  bit! The container image names should be:
@@ -1024,19 +1031,13 @@ You can tag the image names on creation (following the vrnetlab readme docs), or
 docker tag [TAG OF IMAGE CREATED] scrapli-[VENDOR]-[OS]
 ```
 
-*NOTE* I have added vty lines 5-98 on the CSR image -- I think the connections opening/closing so quickly during
- testing caused them to get hung. Testing things more slowly (adding time.sleep after closing connections) fixed this
-  but that obviously made the testing time longer, so this seemed like a better fix. This change will be in my fork
-   of vrnetlab or you can simply modify the `line vty 0 5` --> `line vty 0 98` in the `luanch.py` for the CSR in your
-    vrnetlab clone. `line vty 1` for some reason also had `length 0` which I have removed (and tests expect to be
-     gone). Lastly, to test telnet the `csr` setup in vrnetlab needs to be modified to allow telnet as well; this
-      means the Dockerfile must expose port 23, the qemu nic settings must support port 23 being sent into the VM and
-       socat must also be setup appropriately. This should all be updated in my vrnetlab fork. 
+*NOTE* If you are going to test scrapli, use [my fork of vrnetlab](https://github.com/carlmontanari/vrnetlab) -- I've
+ enabled telnet, set ports, taken care of setting things up so that NAPALM can config replace, etc.
 
 
 ### Functional Tests
 
-Once you have created the images, you can start the containers with a make command:
+Once you have created the images, you can start all of the containers with a make command:
 
 ```
 make start_dev_env
@@ -1056,7 +1057,9 @@ make start_dev_env_iosxe
 
 Substitute "iosxe" for the platform type you want to start.
 
-Most of the containers don't take too long to fire up, maybe a few minutes (running on my old macmini with Ubuntu, so not exactly a powerhouse!). That said, the IOS-XR device takes about 15 minutes to go to "healthy" status. Once booted up you can connect to their console or via SSH:
+Most of the containers don't take too long to fire up, maybe a few minutes (running on my old macmini with Ubuntu, so
+ not exactly a powerhouse!). That said, the IOS-XR device takes about 15 minutes to go to "healthy" status. Once
+  booted up you can connect to their console or via SSH:
 
 | Device        | Local IP      |
 | --------------|---------------|
@@ -1065,8 +1068,10 @@ Most of the containers don't take too long to fire up, maybe a few minutes (runn
 | iosxr         | 172.18.0.13   |
 | eos           | 172.18.0.14   |
 | junos         | 172.18.0.15   |
+| linux         | 172.18.0.20   |
 
-The console port for all devices is 5000, so to connect to the console of the iosxe device you can simply telnet to that port locally:
+The console port for all devices is 5000, so to connect to the console of the iosxe device you can simply telnet to
+ that port locally:
 
 ```
 telnet 172.18.0.11 5000
@@ -1087,6 +1092,20 @@ Once the container(s) are ready, you can use the make commands to execute tests 
 - `test_iosxr` will execute all unit tests and iosxr functional tests
 - `test_eos` will execute all unit tests and eos functional tests
 - `test_junos` will execute all unit tests and junos functional tests
+- `test_linux` will execute all unit tests and basic linux functional tests (this is really intended to test the base
+ `Scrape` driver instead of the network drivers)
+
+### Other Functional Test Info
+
+The functional tests will try to push the base configuration via NAPALM before running any tests. This is obviously
+ nice to ensure that testing is consistent, however after the initial deployment of the config the configs shouldn't
+  be changing during testing (configs are made, but are also removed after validation). Waiting for NAPALM to push
+   configs at each test can be annoying, to avoid this simply set the environment variable `SCRAPLI_NO_SETUP=true` to
+    disable this.
+
+IOSXE is the only platform that is testing SSH key based authentication at the moment. The key is pushed via NAPALM in
+ the setup phase. This was mostly done out of laziness, and in the future the other platforms may be tested with key
+  based auth as well, but for now IOSXE is representative enough to provide some faith that key based auth works! 
 
 
 # Todo and Roadmap
@@ -1097,15 +1116,13 @@ This section may not get updated much, but will hopefully reflect the priority i
 ## Todo
 
 - Add tests for keepalive stuff if possible
+- Add tests for timeouts if possible
+- Add tests for auth failures
+- Add tests for custom on open/close functions
 - Investigate pre-authentication handling for telnet -- support handling a prompt *before* auth happens i.e. accept
  some banner/message -- does this ever happen for ssh? I don't know! If so, support dealing with that as well.
 - Remove as much as possible from the vendor'd `ptyprocess` code. Type hint it, add docstrings everywhere, add tests
  if possible (and remove from ignore for test coverage and darglint).
-- Improve testing in general... make it more orderly/nicer, retry connections automatically if there is a failure
- (failures happen from vtys getting tied up and stuff like that it seems), shoot for even better coverage!
-- Add a dummy container (like nornir maybe?) to use for functional testing -- its very likely folks won't have a
- vrnetlab setup or compute to set that up... it'd be nice to have a lightweight container that can be used for basic
-  testing of `Scrape` and for testing auth with keys and such.
 - Improve logging -- especially in the transport classes and surrounding authentication (mostly in systemssh).
 
 ## Roadmap
@@ -1116,3 +1133,4 @@ This section may not get updated much, but will hopefully reflect the priority i
 - Nonrir plugin -- make scrapli a Nornir plugin!
 - Ensure v6 stuff works as expected.
 - Continue to add/support ssh config file things.
+- Maybe make this into a netconf driver as well? ncclient is just built on paramiko so it seems doable...?

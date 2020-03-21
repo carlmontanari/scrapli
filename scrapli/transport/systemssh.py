@@ -350,7 +350,7 @@ class SystemSSHTransport(Transport):
 
         """
         if pipes_session.stderr is None:
-            raise ScrapliTimeout(f"Couldn't read stderr while connecting to host {self.host}")
+            raise ScrapliTimeout(f"Could not read stderr while connecting to host {self.host}")
 
         output = b""
         while True:
@@ -401,9 +401,10 @@ class SystemSSHTransport(Transport):
 
         """
         self.session_lock.acquire()
+        output = b""
         while True:
             try:
-                output = pty_session.read()
+                output += pty_session.read()
             except EOFError:
                 raise ScrapliAuthenticationFailed(f"Failed to open connection to host {self.host}")
             if self._comms_ansi:

@@ -1,110 +1,108 @@
+import os
+
 import pytest
 
-from scrapli import Scrape
-from scrapli.driver import NetworkDriver
-from scrapli.driver.core import IOSXEDriver
+from napalm import get_network_driver
+
+from .test_data.devices import DEVICES
+
+NAPALM_DEVICE_TYPE_MAP = {
+    "cisco_iosxe": "ios",
+    "cisco_nxos": "nxos",
+    "cisco_iosxr": "iosxr",
+    "arista_eos": "eos",
+    "juniper_junos": "junos",
+}
 
 
-@pytest.fixture(scope="module")
-def base_driver():
-    def _base_driver(
-        host,
-        port=22,
-        auth_username="",
-        auth_password="",
-        auth_public_key="",
-        timeout_socket=5,
-        timeout_transport=5000,
-        timeout_ops=5,
-        comms_prompt_pattern=r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
-        comms_ansi=False,
-        transport="system",
-    ):
-        conn = Scrape(
-            host=host,
-            port=port,
-            auth_username=auth_username,
-            auth_password=auth_password,
-            auth_public_key=auth_public_key,
-            auth_strict_key=False,
-            timeout_socket=timeout_socket,
-            timeout_transport=timeout_transport,
-            timeout_ops=timeout_ops,
-            comms_prompt_pattern=comms_prompt_pattern,
-            comms_ansi=comms_ansi,
-            transport=transport,
+@pytest.fixture(scope="session", autouse=True)
+def prepare_device(request):
+    if os.getenv("SCRAPLI_NO_SETUP", "").lower() == "true":
+        return
+
+    test_devices = []
+    for test in request.node.items:
+        # for linux testing we wont have a device_type to test against, and obviously dont need
+        #  napalm to push configs!
+        if "device_type" not in test.callspec.params:
+            continue
+        test_devices.append(test.callspec.params["device_type"])
+    test_devices = set(test_devices)
+
+    # push base config via napalm to ensure consistent testing experience
+    for device in test_devices:
+        base_config = DEVICES[device]["base_config"]
+
+        napalm_device_type = NAPALM_DEVICE_TYPE_MAP.get(device)
+        napalm_driver = get_network_driver(napalm_device_type)
+        napalm_conn = napalm_driver(
+            hostname=DEVICES[device]["host"],
+            username=DEVICES[device]["auth_username"],
+            password=DEVICES[device]["auth_password"],
         )
-        conn.open()
-        return conn
+        napalm_conn.open()
+        napalm_conn.load_replace_candidate(filename=base_config)
+        napalm_conn.commit_config()
+        napalm_conn.close()
 
-    return _base_driver
+
+# @pytest.fixture(scope="class", params=["cisco_iosxe", "cisco_nxos", "cisco_iosxr", "arista_eos", "juniper_junos"])
+@pytest.fixture(
+    scope="class",
+    params=["cisco_iosxe", "cisco_nxos", "cisco_iosxr", "arista_eos", "juniper_junos"],
+)
+def device_type(request):
+    yield request.param
 
 
-@pytest.fixture(scope="module")
-def network_driver():
-    def _network_driver(
-        host,
-        port=22,
-        auth_username="",
-        auth_password="",
-        auth_public_key="",
-        timeout_socket=5,
-        timeout_transport=5000,
-        timeout_ops=5,
-        comms_prompt_pattern=r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
-        comms_ansi=False,
-        transport="system",
-    ):
-        conn = NetworkDriver(
-            host=host,
-            port=port,
-            auth_username=auth_username,
-            auth_password=auth_password,
-            auth_public_key=auth_public_key,
-            auth_strict_key=False,
-            timeout_socket=timeout_socket,
-            timeout_transport=timeout_transport,
-            timeout_ops=timeout_ops,
-            comms_prompt_pattern=comms_prompt_pattern,
-            comms_ansi=comms_ansi,
-            transport=transport,
+# @pytest.fixture(scope="class", params=["system", "ssh2", "paramiko", "telnet"])
+@pytest.fixture(scope="class", params=["system", "ssh2", "paramiko", "telnet"])
+def transport(request):
+    yield request.param
+
+
+@pytest.fixture(scope="class")
+def nix_conn(transport):
+    if transport == "telnet":
+        pytest.skip("skipping telnet for linux hosts")
+
+    device = DEVICES["linux"].copy()
+    driver = device.pop("driver")
+
+    conn = driver(**device, transport=transport,)
+    conn.open()
+    return conn
+
+
+@pytest.fixture(scope="class")
+def conn(device_type, transport):
+    if device_type == "arista_eos" and transport == "ssh2":
+        pytest.skip(
+            "SSH2 (on pypi) doesn't support keyboard interactive auth, skipping ssh2 for arista_eos testing"
         )
-        conn.open()
-        return conn
 
-    return _network_driver
+    device = DEVICES[device_type].copy()
+    driver = device.pop("driver")
+    device.pop("base_config")
 
+    timeout_transport = 5
+    timeout_ops = 5
+    if device_type == "juniper_junos":
+        # commits on vsrx take one whole eternity...
+        timeout_transport = 30
+        timeout_ops = 30
 
-@pytest.fixture(scope="module")
-def cisco_iosxe_driver():
-    def _cisco_iosxe_driver(
-        host,
-        port=22,
-        auth_username="",
-        auth_password="",
-        auth_public_key="",
+    port = 22
+    if transport == "telnet":
+        port = 23
+
+    conn = driver(
+        **device,
+        port=port,
+        transport=transport,
         timeout_socket=5,
-        timeout_transport=5000,
-        timeout_ops=5,
-        comms_prompt_pattern=r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
-        comms_ansi=False,
-        transport="system",
-    ):
-        conn = IOSXEDriver(
-            host=host,
-            port=port,
-            auth_username=auth_username,
-            auth_password=auth_password,
-            auth_public_key=auth_public_key,
-            auth_strict_key=False,
-            timeout_socket=timeout_socket,
-            timeout_transport=timeout_transport,
-            timeout_ops=timeout_ops,
-            comms_prompt_pattern=comms_prompt_pattern,
-            comms_ansi=comms_ansi,
-            transport=transport,
-        )
-        conn.open()
-        return conn
-
-    return _cisco_iosxe_driver
+        timeout_transport=timeout_transport,
+        timeout_ops=timeout_ops,
+    )
+    conn.open()
+    return conn

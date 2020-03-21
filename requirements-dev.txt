@@ -12,6 +12,7 @@ pylint>=2.4.4
 darglint>=1.2.0
 pdoc3>=0.7.5
 netmiko>=2.4.1
+napalm>=2.5.0
 -r requirements.txt
 -r requirements-textfsm.txt
 -r requirements-paramiko.txt

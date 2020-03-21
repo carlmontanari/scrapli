@@ -74,9 +74,9 @@ def test__escalate_auth(mocked_network_driver):
     channel_input_1 = "\n"
     channel_output_1 = "\n3560CX>"
     channel_input_2 = "enable"
-    channel_output_2 = """Password: """
-    channel_input_3 = "password123"
-    channel_output_3 = "3560CX#"
+    channel_output_2 = "Password:"
+    channel_input_3 = "password"
+    channel_output_3 = "\n3560CX#"
     channel_ops = [
         (channel_input_1, channel_output_1),
         (channel_input_2, channel_output_2),
@@ -138,8 +138,8 @@ def test_acquire_priv(mocked_network_driver):
     channel_output_2 = "3560CX>"
     channel_input_3 = "enable"
     channel_output_3 = "Password: "
-    channel_input_4 = "password123"
-    channel_output_4 = "3560CX#"
+    channel_input_4 = "password"
+    channel_output_4 = "\n3560CX#"
     channel_input_5 = "\n"
     channel_output_5 = "3560CX#"
     channel_input_6 = "\n"
@@ -191,8 +191,8 @@ def test_acquire_priv_could_not_acquire_priv(mocked_network_driver):
     channel_output_2 = "3560CX>"
     channel_input_3 = "enable"
     channel_output_3 = "Password: "
-    channel_input_4 = "password123"
-    channel_output_4 = "3560CX#"
+    channel_input_4 = "password"
+    channel_output_4 = "\n3560CX#"
 
     channel_input_5 = "\n"
     channel_output_5 = "\n3560CX>"
@@ -200,8 +200,8 @@ def test_acquire_priv_could_not_acquire_priv(mocked_network_driver):
     channel_output_6 = "3560CX>"
     channel_input_7 = "enable"
     channel_output_7 = "Password: "
-    channel_input_8 = "password123"
-    channel_output_8 = "3560CX#"
+    channel_input_8 = "password"
+    channel_output_8 = "\n3560CX#"
 
     channel_input_9 = "\n"
     channel_output_9 = "\n3560CX>"
@@ -209,8 +209,8 @@ def test_acquire_priv_could_not_acquire_priv(mocked_network_driver):
     channel_output_10 = "3560CX>"
     channel_input_11 = "enable"
     channel_output_11 = "Password: "
-    channel_input_12 = "password123"
-    channel_output_12 = "3560CX#"
+    channel_input_12 = "password"
+    channel_output_12 = "\n3560CX#"
 
     channel_input_13 = "\n"
     channel_output_13 = "\n3560CX>"

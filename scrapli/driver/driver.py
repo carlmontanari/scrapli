@@ -169,15 +169,15 @@ class Scrape:
         if transport != "telnet":
             self._setup_ssh_args(ssh_config_file, ssh_known_hosts_file)
 
-        self.transport: Transport
         self.transport_class, self.transport_args = self._transport_factory(transport)
+        self.transport = self.transport_class(**self.transport_args)
 
-        self.channel: Channel
         self.channel_args: Dict[str, Any] = {}
         for arg in CHANNEL_ARGS:
             if arg == "transport":
                 continue
             self.channel_args[arg] = self._initialization_args.get(arg)
+        self.channel = Channel(self.transport, **self.channel_args)
 
     def __enter__(self) -> "Scrape":
         """
@@ -534,9 +534,7 @@ class Scrape:
             N/A
 
         """
-        self.transport = self.transport_class(**self.transport_args)
         self.transport.open()
-        self.channel = Channel(self.transport, **self.channel_args)
         if self.on_open:
             self.on_open(self)
 
@@ -572,8 +570,9 @@ class Scrape:
             N/A
 
         """
+        alive = False
         try:
             alive = self.transport.isalive()
         except AttributeError:
-            alive = False
+            pass
         return alive

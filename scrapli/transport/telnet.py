@@ -131,6 +131,10 @@ class TelnetTransport(Transport):
         self.auth_password: str = auth_password
 
         self._timeout_ops: int = timeout_ops
+        # timeout_ops_auth is only used for authentication; base ops timeout * 2 as we are doing
+        # two operations -- entering username and entering password (in most cases at least)
+        self._timeout_ops_auth: int = timeout_ops * 2
+
         self._comms_prompt_pattern: str = comms_prompt_pattern
         self._comms_return_char: str = comms_return_char
         self._comms_ansi: bool = comms_ansi
@@ -144,7 +148,7 @@ class TelnetTransport(Transport):
 
     def open(self) -> None:
         """
-        Open channel, acquire pty, request interactive shell
+        Open telnet channel
 
         Args:
             N/A
@@ -170,6 +174,7 @@ class TelnetTransport(Transport):
         LOG.debug(f"Authenticated to host {self.host} with password")
         self.session = telnet_session
 
+    @operation_timeout("_timeout_ops_auth", "Timed out looking for telnet login prompts")
     def _authenticate(self, telnet_session: ScrapliTelnet) -> None:
         """
         Parent private method to handle telnet authentication
@@ -184,57 +189,22 @@ class TelnetTransport(Transport):
             N/A
 
         """
-        self._authenticate_username(telnet_session)
-        self._authenticate_password(telnet_session)
-
-    @operation_timeout("_timeout_ops", "Timed out looking for telnet login username prompt")
-    def _authenticate_username(self, telnet_session: ScrapliTelnet) -> None:
-        """
-        Private method to enter username for telnet authentication
-
-        Args:
-            telnet_session: Telnet session object
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        """
         self.session_lock.acquire()
+        output = b""
         while True:
-            output = telnet_session.read_eager()
+            output += telnet_session.read_eager()
             if self.username_prompt.lower().encode() in output.lower():
+                # if/when we see username, reset the output to empty byte string
+                output = b""
                 telnet_session.write(self.auth_username.encode())
                 telnet_session.write(self._comms_return_char.encode())
-                self.session_lock.release()
-                break
-
-    @operation_timeout("timeout_ops", "Timed out looking for telnet login password prompt")
-    def _authenticate_password(self, telnet_session: ScrapliTelnet) -> None:
-        """
-        Private method to enter password for telnet authentication
-
-        Args:
-            telnet_session: Telnet session object
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        """
-        self.session_lock.acquire()
-        while True:
-            output = telnet_session.read_eager()
             if self.password_prompt.lower().encode() in output.lower():
                 telnet_session.write(self.auth_password.encode())
                 telnet_session.write(self._comms_return_char.encode())
                 self.session_lock.release()
                 break
 
+    @operation_timeout("_timeout_ops_auth", "Timed determining if telnet session is authenticated")
     def _telnet_isauthenticated(self, telnet_session: ScrapliTelnet) -> bool:
         """
         Check if session is authenticated
@@ -261,20 +231,21 @@ class TelnetTransport(Transport):
             time.sleep(0.25)
             fd_ready, _, _ = select([telnet_session_fd], [], [], 0)
             if telnet_session_fd in fd_ready:
-                output = telnet_session.read_eager()
-                # we do not need to deal w/ line replacement for the actual output, only for
-                # parsing if a prompt-like thing is at the end of the output
-                output = re.sub(b"\r", b"", output)
-                if self._comms_ansi:
-                    output = strip_ansi(output)
-                channel_match = re.search(prompt_pattern, output)
-                if channel_match:
-                    self.session_lock.release()
-                    self._isauthenticated = True
-                    return True
-                if b"password" in output.lower():
-                    # if we see "password" we know auth failed (hopefully true in all scenarios!)
-                    return False
+                while True:
+                    output = telnet_session.read_eager()
+                    # we do not need to deal w/ line replacement for the actual output, only for
+                    # parsing if a prompt-like thing is at the end of the output
+                    output = re.sub(b"\r", b"", output)
+                    if self._comms_ansi:
+                        output = strip_ansi(output)
+                    channel_match = re.search(prompt_pattern, output)
+                    if channel_match:
+                        self.session_lock.release()
+                        self._isauthenticated = True
+                        return True
+                    if b"password" in output.lower():
+                        # if we see "password" auth failed... hopefully true in all scenarios!
+                        return False
         self.session_lock.release()
         return False
 
