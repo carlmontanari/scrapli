@@ -5,7 +5,7 @@ from typing import Optional, Tuple
 
 from scrapli.driver import Scrape
 
-__version__ = "2020.03.08"
+__version__ = "2020.03.21"
 __all__ = ("Scrape",)
 
 
