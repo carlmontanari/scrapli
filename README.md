@@ -296,16 +296,16 @@ All drivers can be imported from `scrapli.driver.core`.
 The drivers of course need some information about the device you are trying to connect to. The most common arguments
  to provide to the driver are outlined below:
  
-| Argument        | Purpose/Value                                               |
-|-----------------|-------------------------------------------------------------|
-| host            | name/ip of host to connect to                               |
-| port            | port of host to connect to (defaults to port 22)            |
-| auth_username   | username for authentication                                 |
-| auth_password   | password for authentication                                 |
-| auth_secondary  | password for secondary authentication (enable password)     |
-| auth_public_key | public key for authentication                               |
-| auth_strict_key | strict key checking -- TRUE by default!                     |
-| ssh_config_file | True/False or path to ssh config file to use                |
+| Argument         | Purpose/Value                                               |
+|------------------|-------------------------------------------------------------|
+| host             | name/ip of host to connect to                               |
+| port             | port of host to connect to (defaults to port 22)            |
+| auth_username    | username for authentication                                 |
+| auth_password    | password for authentication                                 |
+| auth_secondary   | password for secondary authentication (enable password)     |
+| auth_private_key | private key for authentication                              |
+| auth_strict_key  | strict key checking -- TRUE by default!                     |
+| ssh_config_file  | True/False or path to ssh config file to use                |
 
 These arguments may be passed as keyword arguments to the driver of your choice, or, commonly are passed via
  dictionary unpacking as show below:
@@ -582,7 +582,7 @@ The basic usage section outlined the most commonly used driver arguments, this o
 | auth_username        | username for authentication                                 |
 | auth_password        | password for authentication                                 |
 | auth_secondary       | password for secondary authentication (enable password)     |
-| auth_public_key      | public key for authentication                               |
+| auth_private_key     | private key for authentication                              |
 | auth_strict_key      | strict key checking -- TRUE by default!                     |
 | timeout_socket       | timeout value for initial socket connection                 |
 | timeout_transport    | timeout value for transport (i.e. paramiko)                 |

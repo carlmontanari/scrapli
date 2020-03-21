@@ -18,7 +18,7 @@ def test__repr():
     conn = Scrape(host="myhost")
     assert (
         repr(conn)
-        == "Scrape(host='myhost', port=22, auth_username='', auth_password='', auth_public_key=b'', "
+        == "Scrape(host='myhost', port=22, auth_username='', auth_password='', auth_private_key=b'', "
         "auth_strict_key=True, timeout_socket=5, timeout_transport=5, timeout_ops=10, timeout_exit=True, "
         "keepalive=False, keepalive_interval=30, keepalive_type='network', keepalive_pattern='\\x05', "
         "comms_prompt_pattern='^[a-z0-9.\\\\-@()/:]{1,32}[#>$]\\\\s*$', comms_return_char='\\n', comms_ansi=False, "
@@ -37,7 +37,7 @@ def test__repr():
             TypeError,
             "`auth_strict_key` should be bool, got <class 'str'>",
         ),
-        ("auth_public_key", "notafile", ValueError, "Provided public key `notafile` is not a file"),
+        ("auth_private_key", "notafile", ValueError, "Provided public key `notafile` is not a file"),
         ("timeout_exit", "notabool", TypeError, "`timeout_exit` should be bool, got <class 'str'>"),
         ("keepalive", "notabool", TypeError, "`keepalive` should be bool, got <class 'str'>"),
         (
@@ -78,7 +78,7 @@ def test__repr():
         "host",
         "port",
         "auth_strict_key",
-        "auth_public_key",
+        "auth_private_key",
         "timeout_exit",
         "keepalive",
         "keepalive_type",
@@ -114,7 +114,7 @@ def test_exceptions_raised(attr_setup):
         ("auth_username", "tacocat ", "tacocat"),
         ("auth_password", "tacocat", "tacocat"),
         ("auth_password", "tacocat ", "tacocat"),
-        ("auth_public_key", f"{UNIT_TEST_DIR}_ssh_config", f"{UNIT_TEST_DIR}_ssh_config".encode()),
+        ("auth_private_key", f"{UNIT_TEST_DIR}_ssh_config", f"{UNIT_TEST_DIR}_ssh_config".encode()),
         ("auth_strict_key", False, False),
         ("timeout_socket", 100, 100),
         ("timeout_transport", 100, 100),
@@ -139,7 +139,7 @@ def test_exceptions_raised(attr_setup):
         "auth_username_strip",
         "auth_password",
         "auth_password_strip",
-        "auth_public_key",
+        "auth_private_key",
         "auth_strict_key",
         "timeout_socket",
         "timeout_transport",
@@ -171,11 +171,11 @@ def test_attr_assignment(attr_setup):
         assert conn._initialization_args.get(attr_name) == attr_expected
 
 
-def test_valid_public_key_file():
-    auth_public_key = f"{UNIT_TEST_DIR}_ssh_public_key"
-    conn = Scrape(host="myhost", auth_public_key=auth_public_key)
+def test_valid_private_key_file():
+    auth_private_key = f"{UNIT_TEST_DIR}_ssh_private_key"
+    conn = Scrape(host="myhost", auth_private_key=auth_private_key)
     assert (
-        conn._initialization_args["auth_public_key"] == f"{UNIT_TEST_DIR}_ssh_public_key".encode()
+        conn._initialization_args["auth_private_key"] == f"{UNIT_TEST_DIR}_ssh_private_key".encode()
     )
 
 

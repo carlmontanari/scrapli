@@ -28,6 +28,7 @@
 <pre><code class="python">&#34;&#34;&#34;scrapli.driver.network_driver&#34;&#34;&#34;
 import logging
 import re
+import warnings
 from abc import ABC, abstractmethod
 from collections import namedtuple
 from typing import Any, Callable, Dict, List, Tuple, Union
@@ -153,21 +154,36 @@ class NetworkDriver(Scrape, ABC):
             )
         next_prompt = next_priv.pattern
         if current_priv.escalate_auth:
-            escalate_cmd: str = current_priv.escalate
-            escalate_prompt: str = current_priv.escalate_prompt
-            escalate_auth = self.auth_secondary
-            if not isinstance(next_prompt, str):
-                raise TypeError(
-                    f&#34;got {type(next_prompt)} for {current_priv.name} escalate priv, &#34;
-                    &#34;expected str&#34;
+            if not self.auth_secondary:
+                err = (
+                    &#34;Privilege escalation generally requires an `auth_secondary` password, &#34;
+                    &#34;but none is set!&#34;
                 )
-            self.channel.send_inputs_interact(
-                [escalate_cmd, escalate_prompt, escalate_auth, next_prompt], hidden_response=True,
-            )
-            self.channel.comms_prompt_pattern = next_priv.pattern
-        else:
-            self.channel.comms_prompt_pattern = next_priv.pattern
-            self.channel.send_input(current_priv.escalate)
+                msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
+                fix = (
+                    &#34;scrapli will try to escalate privilege without entering a password but may &#34;
+                    &#34;fail.\nSet an `auth_secondary` password if your device requires a password to &#34;
+                    &#34;increase privilege, otherwise ignore this message.&#34;
+                )
+                warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
+                warnings.warn(warning)
+            else:
+                escalate_cmd: str = current_priv.escalate
+                escalate_prompt: str = current_priv.escalate_prompt
+                escalate_auth = self.auth_secondary
+                if not isinstance(next_prompt, str):
+                    raise TypeError(
+                        f&#34;got {type(next_prompt)} for {current_priv.name} escalate priv, &#34;
+                        &#34;expected str&#34;
+                    )
+                self.channel.send_inputs_interact(
+                    [escalate_cmd, escalate_prompt, escalate_auth, next_prompt],
+                    hidden_response=True,
+                )
+                self.channel.comms_prompt_pattern = next_priv.pattern
+                return
+        self.channel.comms_prompt_pattern = next_priv.pattern
+        self.channel.send_input(current_priv.escalate)
 
     def _deescalate(self) -&gt; None:
         &#34;&#34;&#34;
@@ -287,7 +303,7 @@ class NetworkDriver(Scrape, ABC):
 
         return responses
 
-    def send_interactive(self, inputs: List[str], hidden_response: bool = False) -&gt; Response:
+    def send_interactive(self, interact: List[str], hidden_response: bool = False) -&gt; Response:
         &#34;&#34;&#34;
         Send inputs in an interactive fashion; used to handle prompts
 
@@ -298,7 +314,7 @@ class NetworkDriver(Scrape, ABC):
         could be &#34;chained&#34; together to respond to more than a &#34;single&#34; staged prompt
 
         Args:
-            inputs: list of four string elements representing...
+            interact: list of four string elements representing...
                 channel_input - initial input to send
                 expected_prompt - prompt to expect after initial input
                 response - response to prompt
@@ -314,7 +330,7 @@ class NetworkDriver(Scrape, ABC):
         &#34;&#34;&#34;
         if self._current_priv_level.name != self.default_desired_priv:
             self.acquire_priv(self.default_desired_priv)
-        response = self.channel.send_inputs_interact(inputs, hidden_response)
+        response = self.channel.send_inputs_interact(interact, hidden_response)
         return response
 
     def send_configs(
@@ -472,21 +488,36 @@ inheritance.</p>
             )
         next_prompt = next_priv.pattern
         if current_priv.escalate_auth:
-            escalate_cmd: str = current_priv.escalate
-            escalate_prompt: str = current_priv.escalate_prompt
-            escalate_auth = self.auth_secondary
-            if not isinstance(next_prompt, str):
-                raise TypeError(
-                    f&#34;got {type(next_prompt)} for {current_priv.name} escalate priv, &#34;
-                    &#34;expected str&#34;
+            if not self.auth_secondary:
+                err = (
+                    &#34;Privilege escalation generally requires an `auth_secondary` password, &#34;
+                    &#34;but none is set!&#34;
                 )
-            self.channel.send_inputs_interact(
-                [escalate_cmd, escalate_prompt, escalate_auth, next_prompt], hidden_response=True,
-            )
-            self.channel.comms_prompt_pattern = next_priv.pattern
-        else:
-            self.channel.comms_prompt_pattern = next_priv.pattern
-            self.channel.send_input(current_priv.escalate)
+                msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
+                fix = (
+                    &#34;scrapli will try to escalate privilege without entering a password but may &#34;
+                    &#34;fail.\nSet an `auth_secondary` password if your device requires a password to &#34;
+                    &#34;increase privilege, otherwise ignore this message.&#34;
+                )
+                warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
+                warnings.warn(warning)
+            else:
+                escalate_cmd: str = current_priv.escalate
+                escalate_prompt: str = current_priv.escalate_prompt
+                escalate_auth = self.auth_secondary
+                if not isinstance(next_prompt, str):
+                    raise TypeError(
+                        f&#34;got {type(next_prompt)} for {current_priv.name} escalate priv, &#34;
+                        &#34;expected str&#34;
+                    )
+                self.channel.send_inputs_interact(
+                    [escalate_cmd, escalate_prompt, escalate_auth, next_prompt],
+                    hidden_response=True,
+                )
+                self.channel.comms_prompt_pattern = next_priv.pattern
+                return
+        self.channel.comms_prompt_pattern = next_priv.pattern
+        self.channel.send_input(current_priv.escalate)
 
     def _deescalate(self) -&gt; None:
         &#34;&#34;&#34;
@@ -606,7 +637,7 @@ inheritance.</p>
 
         return responses
 
-    def send_interactive(self, inputs: List[str], hidden_response: bool = False) -&gt; Response:
+    def send_interactive(self, interact: List[str], hidden_response: bool = False) -&gt; Response:
         &#34;&#34;&#34;
         Send inputs in an interactive fashion; used to handle prompts
 
@@ -617,7 +648,7 @@ inheritance.</p>
         could be &#34;chained&#34; together to respond to more than a &#34;single&#34; staged prompt
 
         Args:
-            inputs: list of four string elements representing...
+            interact: list of four string elements representing...
                 channel_input - initial input to send
                 expected_prompt - prompt to expect after initial input
                 response - response to prompt
@@ -633,7 +664,7 @@ inheritance.</p>
         &#34;&#34;&#34;
         if self._current_priv_level.name != self.default_desired_priv:
             self.acquire_priv(self.default_desired_priv)
-        response = self.channel.send_inputs_interact(inputs, hidden_response)
+        response = self.channel.send_inputs_interact(interact, hidden_response)
         return response
 
     def send_configs(
@@ -960,7 +991,7 @@ inheritance.</p>
 </details>
 </dd>
 <dt id="scrapli.driver.network_driver.NetworkDriver.send_interactive"><code class="name flex">
-<span>def <span class="ident">send_interactive</span></span>(<span>self, inputs, hidden_response=False)</span>
+<span>def <span class="ident">send_interactive</span></span>(<span>self, interact, hidden_response=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Send inputs in an interactive fashion; used to handle prompts</p>
@@ -970,7 +1001,7 @@ returns the results of the interaction</p>
 <p>could be "chained" together to respond to more than a "single" staged prompt</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>inputs</code></strong></dt>
+<dt><strong><code>interact</code></strong></dt>
 <dd>list of four string elements representing&hellip;
 channel_input - initial input to send
 expected_prompt - prompt to expect after initial input
@@ -993,7 +1024,7 @@ final_prompt - final prompt to expect</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def send_interactive(self, inputs: List[str], hidden_response: bool = False) -&gt; Response:
+<pre><code class="python">def send_interactive(self, interact: List[str], hidden_response: bool = False) -&gt; Response:
     &#34;&#34;&#34;
     Send inputs in an interactive fashion; used to handle prompts
 
@@ -1004,7 +1035,7 @@ final_prompt - final prompt to expect</dd>
     could be &#34;chained&#34; together to respond to more than a &#34;single&#34; staged prompt
 
     Args:
-        inputs: list of four string elements representing...
+        interact: list of four string elements representing...
             channel_input - initial input to send
             expected_prompt - prompt to expect after initial input
             response - response to prompt
@@ -1020,7 +1051,7 @@ final_prompt - final prompt to expect</dd>
     &#34;&#34;&#34;
     if self._current_priv_level.name != self.default_desired_priv:
         self.acquire_priv(self.default_desired_priv)
-    response = self.channel.send_inputs_interact(inputs, hidden_response)
+    response = self.channel.send_inputs_interact(interact, hidden_response)
     return response</code></pre>
 </details>
 </dd>

@@ -4,7 +4,7 @@ import pytest
 
 from scrapli.exceptions import ScrapliAuthenticationFailed
 
-from .test_data.devices import DEVICES, PUBLIC_KEY, INVALID_PUBLIC_KEY
+from .test_data.devices import DEVICES, PRIVATE_KEY, INVALID_PRIVATE_KEY
 from .test_data.test_cases import TEST_CASES
 
 
@@ -197,7 +197,7 @@ def test_public_key_auth(device_type, transport):
     device["timeout_socket"] = 2
     device["timeout_transport"] = 2
     device["timeout_ops"] = 2
-    device["auth_public_key"] = PUBLIC_KEY
+    device["auth_private_key"] = PRIVATE_KEY
 
     with driver(**device) as conn:
         assert conn.isalive() is True
@@ -219,13 +219,13 @@ def test_public_key_auth_failure(device_type, transport):
     device["timeout_socket"] = 2
     device["timeout_transport"] = 2
     device["timeout_ops"] = 2
-    device["auth_public_key"] = INVALID_PUBLIC_KEY
+    device["auth_private_key"] = INVALID_PRIVATE_KEY
     device.pop("auth_password")
     conn = driver(**device)
 
     with pytest.raises(ScrapliAuthenticationFailed) as exc:
         conn.open()
     assert str(exc.value) == (
-        f"Private key authentication to host {device['host']} failed. Missing username or "
+        f"Public key authentication to host {device['host']} failed. Missing username or "
         "password unable to attempt password authentication."
     )

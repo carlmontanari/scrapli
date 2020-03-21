@@ -19,7 +19,7 @@ LOG = getLogger("transport")
 
 SSH2_TRANSPORT_ARGS = (
     "auth_username",
-    "auth_public_key",
+    "auth_private_key",
     "auth_password",
     "auth_strict_key",
     "ssh_config_file",
@@ -34,7 +34,7 @@ class SSH2Transport(Transport):
         host: str,
         port: int = -1,
         auth_username: str = "",
-        auth_public_key: str = "",
+        auth_private_key: str = "",
         auth_password: str = "",
         auth_strict_key: bool = True,
         timeout_socket: int = 5,
@@ -57,7 +57,7 @@ class SSH2Transport(Transport):
             host: host ip/name to connect to
             port: port to connect to
             auth_username: username for authentication
-            auth_public_key: path to public key for authentication
+            auth_private_key: path to private key for authentication
             auth_password: password for authentication
             auth_strict_key: True/False to enforce strict key checking (default is True)
             timeout_socket: timeout for establishing socket in seconds
@@ -86,7 +86,7 @@ class SSH2Transport(Transport):
             MissingDependencies: if ssh2-python is not installed
 
         """
-        cfg_port, cfg_user, cfg_public_key = self._process_ssh_config(host, ssh_config_file)
+        cfg_port, cfg_user, cfg_private_key = self._process_ssh_config(host, ssh_config_file)
 
         if port == -1:
             port = cfg_port or 22
@@ -104,7 +104,7 @@ class SSH2Transport(Transport):
         )
 
         self.auth_username: str = auth_username or cfg_user
-        self.auth_public_key: str = auth_public_key or cfg_public_key
+        self.auth_private_key: str = auth_private_key or cfg_private_key
         self.auth_password: str = auth_password
         self.auth_strict_key: bool = auth_strict_key
         self.ssh_known_hosts_file: str = ssh_known_hosts_file
@@ -150,7 +150,8 @@ class SSH2Transport(Transport):
                 `NetworkDriver` or subclasses of it, in most cases.
 
         Returns:
-            N/A  # noqa: DAR202
+            Tuple: port to use for ssh, username to use for ssh, identity file (private key) to
+                use for ssh auth
 
         Raises:
             N/A
@@ -248,13 +249,13 @@ class SSH2Transport(Transport):
             N/A
 
         """
-        if self.auth_public_key:
+        if self.auth_private_key:
             self._authenticate_public_key()
             if self.isauthenticated():
-                LOG.debug(f"Authenticated to host {self.host} with public key")
+                LOG.debug(f"Authenticated to host {self.host} with public key auth")
                 return
             if not self.auth_password or not self.auth_username:
-                msg = (f"Private key authentication to host {self.host} failed. Missing username or"
+                msg = (f"Public key authentication to host {self.host} failed. Missing username or"
                        " password unable to attempt password authentication.")
                 LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
@@ -282,7 +283,7 @@ class SSH2Transport(Transport):
 
         """
         try:
-            self.session.userauth_publickey_fromfile(self.auth_username, self.auth_public_key)
+            self.session.userauth_publickey_fromfile(self.auth_username, self.auth_private_key)
         except self.lib_auth_exception as exc:
             LOG.critical(
                 f"Public key authentication with host {self.host} failed. Exception: {exc}."

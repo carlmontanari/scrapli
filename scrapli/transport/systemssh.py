@@ -21,7 +21,7 @@ LOG = getLogger("transport")
 
 SYSTEM_SSH_TRANSPORT_ARGS = (
     "auth_username",
-    "auth_public_key",
+    "auth_private_key",
     "auth_password",
     "auth_strict_key",
     "ssh_config_file",
@@ -39,7 +39,7 @@ class SystemSSHTransport(Transport):
         host: str = "",
         port: int = 22,
         auth_username: str = "",
-        auth_public_key: str = "",
+        auth_private_key: str = "",
         auth_password: str = "",
         auth_strict_key: bool = True,
         timeout_socket: int = 5,
@@ -65,7 +65,7 @@ class SystemSSHTransport(Transport):
         If using this driver, and passing a ssh_config_file (or setting this argument to `True`),
         all settings in the ssh config file will be superseded by any arguments passed here!
 
-        SystemSSHTransport *always* prefers public key auth if given the option! If auth_public_key
+        SystemSSHTransport *always* prefers public key auth if given the option! If auth_private_key
         is set in the provided arguments OR if ssh_config_file is passed/True and there is a key for
         ANY match (i.e. `*` has a key in ssh config file!!), we will use that key! If public key
         auth fails and a username and password is set (manually or by ssh config file), password
@@ -83,7 +83,7 @@ class SystemSSHTransport(Transport):
             host: host ip/name to connect to
             port: port to connect to
             auth_username: username for authentication
-            auth_public_key: path to public key for authentication
+            auth_private_key: path to private key for authentication
             auth_password: password for authentication
             auth_strict_key: True/False to enforce strict key checking (default is True)
             timeout_socket: timeout for ssh session to start -- this directly maps to ConnectTimeout
@@ -150,7 +150,7 @@ class SystemSSHTransport(Transport):
         )
 
         self.auth_username: str = auth_username
-        self.auth_public_key: str = auth_public_key
+        self.auth_private_key: str = auth_private_key
         self.auth_password: str = auth_password
         self.auth_strict_key: bool = auth_strict_key
 
@@ -177,8 +177,8 @@ class SystemSSHTransport(Transport):
         Method to parse ssh config file
 
         Ensure ssh_config_file is valid (if providing a string path to config file), or resolve
-        config file if passed True. Search config file for any public key, if ANY matching key is
-        found and user has not provided a public key, set `auth_public_key` to the value of the
+        config file if passed True. Search config file for any private key, if ANY matching key is
+        found and user has not provided a private key, set `auth_private_key` to the value of the
         found key. This is because we prefer to use `open_pipes` over `open_pty`!
 
         Args:
@@ -195,8 +195,8 @@ class SystemSSHTransport(Transport):
         ssh = SSHConfig(ssh_config_file)
         self.ssh_config_file = ssh.ssh_config_file
         host_config = ssh.lookup(self.host)
-        if not self.auth_public_key and host_config.identity_file:
-            self.auth_public_key = os.path.expanduser(host_config.identity_file.strip())
+        if not self.auth_private_key and host_config.identity_file:
+            self.auth_private_key = os.path.expanduser(host_config.identity_file.strip())
 
     def _build_open_cmd(self) -> None:
         """
@@ -214,8 +214,8 @@ class SystemSSHTransport(Transport):
         """
         self.open_cmd.extend(["-p", str(self.port)])
         self.open_cmd.extend(["-o", f"ConnectTimeout={self.timeout_socket}"])
-        if self.auth_public_key:
-            self.open_cmd.extend(["-i", self.auth_public_key])
+        if self.auth_private_key:
+            self.open_cmd.extend(["-i", self.auth_private_key])
         if self.auth_username:
             self.open_cmd.extend(["-l", self.auth_username])
         if self.auth_strict_key is False:
@@ -236,13 +236,13 @@ class SystemSSHTransport(Transport):
 
         If possible it is preferable to use the `_open_pipes` method, but we can only do this IF we
         can authenticate with public key authorization (because we don't have to spawn a PTY; if no
-        public key we have to spawn PTY to deal w/ authentication prompts). IF we get a public key
-        provided, use pipes method, we will just deal with `_open_pty`. `_open_pty` is less
-        preferable because we have to spawn a PTY and cannot as easily tell if SSH authentication is
-        successful. With `_open_pipes` we can read stderr which contains the output from the verbose
-        flag for SSH -- this contains a message that indicates success of SSH auth. In the case of
-        `_open_pty` we have to read from the channel directly like in the case of telnet... so it
-        works, but its just a bit less desirable.
+        public key we have to spawn PTY to deal w/ authentication prompts). IF we get a private key
+        provided, use pipes method, otherwise we will just deal with `_open_pty`. `_open_pty` is
+        less preferable because we have to spawn a PTY and cannot as easily tell if SSH
+        authentication is successful. With `_open_pipes` we can read stderr which contains the
+        output from the verbose flag for SSH -- this contains a message that indicates success of
+        SSH auth. In the case of `_open_pty` we have to read from the channel directly like in the
+        case of telnet... so it works, but its just a bit less desirable.
 
         Args:
             N/A
@@ -256,15 +256,15 @@ class SystemSSHTransport(Transport):
         """
         self.session_lock.acquire()
 
-        # If authenticating with public key prefer to use open pipes
+        # If authenticating with private key prefer to use open pipes
         # _open_pipes uses subprocess Popen which is preferable to opening a pty
         # if _open_pipes fails and no password available, raise failure, otherwise try password auth
-        if self.auth_public_key:
+        if self.auth_private_key:
             open_pipes_result = self._open_pipes()
             if open_pipes_result:
                 return
             if not self.auth_password or not self.auth_username:
-                msg = (f"Private key authentication to host {self.host} failed. Missing username or"
+                msg = (f"Public key authentication to host {self.host} failed. Missing username or"
                        " password unable to attempt password authentication.")
                 LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
@@ -318,7 +318,9 @@ class SystemSSHTransport(Transport):
         try:
             self._pipes_isauthenticated(self.session)
         except TimeoutError:
-            # If auth fails, kill the popen session
+            # If auth fails, kill the popen session, also need to manually close the stderr pipe
+            # for some reason... unclear why, but w/out this it will hang open
+            os.close(self.session.stderr.fileno())
             self.session.kill()
             return False
 

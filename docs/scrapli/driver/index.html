@@ -163,21 +163,36 @@ inheritance.</p>
             )
         next_prompt = next_priv.pattern
         if current_priv.escalate_auth:
-            escalate_cmd: str = current_priv.escalate
-            escalate_prompt: str = current_priv.escalate_prompt
-            escalate_auth = self.auth_secondary
-            if not isinstance(next_prompt, str):
-                raise TypeError(
-                    f&#34;got {type(next_prompt)} for {current_priv.name} escalate priv, &#34;
-                    &#34;expected str&#34;
+            if not self.auth_secondary:
+                err = (
+                    &#34;Privilege escalation generally requires an `auth_secondary` password, &#34;
+                    &#34;but none is set!&#34;
                 )
-            self.channel.send_inputs_interact(
-                [escalate_cmd, escalate_prompt, escalate_auth, next_prompt], hidden_response=True,
-            )
-            self.channel.comms_prompt_pattern = next_priv.pattern
-        else:
-            self.channel.comms_prompt_pattern = next_priv.pattern
-            self.channel.send_input(current_priv.escalate)
+                msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
+                fix = (
+                    &#34;scrapli will try to escalate privilege without entering a password but may &#34;
+                    &#34;fail.\nSet an `auth_secondary` password if your device requires a password to &#34;
+                    &#34;increase privilege, otherwise ignore this message.&#34;
+                )
+                warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
+                warnings.warn(warning)
+            else:
+                escalate_cmd: str = current_priv.escalate
+                escalate_prompt: str = current_priv.escalate_prompt
+                escalate_auth = self.auth_secondary
+                if not isinstance(next_prompt, str):
+                    raise TypeError(
+                        f&#34;got {type(next_prompt)} for {current_priv.name} escalate priv, &#34;
+                        &#34;expected str&#34;
+                    )
+                self.channel.send_inputs_interact(
+                    [escalate_cmd, escalate_prompt, escalate_auth, next_prompt],
+                    hidden_response=True,
+                )
+                self.channel.comms_prompt_pattern = next_priv.pattern
+                return
+        self.channel.comms_prompt_pattern = next_priv.pattern
+        self.channel.send_input(current_priv.escalate)
 
     def _deescalate(self) -&gt; None:
         &#34;&#34;&#34;
@@ -297,7 +312,7 @@ inheritance.</p>
 
         return responses
 
-    def send_interactive(self, inputs: List[str], hidden_response: bool = False) -&gt; Response:
+    def send_interactive(self, interact: List[str], hidden_response: bool = False) -&gt; Response:
         &#34;&#34;&#34;
         Send inputs in an interactive fashion; used to handle prompts
 
@@ -308,7 +323,7 @@ inheritance.</p>
         could be &#34;chained&#34; together to respond to more than a &#34;single&#34; staged prompt
 
         Args:
-            inputs: list of four string elements representing...
+            interact: list of four string elements representing...
                 channel_input - initial input to send
                 expected_prompt - prompt to expect after initial input
                 response - response to prompt
@@ -324,7 +339,7 @@ inheritance.</p>
         &#34;&#34;&#34;
         if self._current_priv_level.name != self.default_desired_priv:
             self.acquire_priv(self.default_desired_priv)
-        response = self.channel.send_inputs_interact(inputs, hidden_response)
+        response = self.channel.send_inputs_interact(interact, hidden_response)
         return response
 
     def send_configs(
@@ -651,7 +666,7 @@ inheritance.</p>
 </details>
 </dd>
 <dt id="scrapli.driver.NetworkDriver.send_interactive"><code class="name flex">
-<span>def <span class="ident">send_interactive</span></span>(<span>self, inputs, hidden_response=False)</span>
+<span>def <span class="ident">send_interactive</span></span>(<span>self, interact, hidden_response=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Send inputs in an interactive fashion; used to handle prompts</p>
@@ -661,7 +676,7 @@ returns the results of the interaction</p>
 <p>could be "chained" together to respond to more than a "single" staged prompt</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>inputs</code></strong></dt>
+<dt><strong><code>interact</code></strong></dt>
 <dd>list of four string elements representing&hellip;
 channel_input - initial input to send
 expected_prompt - prompt to expect after initial input
@@ -684,7 +699,7 @@ final_prompt - final prompt to expect</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def send_interactive(self, inputs: List[str], hidden_response: bool = False) -&gt; Response:
+<pre><code class="python">def send_interactive(self, interact: List[str], hidden_response: bool = False) -&gt; Response:
     &#34;&#34;&#34;
     Send inputs in an interactive fashion; used to handle prompts
 
@@ -695,7 +710,7 @@ final_prompt - final prompt to expect</dd>
     could be &#34;chained&#34; together to respond to more than a &#34;single&#34; staged prompt
 
     Args:
-        inputs: list of four string elements representing...
+        interact: list of four string elements representing...
             channel_input - initial input to send
             expected_prompt - prompt to expect after initial input
             response - response to prompt
@@ -711,7 +726,7 @@ final_prompt - final prompt to expect</dd>
     &#34;&#34;&#34;
     if self._current_priv_level.name != self.default_desired_priv:
         self.acquire_priv(self.default_desired_priv)
-    response = self.channel.send_inputs_interact(inputs, hidden_response)
+    response = self.channel.send_inputs_interact(interact, hidden_response)
     return response</code></pre>
 </details>
 </dd>
@@ -729,7 +744,7 @@ final_prompt - final prompt to expect</dd>
 </dd>
 <dt id="scrapli.driver.Scrape"><code class="flex name class">
 <span>class <span class="ident">Scrape</span></span>
-<span>(</span><span>host='', port=22, auth_username='', auth_password='', auth_public_key='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, timeout_ops=10, timeout_exit=True, keepalive=False, keepalive_interval=30, keepalive_type='network', keepalive_pattern='\x05', comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]\\s*$&#x27;, comms_return_char='\n', comms_ansi=False, ssh_config_file=False, ssh_known_hosts_file=False, on_open=None, on_close=None, transport='system')</span>
+<span>(</span><span>host='', port=22, auth_username='', auth_password='', auth_private_key='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, timeout_ops=10, timeout_exit=True, keepalive=False, keepalive_interval=30, keepalive_type='network', keepalive_pattern='\x05', comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]\\s*$&#x27;, comms_return_char='\n', comms_ansi=False, ssh_config_file=False, ssh_known_hosts_file=False, on_open=None, on_close=None, transport='system')</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Scrape Object</p>
@@ -747,8 +762,8 @@ relies on, see Transport and Channel docs for details.</p>
 <dd>port to connect to</dd>
 <dt><strong><code>auth_username</code></strong></dt>
 <dd>username for authentication</dd>
-<dt><strong><code>auth_public_key</code></strong></dt>
-<dd>path to public key for authentication</dd>
+<dt><strong><code>auth_private_key</code></strong></dt>
+<dd>path to private key for authentication</dd>
 <dt><strong><code>auth_password</code></strong></dt>
 <dd>password for authentication</dd>
 <dt><strong><code>auth_strict_key</code></strong></dt>
@@ -843,7 +858,7 @@ has more features built in (though scrapli does not expose/support them all).</d
         port: int = 22,
         auth_username: str = &#34;&#34;,
         auth_password: str = &#34;&#34;,
-        auth_public_key: str = &#34;&#34;,
+        auth_private_key: str = &#34;&#34;,
         auth_strict_key: bool = True,
         timeout_socket: int = 5,
         timeout_transport: int = 5,
@@ -877,7 +892,7 @@ has more features built in (though scrapli does not expose/support them all).</d
             host: host ip/name to connect to
             port: port to connect to
             auth_username: username for authentication
-            auth_public_key: path to public key for authentication
+            auth_private_key: path to private key for authentication
             auth_password: password for authentication
             auth_strict_key: strict host checking or not -- applicable for system ssh driver only
             timeout_socket: timeout for establishing socket in seconds
@@ -944,7 +959,7 @@ has more features built in (though scrapli does not expose/support them all).</d
         self._initialization_args: Dict[str, Any] = {}
 
         self._setup_host(host, port)
-        self._setup_auth(auth_username, auth_password, auth_public_key, auth_strict_key)
+        self._setup_auth(auth_username, auth_password, auth_private_key, auth_strict_key)
         self._setup_timeouts(timeout_socket, timeout_transport, timeout_ops, timeout_exit)
         self._setup_keepalive(keepalive, keepalive_type, keepalive_interval, keepalive_pattern)
         self._setup_comms(comms_prompt_pattern, comms_return_char, comms_ansi)
@@ -959,15 +974,15 @@ has more features built in (though scrapli does not expose/support them all).</d
         if transport != &#34;telnet&#34;:
             self._setup_ssh_args(ssh_config_file, ssh_known_hosts_file)
 
-        self.transport: Transport
         self.transport_class, self.transport_args = self._transport_factory(transport)
+        self.transport = self.transport_class(**self.transport_args)
 
-        self.channel: Channel
         self.channel_args: Dict[str, Any] = {}
         for arg in CHANNEL_ARGS:
             if arg == &#34;transport&#34;:
                 continue
             self.channel_args[arg] = self._initialization_args.get(arg)
+        self.channel = Channel(self.transport, **self.channel_args)
 
     def __enter__(self) -&gt; &#34;Scrape&#34;:
         &#34;&#34;&#34;
@@ -1045,7 +1060,7 @@ has more features built in (though scrapli does not expose/support them all).</d
             f&#34;port={self._initialization_args[&#39;port&#39;]!r}, &#34;
             f&#34;auth_username={self._initialization_args[&#39;auth_username&#39;]!r}, &#34;
             f&#34;auth_password={self._initialization_args[&#39;auth_password&#39;]!r}, &#34;
-            f&#34;auth_public_key={self._initialization_args[&#39;auth_public_key&#39;]!r}, &#34;
+            f&#34;auth_private_key={self._initialization_args[&#39;auth_private_key&#39;]!r}, &#34;
             f&#34;auth_strict_key={self._initialization_args[&#39;auth_strict_key&#39;]!r}, &#34;
             f&#34;timeout_socket={self._initialization_args[&#39;timeout_socket&#39;]!r}, &#34;
             f&#34;timeout_transport={self._initialization_args[&#39;timeout_transport&#39;]!r}, &#34;
@@ -1090,7 +1105,7 @@ has more features built in (though scrapli does not expose/support them all).</d
         self._initialization_args[&#34;port&#34;] = port
 
     def _setup_auth(
-        self, auth_username: str, auth_password: str, auth_public_key: str, auth_strict_key: bool
+        self, auth_username: str, auth_password: str, auth_private_key: str, auth_strict_key: bool
     ) -&gt; None:
         &#34;&#34;&#34;
         Parse and setup auth attributes
@@ -1098,7 +1113,7 @@ has more features built in (though scrapli does not expose/support them all).</d
         Args:
             auth_username: username to parse/set
             auth_password: password to parse/set
-            auth_public_key: public key to parse/set
+            auth_private_key: public key to parse/set
             auth_strict_key: strict key to parse/set
 
         Returns:
@@ -1106,7 +1121,7 @@ has more features built in (though scrapli does not expose/support them all).</d
 
         Raises:
             TypeError: if auth_strict_key is not a bool
-            ValueError: if auth_public_key is not a valid file
+            ValueError: if auth_private_key is not a valid file
 
         &#34;&#34;&#34;
         if not isinstance(auth_strict_key, bool):
@@ -1116,15 +1131,15 @@ has more features built in (though scrapli does not expose/support them all).</d
         self._initialization_args[&#34;auth_username&#34;] = auth_username.strip()
         self._initialization_args[&#34;auth_password&#34;] = auth_password.strip()
 
-        if auth_public_key:
-            public_key_path = Path.expanduser(Path(auth_public_key.strip()))
+        if auth_private_key:
+            public_key_path = Path.expanduser(Path(auth_private_key.strip()))
             if not public_key_path.is_file():
-                raise ValueError(f&#34;Provided public key `{auth_public_key}` is not a file&#34;)
-            self._initialization_args[&#34;auth_public_key&#34;] = os.path.expanduser(
-                auth_public_key.strip().encode()
+                raise ValueError(f&#34;Provided public key `{auth_private_key}` is not a file&#34;)
+            self._initialization_args[&#34;auth_private_key&#34;] = os.path.expanduser(
+                auth_private_key.strip().encode()
             )
         else:
-            self._initialization_args[&#34;auth_public_key&#34;] = auth_public_key.encode()
+            self._initialization_args[&#34;auth_private_key&#34;] = auth_private_key.encode()
 
     def _setup_timeouts(
         self, timeout_socket: int, timeout_transport: int, timeout_ops: int, timeout_exit: bool
@@ -1324,9 +1339,7 @@ has more features built in (though scrapli does not expose/support them all).</d
             N/A
 
         &#34;&#34;&#34;
-        self.transport = self.transport_class(**self.transport_args)
         self.transport.open()
-        self.channel = Channel(self.transport, **self.channel_args)
         if self.on_open:
             self.on_open(self)
 
@@ -1362,10 +1375,11 @@ has more features built in (though scrapli does not expose/support them all).</d
             N/A
 
         &#34;&#34;&#34;
+        alive = False
         try:
             alive = self.transport.isalive()
         except AttributeError:
-            alive = False
+            pass
         return alive</code></pre>
 </details>
 <h3>Subclasses</h3>
@@ -1450,10 +1464,11 @@ has more features built in (though scrapli does not expose/support them all).</d
         N/A
 
     &#34;&#34;&#34;
+    alive = False
     try:
         alive = self.transport.isalive()
     except AttributeError:
-        alive = False
+        pass
     return alive</code></pre>
 </details>
 </dd>
@@ -1496,9 +1511,7 @@ has more features built in (though scrapli does not expose/support them all).</d
         N/A
 
     &#34;&#34;&#34;
-    self.transport = self.transport_class(**self.transport_args)
     self.transport.open()
-    self.channel = Channel(self.transport, **self.channel_args)
     if self.on_open:
         self.on_open(self)</code></pre>
 </details>
