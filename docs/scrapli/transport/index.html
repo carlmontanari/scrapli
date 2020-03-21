@@ -88,7 +88,7 @@ __all__ = (
 <dl>
 <dt id="scrapli.transport.MikoTransport"><code class="flex name class">
 <span>class <span class="ident">MikoTransport</span></span>
-<span>(</span><span>host, port=-1, auth_username='', auth_public_key='', auth_password='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, timeout_exit=True, keepalive=False, keepalive_interval=30, keepalive_type='', keepalive_pattern='\x05', ssh_config_file='', ssh_known_hosts_file='')</span>
+<span>(</span><span>host, port=-1, auth_username='', auth_private_key='', auth_password='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, timeout_exit=True, keepalive=False, keepalive_interval=30, keepalive_type='', keepalive_pattern='\x05', ssh_config_file='', ssh_known_hosts_file='')</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -104,8 +104,8 @@ MikoTransport &lt;- Transport (ABC)</p>
 <dd>port to connect to</dd>
 <dt><strong><code>auth_username</code></strong></dt>
 <dd>username for authentication</dd>
-<dt><strong><code>auth_public_key</code></strong></dt>
-<dd>path to public key for authentication</dd>
+<dt><strong><code>auth_private_key</code></strong></dt>
+<dd>path to private key for authentication</dd>
 <dt><strong><code>auth_password</code></strong></dt>
 <dd>password for authentication</dd>
 <dt><strong><code>auth_strict_key</code></strong></dt>
@@ -158,7 +158,7 @@ type is 'network'</dd>
         host: str,
         port: int = -1,
         auth_username: str = &#34;&#34;,
-        auth_public_key: str = &#34;&#34;,
+        auth_private_key: str = &#34;&#34;,
         auth_password: str = &#34;&#34;,
         auth_strict_key: bool = True,
         timeout_socket: int = 5,
@@ -181,7 +181,7 @@ type is 'network'</dd>
             host: host ip/name to connect to
             port: port to connect to
             auth_username: username for authentication
-            auth_public_key: path to public key for authentication
+            auth_private_key: path to private key for authentication
             auth_password: password for authentication
             auth_strict_key: True/False to enforce strict key checking (default is True)
             timeout_socket: timeout for establishing socket in seconds
@@ -209,7 +209,7 @@ type is 'network'</dd>
             MissingDependencies: if paramiko is not installed
 
         &#34;&#34;&#34;
-        cfg_port, cfg_user, cfg_public_key = self._process_ssh_config(host, ssh_config_file)
+        cfg_port, cfg_user, cfg_private_key = self._process_ssh_config(host, ssh_config_file)
 
         if port == -1:
             port = cfg_port or 22
@@ -227,7 +227,7 @@ type is 'network'</dd>
         )
 
         self.auth_username: str = auth_username or cfg_user
-        self.auth_public_key: str = auth_public_key or cfg_public_key
+        self.auth_private_key: str = auth_private_key or cfg_private_key
         self.auth_password: str = auth_password
         self.auth_strict_key: bool = auth_strict_key
         self.ssh_known_hosts_file: str = ssh_known_hosts_file
@@ -278,7 +278,8 @@ type is 'network'</dd>
                 `NetworkDriver` or subclasses of it, in most cases.
 
         Returns:
-            N/A  # noqa: DAR202
+            Tuple: port to use for ssh, username to use for ssh, identity file (private key) to
+                use for ssh auth
 
         Raises:
             N/A
@@ -311,19 +312,20 @@ type is 'network'</dd>
             self.session.start_client()
         except Exception as exc:
             LOG.critical(
-                f&#34;Failed to complete handshake with host {self.host}; &#34; f&#34;Exception: {exc}&#34;
+                f&#34;Failed to complete handshake with host {self.host}; Exception: {exc}&#34;
             )
+            self.session_lock.release()
             raise exc
 
         if self.auth_strict_key:
             LOG.debug(f&#34;Attempting to validate {self.host} public key&#34;)
             self._verify_key()
 
-        LOG.debug(f&#34;Session to host {self.host} opened&#34;)
         self.authenticate()
         if not self.isauthenticated():
             msg = f&#34;Authentication to host {self.host} failed&#34;
             LOG.critical(msg)
+            self.session_lock.release()
             raise ScrapliAuthenticationFailed(msg)
         self._open_channel()
         self.session_lock.release()
@@ -373,19 +375,21 @@ type is 'network'</dd>
             N/A
 
         &#34;&#34;&#34;
-        if self.auth_public_key:
+        if self.auth_private_key:
             self._authenticate_public_key()
             if self.isauthenticated():
-                LOG.debug(f&#34;Authenticated to host {self.host} with public key&#34;)
+                LOG.debug(f&#34;Authenticated to host {self.host} with public key auth&#34;)
                 return
-        if self.auth_password:
-            self._authenticate_password()
-            if self.isauthenticated():
-                LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
-                return
-        return
+            if not self.auth_password or not self.auth_username:
+                msg = (f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
+                       &#34; password unable to attempt password authentication.&#34;)
+                LOG.critical(msg)
+                raise ScrapliAuthenticationFailed(msg)
+        self._authenticate_password()
+        if self.isauthenticated():
+            LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
 
-    def _authenticate_public_key(self) -&gt; None:
+    def _authenticate_public_key(self) -&gt; bool:
         &#34;&#34;&#34;
         Attempt to authenticate with public key authentication
 
@@ -404,7 +408,7 @@ type is 'network'</dd>
             # from Transport and Channel objects
             from paramiko.rsakey import RSAKey  # pylint: disable=C0415
 
-            paramiko_key = RSAKey(filename=self.auth_public_key)
+            paramiko_key = RSAKey(filename=self.auth_private_key)
             self.session.auth_publickey(self.auth_username, paramiko_key)
         except self.lib_auth_exception as exc:
             LOG.critical(
@@ -415,7 +419,6 @@ type is 'network'</dd>
                 &#34;Unknown error occurred during public key authentication with host &#34;
                 f&#34;{self.host}; Exception: {exc}&#34;
             )
-            raise exc
 
     def _authenticate_password(self) -&gt; None:
         &#34;&#34;&#34;
@@ -633,17 +636,19 @@ type is 'network'</dd>
         N/A
 
     &#34;&#34;&#34;
-    if self.auth_public_key:
+    if self.auth_private_key:
         self._authenticate_public_key()
         if self.isauthenticated():
-            LOG.debug(f&#34;Authenticated to host {self.host} with public key&#34;)
+            LOG.debug(f&#34;Authenticated to host {self.host} with public key auth&#34;)
             return
-    if self.auth_password:
-        self._authenticate_password()
-        if self.isauthenticated():
-            LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
-            return
-    return</code></pre>
+        if not self.auth_password or not self.auth_username:
+            msg = (f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
+                   &#34; password unable to attempt password authentication.&#34;)
+            LOG.critical(msg)
+            raise ScrapliAuthenticationFailed(msg)
+    self._authenticate_password()
+    if self.isauthenticated():
+        LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)</code></pre>
 </details>
 </dd>
 <dt id="scrapli.transport.MikoTransport.isalive"><code class="name flex">
@@ -772,19 +777,20 @@ type is 'network'</dd>
         self.session.start_client()
     except Exception as exc:
         LOG.critical(
-            f&#34;Failed to complete handshake with host {self.host}; &#34; f&#34;Exception: {exc}&#34;
+            f&#34;Failed to complete handshake with host {self.host}; Exception: {exc}&#34;
         )
+        self.session_lock.release()
         raise exc
 
     if self.auth_strict_key:
         LOG.debug(f&#34;Attempting to validate {self.host} public key&#34;)
         self._verify_key()
 
-    LOG.debug(f&#34;Session to host {self.host} opened&#34;)
     self.authenticate()
     if not self.isauthenticated():
         msg = f&#34;Authentication to host {self.host} failed&#34;
         LOG.critical(msg)
+        self.session_lock.release()
         raise ScrapliAuthenticationFailed(msg)
     self._open_channel()
     self.session_lock.release()
@@ -846,7 +852,7 @@ type is 'network'</dd>
 </dd>
 <dt id="scrapli.transport.SSH2Transport"><code class="flex name class">
 <span>class <span class="ident">SSH2Transport</span></span>
-<span>(</span><span>host, port=-1, auth_username='', auth_public_key='', auth_password='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, timeout_exit=True, keepalive=False, keepalive_interval=30, keepalive_type='', keepalive_pattern='\x05', ssh_config_file='', ssh_known_hosts_file='')</span>
+<span>(</span><span>host, port=-1, auth_username='', auth_private_key='', auth_password='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, timeout_exit=True, keepalive=False, keepalive_interval=30, keepalive_type='', keepalive_pattern='\x05', ssh_config_file='', ssh_known_hosts_file='')</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -862,8 +868,8 @@ SSH2Transport &lt;- Transport (ABC)</p>
 <dd>port to connect to</dd>
 <dt><strong><code>auth_username</code></strong></dt>
 <dd>username for authentication</dd>
-<dt><strong><code>auth_public_key</code></strong></dt>
-<dd>path to public key for authentication</dd>
+<dt><strong><code>auth_private_key</code></strong></dt>
+<dd>path to private key for authentication</dd>
 <dt><strong><code>auth_password</code></strong></dt>
 <dd>password for authentication</dd>
 <dt><strong><code>auth_strict_key</code></strong></dt>
@@ -917,7 +923,7 @@ type is 'network'</dd>
         host: str,
         port: int = -1,
         auth_username: str = &#34;&#34;,
-        auth_public_key: str = &#34;&#34;,
+        auth_private_key: str = &#34;&#34;,
         auth_password: str = &#34;&#34;,
         auth_strict_key: bool = True,
         timeout_socket: int = 5,
@@ -940,7 +946,7 @@ type is 'network'</dd>
             host: host ip/name to connect to
             port: port to connect to
             auth_username: username for authentication
-            auth_public_key: path to public key for authentication
+            auth_private_key: path to private key for authentication
             auth_password: password for authentication
             auth_strict_key: True/False to enforce strict key checking (default is True)
             timeout_socket: timeout for establishing socket in seconds
@@ -969,7 +975,7 @@ type is 'network'</dd>
             MissingDependencies: if ssh2-python is not installed
 
         &#34;&#34;&#34;
-        cfg_port, cfg_user, cfg_public_key = self._process_ssh_config(host, ssh_config_file)
+        cfg_port, cfg_user, cfg_private_key = self._process_ssh_config(host, ssh_config_file)
 
         if port == -1:
             port = cfg_port or 22
@@ -987,7 +993,7 @@ type is 'network'</dd>
         )
 
         self.auth_username: str = auth_username or cfg_user
-        self.auth_public_key: str = auth_public_key or cfg_public_key
+        self.auth_private_key: str = auth_private_key or cfg_private_key
         self.auth_password: str = auth_password
         self.auth_strict_key: bool = auth_strict_key
         self.ssh_known_hosts_file: str = ssh_known_hosts_file
@@ -1033,7 +1039,8 @@ type is 'network'</dd>
                 `NetworkDriver` or subclasses of it, in most cases.
 
         Returns:
-            N/A  # noqa: DAR202
+            Tuple: port to use for ssh, username to use for ssh, identity file (private key) to
+                use for ssh auth
 
         Raises:
             N/A
@@ -1069,6 +1076,7 @@ type is 'network'</dd>
             LOG.critical(
                 f&#34;Failed to complete handshake with host {self.host}; &#34; f&#34;Exception: {exc}&#34;
             )
+            self.session_lock.release()
             raise exc
 
         if self.auth_strict_key:
@@ -1080,6 +1088,7 @@ type is 'network'</dd>
         if not self.isauthenticated():
             msg = f&#34;Authentication to host {self.host} failed&#34;
             LOG.critical(msg)
+            self.session_lock.release()
             raise ScrapliAuthenticationFailed(msg)
         self._open_channel()
         if self.keepalive:
@@ -1129,21 +1138,24 @@ type is 'network'</dd>
             N/A
 
         &#34;&#34;&#34;
-        if self.auth_public_key:
+        if self.auth_private_key:
             self._authenticate_public_key()
             if self.isauthenticated():
-                LOG.debug(f&#34;Authenticated to host {self.host} with public key&#34;)
+                LOG.debug(f&#34;Authenticated to host {self.host} with public key auth&#34;)
                 return
-        if self.auth_password:
-            self._authenticate_password()
-            if self.isauthenticated():
-                LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
-                return
-            self._authenticate_keyboard_interactive()
-            if self.isauthenticated():
-                LOG.debug(f&#34;Authenticated to host {self.host} with keyboard interactive&#34;)
-                return
-        return
+            if not self.auth_password or not self.auth_username:
+                msg = (f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
+                       &#34; password unable to attempt password authentication.&#34;)
+                LOG.critical(msg)
+                raise ScrapliAuthenticationFailed(msg)
+
+        self._authenticate_password()
+        if self.isauthenticated():
+            LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
+            return
+        self._authenticate_keyboard_interactive()
+        if self.isauthenticated():
+            LOG.debug(f&#34;Authenticated to host {self.host} with keyboard interactive&#34;)
 
     def _authenticate_public_key(self) -&gt; None:
         &#34;&#34;&#34;
@@ -1160,7 +1172,7 @@ type is 'network'</dd>
 
         &#34;&#34;&#34;
         try:
-            self.session.userauth_publickey_fromfile(self.auth_username, self.auth_public_key)
+            self.session.userauth_publickey_fromfile(self.auth_username, self.auth_private_key)
         except self.lib_auth_exception as exc:
             LOG.critical(
                 f&#34;Public key authentication with host {self.host} failed. Exception: {exc}.&#34;
@@ -1170,7 +1182,6 @@ type is 'network'</dd>
                 &#34;Unknown error occurred during public key authentication with host &#34;
                 f&#34;{self.host}; Exception: {exc}&#34;
             )
-            raise exc
 
     def _authenticate_password(self) -&gt; None:
         &#34;&#34;&#34;
@@ -1426,21 +1437,24 @@ type is 'network'</dd>
         N/A
 
     &#34;&#34;&#34;
-    if self.auth_public_key:
+    if self.auth_private_key:
         self._authenticate_public_key()
         if self.isauthenticated():
-            LOG.debug(f&#34;Authenticated to host {self.host} with public key&#34;)
+            LOG.debug(f&#34;Authenticated to host {self.host} with public key auth&#34;)
             return
-    if self.auth_password:
-        self._authenticate_password()
-        if self.isauthenticated():
-            LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
-            return
-        self._authenticate_keyboard_interactive()
-        if self.isauthenticated():
-            LOG.debug(f&#34;Authenticated to host {self.host} with keyboard interactive&#34;)
-            return
-    return</code></pre>
+        if not self.auth_password or not self.auth_username:
+            msg = (f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
+                   &#34; password unable to attempt password authentication.&#34;)
+            LOG.critical(msg)
+            raise ScrapliAuthenticationFailed(msg)
+
+    self._authenticate_password()
+    if self.isauthenticated():
+        LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
+        return
+    self._authenticate_keyboard_interactive()
+    if self.isauthenticated():
+        LOG.debug(f&#34;Authenticated to host {self.host} with keyboard interactive&#34;)</code></pre>
 </details>
 </dd>
 <dt id="scrapli.transport.SSH2Transport.isalive"><code class="name flex">
@@ -1572,6 +1586,7 @@ type is 'network'</dd>
         LOG.critical(
             f&#34;Failed to complete handshake with host {self.host}; &#34; f&#34;Exception: {exc}&#34;
         )
+        self.session_lock.release()
         raise exc
 
     if self.auth_strict_key:
@@ -1583,6 +1598,7 @@ type is 'network'</dd>
     if not self.isauthenticated():
         msg = f&#34;Authentication to host {self.host} failed&#34;
         LOG.critical(msg)
+        self.session_lock.release()
         raise ScrapliAuthenticationFailed(msg)
     self._open_channel()
     if self.keepalive:
@@ -1644,7 +1660,7 @@ type is 'network'</dd>
 </dd>
 <dt id="scrapli.transport.SystemSSHTransport"><code class="flex name class">
 <span>class <span class="ident">SystemSSHTransport</span></span>
-<span>(</span><span>host='', port=22, auth_username='', auth_public_key='', auth_password='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, timeout_ops=10, timeout_exit=True, keepalive=False, keepalive_interval=30, keepalive_type='', keepalive_pattern='\x05', comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n', comms_ansi=False, ssh_config_file='', ssh_known_hosts_file='')</span>
+<span>(</span><span>host='', port=22, auth_username='', auth_private_key='', auth_password='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, timeout_ops=10, timeout_exit=True, keepalive=False, keepalive_interval=30, keepalive_type='', keepalive_pattern='\x05', comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n', comms_ansi=False, ssh_config_file='', ssh_known_hosts_file='')</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -1654,7 +1670,7 @@ inheritance.</p>
 SSH2Transport &lt;- Transport (ABC)</p>
 <p>If using this driver, and passing a ssh_config_file (or setting this argument to <code>True</code>),
 all settings in the ssh config file will be superseded by any arguments passed here!</p>
-<p>SystemSSHTransport <em>always</em> prefers public key auth if given the option! If auth_public_key
+<p>SystemSSHTransport <em>always</em> prefers public key auth if given the option! If auth_private_key
 is set in the provided arguments OR if ssh_config_file is passed/True and there is a key for
 ANY match (i.e. <code>*</code> has a key in ssh config file!!), we will use that key! If public key
 auth fails and a username and password is set (manually or by ssh config file), password
@@ -1674,8 +1690,8 @@ authentication methods here.</p>
 <dd>port to connect to</dd>
 <dt><strong><code>auth_username</code></strong></dt>
 <dd>username for authentication</dd>
-<dt><strong><code>auth_public_key</code></strong></dt>
-<dd>path to public key for authentication</dd>
+<dt><strong><code>auth_private_key</code></strong></dt>
+<dd>path to private key for authentication</dd>
 <dt><strong><code>auth_password</code></strong></dt>
 <dd>password for authentication</dd>
 <dt><strong><code>auth_strict_key</code></strong></dt>
@@ -1758,7 +1774,7 @@ is completed.</dd>
         host: str = &#34;&#34;,
         port: int = 22,
         auth_username: str = &#34;&#34;,
-        auth_public_key: str = &#34;&#34;,
+        auth_private_key: str = &#34;&#34;,
         auth_password: str = &#34;&#34;,
         auth_strict_key: bool = True,
         timeout_socket: int = 5,
@@ -1784,7 +1800,7 @@ is completed.</dd>
         If using this driver, and passing a ssh_config_file (or setting this argument to `True`),
         all settings in the ssh config file will be superseded by any arguments passed here!
 
-        SystemSSHTransport *always* prefers public key auth if given the option! If auth_public_key
+        SystemSSHTransport *always* prefers public key auth if given the option! If auth_private_key
         is set in the provided arguments OR if ssh_config_file is passed/True and there is a key for
         ANY match (i.e. `*` has a key in ssh config file!!), we will use that key! If public key
         auth fails and a username and password is set (manually or by ssh config file), password
@@ -1802,7 +1818,7 @@ is completed.</dd>
             host: host ip/name to connect to
             port: port to connect to
             auth_username: username for authentication
-            auth_public_key: path to public key for authentication
+            auth_private_key: path to private key for authentication
             auth_password: password for authentication
             auth_strict_key: True/False to enforce strict key checking (default is True)
             timeout_socket: timeout for ssh session to start -- this directly maps to ConnectTimeout
@@ -1869,7 +1885,7 @@ is completed.</dd>
         )
 
         self.auth_username: str = auth_username
-        self.auth_public_key: str = auth_public_key
+        self.auth_private_key: str = auth_private_key
         self.auth_password: str = auth_password
         self.auth_strict_key: bool = auth_strict_key
 
@@ -1887,13 +1903,17 @@ is completed.</dd>
         self.open_cmd = [&#34;ssh&#34;, self.host]
         self._build_open_cmd()
 
+        # create stdin/stdout fd in case we can use pipes for session
+        self._stdin_fd = -1
+        self._stdout_fd = -1
+
     def _process_ssh_config(self, ssh_config_file: str) -&gt; None:
         &#34;&#34;&#34;
         Method to parse ssh config file
 
         Ensure ssh_config_file is valid (if providing a string path to config file), or resolve
-        config file if passed True. Search config file for any public key, if ANY matching key is
-        found and user has not provided a public key, set `auth_public_key` to the value of the
+        config file if passed True. Search config file for any private key, if ANY matching key is
+        found and user has not provided a private key, set `auth_private_key` to the value of the
         found key. This is because we prefer to use `open_pipes` over `open_pty`!
 
         Args:
@@ -1910,8 +1930,8 @@ is completed.</dd>
         ssh = SSHConfig(ssh_config_file)
         self.ssh_config_file = ssh.ssh_config_file
         host_config = ssh.lookup(self.host)
-        if not self.auth_public_key and host_config.identity_file:
-            self.auth_public_key = os.path.expanduser(host_config.identity_file.strip())
+        if not self.auth_private_key and host_config.identity_file:
+            self.auth_private_key = os.path.expanduser(host_config.identity_file.strip())
 
     def _build_open_cmd(self) -&gt; None:
         &#34;&#34;&#34;
@@ -1929,8 +1949,8 @@ is completed.</dd>
         &#34;&#34;&#34;
         self.open_cmd.extend([&#34;-p&#34;, str(self.port)])
         self.open_cmd.extend([&#34;-o&#34;, f&#34;ConnectTimeout={self.timeout_socket}&#34;])
-        if self.auth_public_key:
-            self.open_cmd.extend([&#34;-i&#34;, self.auth_public_key])
+        if self.auth_private_key:
+            self.open_cmd.extend([&#34;-i&#34;, self.auth_private_key])
         if self.auth_username:
             self.open_cmd.extend([&#34;-l&#34;, self.auth_username])
         if self.auth_strict_key is False:
@@ -1951,13 +1971,13 @@ is completed.</dd>
 
         If possible it is preferable to use the `_open_pipes` method, but we can only do this IF we
         can authenticate with public key authorization (because we don&#39;t have to spawn a PTY; if no
-        public key we have to spawn PTY to deal w/ authentication prompts). IF we get a public key
-        provided, use pipes method, we will just deal with `_open_pty`. `_open_pty` is less
-        preferable because we have to spawn a PTY and cannot as easily tell if SSH authentication is
-        successful. With `_open_pipes` we can read stderr which contains the output from the verbose
-        flag for SSH -- this contains a message that indicates success of SSH auth. In the case of
-        `_open_pty` we have to read from the channel directly like in the case of telnet... so it
-        works, but its just a bit less desirable.
+        public key we have to spawn PTY to deal w/ authentication prompts). IF we get a private key
+        provided, use pipes method, otherwise we will just deal with `_open_pty`. `_open_pty` is
+        less preferable because we have to spawn a PTY and cannot as easily tell if SSH
+        authentication is successful. With `_open_pipes` we can read stderr which contains the
+        output from the verbose flag for SSH -- this contains a message that indicates success of
+        SSH auth. In the case of `_open_pty` we have to read from the channel directly like in the
+        case of telnet... so it works, but its just a bit less desirable.
 
         Args:
             N/A
@@ -1971,15 +1991,16 @@ is completed.</dd>
         &#34;&#34;&#34;
         self.session_lock.acquire()
 
-        # If authenticating with public key prefer to use open pipes
+        # If authenticating with private key prefer to use open pipes
         # _open_pipes uses subprocess Popen which is preferable to opening a pty
         # if _open_pipes fails and no password available, raise failure, otherwise try password auth
-        if self.auth_public_key:
+        if self.auth_private_key:
             open_pipes_result = self._open_pipes()
             if open_pipes_result:
                 return
-            if not open_pipes_result and (not self.auth_password or not self.auth_username):
-                msg = f&#34;Authentication to host {self.host} failed&#34;
+            if not self.auth_password or not self.auth_username:
+                msg = (f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
+                       &#34; password unable to attempt password authentication.&#34;)
                 LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
 
@@ -2013,17 +2034,37 @@ is completed.</dd>
         open_cmd.append(&#34;-v&#34;)
         open_cmd.extend([&#34;-o&#34;, &#34;BatchMode=yes&#34;])
 
-        self.session = Popen(open_cmd, bufsize=0, shell=False, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        stdout_master_pty, stdout_slave_pty = pty.openpty()
+        stdin_master_pty, stdin_slave_pty = pty.openpty()
+
+        self.session = Popen(
+            open_cmd,
+            bufsize=0,
+            shell=False,
+            stdin=stdin_slave_pty,
+            stdout=stdout_slave_pty,
+            stderr=PIPE,
+        )
+        # close the slave fds, don&#39;t need them anymore
+        os.close(stdin_slave_pty)
+        os.close(stdout_slave_pty)
         LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
 
         try:
             self._pipes_isauthenticated(self.session)
         except TimeoutError:
-            # If auth fails, kill the popen session
+            # If auth fails, kill the popen session, also need to manually close the stderr pipe
+            # for some reason... unclear why, but w/out this it will hang open
+            os.close(self.session.stderr.fileno())
             self.session.kill()
             return False
 
         LOG.debug(f&#34;Authenticated to host {self.host} with public key&#34;)
+
+        # set stdin/stdout to the new master pty fds
+        self._stdin_fd = stdin_master_pty
+        self._stdout_fd = stdout_master_pty
+
         self.open_cmd = open_cmd
         self.session_lock.release()
         return True
@@ -2043,15 +2084,20 @@ is completed.</dd>
             bool: True/False session was authenticated
 
         Raises:
-            N/A
+            ScrapliTimeout: if `Operation timed out` in stderr output
 
         &#34;&#34;&#34;
+        if pipes_session.stderr is None:
+            raise ScrapliTimeout(f&#34;Could not read stderr while connecting to host {self.host}&#34;)
+
         output = b&#34;&#34;
         while True:
-            output += pipes_session.stderr.read(1024)
+            output += pipes_session.stderr.read(65535)
             if f&#34;Authenticated to {self.host}&#34;.encode() in output:
                 self._isauthenticated = True
                 return True
+            if &#34;Operation timed out&#34;.encode() in output:
+                raise ScrapliTimeout(f&#34;Timed opening connection to host {self.host}&#34;)
 
     def _open_pty(self) -&gt; bool:
         &#34;&#34;&#34;
@@ -2093,22 +2139,14 @@ is completed.</dd>
 
         &#34;&#34;&#34;
         self.session_lock.acquire()
+        output = b&#34;&#34;
         while True:
             try:
-                output = pty_session.read()
+                output += pty_session.read()
             except EOFError:
-                raise ScrapliAuthenticationFailed(
-                    &#34;PTY Authentication failed to find password prompt, often this means strict &#34;
-                    &#34;host key checking is enabled and is failing!&#34;
-                )
+                raise ScrapliAuthenticationFailed(f&#34;Failed to open connection to host {self.host}&#34;)
             if self._comms_ansi:
                 output = strip_ansi(output)
-            if b&#34;WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!&#34; in output:
-                raise ScrapliAuthenticationFailed(
-                    &#34;PTY Authentication failed! It looks like the remote host identification has&#34;
-                    &#34;changed. Fix this or disable `auth_strict_key` or pass a &#34;
-                    &#34;`ssh_known_hosts_file` containing the hosts identification.&#34;
-                )
             if b&#34;password&#34; in output.lower():
                 LOG.debug(&#34;Found password prompt, sending password&#34;)
                 pty_session.write(self.auth_password.encode())
@@ -2134,6 +2172,7 @@ is completed.</dd>
             N/A
 
         &#34;&#34;&#34;
+        LOG.debug(&#34;Attempting to determine if PTY authentication was successful&#34;)
         if pty_session.isalive() and not pty_session.eof():
             prompt_pattern = get_prompt_pattern(&#34;&#34;, self._comms_prompt_pattern)
             self.session_lock.acquire()
@@ -2142,7 +2181,8 @@ is completed.</dd>
             if pty_session.fd in fd_ready:
                 output = b&#34;&#34;
                 while True:
-                    output += pty_session.read()
+                    new_output = pty_session.read()
+                    output += new_output
                     # we do not need to deal w/ line replacement for the actual output, only for
                     # parsing if a prompt-like thing is at the end of the output
                     output = re.sub(b&#34;\r&#34;, b&#34;&#34;, output)
@@ -2153,6 +2193,13 @@ is completed.</dd>
                         self.session_lock.release()
                         self._isauthenticated = True
                         return True
+                    if b&#34;password&#34; in new_output.lower():
+                        # if we see &#34;password&#34; we know auth failed (hopefully in all scenarios!)
+                        return False
+                    if new_output:
+                        LOG.debug(
+                            f&#34;Cannot determine if authenticated, \n\tRead: {repr(new_output)}&#34;
+                        )
         self.session_lock.release()
         return False
 
@@ -2217,7 +2264,7 @@ is completed.</dd>
         &#34;&#34;&#34;
         read_bytes = 65535
         if isinstance(self.session, Popen):
-            return self.session.stdout.read(read_bytes)
+            return os.read(self._stdout_fd, read_bytes)
         if isinstance(self.session, PtyProcess):
             return self.session.read(read_bytes)
         return b&#34;&#34;
@@ -2238,7 +2285,7 @@ is completed.</dd>
 
         &#34;&#34;&#34;
         if isinstance(self.session, Popen):
-            self.session.stdin.write(channel_input.encode())
+            os.write(self._stdin_fd, channel_input.encode())
         elif isinstance(self.session, PtyProcess):
             self.session.write(channel_input.encode())
 
@@ -2341,13 +2388,13 @@ is completed.</dd>
 <section class="desc"><p>Parent method to open session, authenticate and acquire shell</p>
 <p>If possible it is preferable to use the <code>_open_pipes</code> method, but we can only do this IF we
 can authenticate with public key authorization (because we don't have to spawn a PTY; if no
-public key we have to spawn PTY to deal w/ authentication prompts). IF we get a public key
-provided, use pipes method, we will just deal with <code>_open_pty</code>. <code>_open_pty</code> is less
-preferable because we have to spawn a PTY and cannot as easily tell if SSH authentication is
-successful. With <code>_open_pipes</code> we can read stderr which contains the output from the verbose
-flag for SSH &ndash; this contains a message that indicates success of SSH auth. In the case of
-<code>_open_pty</code> we have to read from the channel directly like in the case of telnet&hellip; so it
-works, but its just a bit less desirable.</p>
+public key we have to spawn PTY to deal w/ authentication prompts). IF we get a private key
+provided, use pipes method, otherwise we will just deal with <code>_open_pty</code>. <code>_open_pty</code> is
+less preferable because we have to spawn a PTY and cannot as easily tell if SSH
+authentication is successful. With <code>_open_pipes</code> we can read stderr which contains the
+output from the verbose flag for SSH &ndash; this contains a message that indicates success of
+SSH auth. In the case of <code>_open_pty</code> we have to read from the channel directly like in the
+case of telnet&hellip; so it works, but its just a bit less desirable.</p>
 <h2 id="args">Args</h2>
 <p>N/A</p>
 <h2 id="returns">Returns</h2>
@@ -2371,13 +2418,13 @@ works, but its just a bit less desirable.</p>
 
     If possible it is preferable to use the `_open_pipes` method, but we can only do this IF we
     can authenticate with public key authorization (because we don&#39;t have to spawn a PTY; if no
-    public key we have to spawn PTY to deal w/ authentication prompts). IF we get a public key
-    provided, use pipes method, we will just deal with `_open_pty`. `_open_pty` is less
-    preferable because we have to spawn a PTY and cannot as easily tell if SSH authentication is
-    successful. With `_open_pipes` we can read stderr which contains the output from the verbose
-    flag for SSH -- this contains a message that indicates success of SSH auth. In the case of
-    `_open_pty` we have to read from the channel directly like in the case of telnet... so it
-    works, but its just a bit less desirable.
+    public key we have to spawn PTY to deal w/ authentication prompts). IF we get a private key
+    provided, use pipes method, otherwise we will just deal with `_open_pty`. `_open_pty` is
+    less preferable because we have to spawn a PTY and cannot as easily tell if SSH
+    authentication is successful. With `_open_pipes` we can read stderr which contains the
+    output from the verbose flag for SSH -- this contains a message that indicates success of
+    SSH auth. In the case of `_open_pty` we have to read from the channel directly like in the
+    case of telnet... so it works, but its just a bit less desirable.
 
     Args:
         N/A
@@ -2391,15 +2438,16 @@ works, but its just a bit less desirable.</p>
     &#34;&#34;&#34;
     self.session_lock.acquire()
 
-    # If authenticating with public key prefer to use open pipes
+    # If authenticating with private key prefer to use open pipes
     # _open_pipes uses subprocess Popen which is preferable to opening a pty
     # if _open_pipes fails and no password available, raise failure, otherwise try password auth
-    if self.auth_public_key:
+    if self.auth_private_key:
         open_pipes_result = self._open_pipes()
         if open_pipes_result:
             return
-        if not open_pipes_result and (not self.auth_password or not self.auth_username):
-            msg = f&#34;Authentication to host {self.host} failed&#34;
+        if not self.auth_password or not self.auth_username:
+            msg = (f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
+                   &#34; password unable to attempt password authentication.&#34;)
             LOG.critical(msg)
             raise ScrapliAuthenticationFailed(msg)
 
@@ -2675,6 +2723,10 @@ and is ignored after authentication is completed.</dd>
         self.auth_password: str = auth_password
 
         self._timeout_ops: int = timeout_ops
+        # timeout_ops_auth is only used for authentication; base ops timeout * 2 as we are doing
+        # two operations -- entering username and entering password (in most cases at least)
+        self._timeout_ops_auth: int = timeout_ops * 2
+
         self._comms_prompt_pattern: str = comms_prompt_pattern
         self._comms_return_char: str = comms_return_char
         self._comms_ansi: bool = comms_ansi
@@ -2688,7 +2740,7 @@ and is ignored after authentication is completed.</dd>
 
     def open(self) -&gt; None:
         &#34;&#34;&#34;
-        Open channel, acquire pty, request interactive shell
+        Open telnet channel
 
         Args:
             N/A
@@ -2714,6 +2766,7 @@ and is ignored after authentication is completed.</dd>
         LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
         self.session = telnet_session
 
+    @operation_timeout(&#34;_timeout_ops_auth&#34;, &#34;Timed out looking for telnet login prompts&#34;)
     def _authenticate(self, telnet_session: ScrapliTelnet) -&gt; None:
         &#34;&#34;&#34;
         Parent private method to handle telnet authentication
@@ -2728,57 +2781,22 @@ and is ignored after authentication is completed.</dd>
             N/A
 
         &#34;&#34;&#34;
-        self._authenticate_username(telnet_session)
-        self._authenticate_password(telnet_session)
-
-    @operation_timeout(&#34;_timeout_ops&#34;, &#34;Timed out looking for telnet login username prompt&#34;)
-    def _authenticate_username(self, telnet_session: ScrapliTelnet) -&gt; None:
-        &#34;&#34;&#34;
-        Private method to enter username for telnet authentication
-
-        Args:
-            telnet_session: Telnet session object
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
         self.session_lock.acquire()
+        output = b&#34;&#34;
         while True:
-            output = telnet_session.read_eager()
+            output += telnet_session.read_eager()
             if self.username_prompt.lower().encode() in output.lower():
+                # if/when we see username, reset the output to empty byte string
+                output = b&#34;&#34;
                 telnet_session.write(self.auth_username.encode())
                 telnet_session.write(self._comms_return_char.encode())
-                self.session_lock.release()
-                break
-
-    @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out looking for telnet login password prompt&#34;)
-    def _authenticate_password(self, telnet_session: ScrapliTelnet) -&gt; None:
-        &#34;&#34;&#34;
-        Private method to enter password for telnet authentication
-
-        Args:
-            telnet_session: Telnet session object
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.session_lock.acquire()
-        while True:
-            output = telnet_session.read_eager()
             if self.password_prompt.lower().encode() in output.lower():
                 telnet_session.write(self.auth_password.encode())
                 telnet_session.write(self._comms_return_char.encode())
                 self.session_lock.release()
                 break
 
+    @operation_timeout(&#34;_timeout_ops_auth&#34;, &#34;Timed determining if telnet session is authenticated&#34;)
     def _telnet_isauthenticated(self, telnet_session: ScrapliTelnet) -&gt; bool:
         &#34;&#34;&#34;
         Check if session is authenticated
@@ -2796,6 +2814,7 @@ and is ignored after authentication is completed.</dd>
             N/A
 
         &#34;&#34;&#34;
+        LOG.debug(&#34;Attempting to determine if telnet authentication was successful&#34;)
         if not telnet_session.eof:
             prompt_pattern = get_prompt_pattern(&#34;&#34;, self._comms_prompt_pattern)
             telnet_session_fd = telnet_session.fileno()
@@ -2804,17 +2823,21 @@ and is ignored after authentication is completed.</dd>
             time.sleep(0.25)
             fd_ready, _, _ = select([telnet_session_fd], [], [], 0)
             if telnet_session_fd in fd_ready:
-                output = telnet_session.read_eager()
-                # we do not need to deal w/ line replacement for the actual output, only for
-                # parsing if a prompt-like thing is at the end of the output
-                output = re.sub(b&#34;\r&#34;, b&#34;&#34;, output)
-                if self._comms_ansi:
-                    output = strip_ansi(output)
-                channel_match = re.search(prompt_pattern, output)
-                if channel_match:
-                    self.session_lock.release()
-                    self._isauthenticated = True
-                    return True
+                while True:
+                    output = telnet_session.read_eager()
+                    # we do not need to deal w/ line replacement for the actual output, only for
+                    # parsing if a prompt-like thing is at the end of the output
+                    output = re.sub(b&#34;\r&#34;, b&#34;&#34;, output)
+                    if self._comms_ansi:
+                        output = strip_ansi(output)
+                    channel_match = re.search(prompt_pattern, output)
+                    if channel_match:
+                        self.session_lock.release()
+                        self._isauthenticated = True
+                        return True
+                    if b&#34;password&#34; in output.lower():
+                        # if we see &#34;password&#34; auth failed... hopefully true in all scenarios!
+                        return False
         self.session_lock.release()
         return False
 
@@ -2975,7 +2998,7 @@ and is ignored after authentication is completed.</dd>
 <span>def <span class="ident">open</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Open channel, acquire pty, request interactive shell</p>
+<section class="desc"><p>Open telnet channel</p>
 <h2 id="args">Args</h2>
 <p>N/A</p>
 <h2 id="returns">Returns</h2>
@@ -2995,7 +3018,7 @@ and is ignored after authentication is completed.</dd>
 </summary>
 <pre><code class="python">def open(self) -&gt; None:
     &#34;&#34;&#34;
-    Open channel, acquire pty, request interactive shell
+    Open telnet channel
 
     Args:
         N/A

@@ -47,4 +47,16 @@ eos_device = {
     "transport": "system",
     "keepalive": True,
     "keepalive_interval": 1,
+    "comms_ansi": True,
+}
+
+junos_device = {
+    "host": "172.18.0.15",
+    "port": 22,
+    "auth_username": "vrnetlab",
+    "auth_password": "VR-netlab9",
+    "auth_strict_key": False,
+    "transport": "system",
+    "keepalive": True,
+    "keepalive_interval": 1,
 }

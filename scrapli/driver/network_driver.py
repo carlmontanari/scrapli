@@ -1,6 +1,7 @@
 """scrapli.driver.network_driver"""
 import logging
 import re
+import warnings
 from abc import ABC, abstractmethod
 from collections import namedtuple
 from typing import Any, Callable, Dict, List, Tuple, Union
@@ -126,21 +127,36 @@ class NetworkDriver(Scrape, ABC):
             )
         next_prompt = next_priv.pattern
         if current_priv.escalate_auth:
-            escalate_cmd: str = current_priv.escalate
-            escalate_prompt: str = current_priv.escalate_prompt
-            escalate_auth = self.auth_secondary
-            if not isinstance(next_prompt, str):
-                raise TypeError(
-                    f"got {type(next_prompt)} for {current_priv.name} escalate priv, "
-                    "expected str"
+            if not self.auth_secondary:
+                err = (
+                    "Privilege escalation generally requires an `auth_secondary` password, "
+                    "but none is set!"
                 )
-            self.channel.send_inputs_interact(
-                [escalate_cmd, escalate_prompt, escalate_auth, next_prompt], hidden_response=True,
-            )
-            self.channel.comms_prompt_pattern = next_priv.pattern
-        else:
-            self.channel.comms_prompt_pattern = next_priv.pattern
-            self.channel.send_input(current_priv.escalate)
+                msg = f"***** {err} {'*' * (80 - len(err))}"
+                fix = (
+                    "scrapli will try to escalate privilege without entering a password but may "
+                    "fail.\nSet an `auth_secondary` password if your device requires a password to "
+                    "increase privilege, otherwise ignore this message."
+                )
+                warning = "\n" + msg + "\n" + fix + "\n" + msg
+                warnings.warn(warning)
+            else:
+                escalate_cmd: str = current_priv.escalate
+                escalate_prompt: str = current_priv.escalate_prompt
+                escalate_auth = self.auth_secondary
+                if not isinstance(next_prompt, str):
+                    raise TypeError(
+                        f"got {type(next_prompt)} for {current_priv.name} escalate priv, "
+                        "expected str"
+                    )
+                self.channel.send_inputs_interact(
+                    [escalate_cmd, escalate_prompt, escalate_auth, next_prompt],
+                    hidden_response=True,
+                )
+                self.channel.comms_prompt_pattern = next_priv.pattern
+                return
+        self.channel.comms_prompt_pattern = next_priv.pattern
+        self.channel.send_input(current_priv.escalate)
 
     def _deescalate(self) -> None:
         """
@@ -260,7 +276,7 @@ class NetworkDriver(Scrape, ABC):
 
         return responses
 
-    def send_interactive(self, inputs: List[str], hidden_response: bool = False) -> Response:
+    def send_interactive(self, interact: List[str], hidden_response: bool = False) -> Response:
         """
         Send inputs in an interactive fashion; used to handle prompts
 
@@ -271,7 +287,7 @@ class NetworkDriver(Scrape, ABC):
         could be "chained" together to respond to more than a "single" staged prompt
 
         Args:
-            inputs: list of four string elements representing...
+            interact: list of four string elements representing...
                 channel_input - initial input to send
                 expected_prompt - prompt to expect after initial input
                 response - response to prompt
@@ -287,7 +303,7 @@ class NetworkDriver(Scrape, ABC):
         """
         if self._current_priv_level.name != self.default_desired_priv:
             self.acquire_priv(self.default_desired_priv)
-        response = self.channel.send_inputs_interact(inputs, hidden_response)
+        response = self.channel.send_inputs_interact(interact, hidden_response)
         return response
 
     def send_configs(

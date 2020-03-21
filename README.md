@@ -64,7 +64,7 @@ scrapli -- scrap(e c)li --  is a python library focused on connecting to devices
 ## Installation
 
 In most cases installation via pip is the simplest and best way to install scrapli.
-See the below or [here](#advanced-installation) for advanced installation details.
+See below or [here](#advanced-installation) for advanced installation details.
 
 ```
 pip install scrapli
@@ -210,11 +210,11 @@ The "driver" pattern is pretty much exactly like the implementation in NAPALM. T
   [ntc templates](https://github.com/networktocode/ntc-templates) for use with TextFSM, and so on.
 
 All of this is focused on network device type Telnet/SSH cli interfaces, but should work on pretty much any SSH
- connection (though there are almost certainly better options for non-network type devices!). The "base" (`Scrape
- `) connection does not handle any kind of device-specific operations such as privilege escalation or saving
-  configurations, it is simply intended to be a bare bones connection that can interact with nearly any device
-  /platform if you are willing to send/parse inputs/outputs manually. In most cases it is assumed that users will use
-   one of the "core" drivers.
+ connection (though there are almost certainly better options for non-network type devices!). The "base" (`Scrape`)
+  connection does not handle any kind of device-specific operations such as privilege escalation or saving
+   configurations, it is simply intended to be a bare bones connection that can interact with nearly any device
+   /platform if you are willing to send/parse inputs/outputs manually. In most cases it is assumed that users will
+    use one of the "core" drivers.
 
 The goal for all "core" devices will be to include functional tests that can run against
 [vrnetlab](https://github.com/plajjan/vrnetlab) containers to ensure that the "core" devices are as thoroughly tested
@@ -296,16 +296,16 @@ All drivers can be imported from `scrapli.driver.core`.
 The drivers of course need some information about the device you are trying to connect to. The most common arguments
  to provide to the driver are outlined below:
  
-| Argument        | Purpose/Value                                               |
-|-----------------|-------------------------------------------------------------|
-| host            | name/ip of host to connect to                               |
-| port            | port of host to connect to (defaults to port 22)            |
-| auth_username   | username for authentication                                 |
-| auth_password   | password for authentication                                 |
-| auth_secondary  | password for secondary authentication (enable password)     |
-| auth_public_key | public key for authentication                               |
-| auth_strict_key | strict key checking -- TRUE by default!                     |
-| ssh_config_file | True/False or path to ssh config file to use                |
+| Argument         | Purpose/Value                                               |
+|------------------|-------------------------------------------------------------|
+| host             | name/ip of host to connect to                               |
+| port             | port of host to connect to (defaults to port 22)            |
+| auth_username    | username for authentication                                 |
+| auth_password    | password for authentication                                 |
+| auth_secondary   | password for secondary authentication (enable password)     |
+| auth_private_key | private key for authentication                              |
+| auth_strict_key  | strict key checking -- TRUE by default!                     |
+| ssh_config_file  | True/False or path to ssh config file to use                |
 
 These arguments may be passed as keyword arguments to the driver of your choice, or, commonly are passed via
  dictionary unpacking as show below:
@@ -518,7 +518,7 @@ my_device = {
 
 with IOSXEDriver(**my_device) as conn:
     interactive = conn.send_interactive(
-                ("clear logging", "Clear logging buffer [confirm]", "\n", conn.get_prompt())
+                ["clear logging", "Clear logging buffer [confirm]", "\n", conn.get_prompt()]
             )
 ```
 
@@ -543,11 +543,13 @@ If telnet for some reason becomes an important use case, the telnet Transport la
 scrapli supports using OpenSSH configuration files in a few ways. For "system" SSH transport (default setting
 ), passing a path to a config file will simply make scrapli "point" to that file, and therefore use that
  configuration files attributes (because it is just exec'ing system SSH!). See the [Transport Notes](#transport-notes
- -caveats-and-known-issues) section for details about what Transport supports what configuration options.
+ -caveats-and-known-issues) section for details about what Transport supports what configuration options. You can
+  also pass `True` to let scrapli search in system default locations for an ssh config file (`~/.ssh/config` and
+   `/etc/ssh/ssh_config`.)
    
-*NOTE* -- when using the system (default) SSH transport driver scrapli does NOT disable strict host checking by default
-. Obviously this is the "smart" behavior, but it can be overridden on a per host basis in your SSH config file, or by
- passing `False` to the "auth_strict_key" argument on object instantiation.
+*NOTE* -- scrapli does NOT disable strict host checking by default. Obviously this is the "smart" behavior, but it
+ can be overridden on a per host basis in your SSH config file, or by passing `False` to the "auth_strict_key
+ " argument on object instantiation.
 
 ```python
 from scrapli.driver.core import IOSXEDriver
@@ -580,7 +582,7 @@ The basic usage section outlined the most commonly used driver arguments, this o
 | auth_username        | username for authentication                                 |
 | auth_password        | password for authentication                                 |
 | auth_secondary       | password for secondary authentication (enable password)     |
-| auth_public_key      | public key for authentication                               |
+| auth_private_key     | private key for authentication                              |
 | auth_strict_key      | strict key checking -- TRUE by default!                     |
 | timeout_socket       | timeout value for initial socket connection                 |
 | timeout_transport    | timeout value for transport (i.e. paramiko)                 |
@@ -615,12 +617,12 @@ This pattern is contained in the `comms_prompt_pattern` setting, and is perhaps 
 
 The "base" (default, but changeable) pattern is:
 
-`"^[a-z0-9.\-@()/:]{1,20}[#>$]$"`
+`"^[a-z0-9.\-@()/:]{1,20}[#>$]\s*$"`
 
 *NOTE* all `comms_prompt_pattern` should use the start and end of line anchors as all regex searches in scrapli are
  multi-line (this is an important piece to making this all work!). While you don't *need* to use the line anchors its
   probably a really good idea! Also note that most devices seem to leave at least one white space after the final
-   character of the prompt, so make sure to account for this! Last important note -- the core drivers all of reliable
+   character of the prompt, so make sure to account for this! Last important note -- the core drivers all have reliable
     patterns set for you, so you hopefully don't need to bother with this too much!
 
 The above pattern works on all "core" platforms listed above for at the very least basic usage. Custom prompts or
@@ -628,7 +630,7 @@ The above pattern works on all "core" platforms listed above for at the very lea
 
 If you do not wish to match Cisco "config" level prompts you could use a `comms_prompt_pattern` such as:
 
-`"^[a-z0-9.-@]{1,20}[#>$]$"`
+`"^[a-z0-9.-@]{1,20}[#>$]\s*$"`
 
 If you use a platform driver, the base prompt is set in the driver so you don't really need to worry about this!
 
@@ -747,10 +749,10 @@ Each privilege level has the following attributes:
 
 - pattern: regex pattern to associate prompt to privilege level with
 - name: name of the priv level, i.e. "exec"
-- deescalate_priv: name of next lower privilege or None
-- deescalate: command to deescalate to next lower privilege or None
-- escalate: name of next higher privilege or None
-- escalate_auth: command to escalate to next higher privilege or None
+- deescalate_priv: name of next lower privilege or "" (to evaluate False)
+- deescalate: command to deescalate to next lower privilege or "" (to evaluate False)
+- escalate: name of next higher privilege or "" (to evaluate False)
+- escalate_auth: command to escalate to next higher privilege or "" (to evaluate False)
 - escalate_prompt: False or pattern to expect for escalation -- i.e. "Password:"
 - requestable: True/False if the privilege level is requestable
 - level: integer value of level i.e. 1
@@ -793,12 +795,12 @@ my_device = {
 }
 
 with Scrape(**my_device) as conn:
-    conn.channel.send_inputs("terminal length 0")
-    response = conn.channel.send_inputs("show version")
-    responses = conn.channel.send_inputs(("show version", "show run"))
+    conn.channel.send_input("terminal length 0")
+    response = conn.channel.send_input("show version")
+    responses = conn.channel.send_inputs(["show version", "show run"])
 ```
 
-Without the `send_command` and similar methods, you must directly acccess the `Channel` object when sending inputs
+Without the `send_command` and similar methods, you must directly access the `Channel` object when sending inputs
  with `Scrape`.
 
 
@@ -856,11 +858,11 @@ Currently the only reason I can think of to use anything other than "system" as 
    adapt to any other network-y type CLI by virtue of flexible prompt finding and easily modifiable on connect
     functions.
 - Question: Is this easy to use?
-  - Answer: Yep! The "native" usage is pretty straight forward -- the thing to remember is that it doesn't do "things
-  " for you like Netmiko does for example, so its a lot more like Paramiko in that regard this just means that you
-   need to disable paging yourself (or pass an `on_connect` callable to do so), handle privilege modes and things like
-    that. That said you can use one of the available drivers to have a more Netmiko-like experience -OR- write your
-     own driver as this has been built with the thought of being easily extended.
+  - Answer: Yep! The base usage with `Scrape` is pretty straight forward -- the thing to remember is that it doesn't
+   do "things" for you like Netmiko does for example, so its a lot more like Paramiko in that regard this just means
+    that you need to disable paging yourself (or pass an `on_open` callable to do so), handle privilege modes and
+     things like that. That said you can use one of the available drivers to have a more Netmiko-like experience -OR
+     - write your own driver as this has been built with the thought of being easily extended.
 - Why do I get a "conn (or your object name here) has no attribute channel" exception?
   - Answer: Connection objects do not "auto open", and the channel attribute is not assigned until opening the
    connection. Call `conn.open()` (or your object name in place of conn) to open the session and assign the channel
@@ -909,8 +911,6 @@ Currently the only reason I can think of to use anything other than "system" as 
 - Any arguments passed to the `SystemSSHTransport` class will override arguments in your ssh config file. This is
  because the arguments get crafted into an "open_cmd" (the command that actually fires off the ssh session), and
   these cli arguments take precedence over the config file arguments.
-- strict key checking is ENABLED by default! If you see weird EOF errors immediately after opening a connection, you
- probably did not disable strict key checking!
 - If you set `ssh_config_file` to `False` the `SystemSSHTransport` class will set the config file used to `/dev/null
 ` so that no ssh config file configs are accidentally used.
 
@@ -920,10 +920,7 @@ Currently the only reason I can think of to use anything other than "system" as 
 
 ### Known Issues
 
-- Connecting to linux hosts (tested w/ Ubuntu, but presumably on all linux hosts?) when using system-ssh and a public
- key for authentication (thus forcing using sub process with pipes -- `_open_pipes`) successfully auths, but gets no
-  read data back after reading the banner. I have no idea why. Testing to the same server w/ password authentication
-   things work as expected. As linux is not a priority target for scrapli this may go unresolved for a while...
+- None yet!
 
 ## telnet
 
@@ -939,9 +936,6 @@ Currently the only reason I can think of to use anything other than "system" as 
 
 
 # Linting and Testing
-
-*NOTE* Currently there are no unit/functional tests for IOSXR/NXOS/EOS/Junos, however as this part of scrapli is largely
- a port of ssh2net, they should work :) 
 
 ## Linting
 
@@ -998,14 +992,24 @@ Executing the functional tests is a bit more complicated! First, thank you to Kr
  [vrnetlab](https://github.com/plajjan/vrnetlab)! All functional tests are built on this awesome platform that allows
   for easy creation of containerized network devices.
 
-Basic functional tests exist for all "core" platform types (IOSXE, NXOS, IOSXR, EOS, Junos). Vrnetlab currently only
- supports the older emulation style NX-OS devices, and *not* the newer VM image n9kv. I have made some very minor
-  tweaks to vrnetlab locally in order to get the n9kv image running -- I have raised a PR to add this to vrnetlab
-   proper. Minus the n9kv tweaks, getting going with vrnetlab is fairly straightforward -- simply follow Kristian's
-    great readme docs. For the Arista EOS image -- prior to creating the container you should boot the device and
-     enter the `zerotouch disable` command. This allows for the config to actually be saved and prevents the
-      interfaces from cycling through interface types in the container (I'm not clear why it does that but executing
-       this command before building the container "fixes" this!).
+Basic functional tests exist for all "core" platform types (IOSXE, NXOS, IOSXR, EOS, Junos) as well as basic testing
+ for Linux. Vrnetlab currently only supports the older emulation style NX-OS devices, and *not* the newer VM image
+  n9kv. I have made some very minor tweaks to vrnetlab locally in order to get the n9kv image running. I also have
+   made some changes to enable scp-server for IOSXE/NXOS devices to allow for config replaces with NAPALM right out
+    of the box. You can get these tweaks in my fork of vrnetlab. Getting going with vrnetlab is fairly
+     straightforward -- simply follow Kristian's great readme docs.
+     
+For the Arista EOS image -- prior to creating the container you should boot the device and enter the `zerotouch
+ disable` command. This allows for the config to actually be saved and prevents the interfaces from cycling through
+  interface types in the container (I'm not clear why it does that but executing this command before building the
+   container "fixes" this!). An example qemu command to boot up the EOS device is:
+         
+```
+qemu-system-x86_64 -enable-kvm -display none -machine pc -monitor tcp:0.0.0.0:4999,server,nowait -m 4096 -serial telnet:0.0.0.0:5999,server,nowait -drive if=ide,file=vEOS-lab-4.22.1F.vmdk -device pci-bridge,chassis_nr=1,id=pci.1 -device e1000,netdev=p00,mac=52:54:00:54:e9:00 -netdev user,id=p00,net=10.0.0.0/24,tftp=/tftpboot,hostfwd=tcp::2022-10.0.0.15:22,hostfwd=tcp::2023-10.0.0.15:23,hostfwd=udp::2161-10.0.0.15:161,hostfwd=tcp::2830-10.0.0.15:830,hostfwd=tcp::2080-10.0.0.15:80,hostfwd=tcp::2443-10.0.0.15:443
+```
+
+Once booted, connect to the device (telnet to container IP on port 5999 if using above command), issue the command
+ `zerotouch disable`, save the config and then you can shut it down, and make the container.
 
 The docker-compose file here will be looking for the container images matching this pattern, so this is an important
  bit! The container image names should be:
@@ -1024,19 +1028,13 @@ You can tag the image names on creation (following the vrnetlab readme docs), or
 docker tag [TAG OF IMAGE CREATED] scrapli-[VENDOR]-[OS]
 ```
 
-*NOTE* I have added vty lines 5-98 on the CSR image -- I think the connections opening/closing so quickly during
- testing caused them to get hung. Testing things more slowly (adding time.sleep after closing connections) fixed this
-  but that obviously made the testing time longer, so this seemed like a better fix. This change will be in my fork
-   of vrnetlab or you can simply modify the `line vty 0 5` --> `line vty 0 98` in the `luanch.py` for the CSR in your
-    vrnetlab clone. `line vty 1` for some reason also had `length 0` which I have removed (and tests expect to be
-     gone). Lastly, to test telnet the `csr` setup in vrnetlab needs to be modified to allow telnet as well; this
-      means the Dockerfile must expose port 23, the qemu nic settings must support port 23 being sent into the VM and
-       socat must also be setup appropriately. This should all be updated in my vrnetlab fork. 
+*NOTE* If you are going to test scrapli, use [my fork of vrnetlab](https://github.com/carlmontanari/vrnetlab) -- I've
+ enabled telnet, set ports, taken care of setting things up so that NAPALM can config replace, etc.
 
 
 ### Functional Tests
 
-Once you have created the images, you can start the containers with a make command:
+Once you have created the images, you can start all of the containers with a make command:
 
 ```
 make start_dev_env
@@ -1056,7 +1054,9 @@ make start_dev_env_iosxe
 
 Substitute "iosxe" for the platform type you want to start.
 
-Most of the containers don't take too long to fire up, maybe a few minutes (running on my old macmini with Ubuntu, so not exactly a powerhouse!). That said, the IOS-XR device takes about 15 minutes to go to "healthy" status. Once booted up you can connect to their console or via SSH:
+Most of the containers don't take too long to fire up, maybe a few minutes (running on my old macmini with Ubuntu, so
+ not exactly a powerhouse!). That said, the IOS-XR device takes about 15 minutes to go to "healthy" status. Once
+  booted up you can connect to their console or via SSH:
 
 | Device        | Local IP      |
 | --------------|---------------|
@@ -1065,8 +1065,10 @@ Most of the containers don't take too long to fire up, maybe a few minutes (runn
 | iosxr         | 172.18.0.13   |
 | eos           | 172.18.0.14   |
 | junos         | 172.18.0.15   |
+| linux         | 172.18.0.20   |
 
-The console port for all devices is 5000, so to connect to the console of the iosxe device you can simply telnet to that port locally:
+The console port for all devices is 5000, so to connect to the console of the iosxe device you can simply telnet to
+ that port locally:
 
 ```
 telnet 172.18.0.11 5000
@@ -1087,6 +1089,20 @@ Once the container(s) are ready, you can use the make commands to execute tests 
 - `test_iosxr` will execute all unit tests and iosxr functional tests
 - `test_eos` will execute all unit tests and eos functional tests
 - `test_junos` will execute all unit tests and junos functional tests
+- `test_linux` will execute all unit tests and basic linux functional tests (this is really intended to test the base
+ `Scrape` driver instead of the network drivers)
+
+### Other Functional Test Info
+
+The functional tests will try to push the base configuration via NAPALM before running any tests. This is obviously
+ nice to ensure that testing is consistent, however after the initial deployment of the config the configs shouldn't
+  be changing during testing (configs are made, but are also removed after validation). Waiting for NAPALM to push
+   configs at each test can be annoying, to avoid this simply set the environment variable `SCRAPLI_NO_SETUP=true` to
+    disable this.
+
+IOSXE is the only platform that is testing SSH key based authentication at the moment. The key is pushed via NAPALM in
+ the setup phase. This was mostly done out of laziness, and in the future the other platforms may be tested with key
+  based auth as well, but for now IOSXE is representative enough to provide some faith that key based auth works! 
 
 
 # Todo and Roadmap
@@ -1097,15 +1113,13 @@ This section may not get updated much, but will hopefully reflect the priority i
 ## Todo
 
 - Add tests for keepalive stuff if possible
+- Add tests for timeouts if possible
+- Add more tests for auth failures
+- Add tests for custom on open/close functions
 - Investigate pre-authentication handling for telnet -- support handling a prompt *before* auth happens i.e. accept
  some banner/message -- does this ever happen for ssh? I don't know! If so, support dealing with that as well.
 - Remove as much as possible from the vendor'd `ptyprocess` code. Type hint it, add docstrings everywhere, add tests
  if possible (and remove from ignore for test coverage and darglint).
-- Improve testing in general... make it more orderly/nicer, retry connections automatically if there is a failure
- (failures happen from vtys getting tied up and stuff like that it seems), shoot for even better coverage!
-- Add a dummy container (like nornir maybe?) to use for functional testing -- its very likely folks won't have a
- vrnetlab setup or compute to set that up... it'd be nice to have a lightweight container that can be used for basic
-  testing of `Scrape` and for testing auth with keys and such.
 - Improve logging -- especially in the transport classes and surrounding authentication (mostly in systemssh).
 
 ## Roadmap
@@ -1116,3 +1130,4 @@ This section may not get updated much, but will hopefully reflect the priority i
 - Nonrir plugin -- make scrapli a Nornir plugin!
 - Ensure v6 stuff works as expected.
 - Continue to add/support ssh config file things.
+- Maybe make this into a netconf driver as well? ncclient is just built on paramiko so it seems doable...?
