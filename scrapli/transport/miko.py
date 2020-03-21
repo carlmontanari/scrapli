@@ -185,19 +185,20 @@ class MikoTransport(Transport):
             self.session.start_client()
         except Exception as exc:
             LOG.critical(
-                f"Failed to complete handshake with host {self.host}; " f"Exception: {exc}"
+                f"Failed to complete handshake with host {self.host}; Exception: {exc}"
             )
+            self.session_lock.release()
             raise exc
 
         if self.auth_strict_key:
             LOG.debug(f"Attempting to validate {self.host} public key")
             self._verify_key()
 
-        LOG.debug(f"Session to host {self.host} opened")
         self.authenticate()
         if not self.isauthenticated():
             msg = f"Authentication to host {self.host} failed"
             LOG.critical(msg)
+            self.session_lock.release()
             raise ScrapliAuthenticationFailed(msg)
         self._open_channel()
         self.session_lock.release()
@@ -252,14 +253,16 @@ class MikoTransport(Transport):
             if self.isauthenticated():
                 LOG.debug(f"Authenticated to host {self.host} with public key")
                 return
-        if self.auth_password:
-            self._authenticate_password()
-            if self.isauthenticated():
-                LOG.debug(f"Authenticated to host {self.host} with password")
-                return
-        return
+            if not self.auth_password or not self.auth_username:
+                msg = (f"Private key authentication to host {self.host} failed. Missing username or"
+                       " password unable to attempt password authentication.")
+                LOG.critical(msg)
+                raise ScrapliAuthenticationFailed(msg)
+        self._authenticate_password()
+        if self.isauthenticated():
+            LOG.debug(f"Authenticated to host {self.host} with password")
 
-    def _authenticate_public_key(self) -> None:
+    def _authenticate_public_key(self) -> bool:
         """
         Attempt to authenticate with public key authentication
 
@@ -289,7 +292,6 @@ class MikoTransport(Transport):
                 "Unknown error occurred during public key authentication with host "
                 f"{self.host}; Exception: {exc}"
             )
-            raise exc
 
     def _authenticate_password(self) -> None:
         """

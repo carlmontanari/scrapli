@@ -9,6 +9,7 @@ TEST_DATA_PATH = f"{Path(scrapli.__file__).parents[1]}/tests/functional/test_dat
 USERNAME = "vrnetlab"
 PASSWORD = "VR-netlab9"
 PUBLIC_KEY = f"{TEST_DATA_PATH}/vrnetlab_key"
+INVALID_PUBLIC_KEY = f"{TEST_DATA_PATH}/__init__.py"
 
 DEVICES = {
     "cisco_iosxe": {

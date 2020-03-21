@@ -263,8 +263,9 @@ class SystemSSHTransport(Transport):
             open_pipes_result = self._open_pipes()
             if open_pipes_result:
                 return
-            if not open_pipes_result and (not self.auth_password or not self.auth_username):
-                msg = f"Authentication to host {self.host} failed"
+            if not self.auth_password or not self.auth_username:
+                msg = (f"Private key authentication to host {self.host} failed. Missing username or"
+                       " password unable to attempt password authentication.")
                 LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
 

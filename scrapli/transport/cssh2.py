@@ -186,6 +186,7 @@ class SSH2Transport(Transport):
             LOG.critical(
                 f"Failed to complete handshake with host {self.host}; " f"Exception: {exc}"
             )
+            self.session_lock.release()
             raise exc
 
         if self.auth_strict_key:
@@ -197,6 +198,7 @@ class SSH2Transport(Transport):
         if not self.isauthenticated():
             msg = f"Authentication to host {self.host} failed"
             LOG.critical(msg)
+            self.session_lock.release()
             raise ScrapliAuthenticationFailed(msg)
         self._open_channel()
         if self.keepalive:
@@ -251,16 +253,19 @@ class SSH2Transport(Transport):
             if self.isauthenticated():
                 LOG.debug(f"Authenticated to host {self.host} with public key")
                 return
-        if self.auth_password:
-            self._authenticate_password()
-            if self.isauthenticated():
-                LOG.debug(f"Authenticated to host {self.host} with password")
-                return
-            self._authenticate_keyboard_interactive()
-            if self.isauthenticated():
-                LOG.debug(f"Authenticated to host {self.host} with keyboard interactive")
-                return
-        return
+            if not self.auth_password or not self.auth_username:
+                msg = (f"Private key authentication to host {self.host} failed. Missing username or"
+                       " password unable to attempt password authentication.")
+                LOG.critical(msg)
+                raise ScrapliAuthenticationFailed(msg)
+
+        self._authenticate_password()
+        if self.isauthenticated():
+            LOG.debug(f"Authenticated to host {self.host} with password")
+            return
+        self._authenticate_keyboard_interactive()
+        if self.isauthenticated():
+            LOG.debug(f"Authenticated to host {self.host} with keyboard interactive")
 
     def _authenticate_public_key(self) -> None:
         """
@@ -287,7 +292,6 @@ class SSH2Transport(Transport):
                 "Unknown error occurred during public key authentication with host "
                 f"{self.host}; Exception: {exc}"
             )
-            raise exc
 
     def _authenticate_password(self) -> None:
         """
