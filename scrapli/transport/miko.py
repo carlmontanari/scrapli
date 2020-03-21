@@ -185,9 +185,7 @@ class MikoTransport(Transport):
             self.session = self.lib_session(self.socket.sock)
             self.session.start_client()
         except Exception as exc:
-            LOG.critical(
-                f"Failed to complete handshake with host {self.host}; Exception: {exc}"
-            )
+            LOG.critical(f"Failed to complete handshake with host {self.host}; Exception: {exc}")
             self.session_lock.release()
             raise exc
 
@@ -255,15 +253,17 @@ class MikoTransport(Transport):
                 LOG.debug(f"Authenticated to host {self.host} with public key auth")
                 return
             if not self.auth_password or not self.auth_username:
-                msg = (f"Public key authentication to host {self.host} failed. Missing username or"
-                       " password unable to attempt password authentication.")
+                msg = (
+                    f"Public key authentication to host {self.host} failed. Missing username or"
+                    " password unable to attempt password authentication."
+                )
                 LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
         self._authenticate_password()
         if self.isauthenticated():
             LOG.debug(f"Authenticated to host {self.host} with password")
 
-    def _authenticate_public_key(self) -> bool:
+    def _authenticate_public_key(self) -> None:
         """
         Attempt to authenticate with public key authentication
 
@@ -288,7 +288,7 @@ class MikoTransport(Transport):
             LOG.critical(
                 f"Public key authentication with host {self.host} failed. Exception: {exc}."
             )
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=W0703
             LOG.critical(
                 "Unknown error occurred during public key authentication with host "
                 f"{self.host}; Exception: {exc}"

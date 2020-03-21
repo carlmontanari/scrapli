@@ -113,12 +113,13 @@ class SSH2Transport(Transport):
             # import here so these are optional
             from ssh2.channel import Channel  # pylint: disable=C0415
             from ssh2.session import Session  # pylint: disable=C0415
-            from ssh2.exceptions import AuthenticationError  # pylint: disable=C0415
+            from ssh2.exceptions import AuthenticationError, SSH2Error  # pylint: disable=C0415
 
             self.lib_session = Session
             self.session: Session = None
             self.channel: Channel = None
             self.lib_auth_exception = AuthenticationError
+            self.lib_base_exception = SSH2Error
         except ModuleNotFoundError as exc:
             err = f"Module '{exc.name}' not installed!"
             msg = f"***** {err} {'*' * (80 - len(err))}"
@@ -255,8 +256,10 @@ class SSH2Transport(Transport):
                 LOG.debug(f"Authenticated to host {self.host} with public key auth")
                 return
             if not self.auth_password or not self.auth_username:
-                msg = (f"Public key authentication to host {self.host} failed. Missing username or"
-                       " password unable to attempt password authentication.")
+                msg = (
+                    f"Public key authentication to host {self.host} failed. Missing username or"
+                    " password unable to attempt password authentication."
+                )
                 LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
 
@@ -288,7 +291,7 @@ class SSH2Transport(Transport):
             LOG.critical(
                 f"Public key authentication with host {self.host} failed. Exception: {exc}."
             )
-        except Exception as exc:
+        except self.lib_base_exception as exc:
             LOG.critical(
                 "Unknown error occurred during public key authentication with host "
                 f"{self.host}; Exception: {exc}"

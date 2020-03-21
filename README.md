@@ -210,11 +210,11 @@ The "driver" pattern is pretty much exactly like the implementation in NAPALM. T
   [ntc templates](https://github.com/networktocode/ntc-templates) for use with TextFSM, and so on.
 
 All of this is focused on network device type Telnet/SSH cli interfaces, but should work on pretty much any SSH
- connection (though there are almost certainly better options for non-network type devices!). The "base" (`Scrape
- `) connection does not handle any kind of device-specific operations such as privilege escalation or saving
-  configurations, it is simply intended to be a bare bones connection that can interact with nearly any device
-  /platform if you are willing to send/parse inputs/outputs manually. In most cases it is assumed that users will use
-   one of the "core" drivers.
+ connection (though there are almost certainly better options for non-network type devices!). The "base" (`Scrape`)
+  connection does not handle any kind of device-specific operations such as privilege escalation or saving
+   configurations, it is simply intended to be a bare bones connection that can interact with nearly any device
+   /platform if you are willing to send/parse inputs/outputs manually. In most cases it is assumed that users will
+    use one of the "core" drivers.
 
 The goal for all "core" devices will be to include functional tests that can run against
 [vrnetlab](https://github.com/plajjan/vrnetlab) containers to ensure that the "core" devices are as thoroughly tested
@@ -920,10 +920,7 @@ Currently the only reason I can think of to use anything other than "system" as 
 
 ### Known Issues
 
-- Connecting to linux hosts (tested w/ Ubuntu, but presumably on all linux hosts?) when using system-ssh and a public
- key for authentication (thus forcing using sub process with pipes -- `_open_pipes`) successfully auths, but gets no
-  read data back after reading the banner. I have no idea why. Testing to the same server w/ password authentication
-   things work as expected. As linux is not a priority target for scrapli this may go unresolved for a while...
+- None yet!
 
 ## telnet
 
@@ -1117,7 +1114,7 @@ This section may not get updated much, but will hopefully reflect the priority i
 
 - Add tests for keepalive stuff if possible
 - Add tests for timeouts if possible
-- Add tests for auth failures
+- Add more tests for auth failures
 - Add tests for custom on open/close functions
 - Investigate pre-authentication handling for telnet -- support handling a prompt *before* auth happens i.e. accept
  some banner/message -- does this ever happen for ssh? I don't know! If so, support dealing with that as well.

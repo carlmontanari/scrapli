@@ -264,8 +264,10 @@ class SystemSSHTransport(Transport):
             if open_pipes_result:
                 return
             if not self.auth_password or not self.auth_username:
-                msg = (f"Public key authentication to host {self.host} failed. Missing username or"
-                       " password unable to attempt password authentication.")
+                msg = (
+                    f"Public key authentication to host {self.host} failed. Missing username or"
+                    " password unable to attempt password authentication."
+                )
                 LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
 
@@ -320,7 +322,9 @@ class SystemSSHTransport(Transport):
         except TimeoutError:
             # If auth fails, kill the popen session, also need to manually close the stderr pipe
             # for some reason... unclear why, but w/out this it will hang open
-            os.close(self.session.stderr.fileno())
+            if self.session.stderr is not None:
+                stderr_fd = self.session.stderr.fileno()
+                os.close(stderr_fd)
             self.session.kill()
             return False
 

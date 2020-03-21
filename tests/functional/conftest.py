@@ -1,7 +1,6 @@
 import os
 
 import pytest
-
 from napalm import get_network_driver
 
 from .test_data.devices import DEVICES

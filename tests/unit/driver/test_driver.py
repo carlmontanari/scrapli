@@ -37,7 +37,12 @@ def test__repr():
             TypeError,
             "`auth_strict_key` should be bool, got <class 'str'>",
         ),
-        ("auth_private_key", "notafile", ValueError, "Provided public key `notafile` is not a file"),
+        (
+            "auth_private_key",
+            "notafile",
+            ValueError,
+            "Provided public key `notafile` is not a file",
+        ),
         ("timeout_exit", "notabool", TypeError, "`timeout_exit` should be bool, got <class 'str'>"),
         ("keepalive", "notabool", TypeError, "`keepalive` should be bool, got <class 'str'>"),
         (

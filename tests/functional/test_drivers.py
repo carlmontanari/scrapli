@@ -4,7 +4,7 @@ import pytest
 
 from scrapli.exceptions import ScrapliAuthenticationFailed
 
-from .test_data.devices import DEVICES, PRIVATE_KEY, INVALID_PRIVATE_KEY
+from .test_data.devices import DEVICES, INVALID_PRIVATE_KEY, PRIVATE_KEY
 from .test_data.test_cases import TEST_CASES
 
 
