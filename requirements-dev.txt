@@ -17,3 +17,4 @@ napalm>=2.5.0
 -r requirements-textfsm.txt
 -r requirements-paramiko.txt
 -r requirements-ssh2.txt
+-r requirements-genie.txt

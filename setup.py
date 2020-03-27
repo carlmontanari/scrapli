@@ -20,6 +20,7 @@ setuptools.setup(
     install_requires=[],
     extras_require={
         "textfsm": ["textfsm>=1.1.0", "ntc-templates>=1.1.0"],
+        "genie": ["genie>=20.2", "pyats>=20.2"],
         "paramiko": ["paramiko>=2.6.0"],
         "ssh2": ["ssh2-python>=0.18.0-1"],
     },

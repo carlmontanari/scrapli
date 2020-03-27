@@ -450,25 +450,25 @@ class SystemSSHTransport(Transport):
             if pty_session.fd in fd_ready:
                 output = b""
                 while True:
-                    new_output = pty_session.read()
-                    output += new_output
+                    output += pty_session.read()
                     # we do not need to deal w/ line replacement for the actual output, only for
                     # parsing if a prompt-like thing is at the end of the output
                     output = re.sub(b"\r", b"", output)
-                    if self._comms_ansi:
+                    # always check to see if we should strip ansi here; if we don't handle this we
+                    # may raise auth failures for the wrong reason which would be confusing for
+                    # users
+                    if b"\x1B" in output:
                         output = strip_ansi(output)
                     channel_match = re.search(prompt_pattern, output)
                     if channel_match:
                         self.session_lock.release()
                         self._isauthenticated = True
                         return True
-                    if b"password" in new_output.lower():
+                    if b"password" in output.lower():
                         # if we see "password" we know auth failed (hopefully in all scenarios!)
                         return False
-                    if new_output:
-                        LOG.debug(
-                            f"Cannot determine if authenticated, \n\tRead: {repr(new_output)}"
-                        )
+                    if output:
+                        LOG.debug(f"Cannot determine if authenticated, \n\tRead: {repr(output)}")
         self.session_lock.release()
         return False
 

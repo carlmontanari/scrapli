@@ -1,4 +1,5 @@
 """scrapli.transport.cssh2"""
+import atexit
 import base64
 import time
 import warnings
@@ -485,6 +486,30 @@ class SSH2Transport(Transport):
             set_timeout = self.timeout_transport
         # ssh2-python expects timeout in milliseconds
         self.session.set_timeout(set_timeout * 1000)
+
+    def _keepalive_network(self) -> None:
+        """
+        ssh2-specific keepalive network
+
+        Without manually closing sessions ssh2-python seems to block and keep scripts from exiting.
+        This is a hacky fix for that by force killing the transport connection atexit.
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+
+        def kill_transport() -> None:
+            self.close()
+
+        atexit.register(kill_transport)
+        super()._keepalive_network()
 
     def _keepalive_standard(self) -> None:
         """

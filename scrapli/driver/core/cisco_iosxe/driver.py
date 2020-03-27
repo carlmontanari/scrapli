@@ -162,3 +162,4 @@ class IOSXEDriver(NetworkDriver):
         self.privs = PRIVS
         self.default_desired_priv = "privilege_exec"
         self.textfsm_platform = "cisco_ios"
+        self.textfsm_platform = "iosxe"

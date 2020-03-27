@@ -11,8 +11,8 @@ scrapli
 
 scrapli -- scrap(e c)li --  is a python library focused on connecting to devices, specifically network devices
  (routers/switches/firewalls/etc.) via SSH or Telnet. The name scrapli -- is just "scrape cli" (as in screen scrape)
- squished together! scrapli's goal is to be as fast and flexible, while providing a well typed, well documented
- , simple API.
+ squished together! scrapli's goal is to be as fast and flexible, while providing a well typed, well documented,
+  simple API.
 
 
 # Table of Contents
@@ -727,7 +727,7 @@ In some cases it may be desirable to have a long running connection to a device,
 In either case -- "standard" or "network" -- scrapli spawns a keepalive thread. This thread then sends either
  standard keepalive messages or "in band" keepalive messages in the case of "network" keepalives.
  
-"network" keepalives default ot sending u"\005" which is equivalent of sending `CTRL-E` (jump to end (right side) of
+"network" keepalives default to sending u"\005" which is equivalent of sending `CTRL-E` (jump to end (right side) of
  line). This is generally an innocuous command, and furthermore is never sent unless the keepalive thread can acquire
   a channel lock. This should allow scrapli to keep sessions alive as long as needed.
 
@@ -1080,6 +1080,13 @@ Username: `vrnetlab`
 
 Password: `VR-netlab9`
 
+You should also run the `prepare_devices` script in the functional tests, or use the Make commands to do so for you
+. This script will deploy the base config needed for testing. The make commands for this step follow the same pattern
+ as the others:
+
+- `prepare_dev_env` will push the base config to all devices
+- `prepare_dev_env_XYZ` where XYZ == "iosxe", "nxos", etc. will push the base config for the specified device.
+
 Once the container(s) are ready, you can use the make commands to execute tests as needed:
 
 - `test` will execute all currently implemented functional tests as well as the unit tests
@@ -1094,12 +1101,6 @@ Once the container(s) are ready, you can use the make commands to execute tests 
 
 ### Other Functional Test Info
 
-The functional tests will try to push the base configuration via NAPALM before running any tests. This is obviously
- nice to ensure that testing is consistent, however after the initial deployment of the config the configs shouldn't
-  be changing during testing (configs are made, but are also removed after validation). Waiting for NAPALM to push
-   configs at each test can be annoying, to avoid this simply set the environment variable `SCRAPLI_NO_SETUP=true` to
-    disable this.
-
 IOSXE is the only platform that is testing SSH key based authentication at the moment. The key is pushed via NAPALM in
  the setup phase. This was mostly done out of laziness, and in the future the other platforms may be tested with key
   based auth as well, but for now IOSXE is representative enough to provide some faith that key based auth works! 
@@ -1112,6 +1113,9 @@ This section may not get updated much, but will hopefully reflect the priority i
 
 ## Todo
 
+- Investigate setter methods for setting user/pass/and other attrs on base scrape object... they should be able to be
+ set at that level and have the transport updated if it can be done reasonably
+- Figure out why pyats breaks pyfakefs
 - Add tests for keepalive stuff if possible
 - Add tests for timeouts if possible
 - Add more tests for auth failures

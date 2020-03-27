@@ -76,6 +76,7 @@ class NetworkDriver(Scrape, ABC):
         super().__init__(**kwargs)
 
         self.textfsm_platform: str = ""
+        self.genie_platform: str = ""
         self.auth_secondary = auth_secondary
         self.privs = PRIVS
         self.default_desired_priv: str = ""
@@ -241,6 +242,7 @@ class NetworkDriver(Scrape, ABC):
         # update the response objects with textfsm platform; we do this here because the underlying
         #  channel doesn't know or care about platforms
         response.textfsm_platform = self.textfsm_platform
+        response.genie_platform = self.genie_platform
 
         return response
 
@@ -273,6 +275,7 @@ class NetworkDriver(Scrape, ABC):
         #  channel doesn't know or care about platforms
         for response in responses:
             response.textfsm_platform = self.textfsm_platform
+            response.genie_platform = self.genie_platform
 
         return responses
 

@@ -179,6 +179,7 @@ class NXOSDriver(NetworkDriver):
         self.privs = PRIVS
         self.default_desired_priv = "privilege_exec"
         self.textfsm_platform = "cisco_nxos"
+        self.textfsm_platform = "nxos"
 
         if _telnet:
             self.transport.username_prompt = "login:"
