@@ -75,12 +75,14 @@ class NetworkDriver(Scrape, ABC):
         """
         super().__init__(**kwargs)
 
-        self.textfsm_platform: str = ""
-        self.genie_platform: str = ""
         self.auth_secondary = auth_secondary
         self.privs = PRIVS
         self.default_desired_priv: str = ""
         self._current_priv_level = NoPrivLevel
+
+        self.textfsm_platform: str = ""
+        self.genie_platform: str = ""
+        self.failed_when_patterns: List[str] = []
 
     def _determine_current_priv(self, current_prompt: str) -> PrivilegeLevel:
         """
@@ -214,6 +216,26 @@ class NetworkDriver(Scrape, ABC):
                 self._escalate()
             priv_attempt_counter += 1
 
+    def _update_response(self, response: Response) -> None:
+        """
+        Update response with network driver specific data
+
+        This happens here as the underlying channel provides a response object but is unaware of any
+        of the network/platform specific attributes that may need to get updated
+
+        Args:
+            response: response to update
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+        response.textfsm_platform = self.textfsm_platform
+        response.genie_platform = self.genie_platform
+
     def send_command(self, command: str, strip_prompt: bool = True) -> Response:
         """
         Send a command
@@ -238,12 +260,7 @@ class NetworkDriver(Scrape, ABC):
         if self._current_priv_level.name != self.default_desired_priv:
             self.acquire_priv(self.default_desired_priv)
         response = self.channel.send_input(command, strip_prompt)
-
-        # update the response objects with textfsm platform; we do this here because the underlying
-        #  channel doesn't know or care about platforms
-        response.textfsm_platform = self.textfsm_platform
-        response.genie_platform = self.genie_platform
-
+        self._update_response(response)
         return response
 
     def send_commands(self, commands: List[str], strip_prompt: bool = True) -> List[Response]:
@@ -270,13 +287,8 @@ class NetworkDriver(Scrape, ABC):
         if self._current_priv_level.name != self.default_desired_priv:
             self.acquire_priv(self.default_desired_priv)
         responses = self.channel.send_inputs(commands, strip_prompt)
-
-        # update the response objects with textfsm platform; we do this here because the underlying
-        #  channel doesn't know or care about platforms
         for response in responses:
-            response.textfsm_platform = self.textfsm_platform
-            response.genie_platform = self.genie_platform
-
+            self._update_response(response)
         return responses
 
     def send_interactive(self, interact: List[str], hidden_response: bool = False) -> Response:

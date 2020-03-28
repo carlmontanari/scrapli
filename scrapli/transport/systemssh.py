@@ -391,7 +391,7 @@ class SystemSSHTransport(Transport):
         LOG.debug(f"Authenticated to host {self.host} with password")
         return True
 
-    #@operation_timeout("_timeout_ops", "Timed out looking for SSH login password prompt")
+    @operation_timeout("_timeout_ops", "Timed out looking for SSH login password prompt")
     def _pty_authenticate(self, pty_session: PtyProcess) -> None:
         """
         Private method to check initial authentication when using pty_session

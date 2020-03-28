@@ -155,3 +155,9 @@ class EOSDriver(NetworkDriver):
         self.privs = PRIVS
         self.default_desired_priv = "privilege_exec"
         self.textfsm_platform = "arista_eos"
+
+        self.failed_when_patterns = [
+            "% Ambiguous command",
+            "% Incomplete command",
+            "% Invalid input",
+        ]
