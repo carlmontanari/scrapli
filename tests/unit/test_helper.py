@@ -17,6 +17,7 @@ from scrapli.helper import (
     textfsm_parse,
 )
 
+
 UNIT_TEST_DIR = f"{Path(scrapli.__file__).parents[1]}/tests/unit/"
 
 IOS_ARP = """Protocol  Address          Age (min)  Hardware Addr   Type   Interface
@@ -91,19 +92,20 @@ def test_textfsm_parse_failure():
     assert result == []
 
 
-# def test_genie_parse_success():
-#     result = genie_parse("iosxe", "show ip arp", IOS_ARP)
-#     assert isinstance(result, dict)
-#     assert (
-#         result["interfaces"]["Vlan254"]["ipv4"]["neighbors"]["172.31.254.1"]["ip"] == "172.31.254.1"
-#     )
-#
-#
-# pyats breaks pyfakefs for some reason... not worth testing genie and breaking ssh config parsing
-# so for now this will remain commented out
-# def test_genie_parse_failure():
-#     result = genie_parse("iosxe", "show ip arp", "not really arp data")
-#     assert result == []
+def test_genie_parse_success():
+    result = genie_parse("iosxe", "show ip arp", IOS_ARP)
+    assert isinstance(result, dict)
+    assert (
+        result["interfaces"]["Vlan254"]["ipv4"]["neighbors"]["172.31.254.1"]["ip"] == "172.31.254.1"
+    )
+
+
+def test_genie_parse_failure():
+    result = genie_parse("iosxe", "show ip arp", "not really arp data")
+    assert result == []
+    # genie loads about nine million modules... for whatever reason these two upset pyfakefs
+    del sys.modules["ats.configuration"]
+    del sys.modules["pyats.configuration"]
 
 
 def test_resolve_ssh_config_file_explicit():
@@ -113,13 +115,18 @@ def test_resolve_ssh_config_file_explicit():
 
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting ssh config on windows")
 def test_resolve_ssh_config_file_user(fs):
-    fs.add_real_file("/etc/ssh/ssh_config", target_path=f"{os.path.expanduser('~')}/.ssh/config")
+    fs.add_real_file(
+        "/Users/carl/dev/github/scrapli/tests/unit/_ssh_config",
+        target_path=f"{os.path.expanduser('~')}/.ssh/config",
+    )
     ssh_conf = resolve_ssh_config("")
     assert ssh_conf == f"{os.path.expanduser('~')}/.ssh/config"
 
 
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting ssh config on windows")
 def test_resolve_ssh_config_file_system(fs):
-    fs.add_real_file("/etc/ssh/ssh_config")
+    fs.add_real_file(
+        "/Users/carl/dev/github/scrapli/tests/unit/_ssh_config", target_path="/etc/ssh/ssh_config"
+    )
     ssh_conf = resolve_ssh_config("")
     assert ssh_conf == "/etc/ssh/ssh_config"

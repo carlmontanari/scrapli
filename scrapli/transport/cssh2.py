@@ -506,7 +506,8 @@ class SSH2Transport(Transport):
         """
 
         def kill_transport() -> None:
-            self.close()
+            if self.isalive():
+                self.close()
 
         atexit.register(kill_transport)
         super()._keepalive_network()

@@ -1115,7 +1115,6 @@ This section may not get updated much, but will hopefully reflect the priority i
 
 - Investigate setter methods for setting user/pass/and other attrs on base scrape object... they should be able to be
  set at that level and have the transport updated if it can be done reasonably
-- Figure out why pyats breaks pyfakefs
 - Add tests for keepalive stuff if possible
 - Add tests for timeouts if possible
 - Add more tests for auth failures
