@@ -44,6 +44,7 @@ scrapli -- scrap(e c)li --  is a python library focused on connecting to devices
   - [Timeouts](#timeouts)
   - [Driver Privilege Levels](#driver-privilege-levels)
   - [Using Scrape Directly](#using-scrape-directly)
+  - [Using the GenericDriver](#using-the-generic-driver)
   - [Using a Different Transport](#using-a-different-transport)
 - [FAQ](#faq)
 - [Transport Notes, Caveats, and Known Issues](#transport-notes-caveats-and-known-issues)
@@ -290,6 +291,11 @@ The core drivers and associated platforms are outlined below:
 | Juniper JunOS | JunosDriver     |
 
 All drivers can be imported from `scrapli.driver.core`.
+
+If you are working with a platform not listed above, you have two options: you can use the `Scrape` driver directly
+, which you can read about [here](#using-scrape-directly) or you can use the `GenericDriver` which which you can read
+ about [here](#using-the-genericdriver). 
+
 
 ## Basic Driver Arguments
 
@@ -802,6 +808,34 @@ with Scrape(**my_device) as conn:
 
 Without the `send_command` and similar methods, you must directly access the `Channel` object when sending inputs
  with `Scrape`.
+
+
+## Using the `GenericDriver`
+
+Using the `Scrape` driver directly is nice enough, however you may not want to have to change the prompt pattern, or
+ deal with accessing the channel to send commands to the device. In this case there is a `GenericDriver` available to
+  you. This driver has a *very* broad pattern that it matches for base prompts, has no concept of disabling paging or
+   privilege levels (like `Scrape`), but does provide `send_command`, `send_commands`, `send_interact`, and
+    `get_prompt` methods for a more NetworkDriver-like experience. 
+
+Hopefully this `GenericDriver` can be used as a starting point for devices that don't fall under the core supported
+ platforms list.
+   
+```python
+from scrapli.driver.core import GenericDriver
+
+my_device = {
+    "host": "172.18.0.11",
+    "auth_username": "vrnetlab",
+    "auth_password": "VR-netlab9",
+    "auth_strict_key": False,
+}
+
+with GenericDriver(**my_device) as conn:
+    conn.send_command("terminal length 0")
+    response = conn.send_command("show version")
+    responses = conn.send_commands(["show version", "show run"])
+```
 
 
 ## Using a Different Transport

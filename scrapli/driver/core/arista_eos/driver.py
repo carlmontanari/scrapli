@@ -41,14 +41,6 @@ def eos_on_close(conn: NetworkDriver) -> None:
     conn.transport.write(conn.channel.comms_prompt_pattern)
 
 
-EOS_ARG_MAPPER = {
-    "comms_prompt_regex": r"^[a-z0-9.\-@()/:]{1,32}[#>$]\s?$",
-    "comms_return_char": "\n",
-    "comms_pre_login_handler": "",
-    "on_open": eos_on_open,
-    "on_close": eos_on_close,
-}
-
 PRIVS = {
     "exec": (
         PrivilegeLevel(

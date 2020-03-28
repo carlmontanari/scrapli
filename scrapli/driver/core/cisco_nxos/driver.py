@@ -41,13 +41,6 @@ def nxos_on_close(conn: NetworkDriver) -> None:
     conn.transport.write(conn.channel.comms_prompt_pattern)
 
 
-NXOS_ARG_MAPPER = {
-    "comms_prompt_regex": r"^[a-z0-9.\-@()/:]{1,32}[#>$]\s*$",
-    "comms_return_char": "\n",
-    "on_open": nxos_on_open,
-    "on_close": nxos_on_close,
-}
-
 PRIVS = {
     "exec": (
         PrivilegeLevel(
@@ -179,7 +172,7 @@ class NXOSDriver(NetworkDriver):
         self.privs = PRIVS
         self.default_desired_priv = "privilege_exec"
         self.textfsm_platform = "cisco_nxos"
-        self.textfsm_platform = "nxos"
+        self.genie_platform = "nxos"
 
         if _telnet:
             self.transport.username_prompt = "login:"

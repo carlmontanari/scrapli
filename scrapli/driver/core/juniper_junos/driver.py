@@ -43,13 +43,6 @@ def junos_on_close(conn: NetworkDriver) -> None:
     conn.transport.write(conn.channel.comms_prompt_pattern)
 
 
-JUNOS_ARG_MAPPER = {
-    "comms_prompt_regex": r"^[a-z0-9.\-@()/:]{1,32}[#>$]\s?$",
-    "comms_return_char": "\n",
-    "on_open": junos_on_open,
-    "on_close": junos_on_close,
-}
-
 PRIVS = {
     "exec": (
         PrivilegeLevel(

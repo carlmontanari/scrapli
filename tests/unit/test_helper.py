@@ -17,7 +17,6 @@ from scrapli.helper import (
     textfsm_parse,
 )
 
-
 UNIT_TEST_DIR = f"{Path(scrapli.__file__).parents[1]}/tests/unit/"
 
 IOS_ARP = """Protocol  Address          Age (min)  Hardware Addr   Type   Interface

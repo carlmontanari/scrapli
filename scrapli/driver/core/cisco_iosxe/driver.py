@@ -41,13 +41,6 @@ def iosxe_on_close(conn: NetworkDriver) -> None:
     conn.transport.write(conn.channel.comms_prompt_pattern)
 
 
-IOSXE_ARG_MAPPER = {
-    "comms_prompt_pattern": r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
-    "comms_return_char": "\n",
-    "on_open": iosxe_on_open,
-    "on_close": iosxe_on_close,
-}
-
 PRIVS = {
     "exec": (
         PrivilegeLevel(
@@ -162,4 +155,4 @@ class IOSXEDriver(NetworkDriver):
         self.privs = PRIVS
         self.default_desired_priv = "privilege_exec"
         self.textfsm_platform = "cisco_ios"
-        self.textfsm_platform = "iosxe"
+        self.genie_platform = "iosxe"

@@ -279,7 +279,7 @@ def test_acquire_priv_could_not_acquire_priv(mocked_network_driver):
     assert str(exc.value) == "Could not get to 'privilege_exec' privilege level."
 
 
-def test_send_commands(mocked_network_driver):
+def test_send_command(mocked_network_driver):
     channel_input_1 = "\n"
     channel_output_1 = "\n3560CX#"
     channel_input_2 = "show ip access-lists"
@@ -304,6 +304,55 @@ def test_send_commands(mocked_network_driver):
     conn.default_desired_priv = "privilege_exec"
     output = conn.send_command(channel_input_2, strip_prompt=False)
     assert output.result == channel_output_2
+
+
+def test_send_commands(mocked_network_driver):
+    channel_input_1 = "\n"
+    channel_output_1 = "\n3560CX#"
+    channel_input_2 = "show ip access-lists"
+    channel_output_2 = """Extended IP access list ext_acl_fw
+        10 deny ip 0.0.0.0 0.255.255.255 any
+        20 deny ip 10.0.0.0 0.255.255.255 any
+        30 deny ip 100.64.0.0 0.63.255.255 any (2 matches)
+        40 deny ip 127.0.0.0 0.255.255.255 any
+        50 deny ip 169.254.0.0 0.0.255.255 any
+        60 deny ip 172.16.0.0 0.15.255.255 any
+        70 deny ip 192.0.0.0 0.0.0.255 any
+        80 deny ip 192.0.2.0 0.0.0.255 any
+        90 deny ip 192.168.0.0 0.0.255.255 any
+        100 deny ip 198.18.0.0 0.1.255.255 any
+        110 deny ip 198.51.100.0 0.0.0.255 any
+        120 deny ip 203.0.113.0 0.0.0.255 any
+        130 deny ip 224.0.0.0 15.255.255.255 any
+        140 deny ip 240.0.0.0 15.255.255.255 any
+3560CX#"""
+    channel_input_3 = "show ip access-lists"
+    channel_output_3 = """Extended IP access list ext_acl_fw
+            10 deny ip 0.0.0.0 0.255.255.255 any
+            20 deny ip 10.0.0.0 0.255.255.255 any
+            30 deny ip 100.64.0.0 0.63.255.255 any (2 matches)
+            40 deny ip 127.0.0.0 0.255.255.255 any
+            50 deny ip 169.254.0.0 0.0.255.255 any
+            60 deny ip 172.16.0.0 0.15.255.255 any
+            70 deny ip 192.0.0.0 0.0.0.255 any
+            80 deny ip 192.0.2.0 0.0.0.255 any
+            90 deny ip 192.168.0.0 0.0.255.255 any
+            100 deny ip 198.18.0.0 0.1.255.255 any
+            110 deny ip 198.51.100.0 0.0.0.255 any
+            120 deny ip 203.0.113.0 0.0.0.255 any
+            130 deny ip 224.0.0.0 15.255.255.255 any
+            140 deny ip 240.0.0.0 15.255.255.255 any
+3560CX#"""
+    test_operations = [
+        (channel_input_1, channel_output_1),
+        (channel_input_2, channel_output_2),
+        (channel_input_3, channel_output_3),
+    ]
+    conn = mocked_network_driver(test_operations)
+    conn.default_desired_priv = "privilege_exec"
+    outputs = conn.send_commands([channel_input_2, channel_input_3], strip_prompt=False)
+    assert outputs[0].result == channel_output_2
+    assert outputs[1].result == channel_output_3
 
 
 def test_send_inputs_interact(mocked_network_driver):

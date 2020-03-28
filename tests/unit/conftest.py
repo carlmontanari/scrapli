@@ -5,6 +5,7 @@ import pytest
 
 from scrapli.channel import Channel
 from scrapli.driver import NetworkDriver, Scrape
+from scrapli.driver.core import GenericDriver
 from scrapli.driver.core.cisco_iosxe.driver import PRIVS
 from scrapli.transport.transport import Transport
 
@@ -102,6 +103,18 @@ class MockNetworkDriver(MockScrape, NetworkDriver):
         self.channel = Channel(self.transport, **self.channel_args)
 
 
+class MockGenericDriver(MockScrape, GenericDriver):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def open(self):
+        # Overriding "normal" network driver open method as we don't need to worry about disable
+        # paging or pre login handles; ignoring this makes the mocked file read/write pieces simpler
+        self.transport = self.transport_class(**self.transport_args)
+        self.transport.open()
+        self.channel = Channel(self.transport, **self.channel_args)
+
+
 @pytest.fixture(scope="module")
 def mocked_channel():
     def _create_mocked_channel(test_operations, initial_bytes=b"3560CX#", **kwargs):
@@ -124,3 +137,15 @@ def mocked_network_driver():
         return conn
 
     return _create_mocked_network_driver
+
+
+@pytest.fixture(scope="module")
+def mocked_generic_driver():
+    def _create_mocked_generic_driver(test_operations, initial_bytes=b"3560CX#", **kwargs):
+        conn = MockGenericDriver(
+            host="localhost", channel_ops=test_operations, initial_bytes=initial_bytes, **kwargs
+        )
+        conn.open()
+        return conn
+
+    return _create_mocked_generic_driver
