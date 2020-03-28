@@ -1,7 +1,7 @@
 """scrapli.channel.channel"""
 import re
 from logging import getLogger
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from scrapli.decorators import operation_timeout
 from scrapli.helper import get_prompt_pattern, normalize_lines, strip_ansi
@@ -207,13 +207,19 @@ class Channel:
                 current_prompt = channel_match.group(0)
                 return current_prompt.decode().strip()
 
-    def send_input(self, channel_input: str, strip_prompt: bool = True) -> Response:
+    def send_input(
+        self,
+        channel_input: str,
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[List[str]] = None,
+    ) -> Response:
         """
         Primary entry point to send data to devices in shell mode; accept input and returns result
 
         Args:
             channel_input: string input to send to channel
             strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
+            failed_when_contains: list of strings that indicate input task failed
 
         Returns:
             Response: list of Response object(s)
@@ -227,19 +233,29 @@ class Channel:
                 f"`send_input` expects a single string, got {type(channel_input)}. "
                 "to send a list of inputs use the `send_inputs` method instead"
             )
-        response = Response(self.transport.host, channel_input)
+        response = Response(
+            self.transport.host,
+            channel_input=channel_input,
+            failed_when_contains=failed_when_contains,
+        )
         raw_result, processed_result = self._send_input(channel_input, strip_prompt)
         response.raw_result = raw_result.decode()
         response.record_response(processed_result.decode())
         return response
 
-    def send_inputs(self, channel_inputs: List[str], strip_prompt: bool = True) -> List[Response]:
+    def send_inputs(
+        self,
+        channel_inputs: List[str],
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[List[str]] = None,
+    ) -> List[Response]:
         """
         Primary entry point to send data to devices in shell mode; accept inputs and return results
 
         Args:
             channel_inputs: list of string inputs to send to channel
             strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
+            failed_when_contains: list of strings that indicate input task failed
 
         Returns:
             responses: list of Response object(s)
@@ -256,7 +272,11 @@ class Channel:
 
         responses = []
         for channel_input in channel_inputs:
-            response = Response(self.transport.host, channel_input)
+            response = Response(
+                self.transport.host,
+                channel_input=channel_input,
+                failed_when_contains=failed_when_contains,
+            )
             raw_result, processed_result = self._send_input(channel_input, strip_prompt)
             response.raw_result = raw_result.decode()
             response.record_response(processed_result.decode())

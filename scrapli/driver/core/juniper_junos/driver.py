@@ -143,9 +143,17 @@ class JunosDriver(NetworkDriver):
             **kwargs,
         )
 
+        if _telnet:
+            self.transport.username_prompt = "login:"
+
         self.privs = PRIVS
+        self.default_desired_priv = "exec"
+
         self.default_desired_priv = "exec"
         self.textfsm_platform = "juniper_junos"
 
-        if _telnet:
-            self.transport.username_prompt = "login:"
+        self.failed_when_contains = [
+            "is ambiguous.",
+            "No valid completions",
+            "unknown command.",
+        ]

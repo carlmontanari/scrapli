@@ -128,8 +128,10 @@ class Response:
         self.finish_time = datetime.now()
         self.elapsed_time = (self.finish_time - self.start_time).total_seconds()
         self.result = result
-        # update failed to false after recording results
-        self.failed = False
+        if not self.failed_when_contains:
+            self.failed = False
+        elif not any(err in result for err in self.failed_when_contains):
+            self.failed = False
 
     def textfsm_parse_output(self) -> Union[Dict[str, Any], List[Any]]:
         """

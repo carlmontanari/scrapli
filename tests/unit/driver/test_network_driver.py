@@ -4,6 +4,7 @@ import pytest
 
 from scrapli.driver.network_driver import PrivilegeLevel
 from scrapli.exceptions import CouldNotAcquirePrivLevel, UnknownPrivLevel
+from scrapli.response import Response
 
 try:
     import ntc_templates
@@ -12,6 +13,36 @@ try:
     textfsm_avail = True
 except ImportError:
     textfsm_avail = False
+
+
+@pytest.mark.parametrize(
+    "attr_setup",
+    [
+        (
+            "send_command",
+            [],
+            TypeError,
+            "`send_command` expects a single string, got <class 'list'>. to send a list of commands use the `send_commands` method instead.",
+        ),
+        (
+            "send_commands",
+            "racecar",
+            TypeError,
+            "`send_commands` expects a list of strings, got <class 'str'>. to send a single command use the `send_command` method instead.",
+        ),
+    ],
+    ids=["send_command", "send_commands",],
+)
+def test_send_commands_exceptions(attr_setup, mocked_network_driver):
+    method = attr_setup[0]
+    method_input = attr_setup[1]
+    method_exc = attr_setup[2]
+    method_msg = attr_setup[3]
+    conn = mocked_network_driver([])
+    method_to_call = getattr(conn, method)
+    with pytest.raises(method_exc) as exc:
+        method_to_call(method_input)
+    assert str(exc.value) == method_msg
 
 
 def test__determine_current_priv(mocked_network_driver):
@@ -277,6 +308,16 @@ def test_acquire_priv_could_not_acquire_priv(mocked_network_driver):
     with pytest.raises(CouldNotAcquirePrivLevel) as exc:
         conn.acquire_priv("privilege_exec")
     assert str(exc.value) == "Could not get to 'privilege_exec' privilege level."
+
+
+def test_update_response(mocked_network_driver):
+    response = Response("localhost", "some input")
+    conn = mocked_network_driver([])
+    conn.textfsm_platform = "racecar"
+    conn.genie_platform = "tacocat"
+    conn._update_response(response)
+    assert response.textfsm_platform == "racecar"
+    assert response.genie_platform == "tacocat"
 
 
 def test_send_command(mocked_network_driver):

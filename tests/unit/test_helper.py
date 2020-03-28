@@ -105,27 +105,3 @@ def test_genie_parse_failure():
     # genie loads about nine million modules... for whatever reason these two upset pyfakefs
     del sys.modules["ats.configuration"]
     del sys.modules["pyats.configuration"]
-
-
-def test_resolve_ssh_config_file_explicit():
-    ssh_conf = resolve_ssh_config(f"{UNIT_TEST_DIR}_ssh_config")
-    assert ssh_conf == f"{UNIT_TEST_DIR}_ssh_config"
-
-
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting ssh config on windows")
-def test_resolve_ssh_config_file_user(fs):
-    fs.add_real_file(
-        "/Users/carl/dev/github/scrapli/tests/unit/_ssh_config",
-        target_path=f"{os.path.expanduser('~')}/.ssh/config",
-    )
-    ssh_conf = resolve_ssh_config("")
-    assert ssh_conf == f"{os.path.expanduser('~')}/.ssh/config"
-
-
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting ssh config on windows")
-def test_resolve_ssh_config_file_system(fs):
-    fs.add_real_file(
-        "/Users/carl/dev/github/scrapli/tests/unit/_ssh_config", target_path="/etc/ssh/ssh_config"
-    )
-    ssh_conf = resolve_ssh_config("")
-    assert ssh_conf == "/etc/ssh/ssh_config"

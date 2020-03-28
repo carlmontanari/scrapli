@@ -169,10 +169,17 @@ class NXOSDriver(NetworkDriver):
             **kwargs,
         )
 
+        if _telnet:
+            self.transport.username_prompt = "login:"
+
         self.privs = PRIVS
         self.default_desired_priv = "privilege_exec"
+
         self.textfsm_platform = "cisco_nxos"
         self.genie_platform = "nxos"
 
-        if _telnet:
-            self.transport.username_prompt = "login:"
+        self.failed_when_contains = [
+            "% Ambiguous command",
+            "% Incomplete command",
+            "% Invalid input detected",
+        ]

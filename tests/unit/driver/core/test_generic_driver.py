@@ -1,3 +1,5 @@
+import pytest
+
 try:
     import ntc_templates
     import textfsm
@@ -5,6 +7,36 @@ try:
     textfsm_avail = True
 except ImportError:
     textfsm_avail = False
+
+
+@pytest.mark.parametrize(
+    "attr_setup",
+    [
+        (
+            "send_command",
+            [],
+            TypeError,
+            "`send_command` expects a single string, got <class 'list'>. to send a list of commands use the `send_commands` method instead.",
+        ),
+        (
+            "send_commands",
+            "racecar",
+            TypeError,
+            "`send_commands` expects a list of strings, got <class 'str'>. to send a single command use the `send_command` method instead.",
+        ),
+    ],
+    ids=["send_command", "send_commands",],
+)
+def test_send_commands_exceptions(attr_setup, mocked_generic_driver):
+    method = attr_setup[0]
+    method_input = attr_setup[1]
+    method_exc = attr_setup[2]
+    method_msg = attr_setup[3]
+    conn = mocked_generic_driver([])
+    method_to_call = getattr(conn, method)
+    with pytest.raises(method_exc) as exc:
+        method_to_call(method_input)
+    assert str(exc.value) == method_msg
 
 
 def test_send_command(mocked_generic_driver):

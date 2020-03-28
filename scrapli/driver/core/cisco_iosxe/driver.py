@@ -158,7 +158,7 @@ class IOSXEDriver(NetworkDriver):
         self.textfsm_platform = "cisco_ios"
         self.genie_platform = "iosxe"
 
-        self.failed_when_patterns = [
+        self.failed_when_contains = [
             "% Ambiguous command",
             "% Incomplete command",
             "% Invalid input detected",

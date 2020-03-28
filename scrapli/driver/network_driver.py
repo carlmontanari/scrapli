@@ -82,7 +82,7 @@ class NetworkDriver(Scrape, ABC):
 
         self.textfsm_platform: str = ""
         self.genie_platform: str = ""
-        self.failed_when_patterns: List[str] = []
+        self.failed_when_contains: List[str] = []
 
     def _determine_current_priv(self, current_prompt: str) -> PrivilegeLevel:
         """
@@ -259,7 +259,9 @@ class NetworkDriver(Scrape, ABC):
 
         if self._current_priv_level.name != self.default_desired_priv:
             self.acquire_priv(self.default_desired_priv)
-        response = self.channel.send_input(command, strip_prompt)
+        response = self.channel.send_input(
+            command, strip_prompt=strip_prompt, failed_when_contains=self.failed_when_contains
+        )
         self._update_response(response)
         return response
 
@@ -286,7 +288,9 @@ class NetworkDriver(Scrape, ABC):
 
         if self._current_priv_level.name != self.default_desired_priv:
             self.acquire_priv(self.default_desired_priv)
-        responses = self.channel.send_inputs(commands, strip_prompt)
+        responses = self.channel.send_inputs(
+            commands, strip_prompt=strip_prompt, failed_when_contains=self.failed_when_contains
+        )
         for response in responses:
             self._update_response(response)
         return responses
@@ -342,7 +346,9 @@ class NetworkDriver(Scrape, ABC):
             configs = [configs]
 
         self.acquire_priv("configuration")
-        responses = self.channel.send_inputs(configs, strip_prompt)
+        responses = self.channel.send_inputs(
+            configs, strip_prompt=strip_prompt, failed_when_contains=self.failed_when_contains
+        )
         self.acquire_priv(self.default_desired_priv)
         return responses
 

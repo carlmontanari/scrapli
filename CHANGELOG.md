@@ -13,3 +13,6 @@ CHANGELOG
   decent starting point for anyone working on non-core platforms!
 - Minor unit test improvement to cover send_commands (plural) and to cover the new `GenericDriver`
 - Improved auth failure handling for systemssh using pty auth (username/pass auth)
+- Add "failed_when" strings to the core drivers; these are used in the response object to help indicate if the
+ channel input failed or succeeded. For scrapli not super super helpful, but nornir_scrapli will benefit from this as
+  well!

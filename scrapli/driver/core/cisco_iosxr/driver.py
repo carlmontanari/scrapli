@@ -144,5 +144,12 @@ class IOSXRDriver(NetworkDriver):
 
         self.privs = PRIVS
         self.default_desired_priv = "privilege_exec"
+
         self.textfsm_platform = "cisco_xr"
         self.genie_platform = "iosxr"
+
+        self.failed_when_contains = [
+            "% Ambiguous command",
+            "% Incomplete command",
+            "% Invalid input detected",
+        ]
