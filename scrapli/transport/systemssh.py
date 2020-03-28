@@ -391,7 +391,7 @@ class SystemSSHTransport(Transport):
         LOG.debug(f"Authenticated to host {self.host} with password")
         return True
 
-    @operation_timeout("_timeout_ops", "Timed out looking for SSH login password prompt")
+    #@operation_timeout("_timeout_ops", "Timed out looking for SSH login password prompt")
     def _pty_authenticate(self, pty_session: PtyProcess) -> None:
         """
         Private method to check initial authentication when using pty_session
@@ -413,7 +413,12 @@ class SystemSSHTransport(Transport):
             try:
                 output += pty_session.read()
             except EOFError:
-                raise ScrapliAuthenticationFailed(f"Failed to open connection to host {self.host}")
+                msg = f"Failed to open connection to host {self.host}"
+                if b"Host key verification failed" in output:
+                    msg = f"Host key verification failed for host {self.host}"
+                elif b"Operation timed out" in output:
+                    msg = f"Timed out connecting to host {self.host}"
+                raise ScrapliAuthenticationFailed(msg)
             if self._comms_ansi:
                 output = strip_ansi(output)
             if b"password" in output.lower():

@@ -12,3 +12,4 @@ CHANGELOG
  `, `send_commands`, `send_interact`, and `get_prompt` methods just like the "core" drivers do. This should be a
   decent starting point for anyone working on non-core platforms!
 - Minor unit test improvement to cover send_commands (plural) and to cover the new `GenericDriver`
+- Improved auth failure handling for systemssh using pty auth (username/pass auth)
