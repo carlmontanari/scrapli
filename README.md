@@ -427,7 +427,7 @@ If using `send_commands` (plural!) then scrapli will return a list of Response o
 
 In addition to containing the input and output of the command(s) that you sent, the `Response` object also contains a
  method `textfsm_parse_output` (for more on TextFSM support see
- [Textfsm/NTC-Templates Integration](#textfsmntc-templates-integration) which will attempt to parse and return the
+ [Textfsm/NTC-Templates Integration](#textfsmntc-templates-integration)) which will attempt to parse and return the
   received output. If parsing fails, the value returned will be an empty list.
    
 ```python

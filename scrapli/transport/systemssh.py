@@ -602,4 +602,4 @@ class SystemSSHTransport(Transport):
             NotImplementedError: always, because this is not implemented for telnet
 
         """
-        raise NotImplementedError("No 'standard' keepalive mechanism for telnet.")
+        raise NotImplementedError("'standard' keepalive mechanism not yet implemented for system.")
