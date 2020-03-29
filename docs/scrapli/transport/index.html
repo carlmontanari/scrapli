@@ -370,7 +370,7 @@ type is 'network'</dd>
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            ScrapliAuthenticationFailed: if authentication fails
 
         &#34;&#34;&#34;
         if self.auth_private_key:
@@ -400,7 +400,8 @@ type is 'network'</dd>
             N/A  # noqa: DAR202
 
         Raises:
-            exc: if unknown (i.e. not auth failed) exception occurs
+            exc: (really the paramiko auth exception) if auth exception occurs
+            exc: (really the paramiko base exception) if unknown exception occurs
 
         &#34;&#34;&#34;
         try:
@@ -615,8 +616,8 @@ type is 'network'</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
+<dt><strong><code>ScrapliAuthenticationFailed</code></strong></dt>
+<dd>if authentication fails</dd>
 </dl></section>
 <details class="source">
 <summary>
@@ -633,7 +634,7 @@ type is 'network'</dd>
         N/A  # noqa: DAR202
 
     Raises:
-        N/A
+        ScrapliAuthenticationFailed: if authentication fails
 
     &#34;&#34;&#34;
     if self.auth_private_key:
@@ -1136,7 +1137,7 @@ type is 'network'</dd>
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            ScrapliAuthenticationFailed: if auth fails
 
         &#34;&#34;&#34;
         if self.auth_private_key:
@@ -1171,7 +1172,8 @@ type is 'network'</dd>
             N/A  # noqa: DAR202
 
         Raises:
-            exc: if unknown (i.e. not auth failed) exception occurs
+            exc: (really the ssh2 auth exception) if auth exception occurs
+            exc: (really the ssh2 base exception) if unknown exception occurs
 
         &#34;&#34;&#34;
         try:
@@ -1444,8 +1446,8 @@ type is 'network'</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
+<dt><strong><code>ScrapliAuthenticationFailed</code></strong></dt>
+<dd>if auth fails</dd>
 </dl></section>
 <details class="source">
 <summary>
@@ -1462,7 +1464,7 @@ type is 'network'</dd>
         N/A  # noqa: DAR202
 
     Raises:
-        N/A
+        ScrapliAuthenticationFailed: if auth fails
 
     &#34;&#34;&#34;
     if self.auth_private_key:
@@ -2864,8 +2866,9 @@ and is ignored after authentication is completed.</dd>
             time.sleep(0.25)
             fd_ready, _, _ = select([telnet_session_fd], [], [], 0)
             if telnet_session_fd in fd_ready:
+                output = b&#34;&#34;
                 while True:
-                    output = telnet_session.read_eager()
+                    output += telnet_session.read_eager()
                     # we do not need to deal w/ line replacement for the actual output, only for
                     # parsing if a prompt-like thing is at the end of the output
                     output = re.sub(b&#34;\r&#34;, b&#34;&#34;, output)

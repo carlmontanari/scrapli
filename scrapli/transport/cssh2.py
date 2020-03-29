@@ -248,7 +248,7 @@ class SSH2Transport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            ScrapliAuthenticationFailed: if auth fails
 
         """
         if self.auth_private_key:
@@ -283,7 +283,8 @@ class SSH2Transport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            exc: if unknown (i.e. not auth failed) exception occurs
+            exc: (really the ssh2 auth exception) if auth exception occurs
+            exc: (really the ssh2 base exception) if unknown exception occurs
 
         """
         try:
