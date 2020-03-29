@@ -20,3 +20,4 @@ CHANGELOG
 ` objects get created/returned from. `Channel` now is much more de-coupled from whatever sits on top of it (this will
  be important for some netconf testing happening soon!). 
 - Minor test de-duplication around ssh config/known hosts file gathering.
+- Added a few simple examples for structured data (textfsm/genie) and updated existing examples a bit.

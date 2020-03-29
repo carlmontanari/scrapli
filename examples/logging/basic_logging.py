@@ -1,6 +1,6 @@
 import logging
 
-from scrapli import Scrape
+from scrapli.driver.core import IOSXEDriver
 
 logging.basicConfig(filename="scrapli.log", level=logging.DEBUG)
 logger = logging.getLogger("scrapli")
@@ -12,8 +12,8 @@ args = {
     "auth_strict_key": False,
 }
 
-conn = Scrape(**args)
+conn = IOSXEDriver(**args)
 conn.open()
 
-print(conn.channel.get_prompt())
-print(conn.channel.send_inputs("show run | i hostname")[0].result)
+print(conn.get_prompt())
+print(conn.send_command("show run | i hostname").result)

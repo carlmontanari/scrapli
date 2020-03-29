@@ -33,6 +33,7 @@ scrapli -- scrap(e c)li --  is a python library focused on connecting to devices
   - [Response Object](#response-object)
   - [Sending Configurations](#sending-configurations)
   - [Textfsm/NTC-Templates Integration](#textfsmntc-templates-integration)
+  - [Cisco Genie Integration](#cisco-genie-integration)
   - [Handling Prompts](#handling-prompts)
   - [Telnet](#telnet)
   - [SSH Config Support](#ssh-config-support)
@@ -44,7 +45,7 @@ scrapli -- scrap(e c)li --  is a python library focused on connecting to devices
   - [Timeouts](#timeouts)
   - [Driver Privilege Levels](#driver-privilege-levels)
   - [Using Scrape Directly](#using-scrape-directly)
-  - [Using the GenericDriver](#using-the-generic-driver)
+  - [Using the GenericDriver](#using-the-genericdriver)
   - [Using a Different Transport](#using-a-different-transport)
 - [FAQ](#faq)
 - [Transport Notes, Caveats, and Known Issues](#transport-notes-caveats-and-known-issues)
@@ -119,6 +120,8 @@ end
 - [Setting up basic logging](/examples/logging/basic_logging.py)
 - [Using SSH Key for authentication](/examples/ssh_keys/ssh_keys.py)
 - [Using SSH config file](/examples/ssh_config_files/ssh_config_file.py)
+- [Parse output with TextFSM/ntc-templates](/examples/structured_data/structured_data_textfsm.py)
+- [Parse output with Genie](/examples/structured_data/structured_data_genie.py)
 
 
 # scrapli: What is it
@@ -511,6 +514,42 @@ with IOSXEDriver(**my_device) as conn:
 ```
 
 *NOTE*: If a template does not return structured data an empty list will be returned!
+
+*NOTE*: Textfsm and ntc-templates is an optional extra for scrapli; you can install these modules manually or using
+ the optional extras install via pip:
+ 
+`pip install scrapli[textfsm]`
+
+
+# Cisco Genie Integration
+
+Very much the same as the textfsm/ntc-templates integration, scrapli has optional integration with Cisco's PyATS
+/Genie parsing library for parsing show command output. While it is possible there are/will be parsers for non-Cisco
+ platforms, this is in practice just for Cisco platforms.
+
+```python
+from scrapli.driver.core import IOSXEDriver
+
+my_device = {
+    "host": "172.18.0.11",
+    "auth_username": "vrnetlab",
+    "auth_password": "VR-netlab9",
+    "auth_strict_key": False,
+}
+
+with IOSXEDriver(**my_device) as conn:
+    response = conn.send_command("show version")
+    structured_result = response.genie_parse_output()
+    print(structured_result)
+```
+
+*NOTE*: If a parser does not return structured data an empty list will be returned!
+
+*NOTE*: PyATS and Genie is an optional extra for scrapli; you can install these modules manually or using
+ the optional extras install via pip:
+ 
+`pip install scrapli[genie]`
+
 
 ## Handling Prompts
 
@@ -1173,7 +1212,6 @@ This section may not get updated much, but will hopefully reflect the priority i
 - Async support. This is a bit of a question mark as I personally don't know even where to start to implement this
 , and have no real current use case... that said I think it would be cool if for no other reason than to learn!
 - Plugins -- make the drivers all plugins!
-- Nonrir plugin -- make scrapli a Nornir plugin!
 - Ensure v6 stuff works as expected.
 - Continue to add/support ssh config file things.
 - Maybe make this into a netconf driver as well? ncclient is just built on paramiko so it seems doable...?
