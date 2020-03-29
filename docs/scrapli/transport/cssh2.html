@@ -26,6 +26,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.transport.cssh2&#34;&#34;&#34;
+import atexit
 import base64
 import time
 import warnings
@@ -140,12 +141,13 @@ class SSH2Transport(Transport):
             # import here so these are optional
             from ssh2.channel import Channel  # pylint: disable=C0415
             from ssh2.session import Session  # pylint: disable=C0415
-            from ssh2.exceptions import AuthenticationError  # pylint: disable=C0415
+            from ssh2.exceptions import AuthenticationError, SSH2Error  # pylint: disable=C0415
 
             self.lib_session = Session
             self.session: Session = None
             self.channel: Channel = None
             self.lib_auth_exception = AuthenticationError
+            self.lib_base_exception = SSH2Error
         except ModuleNotFoundError as exc:
             err = f&#34;Module &#39;{exc.name}&#39; not installed!&#34;
             msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
@@ -282,8 +284,10 @@ class SSH2Transport(Transport):
                 LOG.debug(f&#34;Authenticated to host {self.host} with public key auth&#34;)
                 return
             if not self.auth_password or not self.auth_username:
-                msg = (f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
-                       &#34; password unable to attempt password authentication.&#34;)
+                msg = (
+                    f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
+                    &#34; password unable to attempt password authentication.&#34;
+                )
                 LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
 
@@ -315,7 +319,7 @@ class SSH2Transport(Transport):
             LOG.critical(
                 f&#34;Public key authentication with host {self.host} failed. Exception: {exc}.&#34;
             )
-        except Exception as exc:
+        except self.lib_base_exception as exc:
             LOG.critical(
                 &#34;Unknown error occurred during public key authentication with host &#34;
                 f&#34;{self.host}; Exception: {exc}&#34;
@@ -509,6 +513,31 @@ class SSH2Transport(Transport):
             set_timeout = self.timeout_transport
         # ssh2-python expects timeout in milliseconds
         self.session.set_timeout(set_timeout * 1000)
+
+    def _keepalive_network(self) -&gt; None:
+        &#34;&#34;&#34;
+        ssh2-specific keepalive network
+
+        Without manually closing sessions ssh2-python seems to block and keep scripts from exiting.
+        This is a hacky fix for that by force killing the transport connection atexit.
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+
+        def kill_transport() -&gt; None:
+            if self.isalive():
+                self.close()
+
+        atexit.register(kill_transport)
+        super()._keepalive_network()
 
     def _keepalive_standard(self) -&gt; None:
         &#34;&#34;&#34;
@@ -694,12 +723,13 @@ type is 'network'</dd>
             # import here so these are optional
             from ssh2.channel import Channel  # pylint: disable=C0415
             from ssh2.session import Session  # pylint: disable=C0415
-            from ssh2.exceptions import AuthenticationError  # pylint: disable=C0415
+            from ssh2.exceptions import AuthenticationError, SSH2Error  # pylint: disable=C0415
 
             self.lib_session = Session
             self.session: Session = None
             self.channel: Channel = None
             self.lib_auth_exception = AuthenticationError
+            self.lib_base_exception = SSH2Error
         except ModuleNotFoundError as exc:
             err = f&#34;Module &#39;{exc.name}&#39; not installed!&#34;
             msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
@@ -836,8 +866,10 @@ type is 'network'</dd>
                 LOG.debug(f&#34;Authenticated to host {self.host} with public key auth&#34;)
                 return
             if not self.auth_password or not self.auth_username:
-                msg = (f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
-                       &#34; password unable to attempt password authentication.&#34;)
+                msg = (
+                    f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
+                    &#34; password unable to attempt password authentication.&#34;
+                )
                 LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
 
@@ -869,7 +901,7 @@ type is 'network'</dd>
             LOG.critical(
                 f&#34;Public key authentication with host {self.host} failed. Exception: {exc}.&#34;
             )
-        except Exception as exc:
+        except self.lib_base_exception as exc:
             LOG.critical(
                 &#34;Unknown error occurred during public key authentication with host &#34;
                 f&#34;{self.host}; Exception: {exc}&#34;
@@ -1064,6 +1096,31 @@ type is 'network'</dd>
         # ssh2-python expects timeout in milliseconds
         self.session.set_timeout(set_timeout * 1000)
 
+    def _keepalive_network(self) -&gt; None:
+        &#34;&#34;&#34;
+        ssh2-specific keepalive network
+
+        Without manually closing sessions ssh2-python seems to block and keep scripts from exiting.
+        This is a hacky fix for that by force killing the transport connection atexit.
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+
+        def kill_transport() -&gt; None:
+            if self.isalive():
+                self.close()
+
+        atexit.register(kill_transport)
+        super()._keepalive_network()
+
     def _keepalive_standard(self) -&gt; None:
         &#34;&#34;&#34;
         Send &#34;out of band&#34; (protocol level) keepalives to devices.
@@ -1135,8 +1192,10 @@ type is 'network'</dd>
             LOG.debug(f&#34;Authenticated to host {self.host} with public key auth&#34;)
             return
         if not self.auth_password or not self.auth_username:
-            msg = (f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
-                   &#34; password unable to attempt password authentication.&#34;)
+            msg = (
+                f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
+                &#34; password unable to attempt password authentication.&#34;
+            )
             LOG.critical(msg)
             raise ScrapliAuthenticationFailed(msg)
 

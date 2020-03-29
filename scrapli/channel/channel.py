@@ -207,7 +207,7 @@ class Channel:
                 current_prompt = channel_match.group(0)
                 return current_prompt.decode().strip()
 
-    def send_input(self, channel_input: str, strip_prompt: bool = True) -> Response:
+    def send_input(self, channel_input: str, strip_prompt: bool = True,) -> Tuple[str, str]:
         """
         Primary entry point to send data to devices in shell mode; accept input and returns result
 
@@ -227,41 +227,8 @@ class Channel:
                 f"`send_input` expects a single string, got {type(channel_input)}. "
                 "to send a list of inputs use the `send_inputs` method instead"
             )
-        response = Response(self.transport.host, channel_input)
         raw_result, processed_result = self._send_input(channel_input, strip_prompt)
-        response.raw_result = raw_result.decode()
-        response.record_response(processed_result.decode())
-        return response
-
-    def send_inputs(self, channel_inputs: List[str], strip_prompt: bool = True) -> List[Response]:
-        """
-        Primary entry point to send data to devices in shell mode; accept inputs and return results
-
-        Args:
-            channel_inputs: list of string inputs to send to channel
-            strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
-
-        Returns:
-            responses: list of Response object(s)
-
-        Raises:
-            TypeError: if anything but a list is passed for channel_inputs
-
-        """
-        if not isinstance(channel_inputs, list):
-            raise TypeError(
-                f"`send_inputs` expects a list of strings, got {type(channel_inputs)}. "
-                "to send a single input use the `send_input` method instead"
-            )
-
-        responses = []
-        for channel_input in channel_inputs:
-            response = Response(self.transport.host, channel_input)
-            raw_result, processed_result = self._send_input(channel_input, strip_prompt)
-            response.raw_result = raw_result.decode()
-            response.record_response(processed_result.decode())
-            responses.append(response)
-        return responses
+        return raw_result.decode(), processed_result.decode()
 
     @operation_timeout("timeout_ops", "Timed out sending input to device.")
     def _send_input(self, channel_input: str, strip_prompt: bool) -> Tuple[bytes, bytes]:

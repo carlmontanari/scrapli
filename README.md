@@ -11,8 +11,8 @@ scrapli
 
 scrapli -- scrap(e c)li --  is a python library focused on connecting to devices, specifically network devices
  (routers/switches/firewalls/etc.) via SSH or Telnet. The name scrapli -- is just "scrape cli" (as in screen scrape)
- squished together! scrapli's goal is to be as fast and flexible, while providing a well typed, well documented
- , simple API.
+ squished together! scrapli's goal is to be as fast and flexible, while providing a well typed, well documented,
+  simple API.
 
 
 # Table of Contents
@@ -33,6 +33,7 @@ scrapli -- scrap(e c)li --  is a python library focused on connecting to devices
   - [Response Object](#response-object)
   - [Sending Configurations](#sending-configurations)
   - [Textfsm/NTC-Templates Integration](#textfsmntc-templates-integration)
+  - [Cisco Genie Integration](#cisco-genie-integration)
   - [Handling Prompts](#handling-prompts)
   - [Telnet](#telnet)
   - [SSH Config Support](#ssh-config-support)
@@ -44,6 +45,7 @@ scrapli -- scrap(e c)li --  is a python library focused on connecting to devices
   - [Timeouts](#timeouts)
   - [Driver Privilege Levels](#driver-privilege-levels)
   - [Using Scrape Directly](#using-scrape-directly)
+  - [Using the GenericDriver](#using-the-genericdriver)
   - [Using a Different Transport](#using-a-different-transport)
 - [FAQ](#faq)
 - [Transport Notes, Caveats, and Known Issues](#transport-notes-caveats-and-known-issues)
@@ -113,10 +115,13 @@ end
 ## More Examples
 
 - [Basic "native" Scrape operations](/examples/basic_usage/scrapli_driver.py)
-- [Basic "driver" Scrape operations](/examples/basic_usage/iosxe_driver.py)
+- [Basic "GenericDriver" operations](/examples/basic_usage/generic_driver.py)
+- [Basic "core" Driver operations](/examples/basic_usage/iosxe_driver.py)
 - [Setting up basic logging](/examples/logging/basic_logging.py)
 - [Using SSH Key for authentication](/examples/ssh_keys/ssh_keys.py)
 - [Using SSH config file](/examples/ssh_config_files/ssh_config_file.py)
+- [Parse output with TextFSM/ntc-templates](/examples/structured_data/structured_data_textfsm.py)
+- [Parse output with Genie](/examples/structured_data/structured_data_genie.py)
 
 
 # scrapli: What is it
@@ -164,11 +169,13 @@ The final piece of scrapli is the actual "driver" -- or the component that binds
   a "raw" SSH (or telnet) connection that is created by instantiating a Transport object, and a Channel object
   . `Scrape` provides (via Channel) read/write methods and not much else -- this should feel familiar if you have
    used paramiko in the past. More specific "drivers" can inherit from this class to extend functionality of the
-    driver to make it more friendly for network devices. In fact, there is a `NetworkDriver` abstract base class which
-     does just that. This `NetworkDriver` isn't really meant to be used directly though (hence why it is an ABC), but
-      to be further extended and built upon instead. As this library is focused on interacting with network devices
-      , an example scrapli driver (built on the `NetworkDriver`) would be the `IOSXE` driver -- to, as you may have
-       guessed, interact with devices running Cisco's IOS-XE operating system.
+    driver to make it more friendly for network devices. In fact, there is a `GenericDriver` class that inherits from
+     `Scrape` and provides a base driver to work with if you need to interact with a device not represented by one of
+      the "core" drivers. Next, the `NetworkDriver` abstract base class inherits from `GenericDriver` This
+       `NetworkDriver` isn't really meant to be used directly though (hence why it is an ABC), but to be further
+        extended and built upon instead. As this library is focused on interacting with network devices, an example
+         scrapli driver (built on the `NetworkDriver`) would be the `IOSXE` driver -- to, as you may have guessed
+         , interact with devices running Cisco's IOS-XE operating system.
 
 
 # Documentation
@@ -291,6 +298,12 @@ The core drivers and associated platforms are outlined below:
 
 All drivers can be imported from `scrapli.driver.core`.
 
+If you are working with a platform not listed above, you have two options: you can use the `Scrape` driver directly
+, which you can read about [here](#using-scrape-directly) or you can use the `GenericDriver` which which you can read
+ about [here](#using-the-genericdriver). In general you should probably use the `GenericDriver` and not mess about
+  using `Scrape` directly.
+
+
 ## Basic Driver Arguments
 
 The drivers of course need some information about the device you are trying to connect to. The most common arguments
@@ -371,11 +384,14 @@ with IOSXEDriver(**my_device) as conn:
 
 ## Sending Commands
 
-When using any of the core network drivers (`JunosDriver`, `EOSDriver`, etc.), the `send_command` and
- `send_commands` methods will respectively send a single command or list of commands to the device. The commands will
-  be sent at the `default_desired_priv` level which is typically "privilege exec" (or equivalent) privilege level
-  . Please see [Driver Privilege Levels](#driver-privilege-levels) in the advanced usage section for more details on
-   privilege levels.
+When using any of the core network drivers (`JunosDriver`, `EOSDriver`, etc.) or the `GenericDriver`, the `send_command
+` and `send_commands` methods will respectively send a single command or list of commands to the device.
+
+When using the core network drivers, the command(s) will be sent at the `default_desired_priv` level which is
+ typically "privilege exec" (or equivalent) privilege level. Please see [Driver Privilege Levels](#driver-privilege
+ -levels) in the advanced usage section for more details on privilege levels. As the `GenericDriver` doesn't know or
+  care about privilege levels you would need to manually handle acquiring the appropriate privilege level for you
+   command yourself if using that driver.
 
 Note the different methods for sending a single command versus a list of commands!
 
@@ -397,8 +413,9 @@ responses = conn.send_commands(["show run", "show ip int brief"])
 
 ## Response Object
 
-All read operations result in a `Response` object being created. The `Response` object contains attributes for the command
- sent (`channel_input`), start/end/elapsed time, and of course the result of the command sent.
+All command/config operations that happen in the `GenericDriver` or any of the drivers inheriting from the
+ `NetworkDriver` result in a `Response` object being created. The `Response` object contains attributes for the
+  command sent (`channel_input`), start/end/elapsed time, and of course the result of the command sent.
 
 ```python
 from scrapli.driver.core import IOSXEDriver
@@ -421,7 +438,7 @@ If using `send_commands` (plural!) then scrapli will return a list of Response o
 
 In addition to containing the input and output of the command(s) that you sent, the `Response` object also contains a
  method `textfsm_parse_output` (for more on TextFSM support see
- [Textfsm/NTC-Templates Integration](#textfsmntc-templates-integration) which will attempt to parse and return the
+ [Textfsm/NTC-Templates Integration](#textfsmntc-templates-integration)) which will attempt to parse and return the
   received output. If parsing fails, the value returned will be an empty list.
    
 ```python
@@ -497,6 +514,42 @@ with IOSXEDriver(**my_device) as conn:
 ```
 
 *NOTE*: If a template does not return structured data an empty list will be returned!
+
+*NOTE*: Textfsm and ntc-templates is an optional extra for scrapli; you can install these modules manually or using
+ the optional extras install via pip:
+ 
+`pip install scrapli[textfsm]`
+
+
+# Cisco Genie Integration
+
+Very much the same as the textfsm/ntc-templates integration, scrapli has optional integration with Cisco's PyATS
+/Genie parsing library for parsing show command output. While it is possible there are/will be parsers for non-Cisco
+ platforms, this is in practice just for Cisco platforms.
+
+```python
+from scrapli.driver.core import IOSXEDriver
+
+my_device = {
+    "host": "172.18.0.11",
+    "auth_username": "vrnetlab",
+    "auth_password": "VR-netlab9",
+    "auth_strict_key": False,
+}
+
+with IOSXEDriver(**my_device) as conn:
+    response = conn.send_command("show version")
+    structured_result = response.genie_parse_output()
+    print(structured_result)
+```
+
+*NOTE*: If a parser does not return structured data an empty list will be returned!
+
+*NOTE*: PyATS and Genie is an optional extra for scrapli; you can install these modules manually or using
+ the optional extras install via pip:
+ 
+`pip install scrapli[genie]`
+
 
 ## Handling Prompts
 
@@ -642,10 +695,11 @@ The `comms_prompt_pattern` pattern can be changed at any time at or after instan
 
 Lots of times when connecting to a device there are "things" that need to happen immediately after getting connected
 . In the context of network devices the most obvious/common example would be disabling paging (i.e. sending `terminal
- length 0` on a Cisco-type device). While scrapli `Scrape` (the base driver) does not know or care about disabling
-  paging or any other on connect type activities, scrapli of course provides a mechanism for allowing users to handle
-   these types of tasks. Even better yet, if you are using any of the core drivers (`IOSXEDriver`, `IOSXRDriver
-   `, etc.), scrapli will automatically have some sane default "on connect" actions (namely disabling paging).
+ length 0` on a Cisco-type device). While scrapli `Scrape` (the base driver) and `GenericDriver` do not know or care
+  about disabling paging or any other on connect type activities, scrapli of course provides a mechanism for allowing
+   users to handle these types of tasks. Even better yet, if you are using any of the core drivers (`IOSXEDriver
+   `, `IOSXRDriver`, etc.), scrapli will automatically have some sane default "on connect" actions (namely disabling
+    paging).
 
 If you were so inclined to create some of your own "on connect" actions, you can simply pass those to the `on_connect
 ` argument of `Scrape` or any of its sub-classes (`NetworkDriver`, `IOSXEDriver`, etc.). The value of this argument
@@ -727,7 +781,7 @@ In some cases it may be desirable to have a long running connection to a device,
 In either case -- "standard" or "network" -- scrapli spawns a keepalive thread. This thread then sends either
  standard keepalive messages or "in band" keepalive messages in the case of "network" keepalives.
  
-"network" keepalives default ot sending u"\005" which is equivalent of sending `CTRL-E` (jump to end (right side) of
+"network" keepalives default to sending u"\005" which is equivalent of sending `CTRL-E` (jump to end (right side) of
  line). This is generally an innocuous command, and furthermore is never sent unless the keepalive thread can acquire
   a channel lock. This should allow scrapli to keep sessions alive as long as needed.
 
@@ -777,12 +831,12 @@ with IOSXEDriver(**my_device) as conn:
 ## Using `Scrape` Directly
 
 All examples in this readme have shown using the "core" network drivers such as `IOSXEDriver`. These core network
- drivers are actually sub-classes of an ABC called `NetworkDriver` which itself is a sub-class of the base `Scrape
- ` class -- the namesake for this library. The `Scrape` object can be used directly if you prefer to have a much less
-  opinionated or less "auto-magic" type experience. `Scrape` does not provide the same `send_command`/`send_commands
-  `/`send_configs` methods, nor does it disable paging, or handle any kind of privilege escalation/de-escalation
-  . `Scrape` is a much more basic "paramiko"-like experience. Below is a brief example of using the `Scrape` object
-   directly:
+ drivers are actually sub-classes of an ABC called `NetworkDriver` which itself is a sub-class of the `GenericDriver
+ ` which is a sub-class of the base `Scrape` class -- the namesake for this library. The `Scrape` object can be used
+  directly if you prefer to have a much less opinionated or less "auto-magic" type experience. `Scrape` does not
+   provide the same `send_command`/`send_commands`/`send_configs` methods, nor does it disable paging, or handle any
+    kind of privilege escalation/de-escalation. `Scrape` is a much more basic "paramiko"-like experience. Below is a
+     brief example of using the `Scrape` object directly:
    
 ```python
 from scrapli import Scrape
@@ -802,6 +856,34 @@ with Scrape(**my_device) as conn:
 
 Without the `send_command` and similar methods, you must directly access the `Channel` object when sending inputs
  with `Scrape`.
+
+
+## Using the `GenericDriver`
+
+Using the `Scrape` driver directly is nice enough, however you may not want to have to change the prompt pattern, or
+ deal with accessing the channel to send commands to the device. In this case there is a `GenericDriver` available to
+  you. This driver has a *very* broad pattern that it matches for base prompts, has no concept of disabling paging or
+   privilege levels (like `Scrape`), but does provide `send_command`, `send_commands`, `send_interact`, and
+    `get_prompt` methods for a more NetworkDriver-like experience. 
+
+Hopefully this `GenericDriver` can be used as a starting point for devices that don't fall under the core supported
+ platforms list.
+   
+```python
+from scrapli.driver.core import GenericDriver
+
+my_device = {
+    "host": "172.18.0.11",
+    "auth_username": "vrnetlab",
+    "auth_password": "VR-netlab9",
+    "auth_strict_key": False,
+}
+
+with GenericDriver(**my_device) as conn:
+    conn.send_command("terminal length 0")
+    response = conn.send_command("show version")
+    responses = conn.send_commands(["show version", "show run"])
+```
 
 
 ## Using a Different Transport
@@ -1080,6 +1162,13 @@ Username: `vrnetlab`
 
 Password: `VR-netlab9`
 
+You should also run the `prepare_devices` script in the functional tests, or use the Make commands to do so for you
+. This script will deploy the base config needed for testing. The make commands for this step follow the same pattern
+ as the others:
+
+- `prepare_dev_env` will push the base config to all devices
+- `prepare_dev_env_XYZ` where XYZ == "iosxe", "nxos", etc. will push the base config for the specified device.
+
 Once the container(s) are ready, you can use the make commands to execute tests as needed:
 
 - `test` will execute all currently implemented functional tests as well as the unit tests
@@ -1094,12 +1183,6 @@ Once the container(s) are ready, you can use the make commands to execute tests 
 
 ### Other Functional Test Info
 
-The functional tests will try to push the base configuration via NAPALM before running any tests. This is obviously
- nice to ensure that testing is consistent, however after the initial deployment of the config the configs shouldn't
-  be changing during testing (configs are made, but are also removed after validation). Waiting for NAPALM to push
-   configs at each test can be annoying, to avoid this simply set the environment variable `SCRAPLI_NO_SETUP=true` to
-    disable this.
-
 IOSXE is the only platform that is testing SSH key based authentication at the moment. The key is pushed via NAPALM in
  the setup phase. This was mostly done out of laziness, and in the future the other platforms may be tested with key
   based auth as well, but for now IOSXE is representative enough to provide some faith that key based auth works! 
@@ -1112,6 +1195,8 @@ This section may not get updated much, but will hopefully reflect the priority i
 
 ## Todo
 
+- Investigate setter methods for setting user/pass/and other attrs on base scrape object... they should be able to be
+ set at that level and have the transport updated if it can be done reasonably
 - Add tests for keepalive stuff if possible
 - Add tests for timeouts if possible
 - Add more tests for auth failures
@@ -1127,7 +1212,6 @@ This section may not get updated much, but will hopefully reflect the priority i
 - Async support. This is a bit of a question mark as I personally don't know even where to start to implement this
 , and have no real current use case... that said I think it would be cool if for no other reason than to learn!
 - Plugins -- make the drivers all plugins!
-- Nonrir plugin -- make scrapli a Nornir plugin!
 - Ensure v6 stuff works as expected.
 - Continue to add/support ssh config file things.
 - Maybe make this into a netconf driver as well? ncclient is just built on paramiko so it seems doable...?

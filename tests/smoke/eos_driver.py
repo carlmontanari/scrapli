@@ -10,19 +10,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("scrapli")
 
-args = {
-    "host": eos_device["host"],
-    "port": eos_device["port"],
-    "auth_username": eos_device["auth_username"],
-    "auth_password": eos_device["auth_password"],
-    "auth_strict_key": False,
-    "keepalive_interval": eos_device["keepalive_interval"],
-    "transport": eos_device["transport"],
-    "keepalive": eos_device["keepalive"],
-    "comms_ansi": True,
-}
-
-conn = EOSDriver(**args)
+conn = EOSDriver(**eos_device)
 conn.open()
 
 # vrnetlab eos has no enable password so we just enable this manually for now

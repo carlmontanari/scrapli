@@ -45,13 +45,6 @@ def iosxr_on_close(conn: NetworkDriver) -> None:
     conn.transport.write(conn.channel.comms_prompt_pattern)
 
 
-IOSXR_ARG_MAPPER = {
-    "comms_prompt_regex": r"^[a-z0-9.\-@()/:]{1,32}[#>$]\s?$",
-    "comms_return_char": "\n",
-    "on_open": iosxr_on_open,
-    "on_close": iosxr_on_close,
-}
-
 PRIVS = {
     "privilege_exec": (
         PrivilegeLevel(
@@ -151,4 +144,12 @@ class IOSXRDriver(NetworkDriver):
 
         self.privs = PRIVS
         self.default_desired_priv = "privilege_exec"
+
         self.textfsm_platform = "cisco_xr"
+        self.genie_platform = "iosxr"
+
+        self.failed_when_contains = [
+            "% Ambiguous command",
+            "% Incomplete command",
+            "% Invalid input detected",
+        ]

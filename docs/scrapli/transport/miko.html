@@ -212,9 +212,7 @@ class MikoTransport(Transport):
             self.session = self.lib_session(self.socket.sock)
             self.session.start_client()
         except Exception as exc:
-            LOG.critical(
-                f&#34;Failed to complete handshake with host {self.host}; Exception: {exc}&#34;
-            )
+            LOG.critical(f&#34;Failed to complete handshake with host {self.host}; Exception: {exc}&#34;)
             self.session_lock.release()
             raise exc
 
@@ -282,15 +280,17 @@ class MikoTransport(Transport):
                 LOG.debug(f&#34;Authenticated to host {self.host} with public key auth&#34;)
                 return
             if not self.auth_password or not self.auth_username:
-                msg = (f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
-                       &#34; password unable to attempt password authentication.&#34;)
+                msg = (
+                    f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
+                    &#34; password unable to attempt password authentication.&#34;
+                )
                 LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
         self._authenticate_password()
         if self.isauthenticated():
             LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
 
-    def _authenticate_public_key(self) -&gt; bool:
+    def _authenticate_public_key(self) -&gt; None:
         &#34;&#34;&#34;
         Attempt to authenticate with public key authentication
 
@@ -315,7 +315,7 @@ class MikoTransport(Transport):
             LOG.critical(
                 f&#34;Public key authentication with host {self.host} failed. Exception: {exc}.&#34;
             )
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=W0703
             LOG.critical(
                 &#34;Unknown error occurred during public key authentication with host &#34;
                 f&#34;{self.host}; Exception: {exc}&#34;
@@ -729,9 +729,7 @@ type is 'network'</dd>
             self.session = self.lib_session(self.socket.sock)
             self.session.start_client()
         except Exception as exc:
-            LOG.critical(
-                f&#34;Failed to complete handshake with host {self.host}; Exception: {exc}&#34;
-            )
+            LOG.critical(f&#34;Failed to complete handshake with host {self.host}; Exception: {exc}&#34;)
             self.session_lock.release()
             raise exc
 
@@ -799,15 +797,17 @@ type is 'network'</dd>
                 LOG.debug(f&#34;Authenticated to host {self.host} with public key auth&#34;)
                 return
             if not self.auth_password or not self.auth_username:
-                msg = (f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
-                       &#34; password unable to attempt password authentication.&#34;)
+                msg = (
+                    f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
+                    &#34; password unable to attempt password authentication.&#34;
+                )
                 LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
         self._authenticate_password()
         if self.isauthenticated():
             LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
 
-    def _authenticate_public_key(self) -&gt; bool:
+    def _authenticate_public_key(self) -&gt; None:
         &#34;&#34;&#34;
         Attempt to authenticate with public key authentication
 
@@ -832,7 +832,7 @@ type is 'network'</dd>
             LOG.critical(
                 f&#34;Public key authentication with host {self.host} failed. Exception: {exc}.&#34;
             )
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=W0703
             LOG.critical(
                 &#34;Unknown error occurred during public key authentication with host &#34;
                 f&#34;{self.host}; Exception: {exc}&#34;
@@ -1060,8 +1060,10 @@ type is 'network'</dd>
             LOG.debug(f&#34;Authenticated to host {self.host} with public key auth&#34;)
             return
         if not self.auth_password or not self.auth_username:
-            msg = (f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
-                   &#34; password unable to attempt password authentication.&#34;)
+            msg = (
+                f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
+                &#34; password unable to attempt password authentication.&#34;
+            )
             LOG.critical(msg)
             raise ScrapliAuthenticationFailed(msg)
     self._authenticate_password()
@@ -1194,9 +1196,7 @@ type is 'network'</dd>
         self.session = self.lib_session(self.socket.sock)
         self.session.start_client()
     except Exception as exc:
-        LOG.critical(
-            f&#34;Failed to complete handshake with host {self.host}; Exception: {exc}&#34;
-        )
+        LOG.critical(f&#34;Failed to complete handshake with host {self.host}; Exception: {exc}&#34;)
         self.session_lock.release()
         raise exc
 

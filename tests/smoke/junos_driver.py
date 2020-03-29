@@ -10,18 +10,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("scrapli")
 
-args = {
-    "host": junos_device["host"],
-    "port": junos_device["port"],
-    "auth_username": junos_device["auth_username"],
-    "auth_password": junos_device["auth_password"],
-    "auth_strict_key": False,
-    "keepalive_interval": junos_device["keepalive_interval"],
-    "transport": junos_device["transport"],
-    "keepalive": junos_device["keepalive"],
-}
-
-conn = JunosDriver(**args)
+conn = JunosDriver(**junos_device)
 conn.open()
 
 print("***** Get Prompt:")

@@ -10,18 +10,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("scrapli")
 
-args = {
-    "host": iosxr_device["host"],
-    "port": iosxr_device["port"],
-    "auth_username": iosxr_device["auth_username"],
-    "auth_password": iosxr_device["auth_password"],
-    "auth_strict_key": False,
-    "keepalive_interval": iosxr_device["keepalive_interval"],
-    "transport": iosxr_device["transport"],
-    "keepalive": iosxr_device["keepalive"],
-}
-
-conn = IOSXRDriver(**args)
+conn = IOSXRDriver(**iosxr_device)
 conn.open()
 
 print("***** Get Prompt:")

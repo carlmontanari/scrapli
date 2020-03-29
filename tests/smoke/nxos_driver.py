@@ -10,18 +10,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("scrapli")
 
-args = {
-    "host": nxos_device["host"],
-    "port": nxos_device["port"],
-    "auth_username": nxos_device["auth_username"],
-    "auth_password": nxos_device["auth_password"],
-    "auth_strict_key": False,
-    "keepalive_interval": nxos_device["keepalive_interval"],
-    "transport": nxos_device["transport"],
-    "keepalive": nxos_device["keepalive"],
-}
-
-conn = NXOSDriver(**args)
+conn = NXOSDriver(**nxos_device)
 conn.open()
 
 print("***** Get Prompt:")

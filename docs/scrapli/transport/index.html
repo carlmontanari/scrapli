@@ -311,9 +311,7 @@ type is 'network'</dd>
             self.session = self.lib_session(self.socket.sock)
             self.session.start_client()
         except Exception as exc:
-            LOG.critical(
-                f&#34;Failed to complete handshake with host {self.host}; Exception: {exc}&#34;
-            )
+            LOG.critical(f&#34;Failed to complete handshake with host {self.host}; Exception: {exc}&#34;)
             self.session_lock.release()
             raise exc
 
@@ -381,15 +379,17 @@ type is 'network'</dd>
                 LOG.debug(f&#34;Authenticated to host {self.host} with public key auth&#34;)
                 return
             if not self.auth_password or not self.auth_username:
-                msg = (f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
-                       &#34; password unable to attempt password authentication.&#34;)
+                msg = (
+                    f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
+                    &#34; password unable to attempt password authentication.&#34;
+                )
                 LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
         self._authenticate_password()
         if self.isauthenticated():
             LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
 
-    def _authenticate_public_key(self) -&gt; bool:
+    def _authenticate_public_key(self) -&gt; None:
         &#34;&#34;&#34;
         Attempt to authenticate with public key authentication
 
@@ -414,7 +414,7 @@ type is 'network'</dd>
             LOG.critical(
                 f&#34;Public key authentication with host {self.host} failed. Exception: {exc}.&#34;
             )
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=W0703
             LOG.critical(
                 &#34;Unknown error occurred during public key authentication with host &#34;
                 f&#34;{self.host}; Exception: {exc}&#34;
@@ -642,8 +642,10 @@ type is 'network'</dd>
             LOG.debug(f&#34;Authenticated to host {self.host} with public key auth&#34;)
             return
         if not self.auth_password or not self.auth_username:
-            msg = (f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
-                   &#34; password unable to attempt password authentication.&#34;)
+            msg = (
+                f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
+                &#34; password unable to attempt password authentication.&#34;
+            )
             LOG.critical(msg)
             raise ScrapliAuthenticationFailed(msg)
     self._authenticate_password()
@@ -776,9 +778,7 @@ type is 'network'</dd>
         self.session = self.lib_session(self.socket.sock)
         self.session.start_client()
     except Exception as exc:
-        LOG.critical(
-            f&#34;Failed to complete handshake with host {self.host}; Exception: {exc}&#34;
-        )
+        LOG.critical(f&#34;Failed to complete handshake with host {self.host}; Exception: {exc}&#34;)
         self.session_lock.release()
         raise exc
 
@@ -1002,12 +1002,13 @@ type is 'network'</dd>
             # import here so these are optional
             from ssh2.channel import Channel  # pylint: disable=C0415
             from ssh2.session import Session  # pylint: disable=C0415
-            from ssh2.exceptions import AuthenticationError  # pylint: disable=C0415
+            from ssh2.exceptions import AuthenticationError, SSH2Error  # pylint: disable=C0415
 
             self.lib_session = Session
             self.session: Session = None
             self.channel: Channel = None
             self.lib_auth_exception = AuthenticationError
+            self.lib_base_exception = SSH2Error
         except ModuleNotFoundError as exc:
             err = f&#34;Module &#39;{exc.name}&#39; not installed!&#34;
             msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
@@ -1144,8 +1145,10 @@ type is 'network'</dd>
                 LOG.debug(f&#34;Authenticated to host {self.host} with public key auth&#34;)
                 return
             if not self.auth_password or not self.auth_username:
-                msg = (f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
-                       &#34; password unable to attempt password authentication.&#34;)
+                msg = (
+                    f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
+                    &#34; password unable to attempt password authentication.&#34;
+                )
                 LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
 
@@ -1177,7 +1180,7 @@ type is 'network'</dd>
             LOG.critical(
                 f&#34;Public key authentication with host {self.host} failed. Exception: {exc}.&#34;
             )
-        except Exception as exc:
+        except self.lib_base_exception as exc:
             LOG.critical(
                 &#34;Unknown error occurred during public key authentication with host &#34;
                 f&#34;{self.host}; Exception: {exc}&#34;
@@ -1372,6 +1375,31 @@ type is 'network'</dd>
         # ssh2-python expects timeout in milliseconds
         self.session.set_timeout(set_timeout * 1000)
 
+    def _keepalive_network(self) -&gt; None:
+        &#34;&#34;&#34;
+        ssh2-specific keepalive network
+
+        Without manually closing sessions ssh2-python seems to block and keep scripts from exiting.
+        This is a hacky fix for that by force killing the transport connection atexit.
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+
+        def kill_transport() -&gt; None:
+            if self.isalive():
+                self.close()
+
+        atexit.register(kill_transport)
+        super()._keepalive_network()
+
     def _keepalive_standard(self) -&gt; None:
         &#34;&#34;&#34;
         Send &#34;out of band&#34; (protocol level) keepalives to devices.
@@ -1443,8 +1471,10 @@ type is 'network'</dd>
             LOG.debug(f&#34;Authenticated to host {self.host} with public key auth&#34;)
             return
         if not self.auth_password or not self.auth_username:
-            msg = (f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
-                   &#34; password unable to attempt password authentication.&#34;)
+            msg = (
+                f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
+                &#34; password unable to attempt password authentication.&#34;
+            )
             LOG.critical(msg)
             raise ScrapliAuthenticationFailed(msg)
 
@@ -1999,8 +2029,10 @@ is completed.</dd>
             if open_pipes_result:
                 return
             if not self.auth_password or not self.auth_username:
-                msg = (f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
-                       &#34; password unable to attempt password authentication.&#34;)
+                msg = (
+                    f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
+                    &#34; password unable to attempt password authentication.&#34;
+                )
                 LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
 
@@ -2055,7 +2087,9 @@ is completed.</dd>
         except TimeoutError:
             # If auth fails, kill the popen session, also need to manually close the stderr pipe
             # for some reason... unclear why, but w/out this it will hang open
-            os.close(self.session.stderr.fileno())
+            if self.session.stderr is not None:
+                stderr_fd = self.session.stderr.fileno()
+                os.close(stderr_fd)
             self.session.kill()
             return False
 
@@ -2144,7 +2178,12 @@ is completed.</dd>
             try:
                 output += pty_session.read()
             except EOFError:
-                raise ScrapliAuthenticationFailed(f&#34;Failed to open connection to host {self.host}&#34;)
+                msg = f&#34;Failed to open connection to host {self.host}&#34;
+                if b&#34;Host key verification failed&#34; in output:
+                    msg = f&#34;Host key verification failed for host {self.host}&#34;
+                elif b&#34;Operation timed out&#34; in output:
+                    msg = f&#34;Timed out connecting to host {self.host}&#34;
+                raise ScrapliAuthenticationFailed(msg)
             if self._comms_ansi:
                 output = strip_ansi(output)
             if b&#34;password&#34; in output.lower():
@@ -2181,25 +2220,25 @@ is completed.</dd>
             if pty_session.fd in fd_ready:
                 output = b&#34;&#34;
                 while True:
-                    new_output = pty_session.read()
-                    output += new_output
+                    output += pty_session.read()
                     # we do not need to deal w/ line replacement for the actual output, only for
                     # parsing if a prompt-like thing is at the end of the output
                     output = re.sub(b&#34;\r&#34;, b&#34;&#34;, output)
-                    if self._comms_ansi:
+                    # always check to see if we should strip ansi here; if we don&#39;t handle this we
+                    # may raise auth failures for the wrong reason which would be confusing for
+                    # users
+                    if b&#34;\x1B&#34; in output:
                         output = strip_ansi(output)
                     channel_match = re.search(prompt_pattern, output)
                     if channel_match:
                         self.session_lock.release()
                         self._isauthenticated = True
                         return True
-                    if b&#34;password&#34; in new_output.lower():
+                    if b&#34;password&#34; in output.lower():
                         # if we see &#34;password&#34; we know auth failed (hopefully in all scenarios!)
                         return False
-                    if new_output:
-                        LOG.debug(
-                            f&#34;Cannot determine if authenticated, \n\tRead: {repr(new_output)}&#34;
-                        )
+                    if output:
+                        LOG.debug(f&#34;Cannot determine if authenticated, \n\tRead: {repr(output)}&#34;)
         self.session_lock.release()
         return False
 
@@ -2328,7 +2367,7 @@ is completed.</dd>
             NotImplementedError: always, because this is not implemented for telnet
 
         &#34;&#34;&#34;
-        raise NotImplementedError(&#34;No &#39;standard&#39; keepalive mechanism for telnet.&#34;)</code></pre>
+        raise NotImplementedError(&#34;&#39;standard&#39; keepalive mechanism not yet implemented for system.&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2446,8 +2485,10 @@ case of telnet&hellip; so it works, but its just a bit less desirable.</p>
         if open_pipes_result:
             return
         if not self.auth_password or not self.auth_username:
-            msg = (f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
-                   &#34; password unable to attempt password authentication.&#34;)
+            msg = (
+                f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
+                &#34; password unable to attempt password authentication.&#34;
+            )
             LOG.critical(msg)
             raise ScrapliAuthenticationFailed(msg)
 

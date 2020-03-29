@@ -10,18 +10,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("scrapli")
 
-args = {
-    "host": iosxe_device["host"],
-    "port": iosxe_device["port"],
-    "auth_username": iosxe_device["auth_username"],
-    "auth_password": iosxe_device["auth_password"],
-    "auth_strict_key": False,
-    "keepalive_interval": iosxe_device["keepalive_interval"],
-    "transport": iosxe_device["transport"],
-    "keepalive": iosxe_device["keepalive"],
-}
-
-conn = Scrape(**args)
+conn = Scrape(**iosxe_device)
 conn.open()
 
 print("***** Get Prompt:")

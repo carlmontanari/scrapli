@@ -231,8 +231,9 @@ class TelnetTransport(Transport):
             time.sleep(0.25)
             fd_ready, _, _ = select([telnet_session_fd], [], [], 0)
             if telnet_session_fd in fd_ready:
+                output = b""
                 while True:
-                    output = telnet_session.read_eager()
+                    output += telnet_session.read_eager()
                     # we do not need to deal w/ line replacement for the actual output, only for
                     # parsing if a prompt-like thing is at the end of the output
                     output = re.sub(b"\r", b"", output)

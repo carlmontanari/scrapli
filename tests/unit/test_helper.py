@@ -10,6 +10,7 @@ import pytest
 import scrapli
 from scrapli.helper import (
     _textfsm_get_template,
+    genie_parse,
     get_prompt_pattern,
     resolve_ssh_config,
     strip_ansi,
@@ -68,7 +69,7 @@ def test__textfsm_get_template_invalid_template():
 
 
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting textfsm on windows")
-def test_text_textfsm_parse_success():
+def test_textfsm_parse_success():
     template = _textfsm_get_template("cisco_ios", "show ip arp")
     result = textfsm_parse(template, IOS_ARP)
     assert isinstance(result, list)
@@ -76,7 +77,7 @@ def test_text_textfsm_parse_success():
 
 
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting textfsm on windows")
-def test_text_textfsm_parse_success_string_path():
+def test_textfsm_parse_success_string_path():
     template = _textfsm_get_template("cisco_ios", "show ip arp")
     result = textfsm_parse(template.name, IOS_ARP)
     assert isinstance(result, list)
@@ -84,26 +85,23 @@ def test_text_textfsm_parse_success_string_path():
 
 
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting textfsm on windows")
-def test_text_textfsm_parse_failure():
+def test_textfsm_parse_failure():
     template = _textfsm_get_template("cisco_ios", "show ip arp")
     result = textfsm_parse(template, "not really arp data")
     assert result == []
 
 
-def test_resolve_ssh_config_file_explicit():
-    ssh_conf = resolve_ssh_config(f"{UNIT_TEST_DIR}_ssh_config")
-    assert ssh_conf == f"{UNIT_TEST_DIR}_ssh_config"
+def test_genie_parse_success():
+    result = genie_parse("iosxe", "show ip arp", IOS_ARP)
+    assert isinstance(result, dict)
+    assert (
+        result["interfaces"]["Vlan254"]["ipv4"]["neighbors"]["172.31.254.1"]["ip"] == "172.31.254.1"
+    )
 
 
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting ssh config on windows")
-def test_resolve_ssh_config_file_user(fs):
-    fs.add_real_file("/etc/ssh/ssh_config", target_path=f"{os.path.expanduser('~')}/.ssh/config")
-    ssh_conf = resolve_ssh_config("")
-    assert ssh_conf == f"{os.path.expanduser('~')}/.ssh/config"
-
-
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting ssh config on windows")
-def test_resolve_ssh_config_file_system(fs):
-    fs.add_real_file("/etc/ssh/ssh_config")
-    ssh_conf = resolve_ssh_config("")
-    assert ssh_conf == "/etc/ssh/ssh_config"
+def test_genie_parse_failure():
+    result = genie_parse("iosxe", "show ip arp", "not really arp data")
+    assert result == []
+    # genie loads about nine million modules... for whatever reason these two upset pyfakefs
+    del sys.modules["ats.configuration"]
+    del sys.modules["pyats.configuration"]

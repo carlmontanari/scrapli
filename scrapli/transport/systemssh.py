@@ -413,7 +413,12 @@ class SystemSSHTransport(Transport):
             try:
                 output += pty_session.read()
             except EOFError:
-                raise ScrapliAuthenticationFailed(f"Failed to open connection to host {self.host}")
+                msg = f"Failed to open connection to host {self.host}"
+                if b"Host key verification failed" in output:
+                    msg = f"Host key verification failed for host {self.host}"
+                elif b"Operation timed out" in output:
+                    msg = f"Timed out connecting to host {self.host}"
+                raise ScrapliAuthenticationFailed(msg)
             if self._comms_ansi:
                 output = strip_ansi(output)
             if b"password" in output.lower():
@@ -450,25 +455,25 @@ class SystemSSHTransport(Transport):
             if pty_session.fd in fd_ready:
                 output = b""
                 while True:
-                    new_output = pty_session.read()
-                    output += new_output
+                    output += pty_session.read()
                     # we do not need to deal w/ line replacement for the actual output, only for
                     # parsing if a prompt-like thing is at the end of the output
                     output = re.sub(b"\r", b"", output)
-                    if self._comms_ansi:
+                    # always check to see if we should strip ansi here; if we don't handle this we
+                    # may raise auth failures for the wrong reason which would be confusing for
+                    # users
+                    if b"\x1B" in output:
                         output = strip_ansi(output)
                     channel_match = re.search(prompt_pattern, output)
                     if channel_match:
                         self.session_lock.release()
                         self._isauthenticated = True
                         return True
-                    if b"password" in new_output.lower():
+                    if b"password" in output.lower():
                         # if we see "password" we know auth failed (hopefully in all scenarios!)
                         return False
-                    if new_output:
-                        LOG.debug(
-                            f"Cannot determine if authenticated, \n\tRead: {repr(new_output)}"
-                        )
+                    if output:
+                        LOG.debug(f"Cannot determine if authenticated, \n\tRead: {repr(output)}")
         self.session_lock.release()
         return False
 
@@ -597,4 +602,4 @@ class SystemSSHTransport(Transport):
             NotImplementedError: always, because this is not implemented for telnet
 
         """
-        raise NotImplementedError("No 'standard' keepalive mechanism for telnet.")
+        raise NotImplementedError("'standard' keepalive mechanism not yet implemented for system.")
