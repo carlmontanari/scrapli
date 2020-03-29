@@ -1,5 +1,7 @@
 import pytest
 
+from scrapli.driver import GenericDriver
+
 from .test_data.devices import DEVICES
 
 NAPALM_DEVICE_TYPE_MAP = {
@@ -33,6 +35,19 @@ def nix_conn(transport):
     driver = device.pop("driver")
 
     conn = driver(**device, transport=transport,)
+    conn.open()
+    return conn
+
+
+@pytest.fixture(scope="class")
+def nix_conn_generic(transport):
+    if transport == "telnet":
+        pytest.skip("skipping telnet for linux hosts")
+
+    device = DEVICES["linux"].copy()
+    device.pop("driver")
+
+    conn = GenericDriver(**device, transport=transport,)
     conn.open()
     return conn
 

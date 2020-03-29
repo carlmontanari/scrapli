@@ -272,7 +272,7 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
                 current_prompt = channel_match.group(0)
                 return current_prompt.decode().strip()
 
-    def send_input(self, channel_input: str, strip_prompt: bool = True) -&gt; Response:
+    def send_input(self, channel_input: str, strip_prompt: bool = True,) -&gt; Tuple[str, str]:
         &#34;&#34;&#34;
         Primary entry point to send data to devices in shell mode; accept input and returns result
 
@@ -292,41 +292,8 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
                 f&#34;`send_input` expects a single string, got {type(channel_input)}. &#34;
                 &#34;to send a list of inputs use the `send_inputs` method instead&#34;
             )
-        response = Response(self.transport.host, channel_input)
         raw_result, processed_result = self._send_input(channel_input, strip_prompt)
-        response.raw_result = raw_result.decode()
-        response.record_response(processed_result.decode())
-        return response
-
-    def send_inputs(self, channel_inputs: List[str], strip_prompt: bool = True) -&gt; List[Response]:
-        &#34;&#34;&#34;
-        Primary entry point to send data to devices in shell mode; accept inputs and return results
-
-        Args:
-            channel_inputs: list of string inputs to send to channel
-            strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
-
-        Returns:
-            responses: list of Response object(s)
-
-        Raises:
-            TypeError: if anything but a list is passed for channel_inputs
-
-        &#34;&#34;&#34;
-        if not isinstance(channel_inputs, list):
-            raise TypeError(
-                f&#34;`send_inputs` expects a list of strings, got {type(channel_inputs)}. &#34;
-                &#34;to send a single input use the `send_input` method instead&#34;
-            )
-
-        responses = []
-        for channel_input in channel_inputs:
-            response = Response(self.transport.host, channel_input)
-            raw_result, processed_result = self._send_input(channel_input, strip_prompt)
-            response.raw_result = raw_result.decode()
-            response.record_response(processed_result.decode())
-            responses.append(response)
-        return responses
+        return raw_result.decode(), processed_result.decode()
 
     @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out sending input to device.&#34;)
     def _send_input(self, channel_input: str, strip_prompt: bool) -&gt; Tuple[bytes, bytes]:
@@ -548,7 +515,7 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def send_input(self, channel_input: str, strip_prompt: bool = True) -&gt; Response:
+<pre><code class="python">def send_input(self, channel_input: str, strip_prompt: bool = True,) -&gt; Tuple[str, str]:
     &#34;&#34;&#34;
     Primary entry point to send data to devices in shell mode; accept input and returns result
 
@@ -568,68 +535,8 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
             f&#34;`send_input` expects a single string, got {type(channel_input)}. &#34;
             &#34;to send a list of inputs use the `send_inputs` method instead&#34;
         )
-    response = Response(self.transport.host, channel_input)
     raw_result, processed_result = self._send_input(channel_input, strip_prompt)
-    response.raw_result = raw_result.decode()
-    response.record_response(processed_result.decode())
-    return response</code></pre>
-</details>
-</dd>
-<dt id="scrapli.channel.Channel.send_inputs"><code class="name flex">
-<span>def <span class="ident">send_inputs</span></span>(<span>self, channel_inputs, strip_prompt=True)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Primary entry point to send data to devices in shell mode; accept inputs and return results</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>channel_inputs</code></strong></dt>
-<dd>list of string inputs to send to channel</dd>
-<dt><strong><code>strip_prompt</code></strong></dt>
-<dd>strip prompt or not, defaults to True (yes, strip the prompt)</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>responses</code></strong></dt>
-<dd>list of Response object(s)</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><strong><code>TypeError</code></strong></dt>
-<dd>if anything but a list is passed for channel_inputs</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def send_inputs(self, channel_inputs: List[str], strip_prompt: bool = True) -&gt; List[Response]:
-    &#34;&#34;&#34;
-    Primary entry point to send data to devices in shell mode; accept inputs and return results
-
-    Args:
-        channel_inputs: list of string inputs to send to channel
-        strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
-
-    Returns:
-        responses: list of Response object(s)
-
-    Raises:
-        TypeError: if anything but a list is passed for channel_inputs
-
-    &#34;&#34;&#34;
-    if not isinstance(channel_inputs, list):
-        raise TypeError(
-            f&#34;`send_inputs` expects a list of strings, got {type(channel_inputs)}. &#34;
-            &#34;to send a single input use the `send_input` method instead&#34;
-        )
-
-    responses = []
-    for channel_input in channel_inputs:
-        response = Response(self.transport.host, channel_input)
-        raw_result, processed_result = self._send_input(channel_input, strip_prompt)
-        response.raw_result = raw_result.decode()
-        response.record_response(processed_result.decode())
-        responses.append(response)
-    return responses</code></pre>
+    return raw_result.decode(), processed_result.decode()</code></pre>
 </details>
 </dd>
 <dt id="scrapli.channel.Channel.send_inputs_interact"><code class="name flex">
@@ -729,7 +636,6 @@ final_prompt - final prompt to expect</dd>
 <ul class="">
 <li><code><a title="scrapli.channel.Channel.get_prompt" href="#scrapli.channel.Channel.get_prompt">get_prompt</a></code></li>
 <li><code><a title="scrapli.channel.Channel.send_input" href="#scrapli.channel.Channel.send_input">send_input</a></code></li>
-<li><code><a title="scrapli.channel.Channel.send_inputs" href="#scrapli.channel.Channel.send_inputs">send_inputs</a></code></li>
 <li><code><a title="scrapli.channel.Channel.send_inputs_interact" href="#scrapli.channel.Channel.send_inputs_interact">send_inputs_interact</a></code></li>
 </ul>
 </li>

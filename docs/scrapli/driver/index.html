@@ -27,9 +27,10 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.driver&#34;&#34;&#34;
 from scrapli.driver.driver import Scrape
+from scrapli.driver.generic_driver import GenericDriver
 from scrapli.driver.network_driver import NetworkDriver
 
-__all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
+__all__ = (&#34;Scrape&#34;, &#34;GenericDriver&#34;, &#34;NetworkDriver&#34;)</code></pre>
 </details>
 </section>
 <section>
@@ -47,6 +48,10 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
 <dd>
 <section class="desc"><p>scrapli.driver.driver</p></section>
 </dd>
+<dt><code class="name"><a title="scrapli.driver.generic_driver" href="generic_driver.html">scrapli.driver.generic_driver</a></code></dt>
+<dd>
+<section class="desc"><p>scrapli.driver.generic_driver</p></section>
+</dd>
 <dt><code class="name"><a title="scrapli.driver.network_driver" href="network_driver.html">scrapli.driver.network_driver</a></code></dt>
 <dd>
 <section class="desc"><p>scrapli.driver.network_driver</p></section>
@@ -60,6 +65,470 @@ __all__ = (&#34;Scrape&#34;, &#34;NetworkDriver&#34;)</code></pre>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="scrapli.driver.GenericDriver"><code class="flex name class">
+<span>class <span class="ident">GenericDriver</span></span>
+<span>(</span><span>comms_prompt_pattern=&#x27;^\\S{0,32}[#&gt;$~@:\\]]\\s*$&#x27;, comms_ansi=True, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>GenericDriver Object</p>
+<p>A generic network driver that will <em>hopefully</em> work for a broad variety of devices with
+minimal to no modifications and provide a normal NetworkDriver type experience with
+<code>send_command(s)</code>, <code>get_prompt</code> and <code>send_interactive</code> methods instead of forcing users to
+call Channel methods directly.</p>
+<p>This driver doesn't know anything about privilege levels (or any type of "config modes",
+disabling paging, gracefully exiting, or anything like that, and as such should be treated
+similar to the base <a title="scrapli.driver.Scrape" href="#scrapli.driver.Scrape"><code>Scrape</code></a> object from that perspective.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>comms_prompt_pattern</code></strong></dt>
+<dd>raw string regex pattern &ndash; preferably use <code>^</code> and <code>$</code> anchors!
+this is the single most important attribute here! if this does not match a prompt,
+scrapli will not work!
+For this GenericDriver the prompt pattern matches a really wide range of things&hellip;
+the general pattern is start of line, match any character 0-32 times, then match a
+prompt termination character from the following character set: <code>#</code>, <code>&gt;</code>, <code>$</code>, <code>~</code>,
+<code>@</code>, <code>:</code>, <code>]</code>, finally match any or no whitespace till the end of the line. This
+pattern works on all of the "core" platforms and should work on a wide range of
+other devices, however because it is so broad it may also accidentally match too
+many things and cause issues, so be careful!</dd>
+<dt><strong><code>comms_ansi</code></strong></dt>
+<dd>True/False strip comms_ansi characters from output; in the case of the
+GenericDriver, always strip ansi; this may slow things down but will hopefully help
+prevent issues! Obviously can be overridden if desired.</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>keyword args to pass to inherited class(es)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N</code>/<code>A</code>
+# <code>noqa</code>: <code>DAR202</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class GenericDriver(Scrape):
+    def __init__(
+        self,
+        comms_prompt_pattern: str = r&#34;^\S{0,32}[#&gt;$~@:\]]\s*$&#34;,
+        comms_ansi: bool = True,
+        **kwargs: Any,
+    ):
+        &#34;&#34;&#34;
+        GenericDriver Object
+
+        A generic network driver that will *hopefully* work for a broad variety of devices with
+        minimal to no modifications and provide a normal NetworkDriver type experience with
+        `send_command(s)`, `get_prompt` and `send_interactive` methods instead of forcing users to
+        call Channel methods directly.
+
+        This driver doesn&#39;t know anything about privilege levels (or any type of &#34;config modes&#34;,
+        disabling paging, gracefully exiting, or anything like that, and as such should be treated
+        similar to the base `Scrape` object from that perspective.
+
+        Args:
+            comms_prompt_pattern: raw string regex pattern -- preferably use `^` and `$` anchors!
+                this is the single most important attribute here! if this does not match a prompt,
+                scrapli will not work!
+                For this GenericDriver the prompt pattern matches a really wide range of things...
+                the general pattern is start of line, match any character 0-32 times, then match a
+                prompt termination character from the following character set: `#`, `&gt;`, `$`, `~`,
+                `@`, `:`, `]`, finally match any or no whitespace till the end of the line. This
+                pattern works on all of the &#34;core&#34; platforms and should work on a wide range of
+                other devices, however because it is so broad it may also accidentally match too
+                many things and cause issues, so be careful!
+            comms_ansi: True/False strip comms_ansi characters from output; in the case of the
+                GenericDriver, always strip ansi; this may slow things down but will hopefully help
+                prevent issues! Obviously can be overridden if desired.
+            **kwargs: keyword args to pass to inherited class(es)
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+        &#34;&#34;&#34;
+        super().__init__(comms_prompt_pattern=comms_prompt_pattern, comms_ansi=comms_ansi, **kwargs)
+
+    def send_command(
+        self,
+        command: str,
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+    ) -&gt; Response:
+        &#34;&#34;&#34;
+        Send a command
+
+        Args:
+            command: string to send to device in privilege exec mode
+            strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
+
+        Returns:
+            Response: Scrapli Response object
+
+        Raises:
+            TypeError: if command is anything but a string
+
+        &#34;&#34;&#34;
+        if not isinstance(command, str):
+            raise TypeError(
+                f&#34;`send_command` expects a single string, got {type(command)}. &#34;
+                &#34;to send a list of commands use the `send_commands` method instead.&#34;
+            )
+
+        response = Response(
+            self.transport.host, channel_input=command, failed_when_contains=failed_when_contains
+        )
+        raw_response, processed_response = self.channel.send_input(command, strip_prompt)
+        response.record_response(processed_response)
+        response.raw_result = raw_response
+
+        return response
+
+    def send_commands(
+        self,
+        commands: List[str],
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+    ) -&gt; List[Response]:
+        &#34;&#34;&#34;
+        Send multiple commands
+
+        Args:
+            commands: list of strings to send to device in privilege exec mode
+            strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
+
+        Returns:
+            responses: list of Scrapli Response objects
+
+        Raises:
+            TypeError: if commands is anything but a list
+
+        &#34;&#34;&#34;
+        if not isinstance(commands, list):
+            raise TypeError(
+                f&#34;`send_commands` expects a list of strings, got {type(commands)}. &#34;
+                &#34;to send a single command use the `send_command` method instead.&#34;
+            )
+
+        responses = []
+        for command in commands:
+            responses.append(
+                self.send_command(
+                    command, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+                )
+            )
+
+        return responses
+
+    def send_interactive(self, interact: List[str], hidden_response: bool = False) -&gt; Response:
+        &#34;&#34;&#34;
+        Send inputs in an interactive fashion; used to handle prompts
+
+        accepts inputs and looks for expected prompt;
+        sends the appropriate response, then waits for the &#34;finale&#34;
+        returns the results of the interaction
+
+        could be &#34;chained&#34; together to respond to more than a &#34;single&#34; staged prompt
+
+        Args:
+            interact: list of four string elements representing...
+                channel_input - initial input to send
+                expected_prompt - prompt to expect after initial input
+                response - response to prompt
+                final_prompt - final prompt to expect
+            hidden_response: True/False response is hidden (i.e. password input)
+
+        Returns:
+            Response: scrapli Response object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        response = self.channel.send_inputs_interact(interact, hidden_response)
+        return response
+
+    def get_prompt(self) -&gt; str:
+        &#34;&#34;&#34;
+        Convenience method to get device prompt from Channel
+
+        Args:
+            N/A
+
+        Returns:
+            str: prompt received from channel.get_prompt
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        prompt: str = self.channel.get_prompt()
+        return prompt</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scrapli.driver.driver.Scrape" href="driver.html#scrapli.driver.driver.Scrape">Scrape</a></li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="scrapli.driver.network_driver.NetworkDriver" href="network_driver.html#scrapli.driver.network_driver.NetworkDriver">NetworkDriver</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="scrapli.driver.GenericDriver.get_prompt"><code class="name flex">
+<span>def <span class="ident">get_prompt</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Convenience method to get device prompt from Channel</p>
+<h2 id="args">Args</h2>
+<p>N/A</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>str</code></strong></dt>
+<dd>prompt received from channel.get_prompt</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_prompt(self) -&gt; str:
+    &#34;&#34;&#34;
+    Convenience method to get device prompt from Channel
+
+    Args:
+        N/A
+
+    Returns:
+        str: prompt received from channel.get_prompt
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    prompt: str = self.channel.get_prompt()
+    return prompt</code></pre>
+</details>
+</dd>
+<dt id="scrapli.driver.GenericDriver.send_command"><code class="name flex">
+<span>def <span class="ident">send_command</span></span>(<span>self, command, strip_prompt=True, failed_when_contains=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Send a command</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>command</code></strong></dt>
+<dd>string to send to device in privilege exec mode</dd>
+<dt><strong><code>strip_prompt</code></strong></dt>
+<dd>True/False strip prompt from returned output</dd>
+<dt><strong><code>failed_when_contains</code></strong></dt>
+<dd>string or list of strings indicating failure if found in response</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>Response</code></strong></dt>
+<dd>Scrapli Response object</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><strong><code>TypeError</code></strong></dt>
+<dd>if command is anything but a string</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def send_command(
+    self,
+    command: str,
+    strip_prompt: bool = True,
+    failed_when_contains: Optional[Union[str, List[str]]] = None,
+) -&gt; Response:
+    &#34;&#34;&#34;
+    Send a command
+
+    Args:
+        command: string to send to device in privilege exec mode
+        strip_prompt: True/False strip prompt from returned output
+        failed_when_contains: string or list of strings indicating failure if found in response
+
+    Returns:
+        Response: Scrapli Response object
+
+    Raises:
+        TypeError: if command is anything but a string
+
+    &#34;&#34;&#34;
+    if not isinstance(command, str):
+        raise TypeError(
+            f&#34;`send_command` expects a single string, got {type(command)}. &#34;
+            &#34;to send a list of commands use the `send_commands` method instead.&#34;
+        )
+
+    response = Response(
+        self.transport.host, channel_input=command, failed_when_contains=failed_when_contains
+    )
+    raw_response, processed_response = self.channel.send_input(command, strip_prompt)
+    response.record_response(processed_response)
+    response.raw_result = raw_response
+
+    return response</code></pre>
+</details>
+</dd>
+<dt id="scrapli.driver.GenericDriver.send_commands"><code class="name flex">
+<span>def <span class="ident">send_commands</span></span>(<span>self, commands, strip_prompt=True, failed_when_contains=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Send multiple commands</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>commands</code></strong></dt>
+<dd>list of strings to send to device in privilege exec mode</dd>
+<dt><strong><code>strip_prompt</code></strong></dt>
+<dd>True/False strip prompt from returned output</dd>
+<dt><strong><code>failed_when_contains</code></strong></dt>
+<dd>string or list of strings indicating failure if found in response</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>responses</code></strong></dt>
+<dd>list of Scrapli Response objects</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><strong><code>TypeError</code></strong></dt>
+<dd>if commands is anything but a list</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def send_commands(
+    self,
+    commands: List[str],
+    strip_prompt: bool = True,
+    failed_when_contains: Optional[Union[str, List[str]]] = None,
+) -&gt; List[Response]:
+    &#34;&#34;&#34;
+    Send multiple commands
+
+    Args:
+        commands: list of strings to send to device in privilege exec mode
+        strip_prompt: True/False strip prompt from returned output
+        failed_when_contains: string or list of strings indicating failure if found in response
+
+    Returns:
+        responses: list of Scrapli Response objects
+
+    Raises:
+        TypeError: if commands is anything but a list
+
+    &#34;&#34;&#34;
+    if not isinstance(commands, list):
+        raise TypeError(
+            f&#34;`send_commands` expects a list of strings, got {type(commands)}. &#34;
+            &#34;to send a single command use the `send_command` method instead.&#34;
+        )
+
+    responses = []
+    for command in commands:
+        responses.append(
+            self.send_command(
+                command, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+            )
+        )
+
+    return responses</code></pre>
+</details>
+</dd>
+<dt id="scrapli.driver.GenericDriver.send_interactive"><code class="name flex">
+<span>def <span class="ident">send_interactive</span></span>(<span>self, interact, hidden_response=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Send inputs in an interactive fashion; used to handle prompts</p>
+<p>accepts inputs and looks for expected prompt;
+sends the appropriate response, then waits for the "finale"
+returns the results of the interaction</p>
+<p>could be "chained" together to respond to more than a "single" staged prompt</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>interact</code></strong></dt>
+<dd>list of four string elements representing&hellip;
+channel_input - initial input to send
+expected_prompt - prompt to expect after initial input
+response - response to prompt
+final_prompt - final prompt to expect</dd>
+<dt><strong><code>hidden_response</code></strong></dt>
+<dd>True/False response is hidden (i.e. password input)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>Response</code></strong></dt>
+<dd>scrapli Response object</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def send_interactive(self, interact: List[str], hidden_response: bool = False) -&gt; Response:
+    &#34;&#34;&#34;
+    Send inputs in an interactive fashion; used to handle prompts
+
+    accepts inputs and looks for expected prompt;
+    sends the appropriate response, then waits for the &#34;finale&#34;
+    returns the results of the interaction
+
+    could be &#34;chained&#34; together to respond to more than a &#34;single&#34; staged prompt
+
+    Args:
+        interact: list of four string elements representing...
+            channel_input - initial input to send
+            expected_prompt - prompt to expect after initial input
+            response - response to prompt
+            final_prompt - final prompt to expect
+        hidden_response: True/False response is hidden (i.e. password input)
+
+    Returns:
+        Response: scrapli Response object
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    response = self.channel.send_inputs_interact(interact, hidden_response)
+    return response</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scrapli.driver.driver.Scrape" href="driver.html#scrapli.driver.driver.Scrape">Scrape</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scrapli.driver.driver.Scrape.close" href="driver.html#scrapli.driver.driver.Scrape.close">close</a></code></li>
+<li><code><a title="scrapli.driver.driver.Scrape.isalive" href="driver.html#scrapli.driver.driver.Scrape.isalive">isalive</a></code></li>
+<li><code><a title="scrapli.driver.driver.Scrape.open" href="driver.html#scrapli.driver.driver.Scrape.open">open</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="scrapli.driver.NetworkDriver"><code class="flex name class">
 <span>class <span class="ident">NetworkDriver</span></span>
 <span>(</span><span>auth_secondary='', **kwargs)</span>
@@ -90,7 +559,7 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class NetworkDriver(Scrape, ABC):
+<pre><code class="python">class NetworkDriver(GenericDriver, ABC):
     @abstractmethod
     def __init__(
         self, auth_secondary: str = &#34;&#34;, **kwargs: Any,
@@ -111,11 +580,14 @@ inheritance.</p>
         &#34;&#34;&#34;
         super().__init__(**kwargs)
 
-        self.textfsm_platform: str = &#34;&#34;
         self.auth_secondary = auth_secondary
         self.privs = PRIVS
         self.default_desired_priv: str = &#34;&#34;
         self._current_priv_level = NoPrivLevel
+
+        self.textfsm_platform: str = &#34;&#34;
+        self.genie_platform: str = &#34;&#34;
+        self.failed_when_contains: List[str] = []
 
     def _determine_current_priv(self, current_prompt: str) -&gt; PrivilegeLevel:
         &#34;&#34;&#34;
@@ -249,13 +721,39 @@ inheritance.</p>
                 self._escalate()
             priv_attempt_counter += 1
 
-    def send_command(self, command: str, strip_prompt: bool = True) -&gt; Response:
+    def _update_response(self, response: Response) -&gt; None:
+        &#34;&#34;&#34;
+        Update response with network driver specific data
+
+        This happens here as the underlying channel provides a response object but is unaware of any
+        of the network/platform specific attributes that may need to get updated
+
+        Args:
+            response: response to update
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        response.textfsm_platform = self.textfsm_platform
+        response.genie_platform = self.genie_platform
+
+    def send_command(
+        self,
+        command: str,
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+    ) -&gt; Response:
         &#34;&#34;&#34;
         Send a command
 
         Args:
             command: string to send to device in privilege exec mode
             strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
 
         Returns:
             Response: Scrapli Response object
@@ -264,29 +762,33 @@ inheritance.</p>
             TypeError: if command is anything but a string
 
         &#34;&#34;&#34;
-        if not isinstance(command, str):
-            raise TypeError(
-                f&#34;`send_command` expects a single string, got {type(command)}. &#34;
-                &#34;to send a list of commands use the `send_commands` method instead.&#34;
-            )
-
         if self._current_priv_level.name != self.default_desired_priv:
             self.acquire_priv(self.default_desired_priv)
-        response = self.channel.send_input(command, strip_prompt)
 
-        # update the response objects with textfsm platform; we do this here because the underlying
-        #  channel doesn&#39;t know or care about platforms
-        response.textfsm_platform = self.textfsm_platform
+        if failed_when_contains is None:
+            failed_when_contains = self.failed_when_contains
+
+        response = super().send_command(
+            command, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+        )
+
+        self._update_response(response)
 
         return response
 
-    def send_commands(self, commands: List[str], strip_prompt: bool = True) -&gt; List[Response]:
+    def send_commands(
+        self,
+        commands: List[str],
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+    ) -&gt; List[Response]:
         &#34;&#34;&#34;
         Send multiple commands
 
         Args:
             commands: list of strings to send to device in privilege exec mode
             strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
 
         Returns:
             responses: list of Scrapli Response objects
@@ -295,20 +797,18 @@ inheritance.</p>
             TypeError: if commands is anything but a list
 
         &#34;&#34;&#34;
-        if not isinstance(commands, list):
-            raise TypeError(
-                f&#34;`send_commands` expects a list of strings, got {type(commands)}. &#34;
-                &#34;to send a single command use the `send_command` method instead.&#34;
-            )
-
         if self._current_priv_level.name != self.default_desired_priv:
             self.acquire_priv(self.default_desired_priv)
-        responses = self.channel.send_inputs(commands, strip_prompt)
 
-        # update the response objects with textfsm platform; we do this here because the underlying
-        #  channel doesn&#39;t know or care about platforms
+        if failed_when_contains is None:
+            failed_when_contains = self.failed_when_contains
+
+        responses = super().send_commands(
+            commands, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+        )
+
         for response in responses:
-            response.textfsm_platform = self.textfsm_platform
+            self._update_response(response)
 
         return responses
 
@@ -343,7 +843,10 @@ inheritance.</p>
         return response
 
     def send_configs(
-        self, configs: Union[str, List[str]], strip_prompt: bool = True
+        self,
+        configs: Union[str, List[str]],
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
     ) -&gt; List[Response]:
         &#34;&#34;&#34;
         Send configuration(s)
@@ -351,6 +854,7 @@ inheritance.</p>
         Args:
             configs: string or list of strings to send to device in config mode
             strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
 
         Returns:
             responses: List of Scrape Response objects
@@ -363,29 +867,27 @@ inheritance.</p>
             configs = [configs]
 
         self.acquire_priv(&#34;configuration&#34;)
-        responses = self.channel.send_inputs(configs, strip_prompt)
+
+        if failed_when_contains is None:
+            failed_when_contains = self.failed_when_contains
+
+        responses = []
+        for config in configs:
+            responses.append(
+                super().send_command(
+                    config, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+                )
+            )
+
+        for response in responses:
+            self._update_response(response)
+
         self.acquire_priv(self.default_desired_priv)
-        return responses
-
-    def get_prompt(self) -&gt; str:
-        &#34;&#34;&#34;
-        Convenience method to get device prompt from Channel
-
-        Args:
-            N/A
-
-        Returns:
-            str: prompt received from channel.get_prompt
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        prompt: str = self.channel.get_prompt()
-        return prompt</code></pre>
+        return responses</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="scrapli.driver.generic_driver.GenericDriver" href="generic_driver.html#scrapli.driver.generic_driver.GenericDriver">GenericDriver</a></li>
 <li><a title="scrapli.driver.driver.Scrape" href="driver.html#scrapli.driver.driver.Scrape">Scrape</a></li>
 <li>abc.ABC</li>
 </ul>
@@ -457,164 +959,8 @@ inheritance.</p>
         priv_attempt_counter += 1</code></pre>
 </details>
 </dd>
-<dt id="scrapli.driver.NetworkDriver.get_prompt"><code class="name flex">
-<span>def <span class="ident">get_prompt</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Convenience method to get device prompt from Channel</p>
-<h2 id="args">Args</h2>
-<p>N/A</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>str</code></strong></dt>
-<dd>prompt received from channel.get_prompt</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_prompt(self) -&gt; str:
-    &#34;&#34;&#34;
-    Convenience method to get device prompt from Channel
-
-    Args:
-        N/A
-
-    Returns:
-        str: prompt received from channel.get_prompt
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    prompt: str = self.channel.get_prompt()
-    return prompt</code></pre>
-</details>
-</dd>
-<dt id="scrapli.driver.NetworkDriver.send_command"><code class="name flex">
-<span>def <span class="ident">send_command</span></span>(<span>self, command, strip_prompt=True)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Send a command</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>command</code></strong></dt>
-<dd>string to send to device in privilege exec mode</dd>
-<dt><strong><code>strip_prompt</code></strong></dt>
-<dd>True/False strip prompt from returned output</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>Response</code></strong></dt>
-<dd>Scrapli Response object</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><strong><code>TypeError</code></strong></dt>
-<dd>if command is anything but a string</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def send_command(self, command: str, strip_prompt: bool = True) -&gt; Response:
-    &#34;&#34;&#34;
-    Send a command
-
-    Args:
-        command: string to send to device in privilege exec mode
-        strip_prompt: True/False strip prompt from returned output
-
-    Returns:
-        Response: Scrapli Response object
-
-    Raises:
-        TypeError: if command is anything but a string
-
-    &#34;&#34;&#34;
-    if not isinstance(command, str):
-        raise TypeError(
-            f&#34;`send_command` expects a single string, got {type(command)}. &#34;
-            &#34;to send a list of commands use the `send_commands` method instead.&#34;
-        )
-
-    if self._current_priv_level.name != self.default_desired_priv:
-        self.acquire_priv(self.default_desired_priv)
-    response = self.channel.send_input(command, strip_prompt)
-
-    # update the response objects with textfsm platform; we do this here because the underlying
-    #  channel doesn&#39;t know or care about platforms
-    response.textfsm_platform = self.textfsm_platform
-
-    return response</code></pre>
-</details>
-</dd>
-<dt id="scrapli.driver.NetworkDriver.send_commands"><code class="name flex">
-<span>def <span class="ident">send_commands</span></span>(<span>self, commands, strip_prompt=True)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Send multiple commands</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>commands</code></strong></dt>
-<dd>list of strings to send to device in privilege exec mode</dd>
-<dt><strong><code>strip_prompt</code></strong></dt>
-<dd>True/False strip prompt from returned output</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>responses</code></strong></dt>
-<dd>list of Scrapli Response objects</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><strong><code>TypeError</code></strong></dt>
-<dd>if commands is anything but a list</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def send_commands(self, commands: List[str], strip_prompt: bool = True) -&gt; List[Response]:
-    &#34;&#34;&#34;
-    Send multiple commands
-
-    Args:
-        commands: list of strings to send to device in privilege exec mode
-        strip_prompt: True/False strip prompt from returned output
-
-    Returns:
-        responses: list of Scrapli Response objects
-
-    Raises:
-        TypeError: if commands is anything but a list
-
-    &#34;&#34;&#34;
-    if not isinstance(commands, list):
-        raise TypeError(
-            f&#34;`send_commands` expects a list of strings, got {type(commands)}. &#34;
-            &#34;to send a single command use the `send_command` method instead.&#34;
-        )
-
-    if self._current_priv_level.name != self.default_desired_priv:
-        self.acquire_priv(self.default_desired_priv)
-    responses = self.channel.send_inputs(commands, strip_prompt)
-
-    # update the response objects with textfsm platform; we do this here because the underlying
-    #  channel doesn&#39;t know or care about platforms
-    for response in responses:
-        response.textfsm_platform = self.textfsm_platform
-
-    return responses</code></pre>
-</details>
-</dd>
 <dt id="scrapli.driver.NetworkDriver.send_configs"><code class="name flex">
-<span>def <span class="ident">send_configs</span></span>(<span>self, configs, strip_prompt=True)</span>
+<span>def <span class="ident">send_configs</span></span>(<span>self, configs, strip_prompt=True, failed_when_contains=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Send configuration(s)</p>
@@ -624,6 +970,8 @@ inheritance.</p>
 <dd>string or list of strings to send to device in config mode</dd>
 <dt><strong><code>strip_prompt</code></strong></dt>
 <dd>True/False strip prompt from returned output</dd>
+<dt><strong><code>failed_when_contains</code></strong></dt>
+<dd>string or list of strings indicating failure if found in response</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -640,7 +988,10 @@ inheritance.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def send_configs(
-    self, configs: Union[str, List[str]], strip_prompt: bool = True
+    self,
+    configs: Union[str, List[str]],
+    strip_prompt: bool = True,
+    failed_when_contains: Optional[Union[str, List[str]]] = None,
 ) -&gt; List[Response]:
     &#34;&#34;&#34;
     Send configuration(s)
@@ -648,6 +999,7 @@ inheritance.</p>
     Args:
         configs: string or list of strings to send to device in config mode
         strip_prompt: True/False strip prompt from returned output
+        failed_when_contains: string or list of strings indicating failure if found in response
 
     Returns:
         responses: List of Scrape Response objects
@@ -660,84 +1012,37 @@ inheritance.</p>
         configs = [configs]
 
     self.acquire_priv(&#34;configuration&#34;)
-    responses = self.channel.send_inputs(configs, strip_prompt)
+
+    if failed_when_contains is None:
+        failed_when_contains = self.failed_when_contains
+
+    responses = []
+    for config in configs:
+        responses.append(
+            super().send_command(
+                config, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+            )
+        )
+
+    for response in responses:
+        self._update_response(response)
+
     self.acquire_priv(self.default_desired_priv)
     return responses</code></pre>
-</details>
-</dd>
-<dt id="scrapli.driver.NetworkDriver.send_interactive"><code class="name flex">
-<span>def <span class="ident">send_interactive</span></span>(<span>self, interact, hidden_response=False)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Send inputs in an interactive fashion; used to handle prompts</p>
-<p>accepts inputs and looks for expected prompt;
-sends the appropriate response, then waits for the "finale"
-returns the results of the interaction</p>
-<p>could be "chained" together to respond to more than a "single" staged prompt</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>interact</code></strong></dt>
-<dd>list of four string elements representing&hellip;
-channel_input - initial input to send
-expected_prompt - prompt to expect after initial input
-response - response to prompt
-final_prompt - final prompt to expect</dd>
-<dt><strong><code>hidden_response</code></strong></dt>
-<dd>True/False response is hidden (i.e. password input)</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>Response</code></strong></dt>
-<dd>scrapli Response object</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def send_interactive(self, interact: List[str], hidden_response: bool = False) -&gt; Response:
-    &#34;&#34;&#34;
-    Send inputs in an interactive fashion; used to handle prompts
-
-    accepts inputs and looks for expected prompt;
-    sends the appropriate response, then waits for the &#34;finale&#34;
-    returns the results of the interaction
-
-    could be &#34;chained&#34; together to respond to more than a &#34;single&#34; staged prompt
-
-    Args:
-        interact: list of four string elements representing...
-            channel_input - initial input to send
-            expected_prompt - prompt to expect after initial input
-            response - response to prompt
-            final_prompt - final prompt to expect
-        hidden_response: True/False response is hidden (i.e. password input)
-
-    Returns:
-        Response: scrapli Response object
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    if self._current_priv_level.name != self.default_desired_priv:
-        self.acquire_priv(self.default_desired_priv)
-    response = self.channel.send_inputs_interact(interact, hidden_response)
-    return response</code></pre>
 </details>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="scrapli.driver.driver.Scrape" href="driver.html#scrapli.driver.driver.Scrape">Scrape</a></b></code>:
+<li><code><b><a title="scrapli.driver.generic_driver.GenericDriver" href="generic_driver.html#scrapli.driver.generic_driver.GenericDriver">GenericDriver</a></b></code>:
 <ul class="hlist">
-<li><code><a title="scrapli.driver.driver.Scrape.close" href="driver.html#scrapli.driver.driver.Scrape.close">close</a></code></li>
-<li><code><a title="scrapli.driver.driver.Scrape.isalive" href="driver.html#scrapli.driver.driver.Scrape.isalive">isalive</a></code></li>
-<li><code><a title="scrapli.driver.driver.Scrape.open" href="driver.html#scrapli.driver.driver.Scrape.open">open</a></code></li>
+<li><code><a title="scrapli.driver.generic_driver.GenericDriver.close" href="driver.html#scrapli.driver.driver.Scrape.close">close</a></code></li>
+<li><code><a title="scrapli.driver.generic_driver.GenericDriver.get_prompt" href="generic_driver.html#scrapli.driver.generic_driver.GenericDriver.get_prompt">get_prompt</a></code></li>
+<li><code><a title="scrapli.driver.generic_driver.GenericDriver.isalive" href="driver.html#scrapli.driver.driver.Scrape.isalive">isalive</a></code></li>
+<li><code><a title="scrapli.driver.generic_driver.GenericDriver.open" href="driver.html#scrapli.driver.driver.Scrape.open">open</a></code></li>
+<li><code><a title="scrapli.driver.generic_driver.GenericDriver.send_command" href="generic_driver.html#scrapli.driver.generic_driver.GenericDriver.send_command">send_command</a></code></li>
+<li><code><a title="scrapli.driver.generic_driver.GenericDriver.send_commands" href="generic_driver.html#scrapli.driver.generic_driver.GenericDriver.send_commands">send_commands</a></code></li>
+<li><code><a title="scrapli.driver.generic_driver.GenericDriver.send_interactive" href="generic_driver.html#scrapli.driver.generic_driver.GenericDriver.send_interactive">send_interactive</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1073,8 +1378,8 @@ has more features built in (though scrapli does not expose/support them all).</d
             f&#34;comms_prompt_pattern={self._initialization_args[&#39;comms_prompt_pattern&#39;]!r}, &#34;
             f&#34;comms_return_char={self._initialization_args[&#39;comms_return_char&#39;]!r}, &#34;
             f&#34;comms_ansi={self._initialization_args[&#39;comms_ansi&#39;]!r}, &#34;
-            f&#34;ssh_config_file={self._initialization_args[&#39;ssh_config_file&#39;]!r}, &#34;
-            f&#34;ssh_known_hosts_file={self._initialization_args[&#39;ssh_known_hosts_file&#39;]!r}, &#34;
+            f&#34;ssh_config_file={self._initialization_args.get(&#39;ssh_config_file&#39;)!r}, &#34;
+            f&#34;ssh_known_hosts_file={self._initialization_args.get(&#39;ssh_known_hosts_file&#39;)!r}, &#34;
             f&#34;on_open={self.on_open!r}, &#34;
             f&#34;on_close={self.on_close!r}, &#34;
             f&#34;transport={self._transport!r})&#34;
@@ -1384,7 +1689,7 @@ has more features built in (though scrapli does not expose/support them all).</d
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="scrapli.driver.network_driver.NetworkDriver" href="network_driver.html#scrapli.driver.network_driver.NetworkDriver">NetworkDriver</a></li>
+<li><a title="scrapli.driver.generic_driver.GenericDriver" href="generic_driver.html#scrapli.driver.generic_driver.GenericDriver">GenericDriver</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -1537,20 +1842,26 @@ has more features built in (though scrapli does not expose/support them all).</d
 <li><code><a title="scrapli.driver.community" href="community/index.html">scrapli.driver.community</a></code></li>
 <li><code><a title="scrapli.driver.core" href="core/index.html">scrapli.driver.core</a></code></li>
 <li><code><a title="scrapli.driver.driver" href="driver.html">scrapli.driver.driver</a></code></li>
+<li><code><a title="scrapli.driver.generic_driver" href="generic_driver.html">scrapli.driver.generic_driver</a></code></li>
 <li><code><a title="scrapli.driver.network_driver" href="network_driver.html">scrapli.driver.network_driver</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
+<h4><code><a title="scrapli.driver.GenericDriver" href="#scrapli.driver.GenericDriver">GenericDriver</a></code></h4>
+<ul class="">
+<li><code><a title="scrapli.driver.GenericDriver.get_prompt" href="#scrapli.driver.GenericDriver.get_prompt">get_prompt</a></code></li>
+<li><code><a title="scrapli.driver.GenericDriver.send_command" href="#scrapli.driver.GenericDriver.send_command">send_command</a></code></li>
+<li><code><a title="scrapli.driver.GenericDriver.send_commands" href="#scrapli.driver.GenericDriver.send_commands">send_commands</a></code></li>
+<li><code><a title="scrapli.driver.GenericDriver.send_interactive" href="#scrapli.driver.GenericDriver.send_interactive">send_interactive</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="scrapli.driver.NetworkDriver" href="#scrapli.driver.NetworkDriver">NetworkDriver</a></code></h4>
-<ul class="two-column">
+<ul class="">
 <li><code><a title="scrapli.driver.NetworkDriver.acquire_priv" href="#scrapli.driver.NetworkDriver.acquire_priv">acquire_priv</a></code></li>
-<li><code><a title="scrapli.driver.NetworkDriver.get_prompt" href="#scrapli.driver.NetworkDriver.get_prompt">get_prompt</a></code></li>
-<li><code><a title="scrapli.driver.NetworkDriver.send_command" href="#scrapli.driver.NetworkDriver.send_command">send_command</a></code></li>
-<li><code><a title="scrapli.driver.NetworkDriver.send_commands" href="#scrapli.driver.NetworkDriver.send_commands">send_commands</a></code></li>
 <li><code><a title="scrapli.driver.NetworkDriver.send_configs" href="#scrapli.driver.NetworkDriver.send_configs">send_configs</a></code></li>
-<li><code><a title="scrapli.driver.NetworkDriver.send_interactive" href="#scrapli.driver.NetworkDriver.send_interactive">send_interactive</a></code></li>
 </ul>
 </li>
 <li>

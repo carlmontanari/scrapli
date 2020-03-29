@@ -1,14 +1,14 @@
-"""scrapli.driver.core.generic_driver"""
-from typing import Any, List
+"""scrapli.driver.generic_driver"""
+from typing import Any, List, Optional, Union
 
-from scrapli import Scrape
+from scrapli.driver.driver import Scrape
 from scrapli.response import Response
 
 
 class GenericDriver(Scrape):
     def __init__(
         self,
-        comms_prompt_pattern: str = r"^.{0,32}[#>$~@:\]]\s*$",
+        comms_prompt_pattern: str = r"^\S{0,32}[#>$~@:\]]\s*$",
         comms_ansi: bool = True,
         **kwargs: Any,
     ):
@@ -48,13 +48,19 @@ class GenericDriver(Scrape):
         """
         super().__init__(comms_prompt_pattern=comms_prompt_pattern, comms_ansi=comms_ansi, **kwargs)
 
-    def send_command(self, command: str, strip_prompt: bool = True) -> Response:
+    def send_command(
+        self,
+        command: str,
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+    ) -> Response:
         """
         Send a command
 
         Args:
             command: string to send to device in privilege exec mode
             strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
 
         Returns:
             Response: Scrapli Response object
@@ -69,17 +75,28 @@ class GenericDriver(Scrape):
                 "to send a list of commands use the `send_commands` method instead."
             )
 
-        response = self.channel.send_input(command, strip_prompt)
+        response = Response(
+            self.transport.host, channel_input=command, failed_when_contains=failed_when_contains
+        )
+        raw_response, processed_response = self.channel.send_input(command, strip_prompt)
+        response.record_response(processed_response)
+        response.raw_result = raw_response
 
         return response
 
-    def send_commands(self, commands: List[str], strip_prompt: bool = True) -> List[Response]:
+    def send_commands(
+        self,
+        commands: List[str],
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+    ) -> List[Response]:
         """
         Send multiple commands
 
         Args:
             commands: list of strings to send to device in privilege exec mode
             strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
 
         Returns:
             responses: list of Scrapli Response objects
@@ -94,7 +111,13 @@ class GenericDriver(Scrape):
                 "to send a single command use the `send_command` method instead."
             )
 
-        responses = self.channel.send_inputs(commands, strip_prompt)
+        responses = []
+        for command in commands:
+            responses.append(
+                self.send_command(
+                    command, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+                )
+            )
 
         return responses
 

@@ -175,11 +175,18 @@ or to logout properly to free up vtys or similar.</dd>
 
         self.privs = PRIVS
         self.default_desired_priv = &#34;privilege_exec&#34;
-        self.textfsm_platform = &#34;arista_eos&#34;</code></pre>
+        self.textfsm_platform = &#34;arista_eos&#34;
+
+        self.failed_when_contains = [
+            &#34;% Ambiguous command&#34;,
+            &#34;% Incomplete command&#34;,
+            &#34;% Invalid input&#34;,
+        ]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="scrapli.driver.network_driver.NetworkDriver" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver">NetworkDriver</a></li>
+<li><a title="scrapli.driver.generic_driver.GenericDriver" href="../generic_driver.html#scrapli.driver.generic_driver.GenericDriver">GenericDriver</a></li>
 <li><a title="scrapli.driver.driver.Scrape" href="../driver.html#scrapli.driver.driver.Scrape">Scrape</a></li>
 <li>abc.ABC</li>
 </ul>
@@ -189,13 +196,13 @@ or to logout properly to free up vtys or similar.</dd>
 <ul class="hlist">
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.acquire_priv" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.acquire_priv">acquire_priv</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.close" href="../driver.html#scrapli.driver.driver.Scrape.close">close</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.get_prompt" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.get_prompt">get_prompt</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.get_prompt" href="../generic_driver.html#scrapli.driver.generic_driver.GenericDriver.get_prompt">get_prompt</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.isalive" href="../driver.html#scrapli.driver.driver.Scrape.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.open" href="../driver.html#scrapli.driver.driver.Scrape.open">open</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_command" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_command">send_command</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_commands" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_commands">send_commands</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_command" href="../generic_driver.html#scrapli.driver.generic_driver.GenericDriver.send_command">send_command</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_commands" href="../generic_driver.html#scrapli.driver.generic_driver.GenericDriver.send_commands">send_commands</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_configs" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_configs">send_configs</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_interactive" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_interactive">send_interactive</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_interactive" href="../generic_driver.html#scrapli.driver.generic_driver.GenericDriver.send_interactive">send_interactive</a></code></li>
 </ul>
 </li>
 </ul>
@@ -302,11 +309,20 @@ or to logout properly to free up vtys or similar.</dd>
 
         self.privs = PRIVS
         self.default_desired_priv = &#34;privilege_exec&#34;
-        self.textfsm_platform = &#34;cisco_ios&#34;</code></pre>
+
+        self.textfsm_platform = &#34;cisco_ios&#34;
+        self.genie_platform = &#34;iosxe&#34;
+
+        self.failed_when_contains = [
+            &#34;% Ambiguous command&#34;,
+            &#34;% Incomplete command&#34;,
+            &#34;% Invalid input detected&#34;,
+        ]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="scrapli.driver.network_driver.NetworkDriver" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver">NetworkDriver</a></li>
+<li><a title="scrapli.driver.generic_driver.GenericDriver" href="../generic_driver.html#scrapli.driver.generic_driver.GenericDriver">GenericDriver</a></li>
 <li><a title="scrapli.driver.driver.Scrape" href="../driver.html#scrapli.driver.driver.Scrape">Scrape</a></li>
 <li>abc.ABC</li>
 </ul>
@@ -316,13 +332,13 @@ or to logout properly to free up vtys or similar.</dd>
 <ul class="hlist">
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.acquire_priv" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.acquire_priv">acquire_priv</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.close" href="../driver.html#scrapli.driver.driver.Scrape.close">close</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.get_prompt" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.get_prompt">get_prompt</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.get_prompt" href="../generic_driver.html#scrapli.driver.generic_driver.GenericDriver.get_prompt">get_prompt</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.isalive" href="../driver.html#scrapli.driver.driver.Scrape.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.open" href="../driver.html#scrapli.driver.driver.Scrape.open">open</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_command" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_command">send_command</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_commands" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_commands">send_commands</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_command" href="../generic_driver.html#scrapli.driver.generic_driver.GenericDriver.send_command">send_command</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_commands" href="../generic_driver.html#scrapli.driver.generic_driver.GenericDriver.send_commands">send_commands</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_configs" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_configs">send_configs</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_interactive" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_interactive">send_interactive</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_interactive" href="../generic_driver.html#scrapli.driver.generic_driver.GenericDriver.send_interactive">send_interactive</a></code></li>
 </ul>
 </li>
 </ul>
@@ -429,11 +445,20 @@ or to logout properly to free up vtys or similar.</dd>
 
         self.privs = PRIVS
         self.default_desired_priv = &#34;privilege_exec&#34;
-        self.textfsm_platform = &#34;cisco_xr&#34;</code></pre>
+
+        self.textfsm_platform = &#34;cisco_xr&#34;
+        self.genie_platform = &#34;iosxr&#34;
+
+        self.failed_when_contains = [
+            &#34;% Ambiguous command&#34;,
+            &#34;% Incomplete command&#34;,
+            &#34;% Invalid input detected&#34;,
+        ]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="scrapli.driver.network_driver.NetworkDriver" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver">NetworkDriver</a></li>
+<li><a title="scrapli.driver.generic_driver.GenericDriver" href="../generic_driver.html#scrapli.driver.generic_driver.GenericDriver">GenericDriver</a></li>
 <li><a title="scrapli.driver.driver.Scrape" href="../driver.html#scrapli.driver.driver.Scrape">Scrape</a></li>
 <li>abc.ABC</li>
 </ul>
@@ -443,13 +468,13 @@ or to logout properly to free up vtys or similar.</dd>
 <ul class="hlist">
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.acquire_priv" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.acquire_priv">acquire_priv</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.close" href="../driver.html#scrapli.driver.driver.Scrape.close">close</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.get_prompt" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.get_prompt">get_prompt</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.get_prompt" href="../generic_driver.html#scrapli.driver.generic_driver.GenericDriver.get_prompt">get_prompt</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.isalive" href="../driver.html#scrapli.driver.driver.Scrape.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.open" href="../driver.html#scrapli.driver.driver.Scrape.open">open</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_command" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_command">send_command</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_commands" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_commands">send_commands</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_command" href="../generic_driver.html#scrapli.driver.generic_driver.GenericDriver.send_command">send_command</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_commands" href="../generic_driver.html#scrapli.driver.generic_driver.GenericDriver.send_commands">send_commands</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_configs" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_configs">send_configs</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_interactive" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_interactive">send_interactive</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_interactive" href="../generic_driver.html#scrapli.driver.generic_driver.GenericDriver.send_interactive">send_interactive</a></code></li>
 </ul>
 </li>
 </ul>
@@ -583,16 +608,25 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
             **kwargs,
         )
 
+        if _telnet:
+            self.transport.username_prompt = &#34;login:&#34;
+
         self.privs = PRIVS
+        self.default_desired_priv = &#34;exec&#34;
+
         self.default_desired_priv = &#34;exec&#34;
         self.textfsm_platform = &#34;juniper_junos&#34;
 
-        if _telnet:
-            self.transport.username_prompt = &#34;login:&#34;</code></pre>
+        self.failed_when_contains = [
+            &#34;is ambiguous.&#34;,
+            &#34;No valid completions&#34;,
+            &#34;unknown command.&#34;,
+        ]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="scrapli.driver.network_driver.NetworkDriver" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver">NetworkDriver</a></li>
+<li><a title="scrapli.driver.generic_driver.GenericDriver" href="../generic_driver.html#scrapli.driver.generic_driver.GenericDriver">GenericDriver</a></li>
 <li><a title="scrapli.driver.driver.Scrape" href="../driver.html#scrapli.driver.driver.Scrape">Scrape</a></li>
 <li>abc.ABC</li>
 </ul>
@@ -602,13 +636,13 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
 <ul class="hlist">
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.acquire_priv" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.acquire_priv">acquire_priv</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.close" href="../driver.html#scrapli.driver.driver.Scrape.close">close</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.get_prompt" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.get_prompt">get_prompt</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.get_prompt" href="../generic_driver.html#scrapli.driver.generic_driver.GenericDriver.get_prompt">get_prompt</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.isalive" href="../driver.html#scrapli.driver.driver.Scrape.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.open" href="../driver.html#scrapli.driver.driver.Scrape.open">open</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_command" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_command">send_command</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_commands" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_commands">send_commands</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_command" href="../generic_driver.html#scrapli.driver.generic_driver.GenericDriver.send_command">send_command</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_commands" href="../generic_driver.html#scrapli.driver.generic_driver.GenericDriver.send_commands">send_commands</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_configs" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_configs">send_configs</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_interactive" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_interactive">send_interactive</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_interactive" href="../generic_driver.html#scrapli.driver.generic_driver.GenericDriver.send_interactive">send_interactive</a></code></li>
 </ul>
 </li>
 </ul>
@@ -742,16 +776,25 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
             **kwargs,
         )
 
+        if _telnet:
+            self.transport.username_prompt = &#34;login:&#34;
+
         self.privs = PRIVS
         self.default_desired_priv = &#34;privilege_exec&#34;
-        self.textfsm_platform = &#34;cisco_nxos&#34;
 
-        if _telnet:
-            self.transport.username_prompt = &#34;login:&#34;</code></pre>
+        self.textfsm_platform = &#34;cisco_nxos&#34;
+        self.genie_platform = &#34;nxos&#34;
+
+        self.failed_when_contains = [
+            &#34;% Ambiguous command&#34;,
+            &#34;% Incomplete command&#34;,
+            &#34;% Invalid input detected&#34;,
+        ]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="scrapli.driver.network_driver.NetworkDriver" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver">NetworkDriver</a></li>
+<li><a title="scrapli.driver.generic_driver.GenericDriver" href="../generic_driver.html#scrapli.driver.generic_driver.GenericDriver">GenericDriver</a></li>
 <li><a title="scrapli.driver.driver.Scrape" href="../driver.html#scrapli.driver.driver.Scrape">Scrape</a></li>
 <li>abc.ABC</li>
 </ul>
@@ -761,13 +804,13 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
 <ul class="hlist">
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.acquire_priv" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.acquire_priv">acquire_priv</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.close" href="../driver.html#scrapli.driver.driver.Scrape.close">close</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.get_prompt" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.get_prompt">get_prompt</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.get_prompt" href="../generic_driver.html#scrapli.driver.generic_driver.GenericDriver.get_prompt">get_prompt</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.isalive" href="../driver.html#scrapli.driver.driver.Scrape.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.open" href="../driver.html#scrapli.driver.driver.Scrape.open">open</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_command" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_command">send_command</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_commands" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_commands">send_commands</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_command" href="../generic_driver.html#scrapli.driver.generic_driver.GenericDriver.send_command">send_command</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_commands" href="../generic_driver.html#scrapli.driver.generic_driver.GenericDriver.send_commands">send_commands</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_configs" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_configs">send_configs</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_interactive" href="../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_interactive">send_interactive</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_interactive" href="../generic_driver.html#scrapli.driver.generic_driver.GenericDriver.send_interactive">send_interactive</a></code></li>
 </ul>
 </li>
 </ul>

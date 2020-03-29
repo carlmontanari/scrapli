@@ -4,33 +4,12 @@ import re
 import warnings
 from abc import ABC, abstractmethod
 from collections import namedtuple
-from typing import Any, Callable, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Optional, Union
 
-from scrapli.driver.driver import Scrape
+from scrapli.driver.generic_driver import GenericDriver
 from scrapli.exceptions import CouldNotAcquirePrivLevel, UnknownPrivLevel
 from scrapli.helper import get_prompt_pattern
 from scrapli.response import Response
-from scrapli.transport import (
-    MIKO_TRANSPORT_ARGS,
-    SSH2_TRANSPORT_ARGS,
-    SYSTEM_SSH_TRANSPORT_ARGS,
-    MikoTransport,
-    SSH2Transport,
-    SystemSSHTransport,
-    Transport,
-)
-
-TRANSPORT_CLASS: Dict[str, Callable[..., Transport]] = {
-    "system": SystemSSHTransport,
-    "ssh2": SSH2Transport,
-    "paramiko": MikoTransport,
-}
-TRANSPORT_ARGS: Dict[str, Tuple[str, ...]] = {
-    "system": SYSTEM_SSH_TRANSPORT_ARGS,
-    "ssh2": SSH2_TRANSPORT_ARGS,
-    "paramiko": MIKO_TRANSPORT_ARGS,
-}
-
 
 PrivilegeLevel = namedtuple(
     "PrivilegeLevel",
@@ -54,7 +33,7 @@ PRIVS: Dict[str, PrivilegeLevel] = {}
 LOG = logging.getLogger("scrapli_base")
 
 
-class NetworkDriver(Scrape, ABC):
+class NetworkDriver(GenericDriver, ABC):
     @abstractmethod
     def __init__(
         self, auth_secondary: str = "", **kwargs: Any,
@@ -236,13 +215,19 @@ class NetworkDriver(Scrape, ABC):
         response.textfsm_platform = self.textfsm_platform
         response.genie_platform = self.genie_platform
 
-    def send_command(self, command: str, strip_prompt: bool = True) -> Response:
+    def send_command(
+        self,
+        command: str,
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+    ) -> Response:
         """
         Send a command
 
         Args:
             command: string to send to device in privilege exec mode
             strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
 
         Returns:
             Response: Scrapli Response object
@@ -251,27 +236,33 @@ class NetworkDriver(Scrape, ABC):
             TypeError: if command is anything but a string
 
         """
-        if not isinstance(command, str):
-            raise TypeError(
-                f"`send_command` expects a single string, got {type(command)}. "
-                "to send a list of commands use the `send_commands` method instead."
-            )
-
         if self._current_priv_level.name != self.default_desired_priv:
             self.acquire_priv(self.default_desired_priv)
-        response = self.channel.send_input(
-            command, strip_prompt=strip_prompt, failed_when_contains=self.failed_when_contains
+
+        if failed_when_contains is None:
+            failed_when_contains = self.failed_when_contains
+
+        response = super().send_command(
+            command, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
         )
+
         self._update_response(response)
+
         return response
 
-    def send_commands(self, commands: List[str], strip_prompt: bool = True) -> List[Response]:
+    def send_commands(
+        self,
+        commands: List[str],
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+    ) -> List[Response]:
         """
         Send multiple commands
 
         Args:
             commands: list of strings to send to device in privilege exec mode
             strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
 
         Returns:
             responses: list of Scrapli Response objects
@@ -280,19 +271,19 @@ class NetworkDriver(Scrape, ABC):
             TypeError: if commands is anything but a list
 
         """
-        if not isinstance(commands, list):
-            raise TypeError(
-                f"`send_commands` expects a list of strings, got {type(commands)}. "
-                "to send a single command use the `send_command` method instead."
-            )
-
         if self._current_priv_level.name != self.default_desired_priv:
             self.acquire_priv(self.default_desired_priv)
-        responses = self.channel.send_inputs(
-            commands, strip_prompt=strip_prompt, failed_when_contains=self.failed_when_contains
+
+        if failed_when_contains is None:
+            failed_when_contains = self.failed_when_contains
+
+        responses = super().send_commands(
+            commands, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
         )
+
         for response in responses:
             self._update_response(response)
+
         return responses
 
     def send_interactive(self, interact: List[str], hidden_response: bool = False) -> Response:
@@ -326,7 +317,10 @@ class NetworkDriver(Scrape, ABC):
         return response
 
     def send_configs(
-        self, configs: Union[str, List[str]], strip_prompt: bool = True
+        self,
+        configs: Union[str, List[str]],
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
     ) -> List[Response]:
         """
         Send configuration(s)
@@ -334,6 +328,7 @@ class NetworkDriver(Scrape, ABC):
         Args:
             configs: string or list of strings to send to device in config mode
             strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
 
         Returns:
             responses: List of Scrape Response objects
@@ -346,25 +341,20 @@ class NetworkDriver(Scrape, ABC):
             configs = [configs]
 
         self.acquire_priv("configuration")
-        responses = self.channel.send_inputs(
-            configs, strip_prompt=strip_prompt, failed_when_contains=self.failed_when_contains
-        )
+
+        if failed_when_contains is None:
+            failed_when_contains = self.failed_when_contains
+
+        responses = []
+        for config in configs:
+            responses.append(
+                super().send_command(
+                    config, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+                )
+            )
+
+        for response in responses:
+            self._update_response(response)
+
         self.acquire_priv(self.default_desired_priv)
         return responses
-
-    def get_prompt(self) -> str:
-        """
-        Convenience method to get device prompt from Channel
-
-        Args:
-            N/A
-
-        Returns:
-            str: prompt received from channel.get_prompt
-
-        Raises:
-            N/A
-
-        """
-        prompt: str = self.channel.get_prompt()
-        return prompt

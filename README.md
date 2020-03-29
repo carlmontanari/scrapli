@@ -114,7 +114,8 @@ end
 ## More Examples
 
 - [Basic "native" Scrape operations](/examples/basic_usage/scrapli_driver.py)
-- [Basic "driver" Scrape operations](/examples/basic_usage/iosxe_driver.py)
+- [Basic "GenericDriver" operations](/examples/basic_usage/generic_driver.py)
+- [Basic "core" Driver operations](/examples/basic_usage/iosxe_driver.py)
 - [Setting up basic logging](/examples/logging/basic_logging.py)
 - [Using SSH Key for authentication](/examples/ssh_keys/ssh_keys.py)
 - [Using SSH config file](/examples/ssh_config_files/ssh_config_file.py)
@@ -165,11 +166,13 @@ The final piece of scrapli is the actual "driver" -- or the component that binds
   a "raw" SSH (or telnet) connection that is created by instantiating a Transport object, and a Channel object
   . `Scrape` provides (via Channel) read/write methods and not much else -- this should feel familiar if you have
    used paramiko in the past. More specific "drivers" can inherit from this class to extend functionality of the
-    driver to make it more friendly for network devices. In fact, there is a `NetworkDriver` abstract base class which
-     does just that. This `NetworkDriver` isn't really meant to be used directly though (hence why it is an ABC), but
-      to be further extended and built upon instead. As this library is focused on interacting with network devices
-      , an example scrapli driver (built on the `NetworkDriver`) would be the `IOSXE` driver -- to, as you may have
-       guessed, interact with devices running Cisco's IOS-XE operating system.
+    driver to make it more friendly for network devices. In fact, there is a `GenericDriver` class that inherits from
+     `Scrape` and provides a base driver to work with if you need to interact with a device not represented by one of
+      the "core" drivers. Next, the `NetworkDriver` abstract base class inherits from `GenericDriver` This
+       `NetworkDriver` isn't really meant to be used directly though (hence why it is an ABC), but to be further
+        extended and built upon instead. As this library is focused on interacting with network devices, an example
+         scrapli driver (built on the `NetworkDriver`) would be the `IOSXE` driver -- to, as you may have guessed
+         , interact with devices running Cisco's IOS-XE operating system.
 
 
 # Documentation
@@ -294,7 +297,8 @@ All drivers can be imported from `scrapli.driver.core`.
 
 If you are working with a platform not listed above, you have two options: you can use the `Scrape` driver directly
 , which you can read about [here](#using-scrape-directly) or you can use the `GenericDriver` which which you can read
- about [here](#using-the-genericdriver). 
+ about [here](#using-the-genericdriver). In general you should probably use the `GenericDriver` and not mess about
+  using `Scrape` directly.
 
 
 ## Basic Driver Arguments
@@ -377,11 +381,14 @@ with IOSXEDriver(**my_device) as conn:
 
 ## Sending Commands
 
-When using any of the core network drivers (`JunosDriver`, `EOSDriver`, etc.), the `send_command` and
- `send_commands` methods will respectively send a single command or list of commands to the device. The commands will
-  be sent at the `default_desired_priv` level which is typically "privilege exec" (or equivalent) privilege level
-  . Please see [Driver Privilege Levels](#driver-privilege-levels) in the advanced usage section for more details on
-   privilege levels.
+When using any of the core network drivers (`JunosDriver`, `EOSDriver`, etc.) or the `GenericDriver`, the `send_command
+` and `send_commands` methods will respectively send a single command or list of commands to the device.
+
+When using the core network drivers, the command(s) will be sent at the `default_desired_priv` level which is
+ typically "privilege exec" (or equivalent) privilege level. Please see [Driver Privilege Levels](#driver-privilege
+ -levels) in the advanced usage section for more details on privilege levels. As the `GenericDriver` doesn't know or
+  care about privilege levels you would need to manually handle acquiring the appropriate privilege level for you
+   command yourself if using that driver.
 
 Note the different methods for sending a single command versus a list of commands!
 
@@ -403,8 +410,9 @@ responses = conn.send_commands(["show run", "show ip int brief"])
 
 ## Response Object
 
-All read operations result in a `Response` object being created. The `Response` object contains attributes for the command
- sent (`channel_input`), start/end/elapsed time, and of course the result of the command sent.
+All command/config operations that happen in the `GenericDriver` or any of the drivers inheriting from the
+ `NetworkDriver` result in a `Response` object being created. The `Response` object contains attributes for the
+  command sent (`channel_input`), start/end/elapsed time, and of course the result of the command sent.
 
 ```python
 from scrapli.driver.core import IOSXEDriver
@@ -648,10 +656,11 @@ The `comms_prompt_pattern` pattern can be changed at any time at or after instan
 
 Lots of times when connecting to a device there are "things" that need to happen immediately after getting connected
 . In the context of network devices the most obvious/common example would be disabling paging (i.e. sending `terminal
- length 0` on a Cisco-type device). While scrapli `Scrape` (the base driver) does not know or care about disabling
-  paging or any other on connect type activities, scrapli of course provides a mechanism for allowing users to handle
-   these types of tasks. Even better yet, if you are using any of the core drivers (`IOSXEDriver`, `IOSXRDriver
-   `, etc.), scrapli will automatically have some sane default "on connect" actions (namely disabling paging).
+ length 0` on a Cisco-type device). While scrapli `Scrape` (the base driver) and `GenericDriver` do not know or care
+  about disabling paging or any other on connect type activities, scrapli of course provides a mechanism for allowing
+   users to handle these types of tasks. Even better yet, if you are using any of the core drivers (`IOSXEDriver
+   `, `IOSXRDriver`, etc.), scrapli will automatically have some sane default "on connect" actions (namely disabling
+    paging).
 
 If you were so inclined to create some of your own "on connect" actions, you can simply pass those to the `on_connect
 ` argument of `Scrape` or any of its sub-classes (`NetworkDriver`, `IOSXEDriver`, etc.). The value of this argument
@@ -783,12 +792,12 @@ with IOSXEDriver(**my_device) as conn:
 ## Using `Scrape` Directly
 
 All examples in this readme have shown using the "core" network drivers such as `IOSXEDriver`. These core network
- drivers are actually sub-classes of an ABC called `NetworkDriver` which itself is a sub-class of the base `Scrape
- ` class -- the namesake for this library. The `Scrape` object can be used directly if you prefer to have a much less
-  opinionated or less "auto-magic" type experience. `Scrape` does not provide the same `send_command`/`send_commands
-  `/`send_configs` methods, nor does it disable paging, or handle any kind of privilege escalation/de-escalation
-  . `Scrape` is a much more basic "paramiko"-like experience. Below is a brief example of using the `Scrape` object
-   directly:
+ drivers are actually sub-classes of an ABC called `NetworkDriver` which itself is a sub-class of the `GenericDriver
+ ` which is a sub-class of the base `Scrape` class -- the namesake for this library. The `Scrape` object can be used
+  directly if you prefer to have a much less opinionated or less "auto-magic" type experience. `Scrape` does not
+   provide the same `send_command`/`send_commands`/`send_configs` methods, nor does it disable paging, or handle any
+    kind of privilege escalation/de-escalation. `Scrape` is a much more basic "paramiko"-like experience. Below is a
+     brief example of using the `Scrape` object directly:
    
 ```python
 from scrapli import Scrape

@@ -16,3 +16,7 @@ CHANGELOG
 - Add "failed_when" strings to the core drivers; these are used in the response object to help indicate if the
  channel input failed or succeeded. For scrapli not super super helpful, but nornir_scrapli will benefit from this as
   well!
+- Modify `NetworkDriver` to inherit from `GenericDriver` -- this allowed for some clean up of how/where `Response
+` objects get created/returned from. `Channel` now is much more de-coupled from whatever sits on top of it (this will
+ be important for some netconf testing happening soon!). 
+- Minor test de-duplication around ssh config/known hosts file gathering.

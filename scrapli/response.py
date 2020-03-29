@@ -16,7 +16,7 @@ class Response:
         expectation: Optional[str] = None,
         channel_response: Optional[str] = None,
         finale: Optional[str] = None,
-        failed_when_contains: Optional[List[str]] = None,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
     ):
         """
         Scrapli Response
@@ -58,8 +58,8 @@ class Response:
         self.raw_result: str = ""
         self.result: str = ""
 
-        # for future use -- could add failed when terms in each driver, then check for those strings
-        # in results to determine if the command failed, could also set this at send_inputs level
+        if isinstance(failed_when_contains, str):
+            failed_when_contains = [failed_when_contains]
         self.failed_when_contains = failed_when_contains
         self.failed = True
 

@@ -20,8 +20,8 @@ class TestDevice:
         command = TEST_CASES["linux"]["send_command_short"]["command"]
         expected_type = "expected_no_strip" if not strip_prompt else "expected_strip"
         expected_response = TEST_CASES["linux"]["send_command_short"][expected_type]
-        response = nix_conn.channel.send_input(channel_input=command, strip_prompt=strip_prompt)
-        assert response.result == expected_response
+        _, response = nix_conn.channel.send_input(channel_input=command, strip_prompt=strip_prompt)
+        assert response == expected_response
 
     @pytest.mark.parametrize(
         "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
@@ -30,23 +30,8 @@ class TestDevice:
         command = TEST_CASES["linux"]["send_command_long"]["command"]
         expected_type = "expected_no_strip" if not strip_prompt else "expected_strip"
         expected_response = TEST_CASES["linux"]["send_command_long"][expected_type]
-        response = nix_conn.channel.send_input(channel_input=command, strip_prompt=strip_prompt)
-        assert response.result == expected_response
-
-    @pytest.mark.parametrize(
-        "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
-    )
-    def test_send_commands(self, nix_conn, transport, strip_prompt):
-        commands = []
-        expected_responses = []
-        commands.append(TEST_CASES["linux"]["send_command_short"]["command"])
-        commands.append(TEST_CASES["linux"]["send_command_long"]["command"])
-        expected_type = "expected_no_strip" if not strip_prompt else "expected_strip"
-        expected_responses.append(TEST_CASES["linux"]["send_command_short"][expected_type])
-        expected_responses.append(TEST_CASES["linux"]["send_command_long"][expected_type])
-        responses = nix_conn.channel.send_inputs(channel_inputs=commands, strip_prompt=strip_prompt)
-        for expected_response, response in zip(expected_responses, responses):
-            assert response.result == expected_response
+        _, response = nix_conn.channel.send_input(channel_input=command, strip_prompt=strip_prompt)
+        assert response == expected_response
 
     def test_isalive_and_close(self, nix_conn, transport):
         assert nix_conn.isalive() is True
@@ -55,6 +40,55 @@ class TestDevice:
         # close in time for the next assert
         time.sleep(0.1)
         assert nix_conn.isalive() is False
+
+
+class TestGenericDevice:
+    def test_get_prompt(self, nix_conn_generic, transport):
+        prompt = nix_conn_generic.channel.get_prompt()
+        assert prompt == TEST_CASES["linux"]["get_prompt"]
+
+    @pytest.mark.parametrize(
+        "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
+    )
+    def test_send_command_short(self, nix_conn_generic, transport, strip_prompt):
+        command = TEST_CASES["linux"]["send_command_short"]["command"]
+        expected_type = "expected_no_strip" if not strip_prompt else "expected_strip"
+        expected_response = TEST_CASES["linux"]["send_command_short"][expected_type]
+        response = nix_conn_generic.send_command(command=command, strip_prompt=strip_prompt)
+        assert response.result == expected_response
+
+    @pytest.mark.parametrize(
+        "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
+    )
+    def test_send_command_long(self, nix_conn_generic, transport, strip_prompt):
+        command = TEST_CASES["linux"]["send_command_long"]["command"]
+        expected_type = "expected_no_strip" if not strip_prompt else "expected_strip"
+        expected_response = TEST_CASES["linux"]["send_command_long"][expected_type]
+        response = nix_conn_generic.send_command(command=command, strip_prompt=strip_prompt)
+        assert response.result == expected_response
+
+    @pytest.mark.parametrize(
+        "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
+    )
+    def test_send_commands(self, nix_conn_generic, transport, strip_prompt):
+        commands = []
+        expected_responses = []
+        commands.append(TEST_CASES["linux"]["send_command_short"]["command"])
+        commands.append(TEST_CASES["linux"]["send_command_long"]["command"])
+        expected_type = "expected_no_strip" if not strip_prompt else "expected_strip"
+        expected_responses.append(TEST_CASES["linux"]["send_command_short"][expected_type])
+        expected_responses.append(TEST_CASES["linux"]["send_command_long"][expected_type])
+        responses = nix_conn_generic.send_commands(commands=commands, strip_prompt=strip_prompt)
+        for expected_response, response in zip(expected_responses, responses):
+            assert response.result == expected_response
+
+    def test_isalive_and_close(self, nix_conn_generic, transport):
+        assert nix_conn_generic.isalive() is True
+        nix_conn_generic.close()
+        # unsure why but w/out a tiny sleep pytest just plows ahead and the connection doesnt
+        # close in time for the next assert
+        time.sleep(0.1)
+        assert nix_conn_generic.isalive() is False
 
 
 class TestNetworkDevice:

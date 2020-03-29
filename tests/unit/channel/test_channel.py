@@ -25,19 +25,13 @@ def test__repr(mocked_channel):
             "`send_input` expects a single string, got <class 'list'>. to send a list of inputs use the `send_inputs` method instead",
         ),
         (
-            "send_inputs",
-            {"channel_inputs": "stuff"},
-            TypeError,
-            "`send_inputs` expects a list of strings, got <class 'str'>. to send a single input use the `send_input` method instead",
-        ),
-        (
             "send_inputs_interact",
             {"channel_inputs": "stuff"},
             TypeError,
             "`send_inputs_interact` expects a List, got <class 'str'>",
         ),
     ],
-    ids=["send_input", "send_inputs", "send_inputs_interact"],
+    ids=["send_input", "send_inputs_interact"],
 )
 def test_exceptions_raised(attr_setup, mocked_channel):
     method_name = attr_setup[0]
@@ -228,121 +222,8 @@ def test_send_input(attr_setup, mocked_channel):
     channel_output = attr_setup[2]
     expected = attr_setup[3]
     conn = mocked_channel([(channel_input, channel_output)])
-    output = conn.channel.send_input(channel_input, **args)
-    assert output.result == expected
-
-
-@pytest.mark.parametrize(
-    "attr_setup",
-    [
-        (
-            {},
-            ["show ip access-lists", "show ip prefix-list"],
-            [
-                """Extended IP access list ext_acl_fw
-    10 deny ip 0.0.0.0 0.255.255.255 any
-    20 deny ip 10.0.0.0 0.255.255.255 any
-    30 deny ip 100.64.0.0 0.63.255.255 any (2 matches)
-    40 deny ip 127.0.0.0 0.255.255.255 any
-    50 deny ip 169.254.0.0 0.0.255.255 any
-    60 deny ip 172.16.0.0 0.15.255.255 any
-    70 deny ip 192.0.0.0 0.0.0.255 any
-    80 deny ip 192.0.2.0 0.0.0.255 any
-    90 deny ip 192.168.0.0 0.0.255.255 any
-    100 deny ip 198.18.0.0 0.1.255.255 any
-    110 deny ip 198.51.100.0 0.0.0.255 any
-    120 deny ip 203.0.113.0 0.0.0.255 any
-    130 deny ip 224.0.0.0 15.255.255.255 any
-    140 deny ip 240.0.0.0 15.255.255.255 any
-3560CX#""",
-                """ip prefix-list pl_default: 1 entries
-   seq 5 permit 0.0.0.0/0 le 32
-3560CX#""",
-            ],
-            [
-                """Extended IP access list ext_acl_fw
-    10 deny ip 0.0.0.0 0.255.255.255 any
-    20 deny ip 10.0.0.0 0.255.255.255 any
-    30 deny ip 100.64.0.0 0.63.255.255 any (2 matches)
-    40 deny ip 127.0.0.0 0.255.255.255 any
-    50 deny ip 169.254.0.0 0.0.255.255 any
-    60 deny ip 172.16.0.0 0.15.255.255 any
-    70 deny ip 192.0.0.0 0.0.0.255 any
-    80 deny ip 192.0.2.0 0.0.0.255 any
-    90 deny ip 192.168.0.0 0.0.255.255 any
-    100 deny ip 198.18.0.0 0.1.255.255 any
-    110 deny ip 198.51.100.0 0.0.0.255 any
-    120 deny ip 203.0.113.0 0.0.0.255 any
-    130 deny ip 224.0.0.0 15.255.255.255 any
-    140 deny ip 240.0.0.0 15.255.255.255 any""",
-                """ip prefix-list pl_default: 1 entries
-   seq 5 permit 0.0.0.0/0 le 32""",
-            ],
-        ),
-        (
-            {"strip_prompt": False},
-            ["show ip access-lists", "show ip prefix-list"],
-            [
-                """Extended IP access list ext_acl_fw
-    10 deny ip 0.0.0.0 0.255.255.255 any
-    20 deny ip 10.0.0.0 0.255.255.255 any
-    30 deny ip 100.64.0.0 0.63.255.255 any (2 matches)
-    40 deny ip 127.0.0.0 0.255.255.255 any
-    50 deny ip 169.254.0.0 0.0.255.255 any
-    60 deny ip 172.16.0.0 0.15.255.255 any
-    70 deny ip 192.0.0.0 0.0.0.255 any
-    80 deny ip 192.0.2.0 0.0.0.255 any
-    90 deny ip 192.168.0.0 0.0.255.255 any
-    100 deny ip 198.18.0.0 0.1.255.255 any
-    110 deny ip 198.51.100.0 0.0.0.255 any
-    120 deny ip 203.0.113.0 0.0.0.255 any
-    130 deny ip 224.0.0.0 15.255.255.255 any
-    140 deny ip 240.0.0.0 15.255.255.255 any
-3560CX#""",
-                """ip prefix-list pl_default: 1 entries
-   seq 5 permit 0.0.0.0/0 le 32
-3560CX#""",
-            ],
-            [
-                """Extended IP access list ext_acl_fw
-    10 deny ip 0.0.0.0 0.255.255.255 any
-    20 deny ip 10.0.0.0 0.255.255.255 any
-    30 deny ip 100.64.0.0 0.63.255.255 any (2 matches)
-    40 deny ip 127.0.0.0 0.255.255.255 any
-    50 deny ip 169.254.0.0 0.0.255.255 any
-    60 deny ip 172.16.0.0 0.15.255.255 any
-    70 deny ip 192.0.0.0 0.0.0.255 any
-    80 deny ip 192.0.2.0 0.0.0.255 any
-    90 deny ip 192.168.0.0 0.0.255.255 any
-    100 deny ip 198.18.0.0 0.1.255.255 any
-    110 deny ip 198.51.100.0 0.0.0.255 any
-    120 deny ip 203.0.113.0 0.0.0.255 any
-    130 deny ip 224.0.0.0 15.255.255.255 any
-    140 deny ip 240.0.0.0 15.255.255.255 any
-3560CX#""",
-                """ip prefix-list pl_default: 1 entries
-   seq 5 permit 0.0.0.0/0 le 32
-3560CX#""",
-            ],
-        ),
-    ],
-    ids=["strip_prompt_true", "strip_prompt_false",],
-)
-def test_send_inputs(attr_setup, mocked_channel):
-    args = attr_setup[0]
-    channel_inputs = attr_setup[1]
-    channel_outputs = attr_setup[2]
-    expected_results = attr_setup[3]
-
-    test_operations = []
-    for channel_input, channel_output in zip(channel_inputs, channel_outputs):
-        test_operations.append((channel_input, channel_output))
-
-    conn = mocked_channel(test_operations)
-    outputs = conn.channel.send_inputs(channel_inputs, **args)
-
-    for expected, output in zip(expected_results, outputs):
-        assert output.result == expected
+    raw_output, processed_output = conn.channel.send_input(channel_input, **args)
+    assert processed_output == expected
 
 
 @pytest.mark.parametrize(

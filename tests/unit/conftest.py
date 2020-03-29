@@ -4,8 +4,7 @@ from typing import Any, Callable, Dict, Optional, Tuple
 import pytest
 
 from scrapli.channel import Channel
-from scrapli.driver import NetworkDriver, Scrape
-from scrapli.driver.core import GenericDriver
+from scrapli.driver import GenericDriver, NetworkDriver, Scrape
 from scrapli.driver.core.cisco_iosxe.driver import PRIVS
 from scrapli.transport.transport import Transport
 
