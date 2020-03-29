@@ -251,6 +251,8 @@ class NetworkDriver(GenericDriver, ABC):
         &#34;&#34;&#34;
         Send a command
 
+        Super method will raise TypeError if anything but a string is passed here!
+
         Args:
             command: string to send to device in privilege exec mode
             strip_prompt: True/False strip prompt from returned output
@@ -260,7 +262,7 @@ class NetworkDriver(GenericDriver, ABC):
             Response: Scrapli Response object
 
         Raises:
-            TypeError: if command is anything but a string
+            N/A
 
         &#34;&#34;&#34;
         if self._current_priv_level.name != self.default_desired_priv:
@@ -286,6 +288,8 @@ class NetworkDriver(GenericDriver, ABC):
         &#34;&#34;&#34;
         Send multiple commands
 
+        Super method will raise TypeError if anything but a list of strings is passed here!
+
         Args:
             commands: list of strings to send to device in privilege exec mode
             strip_prompt: True/False strip prompt from returned output
@@ -295,7 +299,7 @@ class NetworkDriver(GenericDriver, ABC):
             responses: list of Scrapli Response objects
 
         Raises:
-            TypeError: if commands is anything but a list
+            N/A
 
         &#34;&#34;&#34;
         if self._current_priv_level.name != self.default_desired_priv:
@@ -617,6 +621,8 @@ inheritance.</p>
         &#34;&#34;&#34;
         Send a command
 
+        Super method will raise TypeError if anything but a string is passed here!
+
         Args:
             command: string to send to device in privilege exec mode
             strip_prompt: True/False strip prompt from returned output
@@ -626,7 +632,7 @@ inheritance.</p>
             Response: Scrapli Response object
 
         Raises:
-            TypeError: if command is anything but a string
+            N/A
 
         &#34;&#34;&#34;
         if self._current_priv_level.name != self.default_desired_priv:
@@ -652,6 +658,8 @@ inheritance.</p>
         &#34;&#34;&#34;
         Send multiple commands
 
+        Super method will raise TypeError if anything but a list of strings is passed here!
+
         Args:
             commands: list of strings to send to device in privilege exec mode
             strip_prompt: True/False strip prompt from returned output
@@ -661,7 +669,7 @@ inheritance.</p>
             responses: list of Scrapli Response objects
 
         Raises:
-            TypeError: if commands is anything but a list
+            N/A
 
         &#34;&#34;&#34;
         if self._current_priv_level.name != self.default_desired_priv:
@@ -826,6 +834,141 @@ inheritance.</p>
         priv_attempt_counter += 1</code></pre>
 </details>
 </dd>
+<dt id="scrapli.driver.network_driver.NetworkDriver.send_command"><code class="name flex">
+<span>def <span class="ident">send_command</span></span>(<span>self, command, strip_prompt=True, failed_when_contains=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Send a command</p>
+<p>Super method will raise TypeError if anything but a string is passed here!</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>command</code></strong></dt>
+<dd>string to send to device in privilege exec mode</dd>
+<dt><strong><code>strip_prompt</code></strong></dt>
+<dd>True/False strip prompt from returned output</dd>
+<dt><strong><code>failed_when_contains</code></strong></dt>
+<dd>string or list of strings indicating failure if found in response</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>Response</code></strong></dt>
+<dd>Scrapli Response object</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def send_command(
+    self,
+    command: str,
+    strip_prompt: bool = True,
+    failed_when_contains: Optional[Union[str, List[str]]] = None,
+) -&gt; Response:
+    &#34;&#34;&#34;
+    Send a command
+
+    Super method will raise TypeError if anything but a string is passed here!
+
+    Args:
+        command: string to send to device in privilege exec mode
+        strip_prompt: True/False strip prompt from returned output
+        failed_when_contains: string or list of strings indicating failure if found in response
+
+    Returns:
+        Response: Scrapli Response object
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    if self._current_priv_level.name != self.default_desired_priv:
+        self.acquire_priv(self.default_desired_priv)
+
+    if failed_when_contains is None:
+        failed_when_contains = self.failed_when_contains
+
+    response = super().send_command(
+        command, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+    )
+
+    self._update_response(response)
+
+    return response</code></pre>
+</details>
+</dd>
+<dt id="scrapli.driver.network_driver.NetworkDriver.send_commands"><code class="name flex">
+<span>def <span class="ident">send_commands</span></span>(<span>self, commands, strip_prompt=True, failed_when_contains=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Send multiple commands</p>
+<p>Super method will raise TypeError if anything but a list of strings is passed here!</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>commands</code></strong></dt>
+<dd>list of strings to send to device in privilege exec mode</dd>
+<dt><strong><code>strip_prompt</code></strong></dt>
+<dd>True/False strip prompt from returned output</dd>
+<dt><strong><code>failed_when_contains</code></strong></dt>
+<dd>string or list of strings indicating failure if found in response</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>responses</code></strong></dt>
+<dd>list of Scrapli Response objects</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def send_commands(
+    self,
+    commands: List[str],
+    strip_prompt: bool = True,
+    failed_when_contains: Optional[Union[str, List[str]]] = None,
+) -&gt; List[Response]:
+    &#34;&#34;&#34;
+    Send multiple commands
+
+    Super method will raise TypeError if anything but a list of strings is passed here!
+
+    Args:
+        commands: list of strings to send to device in privilege exec mode
+        strip_prompt: True/False strip prompt from returned output
+        failed_when_contains: string or list of strings indicating failure if found in response
+
+    Returns:
+        responses: list of Scrapli Response objects
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    if self._current_priv_level.name != self.default_desired_priv:
+        self.acquire_priv(self.default_desired_priv)
+
+    if failed_when_contains is None:
+        failed_when_contains = self.failed_when_contains
+
+    responses = super().send_commands(
+        commands, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+    )
+
+    for response in responses:
+        self._update_response(response)
+
+    return responses</code></pre>
+</details>
+</dd>
 <dt id="scrapli.driver.network_driver.NetworkDriver.send_configs"><code class="name flex">
 <span>def <span class="ident">send_configs</span></span>(<span>self, configs, strip_prompt=True, failed_when_contains=None)</span>
 </code></dt>
@@ -907,8 +1050,6 @@ inheritance.</p>
 <li><code><a title="scrapli.driver.generic_driver.GenericDriver.get_prompt" href="generic_driver.html#scrapli.driver.generic_driver.GenericDriver.get_prompt">get_prompt</a></code></li>
 <li><code><a title="scrapli.driver.generic_driver.GenericDriver.isalive" href="driver.html#scrapli.driver.driver.Scrape.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.driver.generic_driver.GenericDriver.open" href="driver.html#scrapli.driver.driver.Scrape.open">open</a></code></li>
-<li><code><a title="scrapli.driver.generic_driver.GenericDriver.send_command" href="generic_driver.html#scrapli.driver.generic_driver.GenericDriver.send_command">send_command</a></code></li>
-<li><code><a title="scrapli.driver.generic_driver.GenericDriver.send_commands" href="generic_driver.html#scrapli.driver.generic_driver.GenericDriver.send_commands">send_commands</a></code></li>
 <li><code><a title="scrapli.driver.generic_driver.GenericDriver.send_interactive" href="generic_driver.html#scrapli.driver.generic_driver.GenericDriver.send_interactive">send_interactive</a></code></li>
 </ul>
 </li>
@@ -988,6 +1129,8 @@ inheritance.</p>
 <h4><code><a title="scrapli.driver.network_driver.NetworkDriver" href="#scrapli.driver.network_driver.NetworkDriver">NetworkDriver</a></code></h4>
 <ul class="">
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.acquire_priv" href="#scrapli.driver.network_driver.NetworkDriver.acquire_priv">acquire_priv</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_command" href="#scrapli.driver.network_driver.NetworkDriver.send_command">send_command</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_commands" href="#scrapli.driver.network_driver.NetworkDriver.send_commands">send_commands</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_configs" href="#scrapli.driver.network_driver.NetworkDriver.send_configs">send_configs</a></code></li>
 </ul>
 </li>

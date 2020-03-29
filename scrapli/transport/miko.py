@@ -244,7 +244,7 @@ class MikoTransport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            ScrapliAuthenticationFailed: if authentication fails
 
         """
         if self.auth_private_key:
@@ -274,7 +274,8 @@ class MikoTransport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            exc: if unknown (i.e. not auth failed) exception occurs
+            exc: (really the paramiko auth exception) if auth exception occurs
+            exc: (really the paramiko base exception) if unknown exception occurs
 
         """
         try:

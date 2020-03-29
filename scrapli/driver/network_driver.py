@@ -224,6 +224,8 @@ class NetworkDriver(GenericDriver, ABC):
         """
         Send a command
 
+        Super method will raise TypeError if anything but a string is passed here!
+
         Args:
             command: string to send to device in privilege exec mode
             strip_prompt: True/False strip prompt from returned output
@@ -233,7 +235,7 @@ class NetworkDriver(GenericDriver, ABC):
             Response: Scrapli Response object
 
         Raises:
-            TypeError: if command is anything but a string
+            N/A
 
         """
         if self._current_priv_level.name != self.default_desired_priv:
@@ -259,6 +261,8 @@ class NetworkDriver(GenericDriver, ABC):
         """
         Send multiple commands
 
+        Super method will raise TypeError if anything but a list of strings is passed here!
+
         Args:
             commands: list of strings to send to device in privilege exec mode
             strip_prompt: True/False strip prompt from returned output
@@ -268,7 +272,7 @@ class NetworkDriver(GenericDriver, ABC):
             responses: list of Scrapli Response objects
 
         Raises:
-            TypeError: if commands is anything but a list
+            N/A
 
         """
         if self._current_priv_level.name != self.default_desired_priv:

@@ -271,7 +271,7 @@ class MikoTransport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            ScrapliAuthenticationFailed: if authentication fails
 
         &#34;&#34;&#34;
         if self.auth_private_key:
@@ -301,7 +301,8 @@ class MikoTransport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            exc: if unknown (i.e. not auth failed) exception occurs
+            exc: (really the paramiko auth exception) if auth exception occurs
+            exc: (really the paramiko base exception) if unknown exception occurs
 
         &#34;&#34;&#34;
         try:
@@ -788,7 +789,7 @@ type is 'network'</dd>
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            ScrapliAuthenticationFailed: if authentication fails
 
         &#34;&#34;&#34;
         if self.auth_private_key:
@@ -818,7 +819,8 @@ type is 'network'</dd>
             N/A  # noqa: DAR202
 
         Raises:
-            exc: if unknown (i.e. not auth failed) exception occurs
+            exc: (really the paramiko auth exception) if auth exception occurs
+            exc: (really the paramiko base exception) if unknown exception occurs
 
         &#34;&#34;&#34;
         try:
@@ -1033,8 +1035,8 @@ type is 'network'</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
+<dt><strong><code>ScrapliAuthenticationFailed</code></strong></dt>
+<dd>if authentication fails</dd>
 </dl></section>
 <details class="source">
 <summary>
@@ -1051,7 +1053,7 @@ type is 'network'</dd>
         N/A  # noqa: DAR202
 
     Raises:
-        N/A
+        ScrapliAuthenticationFailed: if authentication fails
 
     &#34;&#34;&#34;
     if self.auth_private_key:
