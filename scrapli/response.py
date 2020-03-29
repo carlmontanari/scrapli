@@ -3,7 +3,7 @@ from datetime import datetime
 from io import TextIOWrapper
 from typing import Any, Dict, List, Optional, Union
 
-from scrapli.helper import _textfsm_get_template, textfsm_parse
+from scrapli.helper import _textfsm_get_template, genie_parse, textfsm_parse
 
 
 class Response:
@@ -12,10 +12,11 @@ class Response:
         host: str,
         channel_input: str,
         textfsm_platform: str = "",
+        genie_platform: str = "",
         expectation: Optional[str] = None,
         channel_response: Optional[str] = None,
         finale: Optional[str] = None,
-        failed_when_contains: Optional[List[str]] = None,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
     ):
         """
         Scrapli Response
@@ -27,6 +28,7 @@ class Response:
             host: host that was operated on
             channel_input: input that got sent down the channel
             textfsm_platform: ntc-templates friendly platform type
+            genie_platform: cisco pyats/genie friendly platform type
             expectation: used for send_inputs_interact -- string to expect back from the channel
                 after initial input
             channel_response: used for send_inputs_interact -- string to use to respond to expected
@@ -49,14 +51,15 @@ class Response:
 
         self.channel_input = channel_input
         self.textfsm_platform = textfsm_platform
+        self.genie_platform = genie_platform
         self.expectation = expectation
         self.channel_response = channel_response
         self.finale = finale
         self.raw_result: str = ""
         self.result: str = ""
 
-        # for future use -- could add failed when terms in each driver, then check for those strings
-        # in results to determine if the command failed, could also set this at send_inputs level
+        if isinstance(failed_when_contains, str):
+            failed_when_contains = [failed_when_contains]
         self.failed_when_contains = failed_when_contains
         self.failed = True
 
@@ -125,18 +128,22 @@ class Response:
         self.finish_time = datetime.now()
         self.elapsed_time = (self.finish_time - self.start_time).total_seconds()
         self.result = result
-        # update failed to false after recording results
-        self.failed = False
+        if not self.failed_when_contains:
+            self.failed = False
+        elif not any(err in result for err in self.failed_when_contains):
+            self.failed = False
 
     def textfsm_parse_output(self) -> Union[Dict[str, Any], List[Any]]:
         """
-        Parse results with textfsm, assign result to `structured_result`
+        Parse results with textfsm, always return structured data
+
+        Returns an empty list if parsing fails!
 
         Args:
             N/A
 
         Returns:
-            N/A  # noqa: DAR202
+            structured_result: empty list or parsed data from textfsm
 
         Raises:
             N/A
@@ -147,4 +154,23 @@ class Response:
             structured_result = textfsm_parse(template, self.result) or []
         else:
             structured_result = []
+        return structured_result
+
+    def genie_parse_output(self) -> Union[Dict[str, Any], List[Any]]:
+        """
+        Parse results with genie, always return structured data
+
+        Returns an empty list if parsing fails!
+
+        Args:
+            N/A
+
+        Returns:
+            structured_result: empty list or parsed data from genie
+
+        Raises:
+            N/A
+
+        """
+        structured_result = genie_parse(self.genie_platform, self.channel_input, self.result)
         return structured_result

@@ -43,3 +43,13 @@ def test_core_driver_init(platform, attr_setup):
     assert conn.auth_secondary == driver_args["auth_secondary"]
     assert conn.on_open == on_open
     assert conn.on_close == on_close
+
+
+def test_juniper_driver_init_telnet():
+    conn = JunosDriver(host="myhost", transport="telnet")
+    assert conn.transport.username_prompt == "login:"
+
+
+def test_nxos_driver_init_telnet():
+    conn = NXOSDriver(host="myhost", transport="telnet")
+    assert conn.transport.username_prompt == "login:"

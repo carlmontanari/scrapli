@@ -200,6 +200,7 @@ def test_valid_private_key_file():
             f"{UNIT_TEST_DIR}_ssh_known_hosts",
             f"{UNIT_TEST_DIR}_ssh_config",
         ),
+        ("ssh_config_file", "", "", "",),
         (
             "ssh_known_hosts_file",
             True,
@@ -218,14 +219,17 @@ def test_valid_private_key_file():
             f"{UNIT_TEST_DIR}_ssh_known_hosts",
             f"{UNIT_TEST_DIR}_ssh_known_hosts",
         ),
+        ("ssh_known_hosts_file", "", "", "",),
     ],
     ids=[
         "config_file_etc",
         "config_file_user",
         "config_file_manual",
+        "config_file_not_found",
         "known_hosts_file_etc",
         "known_hosts_file_user",
         "known_hosts_file_manual",
+        "known_hosts_file_not_found",
     ],
 )
 def test_ssh_files(fs, ssh_file):
@@ -235,7 +239,8 @@ def test_ssh_files(fs, ssh_file):
     attr_src = ssh_file[3]
     args = {attr_name: attr_value}
 
-    fs.add_real_file(source_path=attr_src, target_path=attr_expected)
+    if attr_src and attr_expected:
+        fs.add_real_file(source_path=attr_src, target_path=attr_expected)
 
     conn = Scrape(host="myhost", **args)
     assert conn._initialization_args[attr_name] == attr_expected

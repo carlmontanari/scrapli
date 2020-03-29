@@ -295,8 +295,8 @@ class Scrape:
             f&#34;comms_prompt_pattern={self._initialization_args[&#39;comms_prompt_pattern&#39;]!r}, &#34;
             f&#34;comms_return_char={self._initialization_args[&#39;comms_return_char&#39;]!r}, &#34;
             f&#34;comms_ansi={self._initialization_args[&#39;comms_ansi&#39;]!r}, &#34;
-            f&#34;ssh_config_file={self._initialization_args[&#39;ssh_config_file&#39;]!r}, &#34;
-            f&#34;ssh_known_hosts_file={self._initialization_args[&#39;ssh_known_hosts_file&#39;]!r}, &#34;
+            f&#34;ssh_config_file={self._initialization_args.get(&#39;ssh_config_file&#39;)!r}, &#34;
+            f&#34;ssh_known_hosts_file={self._initialization_args.get(&#39;ssh_known_hosts_file&#39;)!r}, &#34;
             f&#34;on_open={self.on_open!r}, &#34;
             f&#34;on_close={self.on_close!r}, &#34;
             f&#34;transport={self._transport!r})&#34;
@@ -945,8 +945,8 @@ has more features built in (though scrapli does not expose/support them all).</d
             f&#34;comms_prompt_pattern={self._initialization_args[&#39;comms_prompt_pattern&#39;]!r}, &#34;
             f&#34;comms_return_char={self._initialization_args[&#39;comms_return_char&#39;]!r}, &#34;
             f&#34;comms_ansi={self._initialization_args[&#39;comms_ansi&#39;]!r}, &#34;
-            f&#34;ssh_config_file={self._initialization_args[&#39;ssh_config_file&#39;]!r}, &#34;
-            f&#34;ssh_known_hosts_file={self._initialization_args[&#39;ssh_known_hosts_file&#39;]!r}, &#34;
+            f&#34;ssh_config_file={self._initialization_args.get(&#39;ssh_config_file&#39;)!r}, &#34;
+            f&#34;ssh_known_hosts_file={self._initialization_args.get(&#39;ssh_known_hosts_file&#39;)!r}, &#34;
             f&#34;on_open={self.on_open!r}, &#34;
             f&#34;on_close={self.on_close!r}, &#34;
             f&#34;transport={self._transport!r})&#34;
@@ -1256,7 +1256,7 @@ has more features built in (though scrapli does not expose/support them all).</d
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="scrapli.driver.network_driver.NetworkDriver" href="network_driver.html#scrapli.driver.network_driver.NetworkDriver">NetworkDriver</a></li>
+<li><a title="scrapli.driver.generic_driver.GenericDriver" href="generic_driver.html#scrapli.driver.generic_driver.GenericDriver">GenericDriver</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>

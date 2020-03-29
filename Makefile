@@ -204,3 +204,21 @@ start_dev_env_linux:
 stop_dev_env:
 	${DOCKER_COMPOSE} \
 		down
+
+prepare_dev_env:
+	python tests/functional/prepare_devices.py cisco_iosxe,cisco_nxos,cisco_iosxr,arista_eos,juniper_junos
+
+prepare_dev_env_iosxe:
+	python tests/functional/prepare_devices.py cisco_iosxe
+
+prepare_dev_env_nxos:
+	python tests/functional/prepare_devices.py cisco_nxos
+
+prepare_dev_env_iosxr:
+	python tests/functional/prepare_devices.py cisco_iosxr
+
+prepare_dev_env_eos:
+	python tests/functional/prepare_devices.py arista_eos
+
+prepare_dev_env_junos:
+	python tests/functional/prepare_devices.py juniper_junos

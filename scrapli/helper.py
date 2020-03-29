@@ -147,6 +147,53 @@ def textfsm_parse(
     return []
 
 
+def genie_parse(platform: str, command: str, output: str) -> Union[List[Any], Dict[str, Any]]:
+    """
+    Parse output with Cisco genie parsers, try to return structured output
+
+    Args:
+        platform: genie device type; i.e. iosxe, iosxr, etc.
+        command: string of command that was executed (to find appropriate parser)
+        output: unstructured output from device to parse
+
+    Returns:
+        output: structured data
+
+    Raises:
+        N/A
+
+    """
+    try:
+        from genie.conf.base import Device  # pylint: disable=C0415
+        from genie.libs.parser.utils import get_parser  # pylint: disable=C0415
+    except ModuleNotFoundError as exc:
+        err = f"Module '{exc.name}' not installed!"
+        msg = f"***** {err} {'*' * (80 - len(err))}"
+        fix = (
+            f"To resolve this issue, install '{exc.name}'. You can do this in one of the following"
+            " ways:\n"
+            "1: 'pip install -r requirements-genie.txt'\n"
+            "2: 'pip install scrapli[genie]'"
+        )
+        warning = "\n" + msg + "\n" + fix + "\n" + msg
+        warnings.warn(warning)
+        return []
+
+    genie_device = Device("scrapli_device", custom={"abstraction": {"order": ["os"]}}, os=platform)
+
+    try:
+        get_parser(command, genie_device)
+        genie_parsed_result = genie_device.parse(command, output=output)
+        if not genie_parsed_result:
+            return []
+        if isinstance(genie_parsed_result, (list, dict)):
+            return genie_parsed_result
+    # have to catch base exception because that is all genie raises for some reason :(
+    except Exception:  # pylint: disable=E0012,W0703
+        pass
+    return []
+
+
 def resolve_ssh_config(ssh_config_file: str) -> str:
     """
     Resolve ssh configuration file from provided string
