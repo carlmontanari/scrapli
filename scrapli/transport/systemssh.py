@@ -458,7 +458,7 @@ class SystemSSHTransport(Transport):
                     output += pty_session.read()
                     # we do not need to deal w/ line replacement for the actual output, only for
                     # parsing if a prompt-like thing is at the end of the output
-                    output = re.sub(b"\r", b"", output)
+                    output = output.replace(b"\r", b"")
                     # always check to see if we should strip ansi here; if we don't handle this we
                     # may raise auth failures for the wrong reason which would be confusing for
                     # users

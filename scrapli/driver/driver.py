@@ -43,7 +43,7 @@ TRANSPORT_BASE_ARGS = (
     "timeout_transport",
     "timeout_exit",
 )
-LOG = logging.getLogger("scrapli_base")
+LOG = logging.getLogger("driver")
 
 
 class Scrape:
@@ -534,9 +534,11 @@ class Scrape:
             N/A
 
         """
+        LOG.info(f"Opening connection to {self._initialization_args['host']}")
         self.transport.open()
         if self.on_open:
             self.on_open(self)
+        LOG.info(f"Connection to {self._initialization_args['host']} opened successfully")
 
     def close(self) -> None:
         """
@@ -552,9 +554,11 @@ class Scrape:
             N/A
 
         """
+        LOG.info(f"Closing connection to {self._initialization_args['host']}")
         if self.on_close:
             self.on_close(self)
         self.transport.close()
+        LOG.info(f"Connection to {self._initialization_args['host']} closed successfully")
 
     def isalive(self) -> bool:
         """

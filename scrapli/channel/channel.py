@@ -131,7 +131,7 @@ class Channel:
 
         """
         new_output = self.transport.read()
-        new_output = re.sub(b"\r", b"", new_output)
+        new_output = new_output.replace(b"\r", b"")
         if self.comms_ansi:
             new_output = strip_ansi(new_output)
         LOG.debug(f"Read: {repr(new_output)}")
@@ -196,8 +196,7 @@ class Channel:
         """
         prompt_pattern = get_prompt_pattern("", self.comms_prompt_pattern)
         self.transport.set_timeout(1000)
-        self.transport.write(self.comms_return_char)
-        LOG.debug(f"Write (sending return character): {repr(self.comms_return_char)}")
+        self._send_return()
         output = b""
         while True:
             output += self._read_chunk()
@@ -216,7 +215,9 @@ class Channel:
             strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
 
         Returns:
-            Response: list of Response object(s)
+            Responses: Tuple of decoded responses from the device
+                raw_result - the
+                processed_result
 
         Raises:
             TypeError: if input is anything but a string
@@ -248,7 +249,7 @@ class Channel:
         """
         bytes_channel_input = channel_input.encode()
         self.transport.session_lock.acquire()
-        LOG.debug(f"Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}")
+        LOG.info(f"Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}")
         self.transport.write(channel_input)
         LOG.debug(f"Write: {repr(channel_input)}")
         self._read_until_input(bytes_channel_input)
@@ -328,7 +329,7 @@ class Channel:
         """
         bytes_channel_input = channel_input.encode()
         self.transport.session_lock.acquire()
-        LOG.debug(
+        LOG.info(
             f"Attempting to send input interact: {channel_input}; "
             f"\texpecting: {expectation};"
             f"\tresponding: {channel_response};"

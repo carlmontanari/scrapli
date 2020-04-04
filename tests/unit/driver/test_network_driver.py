@@ -453,7 +453,45 @@ def test_send_configs(mocked_network_driver):
 
 
 @pytest.mark.skipif(textfsm_avail is False, reason="textfsm and/or ntc_templates are not installed")
-def test_send_inputs_textfsm_success(mocked_network_driver):
+@pytest.mark.parametrize(
+    "parse_type",
+    [
+        (
+            False,
+            [
+                "15.2(4)E7",
+                "Bootstrap",
+                "3560CX",
+                "2 weeks, 3 days, 18 hours, 3 minutes",
+                "power-on",
+                "c3560cx-universalk9-mz.152-4.E7.bin",
+                ["WS-C3560CX-8PC-S"],
+                ["FOCXXXXXXXX"],
+                "0xF",
+                ["FF:FF:FF:FF:FF:FF"],
+            ],
+        ),
+        (
+            True,
+            {
+                "version": "15.2(4)E7",
+                "rommon": "Bootstrap",
+                "hostname": "3560CX",
+                "uptime": "2 weeks, 3 days, 18 hours, 3 minutes",
+                "reload_reason": "power-on",
+                "running_image": "c3560cx-universalk9-mz.152-4.E7.bin",
+                "hardware": ["WS-C3560CX-8PC-S"],
+                "serial": ["FOCXXXXXXXX"],
+                "config_register": "0xF",
+                "mac": ["FF:FF:FF:FF:FF:FF"],
+            },
+        ),
+    ],
+    ids=["to_dict_false", "to_dict_true"],
+)
+def test_send_inputs_textfsm_success(mocked_network_driver, parse_type):
+    to_dict = parse_type[0]
+    expected_result = parse_type[1]
     channel_input_1 = "\n"
     channel_output_1 = "\n3560CX#"
     channel_input_2 = "show version"
@@ -529,9 +567,9 @@ Configuration register is 0xF
     conn.default_desired_priv = "privilege_exec"
     conn.textfsm_platform = "cisco_ios"
     results = conn.send_command(channel_input_2)
-    parsed_results = results.textfsm_parse_output()
+    parsed_results = results.textfsm_parse_output(to_dict=to_dict)
     assert isinstance(parsed_results, list)
-    assert parsed_results[0][0] == "15.2(4)E7"
+    assert parsed_results[0] == expected_result
 
 
 @pytest.mark.skipif(textfsm_avail is False, reason="textfsm and/or ntc_templates are not installed")

@@ -1,6 +1,13 @@
 CHANGELOG
 =======
 
+# 2020.04.04
+- Add option (and make it the default) to have textfsm data returned in list of dict form with the headers being the
+ keys and of course the row values as the values, should be much nicer on the eyes this way!
+- Added terminal width settings for the core drivers to set things as wide as possible so long commands don't have
+ issues
+- Teeny tiny improvements that may make things a tick faster in Channel by using str methods instead of re
+
 # 2020.03.29
 - Add support for `parse_genie` to Response object; obviously really only for Cisco devices at this point unless
  there are parsers floating around out there for other platforms I don't know about!

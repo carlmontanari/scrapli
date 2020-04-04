@@ -30,7 +30,7 @@ NoPrivLevel = PrivilegeLevel("", "", "", "", "", "", "", "", "", "")
 
 PRIVS: Dict[str, PrivilegeLevel] = {}
 
-LOG = logging.getLogger("scrapli_base")
+LOG = logging.getLogger("driver")
 
 
 class NetworkDriver(GenericDriver, ABC):
@@ -80,6 +80,7 @@ class NetworkDriver(GenericDriver, ABC):
         for priv_level in self.privs.values():
             prompt_pattern = get_prompt_pattern("", priv_level.pattern)
             if re.search(prompt_pattern, current_prompt.encode()):
+                LOG.debug(f"Determined current privilege level is `{priv_level.name}`")
                 return priv_level
         raise UnknownPrivLevel
 
@@ -179,6 +180,7 @@ class NetworkDriver(GenericDriver, ABC):
             CouldNotAcquirePrivLevel: if requested priv level not attained
 
         """
+        LOG.info(f"Attempting to acquire `{desired_priv}` privilege level")
         priv_attempt_counter = 0
         while True:
             current_priv = self._determine_current_priv(self.channel.get_prompt())

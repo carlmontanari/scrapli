@@ -1,5 +1,6 @@
-import sys
 from datetime import datetime
+
+import pytest
 
 from scrapli.response import Response
 
@@ -64,21 +65,34 @@ drwxr-xr-x  12 carl  staff    384 Jan 27 19:13 .git/"""
     assert response.failed is False
 
 
-def test_response_parse_textfsm():
+@pytest.mark.parametrize(
+    "parse_type",
+    [
+        (False, ["Internet", "172.31.254.1", "-", "0000.0c07.acfe", "ARPA", "Vlan254"],),
+        (
+            True,
+            {
+                "protocol": "Internet",
+                "address": "172.31.254.1",
+                "age": "-",
+                "mac": "0000.0c07.acfe",
+                "type": "ARPA",
+                "interface": "Vlan254",
+            },
+        ),
+    ],
+    ids=["to_dict_false", "to_dict_true"],
+)
+def test_response_parse_textfsm(parse_type):
+    to_dict = parse_type[0]
+    expected_result = parse_type[1]
     response = Response("localhost", channel_input="show ip arp", textfsm_platform="cisco_ios")
     response_str = """Protocol  Address          Age (min)  Hardware Addr   Type   Interface
 Internet  172.31.254.1            -   0000.0c07.acfe  ARPA   Vlan254
 Internet  172.31.254.2            -   c800.84b2.e9c2  ARPA   Vlan254
 """
     response.record_response(response_str)
-    assert response.textfsm_parse_output()[0] == [
-        "Internet",
-        "172.31.254.1",
-        "-",
-        "0000.0c07.acfe",
-        "ARPA",
-        "Vlan254",
-    ]
+    assert response.textfsm_parse_output(to_dict=to_dict)[0] == expected_result
 
 
 def test_response_parse_textfsm_fail():

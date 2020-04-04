@@ -133,14 +133,15 @@ class Response:
         elif not any(err in result for err in self.failed_when_contains):
             self.failed = False
 
-    def textfsm_parse_output(self) -> Union[Dict[str, Any], List[Any]]:
+    def textfsm_parse_output(self, to_dict: bool = True) -> Union[Dict[str, Any], List[Any]]:
         """
         Parse results with textfsm, always return structured data
 
         Returns an empty list if parsing fails!
 
         Args:
-            N/A
+            to_dict: convert textfsm output from list of lists to list of dicts -- basically create
+                dict from header and row data so it is easier to read/parse the output
 
         Returns:
             structured_result: empty list or parsed data from textfsm
@@ -151,7 +152,7 @@ class Response:
         """
         template = _textfsm_get_template(self.textfsm_platform, self.channel_input)
         if isinstance(template, TextIOWrapper):
-            structured_result = textfsm_parse(template, self.result) or []
+            structured_result = textfsm_parse(template, self.result, to_dict=to_dict) or []
         else:
             structured_result = []
         return structured_result
