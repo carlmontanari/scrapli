@@ -62,6 +62,7 @@ def test__textfsm_get_template_valid_template():
     assert template.name == f"{template_dir}/cisco_nxos_show_ip_arp.textfsm"
 
 
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting textfsm on windows")
 def test__textfsm_get_template_invalid_template():
     template = _textfsm_get_template("cisco_nxos", "show racecar")
     assert not template
@@ -130,6 +131,7 @@ def test_textfsm_parse_failure():
     assert result == []
 
 
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting genie on windows")
 def test_genie_parse_success():
     result = genie_parse("iosxe", "show ip arp", IOS_ARP)
     assert isinstance(result, dict)
@@ -138,6 +140,7 @@ def test_genie_parse_success():
     )
 
 
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting genie on windows")
 def test_genie_parse_failure():
     result = genie_parse("iosxe", "show ip arp", "not really arp data")
     assert result == []
