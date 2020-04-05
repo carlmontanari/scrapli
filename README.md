@@ -153,13 +153,12 @@ This led to moving back to paramiko, which of course is a fantastic project with
    Paramiko - ControlPersist in particular is very interesting to me.
 
 With the goal of supporting all of the OpenSSH configuration options the primary transport driver option is simply
- native system local SSH (almost certainly this won't work on Windows, but I don't have a Windows box to test on, or
-  any particular interest in doing so). The implementation of using system SSH is of course a little bit messy
-  , however scrapli takes care of that for you so you don't need to care about it! The payoff of using system SSH is of
-   course that OpenSSH config files simply "work" -- no passing it to scrapli, no selective support, no need to set
-    username or ports or any of the other config items that may reside in your SSH config file. This driver
-      will likely be the focus of most development for this project, though I will try to keep the other transport
-       drivers -- in particular ssh2-python -- as close to parity as is possible/practical.
+ native system local SSH. The implementation of using system SSH is of course a little bit messy, however scrapli
+  takes care of that for you so you don't need to care about it! The payoff of using system SSH is of course that
+   OpenSSH config files simply "work" -- no passing it to scrapli, no selective support, no need to set username or
+    ports or any of the other config items that may reside in your SSH config file. This driver will likely be the
+     focus of most development for this project, though I will try to keep the other transport drivers -- in
+      particular ssh2-python -- as close to parity as is possible/practical.
 
 The last transport is telnet via telnetlib. This was trivial to add in as the interface is basically the same as
  SystemSSH, and it turns out telnet is still actually useful for things like terminal servers and the like!
@@ -271,7 +270,9 @@ The available optional installation extras options are:
 - textfsm (textfsm and ntc-templates)
 
 As for platforms to *run* scrapli on -- it has and will be tested on MacOS and Ubuntu regularly and should work on any
- POSIX system. Windows is *NOT* tested and will not be supported (officially at least, it may work... not really sure).
+ POSIX system. Windows is now being tested very minimally via GitHub Actions builds, however it is important to note
+  that if you wish to use Windows you will need to use paramiko or ssh2-python as the transport driver. It is
+   *strongly* recommended/preferred for folks to use WSL/Cygwin and stick with "systemssh" as the transport. 
 
 
 # Basic Usage
@@ -891,8 +892,7 @@ with GenericDriver(**my_device) as conn:
 scrapli is built to be very flexible, including being flexible enough to use different libraries for "transport
 " -- or the actual Telnet/SSH communication. By default scrapli uses the "system" transport which quite literally
  uses the ssh binary on your system (`/usr/bin/ssh`). This "system" transport means that scrapli has no external
-  dependencies as it just relies on what is available on the machine running the scrapli script. It also means that
-   scrapli by default probably(?) doesn't support Windows.
+  dependencies as it just relies on what is available on the machine running the scrapli script.
 
 In the spirit of being highly flexible, scrapli allows users to swap out this "system" transport with another
  transport mechanism. The other supported transport mechanisms are `paramiko`, `ssh2-python` and `telnetlib`. The
@@ -983,10 +983,13 @@ Currently the only reason I can think of to use anything other than "system" as 
  of ssh2-python (as of January 2020). GitHub user [Red-M](https://github.com/Red-M) has contributed to and fixed this
   particular issue but the fix has not been merged. If you would like to use ssh2-python with EOS I suggest cloning
    and installing via Red-M's repository or my fork of Red-M's fork!
+  - Windows users using python3.8 may need to use Red-M's fork, quick testing in GitHub actions for py3.8 on Windows
+   had install failures for ssh2-python.
 - Use the context manager where possible! More testing needs to be done to confirm/troubleshoot, but limited testing
  seems to indicate that without properly closing the connection there appears to be a bug that causes Python to crash
   on MacOS at least. More to come on this as I have time to poke it more! I believe this is only occurring on the
-   latest branch/update (i.e. not on the pip installable version).
+   latest branch/update (i.e. not on the pip installable version). (April 2020 -- this may be fixed... need to retest
+   ...)
 
 ## system
 
@@ -995,6 +998,9 @@ Currently the only reason I can think of to use anything other than "system" as 
   these cli arguments take precedence over the config file arguments.
 - If you set `ssh_config_file` to `False` the `SystemSSHTransport` class will set the config file used to `/dev/null
 ` so that no ssh config file configs are accidentally used.
+- There is zero Windows support for system ssh transport - I would strongly encourage the use of WSL or cygwin and
+ sticking with systemssh instead of using paramiko/ssh2 natively in Windows -- system ssh is very much the focus of
+  development for scrapli!
 
 ### SSH Config Supported Arguments
 
