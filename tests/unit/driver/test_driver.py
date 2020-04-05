@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 
 import pytest
@@ -184,6 +185,7 @@ def test_valid_private_key_file():
     )
 
 
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="not currently testing ssh file resolution on windows")
 @pytest.mark.parametrize(
     "ssh_file",
     [

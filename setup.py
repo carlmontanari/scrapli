@@ -4,7 +4,7 @@ import setuptools
 
 __author__ = "Carl Montanari"
 
-with open("README.md", "r") as f:
+with open("README.md", "r", encoding="utf-8") as f:
     README = f.read()
 
 setuptools.setup(
