@@ -521,7 +521,7 @@ with IOSXEDriver(**my_device) as conn:
 `pip install scrapli[textfsm]`
 
 
-# Cisco Genie Integration
+## Cisco Genie Integration
 
 Very much the same as the textfsm/ntc-templates integration, scrapli has optional integration with Cisco's PyATS
 /Genie parsing library for parsing show command output. While it is possible there are/will be parsers for non-Cisco
