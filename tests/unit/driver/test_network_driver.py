@@ -1,3 +1,4 @@
+import sys
 import types
 
 import pytest
@@ -452,6 +453,7 @@ def test_send_configs(mocked_network_driver):
     assert output[0].result == channel_output_5
 
 
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting textfsm on windows")
 @pytest.mark.skipif(textfsm_avail is False, reason="textfsm and/or ntc_templates are not installed")
 @pytest.mark.parametrize(
     "parse_type",
