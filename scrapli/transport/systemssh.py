@@ -1,6 +1,5 @@
 """scrapli.transport.systemssh"""
 import os
-import pty
 import re
 from logging import getLogger
 from select import select
@@ -294,6 +293,10 @@ class SystemSSHTransport(Transport):
             N/A
 
         """
+        # import here so that we dont blow up when running on windows (windows users need to use
+        #  ssh2 or paramiko transport)
+        import pty  # pylint: disable=C0415
+
         # copy the open_cmd as we don't want to update the objects open_cmd until we know we can
         # authenticate. add verbose output and disable batch mode (disables passphrase/password
         # queries). If auth is successful update the object open_cmd to represent what was used
