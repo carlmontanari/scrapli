@@ -119,6 +119,7 @@ Internet  172.31.254.2            -   c800.84b2.e9c2  ARPA   Vlan254
     )
 
 
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting genie on windows")
 def test_response_parse_genie_fail():
     response = Response("localhost", channel_input="show ip arp", genie_platform="iosxe")
     response_str = ""

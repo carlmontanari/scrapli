@@ -24,6 +24,7 @@ jobs:
       - name: run tox
         run: python -m tox --skip-missing-interpreters=true
 
+  # no ssh2 for windows python3.8, so just peeling this out into its own job for now
   build_windows:
     runs-on: ${{ matrix.os }}
     strategy:
