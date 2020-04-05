@@ -1,1 +1,1 @@
-ssh2-python>=0.18.0-1  ; sys_platform != "win32" and python_version == "3.8"
+ssh2-python>=0.18.0-1
