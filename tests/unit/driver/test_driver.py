@@ -20,10 +20,11 @@ def test__repr():
     assert (
         repr(conn)
         == "Scrape(host='myhost', port=22, auth_username='', auth_password='', auth_private_key=b'', "
-        "auth_strict_key=True, timeout_socket=5, timeout_transport=5, timeout_ops=10, timeout_exit=True, "
-        "keepalive=False, keepalive_interval=30, keepalive_type='network', keepalive_pattern='\\x05', "
-        "comms_prompt_pattern='^[a-z0-9.\\\\-@()/:]{1,32}[#>$]\\\\s*$', comms_return_char='\\n', comms_ansi=False, "
-        "ssh_config_file='', ssh_known_hosts_file='', on_open=None, on_close=None, transport='system')"
+        "auth_strict_key=True, auth_bypass=False, timeout_socket=5, timeout_transport=10, timeout_ops=10, "
+        "timeout_exit=True, keepalive=False, keepalive_interval=30, keepalive_type='network', "
+        "keepalive_pattern='\\x05', comms_prompt_pattern='^[a-z0-9.\\\\-@()/:]{1,32}[#>$]\\\\s*$', "
+        "comms_return_char='\\n', comms_ansi=False, ssh_config_file='', ssh_known_hosts_file='', on_open=None, "
+        "on_close=None, transport='system')"
     )
 
 
@@ -44,6 +45,7 @@ def test__repr():
             ValueError,
             "Provided public key `notafile` is not a file",
         ),
+        ("auth_bypass", "notabool", TypeError, "`auth_bypass` should be bool, got <class 'str'>",),
         ("timeout_exit", "notabool", TypeError, "`timeout_exit` should be bool, got <class 'str'>"),
         ("keepalive", "notabool", TypeError, "`keepalive` should be bool, got <class 'str'>"),
         (
@@ -85,6 +87,7 @@ def test__repr():
         "port",
         "auth_strict_key",
         "auth_private_key",
+        "auth_bypass",
         "timeout_exit",
         "keepalive",
         "keepalive_type",
@@ -185,7 +188,9 @@ def test_valid_private_key_file():
     )
 
 
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="not currently testing ssh file resolution on windows")
+@pytest.mark.skipif(
+    sys.platform.startswith("win"), reason="not currently testing ssh file resolution on windows"
+)
 @pytest.mark.parametrize(
     "ssh_file",
     [

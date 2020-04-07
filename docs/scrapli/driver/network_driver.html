@@ -57,7 +57,7 @@ NoPrivLevel = PrivilegeLevel(&#34;&#34;, &#34;&#34;, &#34;&#34;, &#34;&#34;, &#3
 
 PRIVS: Dict[str, PrivilegeLevel] = {}
 
-LOG = logging.getLogger(&#34;scrapli_base&#34;)
+LOG = logging.getLogger(&#34;driver&#34;)
 
 
 class NetworkDriver(GenericDriver, ABC):
@@ -107,6 +107,7 @@ class NetworkDriver(GenericDriver, ABC):
         for priv_level in self.privs.values():
             prompt_pattern = get_prompt_pattern(&#34;&#34;, priv_level.pattern)
             if re.search(prompt_pattern, current_prompt.encode()):
+                LOG.debug(f&#34;Determined current privilege level is `{priv_level.name}`&#34;)
                 return priv_level
         raise UnknownPrivLevel
 
@@ -206,6 +207,7 @@ class NetworkDriver(GenericDriver, ABC):
             CouldNotAcquirePrivLevel: if requested priv level not attained
 
         &#34;&#34;&#34;
+        LOG.info(f&#34;Attempting to acquire `{desired_priv}` privilege level&#34;)
         priv_attempt_counter = 0
         while True:
             current_priv = self._determine_current_priv(self.channel.get_prompt())
@@ -477,6 +479,7 @@ inheritance.</p>
         for priv_level in self.privs.values():
             prompt_pattern = get_prompt_pattern(&#34;&#34;, priv_level.pattern)
             if re.search(prompt_pattern, current_prompt.encode()):
+                LOG.debug(f&#34;Determined current privilege level is `{priv_level.name}`&#34;)
                 return priv_level
         raise UnknownPrivLevel
 
@@ -576,6 +579,7 @@ inheritance.</p>
             CouldNotAcquirePrivLevel: if requested priv level not attained
 
         &#34;&#34;&#34;
+        LOG.info(f&#34;Attempting to acquire `{desired_priv}` privilege level&#34;)
         priv_attempt_counter = 0
         while True:
             current_priv = self._determine_current_priv(self.channel.get_prompt())
@@ -817,6 +821,7 @@ inheritance.</p>
         CouldNotAcquirePrivLevel: if requested priv level not attained
 
     &#34;&#34;&#34;
+    LOG.info(f&#34;Attempting to acquire `{desired_priv}` privilege level&#34;)
     priv_attempt_counter = 0
     while True:
         current_priv = self._determine_current_priv(self.channel.get_prompt())

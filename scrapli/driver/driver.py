@@ -55,8 +55,9 @@ class Scrape:
         auth_password: str = "",
         auth_private_key: str = "",
         auth_strict_key: bool = True,
+        auth_bypass: bool = False,
         timeout_socket: int = 5,
-        timeout_transport: int = 5,
+        timeout_transport: int = 10,
         timeout_ops: int = 10,
         timeout_exit: bool = True,
         keepalive: bool = False,
@@ -90,6 +91,9 @@ class Scrape:
             auth_private_key: path to private key for authentication
             auth_password: password for authentication
             auth_strict_key: strict host checking or not -- applicable for system ssh driver only
+            auth_bypass: bypass ssh key or password auth for devices without authentication, or that
+                have auth prompts after ssh session establishment. Currently only supported on
+                system transport; ignored on other transports
             timeout_socket: timeout for establishing socket in seconds
             timeout_transport: timeout for ssh|telnet transport in seconds
             timeout_ops: timeout for ssh channel operations
@@ -154,7 +158,9 @@ class Scrape:
         self._initialization_args: Dict[str, Any] = {}
 
         self._setup_host(host, port)
-        self._setup_auth(auth_username, auth_password, auth_private_key, auth_strict_key)
+        self._setup_auth(
+            auth_username, auth_password, auth_private_key, auth_strict_key, auth_bypass
+        )
         self._setup_timeouts(timeout_socket, timeout_transport, timeout_ops, timeout_exit)
         self._setup_keepalive(keepalive, keepalive_type, keepalive_interval, keepalive_pattern)
         self._setup_comms(comms_prompt_pattern, comms_return_char, comms_ansi)
@@ -257,6 +263,7 @@ class Scrape:
             f"auth_password={self._initialization_args['auth_password']!r}, "
             f"auth_private_key={self._initialization_args['auth_private_key']!r}, "
             f"auth_strict_key={self._initialization_args['auth_strict_key']!r}, "
+            f"auth_bypass={self._initialization_args['auth_bypass']!r}, "
             f"timeout_socket={self._initialization_args['timeout_socket']!r}, "
             f"timeout_transport={self._initialization_args['timeout_transport']!r}, "
             f"timeout_ops={self._initialization_args['timeout_ops']!r}, "
@@ -300,7 +307,12 @@ class Scrape:
         self._initialization_args["port"] = port
 
     def _setup_auth(
-        self, auth_username: str, auth_password: str, auth_private_key: str, auth_strict_key: bool
+        self,
+        auth_username: str,
+        auth_password: str,
+        auth_private_key: str,
+        auth_strict_key: bool,
+        auth_bypass: bool,
     ) -> None:
         """
         Parse and setup auth attributes
@@ -310,6 +322,7 @@ class Scrape:
             auth_password: password to parse/set
             auth_private_key: public key to parse/set
             auth_strict_key: strict key to parse/set
+            auth_bypass: bypass to parse/set
 
         Returns:
             N/A  # noqa: DAR202
@@ -321,8 +334,11 @@ class Scrape:
         """
         if not isinstance(auth_strict_key, bool):
             raise TypeError(f"`auth_strict_key` should be bool, got {type(auth_strict_key)}")
+        if not isinstance(auth_bypass, bool):
+            raise TypeError(f"`auth_bypass` should be bool, got {type(auth_bypass)}")
 
         self._initialization_args["auth_strict_key"] = auth_strict_key
+        self._initialization_args["auth_bypass"] = auth_bypass
         self._initialization_args["auth_username"] = auth_username.strip()
         self._initialization_args["auth_password"] = auth_password.strip()
 

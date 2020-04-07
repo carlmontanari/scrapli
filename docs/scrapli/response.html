@@ -160,14 +160,15 @@ class Response:
         elif not any(err in result for err in self.failed_when_contains):
             self.failed = False
 
-    def textfsm_parse_output(self) -&gt; Union[Dict[str, Any], List[Any]]:
+    def textfsm_parse_output(self, to_dict: bool = True) -&gt; Union[Dict[str, Any], List[Any]]:
         &#34;&#34;&#34;
         Parse results with textfsm, always return structured data
 
         Returns an empty list if parsing fails!
 
         Args:
-            N/A
+            to_dict: convert textfsm output from list of lists to list of dicts -- basically create
+                dict from header and row data so it is easier to read/parse the output
 
         Returns:
             structured_result: empty list or parsed data from textfsm
@@ -178,7 +179,7 @@ class Response:
         &#34;&#34;&#34;
         template = _textfsm_get_template(self.textfsm_platform, self.channel_input)
         if isinstance(template, TextIOWrapper):
-            structured_result = textfsm_parse(template, self.result) or []
+            structured_result = textfsm_parse(template, self.result, to_dict=to_dict) or []
         else:
             structured_result = []
         return structured_result
@@ -385,14 +386,15 @@ failed command/interaction</dd>
         elif not any(err in result for err in self.failed_when_contains):
             self.failed = False
 
-    def textfsm_parse_output(self) -&gt; Union[Dict[str, Any], List[Any]]:
+    def textfsm_parse_output(self, to_dict: bool = True) -&gt; Union[Dict[str, Any], List[Any]]:
         &#34;&#34;&#34;
         Parse results with textfsm, always return structured data
 
         Returns an empty list if parsing fails!
 
         Args:
-            N/A
+            to_dict: convert textfsm output from list of lists to list of dicts -- basically create
+                dict from header and row data so it is easier to read/parse the output
 
         Returns:
             structured_result: empty list or parsed data from textfsm
@@ -403,7 +405,7 @@ failed command/interaction</dd>
         &#34;&#34;&#34;
         template = _textfsm_get_template(self.textfsm_platform, self.channel_input)
         if isinstance(template, TextIOWrapper):
-            structured_result = textfsm_parse(template, self.result) or []
+            structured_result = textfsm_parse(template, self.result, to_dict=to_dict) or []
         else:
             structured_result = []
         return structured_result
@@ -520,13 +522,17 @@ failed command/interaction</dd>
 </details>
 </dd>
 <dt id="scrapli.response.Response.textfsm_parse_output"><code class="name flex">
-<span>def <span class="ident">textfsm_parse_output</span></span>(<span>self)</span>
+<span>def <span class="ident">textfsm_parse_output</span></span>(<span>self, to_dict=True)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Parse results with textfsm, always return structured data</p>
 <p>Returns an empty list if parsing fails!</p>
 <h2 id="args">Args</h2>
-<p>N/A</p>
+<dl>
+<dt><strong><code>to_dict</code></strong></dt>
+<dd>convert textfsm output from list of lists to list of dicts &ndash; basically create
+dict from header and row data so it is easier to read/parse the output</dd>
+</dl>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>structured_result</code></strong></dt>
@@ -541,14 +547,15 @@ failed command/interaction</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def textfsm_parse_output(self) -&gt; Union[Dict[str, Any], List[Any]]:
+<pre><code class="python">def textfsm_parse_output(self, to_dict: bool = True) -&gt; Union[Dict[str, Any], List[Any]]:
     &#34;&#34;&#34;
     Parse results with textfsm, always return structured data
 
     Returns an empty list if parsing fails!
 
     Args:
-        N/A
+        to_dict: convert textfsm output from list of lists to list of dicts -- basically create
+            dict from header and row data so it is easier to read/parse the output
 
     Returns:
         structured_result: empty list or parsed data from textfsm
@@ -559,7 +566,7 @@ failed command/interaction</dd>
     &#34;&#34;&#34;
     template = _textfsm_get_template(self.textfsm_platform, self.channel_input)
     if isinstance(template, TextIOWrapper):
-        structured_result = textfsm_parse(template, self.result) or []
+        structured_result = textfsm_parse(template, self.result, to_dict=to_dict) or []
     else:
         structured_result = []
     return structured_result</code></pre>

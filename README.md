@@ -47,6 +47,7 @@ scrapli -- scrap(e c)li --  is a python library focused on connecting to devices
   - [Using Scrape Directly](#using-scrape-directly)
   - [Using the GenericDriver](#using-the-genericdriver)
   - [Using a Different Transport](#using-a-different-transport)
+  - [Auth Bypass](#auth-bypass)
 - [FAQ](#faq)
 - [Transport Notes, Caveats, and Known Issues](#transport-notes-caveats-and-known-issues)
   - [Paramiko](#paramiko)
@@ -244,7 +245,7 @@ pip install git+https://github.com/carlmontanari/scrapli
 To install from this repositories develop branch:
 
 ```
-pip install -e git+https://github.com/carlmontanari/scrapli.git@develop#egg=scrapli”
+pip install -e git+https://github.com/carlmontanari/scrapli.git@develop#egg=scrapli
 ```
 
 To install from source:
@@ -923,6 +924,21 @@ Currently the only reason I can think of to use anything other than "system" as 
  scrapli on a Windows host or to use telnet. If there are other good reasons please do let me know!
 
 
+## Auth Bypass
+
+*NOTE* Currently only supported with system transport!
+
+Some devices, such as Cisco WLC, have no "true" SSH authentication, and instead prompt for credentials (or perhaps
+ not even that) after session establishment. In order to cope with this corner case, the `auth_bypass` flag can be
+  set to `True` which will cause scrapli to skip all authentication steps. Typically this flag would be set and a
+   custom `on_open` function set to handle whatever prompts the device has upon SSH session establishment.
+   
+In the future this functionality will likely be extended to the telnet transport, and may be extended to paramiko and
+ ssh2 transports.
+
+See the [non core device example](/examples/non_core_device/wlc.py) to see this in action.
+
+
 # FAQ
 
 - Question: Why build this? Netmiko exists, Paramiko exists, Ansible exists, etc...?
@@ -950,6 +966,17 @@ Currently the only reason I can think of to use anything other than "system" as 
    connection. Call `conn.open()` (or your object name in place of conn) to open the session and assign the channel
     attribute. Alternatively you can use any of the drivers with a context manager (see what I did there? WITH... get
      it?) which will auto-magically open and close the connections for you.
+- I wanna go fast!
+  - Hmmm... not a question but I dig it. If you wanna go fast you gotta learn to drive with the fear... ok, enough
+   Talladega Nights quoting for now. In theory using the `ssh2` transport is the gateway to speed... being a very
+    thin wrapper around libssh2 means that its basically all C and that means its probably about as fast as we're
+     reasonably going to get. All that said, scrapli by default uses the `system` transport which is really just
+      using your system ssh.... which is almost certainly libssh2/openssh which is also C. There is a thin layer of
+       abstraction between scrapli and your system ssh but really its just reading/writing to a file which Python
+        should be doing in C anyway I would think. In summary... while `ssh2` is probably the fastest you can go with
+         scrapli, the difference between `ssh2` and `system` transports in limited testing is microscopic, and the
+          benefits of using system transport (native ssh config file support!!) probably should outweigh the speed of
+           ssh2 -- especially if you have control persist and can take advantage of that with system transport!
 - Other questions? Ask away!
 
 

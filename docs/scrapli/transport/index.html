@@ -1692,7 +1692,7 @@ type is 'network'</dd>
 </dd>
 <dt id="scrapli.transport.SystemSSHTransport"><code class="flex name class">
 <span>class <span class="ident">SystemSSHTransport</span></span>
-<span>(</span><span>host='', port=22, auth_username='', auth_private_key='', auth_password='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, timeout_ops=10, timeout_exit=True, keepalive=False, keepalive_interval=30, keepalive_type='', keepalive_pattern='\x05', comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n', comms_ansi=False, ssh_config_file='', ssh_known_hosts_file='')</span>
+<span>(</span><span>host='', port=22, auth_username='', auth_private_key='', auth_password='', auth_strict_key=True, auth_bypass=False, timeout_socket=5, timeout_transport=5, timeout_ops=10, timeout_exit=True, keepalive=False, keepalive_interval=30, keepalive_type='', keepalive_pattern='\x05', comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n', comms_ansi=False, ssh_config_file='', ssh_known_hosts_file='')</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -1728,6 +1728,9 @@ authentication methods here.</p>
 <dd>password for authentication</dd>
 <dt><strong><code>auth_strict_key</code></strong></dt>
 <dd>True/False to enforce strict key checking (default is True)</dd>
+<dt><strong><code>auth_bypass</code></strong></dt>
+<dd>bypass ssh key or password auth for devices without authentication, or that
+have auth prompts after ssh session establishment</dd>
 <dt><strong><code>timeout_socket</code></strong></dt>
 <dd>timeout for ssh session to start &ndash; this directly maps to ConnectTimeout
 ssh argument; see <code>man ssh_config</code></dd>
@@ -1809,6 +1812,7 @@ is completed.</dd>
         auth_private_key: str = &#34;&#34;,
         auth_password: str = &#34;&#34;,
         auth_strict_key: bool = True,
+        auth_bypass: bool = False,
         timeout_socket: int = 5,
         timeout_transport: int = 5,
         timeout_ops: int = 10,
@@ -1853,6 +1857,8 @@ is completed.</dd>
             auth_private_key: path to private key for authentication
             auth_password: password for authentication
             auth_strict_key: True/False to enforce strict key checking (default is True)
+            auth_bypass: bypass ssh key or password auth for devices without authentication, or that
+                have auth prompts after ssh session establishment
             timeout_socket: timeout for ssh session to start -- this directly maps to ConnectTimeout
                 ssh argument; see `man ssh_config`
             timeout_transport: timeout for transport in seconds. since system ssh is using popen/pty
@@ -1920,6 +1926,7 @@ is completed.</dd>
         self.auth_private_key: str = auth_private_key
         self.auth_password: str = auth_password
         self.auth_strict_key: bool = auth_strict_key
+        self.auth_bypass: bool = auth_bypass
 
         self._timeout_ops: int = timeout_ops
         self._comms_prompt_pattern: str = comms_prompt_pattern
@@ -2023,7 +2030,13 @@ is completed.</dd>
         &#34;&#34;&#34;
         self.session_lock.acquire()
 
-        # If authenticating with private key prefer to use open pipes
+        # if auth_bypass kick off keepalive thread if necessary and return
+        if self.auth_bypass:
+            self._open_pty(skip_auth=True)
+            self._session_keepalive()
+            return
+
+        # if authenticating with private key prefer to use open pipes
         # _open_pipes uses subprocess Popen which is preferable to opening a pty
         # if _open_pipes fails and no password available, raise failure, otherwise try password auth
         if self.auth_private_key:
@@ -2061,6 +2074,10 @@ is completed.</dd>
             N/A
 
         &#34;&#34;&#34;
+        # import here so that we dont blow up when running on windows (windows users need to use
+        #  ssh2 or paramiko transport)
+        import pty  # pylint: disable=C0415
+
         # copy the open_cmd as we don&#39;t want to update the objects open_cmd until we know we can
         # authenticate. add verbose output and disable batch mode (disables passphrase/password
         # queries). If auth is successful update the object open_cmd to represent what was used
@@ -2135,12 +2152,12 @@ is completed.</dd>
             if &#34;Operation timed out&#34;.encode() in output:
                 raise ScrapliTimeout(f&#34;Timed opening connection to host {self.host}&#34;)
 
-    def _open_pty(self) -&gt; bool:
+    def _open_pty(self, skip_auth: bool = False) -&gt; bool:
         &#34;&#34;&#34;
         Private method to open session with PtyProcess
 
         Args:
-            N/A
+            skip_auth: skip auth in the case of auth_bypass mode
 
         Returns:
             bool: True/False session was opened and authenticated
@@ -2152,6 +2169,8 @@ is completed.</dd>
         self.session = PtyProcess.spawn(self.open_cmd)
         LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
         self.session_lock.release()
+        if skip_auth:
+            return True
         self._pty_authenticate(self.session)
         if not self._pty_isauthenticated(self.session):
             return False
@@ -2225,7 +2244,7 @@ is completed.</dd>
                     output += pty_session.read()
                     # we do not need to deal w/ line replacement for the actual output, only for
                     # parsing if a prompt-like thing is at the end of the output
-                    output = re.sub(b&#34;\r&#34;, b&#34;&#34;, output)
+                    output = output.replace(b&#34;\r&#34;, b&#34;&#34;)
                     # always check to see if we should strip ansi here; if we don&#39;t handle this we
                     # may raise auth failures for the wrong reason which would be confusing for
                     # users
@@ -2479,7 +2498,13 @@ case of telnet&hellip; so it works, but its just a bit less desirable.</p>
     &#34;&#34;&#34;
     self.session_lock.acquire()
 
-    # If authenticating with private key prefer to use open pipes
+    # if auth_bypass kick off keepalive thread if necessary and return
+    if self.auth_bypass:
+        self._open_pty(skip_auth=True)
+        self._session_keepalive()
+        return
+
+    # if authenticating with private key prefer to use open pipes
     # _open_pipes uses subprocess Popen which is preferable to opening a pty
     # if _open_pipes fails and no password available, raise failure, otherwise try password auth
     if self.auth_private_key:
@@ -2871,7 +2896,7 @@ and is ignored after authentication is completed.</dd>
                     output += telnet_session.read_eager()
                     # we do not need to deal w/ line replacement for the actual output, only for
                     # parsing if a prompt-like thing is at the end of the output
-                    output = re.sub(b&#34;\r&#34;, b&#34;&#34;, output)
+                    output = output.replace(b&#34;\r&#34;, b&#34;&#34;)
                     if self._comms_ansi:
                         output = strip_ansi(output)
                     channel_match = re.search(prompt_pattern, output)

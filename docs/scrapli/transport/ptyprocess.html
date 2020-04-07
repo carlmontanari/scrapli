@@ -63,17 +63,12 @@ has been ridiculously helpful! -CM
 
 import builtins
 import errno
-import fcntl
 import io
 import os
-import pty
-import resource
 import signal
 import struct
 import sys
-import termios
 import time
-from pty import CHILD, STDIN_FILENO
 from shutil import which
 from typing import Type, TypeVar
 
@@ -97,6 +92,8 @@ def _make_eof_intr():
 
     This avoids doing potentially costly operations on module load.
     &#34;&#34;&#34;
+    import termios
+
     global _EOF, _INTR
     if (_EOF is not None) and (_INTR is not None):
         return
@@ -136,6 +133,8 @@ def _make_eof_intr():
 
 
 def _setecho(fd, state):
+    import termios
+
     errmsg = &#34;setecho() may not be called on this platform (it may still be possible to enable/disable echo when spawning the child process)&#34;
 
     try:
@@ -165,6 +164,9 @@ def _setwinsize(fd, rows, cols):
     # termios.TIOCSWINSZ to be truncated. There was a hack here to work
     # around this, but it caused problems with newer platforms so has been
     # removed. For details see https://github.com/pexpect/pexpect/issues/39
+    import termios
+    import fcntl
+
     TIOCSWINSZ = getattr(termios, &#34;TIOCSWINSZ&#34;, -2146929561)
     # Note, assume ws_xpixel and ws_ypixel are zero.
     s = struct.pack(&#34;HHHH&#34;, rows, cols, 0, 0)
@@ -250,6 +252,12 @@ class PtyProcess(object):
         # EOF immediately then it means that the child is already dead.
         # That may not necessarily be bad because you may have spawned a child
         # that performs some task; creates no stdout output; and then dies.
+
+        import fcntl
+        import pty
+        import termios
+        import resource
+        from pty import CHILD, STDIN_FILENO
 
         if not isinstance(argv, (list, tuple)):
             raise TypeError(&#34;Expected a list or tuple for argv, got %r&#34; % argv)
@@ -944,6 +952,12 @@ class PtyProcess(object):
         # That may not necessarily be bad because you may have spawned a child
         # that performs some task; creates no stdout output; and then dies.
 
+        import fcntl
+        import pty
+        import termios
+        import resource
+        from pty import CHILD, STDIN_FILENO
+
         if not isinstance(argv, (list, tuple)):
             raise TypeError(&#34;Expected a list or tuple for argv, got %r&#34; % argv)
 
@@ -1631,6 +1645,12 @@ def spawn(
     # EOF immediately then it means that the child is already dead.
     # That may not necessarily be bad because you may have spawned a child
     # that performs some task; creates no stdout output; and then dies.
+
+    import fcntl
+    import pty
+    import termios
+    import resource
+    from pty import CHILD, STDIN_FILENO
 
     if not isinstance(argv, (list, tuple)):
         raise TypeError(&#34;Expected a list or tuple for argv, got %r&#34; % argv)

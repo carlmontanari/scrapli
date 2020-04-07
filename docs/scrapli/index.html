@@ -125,7 +125,7 @@ logging.getLogger(&#34;channel&#34;).addHandler(NullHandler())</code></pre>
 <dl>
 <dt id="scrapli.Scrape"><code class="flex name class">
 <span>class <span class="ident">Scrape</span></span>
-<span>(</span><span>host='', port=22, auth_username='', auth_password='', auth_private_key='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, timeout_ops=10, timeout_exit=True, keepalive=False, keepalive_interval=30, keepalive_type='network', keepalive_pattern='\x05', comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]\\s*$&#x27;, comms_return_char='\n', comms_ansi=False, ssh_config_file=False, ssh_known_hosts_file=False, on_open=None, on_close=None, transport='system')</span>
+<span>(</span><span>host='', port=22, auth_username='', auth_password='', auth_private_key='', auth_strict_key=True, auth_bypass=False, timeout_socket=5, timeout_transport=10, timeout_ops=10, timeout_exit=True, keepalive=False, keepalive_interval=30, keepalive_type='network', keepalive_pattern='\x05', comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]\\s*$&#x27;, comms_return_char='\n', comms_ansi=False, ssh_config_file=False, ssh_known_hosts_file=False, on_open=None, on_close=None, transport='system')</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Scrape Object</p>
@@ -149,6 +149,10 @@ relies on, see Transport and Channel docs for details.</p>
 <dd>password for authentication</dd>
 <dt><strong><code>auth_strict_key</code></strong></dt>
 <dd>strict host checking or not &ndash; applicable for system ssh driver only</dd>
+<dt><strong><code>auth_bypass</code></strong></dt>
+<dd>bypass ssh key or password auth for devices without authentication, or that
+have auth prompts after ssh session establishment. Currently only supported on
+system transport; ignored on other transports</dd>
 <dt><strong><code>timeout_socket</code></strong></dt>
 <dd>timeout for establishing socket in seconds</dd>
 <dt><strong><code>timeout_transport</code></strong></dt>
@@ -241,8 +245,9 @@ has more features built in (though scrapli does not expose/support them all).</d
         auth_password: str = &#34;&#34;,
         auth_private_key: str = &#34;&#34;,
         auth_strict_key: bool = True,
+        auth_bypass: bool = False,
         timeout_socket: int = 5,
-        timeout_transport: int = 5,
+        timeout_transport: int = 10,
         timeout_ops: int = 10,
         timeout_exit: bool = True,
         keepalive: bool = False,
@@ -276,6 +281,9 @@ has more features built in (though scrapli does not expose/support them all).</d
             auth_private_key: path to private key for authentication
             auth_password: password for authentication
             auth_strict_key: strict host checking or not -- applicable for system ssh driver only
+            auth_bypass: bypass ssh key or password auth for devices without authentication, or that
+                have auth prompts after ssh session establishment. Currently only supported on
+                system transport; ignored on other transports
             timeout_socket: timeout for establishing socket in seconds
             timeout_transport: timeout for ssh|telnet transport in seconds
             timeout_ops: timeout for ssh channel operations
@@ -340,7 +348,9 @@ has more features built in (though scrapli does not expose/support them all).</d
         self._initialization_args: Dict[str, Any] = {}
 
         self._setup_host(host, port)
-        self._setup_auth(auth_username, auth_password, auth_private_key, auth_strict_key)
+        self._setup_auth(
+            auth_username, auth_password, auth_private_key, auth_strict_key, auth_bypass
+        )
         self._setup_timeouts(timeout_socket, timeout_transport, timeout_ops, timeout_exit)
         self._setup_keepalive(keepalive, keepalive_type, keepalive_interval, keepalive_pattern)
         self._setup_comms(comms_prompt_pattern, comms_return_char, comms_ansi)
@@ -443,6 +453,7 @@ has more features built in (though scrapli does not expose/support them all).</d
             f&#34;auth_password={self._initialization_args[&#39;auth_password&#39;]!r}, &#34;
             f&#34;auth_private_key={self._initialization_args[&#39;auth_private_key&#39;]!r}, &#34;
             f&#34;auth_strict_key={self._initialization_args[&#39;auth_strict_key&#39;]!r}, &#34;
+            f&#34;auth_bypass={self._initialization_args[&#39;auth_bypass&#39;]!r}, &#34;
             f&#34;timeout_socket={self._initialization_args[&#39;timeout_socket&#39;]!r}, &#34;
             f&#34;timeout_transport={self._initialization_args[&#39;timeout_transport&#39;]!r}, &#34;
             f&#34;timeout_ops={self._initialization_args[&#39;timeout_ops&#39;]!r}, &#34;
@@ -486,7 +497,12 @@ has more features built in (though scrapli does not expose/support them all).</d
         self._initialization_args[&#34;port&#34;] = port
 
     def _setup_auth(
-        self, auth_username: str, auth_password: str, auth_private_key: str, auth_strict_key: bool
+        self,
+        auth_username: str,
+        auth_password: str,
+        auth_private_key: str,
+        auth_strict_key: bool,
+        auth_bypass: bool,
     ) -&gt; None:
         &#34;&#34;&#34;
         Parse and setup auth attributes
@@ -496,6 +512,7 @@ has more features built in (though scrapli does not expose/support them all).</d
             auth_password: password to parse/set
             auth_private_key: public key to parse/set
             auth_strict_key: strict key to parse/set
+            auth_bypass: bypass to parse/set
 
         Returns:
             N/A  # noqa: DAR202
@@ -507,8 +524,11 @@ has more features built in (though scrapli does not expose/support them all).</d
         &#34;&#34;&#34;
         if not isinstance(auth_strict_key, bool):
             raise TypeError(f&#34;`auth_strict_key` should be bool, got {type(auth_strict_key)}&#34;)
+        if not isinstance(auth_bypass, bool):
+            raise TypeError(f&#34;`auth_bypass` should be bool, got {type(auth_bypass)}&#34;)
 
         self._initialization_args[&#34;auth_strict_key&#34;] = auth_strict_key
+        self._initialization_args[&#34;auth_bypass&#34;] = auth_bypass
         self._initialization_args[&#34;auth_username&#34;] = auth_username.strip()
         self._initialization_args[&#34;auth_password&#34;] = auth_password.strip()
 
@@ -720,9 +740,11 @@ has more features built in (though scrapli does not expose/support them all).</d
             N/A
 
         &#34;&#34;&#34;
+        LOG.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
         self.transport.open()
         if self.on_open:
             self.on_open(self)
+        LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)
 
     def close(self) -&gt; None:
         &#34;&#34;&#34;
@@ -738,9 +760,11 @@ has more features built in (though scrapli does not expose/support them all).</d
             N/A
 
         &#34;&#34;&#34;
+        LOG.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
         if self.on_close:
             self.on_close(self)
         self.transport.close()
+        LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)
 
     def isalive(self) -&gt; bool:
         &#34;&#34;&#34;
@@ -805,9 +829,11 @@ has more features built in (though scrapli does not expose/support them all).</d
         N/A
 
     &#34;&#34;&#34;
+    LOG.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
     if self.on_close:
         self.on_close(self)
-    self.transport.close()</code></pre>
+    self.transport.close()
+    LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
 </details>
 </dd>
 <dt id="scrapli.Scrape.isalive"><code class="name flex">
@@ -892,9 +918,11 @@ has more features built in (though scrapli does not expose/support them all).</d
         N/A
 
     &#34;&#34;&#34;
+    LOG.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
     self.transport.open()
     if self.on_open:
-        self.on_open(self)</code></pre>
+        self.on_open(self)
+    LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)</code></pre>
 </details>
 </dd>
 </dl>

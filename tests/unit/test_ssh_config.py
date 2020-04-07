@@ -15,7 +15,9 @@ def test_str():
     assert str(ssh_conf) == "SSHConfig Object"
 
 
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="not currently testing ssh file resolution on windows")
+@pytest.mark.skipif(
+    sys.platform.startswith("win"), reason="not currently testing ssh file resolution on windows"
+)
 def test_repr():
     ssh_conf = SSHConfig(f"{UNIT_TEST_DIR}_ssh_config")
     assert repr(ssh_conf) == (
@@ -51,7 +53,9 @@ def test_host__str():
     assert str(host) == "Host: "
 
 
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="not currently testing ssh file resolution on windows")
+@pytest.mark.skipif(
+    sys.platform.startswith("win"), reason="not currently testing ssh file resolution on windows"
+)
 def test_host__repr():
     ssh_conf = SSHConfig(f"{UNIT_TEST_DIR}_ssh_config")
     assert repr(ssh_conf.hosts["1.2.3.4 someswitch1"]) == (
@@ -105,7 +109,9 @@ def test_init_ssh_config_file_no_hosts():
     assert ssh_conf.hosts["*"].preferred_authentication is None
 
 
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="not currently testing ssh file resolution on windows")
+@pytest.mark.skipif(
+    sys.platform.startswith("win"), reason="not currently testing ssh file resolution on windows"
+)
 def test_host_lookup_exact_host():
     ssh_conf = SSHConfig(f"{UNIT_TEST_DIR}_ssh_config")
     host = ssh_conf.lookup("1.2.3.4 someswitch1")
@@ -118,7 +124,9 @@ def test_host_lookup_exact_host():
     )
 
 
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="not currently testing ssh file resolution on windows")
+@pytest.mark.skipif(
+    sys.platform.startswith("win"), reason="not currently testing ssh file resolution on windows"
+)
 def test_host_lookup_exact_host_in_list():
     ssh_conf = SSHConfig(f"{UNIT_TEST_DIR}_ssh_config")
     host = ssh_conf.lookup("someswitch1")
@@ -131,7 +139,9 @@ def test_host_lookup_exact_host_in_list():
     )
 
 
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="not currently testing ssh file resolution on windows")
+@pytest.mark.skipif(
+    sys.platform.startswith("win"), reason="not currently testing ssh file resolution on windows"
+)
 def test_host_lookup_host_fuzzy():
     ssh_conf = SSHConfig(f"{UNIT_TEST_DIR}_ssh_config")
     host = ssh_conf.lookup("someswitch2")
@@ -144,7 +154,9 @@ def test_host_lookup_host_fuzzy():
     )
 
 
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="not currently testing ssh file resolution on windows")
+@pytest.mark.skipif(
+    sys.platform.startswith("win"), reason="not currently testing ssh file resolution on windows"
+)
 def test_host_lookup_host_fuzzy_multi_match():
     ssh_conf = SSHConfig(f"{UNIT_TEST_DIR}_ssh_config")
     host = ssh_conf.lookup("someswitch9999")

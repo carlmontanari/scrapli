@@ -158,7 +158,7 @@ class Channel:
 
         &#34;&#34;&#34;
         new_output = self.transport.read()
-        new_output = re.sub(b&#34;\r&#34;, b&#34;&#34;, new_output)
+        new_output = new_output.replace(b&#34;\r&#34;, b&#34;&#34;)
         if self.comms_ansi:
             new_output = strip_ansi(new_output)
         LOG.debug(f&#34;Read: {repr(new_output)}&#34;)
@@ -223,8 +223,7 @@ class Channel:
         &#34;&#34;&#34;
         prompt_pattern = get_prompt_pattern(&#34;&#34;, self.comms_prompt_pattern)
         self.transport.set_timeout(1000)
-        self.transport.write(self.comms_return_char)
-        LOG.debug(f&#34;Write (sending return character): {repr(self.comms_return_char)}&#34;)
+        self._send_return()
         output = b&#34;&#34;
         while True:
             output += self._read_chunk()
@@ -243,7 +242,9 @@ class Channel:
             strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
 
         Returns:
-            Response: list of Response object(s)
+            Responses: Tuple of decoded responses from the device
+                raw_result - the
+                processed_result
 
         Raises:
             TypeError: if input is anything but a string
@@ -275,7 +276,7 @@ class Channel:
         &#34;&#34;&#34;
         bytes_channel_input = channel_input.encode()
         self.transport.session_lock.acquire()
-        LOG.debug(f&#34;Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}&#34;)
+        LOG.info(f&#34;Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}&#34;)
         self.transport.write(channel_input)
         LOG.debug(f&#34;Write: {repr(channel_input)}&#34;)
         self._read_until_input(bytes_channel_input)
@@ -355,7 +356,7 @@ class Channel:
         &#34;&#34;&#34;
         bytes_channel_input = channel_input.encode()
         self.transport.session_lock.acquire()
-        LOG.debug(
+        LOG.info(
             f&#34;Attempting to send input interact: {channel_input}; &#34;
             f&#34;\texpecting: {expectation};&#34;
             f&#34;\tresponding: {channel_response};&#34;
@@ -556,7 +557,7 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
 
         &#34;&#34;&#34;
         new_output = self.transport.read()
-        new_output = re.sub(b&#34;\r&#34;, b&#34;&#34;, new_output)
+        new_output = new_output.replace(b&#34;\r&#34;, b&#34;&#34;)
         if self.comms_ansi:
             new_output = strip_ansi(new_output)
         LOG.debug(f&#34;Read: {repr(new_output)}&#34;)
@@ -621,8 +622,7 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
         &#34;&#34;&#34;
         prompt_pattern = get_prompt_pattern(&#34;&#34;, self.comms_prompt_pattern)
         self.transport.set_timeout(1000)
-        self.transport.write(self.comms_return_char)
-        LOG.debug(f&#34;Write (sending return character): {repr(self.comms_return_char)}&#34;)
+        self._send_return()
         output = b&#34;&#34;
         while True:
             output += self._read_chunk()
@@ -641,7 +641,9 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
             strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
 
         Returns:
-            Response: list of Response object(s)
+            Responses: Tuple of decoded responses from the device
+                raw_result - the
+                processed_result
 
         Raises:
             TypeError: if input is anything but a string
@@ -673,7 +675,7 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
         &#34;&#34;&#34;
         bytes_channel_input = channel_input.encode()
         self.transport.session_lock.acquire()
-        LOG.debug(f&#34;Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}&#34;)
+        LOG.info(f&#34;Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}&#34;)
         self.transport.write(channel_input)
         LOG.debug(f&#34;Write: {repr(channel_input)}&#34;)
         self._read_until_input(bytes_channel_input)
@@ -753,7 +755,7 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
         &#34;&#34;&#34;
         bytes_channel_input = channel_input.encode()
         self.transport.session_lock.acquire()
-        LOG.debug(
+        LOG.info(
             f&#34;Attempting to send input interact: {channel_input}; &#34;
             f&#34;\texpecting: {expectation};&#34;
             f&#34;\tresponding: {channel_response};&#34;
@@ -863,8 +865,10 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>Response</code></strong></dt>
-<dd>list of Response object(s)</dd>
+<dt><strong><code>Responses</code></strong></dt>
+<dd>Tuple of decoded responses from the device
+raw_result - the
+processed_result</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
@@ -884,7 +888,9 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
         strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
 
     Returns:
-        Response: list of Response object(s)
+        Responses: Tuple of decoded responses from the device
+            raw_result - the
+            processed_result
 
     Raises:
         TypeError: if input is anything but a string

@@ -263,7 +263,7 @@ class TelnetTransport(Transport):
                     output += telnet_session.read_eager()
                     # we do not need to deal w/ line replacement for the actual output, only for
                     # parsing if a prompt-like thing is at the end of the output
-                    output = re.sub(b&#34;\r&#34;, b&#34;&#34;, output)
+                    output = output.replace(b&#34;\r&#34;, b&#34;&#34;)
                     if self._comms_ansi:
                         output = strip_ansi(output)
                     channel_match = re.search(prompt_pattern, output)
@@ -759,7 +759,7 @@ and is ignored after authentication is completed.</dd>
                     output += telnet_session.read_eager()
                     # we do not need to deal w/ line replacement for the actual output, only for
                     # parsing if a prompt-like thing is at the end of the output
-                    output = re.sub(b&#34;\r&#34;, b&#34;&#34;, output)
+                    output = output.replace(b&#34;\r&#34;, b&#34;&#34;)
                     if self._comms_ansi:
                         output = strip_ansi(output)
                     channel_match = re.search(prompt_pattern, output)
