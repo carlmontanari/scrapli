@@ -1,7 +1,7 @@
 CHANGELOG
 =======
 
-# 2020.04.XX
+# 2020.04.11
 - *BREAKING CHANGE*: modify `send_interact` to just make more sense in general... now it supports 1->N "events" to
  interact with -- see the "handling prompts" section of README for updated example
 - Moved `record_response` of `Response` object to be a private method, shouldn't really be needed publicly
