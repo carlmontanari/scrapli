@@ -1,17 +1,16 @@
-tox>=3.14.5
+tox>=3.14.6
 black>=19.10b0
 isort>=4.3.21
-mypy>=0.761
-pytest>=5.3.5
+mypy>=0.770
+pytest>=5.4.1
 pytest-cov>=2.8.1
 pyfakefs>=4.0.2
 pylama>=7.7.1
 pycodestyle>=2.5.0
 pydocstyle>=5.0.2
 pylint>=2.4.4
-darglint>=1.2.0
+darglint>=1.2.2
 pdoc3>=0.7.5 ; sys_platform != "win32"
-netmiko>=2.4.1
 napalm>=2.5.0
 -r requirements.txt
 -r requirements-textfsm.txt

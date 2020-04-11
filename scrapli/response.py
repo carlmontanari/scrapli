@@ -100,7 +100,7 @@ class Response:
         """
         return f"Scrape <Success: {str(not self.failed)}>"
 
-    def record_response(self, result: str) -> None:
+    def _record_response(self, result: str) -> None:
         """
         Record channel_input results and elapsed time of channel input/reading output
 

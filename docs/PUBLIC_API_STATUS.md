@@ -66,9 +66,7 @@
 |------------------------------|-------------|-------------|---------------------------------------------------------|
 | open                         | 2020.03.29  |             |                                                         |
 | isalive                      | 2020.03.29  |             |                                                         |
-| authenticate                 | 2020.03.29  |             | should be made private                                  |
-| isauthenticated              | 2020.03.29  |             | should be made private                                  |
-| read                         | 2020.03.29  |             | should be made private                                  |
+| read                         | 2020.03.29  |             |                                                         |
 
 ### MikoTransport
 
@@ -76,9 +74,7 @@
 |------------------------------|-------------|-------------|---------------------------------------------------------|
 | open                         | 2020.03.29  |             |                                                         |
 | isalive                      | 2020.03.29  |             |                                                         |
-| authenticate                 | 2020.03.29  |             | should be made private                                  |
-| isauthenticated              | 2020.03.29  |             | should be made private                                  |
-| read                         | 2020.03.29  |             | should be made private                                  |
+| read                         | 2020.03.29  |             |                                                         |
 
 ### TelnetTransport
 
@@ -92,7 +88,6 @@
 
 | Method                       | Implemented | Last Change | Notes                                                   |
 |------------------------------|-------------|-------------|---------------------------------------------------------|
-| record_response              | 2020.03.29  |             | should be made private                                  |
 | genie_parse_output           | 2020.03.29  |             |                                                         |
 | textfsm_parse_output         | 2020.03.29  |             |                                                         |
 

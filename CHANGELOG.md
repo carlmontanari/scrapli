@@ -2,8 +2,10 @@ CHANGELOG
 =======
 
 # 2020.04.XX
-- BREAKING CHANGE: modify `send_interact` to just make more sense in general... now it supports 1->N "events" to
+- *BREAKING CHANGE*: modify `send_interact` to just make more sense in general... now it supports 1->N "events" to
  interact with -- see the "handling prompts" section of README for updated example
+- Moved `record_response` of `Response` object to be a private method, shouldn't really be needed publicly
+- Moved `authenticate` and `isauthenticated` methods of ssh2/paramiko transports to private methods
 - Add `auth_bypass` option to ignore ssh auth for weird devices such as Cisco WLC -- currently only supported on
  system transport.
 - Bump timeout_transport up to 10 seconds after finding some issues for some users.

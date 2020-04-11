@@ -79,7 +79,7 @@ class GenericDriver(Scrape):
             self.transport.host, channel_input=command, failed_when_contains=failed_when_contains
         )
         raw_response, processed_response = self.channel.send_input(command, strip_prompt)
-        response.record_response(processed_response)
+        response._record_response(processed_response)  # pylint: disable=W0212
         response.raw_result = raw_response
 
         return response
@@ -194,7 +194,7 @@ class GenericDriver(Scrape):
             failed_when_contains=failed_when_contains,
         )
         raw_response, processed_response = self.channel.send_inputs_interact(interact_events)
-        response.record_response(processed_response)
+        response._record_response(processed_response)  # pylint: disable=W0212
         response.raw_result = raw_response
 
         return response

@@ -21,7 +21,7 @@ result = conn.channel.send_input("show run | i hostname")
 print(result)
 
 print("***** Clear logging buffer:")
-interact = ["clear logg", "Clear logging buffer [confirm]", "", "csr1000v#"]
+interact = [("clear logg", "Clear logging buffer [confirm]"), ("", "csr1000v#")]
 result = conn.channel.send_inputs_interact(interact)
 print(result)
 

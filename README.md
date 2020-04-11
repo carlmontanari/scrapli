@@ -11,8 +11,8 @@ scrapli
 
 scrapli -- scrap(e c)li --  is a python library focused on connecting to devices, specifically network devices
  (routers/switches/firewalls/etc.) via SSH or Telnet. The name scrapli -- is just "scrape cli" (as in screen scrape)
- squished together! scrapli's goal is to be as fast and flexible, while providing a well typed, well documented,
-  simple API.
+ squished together! scrapli's goal is to be as fast and flexible as possible, while providing a thoroughly tested, well
+  typed, well documented, simple API.
 
 
 # Table of Contents
@@ -1245,8 +1245,6 @@ This section may not get updated much, but will hopefully reflect the priority i
 - Add tests for timeouts if possible
 - Add more tests for auth failures
 - Add tests for custom on open/close functions
-- Investigate pre-authentication handling for telnet -- support handling a prompt *before* auth happens i.e. accept
- some banner/message -- does this ever happen for ssh? I don't know! If so, support dealing with that as well.
 - Remove as much as possible from the vendor'd `ptyprocess` code. Type hint it, add docstrings everywhere, add tests
  if possible (and remove from ignore for test coverage and darglint).
 - Improve logging -- especially in the transport classes and surrounding authentication (mostly in systemssh).
@@ -1255,7 +1253,8 @@ This section may not get updated much, but will hopefully reflect the priority i
 
 - Async support. This is a bit of a question mark as I personally don't know even where to start to implement this
 , and have no real current use case... that said I think it would be cool if for no other reason than to learn!
-- Plugins -- make the drivers all plugins!
+- Plugins -- make paramiko and ssh2 transports plugins!
+- Plugins -- build framework to allow for others to easily build driver plugins if desired
 - Ensure v6 stuff works as expected.
 - Continue to add/support ssh config file things.
 - Maybe make this into a netconf driver as well? ncclient is just built on paramiko so it seems doable...?

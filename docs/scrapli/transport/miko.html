@@ -201,7 +201,7 @@ class MikoTransport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            exc: if socket handshake fails
+            Exception: if socket handshake fails
             ScrapliAuthenticationFailed: if all authentication means fail
 
         &#34;&#34;&#34;
@@ -220,8 +220,8 @@ class MikoTransport(Transport):
             LOG.debug(f&#34;Attempting to validate {self.host} public key&#34;)
             self._verify_key()
 
-        self.authenticate()
-        if not self.isauthenticated():
+        self._authenticate()
+        if not self._isauthenticated():
             msg = f&#34;Authentication to host {self.host} failed&#34;
             LOG.critical(msg)
             self.session_lock.release()
@@ -260,7 +260,7 @@ class MikoTransport(Transport):
                 f&#34;{self.host} in known_hosts but public key does not match!&#34;
             )
 
-    def authenticate(self) -&gt; None:
+    def _authenticate(self) -&gt; None:
         &#34;&#34;&#34;
         Parent method to try all means of authentication
 
@@ -276,7 +276,7 @@ class MikoTransport(Transport):
         &#34;&#34;&#34;
         if self.auth_private_key:
             self._authenticate_public_key()
-            if self.isauthenticated():
+            if self._isauthenticated():
                 LOG.debug(f&#34;Authenticated to host {self.host} with public key auth&#34;)
                 return
             if not self.auth_password or not self.auth_username:
@@ -287,7 +287,7 @@ class MikoTransport(Transport):
                 LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
         self._authenticate_password()
-        if self.isauthenticated():
+        if self._isauthenticated():
             LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
 
     def _authenticate_public_key(self) -&gt; None:
@@ -301,8 +301,7 @@ class MikoTransport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            exc: (really the paramiko auth exception) if auth exception occurs
-            exc: (really the paramiko base exception) if unknown exception occurs
+            N/A
 
         &#34;&#34;&#34;
         try:
@@ -333,7 +332,7 @@ class MikoTransport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            exc: if unknown (i.e. not auth failed) exception occurs
+            Exception: if unknown (i.e. not auth failed) exception occurs
 
         &#34;&#34;&#34;
         try:
@@ -351,7 +350,7 @@ class MikoTransport(Transport):
             )
             raise exc
 
-    def isauthenticated(self) -&gt; bool:
+    def _isauthenticated(self) -&gt; bool:
         &#34;&#34;&#34;
         Check if session is authenticated
 
@@ -422,7 +421,7 @@ class MikoTransport(Transport):
             N/A
 
         &#34;&#34;&#34;
-        if self.socket.socket_isalive() and self.session.is_alive() and self.isauthenticated():
+        if self.socket.socket_isalive() and self.session.is_alive() and self._isauthenticated():
             return True
         return False
 
@@ -719,7 +718,7 @@ type is 'network'</dd>
             N/A  # noqa: DAR202
 
         Raises:
-            exc: if socket handshake fails
+            Exception: if socket handshake fails
             ScrapliAuthenticationFailed: if all authentication means fail
 
         &#34;&#34;&#34;
@@ -738,8 +737,8 @@ type is 'network'</dd>
             LOG.debug(f&#34;Attempting to validate {self.host} public key&#34;)
             self._verify_key()
 
-        self.authenticate()
-        if not self.isauthenticated():
+        self._authenticate()
+        if not self._isauthenticated():
             msg = f&#34;Authentication to host {self.host} failed&#34;
             LOG.critical(msg)
             self.session_lock.release()
@@ -778,7 +777,7 @@ type is 'network'</dd>
                 f&#34;{self.host} in known_hosts but public key does not match!&#34;
             )
 
-    def authenticate(self) -&gt; None:
+    def _authenticate(self) -&gt; None:
         &#34;&#34;&#34;
         Parent method to try all means of authentication
 
@@ -794,7 +793,7 @@ type is 'network'</dd>
         &#34;&#34;&#34;
         if self.auth_private_key:
             self._authenticate_public_key()
-            if self.isauthenticated():
+            if self._isauthenticated():
                 LOG.debug(f&#34;Authenticated to host {self.host} with public key auth&#34;)
                 return
             if not self.auth_password or not self.auth_username:
@@ -805,7 +804,7 @@ type is 'network'</dd>
                 LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
         self._authenticate_password()
-        if self.isauthenticated():
+        if self._isauthenticated():
             LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
 
     def _authenticate_public_key(self) -&gt; None:
@@ -819,8 +818,7 @@ type is 'network'</dd>
             N/A  # noqa: DAR202
 
         Raises:
-            exc: (really the paramiko auth exception) if auth exception occurs
-            exc: (really the paramiko base exception) if unknown exception occurs
+            N/A
 
         &#34;&#34;&#34;
         try:
@@ -851,7 +849,7 @@ type is 'network'</dd>
             N/A  # noqa: DAR202
 
         Raises:
-            exc: if unknown (i.e. not auth failed) exception occurs
+            Exception: if unknown (i.e. not auth failed) exception occurs
 
         &#34;&#34;&#34;
         try:
@@ -869,7 +867,7 @@ type is 'network'</dd>
             )
             raise exc
 
-    def isauthenticated(self) -&gt; bool:
+    def _isauthenticated(self) -&gt; bool:
         &#34;&#34;&#34;
         Check if session is authenticated
 
@@ -940,7 +938,7 @@ type is 'network'</dd>
             N/A
 
         &#34;&#34;&#34;
-        if self.socket.socket_isalive() and self.session.is_alive() and self.isauthenticated():
+        if self.socket.socket_isalive() and self.session.is_alive() and self._isauthenticated():
             return True
         return False
 
@@ -1020,59 +1018,6 @@ type is 'network'</dd>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="scrapli.transport.miko.MikoTransport.authenticate"><code class="name flex">
-<span>def <span class="ident">authenticate</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Parent method to try all means of authentication</p>
-<h2 id="args">Args</h2>
-<p>N/A</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N</code>/<code>A</code>
-# <code>noqa</code>: <code>DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><strong><code>ScrapliAuthenticationFailed</code></strong></dt>
-<dd>if authentication fails</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def authenticate(self) -&gt; None:
-    &#34;&#34;&#34;
-    Parent method to try all means of authentication
-
-    Args:
-        N/A
-
-    Returns:
-        N/A  # noqa: DAR202
-
-    Raises:
-        ScrapliAuthenticationFailed: if authentication fails
-
-    &#34;&#34;&#34;
-    if self.auth_private_key:
-        self._authenticate_public_key()
-        if self.isauthenticated():
-            LOG.debug(f&#34;Authenticated to host {self.host} with public key auth&#34;)
-            return
-        if not self.auth_password or not self.auth_username:
-            msg = (
-                f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
-                &#34; password unable to attempt password authentication.&#34;
-            )
-            LOG.critical(msg)
-            raise ScrapliAuthenticationFailed(msg)
-    self._authenticate_password()
-    if self.isauthenticated():
-        LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)</code></pre>
-</details>
-</dd>
 <dt id="scrapli.transport.miko.MikoTransport.isalive"><code class="name flex">
 <span>def <span class="ident">isalive</span></span>(<span>self)</span>
 </code></dt>
@@ -1108,48 +1053,9 @@ type is 'network'</dd>
         N/A
 
     &#34;&#34;&#34;
-    if self.socket.socket_isalive() and self.session.is_alive() and self.isauthenticated():
+    if self.socket.socket_isalive() and self.session.is_alive() and self._isauthenticated():
         return True
     return False</code></pre>
-</details>
-</dd>
-<dt id="scrapli.transport.miko.MikoTransport.isauthenticated"><code class="name flex">
-<span>def <span class="ident">isauthenticated</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Check if session is authenticated</p>
-<h2 id="args">Args</h2>
-<p>N/A</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>bool</code></strong></dt>
-<dd>True if authenticated, else False</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def isauthenticated(self) -&gt; bool:
-    &#34;&#34;&#34;
-    Check if session is authenticated
-
-    Args:
-        N/A
-
-    Returns:
-        bool: True if authenticated, else False
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    authenticated: bool = self.session.is_authenticated()
-    return authenticated</code></pre>
 </details>
 </dd>
 <dt id="scrapli.transport.miko.MikoTransport.open"><code class="name flex">
@@ -1167,7 +1073,7 @@ type is 'network'</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><strong><code>exc</code></strong></dt>
+<dt><strong><code>Exception</code></strong></dt>
 <dd>if socket handshake fails</dd>
 <dt><strong><code>ScrapliAuthenticationFailed</code></strong></dt>
 <dd>if all authentication means fail</dd>
@@ -1187,7 +1093,7 @@ type is 'network'</dd>
         N/A  # noqa: DAR202
 
     Raises:
-        exc: if socket handshake fails
+        Exception: if socket handshake fails
         ScrapliAuthenticationFailed: if all authentication means fail
 
     &#34;&#34;&#34;
@@ -1206,8 +1112,8 @@ type is 'network'</dd>
         LOG.debug(f&#34;Attempting to validate {self.host} public key&#34;)
         self._verify_key()
 
-    self.authenticate()
-    if not self.isauthenticated():
+    self._authenticate()
+    if not self._isauthenticated():
         msg = f&#34;Authentication to host {self.host} failed&#34;
         LOG.critical(msg)
         self.session_lock.release()
@@ -1289,9 +1195,7 @@ type is 'network'</dd>
 <li>
 <h4><code><a title="scrapli.transport.miko.MikoTransport" href="#scrapli.transport.miko.MikoTransport">MikoTransport</a></code></h4>
 <ul class="">
-<li><code><a title="scrapli.transport.miko.MikoTransport.authenticate" href="#scrapli.transport.miko.MikoTransport.authenticate">authenticate</a></code></li>
 <li><code><a title="scrapli.transport.miko.MikoTransport.isalive" href="#scrapli.transport.miko.MikoTransport.isalive">isalive</a></code></li>
-<li><code><a title="scrapli.transport.miko.MikoTransport.isauthenticated" href="#scrapli.transport.miko.MikoTransport.isauthenticated">isauthenticated</a></code></li>
 <li><code><a title="scrapli.transport.miko.MikoTransport.open" href="#scrapli.transport.miko.MikoTransport.open">open</a></code></li>
 <li><code><a title="scrapli.transport.miko.MikoTransport.read" href="#scrapli.transport.miko.MikoTransport.read">read</a></code></li>
 </ul>
