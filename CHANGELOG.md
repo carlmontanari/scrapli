@@ -19,6 +19,7 @@ CHANGELOG
 - Create a draft of public api status doc -- this should be useful on a quick glance to see if/when any public
  methods change, obviously as development simmers down things should be stable but inevitably stuff *will* change
  , so the goal here is to just document when methods were introduced and the last time they were changed
+- Move some imports around so that scrapli works on windows (with paramiko/ssh2 transports)
 
 # 2020.03.29
 - Add support for `parse_genie` to Response object; obviously really only for Cisco devices at this point unless
