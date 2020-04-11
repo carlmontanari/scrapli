@@ -1,15 +1,19 @@
+import sys
+
 import pytest
 
 from scrapli.exceptions import ScrapliTimeout
 from scrapli.transport.socket import Socket
 
 
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="not testing windows")
 def test_socket_open_success():
     sock = Socket("localhost", 22, 1)
     sock.socket_open()
     assert sock.socket_isalive() is True
 
 
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="not testing windows")
 def test_socket_open_failure_connection_refused():
     sock = Socket("localhost", 2222, 1)
     with pytest.raises(ConnectionRefusedError) as e:
@@ -17,6 +21,7 @@ def test_socket_open_failure_connection_refused():
     assert str(e.value) == "Connection refused trying to open socket to localhost on port 2222"
 
 
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="not testing windows")
 def test_socket_open_failure_timeout():
     sock = Socket("240.0.0.1", 22, 0.1)
     with pytest.raises(ScrapliTimeout) as e:
@@ -24,6 +29,7 @@ def test_socket_open_failure_timeout():
     assert str(e.value) == "Timed out trying to open socket to 240.0.0.1 on port 22"
 
 
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="not testing windows")
 def test_socket_close_success():
     sock = Socket("localhost", 22, 1)
     sock.socket_open()

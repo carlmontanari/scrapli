@@ -201,7 +201,7 @@ class SSH2Transport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            exc: if socket handshake fails
+            Exception: if socket handshake fails
             ScrapliAuthenticationFailed: if all authentication means fail
 
         &#34;&#34;&#34;
@@ -224,8 +224,8 @@ class SSH2Transport(Transport):
             self._verify_key()
 
         LOG.debug(f&#34;Session to host {self.host} opened&#34;)
-        self.authenticate()
-        if not self.isauthenticated():
+        self._authenticate()
+        if not self._isauthenticated():
             msg = f&#34;Authentication to host {self.host} failed&#34;
             LOG.critical(msg)
             self.session_lock.release()
@@ -264,7 +264,7 @@ class SSH2Transport(Transport):
                 f&#34;{self.host} in known_hosts but public key does not match!&#34;
             )
 
-    def authenticate(self) -&gt; None:
+    def _authenticate(self) -&gt; None:
         &#34;&#34;&#34;
         Parent method to try all means of authentication
 
@@ -280,7 +280,7 @@ class SSH2Transport(Transport):
         &#34;&#34;&#34;
         if self.auth_private_key:
             self._authenticate_public_key()
-            if self.isauthenticated():
+            if self._isauthenticated():
                 LOG.debug(f&#34;Authenticated to host {self.host} with public key auth&#34;)
                 return
             if not self.auth_password or not self.auth_username:
@@ -292,11 +292,11 @@ class SSH2Transport(Transport):
                 raise ScrapliAuthenticationFailed(msg)
 
         self._authenticate_password()
-        if self.isauthenticated():
+        if self._isauthenticated():
             LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
             return
         self._authenticate_keyboard_interactive()
-        if self.isauthenticated():
+        if self._isauthenticated():
             LOG.debug(f&#34;Authenticated to host {self.host} with keyboard interactive&#34;)
 
     def _authenticate_public_key(self) -&gt; None:
@@ -310,8 +310,7 @@ class SSH2Transport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            exc: (really the ssh2 auth exception) if auth exception occurs
-            exc: (really the ssh2 base exception) if unknown exception occurs
+            N/A
 
         &#34;&#34;&#34;
         try:
@@ -337,7 +336,7 @@ class SSH2Transport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            exc: if unknown (i.e. not auth failed) exception occurs
+            Exception: if unknown (i.e. not auth failed) exception occurs
 
         &#34;&#34;&#34;
         try:
@@ -362,7 +361,7 @@ class SSH2Transport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            exc: if unknown (i.e. not auth failed) exception occurs
+            Exception: if unknown (i.e. not auth failed) exception occurs
 
         &#34;&#34;&#34;
         try:
@@ -386,7 +385,7 @@ class SSH2Transport(Transport):
             )
             raise exc
 
-    def isauthenticated(self) -&gt; bool:
+    def _isauthenticated(self) -&gt; bool:
         &#34;&#34;&#34;
         Check if session is authenticated
 
@@ -456,7 +455,7 @@ class SSH2Transport(Transport):
             N/A
 
         &#34;&#34;&#34;
-        if self.socket.socket_isalive() and not self.channel.eof() and self.isauthenticated():
+        if self.socket.socket_isalive() and not self.channel.eof() and self._isauthenticated():
             return True
         return False
 
@@ -784,7 +783,7 @@ type is 'network'</dd>
             N/A  # noqa: DAR202
 
         Raises:
-            exc: if socket handshake fails
+            Exception: if socket handshake fails
             ScrapliAuthenticationFailed: if all authentication means fail
 
         &#34;&#34;&#34;
@@ -807,8 +806,8 @@ type is 'network'</dd>
             self._verify_key()
 
         LOG.debug(f&#34;Session to host {self.host} opened&#34;)
-        self.authenticate()
-        if not self.isauthenticated():
+        self._authenticate()
+        if not self._isauthenticated():
             msg = f&#34;Authentication to host {self.host} failed&#34;
             LOG.critical(msg)
             self.session_lock.release()
@@ -847,7 +846,7 @@ type is 'network'</dd>
                 f&#34;{self.host} in known_hosts but public key does not match!&#34;
             )
 
-    def authenticate(self) -&gt; None:
+    def _authenticate(self) -&gt; None:
         &#34;&#34;&#34;
         Parent method to try all means of authentication
 
@@ -863,7 +862,7 @@ type is 'network'</dd>
         &#34;&#34;&#34;
         if self.auth_private_key:
             self._authenticate_public_key()
-            if self.isauthenticated():
+            if self._isauthenticated():
                 LOG.debug(f&#34;Authenticated to host {self.host} with public key auth&#34;)
                 return
             if not self.auth_password or not self.auth_username:
@@ -875,11 +874,11 @@ type is 'network'</dd>
                 raise ScrapliAuthenticationFailed(msg)
 
         self._authenticate_password()
-        if self.isauthenticated():
+        if self._isauthenticated():
             LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
             return
         self._authenticate_keyboard_interactive()
-        if self.isauthenticated():
+        if self._isauthenticated():
             LOG.debug(f&#34;Authenticated to host {self.host} with keyboard interactive&#34;)
 
     def _authenticate_public_key(self) -&gt; None:
@@ -893,8 +892,7 @@ type is 'network'</dd>
             N/A  # noqa: DAR202
 
         Raises:
-            exc: (really the ssh2 auth exception) if auth exception occurs
-            exc: (really the ssh2 base exception) if unknown exception occurs
+            N/A
 
         &#34;&#34;&#34;
         try:
@@ -920,7 +918,7 @@ type is 'network'</dd>
             N/A  # noqa: DAR202
 
         Raises:
-            exc: if unknown (i.e. not auth failed) exception occurs
+            Exception: if unknown (i.e. not auth failed) exception occurs
 
         &#34;&#34;&#34;
         try:
@@ -945,7 +943,7 @@ type is 'network'</dd>
             N/A  # noqa: DAR202
 
         Raises:
-            exc: if unknown (i.e. not auth failed) exception occurs
+            Exception: if unknown (i.e. not auth failed) exception occurs
 
         &#34;&#34;&#34;
         try:
@@ -969,7 +967,7 @@ type is 'network'</dd>
             )
             raise exc
 
-    def isauthenticated(self) -&gt; bool:
+    def _isauthenticated(self) -&gt; bool:
         &#34;&#34;&#34;
         Check if session is authenticated
 
@@ -1039,7 +1037,7 @@ type is 'network'</dd>
             N/A
 
         &#34;&#34;&#34;
-        if self.socket.socket_isalive() and not self.channel.eof() and self.isauthenticated():
+        if self.socket.socket_isalive() and not self.channel.eof() and self._isauthenticated():
             return True
         return False
 
@@ -1152,64 +1150,6 @@ type is 'network'</dd>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="scrapli.transport.cssh2.SSH2Transport.authenticate"><code class="name flex">
-<span>def <span class="ident">authenticate</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Parent method to try all means of authentication</p>
-<h2 id="args">Args</h2>
-<p>N/A</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N</code>/<code>A</code>
-# <code>noqa</code>: <code>DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><strong><code>ScrapliAuthenticationFailed</code></strong></dt>
-<dd>if auth fails</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def authenticate(self) -&gt; None:
-    &#34;&#34;&#34;
-    Parent method to try all means of authentication
-
-    Args:
-        N/A
-
-    Returns:
-        N/A  # noqa: DAR202
-
-    Raises:
-        ScrapliAuthenticationFailed: if auth fails
-
-    &#34;&#34;&#34;
-    if self.auth_private_key:
-        self._authenticate_public_key()
-        if self.isauthenticated():
-            LOG.debug(f&#34;Authenticated to host {self.host} with public key auth&#34;)
-            return
-        if not self.auth_password or not self.auth_username:
-            msg = (
-                f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
-                &#34; password unable to attempt password authentication.&#34;
-            )
-            LOG.critical(msg)
-            raise ScrapliAuthenticationFailed(msg)
-
-    self._authenticate_password()
-    if self.isauthenticated():
-        LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
-        return
-    self._authenticate_keyboard_interactive()
-    if self.isauthenticated():
-        LOG.debug(f&#34;Authenticated to host {self.host} with keyboard interactive&#34;)</code></pre>
-</details>
-</dd>
 <dt id="scrapli.transport.cssh2.SSH2Transport.isalive"><code class="name flex">
 <span>def <span class="ident">isalive</span></span>(<span>self)</span>
 </code></dt>
@@ -1245,48 +1185,9 @@ type is 'network'</dd>
         N/A
 
     &#34;&#34;&#34;
-    if self.socket.socket_isalive() and not self.channel.eof() and self.isauthenticated():
+    if self.socket.socket_isalive() and not self.channel.eof() and self._isauthenticated():
         return True
     return False</code></pre>
-</details>
-</dd>
-<dt id="scrapli.transport.cssh2.SSH2Transport.isauthenticated"><code class="name flex">
-<span>def <span class="ident">isauthenticated</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Check if session is authenticated</p>
-<h2 id="args">Args</h2>
-<p>N/A</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>bool</code></strong></dt>
-<dd>True if authenticated, else False</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def isauthenticated(self) -&gt; bool:
-    &#34;&#34;&#34;
-    Check if session is authenticated
-
-    Args:
-        N/A
-
-    Returns:
-        bool: True if authenticated, else False
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    authenticated: bool = self.session.userauth_authenticated()
-    return authenticated</code></pre>
 </details>
 </dd>
 <dt id="scrapli.transport.cssh2.SSH2Transport.open"><code class="name flex">
@@ -1304,7 +1205,7 @@ type is 'network'</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><strong><code>exc</code></strong></dt>
+<dt><strong><code>Exception</code></strong></dt>
 <dd>if socket handshake fails</dd>
 <dt><strong><code>ScrapliAuthenticationFailed</code></strong></dt>
 <dd>if all authentication means fail</dd>
@@ -1324,7 +1225,7 @@ type is 'network'</dd>
         N/A  # noqa: DAR202
 
     Raises:
-        exc: if socket handshake fails
+        Exception: if socket handshake fails
         ScrapliAuthenticationFailed: if all authentication means fail
 
     &#34;&#34;&#34;
@@ -1347,8 +1248,8 @@ type is 'network'</dd>
         self._verify_key()
 
     LOG.debug(f&#34;Session to host {self.host} opened&#34;)
-    self.authenticate()
-    if not self.isauthenticated():
+    self._authenticate()
+    if not self._isauthenticated():
         msg = f&#34;Authentication to host {self.host} failed&#34;
         LOG.critical(msg)
         self.session_lock.release()
@@ -1430,9 +1331,7 @@ type is 'network'</dd>
 <li>
 <h4><code><a title="scrapli.transport.cssh2.SSH2Transport" href="#scrapli.transport.cssh2.SSH2Transport">SSH2Transport</a></code></h4>
 <ul class="">
-<li><code><a title="scrapli.transport.cssh2.SSH2Transport.authenticate" href="#scrapli.transport.cssh2.SSH2Transport.authenticate">authenticate</a></code></li>
 <li><code><a title="scrapli.transport.cssh2.SSH2Transport.isalive" href="#scrapli.transport.cssh2.SSH2Transport.isalive">isalive</a></code></li>
-<li><code><a title="scrapli.transport.cssh2.SSH2Transport.isauthenticated" href="#scrapli.transport.cssh2.SSH2Transport.isauthenticated">isauthenticated</a></code></li>
 <li><code><a title="scrapli.transport.cssh2.SSH2Transport.open" href="#scrapli.transport.cssh2.SSH2Transport.open">open</a></code></li>
 <li><code><a title="scrapli.transport.cssh2.SSH2Transport.read" href="#scrapli.transport.cssh2.SSH2Transport.read">read</a></code></li>
 </ul>

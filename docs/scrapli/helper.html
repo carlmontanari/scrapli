@@ -120,6 +120,7 @@ def _textfsm_get_template(platform: str, command: str) -&gt; Optional[TextIO]:
     &#34;&#34;&#34;
     try:
         from textfsm.clitable import CliTable  # pylint: disable=C0415
+        from ntc_templates import templates  # pylint: disable=C0415,W0611
     except ModuleNotFoundError as exc:
         err = f&#34;Module &#39;{exc.name}&#39; not installed!&#34;
         msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
@@ -142,8 +143,30 @@ def _textfsm_get_template(platform: str, command: str) -&gt; Optional[TextIO]:
     return template
 
 
+def _textfsm_to_dict(
+    structured_output: Union[List[Any], Dict[str, Any]], header: List[str]
+) -&gt; Union[List[Any], Dict[str, Any]]:
+    &#34;&#34;&#34;
+    Create list of dicts from textfsm output and header
+
+    Args:
+        structured_output: parsed textfsm output
+        header: list of strings representing column headers for textfsm output
+
+    Returns:
+        output: structured data
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    header_lower = [h.lower() for h in header]
+    structured_output = [dict(zip(header_lower, row)) for row in structured_output]
+    return structured_output
+
+
 def textfsm_parse(
-    template: Union[str, TextIOWrapper], output: str
+    template: Union[str, TextIOWrapper], output: str, to_dict: bool = True
 ) -&gt; Union[List[Any], Dict[str, Any]]:
     &#34;&#34;&#34;
     Parse output with TextFSM and ntc-templates, try to return structured output
@@ -151,6 +174,8 @@ def textfsm_parse(
     Args:
         template: TextIOWrapper or string path to template to use to parse data
         output: unstructured output from device to parse
+        to_dict: convert textfsm output from list of lists to list of dicts -- basically create dict
+            from header and row data so it is easier to read/parse the output
 
     Returns:
         output: structured data
@@ -168,6 +193,8 @@ def textfsm_parse(
     re_table = textfsm.TextFSM(template_file)
     try:
         structured_output: Union[List[Any], Dict[str, Any]] = re_table.ParseText(output)
+        if to_dict:
+            structured_output = _textfsm_to_dict(structured_output, re_table.header)
         return structured_output
     except textfsm.parser.TextFSMError:
         pass
@@ -604,7 +631,7 @@ def resolve_ssh_known_hosts(ssh_known_hosts: str) -&gt; str:
 </details>
 </dd>
 <dt id="scrapli.helper.textfsm_parse"><code class="name flex">
-<span>def <span class="ident">textfsm_parse</span></span>(<span>template, output)</span>
+<span>def <span class="ident">textfsm_parse</span></span>(<span>template, output, to_dict=True)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Parse output with TextFSM and ntc-templates, try to return structured output</p>
@@ -614,6 +641,9 @@ def resolve_ssh_known_hosts(ssh_known_hosts: str) -&gt; str:
 <dd>TextIOWrapper or string path to template to use to parse data</dd>
 <dt><strong><code>output</code></strong></dt>
 <dd>unstructured output from device to parse</dd>
+<dt><strong><code>to_dict</code></strong></dt>
+<dd>convert textfsm output from list of lists to list of dicts &ndash; basically create dict
+from header and row data so it is easier to read/parse the output</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -630,7 +660,7 @@ def resolve_ssh_known_hosts(ssh_known_hosts: str) -&gt; str:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def textfsm_parse(
-    template: Union[str, TextIOWrapper], output: str
+    template: Union[str, TextIOWrapper], output: str, to_dict: bool = True
 ) -&gt; Union[List[Any], Dict[str, Any]]:
     &#34;&#34;&#34;
     Parse output with TextFSM and ntc-templates, try to return structured output
@@ -638,6 +668,8 @@ def resolve_ssh_known_hosts(ssh_known_hosts: str) -&gt; str:
     Args:
         template: TextIOWrapper or string path to template to use to parse data
         output: unstructured output from device to parse
+        to_dict: convert textfsm output from list of lists to list of dicts -- basically create dict
+            from header and row data so it is easier to read/parse the output
 
     Returns:
         output: structured data
@@ -655,6 +687,8 @@ def resolve_ssh_known_hosts(ssh_known_hosts: str) -&gt; str:
     re_table = textfsm.TextFSM(template_file)
     try:
         structured_output: Union[List[Any], Dict[str, Any]] = re_table.ParseText(output)
+        if to_dict:
+            structured_output = _textfsm_to_dict(structured_output, re_table.header)
         return structured_output
     except textfsm.parser.TextFSMError:
         pass

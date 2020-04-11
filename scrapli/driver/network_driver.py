@@ -4,7 +4,7 @@ import re
 import warnings
 from abc import ABC, abstractmethod
 from collections import namedtuple
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from scrapli.driver.generic_driver import GenericDriver
 from scrapli.exceptions import CouldNotAcquirePrivLevel, UnknownPrivLevel
@@ -30,7 +30,7 @@ NoPrivLevel = PrivilegeLevel("", "", "", "", "", "", "", "", "", "")
 
 PRIVS: Dict[str, PrivilegeLevel] = {}
 
-LOG = logging.getLogger("scrapli_base")
+LOG = logging.getLogger("driver")
 
 
 class NetworkDriver(GenericDriver, ABC):
@@ -80,6 +80,7 @@ class NetworkDriver(GenericDriver, ABC):
         for priv_level in self.privs.values():
             prompt_pattern = get_prompt_pattern("", priv_level.pattern)
             if re.search(prompt_pattern, current_prompt.encode()):
+                LOG.debug(f"Determined current privilege level is `{priv_level.name}`")
                 return priv_level
         raise UnknownPrivLevel
 
@@ -131,9 +132,11 @@ class NetworkDriver(GenericDriver, ABC):
                         f"got {type(next_prompt)} for {current_priv.name} escalate priv, "
                         "expected str"
                     )
-                self.channel.send_inputs_interact(
-                    [escalate_cmd, escalate_prompt, escalate_auth, next_prompt],
-                    hidden_response=True,
+                super().send_interactive(
+                    interact_events=[
+                        (escalate_cmd, escalate_prompt, False),
+                        (escalate_auth, next_prompt, True),
+                    ],
                 )
                 self.channel.comms_prompt_pattern = next_priv.pattern
                 return
@@ -179,6 +182,7 @@ class NetworkDriver(GenericDriver, ABC):
             CouldNotAcquirePrivLevel: if requested priv level not attained
 
         """
+        LOG.info(f"Attempting to acquire `{desired_priv}` privilege level")
         priv_attempt_counter = 0
         while True:
             current_priv = self._determine_current_priv(self.channel.get_prompt())
@@ -290,23 +294,64 @@ class NetworkDriver(GenericDriver, ABC):
 
         return responses
 
-    def send_interactive(self, interact: List[str], hidden_response: bool = False) -> Response:
+    def send_interactive(
+        self,
+        interact_events: List[Tuple[str, str, Optional[bool]]],
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+    ) -> Response:
         """
-        Send inputs in an interactive fashion; used to handle prompts
+        Interact with a device with changing prompts per input.
 
-        accepts inputs and looks for expected prompt;
-        sends the appropriate response, then waits for the "finale"
-        returns the results of the interaction
+        Used to interact with devices where prompts change per input, and where inputs may be hidden
+        such as in the case of a password input. This can be used to respond to challenges from
+        devices such as the confirmation for the command "clear logging" on IOSXE devices for
+        example. You may have as many elements in the "interact_events" list as needed, and each
+        element of that list should be a tuple of two or three elements. The first element is always
+        the input to send as a string, the second should be the expected response as a string, and
+        the optional third a bool for whether or not the input is "hidden" (i.e. password input)
 
-        could be "chained" together to respond to more than a "single" staged prompt
+        An example where we need this sort of capability:
+
+        ```
+        3560CX#copy flash: scp:
+        Source filename []? test1.txt
+        Address or name of remote host []? 172.31.254.100
+        Destination username [carl]?
+        Writing test1.txt
+        Password:
+
+        Password:
+         Sink: C0644 639 test1.txt
+        !
+        639 bytes copied in 12.066 secs (53 bytes/sec)
+        3560CX#
+        ```
+
+        To accomplish this we can use the following:
+
+        ```
+        interact = conn.channel.send_inputs_interact(
+            [
+                ("copy flash: scp:", "Source filename []?", False),
+                ("test1.txt", "Address or name of remote host []?", False),
+                ("172.31.254.100", "Destination username [carl]?", False),
+                ("carl", "Password:", False),
+                ("super_secure_password", prompt, True),
+            ]
+        )
+        ```
+
+        If we needed to deal with more prompts we could simply continue adding tuples to the list of
+        interact "events".
 
         Args:
-            interact: list of four string elements representing...
-                channel_input - initial input to send
-                expected_prompt - prompt to expect after initial input
-                response - response to prompt
-                final_prompt - final prompt to expect
-            hidden_response: True/False response is hidden (i.e. password input)
+            interact_events: list of tuples containing the "interactions" with the device
+                each list element must have an input and an expected response, and may have an
+                optional bool for the third and final element -- the optional bool specifies if the
+                input that is sent to the device is "hidden" (ex: password), if the hidden param is
+                not provided it is assumed the input is "normal" (not hidden)
+            failed_when_contains: list of strings that, if present in final output, represent a
+                failed command/interaction
 
         Returns:
             Response: scrapli Response object
@@ -317,7 +362,11 @@ class NetworkDriver(GenericDriver, ABC):
         """
         if self._current_priv_level.name != self.default_desired_priv:
             self.acquire_priv(self.default_desired_priv)
-        response = self.channel.send_inputs_interact(interact, hidden_response)
+        response = super().send_interactive(
+            interact_events=interact_events, failed_when_contains=failed_when_contains
+        )
+        self._update_response(response)
+
         return response
 
     def send_configs(

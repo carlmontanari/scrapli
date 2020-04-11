@@ -47,6 +47,7 @@ def eos_on_open(conn: NetworkDriver) -&gt; None:
     &#34;&#34;&#34;
     conn.acquire_priv(conn.default_desired_priv)
     conn.channel.send_input(&#34;terminal length 0&#34;)
+    conn.channel.send_input(&#34;terminal width 32767&#34;)
 
 
 def eos_on_close(conn: NetworkDriver) -&gt; None:
@@ -280,7 +281,8 @@ class EOSDriver(NetworkDriver):
         N/A
     &#34;&#34;&#34;
     conn.acquire_priv(conn.default_desired_priv)
-    conn.channel.send_input(&#34;terminal length 0&#34;)</code></pre>
+    conn.channel.send_input(&#34;terminal length 0&#34;)
+    conn.channel.send_input(&#34;terminal width 32767&#34;)</code></pre>
 </details>
 </dd>
 </dl>

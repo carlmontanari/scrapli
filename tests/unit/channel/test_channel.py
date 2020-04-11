@@ -26,9 +26,9 @@ def test__repr(mocked_channel):
         ),
         (
             "send_inputs_interact",
-            {"channel_inputs": "stuff"},
+            {"interact_events": "stuff"},
             TypeError,
-            "`send_inputs_interact` expects a List, got <class 'str'>",
+            "`interact_events` expects a List, got <class 'str'>",
         ),
     ],
     ids=["send_input", "send_inputs_interact"],
@@ -230,25 +230,25 @@ def test_send_input(attr_setup, mocked_channel):
     "attr_setup",
     [
         (
-            {},
-            ["clear logg", "Clear logging buffer [confirm]", "", "3560CX#"],
-            "Clear logging buffer [confirm]\n\n3560CX#",
+            [("clear logg", "Clear logging buffer [confirm]"), ("", "3560CX#", False)],
+            "clear logg\nClear logging buffer [confirm]\n3560CX#",
         ),
         (
-            {"hidden_response": True},
-            ["clear logg", "Clear logging buffer [confirm]", "", "3560CX#"],
-            "Clear logging buffer [confirm]\n\n3560CX#",
+            [("clear logg", "Clear logging buffer [confirm]"), ("", "3560CX#", True)],
+            "clear logg\nClear logging buffer [confirm]\n3560CX#",
         ),
     ],
     ids=["basic", "hidden_response"],
 )
 def test_send_inputs_interact(attr_setup, mocked_channel):
-    args = attr_setup[0]
-    interact = attr_setup[1]
-    expected = attr_setup[2]
-    test_operations = [[interact[0], interact[1]], [interact[2], interact[3]]]
-    if "hidden_response" in args:
+    interact_events = attr_setup[0]
+    expected = attr_setup[1]
+    test_operations = [
+        [interact_events[0][0], interact_events[0][1]],
+        [interact_events[1][0], interact_events[1][1]],
+    ]
+    if interact_events[1][2] is True:
         test_operations[1][0] = ""
     conn = mocked_channel(test_operations)
-    output = conn.channel.send_inputs_interact(interact, **args)
-    assert output.result == expected
+    output, _ = conn.channel.send_inputs_interact(interact_events=interact_events)
+    assert output == expected

@@ -18,20 +18,20 @@ print(conn.channel.get_prompt())
 
 print("***** Show run | i hostname:")
 result = conn.channel.send_input("show run | i hostname")
-print(result, result.result)
+print(result)
 
 print("***** Clear logging buffer:")
-interact = ["clear logg", "Clear logging buffer [confirm]", "", "csr1000v#"]
+interact = [("clear logg", "Clear logging buffer [confirm]"), ("", "csr1000v#")]
 result = conn.channel.send_inputs_interact(interact)
-print(result, result[0].result)
+print(result)
 
 print("***** Disable Paging:")
 result = conn.channel.send_input("term length 0")
-print(result, result.result)
+print(result)
 
 print("***** Show run:")
 result = conn.channel.send_input("show run")
-print(result, result.result)
+print(result)
 
 if iosxe_device["keepalive"]:
     print("***** Waiting for keepalive....")

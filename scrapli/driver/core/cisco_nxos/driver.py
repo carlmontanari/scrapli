@@ -19,6 +19,7 @@ def nxos_on_open(conn: NetworkDriver) -> None:
         N/A
     """
     conn.channel.send_input("terminal length 0")
+    conn.channel.send_input("terminal width 511")
 
 
 def nxos_on_close(conn: NetworkDriver) -> None:

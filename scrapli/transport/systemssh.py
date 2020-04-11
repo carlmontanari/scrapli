@@ -1,6 +1,5 @@
 """scrapli.transport.systemssh"""
 import os
-import pty
 import re
 from logging import getLogger
 from select import select
@@ -24,6 +23,7 @@ SYSTEM_SSH_TRANSPORT_ARGS = (
     "auth_private_key",
     "auth_password",
     "auth_strict_key",
+    "auth_bypass",
     "ssh_config_file",
     "ssh_known_hosts_file",
     "comms_prompt_pattern",
@@ -42,6 +42,7 @@ class SystemSSHTransport(Transport):
         auth_private_key: str = "",
         auth_password: str = "",
         auth_strict_key: bool = True,
+        auth_bypass: bool = False,
         timeout_socket: int = 5,
         timeout_transport: int = 5,
         timeout_ops: int = 10,
@@ -86,6 +87,8 @@ class SystemSSHTransport(Transport):
             auth_private_key: path to private key for authentication
             auth_password: password for authentication
             auth_strict_key: True/False to enforce strict key checking (default is True)
+            auth_bypass: bypass ssh key or password auth for devices without authentication, or that
+                have auth prompts after ssh session establishment
             timeout_socket: timeout for ssh session to start -- this directly maps to ConnectTimeout
                 ssh argument; see `man ssh_config`
             timeout_transport: timeout for transport in seconds. since system ssh is using popen/pty
@@ -153,6 +156,7 @@ class SystemSSHTransport(Transport):
         self.auth_private_key: str = auth_private_key
         self.auth_password: str = auth_password
         self.auth_strict_key: bool = auth_strict_key
+        self.auth_bypass: bool = auth_bypass
 
         self._timeout_ops: int = timeout_ops
         self._comms_prompt_pattern: str = comms_prompt_pattern
@@ -256,7 +260,13 @@ class SystemSSHTransport(Transport):
         """
         self.session_lock.acquire()
 
-        # If authenticating with private key prefer to use open pipes
+        # if auth_bypass kick off keepalive thread if necessary and return
+        if self.auth_bypass:
+            self._open_pty(skip_auth=True)
+            self._session_keepalive()
+            return
+
+        # if authenticating with private key prefer to use open pipes
         # _open_pipes uses subprocess Popen which is preferable to opening a pty
         # if _open_pipes fails and no password available, raise failure, otherwise try password auth
         if self.auth_private_key:
@@ -294,6 +304,10 @@ class SystemSSHTransport(Transport):
             N/A
 
         """
+        # import here so that we dont blow up when running on windows (windows users need to use
+        #  ssh2 or paramiko transport)
+        import pty  # pylint: disable=C0415
+
         # copy the open_cmd as we don't want to update the objects open_cmd until we know we can
         # authenticate. add verbose output and disable batch mode (disables passphrase/password
         # queries). If auth is successful update the object open_cmd to represent what was used
@@ -368,12 +382,12 @@ class SystemSSHTransport(Transport):
             if "Operation timed out".encode() in output:
                 raise ScrapliTimeout(f"Timed opening connection to host {self.host}")
 
-    def _open_pty(self) -> bool:
+    def _open_pty(self, skip_auth: bool = False) -> bool:
         """
         Private method to open session with PtyProcess
 
         Args:
-            N/A
+            skip_auth: skip auth in the case of auth_bypass mode
 
         Returns:
             bool: True/False session was opened and authenticated
@@ -385,6 +399,8 @@ class SystemSSHTransport(Transport):
         self.session = PtyProcess.spawn(self.open_cmd)
         LOG.debug(f"Session to host {self.host} spawned")
         self.session_lock.release()
+        if skip_auth:
+            return True
         self._pty_authenticate(self.session)
         if not self._pty_isauthenticated(self.session):
             return False
@@ -458,7 +474,7 @@ class SystemSSHTransport(Transport):
                     output += pty_session.read()
                     # we do not need to deal w/ line replacement for the actual output, only for
                     # parsing if a prompt-like thing is at the end of the output
-                    output = re.sub(b"\r", b"", output)
+                    output = output.replace(b"\r", b"")
                     # always check to see if we should strip ansi here; if we don't handle this we
                     # may raise auth failures for the wrong reason which would be confusing for
                     # users

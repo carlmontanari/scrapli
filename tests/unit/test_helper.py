@@ -1,4 +1,3 @@
-import os
 import re
 import sys
 from io import TextIOWrapper
@@ -63,25 +62,66 @@ def test__textfsm_get_template_valid_template():
     assert template.name == f"{template_dir}/cisco_nxos_show_ip_arp.textfsm"
 
 
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting textfsm on windows")
 def test__textfsm_get_template_invalid_template():
     template = _textfsm_get_template("cisco_nxos", "show racecar")
     assert not template
 
 
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting textfsm on windows")
-def test_textfsm_parse_success():
+@pytest.mark.parametrize(
+    "parse_type",
+    [
+        (False, ["Internet", "172.31.254.1", "-", "0000.0c07.acfe", "ARPA", "Vlan254"],),
+        (
+            True,
+            {
+                "protocol": "Internet",
+                "address": "172.31.254.1",
+                "age": "-",
+                "mac": "0000.0c07.acfe",
+                "type": "ARPA",
+                "interface": "Vlan254",
+            },
+        ),
+    ],
+    ids=["to_dict_false", "to_dict_true"],
+)
+def test_textfsm_parse_success(parse_type):
+    to_dict = parse_type[0]
+    expected_result = parse_type[1]
     template = _textfsm_get_template("cisco_ios", "show ip arp")
-    result = textfsm_parse(template, IOS_ARP)
+    result = textfsm_parse(template, IOS_ARP, to_dict=to_dict)
     assert isinstance(result, list)
-    assert result[0] == ["Internet", "172.31.254.1", "-", "0000.0c07.acfe", "ARPA", "Vlan254"]
+    assert result[0] == expected_result
 
 
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting textfsm on windows")
-def test_textfsm_parse_success_string_path():
+@pytest.mark.parametrize(
+    "parse_type",
+    [
+        (False, ["Internet", "172.31.254.1", "-", "0000.0c07.acfe", "ARPA", "Vlan254"],),
+        (
+            True,
+            {
+                "protocol": "Internet",
+                "address": "172.31.254.1",
+                "age": "-",
+                "mac": "0000.0c07.acfe",
+                "type": "ARPA",
+                "interface": "Vlan254",
+            },
+        ),
+    ],
+    ids=["to_dict_false", "to_dict_true"],
+)
+def test_textfsm_parse_success_string_path(parse_type):
+    to_dict = parse_type[0]
+    expected_result = parse_type[1]
     template = _textfsm_get_template("cisco_ios", "show ip arp")
-    result = textfsm_parse(template.name, IOS_ARP)
+    result = textfsm_parse(template.name, IOS_ARP, to_dict=to_dict)
     assert isinstance(result, list)
-    assert result[0] == ["Internet", "172.31.254.1", "-", "0000.0c07.acfe", "ARPA", "Vlan254"]
+    assert result[0] == expected_result
 
 
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting textfsm on windows")
@@ -91,6 +131,7 @@ def test_textfsm_parse_failure():
     assert result == []
 
 
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting genie on windows")
 def test_genie_parse_success():
     result = genie_parse("iosxe", "show ip arp", IOS_ARP)
     assert isinstance(result, dict)
@@ -99,6 +140,7 @@ def test_genie_parse_success():
     )
 
 
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting genie on windows")
 def test_genie_parse_failure():
     result = genie_parse("iosxe", "show ip arp", "not really arp data")
     assert result == []

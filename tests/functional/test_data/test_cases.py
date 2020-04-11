@@ -35,8 +35,8 @@ TEST_CASES = {
             ).read(),
         },
         "send_interactive_normal_response": {
-            "command": ["clear logg", "Clear logging buffer [confirm]", "", "csr1000v#"],
-            "expected": "Clear logging buffer [confirm]\n\n\ncsr1000v#",
+            "command": [("clear logg", "Clear logging buffer [confirm]"), ("", "csr1000v#")],
+            "expected": "clear logg\nClear logging buffer [confirm]\n\ncsr1000v#",
         },
         "send_interactive_hidden_response": None,
         "send_configs": {
@@ -76,12 +76,10 @@ TEST_CASES = {
         },
         "send_interactive_normal_response": {
             "command": [
-                "delete bootflash:virtual-instance.conf",
-                "(yes/no/abort)   [y]",
-                "n",
-                "switch#",
+                ("delete bootflash:virtual-instance.conf", "(yes/no/abort)   [y]"),
+                ("n", "switch#"),
             ],
-            "expected": 'Do you want to delete "/virtual-instance.conf" ? (yes/no/abort)   [y] n\nswitch#',
+            "expected": 'delete bootflash:virtual-instance.conf\nDo you want to delete "/virtual-instance.conf" ? (yes/no/abort)   [y] n\nswitch#',
         },
         "send_interactive_hidden_response": None,
         "send_configs": {
