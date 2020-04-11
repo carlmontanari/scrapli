@@ -214,9 +214,8 @@ class Channel:
             strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
 
         Returns:
-            Responses: Tuple of decoded responses from the device
-                raw_result - the
-                processed_result
+            raw_result: output read from the channel with no whitespace trimming/cleaning
+            processed_result: output read from the channel that has been cleaned up
 
         Raises:
             TypeError: if input is anything but a string
@@ -240,7 +239,8 @@ class Channel:
             strip_prompt: bool True/False for whether or not to strip prompt
 
         Returns:
-            result: output read from the channel
+            raw_result: output read from the channel with no whitespace trimming/cleaning
+            processed_result: output read from the channel that has been cleaned up
 
         Raises:
             N/A
@@ -335,7 +335,8 @@ class Channel:
                 not provided it is assumed the input is "normal" (not hidden)
 
         Returns:
-            output: output read from the channel, processed output read from the channel
+            raw_result: output read from the channel with no whitespace trimming/cleaning
+            processed_result: output read from the channel that has been cleaned up
 
         Raises:
             TypeError: if inputs is not tuple or list
