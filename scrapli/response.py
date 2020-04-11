@@ -13,9 +13,6 @@ class Response:
         channel_input: str,
         textfsm_platform: str = "",
         genie_platform: str = "",
-        expectation: Optional[str] = None,
-        channel_response: Optional[str] = None,
-        finale: Optional[str] = None,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
     ):
         """
@@ -29,11 +26,6 @@ class Response:
             channel_input: input that got sent down the channel
             textfsm_platform: ntc-templates friendly platform type
             genie_platform: cisco pyats/genie friendly platform type
-            expectation: used for send_inputs_interact -- string to expect back from the channel
-                after initial input
-            channel_response: used for send_inputs_interact -- string to use to respond to expected
-                prompt
-            finale: string of prompt to look for to know when "done" with interaction
             failed_when_contains: list of strings that, if present in final output, represent a
                 failed command/interaction
 
@@ -52,9 +44,6 @@ class Response:
         self.channel_input = channel_input
         self.textfsm_platform = textfsm_platform
         self.genie_platform = genie_platform
-        self.expectation = expectation
-        self.channel_response = channel_response
-        self.finale = finale
         self.raw_result: str = ""
         self.result: str = ""
 

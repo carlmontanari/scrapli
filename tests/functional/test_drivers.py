@@ -149,7 +149,7 @@ class TestNetworkDevice:
             )
         interact = TEST_CASES[device_type]["send_interactive_normal_response"]["command"]
         expected_response = TEST_CASES[device_type]["send_interactive_normal_response"]["expected"]
-        response = conn.send_interactive(interact=interact)
+        response = conn.send_interactive(interact_events=interact)
         assert response.result == expected_response
 
     def test_send_interactive_hidden_response(self, conn, device_type, transport):
@@ -159,7 +159,7 @@ class TestNetworkDevice:
             )
         interact = TEST_CASES[device_type]["send_interactive_hidden_response"]["command"]
         expected_response = TEST_CASES[device_type]["send_interactive_hidden_response"]["expected"]
-        response = conn.send_interactive(interact=interact)
+        response = conn.send_interactive(interact_events=interact)
         assert response.result == expected_response
 
     @pytest.mark.parametrize(

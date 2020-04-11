@@ -1,7 +1,9 @@
 CHANGELOG
 =======
 
-# 2020.04.04
+# 2020.04.XX
+- BREAKING CHANGE: modify `send_interact` to just make more sense in general... now it supports 1->N "events" to
+ interact with -- see the "handling prompts" section of README for updated example
 - Add `auth_bypass` option to ignore ssh auth for weird devices such as Cisco WLC -- currently only supported on
  system transport.
 - Bump timeout_transport up to 10 seconds after finding some issues for some users.
@@ -12,6 +14,9 @@ CHANGELOG
 - Added terminal width settings for the core drivers to set things as wide as possible so long commands don't have
  issues
 - Teeny tiny improvements that may make things a tick faster in Channel by using str methods instead of re
+- Create a draft of public api status doc -- this should be useful on a quick glance to see if/when any public
+ methods change, obviously as development simmers down things should be stable but inevitably stuff *will* change
+ , so the goal here is to just document when methods were introduced and the last time they were changed
 
 # 2020.03.29
 - Add support for `parse_genie` to Response object; obviously really only for Cisco devices at this point unless

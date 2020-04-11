@@ -555,11 +555,15 @@ with IOSXEDriver(**my_device) as conn:
 
 ## Handling Prompts
 
-In some cases you may need to run an "interactive" command on your device. The `send_interactive` method can be used
- to accomplish this. This method accepts a list containing the initial input (command) to send, the expected prompt
-  after the initial send, the response to that prompt, and the final expected prompt -- basically telling scrapli
-   when it is done with the interactive command. In the example below the expectation is that the current/base prompt
-    is the final expected prompt, so we can simply call the `get_prompt` method to snag that directly off the router.
+In some cases you may need to run an "interactive" command on your device. The `send_interactive` method of the
+ `GenericDriver` or its sub-classes (`NetworkDriver` and "core" drivers) can be used to accomplish this. This method
+  accepts a list of "interact_events" -- or basically commands you would like to send, and their expected resulting
+   prompt. A third, optional, element is available for each "interaction", this last element is a bool that indicates
+    weather or not the input that you are sending to the device is "hidden" or obfuscated by the device. This is
+     typically used for password prompts where the input that is sent does not show up on the screen (if you as a
+      human are sitting on a terminal typing).
+      
+This method can accept one or N "events" and thus can be used to deal with any number of subsequent prompts. 
 
 ```python
 from scrapli.driver.core import IOSXEDriver
@@ -573,9 +577,16 @@ my_device = {
 
 with IOSXEDriver(**my_device) as conn:
     interactive = conn.send_interactive(
-                ["clear logging", "Clear logging buffer [confirm]", "\n", conn.get_prompt()]
-            )
+        [
+            ("copy flash: scp:", "Source filename []?", False),
+            ("somefile.txt", "Address or name of remote host []?", False),
+            ("172.31.254.100", "Destination username [carl]?", False),
+            ("scrapli", "Password:", False),
+            ("super_secure_password", "csr1000v#", True),
+        ]
+    )
 ```
+
 
 ## Telnet
 
