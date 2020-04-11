@@ -1,29 +1,33 @@
 """scrapli.exceptions"""
 
 
-class ScrapliTimeout(Exception):
+class ScrapliException(Exception):
+    """Base Exception for scrapli"""
+
+
+class ScrapliTimeout(ScrapliException):
     """Exception for any scrapli timeouts"""
 
 
-class ScrapliKeepaliveFailure(Exception):
+class ScrapliKeepaliveFailure(ScrapliException):
     """Exception for scrapli missing keepalives"""
 
 
-class MissingDependencies(Exception):
+class MissingDependencies(ScrapliException):
     """Exception for any missing (probably optional) dependencies"""
 
 
-class KeyVerificationFailed(Exception):
+class KeyVerificationFailed(ScrapliException):
     """Exception for scrapli public key verification failure"""
 
 
-class ScrapliAuthenticationFailed(Exception):
+class ScrapliAuthenticationFailed(ScrapliException):
     """Exception for scrapli authentication failure"""
 
 
-class UnknownPrivLevel(Exception):
+class UnknownPrivLevel(ScrapliException):
     """Exception for encountering unknown privilege level"""
 
 
-class CouldNotAcquirePrivLevel(Exception):
+class CouldNotAcquirePrivLevel(ScrapliException):
     """Exception for failure to acquire desired privilege level"""

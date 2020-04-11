@@ -32,7 +32,7 @@ result = conn.send_commands("show run | i hostname")
 print(result, result[0].result)
 
 print("***** Clear logging buffer:")
-interact = ("clear logg", "Clear logging buffer [confirm]", "", "3560CX#")
+interact = [("clear logg", "Clear logging buffer [confirm]"), ("", "3560CX#")]
 result = conn.send_interactive(interact)
 print(result, result[0].result)
 

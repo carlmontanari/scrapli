@@ -11,8 +11,8 @@ scrapli
 
 scrapli -- scrap(e c)li --  is a python library focused on connecting to devices, specifically network devices
  (routers/switches/firewalls/etc.) via SSH or Telnet. The name scrapli -- is just "scrape cli" (as in screen scrape)
- squished together! scrapli's goal is to be as fast and flexible, while providing a well typed, well documented,
-  simple API.
+ squished together! scrapli's goal is to be as fast and flexible as possible, while providing a thoroughly tested, well
+  typed, well documented, simple API.
 
 
 # Table of Contents
@@ -47,6 +47,7 @@ scrapli -- scrap(e c)li --  is a python library focused on connecting to devices
   - [Using Scrape Directly](#using-scrape-directly)
   - [Using the GenericDriver](#using-the-genericdriver)
   - [Using a Different Transport](#using-a-different-transport)
+  - [Auth Bypass](#auth-bypass)
 - [FAQ](#faq)
 - [Transport Notes, Caveats, and Known Issues](#transport-notes-caveats-and-known-issues)
   - [Paramiko](#paramiko)
@@ -153,13 +154,12 @@ This led to moving back to paramiko, which of course is a fantastic project with
    Paramiko - ControlPersist in particular is very interesting to me.
 
 With the goal of supporting all of the OpenSSH configuration options the primary transport driver option is simply
- native system local SSH (almost certainly this won't work on Windows, but I don't have a Windows box to test on, or
-  any particular interest in doing so). The implementation of using system SSH is of course a little bit messy
-  , however scrapli takes care of that for you so you don't need to care about it! The payoff of using system SSH is of
-   course that OpenSSH config files simply "work" -- no passing it to scrapli, no selective support, no need to set
-    username or ports or any of the other config items that may reside in your SSH config file. This driver
-      will likely be the focus of most development for this project, though I will try to keep the other transport
-       drivers -- in particular ssh2-python -- as close to parity as is possible/practical.
+ native system local SSH. The implementation of using system SSH is of course a little bit messy, however scrapli
+  takes care of that for you so you don't need to care about it! The payoff of using system SSH is of course that
+   OpenSSH config files simply "work" -- no passing it to scrapli, no selective support, no need to set username or
+    ports or any of the other config items that may reside in your SSH config file. This driver will likely be the
+     focus of most development for this project, though I will try to keep the other transport drivers -- in
+      particular ssh2-python -- as close to parity as is possible/practical.
 
 The last transport is telnet via telnetlib. This was trivial to add in as the interface is basically the same as
  SystemSSH, and it turns out telnet is still actually useful for things like terminal servers and the like!
@@ -245,7 +245,7 @@ pip install git+https://github.com/carlmontanari/scrapli
 To install from this repositories develop branch:
 
 ```
-pip install -e git+https://github.com/carlmontanari/scrapli.git@develop#egg=scrapli”
+pip install -e git+https://github.com/carlmontanari/scrapli.git@develop#egg=scrapli
 ```
 
 To install from source:
@@ -271,7 +271,9 @@ The available optional installation extras options are:
 - textfsm (textfsm and ntc-templates)
 
 As for platforms to *run* scrapli on -- it has and will be tested on MacOS and Ubuntu regularly and should work on any
- POSIX system. Windows is *NOT* tested and will not be supported (officially at least, it may work... not really sure).
+ POSIX system. Windows is now being tested very minimally via GitHub Actions builds, however it is important to note
+  that if you wish to use Windows you will need to use paramiko or ssh2-python as the transport driver. It is
+   *strongly* recommended/preferred for folks to use WSL/Cygwin and stick with "systemssh" as the transport. 
 
 
 # Basic Usage
@@ -521,7 +523,7 @@ with IOSXEDriver(**my_device) as conn:
 `pip install scrapli[textfsm]`
 
 
-# Cisco Genie Integration
+## Cisco Genie Integration
 
 Very much the same as the textfsm/ntc-templates integration, scrapli has optional integration with Cisco's PyATS
 /Genie parsing library for parsing show command output. While it is possible there are/will be parsers for non-Cisco
@@ -553,11 +555,15 @@ with IOSXEDriver(**my_device) as conn:
 
 ## Handling Prompts
 
-In some cases you may need to run an "interactive" command on your device. The `send_interactive` method can be used
- to accomplish this. This method accepts a list containing the initial input (command) to send, the expected prompt
-  after the initial send, the response to that prompt, and the final expected prompt -- basically telling scrapli
-   when it is done with the interactive command. In the example below the expectation is that the current/base prompt
-    is the final expected prompt, so we can simply call the `get_prompt` method to snag that directly off the router.
+In some cases you may need to run an "interactive" command on your device. The `send_interactive` method of the
+ `GenericDriver` or its sub-classes (`NetworkDriver` and "core" drivers) can be used to accomplish this. This method
+  accepts a list of "interact_events" -- or basically commands you would like to send, and their expected resulting
+   prompt. A third, optional, element is available for each "interaction", this last element is a bool that indicates
+    weather or not the input that you are sending to the device is "hidden" or obfuscated by the device. This is
+     typically used for password prompts where the input that is sent does not show up on the screen (if you as a
+      human are sitting on a terminal typing).
+      
+This method can accept one or N "events" and thus can be used to deal with any number of subsequent prompts. 
 
 ```python
 from scrapli.driver.core import IOSXEDriver
@@ -571,9 +577,16 @@ my_device = {
 
 with IOSXEDriver(**my_device) as conn:
     interactive = conn.send_interactive(
-                ["clear logging", "Clear logging buffer [confirm]", "\n", conn.get_prompt()]
-            )
+        [
+            ("copy flash: scp:", "Source filename []?", False),
+            ("somefile.txt", "Address or name of remote host []?", False),
+            ("172.31.254.100", "Destination username [carl]?", False),
+            ("scrapli", "Password:", False),
+            ("super_secure_password", "csr1000v#", True),
+        ]
+    )
 ```
+
 
 ## Telnet
 
@@ -891,8 +904,7 @@ with GenericDriver(**my_device) as conn:
 scrapli is built to be very flexible, including being flexible enough to use different libraries for "transport
 " -- or the actual Telnet/SSH communication. By default scrapli uses the "system" transport which quite literally
  uses the ssh binary on your system (`/usr/bin/ssh`). This "system" transport means that scrapli has no external
-  dependencies as it just relies on what is available on the machine running the scrapli script. It also means that
-   scrapli by default probably(?) doesn't support Windows.
+  dependencies as it just relies on what is available on the machine running the scrapli script.
 
 In the spirit of being highly flexible, scrapli allows users to swap out this "system" transport with another
  transport mechanism. The other supported transport mechanisms are `paramiko`, `ssh2-python` and `telnetlib`. The
@@ -923,6 +935,21 @@ Currently the only reason I can think of to use anything other than "system" as 
  scrapli on a Windows host or to use telnet. If there are other good reasons please do let me know!
 
 
+## Auth Bypass
+
+*NOTE* Currently only supported with system transport!
+
+Some devices, such as Cisco WLC, have no "true" SSH authentication, and instead prompt for credentials (or perhaps
+ not even that) after session establishment. In order to cope with this corner case, the `auth_bypass` flag can be
+  set to `True` which will cause scrapli to skip all authentication steps. Typically this flag would be set and a
+   custom `on_open` function set to handle whatever prompts the device has upon SSH session establishment.
+   
+In the future this functionality will likely be extended to the telnet transport, and may be extended to paramiko and
+ ssh2 transports.
+
+See the [non core device example](/examples/non_core_device/wlc.py) to see this in action.
+
+
 # FAQ
 
 - Question: Why build this? Netmiko exists, Paramiko exists, Ansible exists, etc...?
@@ -950,6 +977,17 @@ Currently the only reason I can think of to use anything other than "system" as 
    connection. Call `conn.open()` (or your object name in place of conn) to open the session and assign the channel
     attribute. Alternatively you can use any of the drivers with a context manager (see what I did there? WITH... get
      it?) which will auto-magically open and close the connections for you.
+- I wanna go fast!
+  - Hmmm... not a question but I dig it. If you wanna go fast you gotta learn to drive with the fear... ok, enough
+   Talladega Nights quoting for now. In theory using the `ssh2` transport is the gateway to speed... being a very
+    thin wrapper around libssh2 means that its basically all C and that means its probably about as fast as we're
+     reasonably going to get. All that said, scrapli by default uses the `system` transport which is really just
+      using your system ssh.... which is almost certainly libssh2/openssh which is also C. There is a thin layer of
+       abstraction between scrapli and your system ssh but really its just reading/writing to a file which Python
+        should be doing in C anyway I would think. In summary... while `ssh2` is probably the fastest you can go with
+         scrapli, the difference between `ssh2` and `system` transports in limited testing is microscopic, and the
+          benefits of using system transport (native ssh config file support!!) probably should outweigh the speed of
+           ssh2 -- especially if you have control persist and can take advantage of that with system transport!
 - Other questions? Ask away!
 
 
@@ -983,10 +1021,13 @@ Currently the only reason I can think of to use anything other than "system" as 
  of ssh2-python (as of January 2020). GitHub user [Red-M](https://github.com/Red-M) has contributed to and fixed this
   particular issue but the fix has not been merged. If you would like to use ssh2-python with EOS I suggest cloning
    and installing via Red-M's repository or my fork of Red-M's fork!
+  - Windows users using python3.8 may need to use Red-M's fork, quick testing in GitHub actions for py3.8 on Windows
+   had install failures for ssh2-python.
 - Use the context manager where possible! More testing needs to be done to confirm/troubleshoot, but limited testing
  seems to indicate that without properly closing the connection there appears to be a bug that causes Python to crash
   on MacOS at least. More to come on this as I have time to poke it more! I believe this is only occurring on the
-   latest branch/update (i.e. not on the pip installable version).
+   latest branch/update (i.e. not on the pip installable version). (April 2020 -- this may be fixed... need to retest
+   ...)
 
 ## system
 
@@ -995,6 +1036,9 @@ Currently the only reason I can think of to use anything other than "system" as 
   these cli arguments take precedence over the config file arguments.
 - If you set `ssh_config_file` to `False` the `SystemSSHTransport` class will set the config file used to `/dev/null
 ` so that no ssh config file configs are accidentally used.
+- There is zero Windows support for system ssh transport - I would strongly encourage the use of WSL or cygwin and
+ sticking with systemssh instead of using paramiko/ssh2 natively in Windows -- system ssh is very much the focus of
+  development for scrapli!
 
 ### SSH Config Supported Arguments
 
@@ -1201,8 +1245,6 @@ This section may not get updated much, but will hopefully reflect the priority i
 - Add tests for timeouts if possible
 - Add more tests for auth failures
 - Add tests for custom on open/close functions
-- Investigate pre-authentication handling for telnet -- support handling a prompt *before* auth happens i.e. accept
- some banner/message -- does this ever happen for ssh? I don't know! If so, support dealing with that as well.
 - Remove as much as possible from the vendor'd `ptyprocess` code. Type hint it, add docstrings everywhere, add tests
  if possible (and remove from ignore for test coverage and darglint).
 - Improve logging -- especially in the transport classes and surrounding authentication (mostly in systemssh).
@@ -1211,7 +1253,8 @@ This section may not get updated much, but will hopefully reflect the priority i
 
 - Async support. This is a bit of a question mark as I personally don't know even where to start to implement this
 , and have no real current use case... that said I think it would be cool if for no other reason than to learn!
-- Plugins -- make the drivers all plugins!
+- Plugins -- make paramiko and ssh2 transports plugins!
+- Plugins -- build framework to allow for others to easily build driver plugins if desired
 - Ensure v6 stuff works as expected.
 - Continue to add/support ssh config file things.
 - Maybe make this into a netconf driver as well? ncclient is just built on paramiko so it seems doable...?

@@ -174,7 +174,7 @@ class MikoTransport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            exc: if socket handshake fails
+            Exception: if socket handshake fails
             ScrapliAuthenticationFailed: if all authentication means fail
 
         """
@@ -193,8 +193,8 @@ class MikoTransport(Transport):
             LOG.debug(f"Attempting to validate {self.host} public key")
             self._verify_key()
 
-        self.authenticate()
-        if not self.isauthenticated():
+        self._authenticate()
+        if not self._isauthenticated():
             msg = f"Authentication to host {self.host} failed"
             LOG.critical(msg)
             self.session_lock.release()
@@ -233,7 +233,7 @@ class MikoTransport(Transport):
                 f"{self.host} in known_hosts but public key does not match!"
             )
 
-    def authenticate(self) -> None:
+    def _authenticate(self) -> None:
         """
         Parent method to try all means of authentication
 
@@ -249,7 +249,7 @@ class MikoTransport(Transport):
         """
         if self.auth_private_key:
             self._authenticate_public_key()
-            if self.isauthenticated():
+            if self._isauthenticated():
                 LOG.debug(f"Authenticated to host {self.host} with public key auth")
                 return
             if not self.auth_password or not self.auth_username:
@@ -260,7 +260,7 @@ class MikoTransport(Transport):
                 LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
         self._authenticate_password()
-        if self.isauthenticated():
+        if self._isauthenticated():
             LOG.debug(f"Authenticated to host {self.host} with password")
 
     def _authenticate_public_key(self) -> None:
@@ -274,8 +274,7 @@ class MikoTransport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            exc: (really the paramiko auth exception) if auth exception occurs
-            exc: (really the paramiko base exception) if unknown exception occurs
+            N/A
 
         """
         try:
@@ -306,7 +305,7 @@ class MikoTransport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            exc: if unknown (i.e. not auth failed) exception occurs
+            Exception: if unknown (i.e. not auth failed) exception occurs
 
         """
         try:
@@ -324,7 +323,7 @@ class MikoTransport(Transport):
             )
             raise exc
 
-    def isauthenticated(self) -> bool:
+    def _isauthenticated(self) -> bool:
         """
         Check if session is authenticated
 
@@ -395,7 +394,7 @@ class MikoTransport(Transport):
             N/A
 
         """
-        if self.socket.socket_isalive() and self.session.is_alive() and self.isauthenticated():
+        if self.socket.socket_isalive() and self.session.is_alive() and self._isauthenticated():
             return True
         return False
 

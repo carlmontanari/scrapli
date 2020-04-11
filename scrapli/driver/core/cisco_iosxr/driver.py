@@ -24,6 +24,7 @@ def iosxr_on_open(conn: NetworkDriver) -> None:
     time.sleep(1)
     conn.acquire_priv(conn.default_desired_priv)
     conn.channel.send_input("terminal length 0")
+    conn.channel.send_input("terminal width 512")
 
 
 def iosxr_on_close(conn: NetworkDriver) -> None:

@@ -47,6 +47,7 @@ def iosxe_on_open(conn: NetworkDriver) -&gt; None:
     &#34;&#34;&#34;
     conn.acquire_priv(conn.default_desired_priv)
     conn.channel.send_input(&#34;terminal length 0&#34;)
+    conn.channel.send_input(&#34;terminal width 512&#34;)
 
 
 def iosxe_on_close(conn: NetworkDriver) -&gt; None:
@@ -282,7 +283,8 @@ class IOSXEDriver(NetworkDriver):
         N/A
     &#34;&#34;&#34;
     conn.acquire_priv(conn.default_desired_priv)
-    conn.channel.send_input(&#34;terminal length 0&#34;)</code></pre>
+    conn.channel.send_input(&#34;terminal length 0&#34;)
+    conn.channel.send_input(&#34;terminal width 512&#34;)</code></pre>
 </details>
 </dd>
 </dl>

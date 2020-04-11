@@ -93,6 +93,7 @@ def _textfsm_get_template(platform: str, command: str) -> Optional[TextIO]:
     """
     try:
         from textfsm.clitable import CliTable  # pylint: disable=C0415
+        from ntc_templates import templates  # pylint: disable=C0415,W0611
     except ModuleNotFoundError as exc:
         err = f"Module '{exc.name}' not installed!"
         msg = f"***** {err} {'*' * (80 - len(err))}"
@@ -115,8 +116,30 @@ def _textfsm_get_template(platform: str, command: str) -> Optional[TextIO]:
     return template
 
 
+def _textfsm_to_dict(
+    structured_output: Union[List[Any], Dict[str, Any]], header: List[str]
+) -> Union[List[Any], Dict[str, Any]]:
+    """
+    Create list of dicts from textfsm output and header
+
+    Args:
+        structured_output: parsed textfsm output
+        header: list of strings representing column headers for textfsm output
+
+    Returns:
+        output: structured data
+
+    Raises:
+        N/A
+
+    """
+    header_lower = [h.lower() for h in header]
+    structured_output = [dict(zip(header_lower, row)) for row in structured_output]
+    return structured_output
+
+
 def textfsm_parse(
-    template: Union[str, TextIOWrapper], output: str
+    template: Union[str, TextIOWrapper], output: str, to_dict: bool = True
 ) -> Union[List[Any], Dict[str, Any]]:
     """
     Parse output with TextFSM and ntc-templates, try to return structured output
@@ -124,6 +147,8 @@ def textfsm_parse(
     Args:
         template: TextIOWrapper or string path to template to use to parse data
         output: unstructured output from device to parse
+        to_dict: convert textfsm output from list of lists to list of dicts -- basically create dict
+            from header and row data so it is easier to read/parse the output
 
     Returns:
         output: structured data
@@ -141,6 +166,8 @@ def textfsm_parse(
     re_table = textfsm.TextFSM(template_file)
     try:
         structured_output: Union[List[Any], Dict[str, Any]] = re_table.ParseText(output)
+        if to_dict:
+            structured_output = _textfsm_to_dict(structured_output, re_table.header)
         return structured_output
     except textfsm.parser.TextFSMError:
         pass

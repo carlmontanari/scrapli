@@ -113,11 +113,11 @@ def test_send_inputs_interact(mocked_generic_driver):
     channel_output_1 = "Clear logging buffer [confirm]"
     channel_input_2 = "\n"
     channel_output_2 = "3560CX#"
-    interact = [channel_input_1, channel_output_1, "", channel_output_2]
+    interact = [(channel_input_1, channel_output_1), ("", channel_output_2)]
     test_operations = [
         (channel_input_1, channel_output_1),
         (channel_input_2, channel_output_2),
     ]
     conn = mocked_generic_driver(test_operations)
-    output = conn.send_interactive(interact, hidden_response=False)
-    assert output.result == "Clear logging buffer [confirm]\n\n3560CX#"
+    output = conn.send_interactive(interact)
+    assert output.result == "clear logg\nClear logging buffer [confirm]\n3560CX#"

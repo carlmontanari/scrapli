@@ -40,9 +40,6 @@ class Response:
         channel_input: str,
         textfsm_platform: str = &#34;&#34;,
         genie_platform: str = &#34;&#34;,
-        expectation: Optional[str] = None,
-        channel_response: Optional[str] = None,
-        finale: Optional[str] = None,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
     ):
         &#34;&#34;&#34;
@@ -56,11 +53,6 @@ class Response:
             channel_input: input that got sent down the channel
             textfsm_platform: ntc-templates friendly platform type
             genie_platform: cisco pyats/genie friendly platform type
-            expectation: used for send_inputs_interact -- string to expect back from the channel
-                after initial input
-            channel_response: used for send_inputs_interact -- string to use to respond to expected
-                prompt
-            finale: string of prompt to look for to know when &#34;done&#34; with interaction
             failed_when_contains: list of strings that, if present in final output, represent a
                 failed command/interaction
 
@@ -79,9 +71,6 @@ class Response:
         self.channel_input = channel_input
         self.textfsm_platform = textfsm_platform
         self.genie_platform = genie_platform
-        self.expectation = expectation
-        self.channel_response = channel_response
-        self.finale = finale
         self.raw_result: str = &#34;&#34;
         self.result: str = &#34;&#34;
 
@@ -138,7 +127,7 @@ class Response:
         &#34;&#34;&#34;
         return f&#34;Scrape &lt;Success: {str(not self.failed)}&gt;&#34;
 
-    def record_response(self, result: str) -&gt; None:
+    def _record_response(self, result: str) -&gt; None:
         &#34;&#34;&#34;
         Record channel_input results and elapsed time of channel input/reading output
 
@@ -160,14 +149,15 @@ class Response:
         elif not any(err in result for err in self.failed_when_contains):
             self.failed = False
 
-    def textfsm_parse_output(self) -&gt; Union[Dict[str, Any], List[Any]]:
+    def textfsm_parse_output(self, to_dict: bool = True) -&gt; Union[Dict[str, Any], List[Any]]:
         &#34;&#34;&#34;
         Parse results with textfsm, always return structured data
 
         Returns an empty list if parsing fails!
 
         Args:
-            N/A
+            to_dict: convert textfsm output from list of lists to list of dicts -- basically create
+                dict from header and row data so it is easier to read/parse the output
 
         Returns:
             structured_result: empty list or parsed data from textfsm
@@ -178,7 +168,7 @@ class Response:
         &#34;&#34;&#34;
         template = _textfsm_get_template(self.textfsm_platform, self.channel_input)
         if isinstance(template, TextIOWrapper):
-            structured_result = textfsm_parse(template, self.result) or []
+            structured_result = textfsm_parse(template, self.result, to_dict=to_dict) or []
         else:
             structured_result = []
         return structured_result
@@ -214,7 +204,7 @@ class Response:
 <dl>
 <dt id="scrapli.response.Response"><code class="flex name class">
 <span>class <span class="ident">Response</span></span>
-<span>(</span><span>host, channel_input, textfsm_platform='', genie_platform='', expectation=None, channel_response=None, finale=None, failed_when_contains=None)</span>
+<span>(</span><span>host, channel_input, textfsm_platform='', genie_platform='', failed_when_contains=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Scrapli Response</p>
@@ -230,14 +220,6 @@ determine if command was successful or not and reflect that in a failed attribut
 <dd>ntc-templates friendly platform type</dd>
 <dt><strong><code>genie_platform</code></strong></dt>
 <dd>cisco pyats/genie friendly platform type</dd>
-<dt><strong><code>expectation</code></strong></dt>
-<dd>used for send_inputs_interact &ndash; string to expect back from the channel
-after initial input</dd>
-<dt><strong><code>channel_response</code></strong></dt>
-<dd>used for send_inputs_interact &ndash; string to use to respond to expected
-prompt</dd>
-<dt><strong><code>finale</code></strong></dt>
-<dd>string of prompt to look for to know when "done" with interaction</dd>
 <dt><strong><code>failed_when_contains</code></strong></dt>
 <dd>list of strings that, if present in final output, represent a
 failed command/interaction</dd>
@@ -265,9 +247,6 @@ failed command/interaction</dd>
         channel_input: str,
         textfsm_platform: str = &#34;&#34;,
         genie_platform: str = &#34;&#34;,
-        expectation: Optional[str] = None,
-        channel_response: Optional[str] = None,
-        finale: Optional[str] = None,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
     ):
         &#34;&#34;&#34;
@@ -281,11 +260,6 @@ failed command/interaction</dd>
             channel_input: input that got sent down the channel
             textfsm_platform: ntc-templates friendly platform type
             genie_platform: cisco pyats/genie friendly platform type
-            expectation: used for send_inputs_interact -- string to expect back from the channel
-                after initial input
-            channel_response: used for send_inputs_interact -- string to use to respond to expected
-                prompt
-            finale: string of prompt to look for to know when &#34;done&#34; with interaction
             failed_when_contains: list of strings that, if present in final output, represent a
                 failed command/interaction
 
@@ -304,9 +278,6 @@ failed command/interaction</dd>
         self.channel_input = channel_input
         self.textfsm_platform = textfsm_platform
         self.genie_platform = genie_platform
-        self.expectation = expectation
-        self.channel_response = channel_response
-        self.finale = finale
         self.raw_result: str = &#34;&#34;
         self.result: str = &#34;&#34;
 
@@ -363,7 +334,7 @@ failed command/interaction</dd>
         &#34;&#34;&#34;
         return f&#34;Scrape &lt;Success: {str(not self.failed)}&gt;&#34;
 
-    def record_response(self, result: str) -&gt; None:
+    def _record_response(self, result: str) -&gt; None:
         &#34;&#34;&#34;
         Record channel_input results and elapsed time of channel input/reading output
 
@@ -385,14 +356,15 @@ failed command/interaction</dd>
         elif not any(err in result for err in self.failed_when_contains):
             self.failed = False
 
-    def textfsm_parse_output(self) -&gt; Union[Dict[str, Any], List[Any]]:
+    def textfsm_parse_output(self, to_dict: bool = True) -&gt; Union[Dict[str, Any], List[Any]]:
         &#34;&#34;&#34;
         Parse results with textfsm, always return structured data
 
         Returns an empty list if parsing fails!
 
         Args:
-            N/A
+            to_dict: convert textfsm output from list of lists to list of dicts -- basically create
+                dict from header and row data so it is easier to read/parse the output
 
         Returns:
             structured_result: empty list or parsed data from textfsm
@@ -403,7 +375,7 @@ failed command/interaction</dd>
         &#34;&#34;&#34;
         template = _textfsm_get_template(self.textfsm_platform, self.channel_input)
         if isinstance(template, TextIOWrapper):
-            structured_result = textfsm_parse(template, self.result) or []
+            structured_result = textfsm_parse(template, self.result, to_dict=to_dict) or []
         else:
             structured_result = []
         return structured_result
@@ -471,62 +443,18 @@ failed command/interaction</dd>
     return structured_result</code></pre>
 </details>
 </dd>
-<dt id="scrapli.response.Response.record_response"><code class="name flex">
-<span>def <span class="ident">record_response</span></span>(<span>self, result)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Record channel_input results and elapsed time of channel input/reading output</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>result</code></strong></dt>
-<dd>string result of channel_input</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N</code>/<code>A</code>
-# <code>noqa</code>: <code>DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def record_response(self, result: str) -&gt; None:
-    &#34;&#34;&#34;
-    Record channel_input results and elapsed time of channel input/reading output
-
-    Args:
-        result: string result of channel_input
-
-    Returns:
-        N/A  # noqa: DAR202
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    self.finish_time = datetime.now()
-    self.elapsed_time = (self.finish_time - self.start_time).total_seconds()
-    self.result = result
-    if not self.failed_when_contains:
-        self.failed = False
-    elif not any(err in result for err in self.failed_when_contains):
-        self.failed = False</code></pre>
-</details>
-</dd>
 <dt id="scrapli.response.Response.textfsm_parse_output"><code class="name flex">
-<span>def <span class="ident">textfsm_parse_output</span></span>(<span>self)</span>
+<span>def <span class="ident">textfsm_parse_output</span></span>(<span>self, to_dict=True)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Parse results with textfsm, always return structured data</p>
 <p>Returns an empty list if parsing fails!</p>
 <h2 id="args">Args</h2>
-<p>N/A</p>
+<dl>
+<dt><strong><code>to_dict</code></strong></dt>
+<dd>convert textfsm output from list of lists to list of dicts &ndash; basically create
+dict from header and row data so it is easier to read/parse the output</dd>
+</dl>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>structured_result</code></strong></dt>
@@ -541,14 +469,15 @@ failed command/interaction</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def textfsm_parse_output(self) -&gt; Union[Dict[str, Any], List[Any]]:
+<pre><code class="python">def textfsm_parse_output(self, to_dict: bool = True) -&gt; Union[Dict[str, Any], List[Any]]:
     &#34;&#34;&#34;
     Parse results with textfsm, always return structured data
 
     Returns an empty list if parsing fails!
 
     Args:
-        N/A
+        to_dict: convert textfsm output from list of lists to list of dicts -- basically create
+            dict from header and row data so it is easier to read/parse the output
 
     Returns:
         structured_result: empty list or parsed data from textfsm
@@ -559,7 +488,7 @@ failed command/interaction</dd>
     &#34;&#34;&#34;
     template = _textfsm_get_template(self.textfsm_platform, self.channel_input)
     if isinstance(template, TextIOWrapper):
-        structured_result = textfsm_parse(template, self.result) or []
+        structured_result = textfsm_parse(template, self.result, to_dict=to_dict) or []
     else:
         structured_result = []
     return structured_result</code></pre>
@@ -587,7 +516,6 @@ failed command/interaction</dd>
 <h4><code><a title="scrapli.response.Response" href="#scrapli.response.Response">Response</a></code></h4>
 <ul class="">
 <li><code><a title="scrapli.response.Response.genie_parse_output" href="#scrapli.response.Response.genie_parse_output">genie_parse_output</a></code></li>
-<li><code><a title="scrapli.response.Response.record_response" href="#scrapli.response.Response.record_response">record_response</a></code></li>
 <li><code><a title="scrapli.response.Response.textfsm_parse_output" href="#scrapli.response.Response.textfsm_parse_output">textfsm_parse_output</a></code></li>
 </ul>
 </li>

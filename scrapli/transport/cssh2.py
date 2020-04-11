@@ -174,7 +174,7 @@ class SSH2Transport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            exc: if socket handshake fails
+            Exception: if socket handshake fails
             ScrapliAuthenticationFailed: if all authentication means fail
 
         """
@@ -197,8 +197,8 @@ class SSH2Transport(Transport):
             self._verify_key()
 
         LOG.debug(f"Session to host {self.host} opened")
-        self.authenticate()
-        if not self.isauthenticated():
+        self._authenticate()
+        if not self._isauthenticated():
             msg = f"Authentication to host {self.host} failed"
             LOG.critical(msg)
             self.session_lock.release()
@@ -237,7 +237,7 @@ class SSH2Transport(Transport):
                 f"{self.host} in known_hosts but public key does not match!"
             )
 
-    def authenticate(self) -> None:
+    def _authenticate(self) -> None:
         """
         Parent method to try all means of authentication
 
@@ -253,7 +253,7 @@ class SSH2Transport(Transport):
         """
         if self.auth_private_key:
             self._authenticate_public_key()
-            if self.isauthenticated():
+            if self._isauthenticated():
                 LOG.debug(f"Authenticated to host {self.host} with public key auth")
                 return
             if not self.auth_password or not self.auth_username:
@@ -265,11 +265,11 @@ class SSH2Transport(Transport):
                 raise ScrapliAuthenticationFailed(msg)
 
         self._authenticate_password()
-        if self.isauthenticated():
+        if self._isauthenticated():
             LOG.debug(f"Authenticated to host {self.host} with password")
             return
         self._authenticate_keyboard_interactive()
-        if self.isauthenticated():
+        if self._isauthenticated():
             LOG.debug(f"Authenticated to host {self.host} with keyboard interactive")
 
     def _authenticate_public_key(self) -> None:
@@ -283,8 +283,7 @@ class SSH2Transport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            exc: (really the ssh2 auth exception) if auth exception occurs
-            exc: (really the ssh2 base exception) if unknown exception occurs
+            N/A
 
         """
         try:
@@ -310,7 +309,7 @@ class SSH2Transport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            exc: if unknown (i.e. not auth failed) exception occurs
+            Exception: if unknown (i.e. not auth failed) exception occurs
 
         """
         try:
@@ -335,7 +334,7 @@ class SSH2Transport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            exc: if unknown (i.e. not auth failed) exception occurs
+            Exception: if unknown (i.e. not auth failed) exception occurs
 
         """
         try:
@@ -359,7 +358,7 @@ class SSH2Transport(Transport):
             )
             raise exc
 
-    def isauthenticated(self) -> bool:
+    def _isauthenticated(self) -> bool:
         """
         Check if session is authenticated
 
@@ -429,7 +428,7 @@ class SSH2Transport(Transport):
             N/A
 
         """
-        if self.socket.socket_isalive() and not self.channel.eof() and self.isauthenticated():
+        if self.socket.socket_isalive() and not self.channel.eof() and self._isauthenticated():
             return True
         return False
 

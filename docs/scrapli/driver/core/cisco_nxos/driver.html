@@ -46,6 +46,7 @@ def nxos_on_open(conn: NetworkDriver) -&gt; None:
         N/A
     &#34;&#34;&#34;
     conn.channel.send_input(&#34;terminal length 0&#34;)
+    conn.channel.send_input(&#34;terminal width 511&#34;)
 
 
 def nxos_on_close(conn: NetworkDriver) -&gt; None:
@@ -302,7 +303,8 @@ class NXOSDriver(NetworkDriver):
     Raises:
         N/A
     &#34;&#34;&#34;
-    conn.channel.send_input(&#34;terminal length 0&#34;)</code></pre>
+    conn.channel.send_input(&#34;terminal length 0&#34;)
+    conn.channel.send_input(&#34;terminal width 511&#34;)</code></pre>
 </details>
 </dd>
 </dl>
