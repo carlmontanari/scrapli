@@ -1,6 +1,16 @@
 CHANGELOG
 =======
 
+# 2020.XX.XX
+- Increase character count for base prompt pattern for `Scrape`, `GenericDriver`, and core drivers. Example:
+`r"^[a-z0-9.\-@()/:]{1,32}[#>$]$"` for the base `IOSXEDriver` `comms_prompt_pattern` has been increased to:
+`r"^[a-z0-9.\-@()/:]{1,48}[#>$]$"`
+- Improve the logging for `SystemSSHTransport` authentication
+- Fixed an issue where `SystemSSHTransport` auth would fail due to a login banner having the word `password` in the
+ banner/text
+- Significantly increase the base `timeout_ops` value -- as this is not a timer that is going to cause things to
+ block, it may as well be much higher for the default value to help prevent issues
+
 # 2020.04.11
 - *BREAKING CHANGE*: modify `send_interact` to just make more sense in general... now it supports 1->N "events" to
  interact with -- see the "handling prompts" section of README for updated example

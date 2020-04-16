@@ -8,7 +8,7 @@ from scrapli.response import Response
 class GenericDriver(Scrape):
     def __init__(
         self,
-        comms_prompt_pattern: str = r"^\S{0,32}[#>$~@:\]]\s*$",
+        comms_prompt_pattern: str = r"^\S{0,48}[#>$~@:\]]\s*$",
         comms_ansi: bool = True,
         **kwargs: Any,
     ):

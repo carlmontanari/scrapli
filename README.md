@@ -883,7 +883,7 @@ Hopefully this `GenericDriver` can be used as a starting point for devices that 
  platforms list.
    
 ```python
-from scrapli.driver.core import GenericDriver
+from scrapli.driver import GenericDriver
 
 my_device = {
     "host": "172.18.0.11",

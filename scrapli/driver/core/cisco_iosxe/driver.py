@@ -105,7 +105,7 @@ PRIVS = {
 class IOSXEDriver(NetworkDriver):
     def __init__(
         self,
-        comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
+        comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,48}[#>$]$",
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         auth_secondary: str = "",

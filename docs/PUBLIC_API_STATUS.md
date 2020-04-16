@@ -17,7 +17,7 @@
 | get_prompt                   | 2020.03.29  |             |                                                           |
 | send_command                 | 2020.03.29  |             |                                                           |
 | send_commands                | 2020.03.29  |             |                                                           |
-| send_interactive             | 2020.03.29  | 2020.04.XX  | changed to support list of "events" to interact with      |
+| send_interactive             | 2020.03.29  | 2020.04.11  | changed to support list of "events" to interact with      |
 
 
 ### NetworkDriver ABC (and Platform driver sub-classes unless overridden)
@@ -36,7 +36,7 @@
 |------------------------------|-------------|-------------|----------------------------------------------------------|
 | get_prompt                   | 2020.03.29  |             |                                                          |
 | send_input                   | 2020.03.29  |             |                                                          |
-| send_inputs_interact         | 2020.03.29  | 2020.04.XX  | changed to support list of "events" to interact with     |
+| send_inputs_interact         | 2020.03.29  | 2020.04.11  | changed to support list of "events" to interact with     |
 
 
 ## Transport

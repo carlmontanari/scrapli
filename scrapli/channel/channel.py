@@ -153,6 +153,7 @@ class Channel:
         output = b""
         while channel_input not in output:
             output += self._read_chunk()
+        LOG.info(f"Read: {repr(output)}")
         return output
 
     def _read_until_prompt(self, output: bytes = b"", prompt: str = "") -> bytes:
@@ -176,6 +177,7 @@ class Channel:
             output += self._read_chunk()
             channel_match = re.search(prompt_pattern, output)
             if channel_match:
+                LOG.info(f"Read: {repr(output)}")
                 return output
 
     @operation_timeout("timeout_ops", "Timed out determining prompt on device.")

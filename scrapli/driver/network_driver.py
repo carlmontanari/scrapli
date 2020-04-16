@@ -106,7 +106,8 @@ class NetworkDriver(GenericDriver, ABC):
         next_priv = self.privs.get(current_priv.escalate_priv, None)
         if next_priv is None:
             raise UnknownPrivLevel(
-                f"Could not get next priv level, current priv is {current_priv.name}"
+                f"Cannot escalate from privilege level `{current_priv.name}` to requested "
+                f"privilege level, no higher privilege level defined"
             )
         next_prompt = next_priv.pattern
         if current_priv.escalate_auth:
@@ -129,7 +130,7 @@ class NetworkDriver(GenericDriver, ABC):
                 escalate_auth = self.auth_secondary
                 if not isinstance(next_prompt, str):
                     raise TypeError(
-                        f"got {type(next_prompt)} for {current_priv.name} escalate priv, "
+                        f"got `{type(next_prompt)}` for `{current_priv.name}` escalate priv, "
                         "expected str"
                     )
                 super().send_interactive(
@@ -158,11 +159,13 @@ class NetworkDriver(GenericDriver, ABC):
 
         """
         current_priv = self._determine_current_priv(self.channel.get_prompt())
+
         if current_priv.deescalate:
             next_priv = self.privs.get(current_priv.deescalate_priv, None)
             if not next_priv:
                 raise UnknownPrivLevel(
-                    "NetworkDriver has no default priv levels, set them or use a network driver"
+                    f"Cannot deescalate from privilege level `{current_priv.name}` to requested "
+                    f"privilege level, no lower privilege level defined"
                 )
             self.channel.comms_prompt_pattern = next_priv.pattern
             self.channel.send_input(current_priv.deescalate)
@@ -179,10 +182,17 @@ class NetworkDriver(GenericDriver, ABC):
             N/A  # noqa: DAR202
 
         Raises:
+            UnknownPrivLevel: if requested priv level is not known
             CouldNotAcquirePrivLevel: if requested priv level not attained
 
         """
         LOG.info(f"Attempting to acquire `{desired_priv}` privilege level")
+        if desired_priv not in self.privs.keys():
+            raise UnknownPrivLevel(
+                f"Requested privilege level `{desired_priv}` not a valid privilege level of "
+                f"`{self.__class__.__name__}`"
+            )
+
         priv_attempt_counter = 0
         while True:
             current_priv = self._determine_current_priv(self.channel.get_prompt())
@@ -191,7 +201,7 @@ class NetworkDriver(GenericDriver, ABC):
                 return
             if priv_attempt_counter > len(self.privs):
                 raise CouldNotAcquirePrivLevel(
-                    f"Could not get to '{desired_priv}' privilege level."
+                    f"Could not acquire requested privilege level: '{desired_priv}'"
                 )
             if current_priv.level > self.privs[desired_priv].level:
                 self._deescalate()

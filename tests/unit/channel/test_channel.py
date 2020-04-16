@@ -10,8 +10,8 @@ def test__repr(mocked_channel):
     conn = mocked_channel([])
     assert (
         repr(conn.channel)
-        == r"scrapli Channel {'comms_prompt_pattern': '^[a-z0-9.\\-@()/:]{1,32}[#>$]\\s*$', 'comms_return_char': '\n', "
-        r"'comms_ansi': False, 'timeout_ops': 10}"
+        == r"scrapli Channel {'comms_prompt_pattern': '^[a-z0-9.\\-@()/:]{1,48}[#>$]\\s*$', 'comms_return_char': '\n', "
+        r"'comms_ansi': False, 'timeout_ops': 30}"
     )
 
 

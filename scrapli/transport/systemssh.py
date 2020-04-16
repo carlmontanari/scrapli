@@ -260,8 +260,11 @@ class SystemSSHTransport(Transport):
         """
         self.session_lock.acquire()
 
+        LOG.info(f"Attempting to authenticate to {self.host}")
+
         # if auth_bypass kick off keepalive thread if necessary and return
         if self.auth_bypass:
+            LOG.info("`auth_bypass` is True, bypassing authentication")
             self._open_pty(skip_auth=True)
             self._session_keepalive()
             return
@@ -286,6 +289,8 @@ class SystemSSHTransport(Transport):
             msg = f"Authentication to host {self.host} failed"
             LOG.critical(msg)
             raise ScrapliAuthenticationFailed(msg)
+
+        LOG.info(f"Successfully authenticated to {self.host}")
 
         if self.keepalive:
             self._session_keepalive()
@@ -427,18 +432,21 @@ class SystemSSHTransport(Transport):
         output = b""
         while True:
             try:
-                output += pty_session.read()
+                new_output = pty_session.read()
+                output += new_output
+                LOG.debug(f"Attempting to authenticate. Read: {repr(new_output)}")
             except EOFError:
                 msg = f"Failed to open connection to host {self.host}"
                 if b"Host key verification failed" in output:
                     msg = f"Host key verification failed for host {self.host}"
                 elif b"Operation timed out" in output:
                     msg = f"Timed out connecting to host {self.host}"
+                LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
             if self._comms_ansi:
                 output = strip_ansi(output)
             if b"password" in output.lower():
-                LOG.debug("Found password prompt, sending password")
+                LOG.info("Found password prompt, sending password")
                 pty_session.write(self.auth_password.encode())
                 pty_session.write(self._comms_return_char.encode())
                 self.session_lock.release()
@@ -471,7 +479,9 @@ class SystemSSHTransport(Transport):
             if pty_session.fd in fd_ready:
                 output = b""
                 while True:
-                    output += pty_session.read()
+                    new_output = pty_session.read()
+                    output += new_output
+                    LOG.debug(f"Attempting validate authentication. Read: {repr(new_output)}")
                     # we do not need to deal w/ line replacement for the actual output, only for
                     # parsing if a prompt-like thing is at the end of the output
                     output = output.replace(b"\r", b"")
@@ -485,8 +495,11 @@ class SystemSSHTransport(Transport):
                         self.session_lock.release()
                         self._isauthenticated = True
                         return True
-                    if b"password" in output.lower():
+                    if b"password:" in output.lower():
                         # if we see "password" we know auth failed (hopefully in all scenarios!)
+                        LOG.critical(
+                            "Found `password:` in output, assuming password authentication failed"
+                        )
                         return False
                     if output:
                         LOG.debug(f"Cannot determine if authenticated, \n\tRead: {repr(output)}")

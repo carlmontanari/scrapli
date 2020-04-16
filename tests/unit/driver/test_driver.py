@@ -20,9 +20,9 @@ def test__repr():
     assert (
         repr(conn)
         == "Scrape(host='myhost', port=22, auth_username='', auth_password='', auth_private_key=b'', "
-        "auth_strict_key=True, auth_bypass=False, timeout_socket=5, timeout_transport=10, timeout_ops=10, "
+        "auth_strict_key=True, auth_bypass=False, timeout_socket=5, timeout_transport=10, timeout_ops=30, "
         "timeout_exit=True, keepalive=False, keepalive_interval=30, keepalive_type='network', "
-        "keepalive_pattern='\\x05', comms_prompt_pattern='^[a-z0-9.\\\\-@()/:]{1,32}[#>$]\\\\s*$', "
+        "keepalive_pattern='\\x05', comms_prompt_pattern='^[a-z0-9.\\\\-@()/:]{1,48}[#>$]\\\\s*$', "
         "comms_return_char='\\n', comms_ansi=False, ssh_config_file='', ssh_known_hosts_file='', on_open=None, "
         "on_close=None, transport='system')"
     )
