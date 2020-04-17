@@ -1,3 +1,4 @@
+"""examples.basic_usage.scrapli_driver"""
 from scrapli import Scrape
 
 MY_DEVICE = {
@@ -9,9 +10,10 @@ MY_DEVICE = {
 
 
 def main():
-    # the `Scrape` driver is only for use if you *really* want to manually handle the channel input/output
-    # if your device type is supported by a core platform you should probably use that, otherwise you should
-    # check out the `GenericDriver` before diving into `Scrape` as a last resort!
+    """Example demonstrating using the `Scrape` driver directly"""
+    # the `Scrape` driver is only for use if you *really* want to manually handle the channel
+    # input/output if your device type is supported by a core platform you should probably use that,
+    # otherwise check out the `GenericDriver` before diving into `Scrape` as a last resort!
     conn = Scrape(**MY_DEVICE)
     conn.open()
 

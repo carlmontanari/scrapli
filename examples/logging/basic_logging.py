@@ -1,3 +1,4 @@
+"""examples.logging.basic_logging"""
 import logging
 
 from scrapli.driver.core import IOSXEDriver
@@ -16,6 +17,7 @@ MY_DEVICE = {
 
 
 def main():
+    """Example demonstrating basic logging with scrapli"""
     conn = IOSXEDriver(**MY_DEVICE)
     conn.open()
     print(conn.get_prompt())

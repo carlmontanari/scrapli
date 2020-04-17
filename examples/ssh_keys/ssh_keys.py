@@ -1,3 +1,4 @@
+"""examples.ssh_keys.ssh_keys"""
 from pathlib import Path
 
 import scrapli
@@ -15,6 +16,7 @@ MY_DEVICE = {
 
 
 def main():
+    """Example demonstrating handling authentication with ssh private key"""
     with IOSXEDriver(**MY_DEVICE) as conn:
         # Platform drivers will auto-magically handle disabling paging for you
         result = conn.send_command("show run")

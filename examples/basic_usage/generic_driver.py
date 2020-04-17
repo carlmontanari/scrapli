@@ -1,3 +1,4 @@
+"""examples.basic_usage.generic_driver"""
 from scrapli.driver import GenericDriver
 
 MY_DEVICE = {
@@ -9,6 +10,7 @@ MY_DEVICE = {
 
 
 def main():
+    """Simple example of connecting to an IOSXEDevice with the GenericDriver"""
     # the `GenericDriver` is a good place to start if your platform is not supported by a "core"
     #  platform drivers
     conn = GenericDriver(**MY_DEVICE)

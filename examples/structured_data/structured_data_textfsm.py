@@ -1,3 +1,4 @@
+"""examples.structured_data.structured_data_textfsm"""
 from scrapli.driver.core import IOSXEDriver
 
 MY_DEVICE = {
@@ -9,6 +10,7 @@ MY_DEVICE = {
 
 
 def main():
+    """Simple example demonstrating getting structured data via the genie parsing library"""
     with IOSXEDriver(**MY_DEVICE) as conn:
         # Platform drivers will auto-magically handle disabling paging for you
         result = conn.send_command("show run")

@@ -1,3 +1,4 @@
+"""examples.basic_usage.iosxe_driver"""
 from scrapli.driver.core import IOSXEDriver
 
 MY_DEVICE = {
@@ -9,6 +10,7 @@ MY_DEVICE = {
 
 
 def main():
+    """Simple example of connecting to an IOSXEDevice with the IOSXEDriver"""
     with IOSXEDriver(**MY_DEVICE) as conn:
         # Platform drivers will auto-magically handle disabling paging for you
         result = conn.send_command("show run")

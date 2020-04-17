@@ -1,3 +1,4 @@
+"""examples.non_core_device.wlc"""
 import logging
 import time
 
@@ -8,6 +9,7 @@ logger = logging.getLogger("scrapli")
 
 
 def wlc_on_open(cls):
+    """Example `on_open` function for use with cisco wlc"""
     # time.sleeps here are just because my test device was a bit sluggish, without these scrapli is
     #  just going to send the username/password right away
     time.sleep(0.25)
@@ -21,6 +23,7 @@ def wlc_on_open(cls):
 
 
 def main():
+    """Example of working with a non "core" or non standard device"""
     # using a cisco WLC as since it has an interesting login pattern where the it prompts for the
     #  username after the initial ssh connection (even though ssh already knows your username!)
     wlc = {
