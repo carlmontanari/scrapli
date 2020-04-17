@@ -10,6 +10,9 @@ CHANGELOG
  banner/text
 - Significantly increase the base `timeout_ops` value -- as this is not a timer that is going to cause things to
  block, it may as well be much higher for the default value to help prevent issues
+- Fixed an issue w/ ssh config file not parsing the last host entry
+- Added super basic tests for most of the examples -- just making sure they don't blow up... in general that should
+ keep them in decent shape!
 
 # 2020.04.11
 - *BREAKING CHANGE*: modify `send_interact` to just make more sense in general... now it supports 1->N "events" to

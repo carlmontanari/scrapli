@@ -144,7 +144,7 @@ class SSHConfig:
         # use word boundaries with a positive lookahead to get everything between the word host
         # need to do this as whitespace/formatting is not really a thing in ssh_config file
         # match host\s to ensure we don't pick up hostname and split things there accidentally
-        host_pattern = re.compile(r"\bhost.*?\b(?=host\s|\s+$)", flags=re.I | re.S)
+        host_pattern = re.compile(r"\bhost.*?\b(?=host\s|\s+$|$)", flags=re.I | re.S)
         host_entries = re.findall(host_pattern, self.ssh_config)
 
         discovered_hosts: Dict[str, Host] = {}

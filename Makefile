@@ -123,6 +123,7 @@ test_unit:
 
 test_functional:
 	python -m pytest tests/functional/
+	python -m pytest examples/
 
 test_iosxe:
 	python -m pytest \
@@ -153,6 +154,9 @@ test_linux:
 	python -m pytest \
 	tests/unit \
 	tests/functional -k "linux"
+
+test_examples:
+	python -m pytest examples/
 
 .PHONY: docs
 docs:
