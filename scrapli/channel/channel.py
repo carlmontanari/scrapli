@@ -105,14 +105,14 @@ class Channel:
             N/A
 
         """
-        output = normalize_lines(output)
+        output = normalize_lines(output=output)
 
         if not strip_prompt:
             return output
 
         # could be compiled elsewhere, but allow for users to modify the prompt whenever they want
-        prompt_pattern = get_prompt_pattern("", self.comms_prompt_pattern)
-        output = re.sub(prompt_pattern, b"", output)
+        prompt_pattern = get_prompt_pattern(prompt="", class_prompt=self.comms_prompt_pattern)
+        output = re.sub(pattern=prompt_pattern, repl=b"", string=output)
         return output
 
     def _read_chunk(self) -> bytes:
@@ -132,7 +132,7 @@ class Channel:
         new_output = self.transport.read()
         new_output = new_output.replace(b"\r", b"")
         if self.comms_ansi:
-            new_output = strip_ansi(new_output)
+            new_output = strip_ansi(output=new_output)
         LOG.debug(f"Read: {repr(new_output)}")
         return new_output
 
@@ -171,11 +171,11 @@ class Channel:
             N/A
 
         """
-        prompt_pattern = get_prompt_pattern(prompt, self.comms_prompt_pattern)
+        prompt_pattern = get_prompt_pattern(prompt=prompt, class_prompt=self.comms_prompt_pattern)
 
         while True:
             output += self._read_chunk()
-            channel_match = re.search(prompt_pattern, output)
+            channel_match = re.search(pattern=prompt_pattern, string=output)
             if channel_match:
                 LOG.info(f"Read: {repr(output)}")
                 return output
@@ -195,13 +195,13 @@ class Channel:
             N/A
 
         """
-        prompt_pattern = get_prompt_pattern("", self.comms_prompt_pattern)
-        self.transport.set_timeout(1000)
+        prompt_pattern = get_prompt_pattern(prompt="", class_prompt=self.comms_prompt_pattern)
+        self.transport.set_timeout(timeout=1000)
         self._send_return()
         output = b""
         while True:
             output += self._read_chunk()
-            channel_match = re.search(prompt_pattern, output)
+            channel_match = re.search(pattern=prompt_pattern, string=output)
             if channel_match:
                 self.transport.set_timeout()
                 current_prompt = channel_match.group(0)
@@ -228,7 +228,9 @@ class Channel:
                 f"`send_input` expects a single string, got {type(channel_input)}. "
                 "to send a list of inputs use the `send_inputs` method instead"
             )
-        raw_result, processed_result = self._send_input(channel_input, strip_prompt)
+        raw_result, processed_result = self._send_input(
+            channel_input=channel_input, strip_prompt=strip_prompt
+        )
         return raw_result.decode(), processed_result.decode()
 
     @operation_timeout("timeout_ops", "Timed out sending input to device.")
@@ -251,13 +253,13 @@ class Channel:
         bytes_channel_input = channel_input.encode()
         self.transport.session_lock.acquire()
         LOG.info(f"Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}")
-        self.transport.write(channel_input)
+        self.transport.write(channel_input=channel_input)
         LOG.debug(f"Write: {repr(channel_input)}")
-        self._read_until_input(bytes_channel_input)
+        self._read_until_input(channel_input=bytes_channel_input)
         self._send_return()
         output = self._read_until_prompt()
         self.transport.session_lock.release()
-        processed_output = self._restructure_output(output, strip_prompt=strip_prompt)
+        processed_output = self._restructure_output(output=output, strip_prompt=strip_prompt)
         # lstrip the return character out of the final result before storing, also remove any extra
         # whitespace to the right if any
         processed_output = processed_output.lstrip(self.comms_return_char.encode()).rstrip()
@@ -277,7 +279,7 @@ class Channel:
             N/A
 
         """
-        self.transport.write(self.comms_return_char)
+        self.transport.write(channel_input=self.comms_return_char)
         LOG.debug(f"Write (sending return character): {repr(self.comms_return_char)}")
 
     @operation_timeout("timeout_ops", "Timed out sending interactive input to device.")
@@ -361,17 +363,17 @@ class Channel:
                 f"\texpecting: {channel_response};"
                 f"\thidden_input: {hidden_input}"
             )
-            self.transport.write(channel_input)
+            self.transport.write(channel_input=channel_input)
             LOG.debug(f"Write: {repr(channel_input)}")
             if not channel_response or hidden_input is True:
                 self._send_return()
             else:
-                output += self._read_until_input(bytes_channel_input)
+                output += self._read_until_input(channel_input=bytes_channel_input)
                 self._send_return()
             output += self._read_until_prompt(prompt=channel_response)
         # wait to release lock until after "interact" session is complete
         self.transport.session_lock.release()
-        processed_output = self._restructure_output(output, strip_prompt=False)
+        processed_output = self._restructure_output(output=output, strip_prompt=False)
         raw_result = output.decode()
         processed_result = processed_output.decode()
         return raw_result, processed_result

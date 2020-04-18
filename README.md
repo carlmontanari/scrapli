@@ -1244,19 +1244,19 @@ This section may not get updated much, but will hopefully reflect the priority i
 
 - Investigate setter methods for setting user/pass/and other attrs on base scrape object... they should be able to be
  set at that level and have the transport updated if it can be done reasonably
-- Add tests for keepalive stuff if possible
+- Refresh the keepalive stuff -- how/where keepalives get kicked off needs to be reevaluated, particularly for
+ systemssh "standard" keepalives as this should really be happening in the open command (systemssh will probably have
+  to override some Transport methods basically), get all of this under functional testing as well
 - Add tests for timeouts if possible
 - Add more tests for auth failures
 - Add tests for custom on open/close functions
 - Remove as much as possible from the vendor'd `ptyprocess` code. Type hint it, add docstrings everywhere, add tests
  if possible (and remove from ignore for test coverage and darglint).
-- Improve logging -- especially in the transport classes and surrounding authentication (mostly in systemssh).
 
 ## Roadmap
 
 - Async support. This is a bit of a question mark as I personally don't know even where to start to implement this
 , and have no real current use case... that said I think it would be cool if for no other reason than to learn!
-- Plugins -- make paramiko and ssh2 transports plugins!
 - Plugins -- build framework to allow for others to easily build driver plugins if desired
 - Ensure v6 stuff works as expected.
 - Continue to add/support ssh config file things.

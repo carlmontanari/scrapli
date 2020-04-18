@@ -78,8 +78,8 @@ class NetworkDriver(GenericDriver, ABC):
 
         """
         for priv_level in self.privs.values():
-            prompt_pattern = get_prompt_pattern("", priv_level.pattern)
-            if re.search(prompt_pattern, current_prompt.encode()):
+            prompt_pattern = get_prompt_pattern(prompt="", class_prompt=priv_level.pattern)
+            if re.search(pattern=prompt_pattern, string=current_prompt.encode()):
                 LOG.debug(f"Determined current privilege level is `{priv_level.name}`")
                 return priv_level
         raise UnknownPrivLevel
@@ -99,7 +99,7 @@ class NetworkDriver(GenericDriver, ABC):
             TypeError: if invalid next prompt value
 
         """
-        current_priv = self._determine_current_priv(self.channel.get_prompt())
+        current_priv = self._determine_current_priv(current_prompt=self.channel.get_prompt())
         if not current_priv.escalate:
             return
 
@@ -142,7 +142,7 @@ class NetworkDriver(GenericDriver, ABC):
                 self.channel.comms_prompt_pattern = next_priv.pattern
                 return
         self.channel.comms_prompt_pattern = next_priv.pattern
-        self.channel.send_input(current_priv.escalate)
+        self.channel.send_input(channel_input=current_priv.escalate)
 
     def _deescalate(self) -> None:
         """
@@ -158,7 +158,7 @@ class NetworkDriver(GenericDriver, ABC):
             UnknownPrivLevel: if no default priv level set to deescalate to
 
         """
-        current_priv = self._determine_current_priv(self.channel.get_prompt())
+        current_priv = self._determine_current_priv(current_prompt=self.channel.get_prompt())
 
         if current_priv.deescalate:
             next_priv = self.privs.get(current_priv.deescalate_priv, None)
@@ -168,7 +168,7 @@ class NetworkDriver(GenericDriver, ABC):
                     f"privilege level, no lower privilege level defined"
                 )
             self.channel.comms_prompt_pattern = next_priv.pattern
-            self.channel.send_input(current_priv.deescalate)
+            self.channel.send_input(channel_input=current_priv.deescalate)
 
     def acquire_priv(self, desired_priv: str) -> None:
         """
@@ -195,7 +195,7 @@ class NetworkDriver(GenericDriver, ABC):
 
         priv_attempt_counter = 0
         while True:
-            current_priv = self._determine_current_priv(self.channel.get_prompt())
+            current_priv = self._determine_current_priv(current_prompt=self.channel.get_prompt())
             if current_priv == self.privs[desired_priv]:
                 self._current_priv_level = current_priv
                 return
@@ -253,13 +253,13 @@ class NetworkDriver(GenericDriver, ABC):
 
         """
         if self._current_priv_level.name != self.default_desired_priv:
-            self.acquire_priv(self.default_desired_priv)
+            self.acquire_priv(desired_priv=self.default_desired_priv)
 
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains
 
         response = super().send_command(
-            command, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+            command=command, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
         )
 
         self._update_response(response)
@@ -290,17 +290,17 @@ class NetworkDriver(GenericDriver, ABC):
 
         """
         if self._current_priv_level.name != self.default_desired_priv:
-            self.acquire_priv(self.default_desired_priv)
+            self.acquire_priv(desired_priv=self.default_desired_priv)
 
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains
 
         responses = super().send_commands(
-            commands, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+            commands=commands, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
         )
 
         for response in responses:
-            self._update_response(response)
+            self._update_response(response=response)
 
         return responses
 
@@ -371,11 +371,11 @@ class NetworkDriver(GenericDriver, ABC):
 
         """
         if self._current_priv_level.name != self.default_desired_priv:
-            self.acquire_priv(self.default_desired_priv)
+            self.acquire_priv(desired_priv=self.default_desired_priv)
         response = super().send_interactive(
             interact_events=interact_events, failed_when_contains=failed_when_contains
         )
-        self._update_response(response)
+        self._update_response(response=response)
 
         return response
 
@@ -412,12 +412,14 @@ class NetworkDriver(GenericDriver, ABC):
         for config in configs:
             responses.append(
                 super().send_command(
-                    config, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+                    command=config,
+                    strip_prompt=strip_prompt,
+                    failed_when_contains=failed_when_contains,
                 )
             )
 
         for response in responses:
-            self._update_response(response)
+            self._update_response(response=response)
 
-        self.acquire_priv(self.default_desired_priv)
+        self.acquire_priv(desired_priv=self.default_desired_priv)
         return responses

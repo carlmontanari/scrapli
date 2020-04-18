@@ -196,9 +196,9 @@ class SystemSSHTransport(Transport):
             N/A
 
         """
-        ssh = SSHConfig(ssh_config_file)
+        ssh = SSHConfig(ssh_config_file=ssh_config_file)
         self.ssh_config_file = ssh.ssh_config_file
-        host_config = ssh.lookup(self.host)
+        host_config = ssh.lookup(host=self.host)
         if not self.auth_private_key and host_config.identity_file:
             self.auth_private_key = os.path.expanduser(host_config.identity_file.strip())
 
@@ -406,7 +406,7 @@ class SystemSSHTransport(Transport):
         self.session_lock.release()
         if skip_auth:
             return True
-        self._pty_authenticate(self.session)
+        self._pty_authenticate(pty_session=self.session)
         if not self._pty_isauthenticated(self.session):
             return False
         LOG.debug(f"Authenticated to host {self.host} with password")
@@ -472,7 +472,7 @@ class SystemSSHTransport(Transport):
         """
         LOG.debug("Attempting to determine if PTY authentication was successful")
         if pty_session.isalive() and not pty_session.eof():
-            prompt_pattern = get_prompt_pattern("", self._comms_prompt_pattern)
+            prompt_pattern = get_prompt_pattern(prompt="", class_prompt=self._comms_prompt_pattern)
             self.session_lock.acquire()
             pty_session.write(self._comms_return_char.encode())
             fd_ready, _, _ = select([pty_session.fd], [], [], 0)
@@ -489,8 +489,8 @@ class SystemSSHTransport(Transport):
                     # may raise auth failures for the wrong reason which would be confusing for
                     # users
                     if b"\x1B" in output:
-                        output = strip_ansi(output)
-                    channel_match = re.search(prompt_pattern, output)
+                        output = strip_ansi(output=output)
+                    channel_match = re.search(pattern=prompt_pattern, string=output)
                     if channel_match:
                         self.session_lock.release()
                         self._isauthenticated = True

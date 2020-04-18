@@ -1,1 +1,1 @@
-scrapli-paramiko>=2020.04.11
+scrapli-paramiko>=2020.04.18

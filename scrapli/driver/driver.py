@@ -149,23 +149,43 @@ class Scrape:
         # and Channel objects
         self._initialization_args: Dict[str, Any] = {}
 
-        self._setup_host(host, port)
+        self._setup_host(host=host, port=port)
         self._setup_auth(
-            auth_username, auth_password, auth_private_key, auth_strict_key, auth_bypass
+            auth_username=auth_username,
+            auth_password=auth_password,
+            auth_private_key=auth_private_key,
+            auth_strict_key=auth_strict_key,
+            auth_bypass=auth_bypass,
         )
-        self._setup_timeouts(timeout_socket, timeout_transport, timeout_ops, timeout_exit)
-        self._setup_keepalive(keepalive, keepalive_type, keepalive_interval, keepalive_pattern)
-        self._setup_comms(comms_prompt_pattern, comms_return_char, comms_ansi)
-        self._setup_callables(on_open, on_close)
+        self._setup_timeouts(
+            timeout_socket=timeout_socket,
+            timeout_transport=timeout_transport,
+            timeout_ops=timeout_ops,
+            timeout_exit=timeout_exit,
+        )
+        self._setup_keepalive(
+            keepalive=keepalive,
+            keepalive_type=keepalive_type,
+            keepalive_interval=keepalive_interval,
+            keepalive_pattern=keepalive_pattern,
+        )
+        self._setup_comms(
+            comms_prompt_pattern=comms_prompt_pattern,
+            comms_return_char=comms_return_char,
+            comms_ansi=comms_ansi,
+        )
+        self._setup_callables(on_open=on_open, on_close=on_close)
 
         if transport not in ("system", "telnet"):
             LOG.info(f"Non-core transport `{transport}` selected")
         self._transport = transport
 
         if transport != "telnet":
-            self._setup_ssh_args(ssh_config_file, ssh_known_hosts_file)
+            self._setup_ssh_args(
+                ssh_config_file=ssh_config_file, ssh_known_hosts_file=ssh_known_hosts_file
+            )
 
-        self.transport_class, self.transport_args = self._transport_factory(transport)
+        self.transport_class, self.transport_args = self._transport_factory(transport=transport)
         self.transport = self.transport_class(**self.transport_args)
 
         self.channel_args: Dict[str, Any] = {}
@@ -173,7 +193,7 @@ class Scrape:
             if arg == "transport":
                 continue
             self.channel_args[arg] = self._initialization_args.get(arg)
-        self.channel = Channel(self.transport, **self.channel_args)
+        self.channel = Channel(transport=self.transport, **self.channel_args)
 
     def __enter__(self) -> "Scrape":
         """

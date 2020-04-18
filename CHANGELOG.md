@@ -18,6 +18,7 @@ CHANGELOG
   paramiko transport and the requirements (paramiko), and the actual usage (setting `"transport" = "paramiko
   "`) remains the same! This is mostly about keeping the core of scrapli as simple as possible, and also will
    hopefully help to illustrate that `SystemSSH` is the development priority for scrapli.
+- Convert many function calls to use keyword args for better readability throughout
 
 # 2020.04.11
 - *BREAKING CHANGE*: modify `send_interact` to just make more sense in general... now it supports 1->N "events" to

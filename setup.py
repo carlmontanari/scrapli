@@ -21,8 +21,8 @@ setuptools.setup(
     extras_require={
         "textfsm": ["textfsm>=1.1.0", "ntc-templates>=1.1.0"],
         "genie": ["genie>=20.2", "pyats>=20.2"],
-        "paramiko": ["scrapli_paramiko>=2020.04.11"],
-        "ssh2": ["scrapli_ssh2>=2020.04.11"],
+        "paramiko": ["scrapli_paramiko>=2020.04.18"],
+        "ssh2": ["scrapli_ssh2>=2020.04.18"],
     },
     classifiers=[
         "License :: OSI Approved :: MIT License",

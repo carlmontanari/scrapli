@@ -22,9 +22,9 @@ def iosxr_on_open(conn: NetworkDriver) -> None:
     # sleep for session to establish; without this we never find base prompt for some reason?
     # maybe this is an artifact from previous iterations/tests and can be done away with...
     time.sleep(1)
-    conn.acquire_priv(conn.default_desired_priv)
-    conn.channel.send_input("terminal length 0")
-    conn.channel.send_input("terminal width 512")
+    conn.acquire_priv(desired_priv=conn.default_desired_priv)
+    conn.channel.send_input(channel_input="terminal length 0")
+    conn.channel.send_input(channel_input="terminal width 512")
 
 
 def iosxr_on_close(conn: NetworkDriver) -> None:
@@ -42,8 +42,8 @@ def iosxr_on_close(conn: NetworkDriver) -> None:
     """
     # write exit directly to the transport as channel would fail to find the prompt after sending
     # the exit command!
-    conn.transport.write("exit")
-    conn.transport.write(conn.channel.comms_prompt_pattern)
+    conn.transport.write(channel_input="exit")
+    conn.transport.write(channel_input=conn.channel.comms_prompt_pattern)
 
 
 PRIVS = {
@@ -136,7 +136,7 @@ class IOSXRDriver(NetworkDriver):
             on_close = iosxr_on_close
 
         super().__init__(
-            auth_secondary,
+            auth_secondary=auth_secondary,
             comms_prompt_pattern=comms_prompt_pattern,
             on_open=on_open,
             on_close=on_close,

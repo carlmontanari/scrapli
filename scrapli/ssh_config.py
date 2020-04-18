@@ -145,7 +145,7 @@ class SSHConfig:
         # need to do this as whitespace/formatting is not really a thing in ssh_config file
         # match host\s to ensure we don't pick up hostname and split things there accidentally
         host_pattern = re.compile(r"\bhost.*?\b(?=host\s|\s+$|$)", flags=re.I | re.S)
-        host_entries = re.findall(host_pattern, self.ssh_config)
+        host_entries = re.findall(pattern=host_pattern, string=self.ssh_config)
 
         discovered_hosts: Dict[str, Host] = {}
         if not host_entries:
@@ -171,27 +171,27 @@ class SSHConfig:
 
         for host_entry in host_entries:
             host = Host()
-            host_line = re.search(hosts_pattern, host_entry)
+            host_line = re.search(pattern=hosts_pattern, string=host_entry)
             if isinstance(host_line, Match):
                 host.hosts = self._strip_comments(host_line.groups()[0])
             else:
                 host.hosts = ""
-            hostname = re.search(hostname_pattern, host_entry)
+            hostname = re.search(pattern=hostname_pattern, string=host_entry)
             if isinstance(hostname, Match):
                 host.hostname = self._strip_comments(hostname.groups()[0])
-            port = re.search(port_pattern, host_entry)
+            port = re.search(pattern=port_pattern, string=host_entry)
             if isinstance(port, Match):
                 host.port = int(self._strip_comments(port.groups()[0]))
-            user = re.search(user_pattern, host_entry)
+            user = re.search(pattern=user_pattern, string=host_entry)
             if isinstance(user, Match):
                 host.user = self._strip_comments(user.groups()[0])
             # address_family = re.search(user_pattern, host_entry[0])
             # bind_address = re.search(user_pattern, host_entry[0])
             # connect_timeout = re.search(user_pattern, host_entry[0])
-            identities_only = re.search(identities_only_pattern, host_entry)
+            identities_only = re.search(pattern=identities_only_pattern, string=host_entry)
             if isinstance(identities_only, Match):
                 host.identities_only = self._strip_comments(identities_only.groups()[0])
-            identity_file = re.search(identity_file_pattern, host_entry)
+            identity_file = re.search(pattern=identity_file_pattern, string=host_entry)
             if isinstance(identity_file, Match):
                 host.identity_file = os.path.expanduser(
                     self._strip_comments(identity_file.groups()[0])
@@ -231,7 +231,7 @@ class SSHConfig:
                 )
                 # compile with case insensitive
                 search_pattern = re.compile(cleaned_host_pattern, flags=re.I)
-                result = re.search(search_pattern, host)
+                result = re.search(pattern=search_pattern, string=host)
                 # if we get a result, append it and the original pattern to the possible matches
                 if result:
                     possible_matches.append((result, host_entry))
@@ -392,7 +392,7 @@ class SSHKnownHosts:
         # skip a space and match any word (also w/ hyphen) to get key type, lastly
         # match any non whitespace to the end of the line to get the public key
         host_pattern = re.compile(r"^\S+\s[\w\-]+\s\S+$", flags=re.I | re.M)
-        host_entries = re.findall(host_pattern, self.ssh_known_hosts)
+        host_entries = re.findall(pattern=host_pattern, string=self.ssh_known_hosts)
 
         known_hosts: Dict[str, Dict[str, str]] = {}
         for host_entry in host_entries:

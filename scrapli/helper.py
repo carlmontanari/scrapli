@@ -99,7 +99,7 @@ def strip_ansi(output: bytes) -> bytes:
 
     """
     ansi_escape_pattern = re.compile(rb"\x1b(\[.*?[@-~]|\].*?(\x07|\x1b\\))")
-    output = re.sub(ansi_escape_pattern, b"", output)
+    output = re.sub(pattern=ansi_escape_pattern, repl=b"", string=output)
     return output
 
 
@@ -194,7 +194,9 @@ def textfsm_parse(
     try:
         structured_output: Union[List[Any], Dict[str, Any]] = re_table.ParseText(output)
         if to_dict:
-            structured_output = _textfsm_to_dict(structured_output, re_table.header)
+            structured_output = _textfsm_to_dict(
+                structured_output=structured_output, header=re_table.header
+            )
         return structured_output
     except textfsm.parser.TextFSMError:
         pass

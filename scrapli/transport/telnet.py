@@ -166,8 +166,8 @@ class TelnetTransport(Transport):
         telnet_session.timeout = self.timeout_transport
         LOG.debug(f"Session to host {self.host} spawned")
         self.session_lock.release()
-        self._authenticate(telnet_session)
-        if not self._telnet_isauthenticated(telnet_session):
+        self._authenticate(telnet_session=telnet_session)
+        if not self._telnet_isauthenticated(telnet_session=telnet_session):
             raise ScrapliAuthenticationFailed(
                 f"Could not authenticate over telnet to host: {self.host}"
             )
@@ -224,7 +224,7 @@ class TelnetTransport(Transport):
         """
         LOG.debug("Attempting to determine if telnet authentication was successful")
         if not telnet_session.eof:
-            prompt_pattern = get_prompt_pattern("", self._comms_prompt_pattern)
+            prompt_pattern = get_prompt_pattern(prompt="", class_prompt=self._comms_prompt_pattern)
             telnet_session_fd = telnet_session.fileno()
             self.session_lock.acquire()
             telnet_session.write(self._comms_return_char.encode())
@@ -238,8 +238,8 @@ class TelnetTransport(Transport):
                     # parsing if a prompt-like thing is at the end of the output
                     output = output.replace(b"\r", b"")
                     if self._comms_ansi:
-                        output = strip_ansi(output)
-                    channel_match = re.search(prompt_pattern, output)
+                        output = strip_ansi(output=output)
+                    channel_match = re.search(pattern=prompt_pattern, string=output)
                     if channel_match:
                         self.session_lock.release()
                         self._isauthenticated = True

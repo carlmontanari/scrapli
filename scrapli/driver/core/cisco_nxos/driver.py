@@ -18,8 +18,8 @@ def nxos_on_open(conn: NetworkDriver) -> None:
     Raises:
         N/A
     """
-    conn.channel.send_input("terminal length 0")
-    conn.channel.send_input("terminal width 511")
+    conn.channel.send_input(channel_input="terminal length 0")
+    conn.channel.send_input(channel_input="terminal width 511")
 
 
 def nxos_on_close(conn: NetworkDriver) -> None:
@@ -37,9 +37,9 @@ def nxos_on_close(conn: NetworkDriver) -> None:
     """
     # write exit directly to the transport as channel would fail to find the prompt after sending
     # the exit command!
-    conn.acquire_priv(conn.default_desired_priv)
-    conn.transport.write("exit")
-    conn.transport.write(conn.channel.comms_prompt_pattern)
+    conn.acquire_priv(desired_priv=conn.default_desired_priv)
+    conn.transport.write(channel_input="exit")
+    conn.transport.write(channel_input=conn.channel.comms_prompt_pattern)
 
 
 PRIVS = {
@@ -162,7 +162,7 @@ class NXOSDriver(NetworkDriver):
             _telnet = True
 
         super().__init__(
-            auth_secondary,
+            auth_secondary=auth_secondary,
             comms_prompt_pattern=comms_prompt_pattern,
             on_open=on_open,
             on_close=on_close,
