@@ -1,12 +1,39 @@
 """scrapli.helper"""
+import importlib
 import os
 import re
 import warnings
 from io import TextIOWrapper
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Pattern, TextIO, Union
+from typing import Any, Dict, List, Optional, Pattern, TextIO, Tuple, Union
 
 import pkg_resources  # pylint: disable=C0411
+
+from scrapli.exceptions import TransportPluginError
+
+
+def _find_transport_plugin(transport: str) -> Tuple[Any, Tuple[str, ...]]:
+    """
+    Find non-core transport plugins and required plugin arguments
+
+    Args:
+        transport: string name of the desired transport, i.e.: paramiko or ssh2
+
+    Returns:
+        transport_class: class representing the given transport
+        required_transport_args: tuple of required arguments for given transport
+
+    Raises:
+        N/A
+
+    """
+    transport_plugin_lib = importlib.import_module(f"scrapli_{transport}.transport")
+    transport_class = getattr(transport_plugin_lib, "Transport", None)
+    required_transport_args = getattr(transport_plugin_lib, "TRANSPORT_ARGS", None)
+    if not all([transport_class, required_transport_args]):
+        msg = f"Failed to load transport plugin `{transport}` transport class or required arguments"
+        raise TransportPluginError(msg)
+    return transport_class, required_transport_args
 
 
 def get_prompt_pattern(prompt: str, class_prompt: str) -> Pattern[bytes]:
