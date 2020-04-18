@@ -131,7 +131,7 @@ def test_exceptions_raised(attr_setup):
         ("comms_ansi", True, True),
         ("on_open", print, print),
         ("on_close", print, print),
-        ("transport", "ssh2", "ssh2"),
+        ("transport", "telnet", "telnet"),
     ],
     ids=[
         "host",
