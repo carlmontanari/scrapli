@@ -31,3 +31,7 @@ class UnknownPrivLevel(ScrapliException):
 
 class CouldNotAcquirePrivLevel(ScrapliException):
     """Exception for failure to acquire desired privilege level"""
+
+
+class TransportPluginError(ScrapliException):
+    """Exception for transport plugin loading errors"""

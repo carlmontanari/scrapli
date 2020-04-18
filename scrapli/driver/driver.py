@@ -7,14 +7,10 @@ from types import TracebackType
 from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
 
 from scrapli.channel import CHANNEL_ARGS, Channel
-from scrapli.helper import resolve_ssh_config, resolve_ssh_known_hosts
+from scrapli.helper import _find_transport_plugin, resolve_ssh_config, resolve_ssh_known_hosts
 from scrapli.transport import (
-    MIKO_TRANSPORT_ARGS,
-    SSH2_TRANSPORT_ARGS,
     SYSTEM_SSH_TRANSPORT_ARGS,
     TELNET_TRANSPORT_ARGS,
-    MikoTransport,
-    SSH2Transport,
     SystemSSHTransport,
     TelnetTransport,
     Transport,
@@ -22,14 +18,10 @@ from scrapli.transport import (
 
 TRANSPORT_CLASS: Dict[str, Callable[..., Transport]] = {
     "system": SystemSSHTransport,
-    "ssh2": SSH2Transport,
-    "paramiko": MikoTransport,
     "telnet": TelnetTransport,
 }
 TRANSPORT_ARGS: Dict[str, Tuple[str, ...]] = {
     "system": SYSTEM_SSH_TRANSPORT_ARGS,
-    "ssh2": SSH2_TRANSPORT_ARGS,
-    "paramiko": MIKO_TRANSPORT_ARGS,
     "telnet": TELNET_TRANSPORT_ARGS,
 }
 TRANSPORT_BASE_ARGS = (
@@ -135,10 +127,10 @@ class Scrape:
                 if provided, is executed immediately prior to closing the underlying transport.
                 Common use cases for this callable would be to save configurations prior to exiting,
                 or to logout properly to free up vtys or similar.
-            transport: system|ssh2|paramiko|telnet -- type of transport to use for connection
+            transport: system|telnet or a plugin -- type of transport to use for connection
                 system uses system available ssh (/usr/bin/ssh)
-                ssh2 uses ssh2-python
-                paramiko uses... paramiko
+                ssh2 uses ssh2-python *has been migrated to a plugin
+                paramiko uses... paramiko *has been migrated to a plugin
                 telnet uses telnetlib
                 choice of driver depends on the features you need. in general system is easiest as
                 it will just 'auto-magically' use your ssh config file ('~/.ssh/config' or
@@ -150,7 +142,7 @@ class Scrape:
             N/A  # noqa: DAR202
 
         Raises:
-            ValueError: if transport value is invalid
+            N/A
 
         """
         # create a dict of all "initialization" args for posterity and for passing to Transport
@@ -166,10 +158,8 @@ class Scrape:
         self._setup_comms(comms_prompt_pattern, comms_return_char, comms_ansi)
         self._setup_callables(on_open, on_close)
 
-        if transport not in ("ssh2", "paramiko", "system", "telnet"):
-            raise ValueError(
-                f"`transport` should be one of ssh2|paramiko|system|telnet, got `{transport}`"
-            )
+        if transport not in ("system", "telnet"):
+            LOG.info(f"Non-core transport `{transport}` selected")
         self._transport = transport
 
         if transport != "telnet":
@@ -524,8 +514,11 @@ class Scrape:
             N/A  # noqa
 
         """
-        transport_class = TRANSPORT_CLASS[transport]
-        required_transport_args = TRANSPORT_ARGS[transport]
+        transport_class = TRANSPORT_CLASS.get(transport, None)
+        required_transport_args = TRANSPORT_ARGS.get(transport, ())
+
+        if transport_class is None:
+            transport_class, required_transport_args = _find_transport_plugin(transport=transport)
 
         transport_args = {}
         for arg in TRANSPORT_BASE_ARGS:

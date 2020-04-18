@@ -13,6 +13,11 @@ CHANGELOG
 - Fixed an issue w/ ssh config file not parsing the last host entry
 - Added super basic tests for most of the examples -- just making sure they don't blow up... in general that should
  keep them in decent shape!
+- Removed cssh2 and miko transports from scrapli core. These have been migrated to their own repositories. From a
+ users perspective nothing really should change -- you can still `pip install scrapli[paramiko]` to install the
+  paramiko transport and the requirements (paramiko), and the actual usage (setting `"transport" = "paramiko
+  "`) remains the same! This is mostly about keeping the core of scrapli as simple as possible, and also will
+   hopefully help to illustrate that `SystemSSH` is the development priority for scrapli.
 
 # 2020.04.11
 - *BREAKING CHANGE*: modify `send_interact` to just make more sense in general... now it supports 1->N "events" to
