@@ -106,10 +106,10 @@ class JunosDriver(NetworkDriver):
                 Common use cases for this callable would be to save configurations prior to exiting,
                 or to logout properly to free up vtys or similar.
             auth_secondary: password to use for secondary authentication (enable)
-            transport: system|ssh2|paramiko|telnet -- type of transport to use for connection
+            transport: system|telnet or a plugin -- type of transport to use for connection
                 system uses system available ssh (/usr/bin/ssh)
-                ssh2 uses ssh2-python
-                paramiko uses... paramiko
+                ssh2 uses ssh2-python *has been migrated to a plugin
+                paramiko uses... paramiko *has been migrated to a plugin
                 telnet uses telnetlib
                 choice of driver depends on the features you need. in general system is easiest as
                 it will just 'auto-magically' use your ssh config file ('~/.ssh/config' or
