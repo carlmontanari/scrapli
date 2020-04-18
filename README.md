@@ -133,11 +133,12 @@ scrapli is built primarily in three parts: transport, channel, and driver. The t
  providing a file-like interface to the target server. The channel layer is responsible for reading and writing
   to the provided file-like interface. Finally, the driver provides the user facing API/interface to scrapli.
 
-There are four available "transports" for the transport layer -- all of which inherit from a base transport class and
- provide the same file-like interface to the upstream channel. The transport options are:
+There are tw available "transports" in scrapli "core" -- both of which inherit from a base transport class
+ and provide the same file-like interface to the upstream channel. There are also (currently!) two transport plugins
+  available -- both of which are installable as optional extras. The transport options are:
 
-- [paramiko](https://github.com/paramiko/paramiko)
-- [ssh2-python](https://github.com/ParallelSSH/ssh2-python)
+- [paramiko](https://github.com/paramiko/paramiko) (optional extra)
+- [ssh2-python](https://github.com/ParallelSSH/ssh2-python) (optional extra)
 - OpenSSH/System available SSH
 - telnetlib
 
@@ -907,9 +908,11 @@ scrapli is built to be very flexible, including being flexible enough to use dif
   dependencies as it just relies on what is available on the machine running the scrapli script.
 
 In the spirit of being highly flexible, scrapli allows users to swap out this "system" transport with another
- transport mechanism. The other supported transport mechanisms are `paramiko`, `ssh2-python` and `telnetlib`. The
-  transport selection can be made when instantiating the scrapli connection object by passing in `paramiko`, `ssh2
-  `, or `telnet` to force scrapli to use the corresponding transport mechanism.
+ transport mechanism. The other supported transport mechanisms are `paramiko`, `ssh2-python` and `telnetlib
+ `. `paramiko` and `ssh2-python` were originally part of the core of scrapli, but have since been moved to their own
+  repositories to be used as plugins to keep the codebase as simple as possible. The transport selection can be made
+   when instantiating the scrapli connection object by passing in `paramiko`, `ssh2`, or `telnet` to force scrapli to
+    use the corresponding transport mechanism.
   
 While it will be a goal to ensure that these other transport mechanisms are supported and useful, the focus of
  scrapli development will be on the "system" SSH transport.
