@@ -74,7 +74,7 @@ def test__repr():
             None,
             TypeError,
             "`ssh_known_hosts_file` must be str or bool, got <class 'NoneType'>",
-        )
+        ),
     ],
     ids=[
         "host",
@@ -90,7 +90,7 @@ def test__repr():
         "on_open",
         "on_close",
         "ssh_config_file",
-        "ssh_known_hosts_file"
+        "ssh_known_hosts_file",
     ],
 )
 def test_exceptions_raised(attr_setup):
