@@ -75,12 +75,6 @@ def test__repr():
             TypeError,
             "`ssh_known_hosts_file` must be str or bool, got <class 'NoneType'>",
         ),
-        (
-            "transport",
-            "notatransport",
-            ValueError,
-            "`transport` should be one of ssh2|paramiko|system|telnet, got `notatransport`",
-        ),
     ],
     ids=[
         "host",
@@ -97,7 +91,6 @@ def test__repr():
         "on_close",
         "ssh_config_file",
         "ssh_known_hosts_file",
-        "transport",
     ],
 )
 def test_exceptions_raised(attr_setup):
@@ -138,7 +131,7 @@ def test_exceptions_raised(attr_setup):
         ("comms_ansi", True, True),
         ("on_open", print, print),
         ("on_close", print, print),
-        ("transport", "ssh2", "ssh2"),
+        ("transport", "telnet", "telnet"),
     ],
     ids=[
         "host",

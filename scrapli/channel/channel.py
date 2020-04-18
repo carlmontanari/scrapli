@@ -32,7 +32,7 @@ class Channel:
         Channel Object
 
         Args:
-            transport: Transport object of any transport provider (ssh2|paramiko|system|telnetlib)
+            transport: Transport object of any transport provider (system|telnet or a plugin)
                 transport could in theory be any transport as long as it provides a read and a write
                 method... obviously its probably always going to be scrapli transport though
             comms_prompt_pattern: raw string regex pattern -- use `^` and `$` for multi-line!
