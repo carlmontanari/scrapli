@@ -26,6 +26,7 @@ class Channel:
         comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
         comms_return_char: str = "\n",
         comms_ansi: bool = False,
+        comms_auto_expand: bool = False,
         timeout_ops: int = 10,
     ):
         """
@@ -38,6 +39,18 @@ class Channel:
             comms_prompt_pattern: raw string regex pattern -- use `^` and `$` for multi-line!
             comms_return_char: character to use to send returns to host
             comms_ansi: True/False strip comms_ansi characters from output
+            comms_auto_expand: bool to indicate if a device auto-expands commands, for example
+                juniper devices without `cli complete-on-space` disabled will convert `config` to
+                `configuration` after entering a space character after `config`; because scrapli
+                reads the channel until each command is entered, the command changing from `config`
+                to `configuration` will cause scrapli (by default) to never think the command has
+                been entered. Setting this value to `True` will force scrapli to zip the split lists
+                of inputs and outputs together to determine if each read output starts with the
+                corresponding input. For example, if the inputs are "sho ver" and the read output is
+                "show version", scrapli will zip the split strings together and confirm that in fact
+                "show" starts with "sho" and "version" starts with "ver", confirming that the
+                commands that were input were input properly. This is disabled by default, as it is
+                preferable to disable this type of behavior via the device itself if possible.
             timeout_ops: timeout in seconds for channel operations (reads/writes)
 
         Args:
@@ -54,6 +67,7 @@ class Channel:
         self.comms_prompt_pattern = comms_prompt_pattern
         self.comms_return_char = comms_return_char
         self.comms_ansi = comms_ansi
+        self.comms_auto_expand = comms_auto_expand
         self.timeout_ops = timeout_ops
 
     def __str__(self) -> str:
@@ -136,12 +150,18 @@ class Channel:
         LOG.debug(f"Read: {repr(new_output)}")
         return new_output
 
-    def _read_until_input(self, channel_input: bytes) -> bytes:
+    def _read_until_input(self, channel_input: bytes, auto_expand: Optional[bool] = None) -> bytes:
         """
         Read until all input has been entered.
 
         Args:
             channel_input: string to write to channel
+            auto_expand: bool to indicate if a device auto-expands commands, for example juniper
+                devices without `cli complete-on-space` disabled will convert `config` to
+                `configuration` after entering a space character after `config`; because scrapli
+                reads the channel until each command is entered, the command changing from `config`
+                to `configuration` will cause scrapli (by default) to never think the command has
+                been entered.
 
         Returns:
             bytes: output read from channel
@@ -151,8 +171,25 @@ class Channel:
 
         """
         output = b""
-        while channel_input not in output:
+
+        if not channel_input:
+            LOG.info(f"Read: {repr(output)}")
+            return output
+
+        if auto_expand is None:
+            auto_expand = self.comms_auto_expand
+
+        channel_input_split = channel_input.split()
+        while True:
             output += self._read_chunk()
+            if not auto_expand and channel_input in output:
+                break
+            if auto_expand and all(
+                _channel_output.startswith(_channel_input)
+                for _channel_input, _channel_output in zip(channel_input_split, output.split())
+            ):
+                break
+
         LOG.info(f"Read: {repr(output)}")
         return output
 

@@ -24,7 +24,8 @@ def _find_transport_plugin(transport: str) -> Tuple[Any, Tuple[str, ...]]:
         required_transport_args: tuple of required arguments for given transport
 
     Raises:
-        N/A
+        TransportPluginError: if unable to load `Transport` and `TRANSPORT_ARGS` from given
+            transport module
 
     """
     transport_plugin_lib = importlib.import_module(f"scrapli_{transport}.transport")

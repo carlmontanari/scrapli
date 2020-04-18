@@ -1252,6 +1252,7 @@ This section may not get updated much, but will hopefully reflect the priority i
 - Add tests for custom on open/close functions
 - Remove as much as possible from the vendor'd `ptyprocess` code. Type hint it, add docstrings everywhere, add tests
  if possible (and remove from ignore for test coverage and darglint).
+- Add darglint back in if it gets faster
 
 ## Roadmap
 

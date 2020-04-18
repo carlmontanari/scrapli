@@ -19,6 +19,8 @@ CHANGELOG
   "`) remains the same! This is mostly about keeping the core of scrapli as simple as possible, and also will
    hopefully help to illustrate that `SystemSSH` is the development priority for scrapli.
 - Convert many function calls to use keyword args for better readability throughout
+- Add a `comms_auto_expand` argument to the `Channel`; for now this is mostly not used, but may be useful in the
+ future. The purpose of this is to handle devices that auto expand input commands to their full canonical name.
 
 # 2020.04.11
 - *BREAKING CHANGE*: modify `send_interact` to just make more sense in general... now it supports 1->N "events" to
