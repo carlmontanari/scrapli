@@ -218,6 +218,7 @@ class SystemSSHTransport(Transport):
         """
         self.open_cmd.extend(["-p", str(self.port)])
         self.open_cmd.extend(["-o", f"ConnectTimeout={self.timeout_socket}"])
+        self.open_cmd.extend(["-o", f"ServerAliveInterval={self.timeout_transport}"])
         if self.auth_private_key:
             self.open_cmd.extend(["-i", self.auth_private_key])
         if self.auth_username:
@@ -550,7 +551,6 @@ class SystemSSHTransport(Transport):
                 return True
         return False
 
-    @operation_timeout("timeout_transport", "Transport timeout during read operation.")
     def read(self) -> bytes:
         """
         Read data from the channel
@@ -572,7 +572,6 @@ class SystemSSHTransport(Transport):
             return self.session.read(read_bytes)
         return b""
 
-    @operation_timeout("timeout_transport", "Transport timeout during write operation.")
     def write(self, channel_input: str) -> None:
         """
         Write data to the channel

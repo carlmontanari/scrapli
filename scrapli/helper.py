@@ -28,7 +28,18 @@ def _find_transport_plugin(transport: str) -> Tuple[Any, Tuple[str, ...]]:
             transport module
 
     """
-    transport_plugin_lib = importlib.import_module(f"scrapli_{transport}.transport")
+    try:
+        transport_plugin_lib = importlib.import_module(f"scrapli_{transport}.transport")
+    except ModuleNotFoundError as exc:
+        err = f"Module '{exc.name}' not found!"
+        msg = f"***** {err} {'*' * (80 - len(err))}"
+        fix = (
+            f"To resolve this issue, ensure you are referencing a valid transport plugin. Transport"
+            " plugins should be named similar to `scrapli_paramiko` or `scrapli_ssh2`, and can be "
+            "selected by passing simply `paramiko` or `ssh2` into the scrapli driver."
+        )
+        warning = "\n" + msg + "\n" + fix + "\n" + msg
+        raise ModuleNotFoundError(warning)
     transport_class = getattr(transport_plugin_lib, "Transport", None)
     required_transport_args = getattr(transport_plugin_lib, "TRANSPORT_ARGS", None)
     if not all([transport_class, required_transport_args]):

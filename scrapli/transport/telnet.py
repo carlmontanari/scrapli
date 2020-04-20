@@ -287,7 +287,6 @@ class TelnetTransport(Transport):
             return True
         return False
 
-    @operation_timeout("timeout_transport", "Transport timeout during read operation.")
     def read(self) -> bytes:
         """
         Read data from the channel

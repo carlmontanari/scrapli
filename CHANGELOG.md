@@ -21,6 +21,10 @@ CHANGELOG
 - Convert many function calls to use keyword args for better readability throughout
 - Add a `comms_auto_expand` argument to the `Channel`; for now this is mostly not used, but may be useful in the
  future. The purpose of this is to handle devices that auto expand input commands to their full canonical name.
+- Hopefully(?) fixed a bit of an idiosyncrasy where the `timeout_transport` was being used to decorate read/write
+ operations for telnet/system transports. This is no longer the case, the read/write methods are NOT decorated now
+ , instead we rely on the `timeout_ops` to time these operations out OR the `timeout_transport` being set to the
+  timeout value (telnet) or `ServerAliveInterval` value for system ssh.
 
 # 2020.04.11
 - *BREAKING CHANGE*: modify `send_interact` to just make more sense in general... now it supports 1->N "events" to
