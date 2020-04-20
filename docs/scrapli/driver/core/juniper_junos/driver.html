@@ -45,10 +45,10 @@ def junos_on_open(conn: NetworkDriver) -&gt; None:
     Raises:
         N/A
     &#34;&#34;&#34;
-    conn.acquire_priv(conn.default_desired_priv)
-    conn.channel.send_input(&#34;set cli complete-on-space off&#34;)
-    conn.channel.send_input(&#34;set cli screen-length 0&#34;)
-    conn.channel.send_input(&#34;set cli screen-width 511&#34;)
+    conn.acquire_priv(desired_priv=conn.default_desired_priv)
+    conn.channel.send_input(channel_input=&#34;set cli complete-on-space off&#34;)
+    conn.channel.send_input(channel_input=&#34;set cli screen-length 0&#34;)
+    conn.channel.send_input(channel_input=&#34;set cli screen-width 511&#34;)
 
 
 def junos_on_close(conn: NetworkDriver) -&gt; None:
@@ -66,8 +66,8 @@ def junos_on_close(conn: NetworkDriver) -&gt; None:
     &#34;&#34;&#34;
     # write exit directly to the transport as channel would fail to find the prompt after sending
     # the exit command!
-    conn.transport.write(&#34;exit&#34;)
-    conn.transport.write(conn.channel.comms_prompt_pattern)
+    conn.transport.write(channel_input=&#34;exit&#34;)
+    conn.transport.write(channel_input=conn.channel.comms_prompt_pattern)
 
 
 PRIVS = {
@@ -105,7 +105,7 @@ PRIVS = {
 class JunosDriver(NetworkDriver):
     def __init__(
         self,
-        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]\s?$&#34;,
+        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,48}[#&gt;$]\s?$&#34;,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         auth_secondary: str = &#34;&#34;,
@@ -133,10 +133,10 @@ class JunosDriver(NetworkDriver):
                 Common use cases for this callable would be to save configurations prior to exiting,
                 or to logout properly to free up vtys or similar.
             auth_secondary: password to use for secondary authentication (enable)
-            transport: system|ssh2|paramiko|telnet -- type of transport to use for connection
+            transport: system|telnet or a plugin -- type of transport to use for connection
                 system uses system available ssh (/usr/bin/ssh)
-                ssh2 uses ssh2-python
-                paramiko uses... paramiko
+                ssh2 uses ssh2-python *has been migrated to a plugin
+                paramiko uses... paramiko *has been migrated to a plugin
                 telnet uses telnetlib
                 choice of driver depends on the features you need. in general system is easiest as
                 it will just &#39;auto-magically&#39; use your ssh config file (&#39;~/.ssh/config&#39; or
@@ -162,7 +162,7 @@ class JunosDriver(NetworkDriver):
             _telnet = True
 
         super().__init__(
-            auth_secondary,
+            auth_secondary=auth_secondary,
             comms_prompt_pattern=comms_prompt_pattern,
             on_open=on_open,
             on_close=on_close,
@@ -233,8 +233,8 @@ class JunosDriver(NetworkDriver):
     &#34;&#34;&#34;
     # write exit directly to the transport as channel would fail to find the prompt after sending
     # the exit command!
-    conn.transport.write(&#34;exit&#34;)
-    conn.transport.write(conn.channel.comms_prompt_pattern)</code></pre>
+    conn.transport.write(channel_input=&#34;exit&#34;)
+    conn.transport.write(channel_input=conn.channel.comms_prompt_pattern)</code></pre>
 </details>
 </dd>
 <dt id="scrapli.driver.core.juniper_junos.driver.junos_on_open"><code class="name flex">
@@ -275,10 +275,10 @@ class JunosDriver(NetworkDriver):
     Raises:
         N/A
     &#34;&#34;&#34;
-    conn.acquire_priv(conn.default_desired_priv)
-    conn.channel.send_input(&#34;set cli complete-on-space off&#34;)
-    conn.channel.send_input(&#34;set cli screen-length 0&#34;)
-    conn.channel.send_input(&#34;set cli screen-width 511&#34;)</code></pre>
+    conn.acquire_priv(desired_priv=conn.default_desired_priv)
+    conn.channel.send_input(channel_input=&#34;set cli complete-on-space off&#34;)
+    conn.channel.send_input(channel_input=&#34;set cli screen-length 0&#34;)
+    conn.channel.send_input(channel_input=&#34;set cli screen-width 511&#34;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -288,7 +288,7 @@ class JunosDriver(NetworkDriver):
 <dl>
 <dt id="scrapli.driver.core.juniper_junos.driver.JunosDriver"><code class="flex name class">
 <span>class <span class="ident">JunosDriver</span></span>
-<span>(</span><span>comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]\\s?$&#x27;, on_open=None, on_close=None, auth_secondary='', transport='system', **kwargs)</span>
+<span>(</span><span>comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,48}[#&gt;$]\\s?$&#x27;, on_open=None, on_close=None, auth_secondary='', transport='system', **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -318,10 +318,10 @@ or to logout properly to free up vtys or similar.</dd>
 <dt><strong><code>auth_secondary</code></strong></dt>
 <dd>password to use for secondary authentication (enable)</dd>
 <dt><strong><code>transport</code></strong></dt>
-<dd>system|ssh2|paramiko|telnet &ndash; type of transport to use for connection
+<dd>system|telnet or a plugin &ndash; type of transport to use for connection
 system uses system available ssh (/usr/bin/ssh)
-ssh2 uses ssh2-python
-paramiko uses&hellip; paramiko
+ssh2 uses ssh2-python <em>has been migrated to a plugin
+paramiko uses&hellip; paramiko </em>has been migrated to a plugin
 telnet uses telnetlib
 choice of driver depends on the features you need. in general system is easiest as
 it will just 'auto-magically' use your ssh config file ('~/.ssh/config' or
@@ -350,7 +350,7 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
 <pre><code class="python">class JunosDriver(NetworkDriver):
     def __init__(
         self,
-        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]\s?$&#34;,
+        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,48}[#&gt;$]\s?$&#34;,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         auth_secondary: str = &#34;&#34;,
@@ -378,10 +378,10 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
                 Common use cases for this callable would be to save configurations prior to exiting,
                 or to logout properly to free up vtys or similar.
             auth_secondary: password to use for secondary authentication (enable)
-            transport: system|ssh2|paramiko|telnet -- type of transport to use for connection
+            transport: system|telnet or a plugin -- type of transport to use for connection
                 system uses system available ssh (/usr/bin/ssh)
-                ssh2 uses ssh2-python
-                paramiko uses... paramiko
+                ssh2 uses ssh2-python *has been migrated to a plugin
+                paramiko uses... paramiko *has been migrated to a plugin
                 telnet uses telnetlib
                 choice of driver depends on the features you need. in general system is easiest as
                 it will just &#39;auto-magically&#39; use your ssh config file (&#39;~/.ssh/config&#39; or
@@ -407,7 +407,7 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
             _telnet = True
 
         super().__init__(
-            auth_secondary,
+            auth_secondary=auth_secondary,
             comms_prompt_pattern=comms_prompt_pattern,
             on_open=on_open,
             on_close=on_close,

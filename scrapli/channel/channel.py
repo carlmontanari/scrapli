@@ -26,18 +26,31 @@ class Channel:
         comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
         comms_return_char: str = "\n",
         comms_ansi: bool = False,
+        comms_auto_expand: bool = False,
         timeout_ops: int = 10,
     ):
         """
         Channel Object
 
         Args:
-            transport: Transport object of any transport provider (ssh2|paramiko|system|telnetlib)
+            transport: Transport object of any transport provider (system|telnet or a plugin)
                 transport could in theory be any transport as long as it provides a read and a write
                 method... obviously its probably always going to be scrapli transport though
             comms_prompt_pattern: raw string regex pattern -- use `^` and `$` for multi-line!
             comms_return_char: character to use to send returns to host
             comms_ansi: True/False strip comms_ansi characters from output
+            comms_auto_expand: bool to indicate if a device auto-expands commands, for example
+                juniper devices without `cli complete-on-space` disabled will convert `config` to
+                `configuration` after entering a space character after `config`; because scrapli
+                reads the channel until each command is entered, the command changing from `config`
+                to `configuration` will cause scrapli (by default) to never think the command has
+                been entered. Setting this value to `True` will force scrapli to zip the split lists
+                of inputs and outputs together to determine if each read output starts with the
+                corresponding input. For example, if the inputs are "sho ver" and the read output is
+                "show version", scrapli will zip the split strings together and confirm that in fact
+                "show" starts with "sho" and "version" starts with "ver", confirming that the
+                commands that were input were input properly. This is disabled by default, as it is
+                preferable to disable this type of behavior via the device itself if possible.
             timeout_ops: timeout in seconds for channel operations (reads/writes)
 
         Args:
@@ -54,6 +67,7 @@ class Channel:
         self.comms_prompt_pattern = comms_prompt_pattern
         self.comms_return_char = comms_return_char
         self.comms_ansi = comms_ansi
+        self.comms_auto_expand = comms_auto_expand
         self.timeout_ops = timeout_ops
 
     def __str__(self) -> str:
@@ -105,14 +119,14 @@ class Channel:
             N/A
 
         """
-        output = normalize_lines(output)
+        output = normalize_lines(output=output)
 
         if not strip_prompt:
             return output
 
         # could be compiled elsewhere, but allow for users to modify the prompt whenever they want
-        prompt_pattern = get_prompt_pattern("", self.comms_prompt_pattern)
-        output = re.sub(prompt_pattern, b"", output)
+        prompt_pattern = get_prompt_pattern(prompt="", class_prompt=self.comms_prompt_pattern)
+        output = re.sub(pattern=prompt_pattern, repl=b"", string=output)
         return output
 
     def _read_chunk(self) -> bytes:
@@ -132,16 +146,22 @@ class Channel:
         new_output = self.transport.read()
         new_output = new_output.replace(b"\r", b"")
         if self.comms_ansi:
-            new_output = strip_ansi(new_output)
+            new_output = strip_ansi(output=new_output)
         LOG.debug(f"Read: {repr(new_output)}")
         return new_output
 
-    def _read_until_input(self, channel_input: bytes) -> bytes:
+    def _read_until_input(self, channel_input: bytes, auto_expand: Optional[bool] = None) -> bytes:
         """
         Read until all input has been entered.
 
         Args:
             channel_input: string to write to channel
+            auto_expand: bool to indicate if a device auto-expands commands, for example juniper
+                devices without `cli complete-on-space` disabled will convert `config` to
+                `configuration` after entering a space character after `config`; because scrapli
+                reads the channel until each command is entered, the command changing from `config`
+                to `configuration` will cause scrapli (by default) to never think the command has
+                been entered.
 
         Returns:
             bytes: output read from channel
@@ -151,8 +171,26 @@ class Channel:
 
         """
         output = b""
-        while channel_input not in output:
+
+        if not channel_input:
+            LOG.info(f"Read: {repr(output)}")
+            return output
+
+        if auto_expand is None:
+            auto_expand = self.comms_auto_expand
+
+        channel_input_split = channel_input.split()
+        while True:
             output += self._read_chunk()
+            if not auto_expand and channel_input in output:
+                break
+            if auto_expand and all(
+                _channel_output.startswith(_channel_input)
+                for _channel_input, _channel_output in zip(channel_input_split, output.split())
+            ):
+                break
+
+        LOG.info(f"Read: {repr(output)}")
         return output
 
     def _read_until_prompt(self, output: bytes = b"", prompt: str = "") -> bytes:
@@ -170,12 +208,13 @@ class Channel:
             N/A
 
         """
-        prompt_pattern = get_prompt_pattern(prompt, self.comms_prompt_pattern)
+        prompt_pattern = get_prompt_pattern(prompt=prompt, class_prompt=self.comms_prompt_pattern)
 
         while True:
             output += self._read_chunk()
-            channel_match = re.search(prompt_pattern, output)
+            channel_match = re.search(pattern=prompt_pattern, string=output)
             if channel_match:
+                LOG.info(f"Read: {repr(output)}")
                 return output
 
     @operation_timeout("timeout_ops", "Timed out determining prompt on device.")
@@ -193,13 +232,13 @@ class Channel:
             N/A
 
         """
-        prompt_pattern = get_prompt_pattern("", self.comms_prompt_pattern)
-        self.transport.set_timeout(1000)
+        prompt_pattern = get_prompt_pattern(prompt="", class_prompt=self.comms_prompt_pattern)
+        self.transport.set_timeout(timeout=1000)
         self._send_return()
         output = b""
         while True:
             output += self._read_chunk()
-            channel_match = re.search(prompt_pattern, output)
+            channel_match = re.search(pattern=prompt_pattern, string=output)
             if channel_match:
                 self.transport.set_timeout()
                 current_prompt = channel_match.group(0)
@@ -226,7 +265,9 @@ class Channel:
                 f"`send_input` expects a single string, got {type(channel_input)}. "
                 "to send a list of inputs use the `send_inputs` method instead"
             )
-        raw_result, processed_result = self._send_input(channel_input, strip_prompt)
+        raw_result, processed_result = self._send_input(
+            channel_input=channel_input, strip_prompt=strip_prompt
+        )
         return raw_result.decode(), processed_result.decode()
 
     @operation_timeout("timeout_ops", "Timed out sending input to device.")
@@ -249,13 +290,13 @@ class Channel:
         bytes_channel_input = channel_input.encode()
         self.transport.session_lock.acquire()
         LOG.info(f"Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}")
-        self.transport.write(channel_input)
+        self.transport.write(channel_input=channel_input)
         LOG.debug(f"Write: {repr(channel_input)}")
-        self._read_until_input(bytes_channel_input)
+        self._read_until_input(channel_input=bytes_channel_input)
         self._send_return()
         output = self._read_until_prompt()
         self.transport.session_lock.release()
-        processed_output = self._restructure_output(output, strip_prompt=strip_prompt)
+        processed_output = self._restructure_output(output=output, strip_prompt=strip_prompt)
         # lstrip the return character out of the final result before storing, also remove any extra
         # whitespace to the right if any
         processed_output = processed_output.lstrip(self.comms_return_char.encode()).rstrip()
@@ -275,7 +316,7 @@ class Channel:
             N/A
 
         """
-        self.transport.write(self.comms_return_char)
+        self.transport.write(channel_input=self.comms_return_char)
         LOG.debug(f"Write (sending return character): {repr(self.comms_return_char)}")
 
     @operation_timeout("timeout_ops", "Timed out sending interactive input to device.")
@@ -359,17 +400,17 @@ class Channel:
                 f"\texpecting: {channel_response};"
                 f"\thidden_input: {hidden_input}"
             )
-            self.transport.write(channel_input)
+            self.transport.write(channel_input=channel_input)
             LOG.debug(f"Write: {repr(channel_input)}")
             if not channel_response or hidden_input is True:
                 self._send_return()
             else:
-                output += self._read_until_input(bytes_channel_input)
+                output += self._read_until_input(channel_input=bytes_channel_input)
                 self._send_return()
             output += self._read_until_prompt(prompt=channel_response)
         # wait to release lock until after "interact" session is complete
         self.transport.session_lock.release()
-        processed_output = self._restructure_output(output, strip_prompt=False)
+        processed_output = self._restructure_output(output=output, strip_prompt=False)
         raw_result = output.decode()
         processed_result = processed_output.decode()
         return raw_result, processed_result

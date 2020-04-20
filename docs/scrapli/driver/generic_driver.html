@@ -35,7 +35,7 @@ from scrapli.response import Response
 class GenericDriver(Scrape):
     def __init__(
         self,
-        comms_prompt_pattern: str = r&#34;^\S{0,32}[#&gt;$~@:\]]\s*$&#34;,
+        comms_prompt_pattern: str = r&#34;^\S{0,48}[#&gt;$~@:\]]\s*$&#34;,
         comms_ansi: bool = True,
         **kwargs: Any,
     ):
@@ -103,10 +103,14 @@ class GenericDriver(Scrape):
             )
 
         response = Response(
-            self.transport.host, channel_input=command, failed_when_contains=failed_when_contains
+            host=self.transport.host,
+            channel_input=command,
+            failed_when_contains=failed_when_contains,
         )
-        raw_response, processed_response = self.channel.send_input(command, strip_prompt)
-        response._record_response(processed_response)  # pylint: disable=W0212
+        raw_response, processed_response = self.channel.send_input(
+            channel_input=command, strip_prompt=strip_prompt
+        )
+        response._record_response(result=processed_response)  # pylint: disable=W0212
         response.raw_result = raw_response
 
         return response
@@ -142,7 +146,9 @@ class GenericDriver(Scrape):
         for command in commands:
             responses.append(
                 self.send_command(
-                    command, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+                    command=command,
+                    strip_prompt=strip_prompt,
+                    failed_when_contains=failed_when_contains,
                 )
             )
 
@@ -220,8 +226,10 @@ class GenericDriver(Scrape):
             channel_input=joined_input,
             failed_when_contains=failed_when_contains,
         )
-        raw_response, processed_response = self.channel.send_inputs_interact(interact_events)
-        response._record_response(processed_response)  # pylint: disable=W0212
+        raw_response, processed_response = self.channel.send_inputs_interact(
+            interact_events=interact_events
+        )
+        response._record_response(result=processed_response)  # pylint: disable=W0212
         response.raw_result = raw_response
 
         return response
@@ -255,7 +263,7 @@ class GenericDriver(Scrape):
 <dl>
 <dt id="scrapli.driver.generic_driver.GenericDriver"><code class="flex name class">
 <span>class <span class="ident">GenericDriver</span></span>
-<span>(</span><span>comms_prompt_pattern=&#x27;^\\S{0,32}[#&gt;$~@:\\]]\\s*$&#x27;, comms_ansi=True, **kwargs)</span>
+<span>(</span><span>comms_prompt_pattern=&#x27;^\\S{0,48}[#&gt;$~@:\\]]\\s*$&#x27;, comms_ansi=True, **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>GenericDriver Object</p>
@@ -304,7 +312,7 @@ prevent issues! Obviously can be overridden if desired.</dd>
 <pre><code class="python">class GenericDriver(Scrape):
     def __init__(
         self,
-        comms_prompt_pattern: str = r&#34;^\S{0,32}[#&gt;$~@:\]]\s*$&#34;,
+        comms_prompt_pattern: str = r&#34;^\S{0,48}[#&gt;$~@:\]]\s*$&#34;,
         comms_ansi: bool = True,
         **kwargs: Any,
     ):
@@ -372,10 +380,14 @@ prevent issues! Obviously can be overridden if desired.</dd>
             )
 
         response = Response(
-            self.transport.host, channel_input=command, failed_when_contains=failed_when_contains
+            host=self.transport.host,
+            channel_input=command,
+            failed_when_contains=failed_when_contains,
         )
-        raw_response, processed_response = self.channel.send_input(command, strip_prompt)
-        response._record_response(processed_response)  # pylint: disable=W0212
+        raw_response, processed_response = self.channel.send_input(
+            channel_input=command, strip_prompt=strip_prompt
+        )
+        response._record_response(result=processed_response)  # pylint: disable=W0212
         response.raw_result = raw_response
 
         return response
@@ -411,7 +423,9 @@ prevent issues! Obviously can be overridden if desired.</dd>
         for command in commands:
             responses.append(
                 self.send_command(
-                    command, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+                    command=command,
+                    strip_prompt=strip_prompt,
+                    failed_when_contains=failed_when_contains,
                 )
             )
 
@@ -489,8 +503,10 @@ prevent issues! Obviously can be overridden if desired.</dd>
             channel_input=joined_input,
             failed_when_contains=failed_when_contains,
         )
-        raw_response, processed_response = self.channel.send_inputs_interact(interact_events)
-        response._record_response(processed_response)  # pylint: disable=W0212
+        raw_response, processed_response = self.channel.send_inputs_interact(
+            interact_events=interact_events
+        )
+        response._record_response(result=processed_response)  # pylint: disable=W0212
         response.raw_result = raw_response
 
         return response
@@ -617,10 +633,14 @@ prevent issues! Obviously can be overridden if desired.</dd>
         )
 
     response = Response(
-        self.transport.host, channel_input=command, failed_when_contains=failed_when_contains
+        host=self.transport.host,
+        channel_input=command,
+        failed_when_contains=failed_when_contains,
     )
-    raw_response, processed_response = self.channel.send_input(command, strip_prompt)
-    response._record_response(processed_response)  # pylint: disable=W0212
+    raw_response, processed_response = self.channel.send_input(
+        channel_input=command, strip_prompt=strip_prompt
+    )
+    response._record_response(result=processed_response)  # pylint: disable=W0212
     response.raw_result = raw_response
 
     return response</code></pre>
@@ -685,7 +705,9 @@ prevent issues! Obviously can be overridden if desired.</dd>
     for command in commands:
         responses.append(
             self.send_command(
-                command, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+                command=command,
+                strip_prompt=strip_prompt,
+                failed_when_contains=failed_when_contains,
             )
         )
 
@@ -829,8 +851,10 @@ failed command/interaction</dd>
         channel_input=joined_input,
         failed_when_contains=failed_when_contains,
     )
-    raw_response, processed_response = self.channel.send_inputs_interact(interact_events)
-    response._record_response(processed_response)  # pylint: disable=W0212
+    raw_response, processed_response = self.channel.send_inputs_interact(
+        interact_events=interact_events
+    )
+    response._record_response(result=processed_response)  # pylint: disable=W0212
     response.raw_result = raw_response
 
     return response</code></pre>

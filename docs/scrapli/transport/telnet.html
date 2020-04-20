@@ -193,8 +193,8 @@ class TelnetTransport(Transport):
         telnet_session.timeout = self.timeout_transport
         LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
         self.session_lock.release()
-        self._authenticate(telnet_session)
-        if not self._telnet_isauthenticated(telnet_session):
+        self._authenticate(telnet_session=telnet_session)
+        if not self._telnet_isauthenticated(telnet_session=telnet_session):
             raise ScrapliAuthenticationFailed(
                 f&#34;Could not authenticate over telnet to host: {self.host}&#34;
             )
@@ -251,7 +251,7 @@ class TelnetTransport(Transport):
         &#34;&#34;&#34;
         LOG.debug(&#34;Attempting to determine if telnet authentication was successful&#34;)
         if not telnet_session.eof:
-            prompt_pattern = get_prompt_pattern(&#34;&#34;, self._comms_prompt_pattern)
+            prompt_pattern = get_prompt_pattern(prompt=&#34;&#34;, class_prompt=self._comms_prompt_pattern)
             telnet_session_fd = telnet_session.fileno()
             self.session_lock.acquire()
             telnet_session.write(self._comms_return_char.encode())
@@ -265,8 +265,8 @@ class TelnetTransport(Transport):
                     # parsing if a prompt-like thing is at the end of the output
                     output = output.replace(b&#34;\r&#34;, b&#34;&#34;)
                     if self._comms_ansi:
-                        output = strip_ansi(output)
-                    channel_match = re.search(prompt_pattern, output)
+                        output = strip_ansi(output=output)
+                    channel_match = re.search(pattern=prompt_pattern, string=output)
                     if channel_match:
                         self.session_lock.release()
                         self._isauthenticated = True
@@ -314,7 +314,6 @@ class TelnetTransport(Transport):
             return True
         return False
 
-    @operation_timeout(&#34;timeout_transport&#34;, &#34;Transport timeout during read operation.&#34;)
     def read(self) -&gt; bytes:
         &#34;&#34;&#34;
         Read data from the channel
@@ -689,8 +688,8 @@ and is ignored after authentication is completed.</dd>
         telnet_session.timeout = self.timeout_transport
         LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
         self.session_lock.release()
-        self._authenticate(telnet_session)
-        if not self._telnet_isauthenticated(telnet_session):
+        self._authenticate(telnet_session=telnet_session)
+        if not self._telnet_isauthenticated(telnet_session=telnet_session):
             raise ScrapliAuthenticationFailed(
                 f&#34;Could not authenticate over telnet to host: {self.host}&#34;
             )
@@ -747,7 +746,7 @@ and is ignored after authentication is completed.</dd>
         &#34;&#34;&#34;
         LOG.debug(&#34;Attempting to determine if telnet authentication was successful&#34;)
         if not telnet_session.eof:
-            prompt_pattern = get_prompt_pattern(&#34;&#34;, self._comms_prompt_pattern)
+            prompt_pattern = get_prompt_pattern(prompt=&#34;&#34;, class_prompt=self._comms_prompt_pattern)
             telnet_session_fd = telnet_session.fileno()
             self.session_lock.acquire()
             telnet_session.write(self._comms_return_char.encode())
@@ -761,8 +760,8 @@ and is ignored after authentication is completed.</dd>
                     # parsing if a prompt-like thing is at the end of the output
                     output = output.replace(b&#34;\r&#34;, b&#34;&#34;)
                     if self._comms_ansi:
-                        output = strip_ansi(output)
-                    channel_match = re.search(prompt_pattern, output)
+                        output = strip_ansi(output=output)
+                    channel_match = re.search(pattern=prompt_pattern, string=output)
                     if channel_match:
                         self.session_lock.release()
                         self._isauthenticated = True
@@ -810,7 +809,6 @@ and is ignored after authentication is completed.</dd>
             return True
         return False
 
-    @operation_timeout(&#34;timeout_transport&#34;, &#34;Transport timeout during read operation.&#34;)
     def read(self) -&gt; bytes:
         &#34;&#34;&#34;
         Read data from the channel
@@ -968,13 +966,51 @@ and is ignored after authentication is completed.</dd>
     telnet_session.timeout = self.timeout_transport
     LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
     self.session_lock.release()
-    self._authenticate(telnet_session)
-    if not self._telnet_isauthenticated(telnet_session):
+    self._authenticate(telnet_session=telnet_session)
+    if not self._telnet_isauthenticated(telnet_session=telnet_session):
         raise ScrapliAuthenticationFailed(
             f&#34;Could not authenticate over telnet to host: {self.host}&#34;
         )
     LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
     self.session = telnet_session</code></pre>
+</details>
+</dd>
+<dt id="scrapli.transport.telnet.TelnetTransport.read"><code class="name flex">
+<span>def <span class="ident">read</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Read data from the channel</p>
+<h2 id="args">Args</h2>
+<p>N/A</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>bytes</code></strong></dt>
+<dd>bytes read from the telnet channel</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read(self) -&gt; bytes:
+    &#34;&#34;&#34;
+    Read data from the channel
+
+    Args:
+        N/A
+
+    Returns:
+        bytes: bytes read from the telnet channel
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    return self.session.read_eager()</code></pre>
 </details>
 </dd>
 </dl>
@@ -983,7 +1019,6 @@ and is ignored after authentication is completed.</dd>
 <li><code><b><a title="scrapli.transport.transport.Transport" href="transport.html#scrapli.transport.transport.Transport">Transport</a></b></code>:
 <ul class="hlist">
 <li><code><a title="scrapli.transport.transport.Transport.close" href="transport.html#scrapli.transport.transport.Transport.close">close</a></code></li>
-<li><code><a title="scrapli.transport.transport.Transport.read" href="transport.html#scrapli.transport.transport.Transport.read">read</a></code></li>
 <li><code><a title="scrapli.transport.transport.Transport.set_timeout" href="transport.html#scrapli.transport.transport.Transport.set_timeout">set_timeout</a></code></li>
 <li><code><a title="scrapli.transport.transport.Transport.write" href="transport.html#scrapli.transport.transport.Transport.write">write</a></code></li>
 </ul>
@@ -1014,6 +1049,7 @@ and is ignored after authentication is completed.</dd>
 <ul class="">
 <li><code><a title="scrapli.transport.telnet.TelnetTransport.isalive" href="#scrapli.transport.telnet.TelnetTransport.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.transport.telnet.TelnetTransport.open" href="#scrapli.transport.telnet.TelnetTransport.open">open</a></code></li>
+<li><code><a title="scrapli.transport.telnet.TelnetTransport.read" href="#scrapli.transport.telnet.TelnetTransport.read">read</a></code></li>
 </ul>
 </li>
 </ul>

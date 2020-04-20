@@ -10,8 +10,8 @@ def test__repr(mocked_channel):
     conn = mocked_channel([])
     assert (
         repr(conn.channel)
-        == r"scrapli Channel {'comms_prompt_pattern': '^[a-z0-9.\\-@()/:]{1,32}[#>$]\\s*$', 'comms_return_char': '\n', "
-        r"'comms_ansi': False, 'timeout_ops': 10}"
+        == r"scrapli Channel {'comms_prompt_pattern': '^[a-z0-9.\\-@()/:]{1,48}[#>$]\\s*$', 'comms_return_char': '\n', "
+        r"'comms_ansi': False, 'comms_auto_expand': False, 'timeout_ops': 30}"
     )
 
 
@@ -85,14 +85,22 @@ def test__read_chunk(attr_setup, mocked_channel):
         ({"comms_ansi": False}, b"3560CX#", b"3560CX#"),
         ({"comms_ansi": True}, b"\x1b[0;0m3560CX#\x1b[0;0m", b"3560CX#"),
     ],
-    ids=["read_chunk", "read_chunk_strip_ansi",],
+    ids=["read_chunk", "read_chunk_strip_ansi"],
 )
 def test__read_until_input(attr_setup, mocked_channel):
     args = attr_setup[0]
     initial_bytes = attr_setup[1]
     expected = attr_setup[2]
     conn = mocked_channel([], initial_bytes=initial_bytes, **args)
-    output = conn.channel._read_until_input(b"3560")
+    output = conn.channel._read_until_input(expected)
+    assert output == expected
+
+
+def test__read_until_input_auto_expand(mocked_channel):
+    initial_bytes = b"show version"
+    expected = b"show version"
+    conn = mocked_channel([], initial_bytes=initial_bytes)
+    output = conn.channel._read_until_input(b"sho ver", auto_expand=True)
     assert output == expected
 
 

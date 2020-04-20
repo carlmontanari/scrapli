@@ -60,22 +60,6 @@
 | isalive                      | 2020.03.29  |             |                                                         |
 | set_timeout                  | 2020.03.29  |             |                                                         |
 
-### SSH2Transport
-
-| Method                       | Implemented | Last Change | Notes                                                   |
-|------------------------------|-------------|-------------|---------------------------------------------------------|
-| open                         | 2020.03.29  |             |                                                         |
-| isalive                      | 2020.03.29  |             |                                                         |
-| read                         | 2020.03.29  |             |                                                         |
-
-### MikoTransport
-
-| Method                       | Implemented | Last Change | Notes                                                   |
-|------------------------------|-------------|-------------|---------------------------------------------------------|
-| open                         | 2020.03.29  |             |                                                         |
-| isalive                      | 2020.03.29  |             |                                                         |
-| read                         | 2020.03.29  |             |                                                         |
-
 ### TelnetTransport
 
 | Method                       | Implemented | Last Change | Notes                                                   |

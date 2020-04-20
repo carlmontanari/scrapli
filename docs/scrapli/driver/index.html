@@ -67,7 +67,7 @@ __all__ = (&#34;Scrape&#34;, &#34;GenericDriver&#34;, &#34;NetworkDriver&#34;)</
 <dl>
 <dt id="scrapli.driver.GenericDriver"><code class="flex name class">
 <span>class <span class="ident">GenericDriver</span></span>
-<span>(</span><span>comms_prompt_pattern=&#x27;^\\S{0,32}[#&gt;$~@:\\]]\\s*$&#x27;, comms_ansi=True, **kwargs)</span>
+<span>(</span><span>comms_prompt_pattern=&#x27;^\\S{0,48}[#&gt;$~@:\\]]\\s*$&#x27;, comms_ansi=True, **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>GenericDriver Object</p>
@@ -116,7 +116,7 @@ prevent issues! Obviously can be overridden if desired.</dd>
 <pre><code class="python">class GenericDriver(Scrape):
     def __init__(
         self,
-        comms_prompt_pattern: str = r&#34;^\S{0,32}[#&gt;$~@:\]]\s*$&#34;,
+        comms_prompt_pattern: str = r&#34;^\S{0,48}[#&gt;$~@:\]]\s*$&#34;,
         comms_ansi: bool = True,
         **kwargs: Any,
     ):
@@ -184,10 +184,14 @@ prevent issues! Obviously can be overridden if desired.</dd>
             )
 
         response = Response(
-            self.transport.host, channel_input=command, failed_when_contains=failed_when_contains
+            host=self.transport.host,
+            channel_input=command,
+            failed_when_contains=failed_when_contains,
         )
-        raw_response, processed_response = self.channel.send_input(command, strip_prompt)
-        response._record_response(processed_response)  # pylint: disable=W0212
+        raw_response, processed_response = self.channel.send_input(
+            channel_input=command, strip_prompt=strip_prompt
+        )
+        response._record_response(result=processed_response)  # pylint: disable=W0212
         response.raw_result = raw_response
 
         return response
@@ -223,7 +227,9 @@ prevent issues! Obviously can be overridden if desired.</dd>
         for command in commands:
             responses.append(
                 self.send_command(
-                    command, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+                    command=command,
+                    strip_prompt=strip_prompt,
+                    failed_when_contains=failed_when_contains,
                 )
             )
 
@@ -301,8 +307,10 @@ prevent issues! Obviously can be overridden if desired.</dd>
             channel_input=joined_input,
             failed_when_contains=failed_when_contains,
         )
-        raw_response, processed_response = self.channel.send_inputs_interact(interact_events)
-        response._record_response(processed_response)  # pylint: disable=W0212
+        raw_response, processed_response = self.channel.send_inputs_interact(
+            interact_events=interact_events
+        )
+        response._record_response(result=processed_response)  # pylint: disable=W0212
         response.raw_result = raw_response
 
         return response
@@ -429,10 +437,14 @@ prevent issues! Obviously can be overridden if desired.</dd>
         )
 
     response = Response(
-        self.transport.host, channel_input=command, failed_when_contains=failed_when_contains
+        host=self.transport.host,
+        channel_input=command,
+        failed_when_contains=failed_when_contains,
     )
-    raw_response, processed_response = self.channel.send_input(command, strip_prompt)
-    response._record_response(processed_response)  # pylint: disable=W0212
+    raw_response, processed_response = self.channel.send_input(
+        channel_input=command, strip_prompt=strip_prompt
+    )
+    response._record_response(result=processed_response)  # pylint: disable=W0212
     response.raw_result = raw_response
 
     return response</code></pre>
@@ -497,7 +509,9 @@ prevent issues! Obviously can be overridden if desired.</dd>
     for command in commands:
         responses.append(
             self.send_command(
-                command, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+                command=command,
+                strip_prompt=strip_prompt,
+                failed_when_contains=failed_when_contains,
             )
         )
 
@@ -641,8 +655,10 @@ failed command/interaction</dd>
         channel_input=joined_input,
         failed_when_contains=failed_when_contains,
     )
-    raw_response, processed_response = self.channel.send_inputs_interact(interact_events)
-    response._record_response(processed_response)  # pylint: disable=W0212
+    raw_response, processed_response = self.channel.send_inputs_interact(
+        interact_events=interact_events
+    )
+    response._record_response(result=processed_response)  # pylint: disable=W0212
     response.raw_result = raw_response
 
     return response</code></pre>
@@ -735,8 +751,8 @@ inheritance.</p>
 
         &#34;&#34;&#34;
         for priv_level in self.privs.values():
-            prompt_pattern = get_prompt_pattern(&#34;&#34;, priv_level.pattern)
-            if re.search(prompt_pattern, current_prompt.encode()):
+            prompt_pattern = get_prompt_pattern(prompt=&#34;&#34;, class_prompt=priv_level.pattern)
+            if re.search(pattern=prompt_pattern, string=current_prompt.encode()):
                 LOG.debug(f&#34;Determined current privilege level is `{priv_level.name}`&#34;)
                 return priv_level
         raise UnknownPrivLevel
@@ -756,14 +772,15 @@ inheritance.</p>
             TypeError: if invalid next prompt value
 
         &#34;&#34;&#34;
-        current_priv = self._determine_current_priv(self.channel.get_prompt())
+        current_priv = self._determine_current_priv(current_prompt=self.channel.get_prompt())
         if not current_priv.escalate:
             return
 
         next_priv = self.privs.get(current_priv.escalate_priv, None)
         if next_priv is None:
             raise UnknownPrivLevel(
-                f&#34;Could not get next priv level, current priv is {current_priv.name}&#34;
+                f&#34;Cannot escalate from privilege level `{current_priv.name}` to requested &#34;
+                f&#34;privilege level, no higher privilege level defined&#34;
             )
         next_prompt = next_priv.pattern
         if current_priv.escalate_auth:
@@ -786,7 +803,7 @@ inheritance.</p>
                 escalate_auth = self.auth_secondary
                 if not isinstance(next_prompt, str):
                     raise TypeError(
-                        f&#34;got {type(next_prompt)} for {current_priv.name} escalate priv, &#34;
+                        f&#34;got `{type(next_prompt)}` for `{current_priv.name}` escalate priv, &#34;
                         &#34;expected str&#34;
                     )
                 super().send_interactive(
@@ -798,7 +815,7 @@ inheritance.</p>
                 self.channel.comms_prompt_pattern = next_priv.pattern
                 return
         self.channel.comms_prompt_pattern = next_priv.pattern
-        self.channel.send_input(current_priv.escalate)
+        self.channel.send_input(channel_input=current_priv.escalate)
 
     def _deescalate(self) -&gt; None:
         &#34;&#34;&#34;
@@ -814,15 +831,17 @@ inheritance.</p>
             UnknownPrivLevel: if no default priv level set to deescalate to
 
         &#34;&#34;&#34;
-        current_priv = self._determine_current_priv(self.channel.get_prompt())
+        current_priv = self._determine_current_priv(current_prompt=self.channel.get_prompt())
+
         if current_priv.deescalate:
             next_priv = self.privs.get(current_priv.deescalate_priv, None)
             if not next_priv:
                 raise UnknownPrivLevel(
-                    &#34;NetworkDriver has no default priv levels, set them or use a network driver&#34;
+                    f&#34;Cannot deescalate from privilege level `{current_priv.name}` to requested &#34;
+                    f&#34;privilege level, no lower privilege level defined&#34;
                 )
             self.channel.comms_prompt_pattern = next_priv.pattern
-            self.channel.send_input(current_priv.deescalate)
+            self.channel.send_input(channel_input=current_priv.deescalate)
 
     def acquire_priv(self, desired_priv: str) -&gt; None:
         &#34;&#34;&#34;
@@ -836,19 +855,26 @@ inheritance.</p>
             N/A  # noqa: DAR202
 
         Raises:
+            UnknownPrivLevel: if requested priv level is not known
             CouldNotAcquirePrivLevel: if requested priv level not attained
 
         &#34;&#34;&#34;
         LOG.info(f&#34;Attempting to acquire `{desired_priv}` privilege level&#34;)
+        if desired_priv not in self.privs.keys():
+            raise UnknownPrivLevel(
+                f&#34;Requested privilege level `{desired_priv}` not a valid privilege level of &#34;
+                f&#34;`{self.__class__.__name__}`&#34;
+            )
+
         priv_attempt_counter = 0
         while True:
-            current_priv = self._determine_current_priv(self.channel.get_prompt())
+            current_priv = self._determine_current_priv(current_prompt=self.channel.get_prompt())
             if current_priv == self.privs[desired_priv]:
                 self._current_priv_level = current_priv
                 return
             if priv_attempt_counter &gt; len(self.privs):
                 raise CouldNotAcquirePrivLevel(
-                    f&#34;Could not get to &#39;{desired_priv}&#39; privilege level.&#34;
+                    f&#34;Could not acquire requested privilege level: &#39;{desired_priv}&#39;&#34;
                 )
             if current_priv.level &gt; self.privs[desired_priv].level:
                 self._deescalate()
@@ -900,13 +926,13 @@ inheritance.</p>
 
         &#34;&#34;&#34;
         if self._current_priv_level.name != self.default_desired_priv:
-            self.acquire_priv(self.default_desired_priv)
+            self.acquire_priv(desired_priv=self.default_desired_priv)
 
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains
 
         response = super().send_command(
-            command, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+            command=command, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
         )
 
         self._update_response(response)
@@ -937,17 +963,17 @@ inheritance.</p>
 
         &#34;&#34;&#34;
         if self._current_priv_level.name != self.default_desired_priv:
-            self.acquire_priv(self.default_desired_priv)
+            self.acquire_priv(desired_priv=self.default_desired_priv)
 
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains
 
         responses = super().send_commands(
-            commands, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+            commands=commands, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
         )
 
         for response in responses:
-            self._update_response(response)
+            self._update_response(response=response)
 
         return responses
 
@@ -1018,11 +1044,11 @@ inheritance.</p>
 
         &#34;&#34;&#34;
         if self._current_priv_level.name != self.default_desired_priv:
-            self.acquire_priv(self.default_desired_priv)
+            self.acquire_priv(desired_priv=self.default_desired_priv)
         response = super().send_interactive(
             interact_events=interact_events, failed_when_contains=failed_when_contains
         )
-        self._update_response(response)
+        self._update_response(response=response)
 
         return response
 
@@ -1059,14 +1085,16 @@ inheritance.</p>
         for config in configs:
             responses.append(
                 super().send_command(
-                    config, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+                    command=config,
+                    strip_prompt=strip_prompt,
+                    failed_when_contains=failed_when_contains,
                 )
             )
 
         for response in responses:
-            self._update_response(response)
+            self._update_response(response=response)
 
-        self.acquire_priv(self.default_desired_priv)
+        self.acquire_priv(desired_priv=self.default_desired_priv)
         return responses</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1104,6 +1132,8 @@ inheritance.</p>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
+<dt><strong><code>UnknownPrivLevel</code></strong></dt>
+<dd>if requested priv level is not known</dd>
 <dt><strong><code>CouldNotAcquirePrivLevel</code></strong></dt>
 <dd>if requested priv level not attained</dd>
 </dl></section>
@@ -1123,19 +1153,26 @@ inheritance.</p>
         N/A  # noqa: DAR202
 
     Raises:
+        UnknownPrivLevel: if requested priv level is not known
         CouldNotAcquirePrivLevel: if requested priv level not attained
 
     &#34;&#34;&#34;
     LOG.info(f&#34;Attempting to acquire `{desired_priv}` privilege level&#34;)
+    if desired_priv not in self.privs.keys():
+        raise UnknownPrivLevel(
+            f&#34;Requested privilege level `{desired_priv}` not a valid privilege level of &#34;
+            f&#34;`{self.__class__.__name__}`&#34;
+        )
+
     priv_attempt_counter = 0
     while True:
-        current_priv = self._determine_current_priv(self.channel.get_prompt())
+        current_priv = self._determine_current_priv(current_prompt=self.channel.get_prompt())
         if current_priv == self.privs[desired_priv]:
             self._current_priv_level = current_priv
             return
         if priv_attempt_counter &gt; len(self.privs):
             raise CouldNotAcquirePrivLevel(
-                f&#34;Could not get to &#39;{desired_priv}&#39; privilege level.&#34;
+                f&#34;Could not acquire requested privilege level: &#39;{desired_priv}&#39;&#34;
             )
         if current_priv.level &gt; self.privs[desired_priv].level:
             self._deescalate()
@@ -1197,13 +1234,13 @@ inheritance.</p>
 
     &#34;&#34;&#34;
     if self._current_priv_level.name != self.default_desired_priv:
-        self.acquire_priv(self.default_desired_priv)
+        self.acquire_priv(desired_priv=self.default_desired_priv)
 
     if failed_when_contains is None:
         failed_when_contains = self.failed_when_contains
 
     response = super().send_command(
-        command, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+        command=command, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
     )
 
     self._update_response(response)
@@ -1264,17 +1301,17 @@ inheritance.</p>
 
     &#34;&#34;&#34;
     if self._current_priv_level.name != self.default_desired_priv:
-        self.acquire_priv(self.default_desired_priv)
+        self.acquire_priv(desired_priv=self.default_desired_priv)
 
     if failed_when_contains is None:
         failed_when_contains = self.failed_when_contains
 
     responses = super().send_commands(
-        commands, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+        commands=commands, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
     )
 
     for response in responses:
-        self._update_response(response)
+        self._update_response(response=response)
 
     return responses</code></pre>
 </details>
@@ -1340,14 +1377,16 @@ inheritance.</p>
     for config in configs:
         responses.append(
             super().send_command(
-                config, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+                command=config,
+                strip_prompt=strip_prompt,
+                failed_when_contains=failed_when_contains,
             )
         )
 
     for response in responses:
-        self._update_response(response)
+        self._update_response(response=response)
 
-    self.acquire_priv(self.default_desired_priv)
+    self.acquire_priv(desired_priv=self.default_desired_priv)
     return responses</code></pre>
 </details>
 </dd>
@@ -1367,7 +1406,7 @@ inheritance.</p>
 </dd>
 <dt id="scrapli.driver.Scrape"><code class="flex name class">
 <span>class <span class="ident">Scrape</span></span>
-<span>(</span><span>host='', port=22, auth_username='', auth_password='', auth_private_key='', auth_strict_key=True, auth_bypass=False, timeout_socket=5, timeout_transport=10, timeout_ops=10, timeout_exit=True, keepalive=False, keepalive_interval=30, keepalive_type='network', keepalive_pattern='\x05', comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]\\s*$&#x27;, comms_return_char='\n', comms_ansi=False, ssh_config_file=False, ssh_known_hosts_file=False, on_open=None, on_close=None, transport='system')</span>
+<span>(</span><span>host='', port=22, auth_username='', auth_password='', auth_private_key='', auth_strict_key=True, auth_bypass=False, timeout_socket=5, timeout_transport=10, timeout_ops=30, timeout_exit=True, keepalive=False, keepalive_interval=30, keepalive_type='network', keepalive_pattern='\x05', comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,48}[#&gt;$]\\s*$&#x27;, comms_return_char='\n', comms_ansi=False, ssh_config_file=False, ssh_known_hosts_file=False, on_open=None, on_close=None, transport='system')</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Scrape Object</p>
@@ -1452,10 +1491,10 @@ if provided, is executed immediately prior to closing the underlying transport.
 Common use cases for this callable would be to save configurations prior to exiting,
 or to logout properly to free up vtys or similar.</dd>
 <dt><strong><code>transport</code></strong></dt>
-<dd>system|ssh2|paramiko|telnet &ndash; type of transport to use for connection
+<dd>system|telnet or a plugin &ndash; type of transport to use for connection
 system uses system available ssh (/usr/bin/ssh)
-ssh2 uses ssh2-python
-paramiko uses&hellip; paramiko
+ssh2 uses ssh2-python <em>has been migrated to a plugin
+paramiko uses&hellip; paramiko </em>has been migrated to a plugin
 telnet uses telnetlib
 choice of driver depends on the features you need. in general system is easiest as
 it will just 'auto-magically' use your ssh config file ('~/.ssh/config' or
@@ -1471,8 +1510,8 @@ has more features built in (though scrapli does not expose/support them all).</d
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><strong><code>ValueError</code></strong></dt>
-<dd>if transport value is invalid</dd>
+<dt><code>N</code>/<code>A</code></dt>
+<dd>&nbsp;</dd>
 </dl></section>
 <details class="source">
 <summary>
@@ -1490,13 +1529,13 @@ has more features built in (though scrapli does not expose/support them all).</d
         auth_bypass: bool = False,
         timeout_socket: int = 5,
         timeout_transport: int = 10,
-        timeout_ops: int = 10,
+        timeout_ops: int = 30,
         timeout_exit: bool = True,
         keepalive: bool = False,
         keepalive_interval: int = 30,
         keepalive_type: str = &#34;network&#34;,
         keepalive_pattern: str = &#34;\005&#34;,
-        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]\s*$&#34;,
+        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,48}[#&gt;$]\s*$&#34;,
         comms_return_char: str = &#34;\n&#34;,
         comms_ansi: bool = False,
         ssh_config_file: Union[str, bool] = False,
@@ -1567,10 +1606,10 @@ has more features built in (though scrapli does not expose/support them all).</d
                 if provided, is executed immediately prior to closing the underlying transport.
                 Common use cases for this callable would be to save configurations prior to exiting,
                 or to logout properly to free up vtys or similar.
-            transport: system|ssh2|paramiko|telnet -- type of transport to use for connection
+            transport: system|telnet or a plugin -- type of transport to use for connection
                 system uses system available ssh (/usr/bin/ssh)
-                ssh2 uses ssh2-python
-                paramiko uses... paramiko
+                ssh2 uses ssh2-python *has been migrated to a plugin
+                paramiko uses... paramiko *has been migrated to a plugin
                 telnet uses telnetlib
                 choice of driver depends on the features you need. in general system is easiest as
                 it will just &#39;auto-magically&#39; use your ssh config file (&#39;~/.ssh/config&#39; or
@@ -1582,32 +1621,50 @@ has more features built in (though scrapli does not expose/support them all).</d
             N/A  # noqa: DAR202
 
         Raises:
-            ValueError: if transport value is invalid
+            N/A
 
         &#34;&#34;&#34;
         # create a dict of all &#34;initialization&#34; args for posterity and for passing to Transport
         # and Channel objects
         self._initialization_args: Dict[str, Any] = {}
 
-        self._setup_host(host, port)
+        self._setup_host(host=host, port=port)
         self._setup_auth(
-            auth_username, auth_password, auth_private_key, auth_strict_key, auth_bypass
+            auth_username=auth_username,
+            auth_password=auth_password,
+            auth_private_key=auth_private_key,
+            auth_strict_key=auth_strict_key,
+            auth_bypass=auth_bypass,
         )
-        self._setup_timeouts(timeout_socket, timeout_transport, timeout_ops, timeout_exit)
-        self._setup_keepalive(keepalive, keepalive_type, keepalive_interval, keepalive_pattern)
-        self._setup_comms(comms_prompt_pattern, comms_return_char, comms_ansi)
-        self._setup_callables(on_open, on_close)
+        self._setup_timeouts(
+            timeout_socket=timeout_socket,
+            timeout_transport=timeout_transport,
+            timeout_ops=timeout_ops,
+            timeout_exit=timeout_exit,
+        )
+        self._setup_keepalive(
+            keepalive=keepalive,
+            keepalive_type=keepalive_type,
+            keepalive_interval=keepalive_interval,
+            keepalive_pattern=keepalive_pattern,
+        )
+        self._setup_comms(
+            comms_prompt_pattern=comms_prompt_pattern,
+            comms_return_char=comms_return_char,
+            comms_ansi=comms_ansi,
+        )
+        self._setup_callables(on_open=on_open, on_close=on_close)
 
-        if transport not in (&#34;ssh2&#34;, &#34;paramiko&#34;, &#34;system&#34;, &#34;telnet&#34;):
-            raise ValueError(
-                f&#34;`transport` should be one of ssh2|paramiko|system|telnet, got `{transport}`&#34;
-            )
+        if transport not in (&#34;system&#34;, &#34;telnet&#34;):
+            LOG.info(f&#34;Non-core transport `{transport}` selected&#34;)
         self._transport = transport
 
         if transport != &#34;telnet&#34;:
-            self._setup_ssh_args(ssh_config_file, ssh_known_hosts_file)
+            self._setup_ssh_args(
+                ssh_config_file=ssh_config_file, ssh_known_hosts_file=ssh_known_hosts_file
+            )
 
-        self.transport_class, self.transport_args = self._transport_factory(transport)
+        self.transport_class, self.transport_args = self._transport_factory(transport=transport)
         self.transport = self.transport_class(**self.transport_args)
 
         self.channel_args: Dict[str, Any] = {}
@@ -1615,7 +1672,7 @@ has more features built in (though scrapli does not expose/support them all).</d
             if arg == &#34;transport&#34;:
                 continue
             self.channel_args[arg] = self._initialization_args.get(arg)
-        self.channel = Channel(self.transport, **self.channel_args)
+        self.channel = Channel(transport=self.transport, **self.channel_args)
 
     def __enter__(self) -&gt; &#34;Scrape&#34;:
         &#34;&#34;&#34;
@@ -1956,8 +2013,11 @@ has more features built in (though scrapli does not expose/support them all).</d
             N/A  # noqa
 
         &#34;&#34;&#34;
-        transport_class = TRANSPORT_CLASS[transport]
-        required_transport_args = TRANSPORT_ARGS[transport]
+        transport_class = TRANSPORT_CLASS.get(transport, None)
+        required_transport_args = TRANSPORT_ARGS.get(transport, ())
+
+        if transport_class is None:
+            transport_class, required_transport_args = _find_transport_plugin(transport=transport)
 
         transport_args = {}
         for arg in TRANSPORT_BASE_ARGS:

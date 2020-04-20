@@ -31,7 +31,7 @@ jobs:
       max-parallel: 1
       matrix:
         os: [windows-latest]
-        python-version: [3.8]
+        python-version: [3.7]
     steps:
       - uses: actions/checkout@v1
       - name: set up python ${{ matrix.python-version }}

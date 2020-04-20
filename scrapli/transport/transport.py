@@ -269,7 +269,7 @@ class Transport(ABC):
                     )
                     lock_counter = 0
                     self.session_lock.acquire()
-                    self.write(self.keepalive_pattern)
+                    self.write(channel_input=self.keepalive_pattern)
                     self.session_lock.release()
                     last_keepalive = datetime.now()
                 else:

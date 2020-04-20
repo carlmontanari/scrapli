@@ -223,9 +223,9 @@ class SystemSSHTransport(Transport):
             N/A
 
         &#34;&#34;&#34;
-        ssh = SSHConfig(ssh_config_file)
+        ssh = SSHConfig(ssh_config_file=ssh_config_file)
         self.ssh_config_file = ssh.ssh_config_file
-        host_config = ssh.lookup(self.host)
+        host_config = ssh.lookup(host=self.host)
         if not self.auth_private_key and host_config.identity_file:
             self.auth_private_key = os.path.expanduser(host_config.identity_file.strip())
 
@@ -245,6 +245,7 @@ class SystemSSHTransport(Transport):
         &#34;&#34;&#34;
         self.open_cmd.extend([&#34;-p&#34;, str(self.port)])
         self.open_cmd.extend([&#34;-o&#34;, f&#34;ConnectTimeout={self.timeout_socket}&#34;])
+        self.open_cmd.extend([&#34;-o&#34;, f&#34;ServerAliveInterval={self.timeout_transport}&#34;])
         if self.auth_private_key:
             self.open_cmd.extend([&#34;-i&#34;, self.auth_private_key])
         if self.auth_username:
@@ -287,8 +288,11 @@ class SystemSSHTransport(Transport):
         &#34;&#34;&#34;
         self.session_lock.acquire()
 
+        LOG.info(f&#34;Attempting to authenticate to {self.host}&#34;)
+
         # if auth_bypass kick off keepalive thread if necessary and return
         if self.auth_bypass:
+            LOG.info(&#34;`auth_bypass` is True, bypassing authentication&#34;)
             self._open_pty(skip_auth=True)
             self._session_keepalive()
             return
@@ -313,6 +317,8 @@ class SystemSSHTransport(Transport):
             msg = f&#34;Authentication to host {self.host} failed&#34;
             LOG.critical(msg)
             raise ScrapliAuthenticationFailed(msg)
+
+        LOG.info(f&#34;Successfully authenticated to {self.host}&#34;)
 
         if self.keepalive:
             self._session_keepalive()
@@ -428,7 +434,7 @@ class SystemSSHTransport(Transport):
         self.session_lock.release()
         if skip_auth:
             return True
-        self._pty_authenticate(self.session)
+        self._pty_authenticate(pty_session=self.session)
         if not self._pty_isauthenticated(self.session):
             return False
         LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
@@ -454,18 +460,21 @@ class SystemSSHTransport(Transport):
         output = b&#34;&#34;
         while True:
             try:
-                output += pty_session.read()
+                new_output = pty_session.read()
+                output += new_output
+                LOG.debug(f&#34;Attempting to authenticate. Read: {repr(new_output)}&#34;)
             except EOFError:
                 msg = f&#34;Failed to open connection to host {self.host}&#34;
                 if b&#34;Host key verification failed&#34; in output:
                     msg = f&#34;Host key verification failed for host {self.host}&#34;
                 elif b&#34;Operation timed out&#34; in output:
                     msg = f&#34;Timed out connecting to host {self.host}&#34;
+                LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
             if self._comms_ansi:
                 output = strip_ansi(output)
             if b&#34;password&#34; in output.lower():
-                LOG.debug(&#34;Found password prompt, sending password&#34;)
+                LOG.info(&#34;Found password prompt, sending password&#34;)
                 pty_session.write(self.auth_password.encode())
                 pty_session.write(self._comms_return_char.encode())
                 self.session_lock.release()
@@ -491,14 +500,16 @@ class SystemSSHTransport(Transport):
         &#34;&#34;&#34;
         LOG.debug(&#34;Attempting to determine if PTY authentication was successful&#34;)
         if pty_session.isalive() and not pty_session.eof():
-            prompt_pattern = get_prompt_pattern(&#34;&#34;, self._comms_prompt_pattern)
+            prompt_pattern = get_prompt_pattern(prompt=&#34;&#34;, class_prompt=self._comms_prompt_pattern)
             self.session_lock.acquire()
             pty_session.write(self._comms_return_char.encode())
             fd_ready, _, _ = select([pty_session.fd], [], [], 0)
             if pty_session.fd in fd_ready:
                 output = b&#34;&#34;
                 while True:
-                    output += pty_session.read()
+                    new_output = pty_session.read()
+                    output += new_output
+                    LOG.debug(f&#34;Attempting validate authentication. Read: {repr(new_output)}&#34;)
                     # we do not need to deal w/ line replacement for the actual output, only for
                     # parsing if a prompt-like thing is at the end of the output
                     output = output.replace(b&#34;\r&#34;, b&#34;&#34;)
@@ -506,14 +517,17 @@ class SystemSSHTransport(Transport):
                     # may raise auth failures for the wrong reason which would be confusing for
                     # users
                     if b&#34;\x1B&#34; in output:
-                        output = strip_ansi(output)
-                    channel_match = re.search(prompt_pattern, output)
+                        output = strip_ansi(output=output)
+                    channel_match = re.search(pattern=prompt_pattern, string=output)
                     if channel_match:
                         self.session_lock.release()
                         self._isauthenticated = True
                         return True
-                    if b&#34;password&#34; in output.lower():
+                    if b&#34;password:&#34; in output.lower():
                         # if we see &#34;password&#34; we know auth failed (hopefully in all scenarios!)
+                        LOG.critical(
+                            &#34;Found `password:` in output, assuming password authentication failed&#34;
+                        )
                         return False
                     if output:
                         LOG.debug(f&#34;Cannot determine if authenticated, \n\tRead: {repr(output)}&#34;)
@@ -564,7 +578,6 @@ class SystemSSHTransport(Transport):
                 return True
         return False
 
-    @operation_timeout(&#34;timeout_transport&#34;, &#34;Transport timeout during read operation.&#34;)
     def read(self) -&gt; bytes:
         &#34;&#34;&#34;
         Read data from the channel
@@ -586,7 +599,6 @@ class SystemSSHTransport(Transport):
             return self.session.read(read_bytes)
         return b&#34;&#34;
 
-    @operation_timeout(&#34;timeout_transport&#34;, &#34;Transport timeout during write operation.&#34;)
     def write(self, channel_input: str) -&gt; None:
         &#34;&#34;&#34;
         Write data to the channel
@@ -933,9 +945,9 @@ is completed.</dd>
             N/A
 
         &#34;&#34;&#34;
-        ssh = SSHConfig(ssh_config_file)
+        ssh = SSHConfig(ssh_config_file=ssh_config_file)
         self.ssh_config_file = ssh.ssh_config_file
-        host_config = ssh.lookup(self.host)
+        host_config = ssh.lookup(host=self.host)
         if not self.auth_private_key and host_config.identity_file:
             self.auth_private_key = os.path.expanduser(host_config.identity_file.strip())
 
@@ -955,6 +967,7 @@ is completed.</dd>
         &#34;&#34;&#34;
         self.open_cmd.extend([&#34;-p&#34;, str(self.port)])
         self.open_cmd.extend([&#34;-o&#34;, f&#34;ConnectTimeout={self.timeout_socket}&#34;])
+        self.open_cmd.extend([&#34;-o&#34;, f&#34;ServerAliveInterval={self.timeout_transport}&#34;])
         if self.auth_private_key:
             self.open_cmd.extend([&#34;-i&#34;, self.auth_private_key])
         if self.auth_username:
@@ -997,8 +1010,11 @@ is completed.</dd>
         &#34;&#34;&#34;
         self.session_lock.acquire()
 
+        LOG.info(f&#34;Attempting to authenticate to {self.host}&#34;)
+
         # if auth_bypass kick off keepalive thread if necessary and return
         if self.auth_bypass:
+            LOG.info(&#34;`auth_bypass` is True, bypassing authentication&#34;)
             self._open_pty(skip_auth=True)
             self._session_keepalive()
             return
@@ -1023,6 +1039,8 @@ is completed.</dd>
             msg = f&#34;Authentication to host {self.host} failed&#34;
             LOG.critical(msg)
             raise ScrapliAuthenticationFailed(msg)
+
+        LOG.info(f&#34;Successfully authenticated to {self.host}&#34;)
 
         if self.keepalive:
             self._session_keepalive()
@@ -1138,7 +1156,7 @@ is completed.</dd>
         self.session_lock.release()
         if skip_auth:
             return True
-        self._pty_authenticate(self.session)
+        self._pty_authenticate(pty_session=self.session)
         if not self._pty_isauthenticated(self.session):
             return False
         LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
@@ -1164,18 +1182,21 @@ is completed.</dd>
         output = b&#34;&#34;
         while True:
             try:
-                output += pty_session.read()
+                new_output = pty_session.read()
+                output += new_output
+                LOG.debug(f&#34;Attempting to authenticate. Read: {repr(new_output)}&#34;)
             except EOFError:
                 msg = f&#34;Failed to open connection to host {self.host}&#34;
                 if b&#34;Host key verification failed&#34; in output:
                     msg = f&#34;Host key verification failed for host {self.host}&#34;
                 elif b&#34;Operation timed out&#34; in output:
                     msg = f&#34;Timed out connecting to host {self.host}&#34;
+                LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
             if self._comms_ansi:
                 output = strip_ansi(output)
             if b&#34;password&#34; in output.lower():
-                LOG.debug(&#34;Found password prompt, sending password&#34;)
+                LOG.info(&#34;Found password prompt, sending password&#34;)
                 pty_session.write(self.auth_password.encode())
                 pty_session.write(self._comms_return_char.encode())
                 self.session_lock.release()
@@ -1201,14 +1222,16 @@ is completed.</dd>
         &#34;&#34;&#34;
         LOG.debug(&#34;Attempting to determine if PTY authentication was successful&#34;)
         if pty_session.isalive() and not pty_session.eof():
-            prompt_pattern = get_prompt_pattern(&#34;&#34;, self._comms_prompt_pattern)
+            prompt_pattern = get_prompt_pattern(prompt=&#34;&#34;, class_prompt=self._comms_prompt_pattern)
             self.session_lock.acquire()
             pty_session.write(self._comms_return_char.encode())
             fd_ready, _, _ = select([pty_session.fd], [], [], 0)
             if pty_session.fd in fd_ready:
                 output = b&#34;&#34;
                 while True:
-                    output += pty_session.read()
+                    new_output = pty_session.read()
+                    output += new_output
+                    LOG.debug(f&#34;Attempting validate authentication. Read: {repr(new_output)}&#34;)
                     # we do not need to deal w/ line replacement for the actual output, only for
                     # parsing if a prompt-like thing is at the end of the output
                     output = output.replace(b&#34;\r&#34;, b&#34;&#34;)
@@ -1216,14 +1239,17 @@ is completed.</dd>
                     # may raise auth failures for the wrong reason which would be confusing for
                     # users
                     if b&#34;\x1B&#34; in output:
-                        output = strip_ansi(output)
-                    channel_match = re.search(prompt_pattern, output)
+                        output = strip_ansi(output=output)
+                    channel_match = re.search(pattern=prompt_pattern, string=output)
                     if channel_match:
                         self.session_lock.release()
                         self._isauthenticated = True
                         return True
-                    if b&#34;password&#34; in output.lower():
+                    if b&#34;password:&#34; in output.lower():
                         # if we see &#34;password&#34; we know auth failed (hopefully in all scenarios!)
+                        LOG.critical(
+                            &#34;Found `password:` in output, assuming password authentication failed&#34;
+                        )
                         return False
                     if output:
                         LOG.debug(f&#34;Cannot determine if authenticated, \n\tRead: {repr(output)}&#34;)
@@ -1274,7 +1300,6 @@ is completed.</dd>
                 return True
         return False
 
-    @operation_timeout(&#34;timeout_transport&#34;, &#34;Transport timeout during read operation.&#34;)
     def read(self) -&gt; bytes:
         &#34;&#34;&#34;
         Read data from the channel
@@ -1296,7 +1321,6 @@ is completed.</dd>
             return self.session.read(read_bytes)
         return b&#34;&#34;
 
-    @operation_timeout(&#34;timeout_transport&#34;, &#34;Transport timeout during write operation.&#34;)
     def write(self, channel_input: str) -&gt; None:
         &#34;&#34;&#34;
         Write data to the channel
@@ -1465,8 +1489,11 @@ case of telnet&hellip; so it works, but its just a bit less desirable.</p>
     &#34;&#34;&#34;
     self.session_lock.acquire()
 
+    LOG.info(f&#34;Attempting to authenticate to {self.host}&#34;)
+
     # if auth_bypass kick off keepalive thread if necessary and return
     if self.auth_bypass:
+        LOG.info(&#34;`auth_bypass` is True, bypassing authentication&#34;)
         self._open_pty(skip_auth=True)
         self._session_keepalive()
         return
@@ -1492,8 +1519,53 @@ case of telnet&hellip; so it works, but its just a bit less desirable.</p>
         LOG.critical(msg)
         raise ScrapliAuthenticationFailed(msg)
 
+    LOG.info(f&#34;Successfully authenticated to {self.host}&#34;)
+
     if self.keepalive:
         self._session_keepalive()</code></pre>
+</details>
+</dd>
+<dt id="scrapli.transport.systemssh.SystemSSHTransport.read"><code class="name flex">
+<span>def <span class="ident">read</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Read data from the channel</p>
+<h2 id="args">Args</h2>
+<p>N/A</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>bytes</code></strong></dt>
+<dd>bytes output as read from channel</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read(self) -&gt; bytes:
+    &#34;&#34;&#34;
+    Read data from the channel
+
+    Args:
+        N/A
+
+    Returns:
+        bytes: bytes output as read from channel
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    read_bytes = 65535
+    if isinstance(self.session, Popen):
+        return os.read(self._stdout_fd, read_bytes)
+    if isinstance(self.session, PtyProcess):
+        return self.session.read(read_bytes)
+    return b&#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="scrapli.transport.systemssh.SystemSSHTransport.set_timeout"><code class="name flex">
@@ -1557,7 +1629,6 @@ leave the objects <code>timeout_transport</code> alone.</p>
 <li><code><b><a title="scrapli.transport.transport.Transport" href="transport.html#scrapli.transport.transport.Transport">Transport</a></b></code>:
 <ul class="hlist">
 <li><code><a title="scrapli.transport.transport.Transport.close" href="transport.html#scrapli.transport.transport.Transport.close">close</a></code></li>
-<li><code><a title="scrapli.transport.transport.Transport.read" href="transport.html#scrapli.transport.transport.Transport.read">read</a></code></li>
 <li><code><a title="scrapli.transport.transport.Transport.write" href="transport.html#scrapli.transport.transport.Transport.write">write</a></code></li>
 </ul>
 </li>
@@ -1584,6 +1655,7 @@ leave the objects <code>timeout_transport</code> alone.</p>
 <ul class="">
 <li><code><a title="scrapli.transport.systemssh.SystemSSHTransport.isalive" href="#scrapli.transport.systemssh.SystemSSHTransport.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.transport.systemssh.SystemSSHTransport.open" href="#scrapli.transport.systemssh.SystemSSHTransport.open">open</a></code></li>
+<li><code><a title="scrapli.transport.systemssh.SystemSSHTransport.read" href="#scrapli.transport.systemssh.SystemSSHTransport.read">read</a></code></li>
 <li><code><a title="scrapli.transport.systemssh.SystemSSHTransport.set_timeout" href="#scrapli.transport.systemssh.SystemSSHTransport.set_timeout">set_timeout</a></code></li>
 </ul>
 </li>

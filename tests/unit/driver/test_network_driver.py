@@ -308,7 +308,7 @@ def test_acquire_priv_could_not_acquire_priv(mocked_network_driver):
 
     with pytest.raises(CouldNotAcquirePrivLevel) as exc:
         conn.acquire_priv("privilege_exec")
-    assert str(exc.value) == "Could not get to 'privilege_exec' privilege level."
+    assert str(exc.value) == "Could not acquire requested privilege level: 'privilege_exec'"
 
 
 def test_update_response(mocked_network_driver):

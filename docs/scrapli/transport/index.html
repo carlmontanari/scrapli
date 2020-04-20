@@ -26,18 +26,12 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.transport&#34;&#34;&#34;
-from scrapli.transport.cssh2 import SSH2_TRANSPORT_ARGS, SSH2Transport
-from scrapli.transport.miko import MIKO_TRANSPORT_ARGS, MikoTransport
 from scrapli.transport.systemssh import SYSTEM_SSH_TRANSPORT_ARGS, SystemSSHTransport
 from scrapli.transport.telnet import TELNET_TRANSPORT_ARGS, TelnetTransport
 from scrapli.transport.transport import Transport
 
 __all__ = (
     &#34;Transport&#34;,
-    &#34;MikoTransport&#34;,
-    &#34;MIKO_TRANSPORT_ARGS&#34;,
-    &#34;SSH2Transport&#34;,
-    &#34;SSH2_TRANSPORT_ARGS&#34;,
     &#34;SystemSSHTransport&#34;,
     &#34;SYSTEM_SSH_TRANSPORT_ARGS&#34;,
     &#34;TELNET_TRANSPORT_ARGS&#34;,
@@ -48,14 +42,6 @@ __all__ = (
 <section>
 <h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
-<dt><code class="name"><a title="scrapli.transport.cssh2" href="cssh2.html">scrapli.transport.cssh2</a></code></dt>
-<dd>
-<section class="desc"><p>scrapli.transport.cssh2</p></section>
-</dd>
-<dt><code class="name"><a title="scrapli.transport.miko" href="miko.html">scrapli.transport.miko</a></code></dt>
-<dd>
-<section class="desc"><p>scrapli.transport.miko</p></section>
-</dd>
 <dt><code class="name"><a title="scrapli.transport.ptyprocess" href="ptyprocess.html">scrapli.transport.ptyprocess</a></code></dt>
 <dd>
 <section class="desc"><p>Ptyprocess is under the ISC license, as code derived from Pexpect.
@@ -86,1419 +72,6 @@ __all__ = (
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="scrapli.transport.MikoTransport"><code class="flex name class">
-<span>class <span class="ident">MikoTransport</span></span>
-<span>(</span><span>host, port=-1, auth_username='', auth_private_key='', auth_password='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, timeout_exit=True, keepalive=False, keepalive_interval=30, keepalive_type='', keepalive_pattern='\x05', ssh_config_file='', ssh_known_hosts_file='')</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Helper class that provides a standard way to create an ABC using
-inheritance.</p>
-<p>MikoTransport Object</p>
-<p>Inherit from Transport ABC
-MikoTransport &lt;- Transport (ABC)</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>host</code></strong></dt>
-<dd>host ip/name to connect to</dd>
-<dt><strong><code>port</code></strong></dt>
-<dd>port to connect to</dd>
-<dt><strong><code>auth_username</code></strong></dt>
-<dd>username for authentication</dd>
-<dt><strong><code>auth_private_key</code></strong></dt>
-<dd>path to private key for authentication</dd>
-<dt><strong><code>auth_password</code></strong></dt>
-<dd>password for authentication</dd>
-<dt><strong><code>auth_strict_key</code></strong></dt>
-<dd>True/False to enforce strict key checking (default is True)</dd>
-<dt><strong><code>timeout_socket</code></strong></dt>
-<dd>timeout for establishing socket in seconds</dd>
-<dt><strong><code>timeout_transport</code></strong></dt>
-<dd>timeout for ssh transport in seconds</dd>
-<dt><strong><code>timeout_exit</code></strong></dt>
-<dd>True/False close transport if timeout encountered. If False and keepalives
-are in use, keepalives will prevent program from exiting so you should be sure to
-catch Timeout exceptions and handle them appropriately</dd>
-<dt><strong><code>keepalive</code></strong></dt>
-<dd>whether or not to try to keep session alive</dd>
-<dt><strong><code>keepalive_interval</code></strong></dt>
-<dd>interval to use for session keepalives</dd>
-<dt><strong><code>keepalive_type</code></strong></dt>
-<dd>network|standard &ndash; 'network' sends actual characters over the
-transport channel. This is useful for network-y type devices that may not support
-'standard' keepalive mechanisms. 'standard' is not currently implemented w/ paramiko</dd>
-<dt><strong><code>keepalive_pattern</code></strong></dt>
-<dd>pattern to send to keep network channel alive. Default is
-u'' which is equivalent to 'ctrl+e'. This pattern moves cursor to end of the
-line which should be an innocuous pattern. This will only be entered <em>if</em> a lock
-can be acquired. This is only applicable if using keepalives and if the keepalive
-type is 'network'</dd>
-<dt><strong><code>ssh_config_file</code></strong></dt>
-<dd>string to path for ssh config file</dd>
-<dt><strong><code>ssh_known_hosts_file</code></strong></dt>
-<dd>string to path for ssh known hosts file</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N</code>/<code>A</code>
-# <code>noqa</code>: <code>DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><strong><code>MissingDependencies</code></strong></dt>
-<dd>if paramiko is not installed</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class MikoTransport(Transport):
-    def __init__(
-        self,
-        host: str,
-        port: int = -1,
-        auth_username: str = &#34;&#34;,
-        auth_private_key: str = &#34;&#34;,
-        auth_password: str = &#34;&#34;,
-        auth_strict_key: bool = True,
-        timeout_socket: int = 5,
-        timeout_transport: int = 5,
-        timeout_exit: bool = True,
-        keepalive: bool = False,
-        keepalive_interval: int = 30,
-        keepalive_type: str = &#34;&#34;,
-        keepalive_pattern: str = &#34;\005&#34;,
-        ssh_config_file: str = &#34;&#34;,
-        ssh_known_hosts_file: str = &#34;&#34;,
-    ) -&gt; None:
-        &#34;&#34;&#34;
-        MikoTransport Object
-
-        Inherit from Transport ABC
-        MikoTransport &lt;- Transport (ABC)
-
-        Args:
-            host: host ip/name to connect to
-            port: port to connect to
-            auth_username: username for authentication
-            auth_private_key: path to private key for authentication
-            auth_password: password for authentication
-            auth_strict_key: True/False to enforce strict key checking (default is True)
-            timeout_socket: timeout for establishing socket in seconds
-            timeout_transport: timeout for ssh transport in seconds
-            timeout_exit: True/False close transport if timeout encountered. If False and keepalives
-                are in use, keepalives will prevent program from exiting so you should be sure to
-                catch Timeout exceptions and handle them appropriately
-            keepalive: whether or not to try to keep session alive
-            keepalive_interval: interval to use for session keepalives
-            keepalive_type: network|standard -- &#39;network&#39; sends actual characters over the
-                transport channel. This is useful for network-y type devices that may not support
-                &#39;standard&#39; keepalive mechanisms. &#39;standard&#39; is not currently implemented w/ paramiko
-            keepalive_pattern: pattern to send to keep network channel alive. Default is
-                u&#39;\005&#39; which is equivalent to &#39;ctrl+e&#39;. This pattern moves cursor to end of the
-                line which should be an innocuous pattern. This will only be entered *if* a lock
-                can be acquired. This is only applicable if using keepalives and if the keepalive
-                type is &#39;network&#39;
-            ssh_config_file: string to path for ssh config file
-            ssh_known_hosts_file: string to path for ssh known hosts file
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            MissingDependencies: if paramiko is not installed
-
-        &#34;&#34;&#34;
-        cfg_port, cfg_user, cfg_private_key = self._process_ssh_config(host, ssh_config_file)
-
-        if port == -1:
-            port = cfg_port or 22
-
-        super().__init__(
-            host,
-            port,
-            timeout_socket,
-            timeout_transport,
-            timeout_exit,
-            keepalive,
-            keepalive_interval,
-            keepalive_type,
-            keepalive_pattern,
-        )
-
-        self.auth_username: str = auth_username or cfg_user
-        self.auth_private_key: str = auth_private_key or cfg_private_key
-        self.auth_password: str = auth_password
-        self.auth_strict_key: bool = auth_strict_key
-        self.ssh_known_hosts_file: str = ssh_known_hosts_file
-
-        self.session_lock: Lock = Lock()
-
-        try:
-            # import here so these are optional
-            from paramiko import Transport as pTransport  # pylint: disable=C0415
-            from paramiko import Channel  # pylint: disable=C0415
-            from paramiko.ssh_exception import (  # pylint: disable=C0415
-                AuthenticationException,
-                SSHException,
-            )
-
-            self.lib_session = pTransport
-            self.session: pTransport = None
-            self.channel: Channel = None
-            self.lib_auth_exception = AuthenticationException
-        except ModuleNotFoundError as exc:
-            err = f&#34;Module &#39;{exc.name}&#39; not installed!&#34;
-            msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
-            fix = (
-                f&#34;To resolve this issue, install &#39;{exc.name}&#39;. You can do this in one of the &#34;
-                &#34;following ways:\n&#34;
-                &#34;1: &#39;pip install -r requirements-paramiko.txt&#39;\n&#34;
-                &#34;2: &#39;pip install scrapli[paramiko]&#39;&#34;
-            )
-            warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
-            warnings.warn(warning)
-            LOG.warning(warning)
-            raise MissingDependencies
-
-        self.socket = Socket(host=self.host, port=self.port, timeout=self.timeout_socket)
-
-    @staticmethod
-    def _process_ssh_config(host: str, ssh_config_file: str) -&gt; Tuple[Optional[int], str, str]:
-        &#34;&#34;&#34;
-        Method to parse ssh config file
-
-        In the future this may move to be a &#39;helper&#39; function as it should be very similar between
-        paramiko and and ssh2-python... for now it can be a static method as there may be varying
-        supported args between the two transport drivers.
-
-        Args:
-            host: host to lookup in ssh config file
-            ssh_config_file: string path to ssh config file; passed down from `Scrape`, or the
-                `NetworkDriver` or subclasses of it, in most cases.
-
-        Returns:
-            Tuple: port to use for ssh, username to use for ssh, identity file (private key) to
-                use for ssh auth
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        ssh = SSHConfig(ssh_config_file)
-        host_config = ssh.lookup(host)
-        return host_config.port, host_config.user or &#34;&#34;, host_config.identity_file or &#34;&#34;
-
-    def open(self) -&gt; None:
-        &#34;&#34;&#34;
-        Parent method to open session, authenticate and acquire shell
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            Exception: if socket handshake fails
-            ScrapliAuthenticationFailed: if all authentication means fail
-
-        &#34;&#34;&#34;
-        if not self.socket.socket_isalive():
-            self.socket.socket_open()
-        self.session_lock.acquire()
-        try:
-            self.session = self.lib_session(self.socket.sock)
-            self.session.start_client()
-        except Exception as exc:
-            LOG.critical(f&#34;Failed to complete handshake with host {self.host}; Exception: {exc}&#34;)
-            self.session_lock.release()
-            raise exc
-
-        if self.auth_strict_key:
-            LOG.debug(f&#34;Attempting to validate {self.host} public key&#34;)
-            self._verify_key()
-
-        self._authenticate()
-        if not self._isauthenticated():
-            msg = f&#34;Authentication to host {self.host} failed&#34;
-            LOG.critical(msg)
-            self.session_lock.release()
-            raise ScrapliAuthenticationFailed(msg)
-        self._open_channel()
-        self.session_lock.release()
-
-        if self.keepalive:
-            self._session_keepalive()
-
-    def _verify_key(self) -&gt; None:
-        &#34;&#34;&#34;
-        Verify target host public key, raise exception if invalid/unknown
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            KeyVerificationFailed: if host is not in known hosts
-            KeyVerificationFailed: if host is in known hosts but public key does not match
-
-        &#34;&#34;&#34;
-        known_hosts = SSHKnownHosts(self.ssh_known_hosts_file)
-
-        if self.host not in known_hosts.hosts.keys():
-            raise KeyVerificationFailed(f&#34;{self.host} not in known_hosts!&#34;)
-
-        remote_server_key = self.session.get_remote_server_key()
-        remote_public_key = remote_server_key.get_base64()
-
-        if known_hosts.hosts[self.host][&#34;public_key&#34;] != remote_public_key:
-            raise KeyVerificationFailed(
-                f&#34;{self.host} in known_hosts but public key does not match!&#34;
-            )
-
-    def _authenticate(self) -&gt; None:
-        &#34;&#34;&#34;
-        Parent method to try all means of authentication
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            ScrapliAuthenticationFailed: if authentication fails
-
-        &#34;&#34;&#34;
-        if self.auth_private_key:
-            self._authenticate_public_key()
-            if self._isauthenticated():
-                LOG.debug(f&#34;Authenticated to host {self.host} with public key auth&#34;)
-                return
-            if not self.auth_password or not self.auth_username:
-                msg = (
-                    f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
-                    &#34; password unable to attempt password authentication.&#34;
-                )
-                LOG.critical(msg)
-                raise ScrapliAuthenticationFailed(msg)
-        self._authenticate_password()
-        if self._isauthenticated():
-            LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
-
-    def _authenticate_public_key(self) -&gt; None:
-        &#34;&#34;&#34;
-        Attempt to authenticate with public key authentication
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        try:
-            # paramiko wants to see its key in a PKey object when crafting the paramiko connection
-            # from Transport and Channel objects
-            from paramiko.rsakey import RSAKey  # pylint: disable=C0415
-
-            paramiko_key = RSAKey(filename=self.auth_private_key)
-            self.session.auth_publickey(self.auth_username, paramiko_key)
-        except self.lib_auth_exception as exc:
-            LOG.critical(
-                f&#34;Public key authentication with host {self.host} failed. Exception: {exc}.&#34;
-            )
-        except Exception as exc:  # pylint: disable=W0703
-            LOG.critical(
-                &#34;Unknown error occurred during public key authentication with host &#34;
-                f&#34;{self.host}; Exception: {exc}&#34;
-            )
-
-    def _authenticate_password(self) -&gt; None:
-        &#34;&#34;&#34;
-        Attempt to authenticate with password authentication
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            Exception: if unknown (i.e. not auth failed) exception occurs
-
-        &#34;&#34;&#34;
-        try:
-            self.session.auth_password(self.auth_username, self.auth_password)
-        except self.lib_auth_exception as exc:
-            LOG.critical(
-                f&#34;Password authentication with host {self.host} failed. Exception: {exc}.&#34;
-                &#34;\n\tNote: Paramiko automatically attempts both standard auth as well as keyboard &#34;
-                &#34;interactive auth. Paramiko exception about bad auth type may be misleading!&#34;
-            )
-        except Exception as exc:
-            LOG.critical(
-                &#34;Unknown error occurred during password authentication with host &#34;
-                f&#34;{self.host}; Exception: {exc}&#34;
-            )
-            raise exc
-
-    def _isauthenticated(self) -&gt; bool:
-        &#34;&#34;&#34;
-        Check if session is authenticated
-
-        Args:
-            N/A
-
-        Returns:
-            bool: True if authenticated, else False
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        authenticated: bool = self.session.is_authenticated()
-        return authenticated
-
-    def _open_channel(self) -&gt; None:
-        &#34;&#34;&#34;
-        Open channel, acquire pty, request interactive shell
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.channel = self.session.open_session()
-        self.set_timeout(self.timeout_transport)
-        self.channel.get_pty()
-        self.channel.invoke_shell()
-        LOG.debug(f&#34;Channel to host {self.host} opened&#34;)
-
-    def close(self) -&gt; None:
-        &#34;&#34;&#34;
-        Close session and socket
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.session_lock.acquire()
-        self.channel.close()
-        LOG.debug(f&#34;Channel to host {self.host} closed&#34;)
-        self.socket.socket_close()
-        self.session_lock.release()
-
-    def isalive(self) -&gt; bool:
-        &#34;&#34;&#34;
-        Check if socket is alive and session is authenticated
-
-        Args:
-            N/A
-
-        Returns:
-            bool: True if socket is alive and session authenticated, else False
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        if self.socket.socket_isalive() and self.session.is_alive() and self._isauthenticated():
-            return True
-        return False
-
-    def read(self) -&gt; bytes:
-        &#34;&#34;&#34;
-        Read data from the channel
-
-        Args:
-            N/A
-
-        Returns:
-            bytes: bytes output as read from channel
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        channel_read: bytes = self.channel.recv(65535)
-        return channel_read
-
-    def write(self, channel_input: str) -&gt; None:
-        &#34;&#34;&#34;
-        Write data to the channel
-
-        Args:
-            channel_input: string to send to channel
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.channel.send(channel_input)
-
-    def set_timeout(self, timeout: Optional[int] = None) -&gt; None:
-        &#34;&#34;&#34;
-        Set session timeout
-
-        Args:
-            timeout: timeout in seconds
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        if isinstance(timeout, int):
-            set_timeout = timeout
-        else:
-            set_timeout = self.timeout_transport
-        self.channel.settimeout(set_timeout)
-
-    def _keepalive_standard(self) -&gt; None:
-        &#34;&#34;&#34;
-        Send &#39;out of band&#39; (protocol level) keepalives to devices.
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            NotImplementedError: always, because this is not implemented for telnet
-
-        &#34;&#34;&#34;
-        raise NotImplementedError(&#34;No &#39;standard&#39; keepalive mechanism for telnet.&#34;)</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="scrapli.transport.transport.Transport" href="transport.html#scrapli.transport.transport.Transport">Transport</a></li>
-<li>abc.ABC</li>
-</ul>
-<h3>Methods</h3>
-<dl>
-<dt id="scrapli.transport.MikoTransport.isalive"><code class="name flex">
-<span>def <span class="ident">isalive</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Check if socket is alive and session is authenticated</p>
-<h2 id="args">Args</h2>
-<p>N/A</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>bool</code></strong></dt>
-<dd>True if socket is alive and session authenticated, else False</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def isalive(self) -&gt; bool:
-    &#34;&#34;&#34;
-    Check if socket is alive and session is authenticated
-
-    Args:
-        N/A
-
-    Returns:
-        bool: True if socket is alive and session authenticated, else False
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    if self.socket.socket_isalive() and self.session.is_alive() and self._isauthenticated():
-        return True
-    return False</code></pre>
-</details>
-</dd>
-<dt id="scrapli.transport.MikoTransport.open"><code class="name flex">
-<span>def <span class="ident">open</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Parent method to open session, authenticate and acquire shell</p>
-<h2 id="args">Args</h2>
-<p>N/A</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N</code>/<code>A</code>
-# <code>noqa</code>: <code>DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><strong><code>Exception</code></strong></dt>
-<dd>if socket handshake fails</dd>
-<dt><strong><code>ScrapliAuthenticationFailed</code></strong></dt>
-<dd>if all authentication means fail</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def open(self) -&gt; None:
-    &#34;&#34;&#34;
-    Parent method to open session, authenticate and acquire shell
-
-    Args:
-        N/A
-
-    Returns:
-        N/A  # noqa: DAR202
-
-    Raises:
-        Exception: if socket handshake fails
-        ScrapliAuthenticationFailed: if all authentication means fail
-
-    &#34;&#34;&#34;
-    if not self.socket.socket_isalive():
-        self.socket.socket_open()
-    self.session_lock.acquire()
-    try:
-        self.session = self.lib_session(self.socket.sock)
-        self.session.start_client()
-    except Exception as exc:
-        LOG.critical(f&#34;Failed to complete handshake with host {self.host}; Exception: {exc}&#34;)
-        self.session_lock.release()
-        raise exc
-
-    if self.auth_strict_key:
-        LOG.debug(f&#34;Attempting to validate {self.host} public key&#34;)
-        self._verify_key()
-
-    self._authenticate()
-    if not self._isauthenticated():
-        msg = f&#34;Authentication to host {self.host} failed&#34;
-        LOG.critical(msg)
-        self.session_lock.release()
-        raise ScrapliAuthenticationFailed(msg)
-    self._open_channel()
-    self.session_lock.release()
-
-    if self.keepalive:
-        self._session_keepalive()</code></pre>
-</details>
-</dd>
-<dt id="scrapli.transport.MikoTransport.read"><code class="name flex">
-<span>def <span class="ident">read</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Read data from the channel</p>
-<h2 id="args">Args</h2>
-<p>N/A</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>bytes</code></strong></dt>
-<dd>bytes output as read from channel</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def read(self) -&gt; bytes:
-    &#34;&#34;&#34;
-    Read data from the channel
-
-    Args:
-        N/A
-
-    Returns:
-        bytes: bytes output as read from channel
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    channel_read: bytes = self.channel.recv(65535)
-    return channel_read</code></pre>
-</details>
-</dd>
-</dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="scrapli.transport.transport.Transport" href="transport.html#scrapli.transport.transport.Transport">Transport</a></b></code>:
-<ul class="hlist">
-<li><code><a title="scrapli.transport.transport.Transport.close" href="transport.html#scrapli.transport.transport.Transport.close">close</a></code></li>
-<li><code><a title="scrapli.transport.transport.Transport.set_timeout" href="transport.html#scrapli.transport.transport.Transport.set_timeout">set_timeout</a></code></li>
-<li><code><a title="scrapli.transport.transport.Transport.write" href="transport.html#scrapli.transport.transport.Transport.write">write</a></code></li>
-</ul>
-</li>
-</ul>
-</dd>
-<dt id="scrapli.transport.SSH2Transport"><code class="flex name class">
-<span>class <span class="ident">SSH2Transport</span></span>
-<span>(</span><span>host, port=-1, auth_username='', auth_private_key='', auth_password='', auth_strict_key=True, timeout_socket=5, timeout_transport=5, timeout_exit=True, keepalive=False, keepalive_interval=30, keepalive_type='', keepalive_pattern='\x05', ssh_config_file='', ssh_known_hosts_file='')</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Helper class that provides a standard way to create an ABC using
-inheritance.</p>
-<p>SSH2Transport Object</p>
-<p>Inherit from Transport ABC
-SSH2Transport &lt;- Transport (ABC)</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>host</code></strong></dt>
-<dd>host ip/name to connect to</dd>
-<dt><strong><code>port</code></strong></dt>
-<dd>port to connect to</dd>
-<dt><strong><code>auth_username</code></strong></dt>
-<dd>username for authentication</dd>
-<dt><strong><code>auth_private_key</code></strong></dt>
-<dd>path to private key for authentication</dd>
-<dt><strong><code>auth_password</code></strong></dt>
-<dd>password for authentication</dd>
-<dt><strong><code>auth_strict_key</code></strong></dt>
-<dd>True/False to enforce strict key checking (default is True)</dd>
-<dt><strong><code>timeout_socket</code></strong></dt>
-<dd>timeout for establishing socket in seconds</dd>
-<dt><strong><code>timeout_transport</code></strong></dt>
-<dd>timeout for ssh2 transport in seconds</dd>
-<dt><strong><code>timeout_exit</code></strong></dt>
-<dd>True/False close transport if timeout encountered. If False and keepalives
-are in use, keepalives will prevent program from exiting so you should be sure to
-catch Timeout exceptions and handle them appropriately</dd>
-<dt><strong><code>keepalive</code></strong></dt>
-<dd>whether or not to try to keep session alive</dd>
-<dt><strong><code>keepalive_interval</code></strong></dt>
-<dd>interval to use for session keepalives</dd>
-<dt><strong><code>keepalive_type</code></strong></dt>
-<dd>network|standard &ndash; 'network' sends actual characters over the
-transport channel. This is useful for network-y type devices that may not support
-'standard' keepalive mechanisms. 'standard' attempts to ssh2-python built in
-keepalive method (using standard openssh keepalive)</dd>
-<dt><strong><code>keepalive_pattern</code></strong></dt>
-<dd>pattern to send to keep network channel alive. Default is
-u'' which is equivalent to 'ctrl+e'. This pattern moves cursor to end of the
-line which should be an innocuous pattern. This will only be entered <em>if</em> a lock
-can be acquired. This is only applicable if using keepalives and if the keepalive
-type is 'network'</dd>
-<dt><strong><code>ssh_config_file</code></strong></dt>
-<dd>string to path for ssh config file</dd>
-<dt><strong><code>ssh_known_hosts_file</code></strong></dt>
-<dd>string to path for ssh known hosts file</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N</code>/<code>A</code>
-# <code>noqa</code>: <code>DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><strong><code>MissingDependencies</code></strong></dt>
-<dd>if ssh2-python is not installed</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class SSH2Transport(Transport):
-    def __init__(
-        self,
-        host: str,
-        port: int = -1,
-        auth_username: str = &#34;&#34;,
-        auth_private_key: str = &#34;&#34;,
-        auth_password: str = &#34;&#34;,
-        auth_strict_key: bool = True,
-        timeout_socket: int = 5,
-        timeout_transport: int = 5,
-        timeout_exit: bool = True,
-        keepalive: bool = False,
-        keepalive_interval: int = 30,
-        keepalive_type: str = &#34;&#34;,
-        keepalive_pattern: str = &#34;\005&#34;,
-        ssh_config_file: str = &#34;&#34;,
-        ssh_known_hosts_file: str = &#34;&#34;,
-    ) -&gt; None:
-        &#34;&#34;&#34;
-        SSH2Transport Object
-
-        Inherit from Transport ABC
-        SSH2Transport &lt;- Transport (ABC)
-
-        Args:
-            host: host ip/name to connect to
-            port: port to connect to
-            auth_username: username for authentication
-            auth_private_key: path to private key for authentication
-            auth_password: password for authentication
-            auth_strict_key: True/False to enforce strict key checking (default is True)
-            timeout_socket: timeout for establishing socket in seconds
-            timeout_transport: timeout for ssh2 transport in seconds
-            timeout_exit: True/False close transport if timeout encountered. If False and keepalives
-                are in use, keepalives will prevent program from exiting so you should be sure to
-                catch Timeout exceptions and handle them appropriately
-            keepalive: whether or not to try to keep session alive
-            keepalive_interval: interval to use for session keepalives
-            keepalive_type: network|standard -- &#39;network&#39; sends actual characters over the
-                transport channel. This is useful for network-y type devices that may not support
-                &#39;standard&#39; keepalive mechanisms. &#39;standard&#39; attempts to ssh2-python built in
-                keepalive method (using standard openssh keepalive)
-            keepalive_pattern: pattern to send to keep network channel alive. Default is
-                u&#39;\005&#39; which is equivalent to &#39;ctrl+e&#39;. This pattern moves cursor to end of the
-                line which should be an innocuous pattern. This will only be entered *if* a lock
-                can be acquired. This is only applicable if using keepalives and if the keepalive
-                type is &#39;network&#39;
-            ssh_config_file: string to path for ssh config file
-            ssh_known_hosts_file: string to path for ssh known hosts file
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            MissingDependencies: if ssh2-python is not installed
-
-        &#34;&#34;&#34;
-        cfg_port, cfg_user, cfg_private_key = self._process_ssh_config(host, ssh_config_file)
-
-        if port == -1:
-            port = cfg_port or 22
-
-        super().__init__(
-            host,
-            port,
-            timeout_socket,
-            timeout_transport,
-            timeout_exit,
-            keepalive,
-            keepalive_interval,
-            keepalive_type,
-            keepalive_pattern,
-        )
-
-        self.auth_username: str = auth_username or cfg_user
-        self.auth_private_key: str = auth_private_key or cfg_private_key
-        self.auth_password: str = auth_password
-        self.auth_strict_key: bool = auth_strict_key
-        self.ssh_known_hosts_file: str = ssh_known_hosts_file
-
-        try:
-            # import here so these are optional
-            from ssh2.channel import Channel  # pylint: disable=C0415
-            from ssh2.session import Session  # pylint: disable=C0415
-            from ssh2.exceptions import AuthenticationError, SSH2Error  # pylint: disable=C0415
-
-            self.lib_session = Session
-            self.session: Session = None
-            self.channel: Channel = None
-            self.lib_auth_exception = AuthenticationError
-            self.lib_base_exception = SSH2Error
-        except ModuleNotFoundError as exc:
-            err = f&#34;Module &#39;{exc.name}&#39; not installed!&#34;
-            msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
-            fix = (
-                f&#34;To resolve this issue, install &#39;{exc.name}&#39;. You can do this in one of the &#34;
-                &#34;following ways:\n&#34;
-                &#34;1: &#39;pip install -r requirements-ssh2.txt&#39;\n&#34;
-                &#34;2: &#39;pip install scrapli[ssh2]&#39;&#34;
-            )
-            warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
-            warnings.warn(warning)
-            LOG.warning(warning)
-            raise MissingDependencies
-
-        self.socket = Socket(host=self.host, port=self.port, timeout=self.timeout_socket)
-
-    @staticmethod
-    def _process_ssh_config(host: str, ssh_config_file: str) -&gt; Tuple[Optional[int], str, str]:
-        &#34;&#34;&#34;
-        Method to parse ssh config file
-
-        In the future this may move to be a &#34;helper&#34; function as it should be very similar between
-        paramiko and and ssh2-python... for now it can be a static method as there may be varying
-        supported args between the two transport drivers.
-
-        Args:
-            host: host to lookup in ssh config file
-            ssh_config_file: string path to ssh config file; passed down from `Scrape`, or the
-                `NetworkDriver` or subclasses of it, in most cases.
-
-        Returns:
-            Tuple: port to use for ssh, username to use for ssh, identity file (private key) to
-                use for ssh auth
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        ssh = SSHConfig(ssh_config_file)
-        host_config = ssh.lookup(host)
-        return host_config.port, host_config.user or &#34;&#34;, host_config.identity_file or &#34;&#34;
-
-    def open(self) -&gt; None:
-        &#34;&#34;&#34;
-        Parent method to open session, authenticate and acquire shell
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            Exception: if socket handshake fails
-            ScrapliAuthenticationFailed: if all authentication means fail
-
-        &#34;&#34;&#34;
-        if not self.socket.socket_isalive():
-            self.socket.socket_open()
-        self.session_lock.acquire()
-        self.session = self.lib_session()
-        self.set_timeout(self.timeout_transport)
-        try:
-            self.session.handshake(self.socket.sock)
-        except Exception as exc:
-            LOG.critical(
-                f&#34;Failed to complete handshake with host {self.host}; &#34; f&#34;Exception: {exc}&#34;
-            )
-            self.session_lock.release()
-            raise exc
-
-        if self.auth_strict_key:
-            LOG.debug(f&#34;Attempting to validate {self.host} public key&#34;)
-            self._verify_key()
-
-        LOG.debug(f&#34;Session to host {self.host} opened&#34;)
-        self._authenticate()
-        if not self._isauthenticated():
-            msg = f&#34;Authentication to host {self.host} failed&#34;
-            LOG.critical(msg)
-            self.session_lock.release()
-            raise ScrapliAuthenticationFailed(msg)
-        self._open_channel()
-        if self.keepalive:
-            self._session_keepalive()
-        self.session_lock.release()
-
-    def _verify_key(self) -&gt; None:
-        &#34;&#34;&#34;
-        Verify target host public key, raise exception if invalid/unknown
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            KeyVerificationFailed: if public key verification fails
-
-        &#34;&#34;&#34;
-        known_hosts = SSHKnownHosts(self.ssh_known_hosts_file)
-
-        if self.host not in known_hosts.hosts.keys():
-            raise KeyVerificationFailed(f&#34;{self.host} not in known_hosts!&#34;)
-
-        remote_server_key_info = self.session.hostkey()
-        encoded_remote_server_key = remote_server_key_info[0]
-        raw_remote_public_key = base64.encodebytes(encoded_remote_server_key)
-        remote_public_key = raw_remote_public_key.replace(b&#34;\n&#34;, b&#34;&#34;).decode()
-
-        if known_hosts.hosts[self.host][&#34;public_key&#34;] != remote_public_key:
-            raise KeyVerificationFailed(
-                f&#34;{self.host} in known_hosts but public key does not match!&#34;
-            )
-
-    def _authenticate(self) -&gt; None:
-        &#34;&#34;&#34;
-        Parent method to try all means of authentication
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            ScrapliAuthenticationFailed: if auth fails
-
-        &#34;&#34;&#34;
-        if self.auth_private_key:
-            self._authenticate_public_key()
-            if self._isauthenticated():
-                LOG.debug(f&#34;Authenticated to host {self.host} with public key auth&#34;)
-                return
-            if not self.auth_password or not self.auth_username:
-                msg = (
-                    f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
-                    &#34; password unable to attempt password authentication.&#34;
-                )
-                LOG.critical(msg)
-                raise ScrapliAuthenticationFailed(msg)
-
-        self._authenticate_password()
-        if self._isauthenticated():
-            LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
-            return
-        self._authenticate_keyboard_interactive()
-        if self._isauthenticated():
-            LOG.debug(f&#34;Authenticated to host {self.host} with keyboard interactive&#34;)
-
-    def _authenticate_public_key(self) -&gt; None:
-        &#34;&#34;&#34;
-        Attempt to authenticate with public key authentication
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        try:
-            self.session.userauth_publickey_fromfile(self.auth_username, self.auth_private_key)
-        except self.lib_auth_exception as exc:
-            LOG.critical(
-                f&#34;Public key authentication with host {self.host} failed. Exception: {exc}.&#34;
-            )
-        except self.lib_base_exception as exc:
-            LOG.critical(
-                &#34;Unknown error occurred during public key authentication with host &#34;
-                f&#34;{self.host}; Exception: {exc}&#34;
-            )
-
-    def _authenticate_password(self) -&gt; None:
-        &#34;&#34;&#34;
-        Attempt to authenticate with password authentication
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            Exception: if unknown (i.e. not auth failed) exception occurs
-
-        &#34;&#34;&#34;
-        try:
-            self.session.userauth_password(self.auth_username, self.auth_password)
-        except self.lib_auth_exception as exc:
-            LOG.critical(f&#34;Password authentication with host {self.host} failed. Exception: {exc}.&#34;)
-        except Exception as exc:
-            LOG.critical(
-                &#34;Unknown error occurred during password authentication with host &#34;
-                f&#34;{self.host}; Exception: {exc}&#34;
-            )
-            raise exc
-
-    def _authenticate_keyboard_interactive(self) -&gt; None:
-        &#34;&#34;&#34;
-        Attempt to authenticate with keyboard interactive authentication
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            Exception: if unknown (i.e. not auth failed) exception occurs
-
-        &#34;&#34;&#34;
-        try:
-            self.session.userauth_keyboardinteractive(  # pylint: disable=C0415
-                self.auth_username, self.auth_password
-            )
-        except AttributeError as exc:
-            LOG.critical(
-                &#34;Keyboard interactive authentication not supported in your ssh2-python version. &#34;
-                f&#34;Exception: {exc}&#34;
-            )
-        except self.lib_auth_exception as exc:
-            LOG.critical(
-                f&#34;Keyboard interactive authentication with host {self.host} failed. &#34;
-                f&#34;Exception: {exc}.&#34;
-            )
-        except Exception as exc:
-            LOG.critical(
-                &#34;Unknown error occurred during keyboard interactive authentication with host &#34;
-                f&#34;{self.host}; Exception: {exc}&#34;
-            )
-            raise exc
-
-    def _isauthenticated(self) -&gt; bool:
-        &#34;&#34;&#34;
-        Check if session is authenticated
-
-        Args:
-            N/A
-
-        Returns:
-            bool: True if authenticated, else False
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        authenticated: bool = self.session.userauth_authenticated()
-        return authenticated
-
-    def _open_channel(self) -&gt; None:
-        &#34;&#34;&#34;
-        Open channel, acquire pty, request interactive shell
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.channel = self.session.open_session()
-        self.channel.pty()
-        self.channel.shell()
-        LOG.debug(f&#34;Channel to host {self.host} opened&#34;)
-
-    def close(self) -&gt; None:
-        &#34;&#34;&#34;
-        Close session and socket
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.session_lock.acquire()
-        self.channel.close()
-        LOG.debug(f&#34;Channel to host {self.host} closed&#34;)
-        self.socket.socket_close()
-        self.session_lock.release()
-
-    def isalive(self) -&gt; bool:
-        &#34;&#34;&#34;
-        Check if socket is alive and session is authenticated
-
-        Args:
-            N/A
-
-        Returns:
-            bool: True if socket is alive and session authenticated, else False
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        if self.socket.socket_isalive() and not self.channel.eof() and self._isauthenticated():
-            return True
-        return False
-
-    def read(self) -&gt; bytes:
-        &#34;&#34;&#34;
-        Read data from the channel
-
-        Args:
-            N/A
-
-        Returns:
-            bytes: bytes output as read from channel
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        output: bytes
-        _, output = self.channel.read(65535)
-        return output
-
-    def write(self, channel_input: str) -&gt; None:
-        &#34;&#34;&#34;
-        Write data to the channel
-
-        Args:
-            channel_input: string to send to channel
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.channel.write(channel_input)
-
-    def set_timeout(self, timeout: Optional[int] = None) -&gt; None:
-        &#34;&#34;&#34;
-        Set session timeout
-
-        Args:
-            timeout: timeout in seconds
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        if isinstance(timeout, int):
-            set_timeout = timeout
-        else:
-            set_timeout = self.timeout_transport
-        # ssh2-python expects timeout in milliseconds
-        self.session.set_timeout(set_timeout * 1000)
-
-    def _keepalive_network(self) -&gt; None:
-        &#34;&#34;&#34;
-        ssh2-specific keepalive network
-
-        Without manually closing sessions ssh2-python seems to block and keep scripts from exiting.
-        This is a hacky fix for that by force killing the transport connection atexit.
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-
-        def kill_transport() -&gt; None:
-            if self.isalive():
-                self.close()
-
-        atexit.register(kill_transport)
-        super()._keepalive_network()
-
-    def _keepalive_standard(self) -&gt; None:
-        &#34;&#34;&#34;
-        Send &#34;out of band&#34; (protocol level) keepalives to devices.
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.session.keepalive_config(want_reply=False, interval=self.keepalive_interval)
-        while True:
-            if not self.isalive():
-                return
-            LOG.debug(&#34;Sending &#39;standard&#39; keepalive.&#34;)
-            self.session.keepalive_send()
-            time.sleep(self.keepalive_interval / 10)</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="scrapli.transport.transport.Transport" href="transport.html#scrapli.transport.transport.Transport">Transport</a></li>
-<li>abc.ABC</li>
-</ul>
-<h3>Methods</h3>
-<dl>
-<dt id="scrapli.transport.SSH2Transport.isalive"><code class="name flex">
-<span>def <span class="ident">isalive</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Check if socket is alive and session is authenticated</p>
-<h2 id="args">Args</h2>
-<p>N/A</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>bool</code></strong></dt>
-<dd>True if socket is alive and session authenticated, else False</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def isalive(self) -&gt; bool:
-    &#34;&#34;&#34;
-    Check if socket is alive and session is authenticated
-
-    Args:
-        N/A
-
-    Returns:
-        bool: True if socket is alive and session authenticated, else False
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    if self.socket.socket_isalive() and not self.channel.eof() and self._isauthenticated():
-        return True
-    return False</code></pre>
-</details>
-</dd>
-<dt id="scrapli.transport.SSH2Transport.open"><code class="name flex">
-<span>def <span class="ident">open</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Parent method to open session, authenticate and acquire shell</p>
-<h2 id="args">Args</h2>
-<p>N/A</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N</code>/<code>A</code>
-# <code>noqa</code>: <code>DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><strong><code>Exception</code></strong></dt>
-<dd>if socket handshake fails</dd>
-<dt><strong><code>ScrapliAuthenticationFailed</code></strong></dt>
-<dd>if all authentication means fail</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def open(self) -&gt; None:
-    &#34;&#34;&#34;
-    Parent method to open session, authenticate and acquire shell
-
-    Args:
-        N/A
-
-    Returns:
-        N/A  # noqa: DAR202
-
-    Raises:
-        Exception: if socket handshake fails
-        ScrapliAuthenticationFailed: if all authentication means fail
-
-    &#34;&#34;&#34;
-    if not self.socket.socket_isalive():
-        self.socket.socket_open()
-    self.session_lock.acquire()
-    self.session = self.lib_session()
-    self.set_timeout(self.timeout_transport)
-    try:
-        self.session.handshake(self.socket.sock)
-    except Exception as exc:
-        LOG.critical(
-            f&#34;Failed to complete handshake with host {self.host}; &#34; f&#34;Exception: {exc}&#34;
-        )
-        self.session_lock.release()
-        raise exc
-
-    if self.auth_strict_key:
-        LOG.debug(f&#34;Attempting to validate {self.host} public key&#34;)
-        self._verify_key()
-
-    LOG.debug(f&#34;Session to host {self.host} opened&#34;)
-    self._authenticate()
-    if not self._isauthenticated():
-        msg = f&#34;Authentication to host {self.host} failed&#34;
-        LOG.critical(msg)
-        self.session_lock.release()
-        raise ScrapliAuthenticationFailed(msg)
-    self._open_channel()
-    if self.keepalive:
-        self._session_keepalive()
-    self.session_lock.release()</code></pre>
-</details>
-</dd>
-<dt id="scrapli.transport.SSH2Transport.read"><code class="name flex">
-<span>def <span class="ident">read</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Read data from the channel</p>
-<h2 id="args">Args</h2>
-<p>N/A</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>bytes</code></strong></dt>
-<dd>bytes output as read from channel</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def read(self) -&gt; bytes:
-    &#34;&#34;&#34;
-    Read data from the channel
-
-    Args:
-        N/A
-
-    Returns:
-        bytes: bytes output as read from channel
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    output: bytes
-    _, output = self.channel.read(65535)
-    return output</code></pre>
-</details>
-</dd>
-</dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="scrapli.transport.transport.Transport" href="transport.html#scrapli.transport.transport.Transport">Transport</a></b></code>:
-<ul class="hlist">
-<li><code><a title="scrapli.transport.transport.Transport.close" href="transport.html#scrapli.transport.transport.Transport.close">close</a></code></li>
-<li><code><a title="scrapli.transport.transport.Transport.set_timeout" href="transport.html#scrapli.transport.transport.Transport.set_timeout">set_timeout</a></code></li>
-<li><code><a title="scrapli.transport.transport.Transport.write" href="transport.html#scrapli.transport.transport.Transport.write">write</a></code></li>
-</ul>
-</li>
-</ul>
-</dd>
 <dt id="scrapli.transport.SystemSSHTransport"><code class="flex name class">
 <span>class <span class="ident">SystemSSHTransport</span></span>
 <span>(</span><span>host='', port=22, auth_username='', auth_private_key='', auth_password='', auth_strict_key=True, auth_bypass=False, timeout_socket=5, timeout_transport=5, timeout_ops=10, timeout_exit=True, keepalive=False, keepalive_interval=30, keepalive_type='', keepalive_pattern='\x05', comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n', comms_ansi=False, ssh_config_file='', ssh_known_hosts_file='')</span>
@@ -1775,9 +348,9 @@ is completed.</dd>
             N/A
 
         &#34;&#34;&#34;
-        ssh = SSHConfig(ssh_config_file)
+        ssh = SSHConfig(ssh_config_file=ssh_config_file)
         self.ssh_config_file = ssh.ssh_config_file
-        host_config = ssh.lookup(self.host)
+        host_config = ssh.lookup(host=self.host)
         if not self.auth_private_key and host_config.identity_file:
             self.auth_private_key = os.path.expanduser(host_config.identity_file.strip())
 
@@ -1797,6 +370,7 @@ is completed.</dd>
         &#34;&#34;&#34;
         self.open_cmd.extend([&#34;-p&#34;, str(self.port)])
         self.open_cmd.extend([&#34;-o&#34;, f&#34;ConnectTimeout={self.timeout_socket}&#34;])
+        self.open_cmd.extend([&#34;-o&#34;, f&#34;ServerAliveInterval={self.timeout_transport}&#34;])
         if self.auth_private_key:
             self.open_cmd.extend([&#34;-i&#34;, self.auth_private_key])
         if self.auth_username:
@@ -1839,8 +413,11 @@ is completed.</dd>
         &#34;&#34;&#34;
         self.session_lock.acquire()
 
+        LOG.info(f&#34;Attempting to authenticate to {self.host}&#34;)
+
         # if auth_bypass kick off keepalive thread if necessary and return
         if self.auth_bypass:
+            LOG.info(&#34;`auth_bypass` is True, bypassing authentication&#34;)
             self._open_pty(skip_auth=True)
             self._session_keepalive()
             return
@@ -1865,6 +442,8 @@ is completed.</dd>
             msg = f&#34;Authentication to host {self.host} failed&#34;
             LOG.critical(msg)
             raise ScrapliAuthenticationFailed(msg)
+
+        LOG.info(f&#34;Successfully authenticated to {self.host}&#34;)
 
         if self.keepalive:
             self._session_keepalive()
@@ -1980,7 +559,7 @@ is completed.</dd>
         self.session_lock.release()
         if skip_auth:
             return True
-        self._pty_authenticate(self.session)
+        self._pty_authenticate(pty_session=self.session)
         if not self._pty_isauthenticated(self.session):
             return False
         LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
@@ -2006,18 +585,21 @@ is completed.</dd>
         output = b&#34;&#34;
         while True:
             try:
-                output += pty_session.read()
+                new_output = pty_session.read()
+                output += new_output
+                LOG.debug(f&#34;Attempting to authenticate. Read: {repr(new_output)}&#34;)
             except EOFError:
                 msg = f&#34;Failed to open connection to host {self.host}&#34;
                 if b&#34;Host key verification failed&#34; in output:
                     msg = f&#34;Host key verification failed for host {self.host}&#34;
                 elif b&#34;Operation timed out&#34; in output:
                     msg = f&#34;Timed out connecting to host {self.host}&#34;
+                LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
             if self._comms_ansi:
                 output = strip_ansi(output)
             if b&#34;password&#34; in output.lower():
-                LOG.debug(&#34;Found password prompt, sending password&#34;)
+                LOG.info(&#34;Found password prompt, sending password&#34;)
                 pty_session.write(self.auth_password.encode())
                 pty_session.write(self._comms_return_char.encode())
                 self.session_lock.release()
@@ -2043,14 +625,16 @@ is completed.</dd>
         &#34;&#34;&#34;
         LOG.debug(&#34;Attempting to determine if PTY authentication was successful&#34;)
         if pty_session.isalive() and not pty_session.eof():
-            prompt_pattern = get_prompt_pattern(&#34;&#34;, self._comms_prompt_pattern)
+            prompt_pattern = get_prompt_pattern(prompt=&#34;&#34;, class_prompt=self._comms_prompt_pattern)
             self.session_lock.acquire()
             pty_session.write(self._comms_return_char.encode())
             fd_ready, _, _ = select([pty_session.fd], [], [], 0)
             if pty_session.fd in fd_ready:
                 output = b&#34;&#34;
                 while True:
-                    output += pty_session.read()
+                    new_output = pty_session.read()
+                    output += new_output
+                    LOG.debug(f&#34;Attempting validate authentication. Read: {repr(new_output)}&#34;)
                     # we do not need to deal w/ line replacement for the actual output, only for
                     # parsing if a prompt-like thing is at the end of the output
                     output = output.replace(b&#34;\r&#34;, b&#34;&#34;)
@@ -2058,14 +642,17 @@ is completed.</dd>
                     # may raise auth failures for the wrong reason which would be confusing for
                     # users
                     if b&#34;\x1B&#34; in output:
-                        output = strip_ansi(output)
-                    channel_match = re.search(prompt_pattern, output)
+                        output = strip_ansi(output=output)
+                    channel_match = re.search(pattern=prompt_pattern, string=output)
                     if channel_match:
                         self.session_lock.release()
                         self._isauthenticated = True
                         return True
-                    if b&#34;password&#34; in output.lower():
+                    if b&#34;password:&#34; in output.lower():
                         # if we see &#34;password&#34; we know auth failed (hopefully in all scenarios!)
+                        LOG.critical(
+                            &#34;Found `password:` in output, assuming password authentication failed&#34;
+                        )
                         return False
                     if output:
                         LOG.debug(f&#34;Cannot determine if authenticated, \n\tRead: {repr(output)}&#34;)
@@ -2116,7 +703,6 @@ is completed.</dd>
                 return True
         return False
 
-    @operation_timeout(&#34;timeout_transport&#34;, &#34;Transport timeout during read operation.&#34;)
     def read(self) -&gt; bytes:
         &#34;&#34;&#34;
         Read data from the channel
@@ -2138,7 +724,6 @@ is completed.</dd>
             return self.session.read(read_bytes)
         return b&#34;&#34;
 
-    @operation_timeout(&#34;timeout_transport&#34;, &#34;Transport timeout during write operation.&#34;)
     def write(self, channel_input: str) -&gt; None:
         &#34;&#34;&#34;
         Write data to the channel
@@ -2307,8 +892,11 @@ case of telnet&hellip; so it works, but its just a bit less desirable.</p>
     &#34;&#34;&#34;
     self.session_lock.acquire()
 
+    LOG.info(f&#34;Attempting to authenticate to {self.host}&#34;)
+
     # if auth_bypass kick off keepalive thread if necessary and return
     if self.auth_bypass:
+        LOG.info(&#34;`auth_bypass` is True, bypassing authentication&#34;)
         self._open_pty(skip_auth=True)
         self._session_keepalive()
         return
@@ -2334,8 +922,53 @@ case of telnet&hellip; so it works, but its just a bit less desirable.</p>
         LOG.critical(msg)
         raise ScrapliAuthenticationFailed(msg)
 
+    LOG.info(f&#34;Successfully authenticated to {self.host}&#34;)
+
     if self.keepalive:
         self._session_keepalive()</code></pre>
+</details>
+</dd>
+<dt id="scrapli.transport.SystemSSHTransport.read"><code class="name flex">
+<span>def <span class="ident">read</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Read data from the channel</p>
+<h2 id="args">Args</h2>
+<p>N/A</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>bytes</code></strong></dt>
+<dd>bytes output as read from channel</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read(self) -&gt; bytes:
+    &#34;&#34;&#34;
+    Read data from the channel
+
+    Args:
+        N/A
+
+    Returns:
+        bytes: bytes output as read from channel
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    read_bytes = 65535
+    if isinstance(self.session, Popen):
+        return os.read(self._stdout_fd, read_bytes)
+    if isinstance(self.session, PtyProcess):
+        return self.session.read(read_bytes)
+    return b&#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="scrapli.transport.SystemSSHTransport.set_timeout"><code class="name flex">
@@ -2399,7 +1032,6 @@ leave the objects <code>timeout_transport</code> alone.</p>
 <li><code><b><a title="scrapli.transport.transport.Transport" href="transport.html#scrapli.transport.transport.Transport">Transport</a></b></code>:
 <ul class="hlist">
 <li><code><a title="scrapli.transport.transport.Transport.close" href="transport.html#scrapli.transport.transport.Transport.close">close</a></code></li>
-<li><code><a title="scrapli.transport.transport.Transport.read" href="transport.html#scrapli.transport.transport.Transport.read">read</a></code></li>
 <li><code><a title="scrapli.transport.transport.Transport.write" href="transport.html#scrapli.transport.transport.Transport.write">write</a></code></li>
 </ul>
 </li>
@@ -2635,8 +1267,8 @@ and is ignored after authentication is completed.</dd>
         telnet_session.timeout = self.timeout_transport
         LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
         self.session_lock.release()
-        self._authenticate(telnet_session)
-        if not self._telnet_isauthenticated(telnet_session):
+        self._authenticate(telnet_session=telnet_session)
+        if not self._telnet_isauthenticated(telnet_session=telnet_session):
             raise ScrapliAuthenticationFailed(
                 f&#34;Could not authenticate over telnet to host: {self.host}&#34;
             )
@@ -2693,7 +1325,7 @@ and is ignored after authentication is completed.</dd>
         &#34;&#34;&#34;
         LOG.debug(&#34;Attempting to determine if telnet authentication was successful&#34;)
         if not telnet_session.eof:
-            prompt_pattern = get_prompt_pattern(&#34;&#34;, self._comms_prompt_pattern)
+            prompt_pattern = get_prompt_pattern(prompt=&#34;&#34;, class_prompt=self._comms_prompt_pattern)
             telnet_session_fd = telnet_session.fileno()
             self.session_lock.acquire()
             telnet_session.write(self._comms_return_char.encode())
@@ -2707,8 +1339,8 @@ and is ignored after authentication is completed.</dd>
                     # parsing if a prompt-like thing is at the end of the output
                     output = output.replace(b&#34;\r&#34;, b&#34;&#34;)
                     if self._comms_ansi:
-                        output = strip_ansi(output)
-                    channel_match = re.search(prompt_pattern, output)
+                        output = strip_ansi(output=output)
+                    channel_match = re.search(pattern=prompt_pattern, string=output)
                     if channel_match:
                         self.session_lock.release()
                         self._isauthenticated = True
@@ -2756,7 +1388,6 @@ and is ignored after authentication is completed.</dd>
             return True
         return False
 
-    @operation_timeout(&#34;timeout_transport&#34;, &#34;Transport timeout during read operation.&#34;)
     def read(self) -&gt; bytes:
         &#34;&#34;&#34;
         Read data from the channel
@@ -2914,13 +1545,51 @@ and is ignored after authentication is completed.</dd>
     telnet_session.timeout = self.timeout_transport
     LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
     self.session_lock.release()
-    self._authenticate(telnet_session)
-    if not self._telnet_isauthenticated(telnet_session):
+    self._authenticate(telnet_session=telnet_session)
+    if not self._telnet_isauthenticated(telnet_session=telnet_session):
         raise ScrapliAuthenticationFailed(
             f&#34;Could not authenticate over telnet to host: {self.host}&#34;
         )
     LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
     self.session = telnet_session</code></pre>
+</details>
+</dd>
+<dt id="scrapli.transport.TelnetTransport.read"><code class="name flex">
+<span>def <span class="ident">read</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Read data from the channel</p>
+<h2 id="args">Args</h2>
+<p>N/A</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>bytes</code></strong></dt>
+<dd>bytes read from the telnet channel</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read(self) -&gt; bytes:
+    &#34;&#34;&#34;
+    Read data from the channel
+
+    Args:
+        N/A
+
+    Returns:
+        bytes: bytes read from the telnet channel
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    return self.session.read_eager()</code></pre>
 </details>
 </dd>
 </dl>
@@ -2929,7 +1598,6 @@ and is ignored after authentication is completed.</dd>
 <li><code><b><a title="scrapli.transport.transport.Transport" href="transport.html#scrapli.transport.transport.Transport">Transport</a></b></code>:
 <ul class="hlist">
 <li><code><a title="scrapli.transport.transport.Transport.close" href="transport.html#scrapli.transport.transport.Transport.close">close</a></code></li>
-<li><code><a title="scrapli.transport.transport.Transport.read" href="transport.html#scrapli.transport.transport.Transport.read">read</a></code></li>
 <li><code><a title="scrapli.transport.transport.Transport.set_timeout" href="transport.html#scrapli.transport.transport.Transport.set_timeout">set_timeout</a></code></li>
 <li><code><a title="scrapli.transport.transport.Transport.write" href="transport.html#scrapli.transport.transport.Transport.write">write</a></code></li>
 </ul>
@@ -3248,7 +1916,7 @@ type is 'network'</dd>
                     )
                     lock_counter = 0
                     self.session_lock.acquire()
-                    self.write(self.keepalive_pattern)
+                    self.write(channel_input=self.keepalive_pattern)
                     self.session_lock.release()
                     last_keepalive = datetime.now()
                 else:
@@ -3286,8 +1954,6 @@ type is 'network'</dd>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="scrapli.transport.cssh2.SSH2Transport" href="cssh2.html#scrapli.transport.cssh2.SSH2Transport">SSH2Transport</a></li>
-<li><a title="scrapli.transport.miko.MikoTransport" href="miko.html#scrapli.transport.miko.MikoTransport">MikoTransport</a></li>
 <li><a title="scrapli.transport.systemssh.SystemSSHTransport" href="systemssh.html#scrapli.transport.systemssh.SystemSSHTransport">SystemSSHTransport</a></li>
 <li><a title="scrapli.transport.telnet.TelnetTransport" href="telnet.html#scrapli.transport.telnet.TelnetTransport">TelnetTransport</a></li>
 </ul>
@@ -3551,8 +2217,6 @@ def write(self, channel_input: str) -&gt; None:
 </li>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
-<li><code><a title="scrapli.transport.cssh2" href="cssh2.html">scrapli.transport.cssh2</a></code></li>
-<li><code><a title="scrapli.transport.miko" href="miko.html">scrapli.transport.miko</a></code></li>
 <li><code><a title="scrapli.transport.ptyprocess" href="ptyprocess.html">scrapli.transport.ptyprocess</a></code></li>
 <li><code><a title="scrapli.transport.socket" href="socket.html">scrapli.transport.socket</a></code></li>
 <li><code><a title="scrapli.transport.systemssh" href="systemssh.html">scrapli.transport.systemssh</a></code></li>
@@ -3563,26 +2227,11 @@ def write(self, channel_input: str) -&gt; None:
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="scrapli.transport.MikoTransport" href="#scrapli.transport.MikoTransport">MikoTransport</a></code></h4>
-<ul class="">
-<li><code><a title="scrapli.transport.MikoTransport.isalive" href="#scrapli.transport.MikoTransport.isalive">isalive</a></code></li>
-<li><code><a title="scrapli.transport.MikoTransport.open" href="#scrapli.transport.MikoTransport.open">open</a></code></li>
-<li><code><a title="scrapli.transport.MikoTransport.read" href="#scrapli.transport.MikoTransport.read">read</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="scrapli.transport.SSH2Transport" href="#scrapli.transport.SSH2Transport">SSH2Transport</a></code></h4>
-<ul class="">
-<li><code><a title="scrapli.transport.SSH2Transport.isalive" href="#scrapli.transport.SSH2Transport.isalive">isalive</a></code></li>
-<li><code><a title="scrapli.transport.SSH2Transport.open" href="#scrapli.transport.SSH2Transport.open">open</a></code></li>
-<li><code><a title="scrapli.transport.SSH2Transport.read" href="#scrapli.transport.SSH2Transport.read">read</a></code></li>
-</ul>
-</li>
-<li>
 <h4><code><a title="scrapli.transport.SystemSSHTransport" href="#scrapli.transport.SystemSSHTransport">SystemSSHTransport</a></code></h4>
 <ul class="">
 <li><code><a title="scrapli.transport.SystemSSHTransport.isalive" href="#scrapli.transport.SystemSSHTransport.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.transport.SystemSSHTransport.open" href="#scrapli.transport.SystemSSHTransport.open">open</a></code></li>
+<li><code><a title="scrapli.transport.SystemSSHTransport.read" href="#scrapli.transport.SystemSSHTransport.read">read</a></code></li>
 <li><code><a title="scrapli.transport.SystemSSHTransport.set_timeout" href="#scrapli.transport.SystemSSHTransport.set_timeout">set_timeout</a></code></li>
 </ul>
 </li>
@@ -3591,6 +2240,7 @@ def write(self, channel_input: str) -&gt; None:
 <ul class="">
 <li><code><a title="scrapli.transport.TelnetTransport.isalive" href="#scrapli.transport.TelnetTransport.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.transport.TelnetTransport.open" href="#scrapli.transport.TelnetTransport.open">open</a></code></li>
+<li><code><a title="scrapli.transport.TelnetTransport.read" href="#scrapli.transport.TelnetTransport.read">read</a></code></li>
 </ul>
 </li>
 <li>

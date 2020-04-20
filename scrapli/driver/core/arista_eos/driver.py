@@ -18,9 +18,9 @@ def eos_on_open(conn: NetworkDriver) -> None:
     Raises:
         N/A
     """
-    conn.acquire_priv(conn.default_desired_priv)
-    conn.channel.send_input("terminal length 0")
-    conn.channel.send_input("terminal width 32767")
+    conn.acquire_priv(desired_priv=conn.default_desired_priv)
+    conn.channel.send_input(channel_input="terminal length 0")
+    conn.channel.send_input(channel_input="terminal width 32767")
 
 
 def eos_on_close(conn: NetworkDriver) -> None:
@@ -38,8 +38,8 @@ def eos_on_close(conn: NetworkDriver) -> None:
     """
     # write exit directly to the transport as channel would fail to find the prompt after sending
     # the exit command!
-    conn.transport.write("exit")
-    conn.transport.write(conn.channel.comms_prompt_pattern)
+    conn.transport.write(channel_input="exit")
+    conn.transport.write(channel_input=conn.channel.comms_prompt_pattern)
 
 
 PRIVS = {
@@ -105,7 +105,7 @@ PRIVS = {
 class EOSDriver(NetworkDriver):
     def __init__(
         self,
-        comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]\s?$",
+        comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,48}[#>$]\s?$",
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         auth_secondary: str = "",
@@ -146,7 +146,7 @@ class EOSDriver(NetworkDriver):
             on_close = eos_on_close
 
         super().__init__(
-            auth_secondary,
+            auth_secondary=auth_secondary,
             comms_prompt_pattern=comms_prompt_pattern,
             on_open=on_open,
             on_close=on_close,

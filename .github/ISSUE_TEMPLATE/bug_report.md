@@ -23,10 +23,12 @@ A clear and concise description of what you expected to happen.
 Copy of your stack trace here, please format it properly using triple back ticks (top left key on US keyboards!)
 
 **Screenshots**
-If applicable, add screenshots to help explain your problem.
+If applicable, add screenshots to help explain your problem, but do note that formatted text is much preferred over
+ screenshots!
 
 **OS (please complete the following information):**
- - OS: [e.g. Ubuntu, MacOS, etc. - Note this is *not* tested on Windows and likely will not be supported]
+ - OS: [e.g. Ubuntu, MacOS, etc. - Note scrapli is *not* thoroughly tested on Windows and some/many things will not
+  be supported]
  - scrapli version
  - version of any optional extras (paramiko|ssh2-python|textfsm, etc.)
 

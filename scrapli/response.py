@@ -139,9 +139,11 @@ class Response:
             N/A
 
         """
-        template = _textfsm_get_template(self.textfsm_platform, self.channel_input)
+        template = _textfsm_get_template(platform=self.textfsm_platform, command=self.channel_input)
         if isinstance(template, TextIOWrapper):
-            structured_result = textfsm_parse(template, self.result, to_dict=to_dict) or []
+            structured_result = (
+                textfsm_parse(template=template, output=self.result, to_dict=to_dict) or []
+            )
         else:
             structured_result = []
         return structured_result
@@ -162,5 +164,7 @@ class Response:
             N/A
 
         """
-        structured_result = genie_parse(self.genie_platform, self.channel_input, self.result)
+        structured_result = genie_parse(
+            platform=self.genie_platform, command=self.channel_input, output=self.result
+        )
         return structured_result
