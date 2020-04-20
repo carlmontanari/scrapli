@@ -26,14 +26,53 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.helper&#34;&#34;&#34;
+import importlib
 import os
 import re
 import warnings
 from io import TextIOWrapper
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Pattern, TextIO, Union
+from typing import Any, Dict, List, Optional, Pattern, TextIO, Tuple, Union
 
 import pkg_resources  # pylint: disable=C0411
+
+from scrapli.exceptions import TransportPluginError
+
+
+def _find_transport_plugin(transport: str) -&gt; Tuple[Any, Tuple[str, ...]]:
+    &#34;&#34;&#34;
+    Find non-core transport plugins and required plugin arguments
+
+    Args:
+        transport: string name of the desired transport, i.e.: paramiko or ssh2
+
+    Returns:
+        transport_class: class representing the given transport
+        required_transport_args: tuple of required arguments for given transport
+
+    Raises:
+        TransportPluginError: if unable to load `Transport` and `TRANSPORT_ARGS` from given
+            transport module
+
+    &#34;&#34;&#34;
+    try:
+        transport_plugin_lib = importlib.import_module(f&#34;scrapli_{transport}.transport&#34;)
+    except ModuleNotFoundError as exc:
+        err = f&#34;Module &#39;{exc.name}&#39; not found!&#34;
+        msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
+        fix = (
+            f&#34;To resolve this issue, ensure you are referencing a valid transport plugin. Transport&#34;
+            &#34; plugins should be named similar to `scrapli_paramiko` or `scrapli_ssh2`, and can be &#34;
+            &#34;selected by passing simply `paramiko` or `ssh2` into the scrapli driver.&#34;
+        )
+        warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
+        raise ModuleNotFoundError(warning)
+    transport_class = getattr(transport_plugin_lib, &#34;Transport&#34;, None)
+    required_transport_args = getattr(transport_plugin_lib, &#34;TRANSPORT_ARGS&#34;, None)
+    if not all([transport_class, required_transport_args]):
+        msg = f&#34;Failed to load transport plugin `{transport}` transport class or required arguments&#34;
+        raise TransportPluginError(msg)
+    return transport_class, required_transport_args
 
 
 def get_prompt_pattern(prompt: str, class_prompt: str) -&gt; Pattern[bytes]:
@@ -99,7 +138,7 @@ def strip_ansi(output: bytes) -&gt; bytes:
 
     &#34;&#34;&#34;
     ansi_escape_pattern = re.compile(rb&#34;\x1b(\[.*?[@-~]|\].*?(\x07|\x1b\\))&#34;)
-    output = re.sub(ansi_escape_pattern, b&#34;&#34;, output)
+    output = re.sub(pattern=ansi_escape_pattern, repl=b&#34;&#34;, string=output)
     return output
 
 
@@ -194,7 +233,9 @@ def textfsm_parse(
     try:
         structured_output: Union[List[Any], Dict[str, Any]] = re_table.ParseText(output)
         if to_dict:
-            structured_output = _textfsm_to_dict(structured_output, re_table.header)
+            structured_output = _textfsm_to_dict(
+                structured_output=structured_output, header=re_table.header
+            )
         return structured_output
     except textfsm.parser.TextFSMError:
         pass
@@ -626,7 +667,7 @@ def resolve_ssh_known_hosts(ssh_known_hosts: str) -&gt; str:
 
     &#34;&#34;&#34;
     ansi_escape_pattern = re.compile(rb&#34;\x1b(\[.*?[@-~]|\].*?(\x07|\x1b\\))&#34;)
-    output = re.sub(ansi_escape_pattern, b&#34;&#34;, output)
+    output = re.sub(pattern=ansi_escape_pattern, repl=b&#34;&#34;, string=output)
     return output</code></pre>
 </details>
 </dd>
@@ -688,7 +729,9 @@ from header and row data so it is easier to read/parse the output</dd>
     try:
         structured_output: Union[List[Any], Dict[str, Any]] = re_table.ParseText(output)
         if to_dict:
-            structured_output = _textfsm_to_dict(structured_output, re_table.header)
+            structured_output = _textfsm_to_dict(
+                structured_output=structured_output, header=re_table.header
+            )
         return structured_output
     except textfsm.parser.TextFSMError:
         pass

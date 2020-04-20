@@ -133,7 +133,7 @@ scrapli is built primarily in three parts: transport, channel, and driver. The t
  providing a file-like interface to the target server. The channel layer is responsible for reading and writing
   to the provided file-like interface. Finally, the driver provides the user facing API/interface to scrapli.
 
-There are tw available "transports" in scrapli "core" -- both of which inherit from a base transport class
+There are two available "transports" in scrapli "core" -- both of which inherit from a base transport class
  and provide the same file-like interface to the upstream channel. There are also (currently!) two transport plugins
   available -- both of which are installable as optional extras. The transport options are:
 

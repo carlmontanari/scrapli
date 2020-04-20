@@ -53,18 +53,31 @@ class Channel:
         comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]$&#34;,
         comms_return_char: str = &#34;\n&#34;,
         comms_ansi: bool = False,
+        comms_auto_expand: bool = False,
         timeout_ops: int = 10,
     ):
         &#34;&#34;&#34;
         Channel Object
 
         Args:
-            transport: Transport object of any transport provider (ssh2|paramiko|system|telnetlib)
+            transport: Transport object of any transport provider (system|telnet or a plugin)
                 transport could in theory be any transport as long as it provides a read and a write
                 method... obviously its probably always going to be scrapli transport though
             comms_prompt_pattern: raw string regex pattern -- use `^` and `$` for multi-line!
             comms_return_char: character to use to send returns to host
             comms_ansi: True/False strip comms_ansi characters from output
+            comms_auto_expand: bool to indicate if a device auto-expands commands, for example
+                juniper devices without `cli complete-on-space` disabled will convert `config` to
+                `configuration` after entering a space character after `config`; because scrapli
+                reads the channel until each command is entered, the command changing from `config`
+                to `configuration` will cause scrapli (by default) to never think the command has
+                been entered. Setting this value to `True` will force scrapli to zip the split lists
+                of inputs and outputs together to determine if each read output starts with the
+                corresponding input. For example, if the inputs are &#34;sho ver&#34; and the read output is
+                &#34;show version&#34;, scrapli will zip the split strings together and confirm that in fact
+                &#34;show&#34; starts with &#34;sho&#34; and &#34;version&#34; starts with &#34;ver&#34;, confirming that the
+                commands that were input were input properly. This is disabled by default, as it is
+                preferable to disable this type of behavior via the device itself if possible.
             timeout_ops: timeout in seconds for channel operations (reads/writes)
 
         Args:
@@ -81,6 +94,7 @@ class Channel:
         self.comms_prompt_pattern = comms_prompt_pattern
         self.comms_return_char = comms_return_char
         self.comms_ansi = comms_ansi
+        self.comms_auto_expand = comms_auto_expand
         self.timeout_ops = timeout_ops
 
     def __str__(self) -&gt; str:
@@ -132,14 +146,14 @@ class Channel:
             N/A
 
         &#34;&#34;&#34;
-        output = normalize_lines(output)
+        output = normalize_lines(output=output)
 
         if not strip_prompt:
             return output
 
         # could be compiled elsewhere, but allow for users to modify the prompt whenever they want
-        prompt_pattern = get_prompt_pattern(&#34;&#34;, self.comms_prompt_pattern)
-        output = re.sub(prompt_pattern, b&#34;&#34;, output)
+        prompt_pattern = get_prompt_pattern(prompt=&#34;&#34;, class_prompt=self.comms_prompt_pattern)
+        output = re.sub(pattern=prompt_pattern, repl=b&#34;&#34;, string=output)
         return output
 
     def _read_chunk(self) -&gt; bytes:
@@ -159,16 +173,22 @@ class Channel:
         new_output = self.transport.read()
         new_output = new_output.replace(b&#34;\r&#34;, b&#34;&#34;)
         if self.comms_ansi:
-            new_output = strip_ansi(new_output)
+            new_output = strip_ansi(output=new_output)
         LOG.debug(f&#34;Read: {repr(new_output)}&#34;)
         return new_output
 
-    def _read_until_input(self, channel_input: bytes) -&gt; bytes:
+    def _read_until_input(self, channel_input: bytes, auto_expand: Optional[bool] = None) -&gt; bytes:
         &#34;&#34;&#34;
         Read until all input has been entered.
 
         Args:
             channel_input: string to write to channel
+            auto_expand: bool to indicate if a device auto-expands commands, for example juniper
+                devices without `cli complete-on-space` disabled will convert `config` to
+                `configuration` after entering a space character after `config`; because scrapli
+                reads the channel until each command is entered, the command changing from `config`
+                to `configuration` will cause scrapli (by default) to never think the command has
+                been entered.
 
         Returns:
             bytes: output read from channel
@@ -178,8 +198,26 @@ class Channel:
 
         &#34;&#34;&#34;
         output = b&#34;&#34;
-        while channel_input not in output:
+
+        if not channel_input:
+            LOG.info(f&#34;Read: {repr(output)}&#34;)
+            return output
+
+        if auto_expand is None:
+            auto_expand = self.comms_auto_expand
+
+        channel_input_split = channel_input.split()
+        while True:
             output += self._read_chunk()
+            if not auto_expand and channel_input in output:
+                break
+            if auto_expand and all(
+                _channel_output.startswith(_channel_input)
+                for _channel_input, _channel_output in zip(channel_input_split, output.split())
+            ):
+                break
+
+        LOG.info(f&#34;Read: {repr(output)}&#34;)
         return output
 
     def _read_until_prompt(self, output: bytes = b&#34;&#34;, prompt: str = &#34;&#34;) -&gt; bytes:
@@ -197,12 +235,13 @@ class Channel:
             N/A
 
         &#34;&#34;&#34;
-        prompt_pattern = get_prompt_pattern(prompt, self.comms_prompt_pattern)
+        prompt_pattern = get_prompt_pattern(prompt=prompt, class_prompt=self.comms_prompt_pattern)
 
         while True:
             output += self._read_chunk()
-            channel_match = re.search(prompt_pattern, output)
+            channel_match = re.search(pattern=prompt_pattern, string=output)
             if channel_match:
+                LOG.info(f&#34;Read: {repr(output)}&#34;)
                 return output
 
     @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out determining prompt on device.&#34;)
@@ -220,13 +259,13 @@ class Channel:
             N/A
 
         &#34;&#34;&#34;
-        prompt_pattern = get_prompt_pattern(&#34;&#34;, self.comms_prompt_pattern)
-        self.transport.set_timeout(1000)
+        prompt_pattern = get_prompt_pattern(prompt=&#34;&#34;, class_prompt=self.comms_prompt_pattern)
+        self.transport.set_timeout(timeout=1000)
         self._send_return()
         output = b&#34;&#34;
         while True:
             output += self._read_chunk()
-            channel_match = re.search(prompt_pattern, output)
+            channel_match = re.search(pattern=prompt_pattern, string=output)
             if channel_match:
                 self.transport.set_timeout()
                 current_prompt = channel_match.group(0)
@@ -241,9 +280,8 @@ class Channel:
             strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
 
         Returns:
-            Responses: Tuple of decoded responses from the device
-                raw_result - the
-                processed_result
+            raw_result: output read from the channel with no whitespace trimming/cleaning
+            processed_result: output read from the channel that has been cleaned up
 
         Raises:
             TypeError: if input is anything but a string
@@ -254,7 +292,9 @@ class Channel:
                 f&#34;`send_input` expects a single string, got {type(channel_input)}. &#34;
                 &#34;to send a list of inputs use the `send_inputs` method instead&#34;
             )
-        raw_result, processed_result = self._send_input(channel_input, strip_prompt)
+        raw_result, processed_result = self._send_input(
+            channel_input=channel_input, strip_prompt=strip_prompt
+        )
         return raw_result.decode(), processed_result.decode()
 
     @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out sending input to device.&#34;)
@@ -267,7 +307,8 @@ class Channel:
             strip_prompt: bool True/False for whether or not to strip prompt
 
         Returns:
-            result: output read from the channel
+            raw_result: output read from the channel with no whitespace trimming/cleaning
+            processed_result: output read from the channel that has been cleaned up
 
         Raises:
             N/A
@@ -276,13 +317,13 @@ class Channel:
         bytes_channel_input = channel_input.encode()
         self.transport.session_lock.acquire()
         LOG.info(f&#34;Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}&#34;)
-        self.transport.write(channel_input)
+        self.transport.write(channel_input=channel_input)
         LOG.debug(f&#34;Write: {repr(channel_input)}&#34;)
-        self._read_until_input(bytes_channel_input)
+        self._read_until_input(channel_input=bytes_channel_input)
         self._send_return()
         output = self._read_until_prompt()
         self.transport.session_lock.release()
-        processed_output = self._restructure_output(output, strip_prompt=strip_prompt)
+        processed_output = self._restructure_output(output=output, strip_prompt=strip_prompt)
         # lstrip the return character out of the final result before storing, also remove any extra
         # whitespace to the right if any
         processed_output = processed_output.lstrip(self.comms_return_char.encode()).rstrip()
@@ -302,7 +343,7 @@ class Channel:
             N/A
 
         &#34;&#34;&#34;
-        self.transport.write(self.comms_return_char)
+        self.transport.write(channel_input=self.comms_return_char)
         LOG.debug(f&#34;Write (sending return character): {repr(self.comms_return_char)}&#34;)
 
     @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out sending interactive input to device.&#34;)
@@ -362,7 +403,8 @@ class Channel:
                 not provided it is assumed the input is &#34;normal&#34; (not hidden)
 
         Returns:
-            output: output read from the channel, processed output read from the channel
+            raw_result: output read from the channel with no whitespace trimming/cleaning
+            processed_result: output read from the channel that has been cleaned up
 
         Raises:
             TypeError: if inputs is not tuple or list
@@ -385,17 +427,17 @@ class Channel:
                 f&#34;\texpecting: {channel_response};&#34;
                 f&#34;\thidden_input: {hidden_input}&#34;
             )
-            self.transport.write(channel_input)
+            self.transport.write(channel_input=channel_input)
             LOG.debug(f&#34;Write: {repr(channel_input)}&#34;)
             if not channel_response or hidden_input is True:
                 self._send_return()
             else:
-                output += self._read_until_input(bytes_channel_input)
+                output += self._read_until_input(channel_input=bytes_channel_input)
                 self._send_return()
             output += self._read_until_prompt(prompt=channel_response)
         # wait to release lock until after &#34;interact&#34; session is complete
         self.transport.session_lock.release()
-        processed_output = self._restructure_output(output, strip_prompt=False)
+        processed_output = self._restructure_output(output=output, strip_prompt=False)
         raw_result = output.decode()
         processed_result = processed_output.decode()
         return raw_result, processed_result</code></pre>
@@ -412,14 +454,14 @@ class Channel:
 <dl>
 <dt id="scrapli.channel.channel.Channel"><code class="flex name class">
 <span>class <span class="ident">Channel</span></span>
-<span>(</span><span>transport, comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n', comms_ansi=False, timeout_ops=10)</span>
+<span>(</span><span>transport, comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n', comms_ansi=False, comms_auto_expand=False, timeout_ops=10)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Channel Object</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>transport</code></strong></dt>
-<dd>Transport object of any transport provider (ssh2|paramiko|system|telnetlib)
+<dd>Transport object of any transport provider (system|telnet or a plugin)
 transport could in theory be any transport as long as it provides a read and a write
 method&hellip; obviously its probably always going to be scrapli transport though</dd>
 <dt><strong><code>comms_prompt_pattern</code></strong></dt>
@@ -428,6 +470,19 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
 <dd>character to use to send returns to host</dd>
 <dt><strong><code>comms_ansi</code></strong></dt>
 <dd>True/False strip comms_ansi characters from output</dd>
+<dt><strong><code>comms_auto_expand</code></strong></dt>
+<dd>bool to indicate if a device auto-expands commands, for example
+juniper devices without <code>cli complete-on-space</code> disabled will convert <code>config</code> to
+<code>configuration</code> after entering a space character after <code>config</code>; because scrapli
+reads the channel until each command is entered, the command changing from <code>config</code>
+to <code>configuration</code> will cause scrapli (by default) to never think the command has
+been entered. Setting this value to <code>True</code> will force scrapli to zip the split lists
+of inputs and outputs together to determine if each read output starts with the
+corresponding input. For example, if the inputs are "sho ver" and the read output is
+"show version", scrapli will zip the split strings together and confirm that in fact
+"show" starts with "sho" and "version" starts with "ver", confirming that the
+commands that were input were input properly. This is disabled by default, as it is
+preferable to disable this type of behavior via the device itself if possible.</dd>
 <dt><strong><code>timeout_ops</code></strong></dt>
 <dd>timeout in seconds for channel operations (reads/writes)</dd>
 </dl>
@@ -455,18 +510,31 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
         comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]$&#34;,
         comms_return_char: str = &#34;\n&#34;,
         comms_ansi: bool = False,
+        comms_auto_expand: bool = False,
         timeout_ops: int = 10,
     ):
         &#34;&#34;&#34;
         Channel Object
 
         Args:
-            transport: Transport object of any transport provider (ssh2|paramiko|system|telnetlib)
+            transport: Transport object of any transport provider (system|telnet or a plugin)
                 transport could in theory be any transport as long as it provides a read and a write
                 method... obviously its probably always going to be scrapli transport though
             comms_prompt_pattern: raw string regex pattern -- use `^` and `$` for multi-line!
             comms_return_char: character to use to send returns to host
             comms_ansi: True/False strip comms_ansi characters from output
+            comms_auto_expand: bool to indicate if a device auto-expands commands, for example
+                juniper devices without `cli complete-on-space` disabled will convert `config` to
+                `configuration` after entering a space character after `config`; because scrapli
+                reads the channel until each command is entered, the command changing from `config`
+                to `configuration` will cause scrapli (by default) to never think the command has
+                been entered. Setting this value to `True` will force scrapli to zip the split lists
+                of inputs and outputs together to determine if each read output starts with the
+                corresponding input. For example, if the inputs are &#34;sho ver&#34; and the read output is
+                &#34;show version&#34;, scrapli will zip the split strings together and confirm that in fact
+                &#34;show&#34; starts with &#34;sho&#34; and &#34;version&#34; starts with &#34;ver&#34;, confirming that the
+                commands that were input were input properly. This is disabled by default, as it is
+                preferable to disable this type of behavior via the device itself if possible.
             timeout_ops: timeout in seconds for channel operations (reads/writes)
 
         Args:
@@ -483,6 +551,7 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
         self.comms_prompt_pattern = comms_prompt_pattern
         self.comms_return_char = comms_return_char
         self.comms_ansi = comms_ansi
+        self.comms_auto_expand = comms_auto_expand
         self.timeout_ops = timeout_ops
 
     def __str__(self) -&gt; str:
@@ -534,14 +603,14 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
             N/A
 
         &#34;&#34;&#34;
-        output = normalize_lines(output)
+        output = normalize_lines(output=output)
 
         if not strip_prompt:
             return output
 
         # could be compiled elsewhere, but allow for users to modify the prompt whenever they want
-        prompt_pattern = get_prompt_pattern(&#34;&#34;, self.comms_prompt_pattern)
-        output = re.sub(prompt_pattern, b&#34;&#34;, output)
+        prompt_pattern = get_prompt_pattern(prompt=&#34;&#34;, class_prompt=self.comms_prompt_pattern)
+        output = re.sub(pattern=prompt_pattern, repl=b&#34;&#34;, string=output)
         return output
 
     def _read_chunk(self) -&gt; bytes:
@@ -561,16 +630,22 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
         new_output = self.transport.read()
         new_output = new_output.replace(b&#34;\r&#34;, b&#34;&#34;)
         if self.comms_ansi:
-            new_output = strip_ansi(new_output)
+            new_output = strip_ansi(output=new_output)
         LOG.debug(f&#34;Read: {repr(new_output)}&#34;)
         return new_output
 
-    def _read_until_input(self, channel_input: bytes) -&gt; bytes:
+    def _read_until_input(self, channel_input: bytes, auto_expand: Optional[bool] = None) -&gt; bytes:
         &#34;&#34;&#34;
         Read until all input has been entered.
 
         Args:
             channel_input: string to write to channel
+            auto_expand: bool to indicate if a device auto-expands commands, for example juniper
+                devices without `cli complete-on-space` disabled will convert `config` to
+                `configuration` after entering a space character after `config`; because scrapli
+                reads the channel until each command is entered, the command changing from `config`
+                to `configuration` will cause scrapli (by default) to never think the command has
+                been entered.
 
         Returns:
             bytes: output read from channel
@@ -580,8 +655,26 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
 
         &#34;&#34;&#34;
         output = b&#34;&#34;
-        while channel_input not in output:
+
+        if not channel_input:
+            LOG.info(f&#34;Read: {repr(output)}&#34;)
+            return output
+
+        if auto_expand is None:
+            auto_expand = self.comms_auto_expand
+
+        channel_input_split = channel_input.split()
+        while True:
             output += self._read_chunk()
+            if not auto_expand and channel_input in output:
+                break
+            if auto_expand and all(
+                _channel_output.startswith(_channel_input)
+                for _channel_input, _channel_output in zip(channel_input_split, output.split())
+            ):
+                break
+
+        LOG.info(f&#34;Read: {repr(output)}&#34;)
         return output
 
     def _read_until_prompt(self, output: bytes = b&#34;&#34;, prompt: str = &#34;&#34;) -&gt; bytes:
@@ -599,12 +692,13 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
             N/A
 
         &#34;&#34;&#34;
-        prompt_pattern = get_prompt_pattern(prompt, self.comms_prompt_pattern)
+        prompt_pattern = get_prompt_pattern(prompt=prompt, class_prompt=self.comms_prompt_pattern)
 
         while True:
             output += self._read_chunk()
-            channel_match = re.search(prompt_pattern, output)
+            channel_match = re.search(pattern=prompt_pattern, string=output)
             if channel_match:
+                LOG.info(f&#34;Read: {repr(output)}&#34;)
                 return output
 
     @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out determining prompt on device.&#34;)
@@ -622,13 +716,13 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
             N/A
 
         &#34;&#34;&#34;
-        prompt_pattern = get_prompt_pattern(&#34;&#34;, self.comms_prompt_pattern)
-        self.transport.set_timeout(1000)
+        prompt_pattern = get_prompt_pattern(prompt=&#34;&#34;, class_prompt=self.comms_prompt_pattern)
+        self.transport.set_timeout(timeout=1000)
         self._send_return()
         output = b&#34;&#34;
         while True:
             output += self._read_chunk()
-            channel_match = re.search(prompt_pattern, output)
+            channel_match = re.search(pattern=prompt_pattern, string=output)
             if channel_match:
                 self.transport.set_timeout()
                 current_prompt = channel_match.group(0)
@@ -643,9 +737,8 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
             strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
 
         Returns:
-            Responses: Tuple of decoded responses from the device
-                raw_result - the
-                processed_result
+            raw_result: output read from the channel with no whitespace trimming/cleaning
+            processed_result: output read from the channel that has been cleaned up
 
         Raises:
             TypeError: if input is anything but a string
@@ -656,7 +749,9 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
                 f&#34;`send_input` expects a single string, got {type(channel_input)}. &#34;
                 &#34;to send a list of inputs use the `send_inputs` method instead&#34;
             )
-        raw_result, processed_result = self._send_input(channel_input, strip_prompt)
+        raw_result, processed_result = self._send_input(
+            channel_input=channel_input, strip_prompt=strip_prompt
+        )
         return raw_result.decode(), processed_result.decode()
 
     @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out sending input to device.&#34;)
@@ -669,7 +764,8 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
             strip_prompt: bool True/False for whether or not to strip prompt
 
         Returns:
-            result: output read from the channel
+            raw_result: output read from the channel with no whitespace trimming/cleaning
+            processed_result: output read from the channel that has been cleaned up
 
         Raises:
             N/A
@@ -678,13 +774,13 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
         bytes_channel_input = channel_input.encode()
         self.transport.session_lock.acquire()
         LOG.info(f&#34;Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}&#34;)
-        self.transport.write(channel_input)
+        self.transport.write(channel_input=channel_input)
         LOG.debug(f&#34;Write: {repr(channel_input)}&#34;)
-        self._read_until_input(bytes_channel_input)
+        self._read_until_input(channel_input=bytes_channel_input)
         self._send_return()
         output = self._read_until_prompt()
         self.transport.session_lock.release()
-        processed_output = self._restructure_output(output, strip_prompt=strip_prompt)
+        processed_output = self._restructure_output(output=output, strip_prompt=strip_prompt)
         # lstrip the return character out of the final result before storing, also remove any extra
         # whitespace to the right if any
         processed_output = processed_output.lstrip(self.comms_return_char.encode()).rstrip()
@@ -704,7 +800,7 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
             N/A
 
         &#34;&#34;&#34;
-        self.transport.write(self.comms_return_char)
+        self.transport.write(channel_input=self.comms_return_char)
         LOG.debug(f&#34;Write (sending return character): {repr(self.comms_return_char)}&#34;)
 
     @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out sending interactive input to device.&#34;)
@@ -764,7 +860,8 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
                 not provided it is assumed the input is &#34;normal&#34; (not hidden)
 
         Returns:
-            output: output read from the channel, processed output read from the channel
+            raw_result: output read from the channel with no whitespace trimming/cleaning
+            processed_result: output read from the channel that has been cleaned up
 
         Raises:
             TypeError: if inputs is not tuple or list
@@ -787,17 +884,17 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
                 f&#34;\texpecting: {channel_response};&#34;
                 f&#34;\thidden_input: {hidden_input}&#34;
             )
-            self.transport.write(channel_input)
+            self.transport.write(channel_input=channel_input)
             LOG.debug(f&#34;Write: {repr(channel_input)}&#34;)
             if not channel_response or hidden_input is True:
                 self._send_return()
             else:
-                output += self._read_until_input(bytes_channel_input)
+                output += self._read_until_input(channel_input=bytes_channel_input)
                 self._send_return()
             output += self._read_until_prompt(prompt=channel_response)
         # wait to release lock until after &#34;interact&#34; session is complete
         self.transport.session_lock.release()
-        processed_output = self._restructure_output(output, strip_prompt=False)
+        processed_output = self._restructure_output(output=output, strip_prompt=False)
         raw_result = output.decode()
         processed_result = processed_output.decode()
         return raw_result, processed_result</code></pre>
@@ -870,10 +967,10 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>Responses</code></strong></dt>
-<dd>Tuple of decoded responses from the device
-raw_result - the
-processed_result</dd>
+<dt><strong><code>raw_result</code></strong></dt>
+<dd>output read from the channel with no whitespace trimming/cleaning</dd>
+<dt><strong><code>processed_result</code></strong></dt>
+<dd>output read from the channel that has been cleaned up</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
@@ -893,9 +990,8 @@ processed_result</dd>
         strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
 
     Returns:
-        Responses: Tuple of decoded responses from the device
-            raw_result - the
-            processed_result
+        raw_result: output read from the channel with no whitespace trimming/cleaning
+        processed_result: output read from the channel that has been cleaned up
 
     Raises:
         TypeError: if input is anything but a string
@@ -906,7 +1002,9 @@ processed_result</dd>
             f&#34;`send_input` expects a single string, got {type(channel_input)}. &#34;
             &#34;to send a list of inputs use the `send_inputs` method instead&#34;
         )
-    raw_result, processed_result = self._send_input(channel_input, strip_prompt)
+    raw_result, processed_result = self._send_input(
+        channel_input=channel_input, strip_prompt=strip_prompt
+    )
     return raw_result.decode(), processed_result.decode()</code></pre>
 </details>
 </dd>

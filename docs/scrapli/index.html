@@ -32,7 +32,7 @@ from typing import Optional, Tuple
 
 from scrapli.driver import Scrape
 
-__version__ = &#34;2020.03.29&#34;
+__version__ = &#34;2020.04.11&#34;
 __all__ = (&#34;Scrape&#34;,)
 
 
@@ -125,7 +125,7 @@ logging.getLogger(&#34;channel&#34;).addHandler(NullHandler())</code></pre>
 <dl>
 <dt id="scrapli.Scrape"><code class="flex name class">
 <span>class <span class="ident">Scrape</span></span>
-<span>(</span><span>host='', port=22, auth_username='', auth_password='', auth_private_key='', auth_strict_key=True, auth_bypass=False, timeout_socket=5, timeout_transport=10, timeout_ops=10, timeout_exit=True, keepalive=False, keepalive_interval=30, keepalive_type='network', keepalive_pattern='\x05', comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]\\s*$&#x27;, comms_return_char='\n', comms_ansi=False, ssh_config_file=False, ssh_known_hosts_file=False, on_open=None, on_close=None, transport='system')</span>
+<span>(</span><span>host='', port=22, auth_username='', auth_password='', auth_private_key='', auth_strict_key=True, auth_bypass=False, timeout_socket=5, timeout_transport=10, timeout_ops=30, timeout_exit=True, keepalive=False, keepalive_interval=30, keepalive_type='network', keepalive_pattern='\x05', comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,48}[#&gt;$]\\s*$&#x27;, comms_return_char='\n', comms_ansi=False, ssh_config_file=False, ssh_known_hosts_file=False, on_open=None, on_close=None, transport='system')</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Scrape Object</p>
@@ -210,10 +210,10 @@ if provided, is executed immediately prior to closing the underlying transport.
 Common use cases for this callable would be to save configurations prior to exiting,
 or to logout properly to free up vtys or similar.</dd>
 <dt><strong><a title="scrapli.transport" href="transport/index.html"><code>scrapli.transport</code></a></strong></dt>
-<dd>system|ssh2|paramiko|telnet &ndash; type of transport to use for connection
+<dd>system|telnet or a plugin &ndash; type of transport to use for connection
 system uses system available ssh (/usr/bin/ssh)
-ssh2 uses ssh2-python
-paramiko uses&hellip; paramiko
+ssh2 uses ssh2-python <em>has been migrated to a plugin
+paramiko uses&hellip; paramiko </em>has been migrated to a plugin
 telnet uses telnetlib
 choice of driver depends on the features you need. in general system is easiest as
 it will just 'auto-magically' use your ssh config file ('~/.ssh/config' or
@@ -229,8 +229,8 @@ has more features built in (though scrapli does not expose/support them all).</d
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><strong><code>ValueError</code></strong></dt>
-<dd>if transport value is invalid</dd>
+<dt><code>N</code>/<code>A</code></dt>
+<dd>&nbsp;</dd>
 </dl></section>
 <details class="source">
 <summary>
@@ -248,13 +248,13 @@ has more features built in (though scrapli does not expose/support them all).</d
         auth_bypass: bool = False,
         timeout_socket: int = 5,
         timeout_transport: int = 10,
-        timeout_ops: int = 10,
+        timeout_ops: int = 30,
         timeout_exit: bool = True,
         keepalive: bool = False,
         keepalive_interval: int = 30,
         keepalive_type: str = &#34;network&#34;,
         keepalive_pattern: str = &#34;\005&#34;,
-        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]\s*$&#34;,
+        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,48}[#&gt;$]\s*$&#34;,
         comms_return_char: str = &#34;\n&#34;,
         comms_ansi: bool = False,
         ssh_config_file: Union[str, bool] = False,
@@ -325,10 +325,10 @@ has more features built in (though scrapli does not expose/support them all).</d
                 if provided, is executed immediately prior to closing the underlying transport.
                 Common use cases for this callable would be to save configurations prior to exiting,
                 or to logout properly to free up vtys or similar.
-            transport: system|ssh2|paramiko|telnet -- type of transport to use for connection
+            transport: system|telnet or a plugin -- type of transport to use for connection
                 system uses system available ssh (/usr/bin/ssh)
-                ssh2 uses ssh2-python
-                paramiko uses... paramiko
+                ssh2 uses ssh2-python *has been migrated to a plugin
+                paramiko uses... paramiko *has been migrated to a plugin
                 telnet uses telnetlib
                 choice of driver depends on the features you need. in general system is easiest as
                 it will just &#39;auto-magically&#39; use your ssh config file (&#39;~/.ssh/config&#39; or
@@ -340,32 +340,50 @@ has more features built in (though scrapli does not expose/support them all).</d
             N/A  # noqa: DAR202
 
         Raises:
-            ValueError: if transport value is invalid
+            N/A
 
         &#34;&#34;&#34;
         # create a dict of all &#34;initialization&#34; args for posterity and for passing to Transport
         # and Channel objects
         self._initialization_args: Dict[str, Any] = {}
 
-        self._setup_host(host, port)
+        self._setup_host(host=host, port=port)
         self._setup_auth(
-            auth_username, auth_password, auth_private_key, auth_strict_key, auth_bypass
+            auth_username=auth_username,
+            auth_password=auth_password,
+            auth_private_key=auth_private_key,
+            auth_strict_key=auth_strict_key,
+            auth_bypass=auth_bypass,
         )
-        self._setup_timeouts(timeout_socket, timeout_transport, timeout_ops, timeout_exit)
-        self._setup_keepalive(keepalive, keepalive_type, keepalive_interval, keepalive_pattern)
-        self._setup_comms(comms_prompt_pattern, comms_return_char, comms_ansi)
-        self._setup_callables(on_open, on_close)
+        self._setup_timeouts(
+            timeout_socket=timeout_socket,
+            timeout_transport=timeout_transport,
+            timeout_ops=timeout_ops,
+            timeout_exit=timeout_exit,
+        )
+        self._setup_keepalive(
+            keepalive=keepalive,
+            keepalive_type=keepalive_type,
+            keepalive_interval=keepalive_interval,
+            keepalive_pattern=keepalive_pattern,
+        )
+        self._setup_comms(
+            comms_prompt_pattern=comms_prompt_pattern,
+            comms_return_char=comms_return_char,
+            comms_ansi=comms_ansi,
+        )
+        self._setup_callables(on_open=on_open, on_close=on_close)
 
-        if transport not in (&#34;ssh2&#34;, &#34;paramiko&#34;, &#34;system&#34;, &#34;telnet&#34;):
-            raise ValueError(
-                f&#34;`transport` should be one of ssh2|paramiko|system|telnet, got `{transport}`&#34;
-            )
+        if transport not in (&#34;system&#34;, &#34;telnet&#34;):
+            LOG.info(f&#34;Non-core transport `{transport}` selected&#34;)
         self._transport = transport
 
         if transport != &#34;telnet&#34;:
-            self._setup_ssh_args(ssh_config_file, ssh_known_hosts_file)
+            self._setup_ssh_args(
+                ssh_config_file=ssh_config_file, ssh_known_hosts_file=ssh_known_hosts_file
+            )
 
-        self.transport_class, self.transport_args = self._transport_factory(transport)
+        self.transport_class, self.transport_args = self._transport_factory(transport=transport)
         self.transport = self.transport_class(**self.transport_args)
 
         self.channel_args: Dict[str, Any] = {}
@@ -373,7 +391,7 @@ has more features built in (though scrapli does not expose/support them all).</d
             if arg == &#34;transport&#34;:
                 continue
             self.channel_args[arg] = self._initialization_args.get(arg)
-        self.channel = Channel(self.transport, **self.channel_args)
+        self.channel = Channel(transport=self.transport, **self.channel_args)
 
     def __enter__(self) -&gt; &#34;Scrape&#34;:
         &#34;&#34;&#34;
@@ -714,8 +732,11 @@ has more features built in (though scrapli does not expose/support them all).</d
             N/A  # noqa
 
         &#34;&#34;&#34;
-        transport_class = TRANSPORT_CLASS[transport]
-        required_transport_args = TRANSPORT_ARGS[transport]
+        transport_class = TRANSPORT_CLASS.get(transport, None)
+        required_transport_args = TRANSPORT_ARGS.get(transport, ())
+
+        if transport_class is None:
+            transport_class, required_transport_args = _find_transport_plugin(transport=transport)
 
         transport_args = {}
         for arg in TRANSPORT_BASE_ARGS:
