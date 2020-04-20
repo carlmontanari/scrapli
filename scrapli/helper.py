@@ -1,12 +1,51 @@
 """scrapli.helper"""
+import importlib
 import os
 import re
 import warnings
 from io import TextIOWrapper
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Pattern, TextIO, Union
+from typing import Any, Dict, List, Optional, Pattern, TextIO, Tuple, Union
 
 import pkg_resources  # pylint: disable=C0411
+
+from scrapli.exceptions import TransportPluginError
+
+
+def _find_transport_plugin(transport: str) -> Tuple[Any, Tuple[str, ...]]:
+    """
+    Find non-core transport plugins and required plugin arguments
+
+    Args:
+        transport: string name of the desired transport, i.e.: paramiko or ssh2
+
+    Returns:
+        transport_class: class representing the given transport
+        required_transport_args: tuple of required arguments for given transport
+
+    Raises:
+        TransportPluginError: if unable to load `Transport` and `TRANSPORT_ARGS` from given
+            transport module
+
+    """
+    try:
+        transport_plugin_lib = importlib.import_module(f"scrapli_{transport}.transport")
+    except ModuleNotFoundError as exc:
+        err = f"Module '{exc.name}' not found!"
+        msg = f"***** {err} {'*' * (80 - len(err))}"
+        fix = (
+            f"To resolve this issue, ensure you are referencing a valid transport plugin. Transport"
+            " plugins should be named similar to `scrapli_paramiko` or `scrapli_ssh2`, and can be "
+            "selected by passing simply `paramiko` or `ssh2` into the scrapli driver."
+        )
+        warning = "\n" + msg + "\n" + fix + "\n" + msg
+        raise ModuleNotFoundError(warning)
+    transport_class = getattr(transport_plugin_lib, "Transport", None)
+    required_transport_args = getattr(transport_plugin_lib, "TRANSPORT_ARGS", None)
+    if not all([transport_class, required_transport_args]):
+        msg = f"Failed to load transport plugin `{transport}` transport class or required arguments"
+        raise TransportPluginError(msg)
+    return transport_class, required_transport_args
 
 
 def get_prompt_pattern(prompt: str, class_prompt: str) -> Pattern[bytes]:
@@ -72,7 +111,7 @@ def strip_ansi(output: bytes) -> bytes:
 
     """
     ansi_escape_pattern = re.compile(rb"\x1b(\[.*?[@-~]|\].*?(\x07|\x1b\\))")
-    output = re.sub(ansi_escape_pattern, b"", output)
+    output = re.sub(pattern=ansi_escape_pattern, repl=b"", string=output)
     return output
 
 
@@ -167,7 +206,9 @@ def textfsm_parse(
     try:
         structured_output: Union[List[Any], Dict[str, Any]] = re_table.ParseText(output)
         if to_dict:
-            structured_output = _textfsm_to_dict(structured_output, re_table.header)
+            structured_output = _textfsm_to_dict(
+                structured_output=structured_output, header=re_table.header
+            )
         return structured_output
     except textfsm.parser.TextFSMError:
         pass

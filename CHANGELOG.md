@@ -1,6 +1,31 @@
 CHANGELOG
 =======
 
+# 2020.XX.XX
+- Increase character count for base prompt pattern for `Scrape`, `GenericDriver`, and core drivers. Example:
+`r"^[a-z0-9.\-@()/:]{1,32}[#>$]$"` for the base `IOSXEDriver` `comms_prompt_pattern` has been increased to:
+`r"^[a-z0-9.\-@()/:]{1,48}[#>$]$"`
+- Improve the logging for `SystemSSHTransport` authentication
+- Fixed an issue where `SystemSSHTransport` auth would fail due to a login banner having the word `password` in the
+ banner/text
+- Significantly increase the base `timeout_ops` value -- as this is not a timer that is going to cause things to
+ block, it may as well be much higher for the default value to help prevent issues
+- Fixed an issue w/ ssh config file not parsing the last host entry
+- Added super basic tests for most of the examples -- just making sure they don't blow up... in general that should
+ keep them in decent shape!
+- Removed cssh2 and miko transports from scrapli core. These have been migrated to their own repositories. From a
+ users perspective nothing really should change -- you can still `pip install scrapli[paramiko]` to install the
+  paramiko transport and the requirements (paramiko), and the actual usage (setting `"transport" = "paramiko
+  "`) remains the same! This is mostly about keeping the core of scrapli as simple as possible, and also will
+   hopefully help to illustrate that `SystemSSH` is the development priority for scrapli.
+- Convert many function calls to use keyword args for better readability throughout
+- Add a `comms_auto_expand` argument to the `Channel`; for now this is mostly not used, but may be useful in the
+ future. The purpose of this is to handle devices that auto expand input commands to their full canonical name.
+- Hopefully(?) fixed a bit of an idiosyncrasy where the `timeout_transport` was being used to decorate read/write
+ operations for telnet/system transports. This is no longer the case, the read/write methods are NOT decorated now
+ , instead we rely on the `timeout_ops` to time these operations out OR the `timeout_transport` being set to the
+  timeout value (telnet) or `ServerAliveInterval` value for system ssh.
+
 # 2020.04.11
 - *BREAKING CHANGE*: modify `send_interact` to just make more sense in general... now it supports 1->N "events" to
  interact with -- see the "handling prompts" section of README for updated example

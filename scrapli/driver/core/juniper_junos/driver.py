@@ -18,10 +18,10 @@ def junos_on_open(conn: NetworkDriver) -> None:
     Raises:
         N/A
     """
-    conn.acquire_priv(conn.default_desired_priv)
-    conn.channel.send_input("set cli complete-on-space off")
-    conn.channel.send_input("set cli screen-length 0")
-    conn.channel.send_input("set cli screen-width 511")
+    conn.acquire_priv(desired_priv=conn.default_desired_priv)
+    conn.channel.send_input(channel_input="set cli complete-on-space off")
+    conn.channel.send_input(channel_input="set cli screen-length 0")
+    conn.channel.send_input(channel_input="set cli screen-width 511")
 
 
 def junos_on_close(conn: NetworkDriver) -> None:
@@ -39,8 +39,8 @@ def junos_on_close(conn: NetworkDriver) -> None:
     """
     # write exit directly to the transport as channel would fail to find the prompt after sending
     # the exit command!
-    conn.transport.write("exit")
-    conn.transport.write(conn.channel.comms_prompt_pattern)
+    conn.transport.write(channel_input="exit")
+    conn.transport.write(channel_input=conn.channel.comms_prompt_pattern)
 
 
 PRIVS = {
@@ -78,7 +78,7 @@ PRIVS = {
 class JunosDriver(NetworkDriver):
     def __init__(
         self,
-        comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]\s?$",
+        comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,48}[#>$]\s?$",
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         auth_secondary: str = "",
@@ -106,10 +106,10 @@ class JunosDriver(NetworkDriver):
                 Common use cases for this callable would be to save configurations prior to exiting,
                 or to logout properly to free up vtys or similar.
             auth_secondary: password to use for secondary authentication (enable)
-            transport: system|ssh2|paramiko|telnet -- type of transport to use for connection
+            transport: system|telnet or a plugin -- type of transport to use for connection
                 system uses system available ssh (/usr/bin/ssh)
-                ssh2 uses ssh2-python
-                paramiko uses... paramiko
+                ssh2 uses ssh2-python *has been migrated to a plugin
+                paramiko uses... paramiko *has been migrated to a plugin
                 telnet uses telnetlib
                 choice of driver depends on the features you need. in general system is easiest as
                 it will just 'auto-magically' use your ssh config file ('~/.ssh/config' or
@@ -135,7 +135,7 @@ class JunosDriver(NetworkDriver):
             _telnet = True
 
         super().__init__(
-            auth_secondary,
+            auth_secondary=auth_secondary,
             comms_prompt_pattern=comms_prompt_pattern,
             on_open=on_open,
             on_close=on_close,

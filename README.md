@@ -133,11 +133,12 @@ scrapli is built primarily in three parts: transport, channel, and driver. The t
  providing a file-like interface to the target server. The channel layer is responsible for reading and writing
   to the provided file-like interface. Finally, the driver provides the user facing API/interface to scrapli.
 
-There are four available "transports" for the transport layer -- all of which inherit from a base transport class and
- provide the same file-like interface to the upstream channel. The transport options are:
+There are two available "transports" in scrapli "core" -- both of which inherit from a base transport class
+ and provide the same file-like interface to the upstream channel. There are also (currently!) two transport plugins
+  available -- both of which are installable as optional extras. The transport options are:
 
-- [paramiko](https://github.com/paramiko/paramiko)
-- [ssh2-python](https://github.com/ParallelSSH/ssh2-python)
+- [paramiko](https://github.com/paramiko/paramiko) (optional extra)
+- [ssh2-python](https://github.com/ParallelSSH/ssh2-python) (optional extra)
 - OpenSSH/System available SSH
 - telnetlib
 
@@ -883,7 +884,7 @@ Hopefully this `GenericDriver` can be used as a starting point for devices that 
  platforms list.
    
 ```python
-from scrapli.driver.core import GenericDriver
+from scrapli.driver import GenericDriver
 
 my_device = {
     "host": "172.18.0.11",
@@ -907,9 +908,11 @@ scrapli is built to be very flexible, including being flexible enough to use dif
   dependencies as it just relies on what is available on the machine running the scrapli script.
 
 In the spirit of being highly flexible, scrapli allows users to swap out this "system" transport with another
- transport mechanism. The other supported transport mechanisms are `paramiko`, `ssh2-python` and `telnetlib`. The
-  transport selection can be made when instantiating the scrapli connection object by passing in `paramiko`, `ssh2
-  `, or `telnet` to force scrapli to use the corresponding transport mechanism.
+ transport mechanism. The other supported transport mechanisms are `paramiko`, `ssh2-python` and `telnetlib
+ `. `paramiko` and `ssh2-python` were originally part of the core of scrapli, but have since been moved to their own
+  repositories to be used as plugins to keep the codebase as simple as possible. The transport selection can be made
+   when instantiating the scrapli connection object by passing in `paramiko`, `ssh2`, or `telnet` to force scrapli to
+    use the corresponding transport mechanism.
   
 While it will be a goal to ensure that these other transport mechanisms are supported and useful, the focus of
  scrapli development will be on the "system" SSH transport.
@@ -1241,19 +1244,20 @@ This section may not get updated much, but will hopefully reflect the priority i
 
 - Investigate setter methods for setting user/pass/and other attrs on base scrape object... they should be able to be
  set at that level and have the transport updated if it can be done reasonably
-- Add tests for keepalive stuff if possible
+- Refresh the keepalive stuff -- how/where keepalives get kicked off needs to be reevaluated, particularly for
+ systemssh "standard" keepalives as this should really be happening in the open command (systemssh will probably have
+  to override some Transport methods basically), get all of this under functional testing as well
 - Add tests for timeouts if possible
 - Add more tests for auth failures
 - Add tests for custom on open/close functions
 - Remove as much as possible from the vendor'd `ptyprocess` code. Type hint it, add docstrings everywhere, add tests
  if possible (and remove from ignore for test coverage and darglint).
-- Improve logging -- especially in the transport classes and surrounding authentication (mostly in systemssh).
+- Add darglint back in if it gets faster
 
 ## Roadmap
 
 - Async support. This is a bit of a question mark as I personally don't know even where to start to implement this
 , and have no real current use case... that said I think it would be cool if for no other reason than to learn!
-- Plugins -- make paramiko and ssh2 transports plugins!
 - Plugins -- build framework to allow for others to easily build driver plugins if desired
 - Ensure v6 stuff works as expected.
 - Continue to add/support ssh config file things.

@@ -75,7 +75,7 @@ __all__ = (
 <dl>
 <dt id="scrapli.driver.core.EOSDriver"><code class="flex name class">
 <span>class <span class="ident">EOSDriver</span></span>
-<span>(</span><span>comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]\\s?$&#x27;, on_open=None, on_close=None, auth_secondary='', **kwargs)</span>
+<span>(</span><span>comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,48}[#&gt;$]\\s?$&#x27;, on_open=None, on_close=None, auth_secondary='', **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -125,7 +125,7 @@ or to logout properly to free up vtys or similar.</dd>
 <pre><code class="python">class EOSDriver(NetworkDriver):
     def __init__(
         self,
-        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]\s?$&#34;,
+        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,48}[#&gt;$]\s?$&#34;,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         auth_secondary: str = &#34;&#34;,
@@ -166,7 +166,7 @@ or to logout properly to free up vtys or similar.</dd>
             on_close = eos_on_close
 
         super().__init__(
-            auth_secondary,
+            auth_secondary=auth_secondary,
             comms_prompt_pattern=comms_prompt_pattern,
             on_open=on_open,
             on_close=on_close,
@@ -209,7 +209,7 @@ or to logout properly to free up vtys or similar.</dd>
 </dd>
 <dt id="scrapli.driver.core.IOSXEDriver"><code class="flex name class">
 <span>class <span class="ident">IOSXEDriver</span></span>
-<span>(</span><span>comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, on_open=None, on_close=None, auth_secondary='', **kwargs)</span>
+<span>(</span><span>comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,48}[#&gt;$]$&#x27;, on_open=None, on_close=None, auth_secondary='', **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -259,7 +259,7 @@ or to logout properly to free up vtys or similar.</dd>
 <pre><code class="python">class IOSXEDriver(NetworkDriver):
     def __init__(
         self,
-        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]$&#34;,
+        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,48}[#&gt;$]$&#34;,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         auth_secondary: str = &#34;&#34;,
@@ -300,7 +300,7 @@ or to logout properly to free up vtys or similar.</dd>
             on_close = iosxe_on_close
 
         super().__init__(
-            auth_secondary,
+            auth_secondary=auth_secondary,
             comms_prompt_pattern=comms_prompt_pattern,
             on_open=on_open,
             on_close=on_close,
@@ -345,7 +345,7 @@ or to logout properly to free up vtys or similar.</dd>
 </dd>
 <dt id="scrapli.driver.core.IOSXRDriver"><code class="flex name class">
 <span>class <span class="ident">IOSXRDriver</span></span>
-<span>(</span><span>comms_prompt_pattern='^[a-z0-9.\\-@/:]{1,32}#\\s?$', on_open=None, on_close=None, auth_secondary='', **kwargs)</span>
+<span>(</span><span>comms_prompt_pattern='^[a-z0-9.\\-@/:]{1,48}#\\s?$', on_open=None, on_close=None, auth_secondary='', **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -395,7 +395,7 @@ or to logout properly to free up vtys or similar.</dd>
 <pre><code class="python">class IOSXRDriver(NetworkDriver):
     def __init__(
         self,
-        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@/:]{1,32}#\s?$&#34;,
+        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@/:]{1,48}#\s?$&#34;,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         auth_secondary: str = &#34;&#34;,
@@ -436,7 +436,7 @@ or to logout properly to free up vtys or similar.</dd>
             on_close = iosxr_on_close
 
         super().__init__(
-            auth_secondary,
+            auth_secondary=auth_secondary,
             comms_prompt_pattern=comms_prompt_pattern,
             on_open=on_open,
             on_close=on_close,
@@ -481,7 +481,7 @@ or to logout properly to free up vtys or similar.</dd>
 </dd>
 <dt id="scrapli.driver.core.JunosDriver"><code class="flex name class">
 <span>class <span class="ident">JunosDriver</span></span>
-<span>(</span><span>comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]\\s?$&#x27;, on_open=None, on_close=None, auth_secondary='', transport='system', **kwargs)</span>
+<span>(</span><span>comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,48}[#&gt;$]\\s?$&#x27;, on_open=None, on_close=None, auth_secondary='', transport='system', **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -511,10 +511,10 @@ or to logout properly to free up vtys or similar.</dd>
 <dt><strong><code>auth_secondary</code></strong></dt>
 <dd>password to use for secondary authentication (enable)</dd>
 <dt><strong><code>transport</code></strong></dt>
-<dd>system|ssh2|paramiko|telnet &ndash; type of transport to use for connection
+<dd>system|telnet or a plugin &ndash; type of transport to use for connection
 system uses system available ssh (/usr/bin/ssh)
-ssh2 uses ssh2-python
-paramiko uses&hellip; paramiko
+ssh2 uses ssh2-python <em>has been migrated to a plugin
+paramiko uses&hellip; paramiko </em>has been migrated to a plugin
 telnet uses telnetlib
 choice of driver depends on the features you need. in general system is easiest as
 it will just 'auto-magically' use your ssh config file ('~/.ssh/config' or
@@ -543,7 +543,7 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
 <pre><code class="python">class JunosDriver(NetworkDriver):
     def __init__(
         self,
-        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]\s?$&#34;,
+        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,48}[#&gt;$]\s?$&#34;,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         auth_secondary: str = &#34;&#34;,
@@ -571,10 +571,10 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
                 Common use cases for this callable would be to save configurations prior to exiting,
                 or to logout properly to free up vtys or similar.
             auth_secondary: password to use for secondary authentication (enable)
-            transport: system|ssh2|paramiko|telnet -- type of transport to use for connection
+            transport: system|telnet or a plugin -- type of transport to use for connection
                 system uses system available ssh (/usr/bin/ssh)
-                ssh2 uses ssh2-python
-                paramiko uses... paramiko
+                ssh2 uses ssh2-python *has been migrated to a plugin
+                paramiko uses... paramiko *has been migrated to a plugin
                 telnet uses telnetlib
                 choice of driver depends on the features you need. in general system is easiest as
                 it will just &#39;auto-magically&#39; use your ssh config file (&#39;~/.ssh/config&#39; or
@@ -600,7 +600,7 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
             _telnet = True
 
         super().__init__(
-            auth_secondary,
+            auth_secondary=auth_secondary,
             comms_prompt_pattern=comms_prompt_pattern,
             on_open=on_open,
             on_close=on_close,
@@ -649,7 +649,7 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
 </dd>
 <dt id="scrapli.driver.core.NXOSDriver"><code class="flex name class">
 <span>class <span class="ident">NXOSDriver</span></span>
-<span>(</span><span>comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]\\s?$&#x27;, on_open=None, on_close=None, auth_secondary='', transport='system', **kwargs)</span>
+<span>(</span><span>comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,48}[#&gt;$]\\s?$&#x27;, on_open=None, on_close=None, auth_secondary='', transport='system', **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -679,10 +679,10 @@ or to logout properly to free up vtys or similar.</dd>
 <dt><strong><code>auth_secondary</code></strong></dt>
 <dd>password to use for secondary authentication (enable)</dd>
 <dt><strong><code>transport</code></strong></dt>
-<dd>system|ssh2|paramiko|telnet &ndash; type of transport to use for connection
+<dd>system|telnet or a plugin &ndash; type of transport to use for connection
 system uses system available ssh (/usr/bin/ssh)
-ssh2 uses ssh2-python
-paramiko uses&hellip; paramiko
+ssh2 uses ssh2-python <em>has been migrated to a plugin
+paramiko uses&hellip; paramiko </em>has been migrated to a plugin
 telnet uses telnetlib
 choice of driver depends on the features you need. in general system is easiest as
 it will just 'auto-magically' use your ssh config file ('~/.ssh/config' or
@@ -711,7 +711,7 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
 <pre><code class="python">class NXOSDriver(NetworkDriver):
     def __init__(
         self,
-        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]\s?$&#34;,
+        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,48}[#&gt;$]\s?$&#34;,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         auth_secondary: str = &#34;&#34;,
@@ -739,10 +739,10 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
                 Common use cases for this callable would be to save configurations prior to exiting,
                 or to logout properly to free up vtys or similar.
             auth_secondary: password to use for secondary authentication (enable)
-            transport: system|ssh2|paramiko|telnet -- type of transport to use for connection
+            transport: system|telnet or a plugin -- type of transport to use for connection
                 system uses system available ssh (/usr/bin/ssh)
-                ssh2 uses ssh2-python
-                paramiko uses... paramiko
+                ssh2 uses ssh2-python *has been migrated to a plugin
+                paramiko uses... paramiko *has been migrated to a plugin
                 telnet uses telnetlib
                 choice of driver depends on the features you need. in general system is easiest as
                 it will just &#39;auto-magically&#39; use your ssh config file (&#39;~/.ssh/config&#39; or
@@ -768,7 +768,7 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
             _telnet = True
 
         super().__init__(
-            auth_secondary,
+            auth_secondary=auth_secondary,
             comms_prompt_pattern=comms_prompt_pattern,
             on_open=on_open,
             on_close=on_close,

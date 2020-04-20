@@ -45,9 +45,9 @@ def iosxe_on_open(conn: NetworkDriver) -&gt; None:
     Raises:
         N/A
     &#34;&#34;&#34;
-    conn.acquire_priv(conn.default_desired_priv)
-    conn.channel.send_input(&#34;terminal length 0&#34;)
-    conn.channel.send_input(&#34;terminal width 512&#34;)
+    conn.acquire_priv(desired_priv=conn.default_desired_priv)
+    conn.channel.send_input(channel_input=&#34;terminal length 0&#34;)
+    conn.channel.send_input(channel_input=&#34;terminal width 512&#34;)
 
 
 def iosxe_on_close(conn: NetworkDriver) -&gt; None:
@@ -65,8 +65,8 @@ def iosxe_on_close(conn: NetworkDriver) -&gt; None:
     &#34;&#34;&#34;
     # write exit directly to the transport as channel would fail to find the prompt after sending
     # the exit command!
-    conn.transport.write(&#34;exit&#34;)
-    conn.transport.write(conn.channel.comms_prompt_pattern)
+    conn.transport.write(channel_input=&#34;exit&#34;)
+    conn.transport.write(channel_input=conn.channel.comms_prompt_pattern)
 
 
 PRIVS = {
@@ -132,7 +132,7 @@ PRIVS = {
 class IOSXEDriver(NetworkDriver):
     def __init__(
         self,
-        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]$&#34;,
+        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,48}[#&gt;$]$&#34;,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         auth_secondary: str = &#34;&#34;,
@@ -173,7 +173,7 @@ class IOSXEDriver(NetworkDriver):
             on_close = iosxe_on_close
 
         super().__init__(
-            auth_secondary,
+            auth_secondary=auth_secondary,
             comms_prompt_pattern=comms_prompt_pattern,
             on_open=on_open,
             on_close=on_close,
@@ -240,8 +240,8 @@ class IOSXEDriver(NetworkDriver):
     &#34;&#34;&#34;
     # write exit directly to the transport as channel would fail to find the prompt after sending
     # the exit command!
-    conn.transport.write(&#34;exit&#34;)
-    conn.transport.write(conn.channel.comms_prompt_pattern)</code></pre>
+    conn.transport.write(channel_input=&#34;exit&#34;)
+    conn.transport.write(channel_input=conn.channel.comms_prompt_pattern)</code></pre>
 </details>
 </dd>
 <dt id="scrapli.driver.core.cisco_iosxe.driver.iosxe_on_open"><code class="name flex">
@@ -282,9 +282,9 @@ class IOSXEDriver(NetworkDriver):
     Raises:
         N/A
     &#34;&#34;&#34;
-    conn.acquire_priv(conn.default_desired_priv)
-    conn.channel.send_input(&#34;terminal length 0&#34;)
-    conn.channel.send_input(&#34;terminal width 512&#34;)</code></pre>
+    conn.acquire_priv(desired_priv=conn.default_desired_priv)
+    conn.channel.send_input(channel_input=&#34;terminal length 0&#34;)
+    conn.channel.send_input(channel_input=&#34;terminal width 512&#34;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -294,7 +294,7 @@ class IOSXEDriver(NetworkDriver):
 <dl>
 <dt id="scrapli.driver.core.cisco_iosxe.driver.IOSXEDriver"><code class="flex name class">
 <span>class <span class="ident">IOSXEDriver</span></span>
-<span>(</span><span>comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, on_open=None, on_close=None, auth_secondary='', **kwargs)</span>
+<span>(</span><span>comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,48}[#&gt;$]$&#x27;, on_open=None, on_close=None, auth_secondary='', **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -344,7 +344,7 @@ or to logout properly to free up vtys or similar.</dd>
 <pre><code class="python">class IOSXEDriver(NetworkDriver):
     def __init__(
         self,
-        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]$&#34;,
+        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,48}[#&gt;$]$&#34;,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         auth_secondary: str = &#34;&#34;,
@@ -385,7 +385,7 @@ or to logout properly to free up vtys or similar.</dd>
             on_close = iosxe_on_close
 
         super().__init__(
-            auth_secondary,
+            auth_secondary=auth_secondary,
             comms_prompt_pattern=comms_prompt_pattern,
             on_open=on_open,
             on_close=on_close,

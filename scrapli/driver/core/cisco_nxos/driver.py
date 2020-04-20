@@ -18,8 +18,8 @@ def nxos_on_open(conn: NetworkDriver) -> None:
     Raises:
         N/A
     """
-    conn.channel.send_input("terminal length 0")
-    conn.channel.send_input("terminal width 511")
+    conn.channel.send_input(channel_input="terminal length 0")
+    conn.channel.send_input(channel_input="terminal width 511")
 
 
 def nxos_on_close(conn: NetworkDriver) -> None:
@@ -37,9 +37,9 @@ def nxos_on_close(conn: NetworkDriver) -> None:
     """
     # write exit directly to the transport as channel would fail to find the prompt after sending
     # the exit command!
-    conn.acquire_priv(conn.default_desired_priv)
-    conn.transport.write("exit")
-    conn.transport.write(conn.channel.comms_prompt_pattern)
+    conn.acquire_priv(desired_priv=conn.default_desired_priv)
+    conn.transport.write(channel_input="exit")
+    conn.transport.write(channel_input=conn.channel.comms_prompt_pattern)
 
 
 PRIVS = {
@@ -105,7 +105,7 @@ PRIVS = {
 class NXOSDriver(NetworkDriver):
     def __init__(
         self,
-        comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]\s?$",
+        comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,48}[#>$]\s?$",
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         auth_secondary: str = "",
@@ -133,10 +133,10 @@ class NXOSDriver(NetworkDriver):
                 Common use cases for this callable would be to save configurations prior to exiting,
                 or to logout properly to free up vtys or similar.
             auth_secondary: password to use for secondary authentication (enable)
-            transport: system|ssh2|paramiko|telnet -- type of transport to use for connection
+            transport: system|telnet or a plugin -- type of transport to use for connection
                 system uses system available ssh (/usr/bin/ssh)
-                ssh2 uses ssh2-python
-                paramiko uses... paramiko
+                ssh2 uses ssh2-python *has been migrated to a plugin
+                paramiko uses... paramiko *has been migrated to a plugin
                 telnet uses telnetlib
                 choice of driver depends on the features you need. in general system is easiest as
                 it will just 'auto-magically' use your ssh config file ('~/.ssh/config' or
@@ -162,7 +162,7 @@ class NXOSDriver(NetworkDriver):
             _telnet = True
 
         super().__init__(
-            auth_secondary,
+            auth_secondary=auth_secondary,
             comms_prompt_pattern=comms_prompt_pattern,
             on_open=on_open,
             on_close=on_close,
