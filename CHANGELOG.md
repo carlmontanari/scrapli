@@ -1,7 +1,7 @@
 CHANGELOG
 =======
 
-# 2020.XX.XX
+# 2020.04.19
 - Increase character count for base prompt pattern for `Scrape`, `GenericDriver`, and core drivers. Example:
 `r"^[a-z0-9.\-@()/:]{1,32}[#>$]$"` for the base `IOSXEDriver` `comms_prompt_pattern` has been increased to:
 `r"^[a-z0-9.\-@()/:]{1,48}[#>$]$"`
