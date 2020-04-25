@@ -1,0 +1,2 @@
+set interfaces fxp0 unit 0 description "scrapli was here"
+commit

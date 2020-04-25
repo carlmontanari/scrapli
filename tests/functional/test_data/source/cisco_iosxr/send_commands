@@ -1,0 +1,2 @@
+show run | i MgmtEth0
+show run | i MgmtEth0

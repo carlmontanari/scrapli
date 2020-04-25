@@ -1,6 +1,15 @@
 CHANGELOG
 =======
 
+# 2020.XX.XX
+- Continued improvement around `SystemSSHTransport` connection/auth failure logging
+- Fix for very intermittent issue where pty fd is not available for reading on SystemSSH/Telnet connections, now we
+ loop over the select statement checking the fd instead of failing if it isn't immediately readable
+- Implement atexit function if keepalives are enabled -- this originally just lived in the ssh2 transport, but needs
+ to be here in the base `Transport` class as the issue affected all transport types
+- Added `send_commands_from_file` method... does what it sounds like it does...
+- Added `send_configs_from_file` method (`NetworkDriver` and sub-classes)... also does what it sounds like it does
+
 # 2020.04.19
 - Increase character count for base prompt pattern for `Scrape`, `GenericDriver`, and core drivers. Example:
 `r"^[a-z0-9.\-@()/:]{1,32}[#>$]$"` for the base `IOSXEDriver` `comms_prompt_pattern` has been increased to:

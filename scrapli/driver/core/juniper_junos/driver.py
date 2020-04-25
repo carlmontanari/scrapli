@@ -156,4 +156,5 @@ class JunosDriver(NetworkDriver):
             "is ambiguous.",
             "No valid completions",
             "unknown command.",
+            "syntax error, expecting",
         ]

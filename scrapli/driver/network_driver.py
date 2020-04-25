@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 from scrapli.driver.generic_driver import GenericDriver
 from scrapli.exceptions import CouldNotAcquirePrivLevel, UnknownPrivLevel
-from scrapli.helper import get_prompt_pattern
+from scrapli.helper import get_prompt_pattern, resolve_file
 from scrapli.response import Response
 
 PrivilegeLevel = namedtuple(
@@ -271,6 +271,7 @@ class NetworkDriver(GenericDriver, ABC):
         commands: List[str],
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
+        stop_on_failed: bool = False,
     ) -> List[Response]:
         """
         Send multiple commands
@@ -281,6 +282,8 @@ class NetworkDriver(GenericDriver, ABC):
             commands: list of strings to send to device in privilege exec mode
             strip_prompt: True/False strip prompt from returned output
             failed_when_contains: string or list of strings indicating failure if found in response
+            stop_on_failed: True/False stop executing commands if a command fails, returns results
+                as of current execution
 
         Returns:
             responses: list of Scrapli Response objects
@@ -296,7 +299,10 @@ class NetworkDriver(GenericDriver, ABC):
             failed_when_contains = self.failed_when_contains
 
         responses = super().send_commands(
-            commands=commands, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+            commands=commands,
+            strip_prompt=strip_prompt,
+            failed_when_contains=failed_when_contains,
+            stop_on_failed=stop_on_failed,
         )
 
         for response in responses:
@@ -384,6 +390,7 @@ class NetworkDriver(GenericDriver, ABC):
         configs: Union[str, List[str]],
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
+        stop_on_failed: bool = False,
     ) -> List[Response]:
         """
         Send configuration(s)
@@ -392,6 +399,8 @@ class NetworkDriver(GenericDriver, ABC):
             configs: string or list of strings to send to device in config mode
             strip_prompt: True/False strip prompt from returned output
             failed_when_contains: string or list of strings indicating failure if found in response
+            stop_on_failed: True/False stop executing commands if a command fails, returns results
+                as of current execution
 
         Returns:
             responses: List of Scrape Response objects
@@ -402,6 +411,58 @@ class NetworkDriver(GenericDriver, ABC):
         """
         if isinstance(configs, str):
             configs = [configs]
+
+        self.acquire_priv("configuration")
+
+        if failed_when_contains is None:
+            failed_when_contains = self.failed_when_contains
+
+        responses = []
+        for config in configs:
+            response = super().send_command(
+                command=config,
+                strip_prompt=strip_prompt,
+                failed_when_contains=failed_when_contains,
+            )
+            responses.append(response)
+            if stop_on_failed is True and response.failed is True:
+                break
+
+        for response in responses:
+            self._update_response(response=response)
+
+        self.acquire_priv(desired_priv=self.default_desired_priv)
+        return responses
+
+    def send_configs_from_file(
+        self,
+        file: str,
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+    ) -> List[Response]:
+        """
+        Send configuration(s)
+
+        Args:
+            file: string path to file
+            strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
+
+        Returns:
+            responses: List of Scrape Response objects
+
+        Raises:
+            N/A
+
+        """
+        if not isinstance(file, str):
+            raise TypeError(
+                f"`send_commands_from_file` expects a string path to file, got {type(file)}"
+            )
+        resolved_file = resolve_file(file)
+
+        with open(resolved_file, "r") as f:
+            configs = f.read().splitlines()
 
         self.acquire_priv("configuration")
 

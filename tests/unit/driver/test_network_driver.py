@@ -1,8 +1,10 @@
 import sys
 import types
+from pathlib import Path
 
 import pytest
 
+import scrapli
 from scrapli.driver.network_driver import PrivilegeLevel
 from scrapli.exceptions import CouldNotAcquirePrivLevel, UnknownPrivLevel
 from scrapli.response import Response
@@ -14,6 +16,8 @@ try:
     textfsm_avail = True
 except ImportError:
     textfsm_avail = False
+
+TEST_DATA_PATH = f"{Path(scrapli.__file__).parents[1]}/tests/unit/test_data"
 
 
 @pytest.mark.parametrize(
@@ -433,9 +437,9 @@ def test_send_configs(mocked_network_driver):
     channel_input_7 = "\n"
     channel_output_7 = "XC0653(config)#"
     channel_input_8 = "end"
-    channel_output_8 = "3560CX#"
+    channel_output_8 = "XC0653#"
     channel_input_9 = "\n"
-    channel_output_9 = "\n3560CX#"
+    channel_output_9 = "\nXC0653#"
     test_operations = [
         (channel_input_1, channel_output_1),
         (channel_input_2, channel_output_2),
@@ -450,6 +454,43 @@ def test_send_configs(mocked_network_driver):
     conn = mocked_network_driver(test_operations)
     conn.default_desired_priv = "privilege_exec"
     output = conn.send_configs(channel_input_5, strip_prompt=False)
+    assert output[0].result == channel_output_5
+
+
+def test_send_configs_from_file(mocked_network_driver):
+    channel_input_1 = "\n"
+    channel_output_1 = "\n3560CX#"
+    channel_input_2 = "\n"
+    channel_output_2 = "\n3560CX#"
+    channel_input_3 = "configure terminal"
+    channel_output_3 = """Enter configuration commands, one per line.  End with CNTL/Z.
+3560CX(config)#"""
+    channel_input_4 = "\n"
+    channel_output_4 = "3560CX(config)#"
+    channel_input_5 = "hostname XC0653"
+    channel_output_5 = "XC0653(config)#"
+    channel_input_6 = "\n"
+    channel_output_6 = "XC0653(config)#"
+    channel_input_7 = "\n"
+    channel_output_7 = "XC0653(config)#"
+    channel_input_8 = "end"
+    channel_output_8 = "XC0653#"
+    channel_input_9 = "\n"
+    channel_output_9 = "\nXC0653#"
+    test_operations = [
+        (channel_input_1, channel_output_1),
+        (channel_input_2, channel_output_2),
+        (channel_input_3, channel_output_3),
+        (channel_input_4, channel_output_4),
+        (channel_input_5, channel_output_5),
+        (channel_input_6, channel_output_6),
+        (channel_input_7, channel_output_7),
+        (channel_input_8, channel_output_8),
+        (channel_input_9, channel_output_9),
+    ]
+    conn = mocked_network_driver(test_operations)
+    conn.default_desired_priv = "privilege_exec"
+    output = conn.send_configs_from_file(file=f"{TEST_DATA_PATH}/send_configs", strip_prompt=False)
     assert output[0].result == channel_output_5
 
 

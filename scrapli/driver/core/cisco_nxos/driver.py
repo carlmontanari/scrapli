@@ -183,4 +183,5 @@ class NXOSDriver(NetworkDriver):
             "% Ambiguous command",
             "% Incomplete command",
             "% Invalid input detected",
+            "% Invalid command at",
         ]

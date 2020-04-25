@@ -442,6 +442,8 @@ class SystemSSHTransport(Transport):
                     msg = f"Host key verification failed for host {self.host}"
                 elif b"Operation timed out" in output:
                     msg = f"Timed out connecting to host {self.host}"
+                elif b"No route to host" in output:
+                    msg = f"No route to host {self.host}"
                 LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
             if self._comms_ansi:
@@ -476,34 +478,40 @@ class SystemSSHTransport(Transport):
             prompt_pattern = get_prompt_pattern(prompt="", class_prompt=self._comms_prompt_pattern)
             self.session_lock.acquire()
             pty_session.write(self._comms_return_char.encode())
-            fd_ready, _, _ = select([pty_session.fd], [], [], 0)
-            if pty_session.fd in fd_ready:
-                output = b""
-                while True:
-                    new_output = pty_session.read()
-                    output += new_output
-                    LOG.debug(f"Attempting validate authentication. Read: {repr(new_output)}")
-                    # we do not need to deal w/ line replacement for the actual output, only for
-                    # parsing if a prompt-like thing is at the end of the output
-                    output = output.replace(b"\r", b"")
-                    # always check to see if we should strip ansi here; if we don't handle this we
-                    # may raise auth failures for the wrong reason which would be confusing for
-                    # users
-                    if b"\x1B" in output:
-                        output = strip_ansi(output=output)
-                    channel_match = re.search(pattern=prompt_pattern, string=output)
-                    if channel_match:
-                        self.session_lock.release()
-                        self._isauthenticated = True
-                        return True
-                    if b"password:" in output.lower():
-                        # if we see "password" we know auth failed (hopefully in all scenarios!)
-                        LOG.critical(
-                            "Found `password:` in output, assuming password authentication failed"
-                        )
-                        return False
-                    if output:
-                        LOG.debug(f"Cannot determine if authenticated, \n\tRead: {repr(output)}")
+            while True:
+                # almost all of the time we don't need a while loop here, but every once in a while
+                # fd won't be ready which causes a failure without an obvious root cause,
+                # loop/logging to hopefully help with that
+                fd_ready, _, _ = select([pty_session.fd], [], [], 0)
+                if pty_session.fd in fd_ready:
+                    break
+                LOG.debug(f"PTY fd not ready yet...")
+            output = b""
+            while True:
+                new_output = pty_session.read()
+                output += new_output
+                LOG.debug(f"Attempting validate authentication. Read: {repr(new_output)}")
+                # we do not need to deal w/ line replacement for the actual output, only for
+                # parsing if a prompt-like thing is at the end of the output
+                output = output.replace(b"\r", b"")
+                # always check to see if we should strip ansi here; if we don't handle this we
+                # may raise auth failures for the wrong reason which would be confusing for
+                # users
+                if b"\x1B" in output:
+                    output = strip_ansi(output=output)
+                channel_match = re.search(pattern=prompt_pattern, string=output)
+                if channel_match:
+                    self.session_lock.release()
+                    self._isauthenticated = True
+                    return True
+                if b"password:" in output.lower():
+                    # if we see "password" we know auth failed (hopefully in all scenarios!)
+                    LOG.critical(
+                        "Found `password:` in output, assuming password authentication failed"
+                    )
+                    return False
+                if output:
+                    LOG.debug(f"Cannot determine if authenticated, \n\tRead: {repr(output)}")
         self.session_lock.release()
         return False
 

@@ -34,6 +34,12 @@ TEST_CASES = {
                 f"{TEST_DATA_PATH}/expected/cisco_iosxe/send_command_long_strip"
             ).read(),
         },
+        "send_commands_from_file": {
+            "file": f"{TEST_DATA_PATH}/source/cisco_iosxe/send_commands",
+            "expected_no_strip": ["hostname csr1000v\ncsr1000v#", "hostname csr1000v\ncsr1000v#"],
+            "expected_strip": ["hostname csr1000v", "hostname csr1000v"],
+        },
+        "send_commands_error": {"commands": ["show version", "show tacocat", "show version"],},
         "send_interactive_normal_response": {
             "command": [("clear logg", "Clear logging buffer [confirm]"), ("", "csr1000v#")],
             "expected": "clear logg\nClear logging buffer [confirm]\n\ncsr1000v#",
@@ -50,6 +56,16 @@ TEST_CASES = {
             "verification_expected_strip": "Building configuration...\n\nCurrent configuration : CONFIG_BYTES"
             "\n!\ninterface Loopback123\n description scrapli was here\n no ip "
             "address\nend",
+            "teardown_configs": "no interface loopback123",
+        },
+        "send_configs_from_file": {
+            "file": f"{TEST_DATA_PATH}/source/cisco_iosxe/send_configs",
+            "expected_no_strip": ["csr1000v(config-if)#", "csr1000v(config-if)#"],
+            "expected_strip": ["", ""],
+            "teardown_configs": "no interface loopback123",
+        },
+        "send_configs_error": {
+            "configs": ["interface loopback123", "show tacocat", "description tacocat was here"],
             "teardown_configs": "no interface loopback123",
         },
         "sanitize_response": cisco_iosxe_clean_response,
@@ -74,6 +90,12 @@ TEST_CASES = {
                 f"{TEST_DATA_PATH}/expected/cisco_nxos/send_command_long_strip"
             ).read(),
         },
+        "send_commands_from_file": {
+            "file": f"{TEST_DATA_PATH}/source/cisco_nxos/send_commands",
+            "expected_no_strip": ["feature scp-server\nswitch#", "feature scp-server\nswitch#"],
+            "expected_strip": ["feature scp-server", "feature scp-server"],
+        },
+        "send_commands_error": {"commands": ["show version", "show tacocat", "show version"],},
         "send_interactive_normal_response": {
             "command": [
                 ("delete bootflash:virtual-instance.conf", "(yes/no/abort)   [y]"),
@@ -95,6 +117,16 @@ TEST_CASES = {
             "configuration last done at: TIME_STAMP_REPLACED\n!Time: "
             "TIME_STAMP_REPLACED\n\nversion 9.2(4) Bios:version\n\ninterface "
             "loopback123\n  description scrapli was here",
+            "teardown_configs": "no interface loopback123",
+        },
+        "send_configs_from_file": {
+            "file": f"{TEST_DATA_PATH}/source/cisco_nxos/send_configs",
+            "expected_no_strip": ["switch(config-if)#", "switch(config-if)#"],
+            "expected_strip": ["", ""],
+            "teardown_configs": "no interface loopback123",
+        },
+        "send_configs_error": {
+            "configs": ["interface loopback123", "show tacocat", "description tacocat was here"],
             "teardown_configs": "no interface loopback123",
         },
         "sanitize_response": cisco_nxos_clean_response,
@@ -119,6 +151,18 @@ TEST_CASES = {
                 f"{TEST_DATA_PATH}/expected/cisco_iosxr/send_command_long_strip"
             ).read(),
         },
+        "send_commands_from_file": {
+            "file": f"{TEST_DATA_PATH}/source/cisco_iosxr/send_commands",
+            "expected_no_strip": [
+                "TIME_STAMP_REPLACED\nBuilding configuration...\ninterface MgmtEth0/RP0/CPU0/0\nRP/0/RP0/CPU0:ios#",
+                "TIME_STAMP_REPLACED\nBuilding configuration...\ninterface MgmtEth0/RP0/CPU0/0\nRP/0/RP0/CPU0:ios#",
+            ],
+            "expected_strip": [
+                "TIME_STAMP_REPLACED\nBuilding configuration...\ninterface MgmtEth0/RP0/CPU0/0",
+                "TIME_STAMP_REPLACED\nBuilding configuration...\ninterface MgmtEth0/RP0/CPU0/0",
+            ],
+        },
+        "send_commands_error": {"commands": ["show version", "show tacocat", "show version"],},
         "send_interactive_normal_response": None,
         "send_interactive_hidden_response": None,
         "send_configs": {
@@ -130,6 +174,13 @@ TEST_CASES = {
             "verification_expected_strip": "TIME_STAMP_REPLACED\ninterface Loopback123\n description scrapli was here\n!",
             "teardown_configs": ["no interface loopback123", "commit"],
         },
+        "send_configs_from_file": {
+            "file": f"{TEST_DATA_PATH}/source/cisco_iosxr/send_configs",
+            "expected_no_strip": ["RP/0/RP0/CPU0:ios(config-if)#", "RP/0/RP0/CPU0:ios(config-if)#"],
+            "expected_strip": ["", ""],
+            "teardown_configs": ["no interface loopback123", "commit"],
+        },
+        "send_configs_error": None,
         "sanitize_response": cisco_iosxr_clean_response,
     },
     "arista_eos": {
@@ -152,6 +203,18 @@ TEST_CASES = {
                 f"{TEST_DATA_PATH}/expected/arista_eos/send_command_long_strip"
             ).read(),
         },
+        "send_commands_from_file": {
+            "file": f"{TEST_DATA_PATH}/source/arista_eos/send_commands",
+            "expected_no_strip": [
+                "logging level ZTP informational\nlocalhost#",
+                "logging level ZTP informational\nlocalhost#",
+            ],
+            "expected_strip": [
+                "logging level ZTP informational",
+                "logging level ZTP informational",
+            ],
+        },
+        "send_commands_error": {"commands": ["show version", "show tacocat", "show version"],},
         "send_interactive_normal_response": None,
         "send_interactive_hidden_response": None,
         "send_configs": {
@@ -161,6 +224,16 @@ TEST_CASES = {
             "verification": "show run int loopback123",
             "verification_expected_no_strip": "interface Loopback123\n   description scrapli was here\nlocalhost#",
             "verification_expected_strip": "interface Loopback123\n   description scrapli was here",
+            "teardown_configs": "no interface loopback123",
+        },
+        "send_configs_from_file": {
+            "file": f"{TEST_DATA_PATH}/source/arista_eos/send_configs",
+            "expected_no_strip": ["localhost(config-if-Lo123)#", "localhost(config-if-Lo123)#"],
+            "expected_strip": ["", ""],
+            "teardown_configs": "no interface loopback123",
+        },
+        "send_configs_error": {
+            "configs": ["interface loopback123", "show tacocat", "description tacocat was here"],
             "teardown_configs": "no interface loopback123",
         },
         "sanitize_response": arista_eos_clean_response,
@@ -181,6 +254,18 @@ TEST_CASES = {
                 f"{TEST_DATA_PATH}/expected/juniper_junos/send_command_long_strip"
             ).read(),
         },
+        "send_commands_from_file": {
+            "file": f"{TEST_DATA_PATH}/source/juniper_junos/send_commands",
+            "expected_no_strip": [
+                "                address 10.0.0.15/24;\n\nvrnetlab>",
+                "                address 10.0.0.15/24;\n\nvrnetlab>",
+            ],
+            "expected_strip": [
+                "                address 10.0.0.15/24;",
+                "                address 10.0.0.15/24;",
+            ],
+        },
+        "send_commands_error": {"commands": ["show version", "show tacocat", "show version"],},
         "send_interactive_normal_response": None,
         "send_interactive_hidden_response": None,
         "send_configs": {
@@ -192,6 +277,13 @@ TEST_CASES = {
             "verification_expected_strip": 'unit 0 {\n    description "scrapli was here";\n    family inet {\n        address 10.0.0.15/24;\n    }\n}',
             "teardown_configs": ["delete interfaces fxp0 unit 0 description", "commit"],
         },
+        "send_configs_from_file": {
+            "file": f"{TEST_DATA_PATH}/source/juniper_junos/send_configs",
+            "expected_no_strip": ["[edit]\nvrnetlab#", "commit complete\n\n[edit]\nvrnetlab#"],
+            "expected_strip": ["[edit]", "commit complete\n\n[edit]"],
+            "teardown_configs": ["delete interfaces fxp0 unit 0 description", "commit"],
+        },
+        "send_configs_error": None,
         "sanitize_response": juniper_junos_clean_response,
     },
     "linux": {

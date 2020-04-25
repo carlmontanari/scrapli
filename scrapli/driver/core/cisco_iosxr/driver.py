@@ -43,7 +43,7 @@ def iosxr_on_close(conn: NetworkDriver) -> None:
     # write exit directly to the transport as channel would fail to find the prompt after sending
     # the exit command!
     conn.transport.write(channel_input="exit")
-    conn.transport.write(channel_input=conn.channel.comms_prompt_pattern)
+    conn.transport.write(channel_input=conn.channel.comms_return_char)
 
 
 PRIVS = {

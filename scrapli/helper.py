@@ -273,7 +273,7 @@ def resolve_ssh_config(ssh_config_file: str) -> str:
         ssh_config_file: string representation of ssh config file to try to use
 
     Returns:
-        str: string to path fro ssh config file or an empty string
+        str: string path to ssh config file or an empty string
 
     Raises:
         N/A
@@ -299,7 +299,7 @@ def resolve_ssh_known_hosts(ssh_known_hosts: str) -> str:
         ssh_known_hosts: string representation of ssh config file to try to use
 
     Returns:
-        str: string to path fro ssh config file or an empty string
+        str: string path to ssh known hosts file or an empty string
 
     Raises:
         N/A
@@ -312,3 +312,24 @@ def resolve_ssh_known_hosts(ssh_known_hosts: str) -> str:
     if Path("/etc/ssh/ssh_known_hosts").is_file():
         return str(Path("/etc/ssh/ssh_known_hosts"))
     return ""
+
+
+def resolve_file(file: str) -> str:
+    """
+    Resolve file from provided string
+
+    Args:
+        file: string path to file
+
+    Returns:
+        str: string path to file
+
+    Raises:
+        ValueError: if file cannot be resolved
+
+    """
+    if Path(file).is_file():
+        return str(Path(file))
+    if Path(os.path.expanduser(file)).is_file():
+        return str(Path(os.path.expanduser(file)))
+    raise ValueError(f"File path `{file}` could not be resolved")
