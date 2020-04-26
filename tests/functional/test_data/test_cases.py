@@ -180,7 +180,10 @@ TEST_CASES = {
             "expected_strip": ["", ""],
             "teardown_configs": ["no interface loopback123", "commit"],
         },
-        "send_configs_error": None,
+        "send_configs_error": {
+            "configs": ["interface loopback123", "show tacocat", "description tacocat was here"],
+            "teardown_configs": "",
+        },
         "sanitize_response": cisco_iosxr_clean_response,
     },
     "arista_eos": {
@@ -283,7 +286,14 @@ TEST_CASES = {
             "expected_strip": ["[edit]", "commit complete\n\n[edit]"],
             "teardown_configs": ["delete interfaces fxp0 unit 0 description", "commit"],
         },
-        "send_configs_error": None,
+        "send_configs_error": {
+            "configs": [
+                "set interfaces fxp0 description tacocat",
+                "show tacocat",
+                "set interfaces fxp0 description tacocat",
+            ],
+            "teardown_configs": "delete interfaces fxp0 description",
+        },
         "sanitize_response": juniper_junos_clean_response,
     },
     "linux": {

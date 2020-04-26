@@ -18,7 +18,7 @@ def eos_on_open(conn: NetworkDriver) -> None:
     Raises:
         N/A
     """
-    conn.acquire_priv(desired_priv=conn.default_desired_priv)
+    conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
     conn.channel.send_input(channel_input="terminal length 0")
     conn.channel.send_input(channel_input="terminal width 32767")
 
@@ -38,65 +38,33 @@ def eos_on_close(conn: NetworkDriver) -> None:
     """
     # write exit directly to the transport as channel would fail to find the prompt after sending
     # the exit command!
+    conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
     conn.transport.write(channel_input="exit")
     conn.transport.write(channel_input=conn.channel.comms_prompt_pattern)
 
 
 PRIVS = {
-    "exec": (
-        PrivilegeLevel(
-            r"^[a-z0-9.\-@()/:]{1,32}>\s?$",
-            "exec",
-            "",
-            "",
-            "privilege_exec",
-            "enable",
-            True,
-            "Password:",
-            True,
-            0,
-        )
-    ),
+    "exec": (PrivilegeLevel(r"^[a-z0-9.\-@()/:]{1,32}>\s?$", "exec", "", "", "", False, "",)),
     "privilege_exec": (
         PrivilegeLevel(
             r"^[a-z0-9.\-@/:]{1,32}#\s?$",
             "privilege_exec",
             "exec",
             "disable",
-            "configuration",
-            "configure terminal",
-            False,
-            "",
+            "enable",
             True,
-            1,
+            "Password:",
         )
     ),
     "configuration": (
         PrivilegeLevel(
-            r"^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{0,16}\)#\s?$",
+            r"^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{0,32}\)#\s?$",
             "configuration",
             "privilege_exec",
             "end",
-            "",
-            "",
+            "configure terminal",
             False,
             "",
-            True,
-            2,
-        )
-    ),
-    "special_configuration": (
-        PrivilegeLevel(
-            r"^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{1,16}\)#\s?$",
-            "special_configuration",
-            "privilege_exec",
-            "end",
-            "",
-            "",
-            False,
-            "",
-            False,
-            3,
         )
     ),
 }
@@ -105,7 +73,6 @@ PRIVS = {
 class EOSDriver(NetworkDriver):
     def __init__(
         self,
-        comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,48}[#>$]\s?$",
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         auth_secondary: str = "",
@@ -115,14 +82,6 @@ class EOSDriver(NetworkDriver):
         EOSDriver Object
 
         Args:
-            comms_prompt_pattern: raw string regex pattern -- preferably use `^` and `$` anchors!
-                this is the single most important attribute here! if this does not match a prompt,
-                scrapli will not work!
-                IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
-                for highly reliably matching for prompts however we do NOT strip trailing whitespace
-                for each line, so be sure to add '\\s*' if your device needs that. This should be
-                mostly sorted for you if using network drivers (i.e. `IOSXEDriver`). Lastly, the
-                case insensitive is just a convenience factor so i can be lazy.
             on_open: callable that accepts the class instance as its only argument. this callable,
                 if provided, is executed immediately after authentication is completed. Common use
                 cases for this callable would be to disable paging or accept any kind of banner
@@ -146,15 +105,14 @@ class EOSDriver(NetworkDriver):
             on_close = eos_on_close
 
         super().__init__(
+            privilege_levels=PRIVS,
+            default_desired_privilege_level="privilege_exec",
             auth_secondary=auth_secondary,
-            comms_prompt_pattern=comms_prompt_pattern,
             on_open=on_open,
             on_close=on_close,
             **kwargs,
         )
 
-        self.privs = PRIVS
-        self.default_desired_priv = "privilege_exec"
         self.textfsm_platform = "arista_eos"
 
         self.failed_when_contains = [

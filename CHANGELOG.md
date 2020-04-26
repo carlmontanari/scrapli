@@ -9,6 +9,17 @@ CHANGELOG
  to be here in the base `Transport` class as the issue affected all transport types
 - Added `send_commands_from_file` method... does what it sounds like it does...
 - Added `send_configs_from_file` method (`NetworkDriver` and sub-classes)... also does what it sounds like it does
+- Simplified privilege levels and overhauled how auth escalation/deescalation works. Its still probably a bit more
+ complex than it should be, but its a bit more efficient and at least a little simpler/more flexible.
+- Removed `comms_prompt_pattern` from Network drivers and now build this as a big pattern matching all of the priv
+ levels for that device type. This is used only for initial connection/finding prompt then scrapli still sets the
+  explicit prompt for the particular privilege level.
+- Implemented lru_cache on some places where we have repetitive tasks... probably unmeasurable difference, but in
+ theory its a little faster now in some places
+- Moved some Network driver things into the  base `NetworkDriver` class to clean things up a bit.
+- Added an `_abort_config` method to abort configurations for IOSXR/Juniper, this is ignored on the other core platforms
+- *BREAKING CHANGE*: (minor) Removed now unneeded exception `CouldNotAcquirePrivLevel`
+- Made the `get_prompt_pattern` helper a little worse... should revisit to improve/make its use more clear
 
 # 2020.04.19
 - Increase character count for base prompt pattern for `Scrape`, `GenericDriver`, and core drivers. Example:

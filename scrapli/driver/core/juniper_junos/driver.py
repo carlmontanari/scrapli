@@ -18,7 +18,7 @@ def junos_on_open(conn: NetworkDriver) -> None:
     Raises:
         N/A
     """
-    conn.acquire_priv(desired_priv=conn.default_desired_priv)
+    conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
     conn.channel.send_input(channel_input="set cli complete-on-space off")
     conn.channel.send_input(channel_input="set cli screen-length 0")
     conn.channel.send_input(channel_input="set cli screen-width 511")
@@ -44,32 +44,16 @@ def junos_on_close(conn: NetworkDriver) -> None:
 
 
 PRIVS = {
-    "exec": (
-        PrivilegeLevel(
-            r"^[a-z0-9.\-@()/:]{1,32}>\s?$",
-            "exec",
-            "",
-            "",
-            "configuration",
-            "configure",
-            False,
-            "",
-            True,
-            0,
-        )
-    ),
+    "exec": (PrivilegeLevel(r"^[a-z0-9.\-@()/:]{1,32}>\s?$", "exec", "", "", "", False, "",)),
     "configuration": (
         PrivilegeLevel(
             r"^[a-z0-9.\-@()/:]{1,32}#\s?$",
             "configuration",
             "exec",
             "exit configuration-mode",
-            "",
-            "",
+            "configure",
             False,
             "",
-            True,
-            1,
         )
     ),
 }
@@ -78,7 +62,6 @@ PRIVS = {
 class JunosDriver(NetworkDriver):
     def __init__(
         self,
-        comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,48}[#>$]\s?$",
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         auth_secondary: str = "",
@@ -89,14 +72,6 @@ class JunosDriver(NetworkDriver):
         JunosDriver Object
 
         Args:
-            comms_prompt_pattern: raw string regex pattern -- preferably use `^` and `$` anchors!
-                this is the single most important attribute here! if this does not match a prompt,
-                scrapli will not work!
-                IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
-                for highly reliably matching for prompts however we do NOT strip trailing whitespace
-                for each line, so be sure to add '\\s*' if your device needs that. This should be
-                mostly sorted for you if using network drivers (i.e. `IOSXEDriver`). Lastly, the
-                case insensitive is just a convenience factor so i can be lazy.
             on_open: callable that accepts the class instance as its only argument. this callable,
                 if provided, is executed immediately after authentication is completed. Common use
                 cases for this callable would be to disable paging or accept any kind of banner
@@ -135,8 +110,9 @@ class JunosDriver(NetworkDriver):
             _telnet = True
 
         super().__init__(
+            privilege_levels=PRIVS,
+            default_desired_privilege_level="exec",
             auth_secondary=auth_secondary,
-            comms_prompt_pattern=comms_prompt_pattern,
             on_open=on_open,
             on_close=on_close,
             transport=transport,
@@ -146,15 +122,35 @@ class JunosDriver(NetworkDriver):
         if _telnet:
             self.transport.username_prompt = "login:"
 
-        self.privs = PRIVS
-        self.default_desired_priv = "exec"
-
         self.default_desired_priv = "exec"
         self.textfsm_platform = "juniper_junos"
 
         self.failed_when_contains = [
-            "is ambiguous.",
+            "is ambiguous",
             "No valid completions",
-            "unknown command.",
-            "syntax error, expecting",
+            "unknown command",
+            "syntax error",
         ]
+
+    def _abort_config(self) -> None:
+        """
+        Abort Junos configuration session
+
+        Args:
+            N/A
+
+        Returns:
+            N/A:  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+        self.channel.comms_prompt_pattern = self.privilege_levels[
+            self.default_desired_privilege_level
+        ].pattern
+        interact_events = [
+            ("exit", "Exit with uncommitted changes? [yes,no] (yes)", False),
+            ("yes", self.channel.comms_prompt_pattern, False),
+        ]
+        self.channel.send_inputs_interact(interact_events=interact_events)

@@ -137,20 +137,23 @@ class GenericDriver(Scrape):
         file: str,
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
+        stop_on_failed: bool = False,
     ) -> List[Response]:
         """
-        Send multiple commands
+        Send command(s) from file
 
         Args:
             file: string path to file
             strip_prompt: True/False strip prompt from returned output
             failed_when_contains: string or list of strings indicating failure if found in response
+            stop_on_failed: True/False stop executing commands if a command fails, returns results
+                as of current execution
 
         Returns:
             responses: list of Scrapli Response objects
 
         Raises:
-            TypeError: if commands is anything but a list
+            TypeError: if anything but a string is provided for `file`
 
         """
         if not isinstance(file, str):
@@ -162,17 +165,12 @@ class GenericDriver(Scrape):
         with open(resolved_file, "r") as f:
             commands = f.read().splitlines()
 
-        responses = []
-        for command in commands:
-            responses.append(
-                self.send_command(
-                    command=command,
-                    strip_prompt=strip_prompt,
-                    failed_when_contains=failed_when_contains,
-                )
-            )
-
-        return responses
+        return self.send_commands(
+            commands=commands,
+            strip_prompt=strip_prompt,
+            failed_when_contains=failed_when_contains,
+            stop_on_failed=stop_on_failed,
+        )
 
     def send_interactive(
         self,
