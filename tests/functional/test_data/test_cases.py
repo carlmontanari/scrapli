@@ -287,7 +287,11 @@ TEST_CASES = {
             "teardown_configs": ["delete interfaces fxp0 unit 0 description", "commit"],
         },
         "send_configs_error": {
-            "configs": ["set interfaces fxp0 description tacocat", "show tacocat", "set interfaces fxp0 description tacocat"],
+            "configs": [
+                "set interfaces fxp0 description tacocat",
+                "show tacocat",
+                "set interfaces fxp0 description tacocat",
+            ],
             "teardown_configs": "delete interfaces fxp0 description",
         },
         "sanitize_response": juniper_junos_clean_response,

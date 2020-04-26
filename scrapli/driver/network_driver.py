@@ -188,7 +188,7 @@ class NetworkDriver(GenericDriver, ABC):
             N/A  # noqa: DAR202
 
         Raises:
-            UnknownPrivLevel: if no default priv level set to deescalate to
+            N/A
 
         """
         self.channel.comms_prompt_pattern = self.privilege_levels[
@@ -208,7 +208,7 @@ class NetworkDriver(GenericDriver, ABC):
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+           UnknownPrivLevel: if attempting to acquire an unknown priv
 
         """
         LOG.info(f"Attempting to acquire `{desired_priv}` privilege level")
@@ -345,6 +345,46 @@ class NetworkDriver(GenericDriver, ABC):
             self._update_response(response=response)
 
         return responses
+
+    def send_commands_from_file(
+        self,
+        file: str,
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+        stop_on_failed: bool = False,
+    ) -> List[Response]:
+        """
+        Send command(s) from file
+
+        Args:
+            file: string path to file
+            strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
+            stop_on_failed: True/False stop executing commands if a command fails, returns results
+                as of current execution
+
+        Returns:
+            responses: list of Scrapli Response objects
+
+        Raises:
+            TypeError: if anything but a string is provided for `file`
+
+        """
+        if not isinstance(file, str):
+            raise TypeError(
+                f"`send_commands_from_file` expects a string path to file, got {type(file)}"
+            )
+        resolved_file = resolve_file(file)
+
+        with open(resolved_file, "r") as f:
+            commands = f.read().splitlines()
+
+        return self.send_commands(
+            commands=commands,
+            strip_prompt=strip_prompt,
+            failed_when_contains=failed_when_contains,
+            stop_on_failed=stop_on_failed,
+        )
 
     def send_interactive(
         self,
@@ -486,7 +526,6 @@ class NetworkDriver(GenericDriver, ABC):
             self._update_response(response=response)
 
         if _failed_during_execution is True:
-            # TODO - update once adding config exclusive and such
             self._abort_config()
 
         self.acquire_priv(desired_priv=self.default_desired_privilege_level)
@@ -513,12 +552,12 @@ class NetworkDriver(GenericDriver, ABC):
             responses: List of Scrape Response objects
 
         Raises:
-            N/A
+            TypeError: if anything but a string is provided for `file`
 
         """
         if not isinstance(file, str):
             raise TypeError(
-                f"`send_commands_from_file` expects a string path to file, got {type(file)}"
+                f"`send_configs_from_file` expects a string path to file, got {type(file)}"
             )
         resolved_file = resolve_file(file)
 

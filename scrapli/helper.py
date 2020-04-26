@@ -25,6 +25,7 @@ def _find_transport_plugin(transport: str) -> Tuple[Any, Tuple[str, ...]]:
         required_transport_args: tuple of required arguments for given transport
 
     Raises:
+        ModuleNotFoundError: if unable to  find scrapli transport module
         TransportPluginError: if unable to load `Transport` and `TRANSPORT_ARGS` from given
             transport module
 
