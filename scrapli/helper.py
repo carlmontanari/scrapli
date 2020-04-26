@@ -3,6 +3,7 @@ import importlib
 import os
 import re
 import warnings
+from functools import lru_cache
 from io import TextIOWrapper
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Pattern, TextIO, Tuple, Union
@@ -48,6 +49,7 @@ def _find_transport_plugin(transport: str) -> Tuple[Any, Tuple[str, ...]]:
     return transport_class, required_transport_args
 
 
+@lru_cache()
 def get_prompt_pattern(prompt: str, class_prompt: str) -> Pattern[bytes]:
     """
     Return compiled prompt pattern
@@ -56,7 +58,7 @@ def get_prompt_pattern(prompt: str, class_prompt: str) -> Pattern[bytes]:
 
     Args:
         prompt: bytes string to process
-        class_prompt: Channel class' prompt pattern
+        class_prompt: Channel class prompt pattern; never re.escape class prompt pattern
 
     Returns:
         output: bytes string each line right stripped
@@ -70,7 +72,10 @@ def get_prompt_pattern(prompt: str, class_prompt: str) -> Pattern[bytes]:
         bytes_check_prompt = check_prompt.encode()
     else:
         bytes_check_prompt = check_prompt
+
     if bytes_check_prompt.startswith(b"^") and bytes_check_prompt.endswith(b"$"):
+        return re.compile(bytes_check_prompt, flags=re.M | re.I)
+    if check_prompt == class_prompt:
         return re.compile(bytes_check_prompt, flags=re.M | re.I)
     return re.compile(re.escape(bytes_check_prompt))
 

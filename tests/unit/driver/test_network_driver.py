@@ -63,112 +63,68 @@ def test__determine_current_priv_unknown(mocked_network_driver):
 
 
 def test__escalate(mocked_network_driver):
-    channel_input_1 = "\n"
-    channel_output_1 = "\n3560CX#"
-    channel_input_2 = "configure terminal"
-    channel_output_2 = """Enter configuration commands, one per line.  End with CNTL/Z.
+    channel_input_1 = "configure terminal"
+    channel_output_1 = """Enter configuration commands, one per line.  End with CNTL/Z.
 3560CX(config)#"""
-    channel_ops = [(channel_input_1, channel_output_1), (channel_input_2, channel_output_2)]
+    channel_ops = [(channel_input_1, channel_output_1)]
 
     conn = mocked_network_driver(channel_ops)
-    conn._escalate()
-
-
-def test__escalate_unknown_priv(mocked_network_driver):
-    channel_input_1 = "\n"
-    channel_output_1 = "\n3560CX#"
-    channel_input_2 = "configure terminal"
-    channel_output_2 = """Enter configuration commands, one per line.  End with CNTL/Z.
-    3560CX(config)#"""
-    channel_ops = [(channel_input_1, channel_output_1), (channel_input_2, channel_output_2)]
-
-    conn = mocked_network_driver(channel_ops)
-
-    mock_privs = {
-        "privilege_exec": (
-            PrivilegeLevel(
-                r"^[a-z0-9.\-@/:]{1,32}#$",
-                "privilege_exec",
-                "exec",
-                "disable",
-                "configuration",
-                "configure terminal",
-                False,
-                False,
-                True,
-                1,
-            )
-        ),
-    }
-    conn.privs = mock_privs
-
-    with pytest.raises(UnknownPrivLevel):
-        conn._escalate()
+    conn._escalate(conn.privilege_levels["configuration"])
 
 
 def test__escalate_auth(mocked_network_driver):
-    channel_input_1 = "\n"
-    channel_output_1 = "\n3560CX>"
-    channel_input_2 = "enable"
-    channel_output_2 = "Password:"
-    channel_input_3 = "password"
-    channel_output_3 = "\n3560CX#"
+    channel_input_1 = "enable"
+    channel_output_1 = "Password:"
+    channel_input_2 = "password"
+    channel_output_2 = "\n3560CX#"
     channel_ops = [
         (channel_input_1, channel_output_1),
         (channel_input_2, channel_output_2),
-        (channel_input_3, channel_output_3),
     ]
 
     conn = mocked_network_driver(channel_ops)
 
     mock_privs = {
-        "exec": (
-            PrivilegeLevel(
-                r"^[a-z0-9.\-@()/:]{1,32}>$",
-                "exec",
-                None,
-                None,
-                "privilege_exec",
-                "enable",
-                True,
-                "Password:",
-                True,
-                0,
-            )
-        ),
+        "exec": (PrivilegeLevel(r"^[a-z0-9.\-@()/:]{1,32}>$", "exec", "", "", "", False, "",)),
         "privilege_exec": (
             PrivilegeLevel(
                 r"^[a-z0-9.\-@/:]{1,32}#$",
                 "privilege_exec",
                 "exec",
                 "disable",
-                "configuration",
-                "configure terminal",
-                False,
-                False,
+                "enable",
                 True,
-                1,
+                "Password:",
             )
         ),
     }
     conn.privs = mock_privs
+    conn._current_priv_level = mock_privs["exec"]
 
-    conn._escalate()
+    conn._escalate(mock_privs["privilege_exec"])
 
 
 def test__deescalate(mocked_network_driver):
-    channel_input_1 = "\n"
-    channel_output_1 = "\n3560CX#"
-    channel_input_2 = "end"
-    channel_output_2 = "3560CX>"
-    channel_ops = [(channel_input_1, channel_output_1), (channel_input_2, channel_output_2)]
+    channel_input_1 = "end"
+    channel_output_1 = "3560CX>"
+    channel_ops = [(channel_input_1, channel_output_1)]
 
     conn = mocked_network_driver(channel_ops)
-    conn._deescalate()
+
+    priv_exec = PrivilegeLevel(
+        r"^[a-z0-9.\-@/:]{1,32}#$",
+        "privilege_exec",
+        "exec",
+        "disable",
+        "enable",
+        True,
+        "Password:",
+    )
+    conn._deescalate(priv_exec)
 
 
 def test_acquire_priv(mocked_network_driver):
-    channel_input_1 = "\n"
+    channel_input_1 = "disable"
     channel_output_1 = "\n3560CX>"
     channel_input_2 = "\n"
     channel_output_2 = "3560CX>"
@@ -178,13 +134,11 @@ def test_acquire_priv(mocked_network_driver):
     channel_output_4 = "\n3560CX#"
     channel_input_5 = "\n"
     channel_output_5 = "3560CX#"
-    channel_input_6 = "\n"
-    channel_output_6 = "3560CX#"
-    channel_input_7 = "configure terminal"
-    channel_output_7 = """Enter configuration commands, one per line.  End with CNTL/Z.
+    channel_input_6 = "configure terminal"
+    channel_output_6 = """Enter configuration commands, one per line.  End with CNTL/Z.
 3560CX(config)#"""
-    channel_input_8 = "\n"
-    channel_output_8 = "3560CX(config)#"
+    channel_input_7 = "\n"
+    channel_output_7 = "3560CX(config)#"
     channel_ops = [
         (channel_input_1, channel_output_1),
         (channel_input_2, channel_output_2),
@@ -193,126 +147,38 @@ def test_acquire_priv(mocked_network_driver):
         (channel_input_5, channel_output_5),
         (channel_input_6, channel_output_6),
         (channel_input_7, channel_output_7),
-        (channel_input_8, channel_output_8),
     ]
 
     conn = mocked_network_driver(channel_ops)
+    conn.acquire_priv("exec")
     conn.acquire_priv("configuration")
 
 
-def test_acquire_priv_deescalate(mocked_network_driver):
-    channel_input_1 = "\n"
-    channel_output_1 = "3560CX(config)#"
-    channel_input_2 = "\n"
-    channel_output_2 = "3560CX(config)#"
-    channel_input_3 = "end"
-    channel_output_3 = "3560CX#"
-    channel_input_4 = "\n"
-    channel_output_4 = "3560CX#"
-    channel_ops = [
-        (channel_input_1, channel_output_1),
-        (channel_input_2, channel_output_2),
-        (channel_input_3, channel_output_3),
-        (channel_input_4, channel_output_4),
-    ]
+def test_acquire_unknown_priv(mocked_network_driver):
+    channel_input_1 = "configure terminal"
+    channel_output_1 = """Enter configuration commands, one per line.  End with CNTL/Z.
+    3560CX(config)#"""
+    channel_ops = [(channel_input_1, channel_output_1)]
 
     conn = mocked_network_driver(channel_ops)
-    conn.acquire_priv("privilege_exec")
 
-
-def test_acquire_priv_could_not_acquire_priv(mocked_network_driver):
-    channel_input_1 = "\n"
-    channel_output_1 = "\n3560CX>"
-    channel_input_2 = "\n"
-    channel_output_2 = "3560CX>"
-    channel_input_3 = "enable"
-    channel_output_3 = "Password: "
-    channel_input_4 = "password"
-    channel_output_4 = "\n3560CX#"
-
-    channel_input_5 = "\n"
-    channel_output_5 = "\n3560CX>"
-    channel_input_6 = "\n"
-    channel_output_6 = "3560CX>"
-    channel_input_7 = "enable"
-    channel_output_7 = "Password: "
-    channel_input_8 = "password"
-    channel_output_8 = "\n3560CX#"
-
-    channel_input_9 = "\n"
-    channel_output_9 = "\n3560CX>"
-    channel_input_10 = "\n"
-    channel_output_10 = "3560CX>"
-    channel_input_11 = "enable"
-    channel_output_11 = "Password: "
-    channel_input_12 = "password"
-    channel_output_12 = "\n3560CX#"
-
-    channel_input_13 = "\n"
-    channel_output_13 = "\n3560CX>"
-
-    channel_ops = [
-        (channel_input_1, channel_output_1),
-        (channel_input_2, channel_output_2),
-        (channel_input_3, channel_output_3),
-        (channel_input_4, channel_output_4),
-        (channel_input_5, channel_output_5),
-        (channel_input_6, channel_output_6),
-        (channel_input_7, channel_output_7),
-        (channel_input_8, channel_output_8),
-        (channel_input_9, channel_output_9),
-        (channel_input_10, channel_output_10),
-        (channel_input_11, channel_output_11),
-        (channel_input_12, channel_output_12),
-        (channel_input_13, channel_output_13),
-    ]
-
-    conn = mocked_network_driver(channel_ops)
     mock_privs = {
-        "exec": (
-            PrivilegeLevel(
-                r"^[a-z0-9.\-@()/:]{1,32}>$",
-                "exec",
-                None,
-                None,
-                "privilege_exec",
-                "enable",
-                True,
-                "Password:",
-                True,
-                0,
-            )
-        ),
         "privilege_exec": (
             PrivilegeLevel(
                 r"^[a-z0-9.\-@/:]{1,32}#$",
                 "privilege_exec",
                 "exec",
                 "disable",
-                "configuration",
-                "configure terminal",
-                False,
-                False,
+                "enable",
                 True,
-                1,
+                "Password:",
             )
         ),
     }
     conn.privs = mock_privs
 
-    def _mock_escalate(self):
-        self.__class__._escalate(self)
-        self.channel.comms_prompt_pattern = mock_privs["exec"].pattern
-
-    def _mock_get_prompt():
-        return "3560CX>"
-
-    conn._escalate = types.MethodType(_mock_escalate, conn)
-    conn.get_prompt = _mock_get_prompt
-
-    with pytest.raises(CouldNotAcquirePrivLevel) as exc:
-        conn.acquire_priv("privilege_exec")
-    assert str(exc.value) == "Could not acquire requested privilege level: 'privilege_exec'"
+    with pytest.raises(UnknownPrivLevel):
+        conn.acquire_priv("tacocat")
 
 
 def test_update_response(mocked_network_driver):
@@ -326,10 +192,8 @@ def test_update_response(mocked_network_driver):
 
 
 def test_send_command(mocked_network_driver):
-    channel_input_1 = "\n"
-    channel_output_1 = "\n3560CX#"
-    channel_input_2 = "show ip access-lists"
-    channel_output_2 = """Extended IP access list ext_acl_fw
+    channel_input_1 = "show ip access-lists"
+    channel_output_1 = """Extended IP access list ext_acl_fw
         10 deny ip 0.0.0.0 0.255.255.255 any
         20 deny ip 10.0.0.0 0.255.255.255 any
         30 deny ip 100.64.0.0 0.63.255.255 any (2 matches)
@@ -345,18 +209,16 @@ def test_send_command(mocked_network_driver):
         130 deny ip 224.0.0.0 15.255.255.255 any
         140 deny ip 240.0.0.0 15.255.255.255 any
 3560CX#"""
-    test_operations = [(channel_input_1, channel_output_1), (channel_input_2, channel_output_2)]
+    test_operations = [(channel_input_1, channel_output_1)]
     conn = mocked_network_driver(test_operations)
     conn.default_desired_priv = "privilege_exec"
-    output = conn.send_command(channel_input_2, strip_prompt=False)
-    assert output.result == channel_output_2
+    output = conn.send_command(channel_input_1, strip_prompt=False)
+    assert output.result == channel_output_1
 
 
 def test_send_commands(mocked_network_driver):
-    channel_input_1 = "\n"
-    channel_output_1 = "\n3560CX#"
-    channel_input_2 = "show ip access-lists"
-    channel_output_2 = """Extended IP access list ext_acl_fw
+    channel_input_1 = "show ip access-lists"
+    channel_output_1 = """Extended IP access list ext_acl_fw
         10 deny ip 0.0.0.0 0.255.255.255 any
         20 deny ip 10.0.0.0 0.255.255.255 any
         30 deny ip 100.64.0.0 0.63.255.255 any (2 matches)
@@ -372,8 +234,8 @@ def test_send_commands(mocked_network_driver):
         130 deny ip 224.0.0.0 15.255.255.255 any
         140 deny ip 240.0.0.0 15.255.255.255 any
 3560CX#"""
-    channel_input_3 = "show ip access-lists"
-    channel_output_3 = """Extended IP access list ext_acl_fw
+    channel_input_2 = "show ip access-lists"
+    channel_output_2 = """Extended IP access list ext_acl_fw
             10 deny ip 0.0.0.0 0.255.255.255 any
             20 deny ip 10.0.0.0 0.255.255.255 any
             30 deny ip 100.64.0.0 0.63.255.255 any (2 matches)
@@ -392,27 +254,23 @@ def test_send_commands(mocked_network_driver):
     test_operations = [
         (channel_input_1, channel_output_1),
         (channel_input_2, channel_output_2),
-        (channel_input_3, channel_output_3),
     ]
     conn = mocked_network_driver(test_operations)
     conn.default_desired_priv = "privilege_exec"
-    outputs = conn.send_commands([channel_input_2, channel_input_3], strip_prompt=False)
-    assert outputs[0].result == channel_output_2
-    assert outputs[1].result == channel_output_3
+    outputs = conn.send_commands([channel_input_1, channel_input_2], strip_prompt=False)
+    assert outputs[0].result == channel_output_1
+    assert outputs[1].result == channel_output_2
 
 
 def test_send_inputs_interact(mocked_network_driver):
-    channel_input_1 = "\n"
-    channel_output_1 = "3560CX#"
-    channel_input_2 = "clear logg"
-    channel_output_2 = "Clear logging buffer [confirm]"
-    channel_input_3 = "\n"
-    channel_output_3 = "3560CX#"
-    interact = [(channel_input_2, channel_output_2), ("", channel_output_3)]
+    channel_input_1 = "clear logg"
+    channel_output_1 = "Clear logging buffer [confirm]"
+    channel_input_2 = "\n"
+    channel_output_2 = "3560CX#"
+    interact = [(channel_input_1, channel_output_1), ("", channel_output_2)]
     test_operations = [
         (channel_input_1, channel_output_1),
         (channel_input_2, channel_output_2),
-        (channel_input_3, channel_output_3),
     ]
     conn = mocked_network_driver(test_operations)
     conn.default_desired_priv = "privilege_exec"
@@ -421,77 +279,48 @@ def test_send_inputs_interact(mocked_network_driver):
 
 
 def test_send_configs(mocked_network_driver):
-    channel_input_1 = "\n"
-    channel_output_1 = "\n3560CX#"
-    channel_input_2 = "\n"
-    channel_output_2 = "\n3560CX#"
-    channel_input_3 = "configure terminal"
-    channel_output_3 = """Enter configuration commands, one per line.  End with CNTL/Z.
+    channel_input_1 = "configure terminal"
+    channel_output_1 = """Enter configuration commands, one per line.  End with CNTL/Z.
 3560CX(config)#"""
-    channel_input_4 = "\n"
-    channel_output_4 = "3560CX(config)#"
-    channel_input_5 = "hostname XC0653"
-    channel_output_5 = "XC0653(config)#"
-    channel_input_6 = "\n"
-    channel_output_6 = "XC0653(config)#"
-    channel_input_7 = "\n"
-    channel_output_7 = "XC0653(config)#"
-    channel_input_8 = "end"
-    channel_output_8 = "XC0653#"
-    channel_input_9 = "\n"
-    channel_output_9 = "\nXC0653#"
+    channel_input_2 = "hostname XC0653"
+    channel_output_2 = "XC0653(config)#"
+    channel_input_3 = "\n"
+    channel_output_3 = "XC0653(config)#"
+    channel_input_4 = "end"
+    channel_output_4 = "XC0653#"
     test_operations = [
         (channel_input_1, channel_output_1),
         (channel_input_2, channel_output_2),
         (channel_input_3, channel_output_3),
         (channel_input_4, channel_output_4),
-        (channel_input_5, channel_output_5),
-        (channel_input_6, channel_output_6),
-        (channel_input_7, channel_output_7),
-        (channel_input_8, channel_output_8),
-        (channel_input_9, channel_output_9),
     ]
     conn = mocked_network_driver(test_operations)
-    conn.default_desired_priv = "privilege_exec"
-    output = conn.send_configs(channel_input_5, strip_prompt=False)
-    assert output[0].result == channel_output_5
+    output = conn.send_configs(channel_input_3, strip_prompt=False)
+    assert output[0].result == channel_output_3
 
 
 def test_send_configs_from_file(mocked_network_driver):
-    channel_input_1 = "\n"
-    channel_output_1 = "\n3560CX#"
-    channel_input_2 = "\n"
-    channel_output_2 = "\n3560CX#"
-    channel_input_3 = "configure terminal"
-    channel_output_3 = """Enter configuration commands, one per line.  End with CNTL/Z.
+    channel_input_1 = "configure terminal"
+    channel_output_1 = """Enter configuration commands, one per line.  End with CNTL/Z.
 3560CX(config)#"""
-    channel_input_4 = "\n"
-    channel_output_4 = "3560CX(config)#"
-    channel_input_5 = "hostname XC0653"
-    channel_output_5 = "XC0653(config)#"
-    channel_input_6 = "\n"
-    channel_output_6 = "XC0653(config)#"
-    channel_input_7 = "\n"
-    channel_output_7 = "XC0653(config)#"
-    channel_input_8 = "end"
-    channel_output_8 = "XC0653#"
-    channel_input_9 = "\n"
-    channel_output_9 = "\nXC0653#"
+    channel_input_2 = "hostname XC0653"
+    channel_output_2 = "XC0653(config)#"
+    channel_input_3 = "\n"
+    channel_output_3 = "XC0653(config)#"
+    channel_input_4 = "end"
+    channel_output_4 = "XC0653#"
+    channel_input_5 = "\n"
+    channel_output_5 = "XC0653#"
     test_operations = [
         (channel_input_1, channel_output_1),
         (channel_input_2, channel_output_2),
         (channel_input_3, channel_output_3),
         (channel_input_4, channel_output_4),
         (channel_input_5, channel_output_5),
-        (channel_input_6, channel_output_6),
-        (channel_input_7, channel_output_7),
-        (channel_input_8, channel_output_8),
-        (channel_input_9, channel_output_9),
     ]
     conn = mocked_network_driver(test_operations)
-    conn.default_desired_priv = "privilege_exec"
     output = conn.send_configs_from_file(file=f"{TEST_DATA_PATH}/send_configs", strip_prompt=False)
-    assert output[0].result == channel_output_5
+    assert output[0].result == channel_output_3
 
 
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting textfsm on windows")
@@ -535,10 +364,8 @@ def test_send_configs_from_file(mocked_network_driver):
 def test_send_inputs_textfsm_success(mocked_network_driver, parse_type):
     to_dict = parse_type[0]
     expected_result = parse_type[1]
-    channel_input_1 = "\n"
-    channel_output_1 = "\n3560CX#"
-    channel_input_2 = "show version"
-    channel_output_2 = """Cisco IOS Software, C3560CX Software (C3560CX-UNIVERSALK9-M), Version 15.2(4)E7, RELEASE SOFTWARE (fc2)
+    channel_input_1 = "show version"
+    channel_output_1 = """Cisco IOS Software, C3560CX Software (C3560CX-UNIVERSALK9-M), Version 15.2(4)E7, RELEASE SOFTWARE (fc2)
 Technical Support: http://www.cisco.com/techsupport
 Copyright (c) 1986-2018 by Cisco Systems, Inc.
 Compiled Tue 18-Sep-18 13:20 by prod_rel_team
@@ -605,11 +432,11 @@ Switch Ports Model                     SW Version            SW Image
 Configuration register is 0xF
 
 3560CX#"""
-    test_operations = [(channel_input_1, channel_output_1), (channel_input_2, channel_output_2)]
+    test_operations = [(channel_input_1, channel_output_1)]
     conn = mocked_network_driver(test_operations)
     conn.default_desired_priv = "privilege_exec"
     conn.textfsm_platform = "cisco_ios"
-    results = conn.send_command(channel_input_2)
+    results = conn.send_command(channel_input_1)
     parsed_results = results.textfsm_parse_output(to_dict=to_dict)
     assert isinstance(parsed_results, list)
     assert parsed_results[0] == expected_result
@@ -617,10 +444,8 @@ Configuration register is 0xF
 
 @pytest.mark.skipif(textfsm_avail is False, reason="textfsm and/or ntc_templates are not installed")
 def test_send_inputs_textfsm_fail(mocked_network_driver):
-    channel_input_1 = "\n"
-    channel_output_1 = "\n3560CX#"
-    channel_input_2 = "show version"
-    channel_output_2 = """Cisco IOS Software, C3560CX Software (C3560CX-UNIVERSALK9-M), Version 15.2(4)E7, RELEASE SOFTWARE (fc2)
+    channel_input_1 = "show version"
+    channel_output_1 = """Cisco IOS Software, C3560CX Software (C3560CX-UNIVERSALK9-M), Version 15.2(4)E7, RELEASE SOFTWARE (fc2)
 Technical Support: http://www.cisco.com/techsupport
 Copyright (c) 1986-2018 by Cisco Systems, Inc.
 Compiled Tue 18-Sep-18 13:20 by prod_rel_team
@@ -687,11 +512,11 @@ Switch Ports Model                     SW Version            SW Image
 Configuration register is 0xF
 
 3560CX#"""
-    test_operations = [(channel_input_1, channel_output_1), (channel_input_2, channel_output_2)]
+    test_operations = [(channel_input_1, channel_output_1)]
     conn = mocked_network_driver(test_operations)
     conn.default_desired_priv = "privilege_exec"
     conn.textfsm_platform = "not_real"
-    results = conn.send_command(channel_input_2)
+    results = conn.send_command(channel_input_1)
     parsed_results = results.textfsm_parse_output()
     assert isinstance(parsed_results, list)
     assert parsed_results == []

@@ -10,10 +10,10 @@ from scrapli.transport.transport import Transport
 
 
 class MockScrape(Scrape):
-    def __init__(self, channel_ops, initial_bytes, *args, **kwargs):
+    def __init__(self, channel_ops, initial_bytes, **kwargs):
         self.channel_ops = channel_ops
         self.initial_bytes = initial_bytes
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
 
     def _transport_factory(self, transport: str) -> Tuple[Callable[..., Any], Dict[str, Any]]:
         """
@@ -89,10 +89,13 @@ class MockTransport(Transport):
 
 
 class MockNetworkDriver(MockScrape, NetworkDriver):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.privs = PRIVS
-        self.auth_secondary = "password"
+    def __init__(self, **kwargs):
+        super().__init__(
+            privilege_levels=PRIVS,
+            default_desired_privilege_level="privilege_exec",
+            auth_secondary="password",
+            **kwargs,
+        )
 
     def open(self):
         # Overriding "normal" network driver open method as we don't need to worry about disable
@@ -100,6 +103,7 @@ class MockNetworkDriver(MockScrape, NetworkDriver):
         self.transport = self.transport_class(**self.transport_args)
         self.transport.open()
         self.channel = Channel(self.transport, **self.channel_args)
+        self._current_priv_level = self.privilege_levels[self.default_desired_privilege_level]
 
 
 class MockGenericDriver(MockScrape, GenericDriver):
