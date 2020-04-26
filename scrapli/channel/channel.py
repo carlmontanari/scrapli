@@ -233,7 +233,7 @@ class Channel:
 
         """
         prompt_pattern = get_prompt_pattern(prompt="", class_prompt=self.comms_prompt_pattern)
-        self.transport.set_timeout(timeout=1000)
+        self.transport.set_timeout(timeout=10)
         self._send_return()
         output = b""
         while True:

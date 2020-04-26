@@ -291,6 +291,7 @@ class TelnetTransport(Transport):
             return True
         return False
 
+    @operation_timeout("timeout_transport", "Timed out reading from transport")
     def read(self) -> bytes:
         """
         Read data from the channel
@@ -307,6 +308,7 @@ class TelnetTransport(Transport):
         """
         return self.session.read_eager()
 
+    @operation_timeout("timeout_transport", "Timed out writing to transport")
     def write(self, channel_input: str) -> None:
         """
         Write data to the channel

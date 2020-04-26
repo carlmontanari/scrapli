@@ -20,6 +20,8 @@ CHANGELOG
 - Added an `_abort_config` method to abort configurations for IOSXR/Juniper, this is ignored on the other core platforms
 - *BREAKING CHANGE*: (minor) Removed now unneeded exception `CouldNotAcquirePrivLevel`
 - Made the `get_prompt_pattern` helper a little worse... should revisit to improve/make its use more clear
+- Fixed a screw up that had ridiculous transport timeouts -- at one point timeouts were in seconds, then milliseconds
+... went back to seconds, but left things setting millisecond values... fixed :D 
 
 # 2020.04.19
 - Increase character count for base prompt pattern for `Scrape`, `GenericDriver`, and core drivers. Example:

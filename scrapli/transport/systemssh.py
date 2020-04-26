@@ -559,6 +559,7 @@ class SystemSSHTransport(Transport):
                 return True
         return False
 
+    @operation_timeout("timeout_transport", "Timed out reading from transport")
     def read(self) -> bytes:
         """
         Read data from the channel
@@ -580,6 +581,7 @@ class SystemSSHTransport(Transport):
             return self.session.read(read_bytes)
         return b""
 
+    @operation_timeout("timeout_transport", "Timed out writing to transport")
     def write(self, channel_input: str) -> None:
         """
         Write data to the channel
