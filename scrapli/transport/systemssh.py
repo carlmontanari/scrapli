@@ -279,11 +279,17 @@ class SystemSSHTransport(Transport):
                 return
             if not self.auth_password or not self.auth_username:
                 msg = (
-                    f"Public key authentication to host {self.host} failed. Missing username or"
-                    " password unable to attempt password authentication."
+                    f"Failed to authenticate to host {self.host} with private key "
+                    f"`{self.auth_private_key}`. Unable to continue authentication, missing "
+                    "username, password, or both."
                 )
                 LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
+            msg = (
+                f"Failed to authenticate to host {self.host} with private key "
+                f"`{self.auth_private_key}`. Attempting to continue with password authentication."
+            )
+            LOG.critical(msg)
 
         # If public key auth fails or is not configured, open a pty session
         if not self._open_pty():
@@ -346,6 +352,12 @@ class SystemSSHTransport(Transport):
                 stderr_fd = self.session.stderr.fileno()
                 os.close(stderr_fd)
             self.session.kill()
+
+            # close the ptys we forked
+            os.close(stdin_master_pty)
+            os.close(stdout_master_pty)
+            # it seems that killing the process/fds somehow unlocks the thread? very unsure how/why
+            self.session_lock.acquire()
             return False
 
         LOG.debug(f"Authenticated to host {self.host} with public key")
@@ -413,6 +425,38 @@ class SystemSSHTransport(Transport):
         LOG.debug(f"Authenticated to host {self.host} with password")
         return True
 
+    def _pty_authentication_eof_handler(self, output: bytes) -> str:
+        """
+        Parse EOF messages from _pty_authenticate and create log/stack exception message
+
+        Args:
+            output: bytes output from _pty_authenticate
+
+        Returns:
+            str: message for logging/stack trace
+
+        Raises:
+            N/A
+
+        """
+        msg = f"Failed to open connection to host {self.host}"
+        if b"Host key verification failed" in output:
+            msg = f"Host key verification failed for host {self.host}"
+        elif b"Operation timed out" in output or b"Connection timed out" in output:
+            msg = f"Timed out connecting to host {self.host}"
+        elif b"No route to host" in output:
+            msg = f"No route to host {self.host}"
+        elif b"no matching cipher found" in output:
+            msg = f"No matching cipher found for host {self.host}"
+            ciphers_pattern = re.compile(pattern=rb"their offer: ([a-z0-9\-,]*)", flags=re.M | re.I)
+            offered_ciphers_match = re.search(pattern=ciphers_pattern, string=output)
+            if offered_ciphers_match:
+                offered_ciphers = offered_ciphers_match.group(1).decode()
+                msg = (
+                    f"No matching cipher found for host {self.host}, their offer: {offered_ciphers}"
+                )
+        return msg
+
     @operation_timeout("_timeout_ops", "Timed out looking for SSH login password prompt")
     def _pty_authenticate(self, pty_session: PtyProcess) -> None:
         """
@@ -437,13 +481,7 @@ class SystemSSHTransport(Transport):
                 output += new_output
                 LOG.debug(f"Attempting to authenticate. Read: {repr(new_output)}")
             except EOFError:
-                msg = f"Failed to open connection to host {self.host}"
-                if b"Host key verification failed" in output:
-                    msg = f"Host key verification failed for host {self.host}"
-                elif b"Operation timed out" in output:
-                    msg = f"Timed out connecting to host {self.host}"
-                elif b"No route to host" in output:
-                    msg = f"No route to host {self.host}"
+                msg = self._pty_authentication_eof_handler(output)
                 LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
             if self._comms_ansi:
