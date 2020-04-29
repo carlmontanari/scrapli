@@ -2,7 +2,13 @@
 import os
 import re
 import shlex
-from typing import Dict, Match, Optional
+import sys
+from typing import Dict, Optional
+
+if sys.version_info >= (3, 8):
+    Match = re.Match
+else:
+    from typing import Match
 
 
 class SSHConfig:

@@ -64,6 +64,7 @@ class Scrape:
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         transport: str = "system",
+        transport_options: Optional[Dict[str, Any]] = None,
     ):
         """
         Scrape Object
@@ -137,6 +138,8 @@ class Scrape:
                 '/etc/ssh/config_file'). ssh2 is very very fast as it is a thin wrapper around
                 libssh2 however it is slightly feature limited. paramiko is slower than ssh2, but
                 has more features built in (though scrapli does not expose/support them all).
+            transport_options: dictionary of options to pass to selected transport class; see
+                docs for given transport class for details of what to pass here
 
         Returns:
             N/A  # noqa: DAR202
@@ -185,7 +188,13 @@ class Scrape:
                 ssh_config_file=ssh_config_file, ssh_known_hosts_file=ssh_known_hosts_file
             )
 
+        self._initialization_args["transport_options"] = transport_options
         self.transport_class, self.transport_args = self._transport_factory(transport=transport)
+        # so transport drivers don't need to support `transport_options` as an argument, if no
+        # transport options provided, do nothing, otherwise add this to the args we ship to the
+        # transport class
+        if transport_options is not None:
+            self.transport_args["transport_options"] = transport_options
         self.transport = self.transport_class(**self.transport_args)
 
         self.channel_args: Dict[str, Any] = {}
@@ -289,7 +298,8 @@ class Scrape:
             f"ssh_known_hosts_file={self._initialization_args.get('ssh_known_hosts_file')!r}, "
             f"on_open={self.on_open!r}, "
             f"on_close={self.on_close!r}, "
-            f"transport={self._transport!r})"
+            f"transport={self._transport!r}, "
+            f"transport_options={self._initialization_args.get('transport_options')!r})"
         )
 
     def _setup_host(self, host: str, port: int) -> None:

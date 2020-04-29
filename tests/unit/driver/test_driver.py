@@ -24,7 +24,7 @@ def test__repr():
         "timeout_exit=True, keepalive=False, keepalive_interval=30, keepalive_type='network', "
         "keepalive_pattern='\\x05', comms_prompt_pattern='^[a-z0-9.\\\\-@()/:]{1,48}[#>$]\\\\s*$', "
         "comms_return_char='\\n', comms_ansi=False, ssh_config_file='', ssh_known_hosts_file='', on_open=None, "
-        "on_close=None, transport='system')"
+        "on_close=None, transport='system', transport_options=None)"
     )
 
 

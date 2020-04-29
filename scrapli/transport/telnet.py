@@ -234,7 +234,7 @@ class TelnetTransport(Transport):
                 fd_ready, _, _ = select([telnet_session_fd], [], [], 0)
                 if telnet_session_fd in fd_ready:
                     break
-                LOG.debug(f"PTY fd not ready yet...")
+                LOG.debug("PTY fd not ready yet...")
             output = b""
             while True:
                 output += telnet_session.read_eager()
