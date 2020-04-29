@@ -4,7 +4,7 @@ import re
 from logging import getLogger
 from select import select
 from subprocess import PIPE, Popen
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 
 from scrapli.decorators import operation_timeout
 from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliTimeout
@@ -56,6 +56,7 @@ class SystemSSHTransport(Transport):
         comms_ansi: bool = False,
         ssh_config_file: str = "",
         ssh_known_hosts_file: str = "",
+        transport_options: Optional[Dict[str, Any]] = None,
     ) -> None:
         """
         SystemSSHTransport Object
@@ -132,6 +133,11 @@ class SystemSSHTransport(Transport):
                 is completed.
             ssh_config_file: string to path for ssh config file
             ssh_known_hosts_file: string to path for ssh known hosts file
+            transport_options: SystemSSHTransport specific transport options (options that don't
+                apply to any of the other transport classes). Currently supported options are:
+                - open_cmd: string or list of strings to extend the open_cmd with, for example:
+                    `["-o", "KexAlgorithms=+diffie-hellman-group1-sha1"]` or:
+                    `-oKexAlgorithms=+diffie-hellman-group1-sha1`
 
         Returns:
             N/A  # noqa: DAR202
@@ -168,6 +174,9 @@ class SystemSSHTransport(Transport):
         self.session: Union[Popen[bytes], PtyProcess]  # pylint: disable=E1136
         self.lib_auth_exception = ScrapliAuthenticationFailed
         self._isauthenticated = False
+
+        # ensure we set transport_options to a dict if its left as None
+        self.transport_options = transport_options or {}
 
         self.open_cmd = ["ssh", self.host]
         self._build_open_cmd()
@@ -327,6 +336,8 @@ class SystemSSHTransport(Transport):
         open_cmd.append("-v")
         open_cmd.extend(["-o", "BatchMode=yes"])
 
+        LOG.info(f"Attempting to open session with the following command: {open_cmd}")
+
         stdout_master_pty, stdout_slave_pty = pty.openpty()
         stdin_master_pty, stdin_slave_pty = pty.openpty()
 
@@ -414,6 +425,7 @@ class SystemSSHTransport(Transport):
             N/A
 
         """
+        LOG.info(f"Attempting to open session with the following command: {self.open_cmd}")
         self.session = PtyProcess.spawn(self.open_cmd)
         LOG.debug(f"Session to host {self.host} spawned")
         self.session_lock.release()
@@ -523,7 +535,7 @@ class SystemSSHTransport(Transport):
                 fd_ready, _, _ = select([pty_session.fd], [], [], 0)
                 if pty_session.fd in fd_ready:
                     break
-                LOG.debug(f"PTY fd not ready yet...")
+                LOG.debug("PTY fd not ready yet...")
             output = b""
             while True:
                 new_output = pty_session.read()
