@@ -176,9 +176,7 @@ def test_attr_assignment(attr_setup):
 def test_valid_private_key_file():
     auth_private_key = f"{UNIT_TEST_DIR}_ssh_private_key"
     conn = Scrape(host="myhost", auth_private_key=auth_private_key)
-    assert (
-        conn._initialization_args["auth_private_key"] == f"{UNIT_TEST_DIR}_ssh_private_key"
-    )
+    assert conn._initialization_args["auth_private_key"] == f"{UNIT_TEST_DIR}_ssh_private_key"
 
 
 @pytest.mark.skipif(
