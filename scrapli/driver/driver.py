@@ -363,14 +363,14 @@ class Scrape:
         self._initialization_args["auth_password"] = auth_password.strip()
 
         if auth_private_key:
-            public_key_path = Path.expanduser(Path(auth_private_key.strip()))
-            if not public_key_path.is_file():
+            private_key_path = Path.expanduser(Path(auth_private_key.strip()))
+            if not private_key_path.is_file():
                 raise ValueError(f"Provided public key `{auth_private_key}` is not a file")
             self._initialization_args["auth_private_key"] = os.path.expanduser(
-                auth_private_key.strip().encode()
+                auth_private_key.strip()
             )
         else:
-            self._initialization_args["auth_private_key"] = auth_private_key.encode()
+            self._initialization_args["auth_private_key"] = auth_private_key
 
     def _setup_timeouts(
         self, timeout_socket: int, timeout_transport: int, timeout_ops: int, timeout_exit: bool

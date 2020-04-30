@@ -22,6 +22,10 @@ CHANGELOG
 - Made the `get_prompt_pattern` helper a little worse... should revisit to improve/make its use more clear
 - Fixed a screw up that had ridiculous transport timeouts -- at one point timeouts were in seconds, then milliseconds
 ... went back to seconds, but left things setting millisecond values... fixed :D 
+- Added `transport_options` to base `Scrape` class -- this is a dict of arguments that can be passed down to your
+ selected transport class... for now this is very limited and is just for passing additional "open_cmd" arguments to
+  `SystemSSHTransport`. The current use case is adding args such as ciphers/kex to your ssh command so you don't need
+   to rely on having this in an ssh config file.
 
 # 2020.04.19
 - Increase character count for base prompt pattern for `Scrape`, `GenericDriver`, and core drivers. Example:

@@ -134,10 +134,18 @@ class SystemSSHTransport(Transport):
             ssh_config_file: string to path for ssh config file
             ssh_known_hosts_file: string to path for ssh known hosts file
             transport_options: SystemSSHTransport specific transport options (options that don't
-                apply to any of the other transport classes). Currently supported options are:
+                apply to any of the other transport classes) supplied in a dictionary where the key
+                is the name of the option and the value is of course the value.
                 - open_cmd: string or list of strings to extend the open_cmd with, for example:
                     `["-o", "KexAlgorithms=+diffie-hellman-group1-sha1"]` or:
                     `-oKexAlgorithms=+diffie-hellman-group1-sha1`
+                    these commands will be appended to the open command that scrapli builds which
+                    looks something like the following depending on the inputs provided:
+                        ssh 172.31.254.1 -p 22 -o ConnectTimeout=5 -o ServerAliveInterval=10
+                         -l scrapli -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+                         -F /dev/null
+                    You can pass any arguments that would be supported if you were ssh'ing on your
+                    terminal "normally", passing some bad arguments can break things!
 
         Returns:
             N/A  # noqa: DAR202
@@ -244,6 +252,11 @@ class SystemSSHTransport(Transport):
         else:
             self.open_cmd.extend(["-F", "/dev/null"])
 
+        user_args = self.transport_options.get("open_cmd", [])
+        if isinstance(user_args, str):
+            user_args = [user_args]
+        self.open_cmd.extend(user_args)
+
     def open(self) -> None:
         """
         Parent method to open session, authenticate and acquire shell
@@ -289,8 +302,8 @@ class SystemSSHTransport(Transport):
             if not self.auth_password or not self.auth_username:
                 msg = (
                     f"Failed to authenticate to host {self.host} with private key "
-                    f"`{self.auth_private_key}`. Unable to continue authentication, missing "
-                    "username, password, or both."
+                    f"`{self.auth_private_key}`. Unable to continue authentication, "
+                    "missing username, password, or both."
                 )
                 LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
@@ -451,7 +464,10 @@ class SystemSSHTransport(Transport):
             N/A
 
         """
-        msg = f"Failed to open connection to host {self.host}"
+        msg = (
+            f"Failed to open connection to host {self.host}. Do you need to disable "
+            "`auth_strict_key`?"
+        )
         if b"Host key verification failed" in output:
             msg = f"Host key verification failed for host {self.host}"
         elif b"Operation timed out" in output or b"Connection timed out" in output:

@@ -33,6 +33,28 @@ def test_build_open_cmd():
 
 
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="systemssh not supported on windows")
+def test_build_open_cmd_user_options():
+    conn = SystemSSHTransport(
+        "localhost", transport_options={"open_cmd": ["oKexAlgorithms=+diffie-hellman-group1-sha1"]}
+    )
+    assert conn.open_cmd == [
+        "ssh",
+        "localhost",
+        "-p",
+        "22",
+        "-o",
+        "ConnectTimeout=5",
+        "-o",
+        "ServerAliveInterval=5",
+        "-o",
+        "StrictHostKeyChecking=yes",
+        "-F",
+        "/dev/null",
+        "oKexAlgorithms=+diffie-hellman-group1-sha1",
+    ]
+
+
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="systemssh not supported on windows")
 @pytest.mark.parametrize(
     "eof_msg",
     [
@@ -45,6 +67,10 @@ def test_build_open_cmd():
             b"no matching cipher found, their offer: aes128-cbc,aes256-cbc",
             "No matching cipher found for host localhost, their offer: aes128-cbc,aes256-cbc",
         ),
+        (
+            b"blah blah blah",
+            "Failed to open connection to host localhost. Do you need to disable `auth_strict_key`?",
+        ),
     ],
     ids=[
         "host key verification",
@@ -53,6 +79,7 @@ def test_build_open_cmd():
         "no route to host",
         "no matching cipher",
         "no matching cipher found ciphers",
+        "unknown reason",
     ],
 )
 def test_pty_authentication_error_messages(eof_msg):

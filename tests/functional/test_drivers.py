@@ -312,6 +312,6 @@ def test_public_key_auth_failure(device_type, transport):
     with pytest.raises(ScrapliAuthenticationFailed) as exc:
         conn.open()
     assert str(exc.value) == (
-        f"Public key authentication to host {device['host']} failed. Missing username or "
-        "password unable to attempt password authentication."
+        f"Failed to authenticate to host 172.18.0.11 with private key `{INVALID_PRIVATE_KEY}`. "
+        "Unable to continue authentication, missing username, password, or both."
     )
