@@ -1,6 +1,9 @@
 CHANGELOG
 =======
 
+# 2020.XX.XX
+- Add underscores to EOS config prompt matching
+
 # 2020.04.30
 - Continued improvement around `SystemSSHTransport` connection/auth failure logging
 - Fix for very intermittent issue where pty fd is not available for reading on SystemSSH/Telnet connections, now we
