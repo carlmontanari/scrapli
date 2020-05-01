@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.7.5" />
+<meta name="generator" content="pdoc 0.8.1" />
 <title>scrapli.transport.systemssh API documentation</title>
 <meta name="description" content="scrapli.transport.systemssh" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
-<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
-<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 </head>
 <body>
@@ -31,7 +31,7 @@ import re
 from logging import getLogger
 from select import select
 from subprocess import PIPE, Popen
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 
 from scrapli.decorators import operation_timeout
 from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliTimeout
@@ -83,6 +83,7 @@ class SystemSSHTransport(Transport):
         comms_ansi: bool = False,
         ssh_config_file: str = &#34;&#34;,
         ssh_known_hosts_file: str = &#34;&#34;,
+        transport_options: Optional[Dict[str, Any]] = None,
     ) -&gt; None:
         &#34;&#34;&#34;
         SystemSSHTransport Object
@@ -159,6 +160,19 @@ class SystemSSHTransport(Transport):
                 is completed.
             ssh_config_file: string to path for ssh config file
             ssh_known_hosts_file: string to path for ssh known hosts file
+            transport_options: SystemSSHTransport specific transport options (options that don&#39;t
+                apply to any of the other transport classes) supplied in a dictionary where the key
+                is the name of the option and the value is of course the value.
+                - open_cmd: string or list of strings to extend the open_cmd with, for example:
+                    `[&#34;-o&#34;, &#34;KexAlgorithms=+diffie-hellman-group1-sha1&#34;]` or:
+                    `-oKexAlgorithms=+diffie-hellman-group1-sha1`
+                    these commands will be appended to the open command that scrapli builds which
+                    looks something like the following depending on the inputs provided:
+                        ssh 172.31.254.1 -p 22 -o ConnectTimeout=5 -o ServerAliveInterval=10
+                         -l scrapli -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+                         -F /dev/null
+                    You can pass any arguments that would be supported if you were ssh&#39;ing on your
+                    terminal &#34;normally&#34;, passing some bad arguments can break things!
 
         Returns:
             N/A  # noqa: DAR202
@@ -195,6 +209,9 @@ class SystemSSHTransport(Transport):
         self.session: Union[Popen[bytes], PtyProcess]  # pylint: disable=E1136
         self.lib_auth_exception = ScrapliAuthenticationFailed
         self._isauthenticated = False
+
+        # ensure we set transport_options to a dict if its left as None
+        self.transport_options = transport_options or {}
 
         self.open_cmd = [&#34;ssh&#34;, self.host]
         self._build_open_cmd()
@@ -262,6 +279,11 @@ class SystemSSHTransport(Transport):
         else:
             self.open_cmd.extend([&#34;-F&#34;, &#34;/dev/null&#34;])
 
+        user_args = self.transport_options.get(&#34;open_cmd&#34;, [])
+        if isinstance(user_args, str):
+            user_args = [user_args]
+        self.open_cmd.extend(user_args)
+
     def open(self) -&gt; None:
         &#34;&#34;&#34;
         Parent method to open session, authenticate and acquire shell
@@ -306,11 +328,17 @@ class SystemSSHTransport(Transport):
                 return
             if not self.auth_password or not self.auth_username:
                 msg = (
-                    f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
-                    &#34; password unable to attempt password authentication.&#34;
+                    f&#34;Failed to authenticate to host {self.host} with private key &#34;
+                    f&#34;`{self.auth_private_key}`. Unable to continue authentication, &#34;
+                    &#34;missing username, password, or both.&#34;
                 )
                 LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
+            msg = (
+                f&#34;Failed to authenticate to host {self.host} with private key &#34;
+                f&#34;`{self.auth_private_key}`. Attempting to continue with password authentication.&#34;
+            )
+            LOG.critical(msg)
 
         # If public key auth fails or is not configured, open a pty session
         if not self._open_pty():
@@ -348,6 +376,8 @@ class SystemSSHTransport(Transport):
         open_cmd.append(&#34;-v&#34;)
         open_cmd.extend([&#34;-o&#34;, &#34;BatchMode=yes&#34;])
 
+        LOG.info(f&#34;Attempting to open session with the following command: {open_cmd}&#34;)
+
         stdout_master_pty, stdout_slave_pty = pty.openpty()
         stdin_master_pty, stdin_slave_pty = pty.openpty()
 
@@ -373,6 +403,12 @@ class SystemSSHTransport(Transport):
                 stderr_fd = self.session.stderr.fileno()
                 os.close(stderr_fd)
             self.session.kill()
+
+            # close the ptys we forked
+            os.close(stdin_master_pty)
+            os.close(stdout_master_pty)
+            # it seems that killing the process/fds somehow unlocks the thread? very unsure how/why
+            self.session_lock.acquire()
             return False
 
         LOG.debug(f&#34;Authenticated to host {self.host} with public key&#34;)
@@ -429,6 +465,7 @@ class SystemSSHTransport(Transport):
             N/A
 
         &#34;&#34;&#34;
+        LOG.info(f&#34;Attempting to open session with the following command: {self.open_cmd}&#34;)
         self.session = PtyProcess.spawn(self.open_cmd)
         LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
         self.session_lock.release()
@@ -439,6 +476,41 @@ class SystemSSHTransport(Transport):
             return False
         LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
         return True
+
+    def _pty_authentication_eof_handler(self, output: bytes) -&gt; str:
+        &#34;&#34;&#34;
+        Parse EOF messages from _pty_authenticate and create log/stack exception message
+
+        Args:
+            output: bytes output from _pty_authenticate
+
+        Returns:
+            str: message for logging/stack trace
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        msg = (
+            f&#34;Failed to open connection to host {self.host}. Do you need to disable &#34;
+            &#34;`auth_strict_key`?&#34;
+        )
+        if b&#34;Host key verification failed&#34; in output:
+            msg = f&#34;Host key verification failed for host {self.host}&#34;
+        elif b&#34;Operation timed out&#34; in output or b&#34;Connection timed out&#34; in output:
+            msg = f&#34;Timed out connecting to host {self.host}&#34;
+        elif b&#34;No route to host&#34; in output:
+            msg = f&#34;No route to host {self.host}&#34;
+        elif b&#34;no matching cipher found&#34; in output:
+            msg = f&#34;No matching cipher found for host {self.host}&#34;
+            ciphers_pattern = re.compile(pattern=rb&#34;their offer: ([a-z0-9\-,]*)&#34;, flags=re.M | re.I)
+            offered_ciphers_match = re.search(pattern=ciphers_pattern, string=output)
+            if offered_ciphers_match:
+                offered_ciphers = offered_ciphers_match.group(1).decode()
+                msg = (
+                    f&#34;No matching cipher found for host {self.host}, their offer: {offered_ciphers}&#34;
+                )
+        return msg
 
     @operation_timeout(&#34;_timeout_ops&#34;, &#34;Timed out looking for SSH login password prompt&#34;)
     def _pty_authenticate(self, pty_session: PtyProcess) -&gt; None:
@@ -464,11 +536,7 @@ class SystemSSHTransport(Transport):
                 output += new_output
                 LOG.debug(f&#34;Attempting to authenticate. Read: {repr(new_output)}&#34;)
             except EOFError:
-                msg = f&#34;Failed to open connection to host {self.host}&#34;
-                if b&#34;Host key verification failed&#34; in output:
-                    msg = f&#34;Host key verification failed for host {self.host}&#34;
-                elif b&#34;Operation timed out&#34; in output:
-                    msg = f&#34;Timed out connecting to host {self.host}&#34;
+                msg = self._pty_authentication_eof_handler(output)
                 LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
             if self._comms_ansi:
@@ -503,34 +571,40 @@ class SystemSSHTransport(Transport):
             prompt_pattern = get_prompt_pattern(prompt=&#34;&#34;, class_prompt=self._comms_prompt_pattern)
             self.session_lock.acquire()
             pty_session.write(self._comms_return_char.encode())
-            fd_ready, _, _ = select([pty_session.fd], [], [], 0)
-            if pty_session.fd in fd_ready:
-                output = b&#34;&#34;
-                while True:
-                    new_output = pty_session.read()
-                    output += new_output
-                    LOG.debug(f&#34;Attempting validate authentication. Read: {repr(new_output)}&#34;)
-                    # we do not need to deal w/ line replacement for the actual output, only for
-                    # parsing if a prompt-like thing is at the end of the output
-                    output = output.replace(b&#34;\r&#34;, b&#34;&#34;)
-                    # always check to see if we should strip ansi here; if we don&#39;t handle this we
-                    # may raise auth failures for the wrong reason which would be confusing for
-                    # users
-                    if b&#34;\x1B&#34; in output:
-                        output = strip_ansi(output=output)
-                    channel_match = re.search(pattern=prompt_pattern, string=output)
-                    if channel_match:
-                        self.session_lock.release()
-                        self._isauthenticated = True
-                        return True
-                    if b&#34;password:&#34; in output.lower():
-                        # if we see &#34;password&#34; we know auth failed (hopefully in all scenarios!)
-                        LOG.critical(
-                            &#34;Found `password:` in output, assuming password authentication failed&#34;
-                        )
-                        return False
-                    if output:
-                        LOG.debug(f&#34;Cannot determine if authenticated, \n\tRead: {repr(output)}&#34;)
+            while True:
+                # almost all of the time we don&#39;t need a while loop here, but every once in a while
+                # fd won&#39;t be ready which causes a failure without an obvious root cause,
+                # loop/logging to hopefully help with that
+                fd_ready, _, _ = select([pty_session.fd], [], [], 0)
+                if pty_session.fd in fd_ready:
+                    break
+                LOG.debug(&#34;PTY fd not ready yet...&#34;)
+            output = b&#34;&#34;
+            while True:
+                new_output = pty_session.read()
+                output += new_output
+                LOG.debug(f&#34;Attempting validate authentication. Read: {repr(new_output)}&#34;)
+                # we do not need to deal w/ line replacement for the actual output, only for
+                # parsing if a prompt-like thing is at the end of the output
+                output = output.replace(b&#34;\r&#34;, b&#34;&#34;)
+                # always check to see if we should strip ansi here; if we don&#39;t handle this we
+                # may raise auth failures for the wrong reason which would be confusing for
+                # users
+                if b&#34;\x1B&#34; in output:
+                    output = strip_ansi(output=output)
+                channel_match = re.search(pattern=prompt_pattern, string=output)
+                if channel_match:
+                    self.session_lock.release()
+                    self._isauthenticated = True
+                    return True
+                if b&#34;password:&#34; in output.lower():
+                    # if we see &#34;password&#34; we know auth failed (hopefully in all scenarios!)
+                    LOG.critical(
+                        &#34;Found `password:` in output, assuming password authentication failed&#34;
+                    )
+                    return False
+                if output:
+                    LOG.debug(f&#34;Cannot determine if authenticated, \n\tRead: {repr(output)}&#34;)
         self.session_lock.release()
         return False
 
@@ -578,6 +652,7 @@ class SystemSSHTransport(Transport):
                 return True
         return False
 
+    @operation_timeout(&#34;timeout_transport&#34;, &#34;Timed out reading from transport&#34;)
     def read(self) -&gt; bytes:
         &#34;&#34;&#34;
         Read data from the channel
@@ -599,6 +674,7 @@ class SystemSSHTransport(Transport):
             return self.session.read(read_bytes)
         return b&#34;&#34;
 
+    @operation_timeout(&#34;timeout_transport&#34;, &#34;Timed out writing to transport&#34;)
     def write(self, channel_input: str) -&gt; None:
         &#34;&#34;&#34;
         Write data to the channel
@@ -671,10 +747,10 @@ class SystemSSHTransport(Transport):
 <dl>
 <dt id="scrapli.transport.systemssh.SystemSSHTransport"><code class="flex name class">
 <span>class <span class="ident">SystemSSHTransport</span></span>
-<span>(</span><span>host='', port=22, auth_username='', auth_private_key='', auth_password='', auth_strict_key=True, auth_bypass=False, timeout_socket=5, timeout_transport=5, timeout_ops=10, timeout_exit=True, keepalive=False, keepalive_interval=30, keepalive_type='', keepalive_pattern='\x05', comms_prompt_pattern=&#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char='\n', comms_ansi=False, ssh_config_file='', ssh_known_hosts_file='')</span>
+<span>(</span><span>host: str = '', port: int = 22, auth_username: str = '', auth_private_key: str = '', auth_password: str = '', auth_strict_key: bool = True, auth_bypass: bool = False, timeout_socket: int = 5, timeout_transport: int = 5, timeout_ops: int = 10, timeout_exit: bool = True, keepalive: bool = False, keepalive_interval: int = 30, keepalive_type: str = '', keepalive_pattern: str = '\x05', comms_prompt_pattern: str = &#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char: str = '\n', comms_ansi: bool = False, ssh_config_file: str = '', ssh_known_hosts_file: str = '', transport_options: Union[Dict[str, Any], NoneType] = None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Helper class that provides a standard way to create an ABC using
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
 inheritance.</p>
 <p>SystemSSHTransport Object</p>
 <p>Inherit from Transport ABC
@@ -766,18 +842,32 @@ is completed.</dd>
 <dd>string to path for ssh config file</dd>
 <dt><strong><code>ssh_known_hosts_file</code></strong></dt>
 <dd>string to path for ssh known hosts file</dd>
+<dt><strong><code>transport_options</code></strong></dt>
+<dd>SystemSSHTransport specific transport options (options that don't
+apply to any of the other transport classes) supplied in a dictionary where the key
+is the name of the option and the value is of course the value.
+- open_cmd: string or list of strings to extend the open_cmd with, for example:
+<code>["-o", "KexAlgorithms=+diffie-hellman-group1-sha1"]</code> or:
+<code>-oKexAlgorithms=+diffie-hellman-group1-sha1</code>
+these commands will be appended to the open command that scrapli builds which
+looks something like the following depending on the inputs provided:
+ssh 172.31.254.1 -p 22 -o ConnectTimeout=5 -o ServerAliveInterval=10
+-l scrapli -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+-F /dev/null
+You can pass any arguments that would be supported if you were ssh'ing on your
+terminal "normally", passing some bad arguments can break things!</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>N</code>/<code>A</code>
-# <code>noqa</code>: <code>DAR202</code></dt>
+<dt><code>N/A
+# noqa: DAR202</code></dt>
 <dd>&nbsp;</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><code>N</code>/<code>A</code></dt>
+<dt><code>N/A</code></dt>
 <dd>&nbsp;</dd>
-</dl></section>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -805,6 +895,7 @@ is completed.</dd>
         comms_ansi: bool = False,
         ssh_config_file: str = &#34;&#34;,
         ssh_known_hosts_file: str = &#34;&#34;,
+        transport_options: Optional[Dict[str, Any]] = None,
     ) -&gt; None:
         &#34;&#34;&#34;
         SystemSSHTransport Object
@@ -881,6 +972,19 @@ is completed.</dd>
                 is completed.
             ssh_config_file: string to path for ssh config file
             ssh_known_hosts_file: string to path for ssh known hosts file
+            transport_options: SystemSSHTransport specific transport options (options that don&#39;t
+                apply to any of the other transport classes) supplied in a dictionary where the key
+                is the name of the option and the value is of course the value.
+                - open_cmd: string or list of strings to extend the open_cmd with, for example:
+                    `[&#34;-o&#34;, &#34;KexAlgorithms=+diffie-hellman-group1-sha1&#34;]` or:
+                    `-oKexAlgorithms=+diffie-hellman-group1-sha1`
+                    these commands will be appended to the open command that scrapli builds which
+                    looks something like the following depending on the inputs provided:
+                        ssh 172.31.254.1 -p 22 -o ConnectTimeout=5 -o ServerAliveInterval=10
+                         -l scrapli -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+                         -F /dev/null
+                    You can pass any arguments that would be supported if you were ssh&#39;ing on your
+                    terminal &#34;normally&#34;, passing some bad arguments can break things!
 
         Returns:
             N/A  # noqa: DAR202
@@ -917,6 +1021,9 @@ is completed.</dd>
         self.session: Union[Popen[bytes], PtyProcess]  # pylint: disable=E1136
         self.lib_auth_exception = ScrapliAuthenticationFailed
         self._isauthenticated = False
+
+        # ensure we set transport_options to a dict if its left as None
+        self.transport_options = transport_options or {}
 
         self.open_cmd = [&#34;ssh&#34;, self.host]
         self._build_open_cmd()
@@ -984,6 +1091,11 @@ is completed.</dd>
         else:
             self.open_cmd.extend([&#34;-F&#34;, &#34;/dev/null&#34;])
 
+        user_args = self.transport_options.get(&#34;open_cmd&#34;, [])
+        if isinstance(user_args, str):
+            user_args = [user_args]
+        self.open_cmd.extend(user_args)
+
     def open(self) -&gt; None:
         &#34;&#34;&#34;
         Parent method to open session, authenticate and acquire shell
@@ -1028,11 +1140,17 @@ is completed.</dd>
                 return
             if not self.auth_password or not self.auth_username:
                 msg = (
-                    f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
-                    &#34; password unable to attempt password authentication.&#34;
+                    f&#34;Failed to authenticate to host {self.host} with private key &#34;
+                    f&#34;`{self.auth_private_key}`. Unable to continue authentication, &#34;
+                    &#34;missing username, password, or both.&#34;
                 )
                 LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
+            msg = (
+                f&#34;Failed to authenticate to host {self.host} with private key &#34;
+                f&#34;`{self.auth_private_key}`. Attempting to continue with password authentication.&#34;
+            )
+            LOG.critical(msg)
 
         # If public key auth fails or is not configured, open a pty session
         if not self._open_pty():
@@ -1070,6 +1188,8 @@ is completed.</dd>
         open_cmd.append(&#34;-v&#34;)
         open_cmd.extend([&#34;-o&#34;, &#34;BatchMode=yes&#34;])
 
+        LOG.info(f&#34;Attempting to open session with the following command: {open_cmd}&#34;)
+
         stdout_master_pty, stdout_slave_pty = pty.openpty()
         stdin_master_pty, stdin_slave_pty = pty.openpty()
 
@@ -1095,6 +1215,12 @@ is completed.</dd>
                 stderr_fd = self.session.stderr.fileno()
                 os.close(stderr_fd)
             self.session.kill()
+
+            # close the ptys we forked
+            os.close(stdin_master_pty)
+            os.close(stdout_master_pty)
+            # it seems that killing the process/fds somehow unlocks the thread? very unsure how/why
+            self.session_lock.acquire()
             return False
 
         LOG.debug(f&#34;Authenticated to host {self.host} with public key&#34;)
@@ -1151,6 +1277,7 @@ is completed.</dd>
             N/A
 
         &#34;&#34;&#34;
+        LOG.info(f&#34;Attempting to open session with the following command: {self.open_cmd}&#34;)
         self.session = PtyProcess.spawn(self.open_cmd)
         LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
         self.session_lock.release()
@@ -1161,6 +1288,41 @@ is completed.</dd>
             return False
         LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
         return True
+
+    def _pty_authentication_eof_handler(self, output: bytes) -&gt; str:
+        &#34;&#34;&#34;
+        Parse EOF messages from _pty_authenticate and create log/stack exception message
+
+        Args:
+            output: bytes output from _pty_authenticate
+
+        Returns:
+            str: message for logging/stack trace
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        msg = (
+            f&#34;Failed to open connection to host {self.host}. Do you need to disable &#34;
+            &#34;`auth_strict_key`?&#34;
+        )
+        if b&#34;Host key verification failed&#34; in output:
+            msg = f&#34;Host key verification failed for host {self.host}&#34;
+        elif b&#34;Operation timed out&#34; in output or b&#34;Connection timed out&#34; in output:
+            msg = f&#34;Timed out connecting to host {self.host}&#34;
+        elif b&#34;No route to host&#34; in output:
+            msg = f&#34;No route to host {self.host}&#34;
+        elif b&#34;no matching cipher found&#34; in output:
+            msg = f&#34;No matching cipher found for host {self.host}&#34;
+            ciphers_pattern = re.compile(pattern=rb&#34;their offer: ([a-z0-9\-,]*)&#34;, flags=re.M | re.I)
+            offered_ciphers_match = re.search(pattern=ciphers_pattern, string=output)
+            if offered_ciphers_match:
+                offered_ciphers = offered_ciphers_match.group(1).decode()
+                msg = (
+                    f&#34;No matching cipher found for host {self.host}, their offer: {offered_ciphers}&#34;
+                )
+        return msg
 
     @operation_timeout(&#34;_timeout_ops&#34;, &#34;Timed out looking for SSH login password prompt&#34;)
     def _pty_authenticate(self, pty_session: PtyProcess) -&gt; None:
@@ -1186,11 +1348,7 @@ is completed.</dd>
                 output += new_output
                 LOG.debug(f&#34;Attempting to authenticate. Read: {repr(new_output)}&#34;)
             except EOFError:
-                msg = f&#34;Failed to open connection to host {self.host}&#34;
-                if b&#34;Host key verification failed&#34; in output:
-                    msg = f&#34;Host key verification failed for host {self.host}&#34;
-                elif b&#34;Operation timed out&#34; in output:
-                    msg = f&#34;Timed out connecting to host {self.host}&#34;
+                msg = self._pty_authentication_eof_handler(output)
                 LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
             if self._comms_ansi:
@@ -1225,34 +1383,40 @@ is completed.</dd>
             prompt_pattern = get_prompt_pattern(prompt=&#34;&#34;, class_prompt=self._comms_prompt_pattern)
             self.session_lock.acquire()
             pty_session.write(self._comms_return_char.encode())
-            fd_ready, _, _ = select([pty_session.fd], [], [], 0)
-            if pty_session.fd in fd_ready:
-                output = b&#34;&#34;
-                while True:
-                    new_output = pty_session.read()
-                    output += new_output
-                    LOG.debug(f&#34;Attempting validate authentication. Read: {repr(new_output)}&#34;)
-                    # we do not need to deal w/ line replacement for the actual output, only for
-                    # parsing if a prompt-like thing is at the end of the output
-                    output = output.replace(b&#34;\r&#34;, b&#34;&#34;)
-                    # always check to see if we should strip ansi here; if we don&#39;t handle this we
-                    # may raise auth failures for the wrong reason which would be confusing for
-                    # users
-                    if b&#34;\x1B&#34; in output:
-                        output = strip_ansi(output=output)
-                    channel_match = re.search(pattern=prompt_pattern, string=output)
-                    if channel_match:
-                        self.session_lock.release()
-                        self._isauthenticated = True
-                        return True
-                    if b&#34;password:&#34; in output.lower():
-                        # if we see &#34;password&#34; we know auth failed (hopefully in all scenarios!)
-                        LOG.critical(
-                            &#34;Found `password:` in output, assuming password authentication failed&#34;
-                        )
-                        return False
-                    if output:
-                        LOG.debug(f&#34;Cannot determine if authenticated, \n\tRead: {repr(output)}&#34;)
+            while True:
+                # almost all of the time we don&#39;t need a while loop here, but every once in a while
+                # fd won&#39;t be ready which causes a failure without an obvious root cause,
+                # loop/logging to hopefully help with that
+                fd_ready, _, _ = select([pty_session.fd], [], [], 0)
+                if pty_session.fd in fd_ready:
+                    break
+                LOG.debug(&#34;PTY fd not ready yet...&#34;)
+            output = b&#34;&#34;
+            while True:
+                new_output = pty_session.read()
+                output += new_output
+                LOG.debug(f&#34;Attempting validate authentication. Read: {repr(new_output)}&#34;)
+                # we do not need to deal w/ line replacement for the actual output, only for
+                # parsing if a prompt-like thing is at the end of the output
+                output = output.replace(b&#34;\r&#34;, b&#34;&#34;)
+                # always check to see if we should strip ansi here; if we don&#39;t handle this we
+                # may raise auth failures for the wrong reason which would be confusing for
+                # users
+                if b&#34;\x1B&#34; in output:
+                    output = strip_ansi(output=output)
+                channel_match = re.search(pattern=prompt_pattern, string=output)
+                if channel_match:
+                    self.session_lock.release()
+                    self._isauthenticated = True
+                    return True
+                if b&#34;password:&#34; in output.lower():
+                    # if we see &#34;password&#34; we know auth failed (hopefully in all scenarios!)
+                    LOG.critical(
+                        &#34;Found `password:` in output, assuming password authentication failed&#34;
+                    )
+                    return False
+                if output:
+                    LOG.debug(f&#34;Cannot determine if authenticated, \n\tRead: {repr(output)}&#34;)
         self.session_lock.release()
         return False
 
@@ -1300,6 +1464,7 @@ is completed.</dd>
                 return True
         return False
 
+    @operation_timeout(&#34;timeout_transport&#34;, &#34;Timed out reading from transport&#34;)
     def read(self) -&gt; bytes:
         &#34;&#34;&#34;
         Read data from the channel
@@ -1321,6 +1486,7 @@ is completed.</dd>
             return self.session.read(read_bytes)
         return b&#34;&#34;
 
+    @operation_timeout(&#34;timeout_transport&#34;, &#34;Timed out writing to transport&#34;)
     def write(self, channel_input: str) -&gt; None:
         &#34;&#34;&#34;
         Write data to the channel
@@ -1389,22 +1555,22 @@ is completed.</dd>
 <h3>Methods</h3>
 <dl>
 <dt id="scrapli.transport.systemssh.SystemSSHTransport.isalive"><code class="name flex">
-<span>def <span class="ident">isalive</span></span>(<span>self)</span>
+<span>def <span class="ident">isalive</span></span>(<span>self) -> bool</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Check if session is alive and session is authenticated</p>
+<div class="desc"><p>Check if session is alive and session is authenticated</p>
 <h2 id="args">Args</h2>
 <p>N/A</p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>bool</code></strong></dt>
+<dt><code>bool</code></dt>
 <dd>True if session is alive and session authenticated, else False</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><code>N</code>/<code>A</code></dt>
+<dt><code>N/A</code></dt>
 <dd>&nbsp;</dd>
-</dl></section>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1433,10 +1599,10 @@ is completed.</dd>
 </details>
 </dd>
 <dt id="scrapli.transport.systemssh.SystemSSHTransport.open"><code class="name flex">
-<span>def <span class="ident">open</span></span>(<span>self)</span>
+<span>def <span class="ident">open</span></span>(<span>self) -> NoneType</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Parent method to open session, authenticate and acquire shell</p>
+<div class="desc"><p>Parent method to open session, authenticate and acquire shell</p>
 <p>If possible it is preferable to use the <code>_open_pipes</code> method, but we can only do this IF we
 can authenticate with public key authorization (because we don't have to spawn a PTY; if no
 public key we have to spawn PTY to deal w/ authentication prompts). IF we get a private key
@@ -1450,15 +1616,15 @@ case of telnet&hellip; so it works, but its just a bit less desirable.</p>
 <p>N/A</p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>N</code>/<code>A</code>
-# <code>noqa</code>: <code>DAR202</code></dt>
+<dt><code>N/A
+# noqa: DAR202</code></dt>
 <dd>&nbsp;</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><strong><code>ScrapliAuthenticationFailed</code></strong></dt>
+<dt><code>ScrapliAuthenticationFailed</code></dt>
 <dd>if all authentication means fail</dd>
-</dl></section>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1507,11 +1673,17 @@ case of telnet&hellip; so it works, but its just a bit less desirable.</p>
             return
         if not self.auth_password or not self.auth_username:
             msg = (
-                f&#34;Public key authentication to host {self.host} failed. Missing username or&#34;
-                &#34; password unable to attempt password authentication.&#34;
+                f&#34;Failed to authenticate to host {self.host} with private key &#34;
+                f&#34;`{self.auth_private_key}`. Unable to continue authentication, &#34;
+                &#34;missing username, password, or both.&#34;
             )
             LOG.critical(msg)
             raise ScrapliAuthenticationFailed(msg)
+        msg = (
+            f&#34;Failed to authenticate to host {self.host} with private key &#34;
+            f&#34;`{self.auth_private_key}`. Attempting to continue with password authentication.&#34;
+        )
+        LOG.critical(msg)
 
     # If public key auth fails or is not configured, open a pty session
     if not self._open_pty():
@@ -1525,54 +1697,11 @@ case of telnet&hellip; so it works, but its just a bit less desirable.</p>
         self._session_keepalive()</code></pre>
 </details>
 </dd>
-<dt id="scrapli.transport.systemssh.SystemSSHTransport.read"><code class="name flex">
-<span>def <span class="ident">read</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Read data from the channel</p>
-<h2 id="args">Args</h2>
-<p>N/A</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>bytes</code></strong></dt>
-<dd>bytes output as read from channel</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def read(self) -&gt; bytes:
-    &#34;&#34;&#34;
-    Read data from the channel
-
-    Args:
-        N/A
-
-    Returns:
-        bytes: bytes output as read from channel
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    read_bytes = 65535
-    if isinstance(self.session, Popen):
-        return os.read(self._stdout_fd, read_bytes)
-    if isinstance(self.session, PtyProcess):
-        return self.session.read(read_bytes)
-    return b&#34;&#34;</code></pre>
-</details>
-</dd>
 <dt id="scrapli.transport.systemssh.SystemSSHTransport.set_timeout"><code class="name flex">
-<span>def <span class="ident">set_timeout</span></span>(<span>self, timeout=None)</span>
+<span>def <span class="ident">set_timeout</span></span>(<span>self, timeout: Union[int, NoneType] = None) -> NoneType</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Set session timeout</p>
+<div class="desc"><p>Set session timeout</p>
 <p>Note that this modifies the objects <code>timeout_transport</code> value directly as this value is
 what controls the timeout decorator for read/write methods. This is slightly different
 behavior from ssh2/paramiko/telnet in that those transports modify the session value and
@@ -1584,15 +1713,15 @@ leave the objects <code>timeout_transport</code> alone.</p>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>N</code>/<code>A</code>
-# <code>noqa</code>: <code>DAR202</code></dt>
+<dt><code>N/A
+# noqa: DAR202</code></dt>
 <dd>&nbsp;</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><code>N</code>/<code>A</code></dt>
+<dt><code>N/A</code></dt>
 <dd>&nbsp;</dd>
-</dl></section>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1629,6 +1758,7 @@ leave the objects <code>timeout_transport</code> alone.</p>
 <li><code><b><a title="scrapli.transport.transport.Transport" href="transport.html#scrapli.transport.transport.Transport">Transport</a></b></code>:
 <ul class="hlist">
 <li><code><a title="scrapli.transport.transport.Transport.close" href="transport.html#scrapli.transport.transport.Transport.close">close</a></code></li>
+<li><code><a title="scrapli.transport.transport.Transport.read" href="transport.html#scrapli.transport.transport.Transport.read">read</a></code></li>
 <li><code><a title="scrapli.transport.transport.Transport.write" href="transport.html#scrapli.transport.transport.Transport.write">write</a></code></li>
 </ul>
 </li>
@@ -1655,7 +1785,6 @@ leave the objects <code>timeout_transport</code> alone.</p>
 <ul class="">
 <li><code><a title="scrapli.transport.systemssh.SystemSSHTransport.isalive" href="#scrapli.transport.systemssh.SystemSSHTransport.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.transport.systemssh.SystemSSHTransport.open" href="#scrapli.transport.systemssh.SystemSSHTransport.open">open</a></code></li>
-<li><code><a title="scrapli.transport.systemssh.SystemSSHTransport.read" href="#scrapli.transport.systemssh.SystemSSHTransport.read">read</a></code></li>
 <li><code><a title="scrapli.transport.systemssh.SystemSSHTransport.set_timeout" href="#scrapli.transport.systemssh.SystemSSHTransport.set_timeout">set_timeout</a></code></li>
 </ul>
 </li>
@@ -1665,7 +1794,7 @@ leave the objects <code>timeout_transport</code> alone.</p>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.5</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.1</a>.</p>
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad()</script>

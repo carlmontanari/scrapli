@@ -9,7 +9,7 @@ with open("README.md", "r", encoding="utf-8") as f:
 
 setuptools.setup(
     name="scrapli",
-    version="2020.04.19",
+    version="2020.04.30",
     author=__author__,
     author_email="carl.r.montanari@gmail.com",
     description="Screen scraping (ssh|telnet) client focused on network devices",
@@ -21,8 +21,8 @@ setuptools.setup(
     extras_require={
         "textfsm": ["textfsm>=1.1.0", "ntc-templates>=1.1.0"],
         "genie": ["genie>=20.2", "pyats>=20.2"],
-        "paramiko": ["scrapli_paramiko>=2020.04.18"],
-        "ssh2": ["scrapli_ssh2>=2020.04.18"],
+        "paramiko": ["scrapli_paramiko>=2020.04.30"],
+        "ssh2": ["scrapli_ssh2>=2020.04.30"],
     },
     classifiers=[
         "License :: OSI Approved :: MIT License",
