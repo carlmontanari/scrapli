@@ -1,4 +1,5 @@
 """scrapli.transport.transport"""
+import atexit
 import time
 from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor
@@ -256,6 +257,14 @@ class Transport(ABC):
                 the keepalive_interval
 
         """
+
+        def kill_transport() -> None:
+            if self.isalive():
+                self.close()
+
+        # ensure the transport is closed so keepalive can terminate if main thread tries to exit
+        atexit.register(kill_transport)
+
         lock_counter = 0
         last_keepalive = datetime.now()
         while True:

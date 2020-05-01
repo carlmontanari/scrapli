@@ -3,6 +3,7 @@ import importlib
 import os
 import re
 import warnings
+from functools import lru_cache
 from io import TextIOWrapper
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Pattern, TextIO, Tuple, Union
@@ -24,6 +25,7 @@ def _find_transport_plugin(transport: str) -> Tuple[Any, Tuple[str, ...]]:
         required_transport_args: tuple of required arguments for given transport
 
     Raises:
+        ModuleNotFoundError: if unable to  find scrapli transport module
         TransportPluginError: if unable to load `Transport` and `TRANSPORT_ARGS` from given
             transport module
 
@@ -34,7 +36,7 @@ def _find_transport_plugin(transport: str) -> Tuple[Any, Tuple[str, ...]]:
         err = f"Module '{exc.name}' not found!"
         msg = f"***** {err} {'*' * (80 - len(err))}"
         fix = (
-            f"To resolve this issue, ensure you are referencing a valid transport plugin. Transport"
+            "To resolve this issue, ensure you are referencing a valid transport plugin. Transport"
             " plugins should be named similar to `scrapli_paramiko` or `scrapli_ssh2`, and can be "
             "selected by passing simply `paramiko` or `ssh2` into the scrapli driver."
         )
@@ -48,6 +50,7 @@ def _find_transport_plugin(transport: str) -> Tuple[Any, Tuple[str, ...]]:
     return transport_class, required_transport_args
 
 
+@lru_cache()
 def get_prompt_pattern(prompt: str, class_prompt: str) -> Pattern[bytes]:
     """
     Return compiled prompt pattern
@@ -56,7 +59,7 @@ def get_prompt_pattern(prompt: str, class_prompt: str) -> Pattern[bytes]:
 
     Args:
         prompt: bytes string to process
-        class_prompt: Channel class' prompt pattern
+        class_prompt: Channel class prompt pattern; never re.escape class prompt pattern
 
     Returns:
         output: bytes string each line right stripped
@@ -70,7 +73,10 @@ def get_prompt_pattern(prompt: str, class_prompt: str) -> Pattern[bytes]:
         bytes_check_prompt = check_prompt.encode()
     else:
         bytes_check_prompt = check_prompt
+
     if bytes_check_prompt.startswith(b"^") and bytes_check_prompt.endswith(b"$"):
+        return re.compile(bytes_check_prompt, flags=re.M | re.I)
+    if check_prompt == class_prompt:
         return re.compile(bytes_check_prompt, flags=re.M | re.I)
     return re.compile(re.escape(bytes_check_prompt))
 
@@ -273,7 +279,7 @@ def resolve_ssh_config(ssh_config_file: str) -> str:
         ssh_config_file: string representation of ssh config file to try to use
 
     Returns:
-        str: string to path fro ssh config file or an empty string
+        str: string path to ssh config file or an empty string
 
     Raises:
         N/A
@@ -299,7 +305,7 @@ def resolve_ssh_known_hosts(ssh_known_hosts: str) -> str:
         ssh_known_hosts: string representation of ssh config file to try to use
 
     Returns:
-        str: string to path fro ssh config file or an empty string
+        str: string path to ssh known hosts file or an empty string
 
     Raises:
         N/A
@@ -312,3 +318,24 @@ def resolve_ssh_known_hosts(ssh_known_hosts: str) -> str:
     if Path("/etc/ssh/ssh_known_hosts").is_file():
         return str(Path("/etc/ssh/ssh_known_hosts"))
     return ""
+
+
+def resolve_file(file: str) -> str:
+    """
+    Resolve file from provided string
+
+    Args:
+        file: string path to file
+
+    Returns:
+        str: string path to file
+
+    Raises:
+        ValueError: if file cannot be resolved
+
+    """
+    if Path(file).is_file():
+        return str(Path(file))
+    if Path(os.path.expanduser(file)).is_file():
+        return str(Path(os.path.expanduser(file)))
+    raise ValueError(f"File path `{file}` could not be resolved")

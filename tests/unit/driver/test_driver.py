@@ -19,12 +19,12 @@ def test__repr():
     conn = Scrape(host="myhost")
     assert (
         repr(conn)
-        == "Scrape(host='myhost', port=22, auth_username='', auth_password='', auth_private_key=b'', "
+        == "Scrape(host='myhost', port=22, auth_username='', auth_password='', auth_private_key='', "
         "auth_strict_key=True, auth_bypass=False, timeout_socket=5, timeout_transport=10, timeout_ops=30, "
         "timeout_exit=True, keepalive=False, keepalive_interval=30, keepalive_type='network', "
         "keepalive_pattern='\\x05', comms_prompt_pattern='^[a-z0-9.\\\\-@()/:]{1,48}[#>$]\\\\s*$', "
         "comms_return_char='\\n', comms_ansi=False, ssh_config_file='', ssh_known_hosts_file='', on_open=None, "
-        "on_close=None, transport='system')"
+        "on_close=None, transport='system', transport_options=None)"
     )
 
 
@@ -116,7 +116,7 @@ def test_exceptions_raised(attr_setup):
         ("auth_username", "tacocat ", "tacocat"),
         ("auth_password", "tacocat", "tacocat"),
         ("auth_password", "tacocat ", "tacocat"),
-        ("auth_private_key", f"{UNIT_TEST_DIR}_ssh_config", f"{UNIT_TEST_DIR}_ssh_config".encode()),
+        ("auth_private_key", f"{UNIT_TEST_DIR}_ssh_config", f"{UNIT_TEST_DIR}_ssh_config"),
         ("auth_strict_key", False, False),
         ("timeout_socket", 100, 100),
         ("timeout_transport", 100, 100),
@@ -176,9 +176,7 @@ def test_attr_assignment(attr_setup):
 def test_valid_private_key_file():
     auth_private_key = f"{UNIT_TEST_DIR}_ssh_private_key"
     conn = Scrape(host="myhost", auth_private_key=auth_private_key)
-    assert (
-        conn._initialization_args["auth_private_key"] == f"{UNIT_TEST_DIR}_ssh_private_key".encode()
-    )
+    assert conn._initialization_args["auth_private_key"] == f"{UNIT_TEST_DIR}_ssh_private_key"
 
 
 @pytest.mark.skipif(

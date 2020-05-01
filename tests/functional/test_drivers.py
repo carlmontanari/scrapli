@@ -142,6 +142,25 @@ class TestNetworkDevice:
         for expected_response, response in zip(expected_responses, responses):
             assert sanitize_response(response.result) == expected_response
 
+    @pytest.mark.parametrize(
+        "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
+    )
+    def test_send_commands_from_file(self, conn, device_type, transport, strip_prompt):
+        file = TEST_CASES[device_type]["send_commands_from_file"]["file"]
+        expected_type = "expected_no_strip" if not strip_prompt else "expected_strip"
+        expected_responses = TEST_CASES[device_type]["send_commands_from_file"][expected_type]
+        sanitize_response = TEST_CASES[device_type]["sanitize_response"]
+        responses = conn.send_commands_from_file(file=file, strip_prompt=strip_prompt)
+        for expected_response, response in zip(expected_responses, responses):
+            assert sanitize_response(response.result) == expected_response
+
+    def test_send_commands_stop_on_failed(self, conn, device_type, transport):
+        commands = TEST_CASES[device_type]["send_commands_error"]["commands"]
+        responses = conn.send_commands(commands=commands, stop_on_failed=True)
+        assert len(responses) == 2
+        assert responses[0].failed is False
+        assert responses[1].failed is True
+
     def test_send_interactive_normal_response(self, conn, device_type, transport):
         if TEST_CASES[device_type]["send_interactive_normal_response"] is None:
             pytest.skip(
@@ -182,12 +201,45 @@ class TestNetworkDevice:
         assert sanitize_response(verification_response.result) == expected_verification
         conn.send_configs(configs=teardown_configs)
 
+    @pytest.mark.parametrize(
+        "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
+    )
+    def test_send_configs_from_file(self, conn, device_type, transport, strip_prompt):
+        file = TEST_CASES[device_type]["send_configs_from_file"]["file"]
+        expected_type = "expected_no_strip" if not strip_prompt else "expected_strip"
+        expected_responses = TEST_CASES[device_type]["send_configs"][expected_type]
+        verification = TEST_CASES[device_type]["send_configs"]["verification"]
+        expected_verification = TEST_CASES[device_type]["send_configs"][
+            f"verification_{expected_type}"
+        ]
+        teardown_configs = TEST_CASES[device_type]["send_configs"]["teardown_configs"]
+        sanitize_response = TEST_CASES[device_type]["sanitize_response"]
+        responses = conn.send_configs_from_file(file=file, strip_prompt=strip_prompt)
+        for expected_response, response in zip(expected_responses, responses):
+            assert response.result == expected_response
+        verification_response = conn.send_command(command=verification, strip_prompt=strip_prompt)
+        assert sanitize_response(verification_response.result) == expected_verification
+        conn.send_configs(configs=teardown_configs)
+
+    def test_send_configs_stop_on_failed(self, conn, device_type, transport):
+        if TEST_CASES[device_type]["send_configs_error"] is None:
+            pytest.skip(
+                f"test_send_configs_stop_on_failed for device type {device_type} not tested yet, need to overhaul privilege levels..."
+            )
+        configs = TEST_CASES[device_type]["send_configs_error"]["configs"]
+        teardown_configs = TEST_CASES[device_type]["send_configs_error"]["teardown_configs"]
+        responses = conn.send_configs(configs=configs, stop_on_failed=True)
+        assert len(responses) == 2
+        assert responses[0].failed is False
+        assert responses[1].failed is True
+        conn.send_configs(configs=teardown_configs)
+
     def test_isalive_and_close(self, conn, device_type, transport):
         assert conn.isalive() is True
         conn.close()
         # unsure why but w/out a tiny sleep pytest just plows ahead and the connection doesnt
         # close in time for the next assert
-        time.sleep(0.1)
+        time.sleep(0.5)
         assert conn.isalive() is False
 
 
@@ -215,7 +267,7 @@ def test_context_manager(device_type, transport):
         assert conn.isalive() is True
     # unsure why but w/out a tiny sleep pytest just plows ahead and the connection doesnt
     # close in time for the next assert
-    time.sleep(0.1)
+    time.sleep(0.5)
     assert conn.isalive() is False
 
 
@@ -237,7 +289,7 @@ def test_public_key_auth(device_type, transport):
         assert conn.isalive() is True
     # unsure why but w/out a tiny sleep pytest just plows ahead and the connection doesnt
     # close in time for the next assert
-    time.sleep(0.1)
+    time.sleep(0.2)
     assert conn.isalive() is False
 
 
@@ -260,6 +312,6 @@ def test_public_key_auth_failure(device_type, transport):
     with pytest.raises(ScrapliAuthenticationFailed) as exc:
         conn.open()
     assert str(exc.value) == (
-        f"Public key authentication to host {device['host']} failed. Missing username or "
-        "password unable to attempt password authentication."
+        f"Failed to authenticate to host 172.18.0.11 with private key `{INVALID_PRIVATE_KEY}`. "
+        "Unable to continue authentication, missing username, password, or both."
     )

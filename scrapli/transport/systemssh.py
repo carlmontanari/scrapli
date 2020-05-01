@@ -4,7 +4,7 @@ import re
 from logging import getLogger
 from select import select
 from subprocess import PIPE, Popen
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 
 from scrapli.decorators import operation_timeout
 from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliTimeout
@@ -56,6 +56,7 @@ class SystemSSHTransport(Transport):
         comms_ansi: bool = False,
         ssh_config_file: str = "",
         ssh_known_hosts_file: str = "",
+        transport_options: Optional[Dict[str, Any]] = None,
     ) -> None:
         """
         SystemSSHTransport Object
@@ -132,6 +133,19 @@ class SystemSSHTransport(Transport):
                 is completed.
             ssh_config_file: string to path for ssh config file
             ssh_known_hosts_file: string to path for ssh known hosts file
+            transport_options: SystemSSHTransport specific transport options (options that don't
+                apply to any of the other transport classes) supplied in a dictionary where the key
+                is the name of the option and the value is of course the value.
+                - open_cmd: string or list of strings to extend the open_cmd with, for example:
+                    `["-o", "KexAlgorithms=+diffie-hellman-group1-sha1"]` or:
+                    `-oKexAlgorithms=+diffie-hellman-group1-sha1`
+                    these commands will be appended to the open command that scrapli builds which
+                    looks something like the following depending on the inputs provided:
+                        ssh 172.31.254.1 -p 22 -o ConnectTimeout=5 -o ServerAliveInterval=10
+                         -l scrapli -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+                         -F /dev/null
+                    You can pass any arguments that would be supported if you were ssh'ing on your
+                    terminal "normally", passing some bad arguments can break things!
 
         Returns:
             N/A  # noqa: DAR202
@@ -168,6 +182,9 @@ class SystemSSHTransport(Transport):
         self.session: Union[Popen[bytes], PtyProcess]  # pylint: disable=E1136
         self.lib_auth_exception = ScrapliAuthenticationFailed
         self._isauthenticated = False
+
+        # ensure we set transport_options to a dict if its left as None
+        self.transport_options = transport_options or {}
 
         self.open_cmd = ["ssh", self.host]
         self._build_open_cmd()
@@ -235,6 +252,11 @@ class SystemSSHTransport(Transport):
         else:
             self.open_cmd.extend(["-F", "/dev/null"])
 
+        user_args = self.transport_options.get("open_cmd", [])
+        if isinstance(user_args, str):
+            user_args = [user_args]
+        self.open_cmd.extend(user_args)
+
     def open(self) -> None:
         """
         Parent method to open session, authenticate and acquire shell
@@ -279,11 +301,17 @@ class SystemSSHTransport(Transport):
                 return
             if not self.auth_password or not self.auth_username:
                 msg = (
-                    f"Public key authentication to host {self.host} failed. Missing username or"
-                    " password unable to attempt password authentication."
+                    f"Failed to authenticate to host {self.host} with private key "
+                    f"`{self.auth_private_key}`. Unable to continue authentication, "
+                    "missing username, password, or both."
                 )
                 LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
+            msg = (
+                f"Failed to authenticate to host {self.host} with private key "
+                f"`{self.auth_private_key}`. Attempting to continue with password authentication."
+            )
+            LOG.critical(msg)
 
         # If public key auth fails or is not configured, open a pty session
         if not self._open_pty():
@@ -321,6 +349,8 @@ class SystemSSHTransport(Transport):
         open_cmd.append("-v")
         open_cmd.extend(["-o", "BatchMode=yes"])
 
+        LOG.info(f"Attempting to open session with the following command: {open_cmd}")
+
         stdout_master_pty, stdout_slave_pty = pty.openpty()
         stdin_master_pty, stdin_slave_pty = pty.openpty()
 
@@ -346,6 +376,12 @@ class SystemSSHTransport(Transport):
                 stderr_fd = self.session.stderr.fileno()
                 os.close(stderr_fd)
             self.session.kill()
+
+            # close the ptys we forked
+            os.close(stdin_master_pty)
+            os.close(stdout_master_pty)
+            # it seems that killing the process/fds somehow unlocks the thread? very unsure how/why
+            self.session_lock.acquire()
             return False
 
         LOG.debug(f"Authenticated to host {self.host} with public key")
@@ -402,6 +438,7 @@ class SystemSSHTransport(Transport):
             N/A
 
         """
+        LOG.info(f"Attempting to open session with the following command: {self.open_cmd}")
         self.session = PtyProcess.spawn(self.open_cmd)
         LOG.debug(f"Session to host {self.host} spawned")
         self.session_lock.release()
@@ -412,6 +449,41 @@ class SystemSSHTransport(Transport):
             return False
         LOG.debug(f"Authenticated to host {self.host} with password")
         return True
+
+    def _pty_authentication_eof_handler(self, output: bytes) -> str:
+        """
+        Parse EOF messages from _pty_authenticate and create log/stack exception message
+
+        Args:
+            output: bytes output from _pty_authenticate
+
+        Returns:
+            str: message for logging/stack trace
+
+        Raises:
+            N/A
+
+        """
+        msg = (
+            f"Failed to open connection to host {self.host}. Do you need to disable "
+            "`auth_strict_key`?"
+        )
+        if b"Host key verification failed" in output:
+            msg = f"Host key verification failed for host {self.host}"
+        elif b"Operation timed out" in output or b"Connection timed out" in output:
+            msg = f"Timed out connecting to host {self.host}"
+        elif b"No route to host" in output:
+            msg = f"No route to host {self.host}"
+        elif b"no matching cipher found" in output:
+            msg = f"No matching cipher found for host {self.host}"
+            ciphers_pattern = re.compile(pattern=rb"their offer: ([a-z0-9\-,]*)", flags=re.M | re.I)
+            offered_ciphers_match = re.search(pattern=ciphers_pattern, string=output)
+            if offered_ciphers_match:
+                offered_ciphers = offered_ciphers_match.group(1).decode()
+                msg = (
+                    f"No matching cipher found for host {self.host}, their offer: {offered_ciphers}"
+                )
+        return msg
 
     @operation_timeout("_timeout_ops", "Timed out looking for SSH login password prompt")
     def _pty_authenticate(self, pty_session: PtyProcess) -> None:
@@ -437,11 +509,7 @@ class SystemSSHTransport(Transport):
                 output += new_output
                 LOG.debug(f"Attempting to authenticate. Read: {repr(new_output)}")
             except EOFError:
-                msg = f"Failed to open connection to host {self.host}"
-                if b"Host key verification failed" in output:
-                    msg = f"Host key verification failed for host {self.host}"
-                elif b"Operation timed out" in output:
-                    msg = f"Timed out connecting to host {self.host}"
+                msg = self._pty_authentication_eof_handler(output)
                 LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
             if self._comms_ansi:
@@ -476,34 +544,40 @@ class SystemSSHTransport(Transport):
             prompt_pattern = get_prompt_pattern(prompt="", class_prompt=self._comms_prompt_pattern)
             self.session_lock.acquire()
             pty_session.write(self._comms_return_char.encode())
-            fd_ready, _, _ = select([pty_session.fd], [], [], 0)
-            if pty_session.fd in fd_ready:
-                output = b""
-                while True:
-                    new_output = pty_session.read()
-                    output += new_output
-                    LOG.debug(f"Attempting validate authentication. Read: {repr(new_output)}")
-                    # we do not need to deal w/ line replacement for the actual output, only for
-                    # parsing if a prompt-like thing is at the end of the output
-                    output = output.replace(b"\r", b"")
-                    # always check to see if we should strip ansi here; if we don't handle this we
-                    # may raise auth failures for the wrong reason which would be confusing for
-                    # users
-                    if b"\x1B" in output:
-                        output = strip_ansi(output=output)
-                    channel_match = re.search(pattern=prompt_pattern, string=output)
-                    if channel_match:
-                        self.session_lock.release()
-                        self._isauthenticated = True
-                        return True
-                    if b"password:" in output.lower():
-                        # if we see "password" we know auth failed (hopefully in all scenarios!)
-                        LOG.critical(
-                            "Found `password:` in output, assuming password authentication failed"
-                        )
-                        return False
-                    if output:
-                        LOG.debug(f"Cannot determine if authenticated, \n\tRead: {repr(output)}")
+            while True:
+                # almost all of the time we don't need a while loop here, but every once in a while
+                # fd won't be ready which causes a failure without an obvious root cause,
+                # loop/logging to hopefully help with that
+                fd_ready, _, _ = select([pty_session.fd], [], [], 0)
+                if pty_session.fd in fd_ready:
+                    break
+                LOG.debug("PTY fd not ready yet...")
+            output = b""
+            while True:
+                new_output = pty_session.read()
+                output += new_output
+                LOG.debug(f"Attempting validate authentication. Read: {repr(new_output)}")
+                # we do not need to deal w/ line replacement for the actual output, only for
+                # parsing if a prompt-like thing is at the end of the output
+                output = output.replace(b"\r", b"")
+                # always check to see if we should strip ansi here; if we don't handle this we
+                # may raise auth failures for the wrong reason which would be confusing for
+                # users
+                if b"\x1B" in output:
+                    output = strip_ansi(output=output)
+                channel_match = re.search(pattern=prompt_pattern, string=output)
+                if channel_match:
+                    self.session_lock.release()
+                    self._isauthenticated = True
+                    return True
+                if b"password:" in output.lower():
+                    # if we see "password" we know auth failed (hopefully in all scenarios!)
+                    LOG.critical(
+                        "Found `password:` in output, assuming password authentication failed"
+                    )
+                    return False
+                if output:
+                    LOG.debug(f"Cannot determine if authenticated, \n\tRead: {repr(output)}")
         self.session_lock.release()
         return False
 
@@ -551,6 +625,7 @@ class SystemSSHTransport(Transport):
                 return True
         return False
 
+    @operation_timeout("timeout_transport", "Timed out reading from transport")
     def read(self) -> bytes:
         """
         Read data from the channel
@@ -572,6 +647,7 @@ class SystemSSHTransport(Transport):
             return self.session.read(read_bytes)
         return b""
 
+    @operation_timeout("timeout_transport", "Timed out writing to transport")
     def write(self, channel_input: str) -> None:
         """
         Write data to the channel

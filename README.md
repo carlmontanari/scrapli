@@ -40,14 +40,15 @@ scrapli -- scrap(e c)li --  is a python library focused on connecting to devices
 - [Advanced Usage](#advanced-usage)
   - [All Driver Arguments](#all-driver-arguments)
   - [Platform Regex](#platform-regex)
-  - [On Connect](#on-connect)
-  - [On Exit](#on-exit)
+  - [On Open](#on-open)
+  - [On Close](#on-close)
   - [Timeouts](#timeouts)
   - [Driver Privilege Levels](#driver-privilege-levels)
   - [Using Scrape Directly](#using-scrape-directly)
   - [Using the GenericDriver](#using-the-genericdriver)
   - [Using a Different Transport](#using-a-different-transport)
   - [Auth Bypass](#auth-bypass)
+  - [Transport Options](#transport-options)
 - [FAQ](#faq)
 - [Transport Notes, Caveats, and Known Issues](#transport-notes-caveats-and-known-issues)
   - [Paramiko](#paramiko)
@@ -123,6 +124,7 @@ end
 - [Using SSH config file](/examples/ssh_config_files/ssh_config_file.py)
 - [Parse output with TextFSM/ntc-templates](/examples/structured_data/structured_data_textfsm.py)
 - [Parse output with Genie](/examples/structured_data/structured_data_genie.py)
+- [Transport Options](examples/transport_options/system_ssh_args.py)
 
 
 # scrapli: What is it
@@ -175,7 +177,7 @@ The final piece of scrapli is the actual "driver" -- or the component that binds
       the "core" drivers. Next, the `NetworkDriver` abstract base class inherits from `GenericDriver` This
        `NetworkDriver` isn't really meant to be used directly though (hence why it is an ABC), but to be further
         extended and built upon instead. As this library is focused on interacting with network devices, an example
-         scrapli driver (built on the `NetworkDriver`) would be the `IOSXE` driver -- to, as you may have guessed
+         scrapli driver (built on the `NetworkDriver`) would be the `IOSXEDriver` -- to, as you may have guessed
          , interact with devices running Cisco's IOS-XE operating system.
 
 
@@ -218,11 +220,11 @@ The "driver" pattern is pretty much exactly like the implementation in NAPALM. T
   [ntc templates](https://github.com/networktocode/ntc-templates) for use with TextFSM, and so on.
 
 All of this is focused on network device type Telnet/SSH cli interfaces, but should work on pretty much any SSH
- connection (though there are almost certainly better options for non-network type devices!). The "base" (`Scrape`)
-  connection does not handle any kind of device-specific operations such as privilege escalation or saving
-   configurations, it is simply intended to be a bare bones connection that can interact with nearly any device
-   /platform if you are willing to send/parse inputs/outputs manually. In most cases it is assumed that users will
-    use one of the "core" drivers.
+ connection (though there are almost certainly better options for non-network type devices!). The "base" (`Scrape
+ `) and `GenericDriver` connections do not handle any kind of device-specific operations such as privilege
+  escalation or saving configurations, they are simply intended to be a bare bones connection that can interact with
+   nearly any device/platform if you are willing to send/parse inputs/outputs manually. In most cases it is assumed
+    that users will use one of the "core" drivers.
 
 The goal for all "core" devices will be to include functional tests that can run against
 [vrnetlab](https://github.com/plajjan/vrnetlab) containers to ensure that the "core" devices are as thoroughly tested
@@ -267,14 +269,15 @@ pip install scrapli[paramiko]
 
 The available optional installation extras options are:
 
-- paramiko
-- ssh2 (ssh2-python)
+- paramiko (paramiko and the scrapli_paramiko transport)
+- ssh2 (ssh2-python and the scrapli_ssh2 transport)
 - textfsm (textfsm and ntc-templates)
+- genie (genie/pyats)
 
 As for platforms to *run* scrapli on -- it has and will be tested on MacOS and Ubuntu regularly and should work on any
  POSIX system. Windows is now being tested very minimally via GitHub Actions builds, however it is important to note
   that if you wish to use Windows you will need to use paramiko or ssh2-python as the transport driver. It is
-   *strongly* recommended/preferred for folks to use WSL/Cygwin and stick with "systemssh" as the transport. 
+   *strongly* recommended/preferred for folks to use WSL/Cygwin and stick with "system" as the transport. 
 
 
 # Basic Usage
@@ -414,6 +417,9 @@ response = conn.send_command("show version")
 responses = conn.send_commands(["show run", "show ip int brief"])
 ```
 
+Finally, if you prefer to have a list of commands to send, there is a `send_commands_from_file` method. This method
+ excepts the provided file to have a single command to send per line in the file.
+
 ## Response Object
 
 All command/config operations that happen in the `GenericDriver` or any of the drivers inheriting from the
@@ -442,7 +448,8 @@ If using `send_commands` (plural!) then scrapli will return a list of Response o
 In addition to containing the input and output of the command(s) that you sent, the `Response` object also contains a
  method `textfsm_parse_output` (for more on TextFSM support see
  [Textfsm/NTC-Templates Integration](#textfsmntc-templates-integration)) which will attempt to parse and return the
-  received output. If parsing fails, the value returned will be an empty list.
+  received output. If parsing fails, the value returned will be an empty list -- meaning you will *always* get
+   "structured data" returned, however it will just be an empty object if parsing fails.
    
 ```python
 >>> structured_result = response.textfsm_parse_output()
@@ -469,6 +476,9 @@ my_device = {
 with IOSXEDriver(**my_device) as conn:
     conn.send_configs(["interface loopback123", "description configured by scrapli"])
 ```
+
+There is also a `send_configs_from_file` method that behaves exactly like the commands version, but sends the
+ commands in configuration mode as you would expect.
 
 ## Textfsm/NTC-Templates Integration
 
@@ -527,8 +537,8 @@ with IOSXEDriver(**my_device) as conn:
 ## Cisco Genie Integration
 
 Very much the same as the textfsm/ntc-templates integration, scrapli has optional integration with Cisco's PyATS
-/Genie parsing library for parsing show command output. While it is possible there are/will be parsers for non-Cisco
- platforms, this is in practice just for Cisco platforms.
+/Genie parsing library for parsing show command output. While there are parsers for non-Cisco platforms, this is
+ currently just an option for Cisco platforms within scrapli.
 
 ```python
 from scrapli.driver.core import IOSXEDriver
@@ -639,34 +649,36 @@ with IOSXEDriver(**my_device) as conn:
 ## All Driver Arguments
 
 The basic usage section outlined the most commonly used driver arguments, this outlines all of the base driver
- arguments -- note that in the future there may be additional driver specific (i.e. JunosDriver) arguments not listed
-  here -- check your specific driver in the docs for more details.
+ arguments.
  
-| Argument             | Purpose/Value                                               |
-|----------------------|-------------------------------------------------------------|
-| host                 | name/ip of host to connect to                               |
-| port                 | port of host to connect to (defaults to port 22)            |
-| auth_username        | username for authentication                                 |
-| auth_password        | password for authentication                                 |
-| auth_secondary       | password for secondary authentication (enable password)     |
-| auth_private_key     | private key for authentication                              |
-| auth_strict_key      | strict key checking -- TRUE by default!                     |
-| timeout_socket       | timeout value for initial socket connection                 |
-| timeout_transport    | timeout value for transport (i.e. paramiko)                 |
-| timeout_ops          | timeout value for individual operations                     |
-| timeout_exit         | True/False exit on timeout ops exceeded                     |
-| keepalive            | True/False send keepalives to the remote host               |
-| keepalive_interval   | interval in seconds for keepalives                          |
-| keepalive_type       | network or standard; see keepalive section for details      |
-| keepalive_pattern    | if network keepalive; pattern to send                       |
-| comms_prompt_pattern | regex pattern for matching prompt(s); see platform regex    |
-| comms_return_char    | return char to use on the channel; default `\n`             |
-| comms_ansi           | True/False strip ansi from returned output                  |
-| ssh_config_file      | True/False or path to ssh config file to use                |
-| ssh_known_hosts_file | True/False or path to ssh known hosts file to use           |
-| on_open              | callable to execute "on open"                               |
-| on_close             | callable to execute "on exit"                               |
-| transport            | system (default), paramiko, ssh2, or telnet                 |
+| Argument                        | Purpose/Value                                               | Class             |
+|---------------------------------|-------------------------------------------------------------|-------------------|
+| host                            | name/ip of host to connect to                               | Scrape            |                             
+| port                            | port of host to connect to (defaults to port 22)            | Scrape            |                             
+| auth_username                   | username for authentication                                 | Scrape            |                             
+| auth_password                   | password for authentication                                 | Scrape            |                             
+| auth_secondary                  | password for secondary authentication (enable password)     | NetworkDriver     |                  
+| auth_private_key                | private key for authentication                              | Scrape            |                   
+| auth_strict_key                 | strict key checking -- TRUE by default!                     | Scrape            |    
+| auth_bypass                     | bypass ssh auth prompts after ssh establishment             | Scrape            |                           
+| timeout_socket                  | timeout value for initial socket connection                 | Scrape            |                   
+| timeout_transport               | timeout value for transport (i.e. paramiko)                 | Scrape            |                   
+| timeout_ops                     | timeout value for individual operations                     | Scrape            |                   
+| timeout_exit                    | True/False exit on timeout ops exceeded                     | Scrape            |                   
+| keepalive                       | True/False send keepalives to the remote host               | Scrape            |                   
+| keepalive_interval              | interval in seconds for keepalives                          | Scrape            |                   
+| keepalive_type                  | network or standard; see keepalive section for details      | Scrape            |                   
+| keepalive_pattern               | if network keepalive; pattern to send                       | Scrape            |                   
+| comms_prompt_pattern            | regex pattern for matching prompt(s); see platform regex    | Scrape            |                   
+| comms_return_char               | return char to use on the channel; default `\n`             | Scrape            |                   
+| comms_ansi                      | True/False strip ansi from returned output                  | Scrape            |                   
+| ssh_config_file                 | True/False or path to ssh config file to use                | Scrape            |                   
+| ssh_known_hosts_file            | True/False or path to ssh known hosts file to use           | Scrape            |                   
+| on_open                         | callable to execute "on open"                               | Scrape            |                   
+| on_close                        | callable to execute "on exit"                               | Scrape            |                   
+| transport                       | system (default), paramiko, ssh2, or telnet                 | Scrape            |  
+| transport_options               | dictionary of transport-specific arguments                  | Scrape            |                
+| default_desired_privilege_level | privilege level for "show" commands to be executed at       | NetworkDriver     |
 
 Most of these attributes actually get passed from the `Scrape` (or sub-class such as `NXOSDriver`) into the
  `Transport` and `Channel` classes, so if you need to modify any of these values after instantiation you should do so
@@ -686,7 +698,7 @@ The "base" (default, but changeable) pattern is:
 
 `"^[a-z0-9.\-@()/:]{1,20}[#>$]\s*$"`
 
-*NOTE* all `comms_prompt_pattern` should use the start and end of line anchors as all regex searches in scrapli are
+*NOTE* all `comms_prompt_pattern` "should" use the start and end of line anchors as all regex searches in scrapli are
  multi-line (this is an important piece to making this all work!). While you don't *need* to use the line anchors its
   probably a really good idea! Also note that most devices seem to leave at least one white space after the final
    character of the prompt, so make sure to account for this! Last important note -- the core drivers all have reliable
@@ -705,7 +717,7 @@ The `comms_prompt_pattern` pattern can be changed at any time at or after instan
  done so by modifying `conn.channel.comms_prompt_pattern` where `conn` is your scrapli connection object. Changing
  this *can* break things though, so be careful!
 
-## On Connect
+## On Open
 
 Lots of times when connecting to a device there are "things" that need to happen immediately after getting connected
 . In the context of network devices the most obvious/common example would be disabling paging (i.e. sending `terminal
@@ -715,13 +727,13 @@ Lots of times when connecting to a device there are "things" that need to happen
    `, `IOSXRDriver`, etc.), scrapli will automatically have some sane default "on connect" actions (namely disabling
     paging).
 
-If you were so inclined to create some of your own "on connect" actions, you can simply pass those to the `on_connect
+If you were so inclined to create some of your own "on connect" actions, you can simply pass those to the `on_open
 ` argument of `Scrape` or any of its sub-classes (`NetworkDriver`, `IOSXEDriver`, etc.). The value of this argument
  must be a callable that accepts the reference to the connection object. This allows for the user to send commands or
   do really anything that needs to happen prior to "normal" operations. The core network drivers disable paging
    functions all call directly into the channel object `send_inputs` method -- this is a good practice to follow as
     this will avoid any of the `NetworkDriver` overhead such as trying to attain privilege levels -- things like this
-     may not be "ready" until *after* your `on_connect` function is executed.
+     may not be "ready" until *after* your `on_open` function is executed.
   
 Below is an example of creating an "on connect" function and passing it to scrapli. Immediately after authentication
  is handled this function will be called and disable paging (in this example):
@@ -750,11 +762,11 @@ Note that this section has talked almost exclusively about disabling paging, but
    happen for devices -- thus decoupling the challenge of addressing all of the possible options from scrapli itself
     and allowing users to handle things specific for their environment.
 
-## On Exit
+## On Close
 
-As you may have guessed, `on_exit` is very similar to `on_connect` with the obvious difference that it happens just
- prior to disconnecting from the device. Just like `on_connect`, `on_exit` functions should accept a single argument
-  that is a reference to the object itself. As with most things scrapli, there are sane defaults for the `on_exit
+As you may have guessed, `on_close` is very similar to `on_open` with the obvious difference that it happens just
+ prior to disconnecting from the device. Just like `on_open`, `on_close` functions should accept a single argument
+  that is a reference to the object itself. As with most things scrapli, there are sane defaults for the `on_close
   ` functions, but you are welcome to override them with your own function if you so chose! 
 
 ## Timeouts
@@ -803,27 +815,24 @@ In either case -- "standard" or "network" -- scrapli spawns a keepalive thread. 
 
 The "core" drivers understand the basic privilege levels of their respective device types. As mentioned previously
 , the drivers will automatically attain the "privilege_exec" (or equivalent) privilege level prior to executing "show
-" commands. If you don't want this "auto-magic" you can use the base driver (`Scrape`). The privileges for each device
- are outlined in named tuples in the platforms `driver.py` file. 
+" commands. If you don't want this "auto-magic" you can use the base driver (`Scrape`) or the `GenericDriver`. The
+ privileges for each device are outlined in named tuples in the platforms `driver.py` file. 
  
 As an example, the following privilege levels are supported by the `IOSXEDriver`:
 
 1. "exec"
 2. "privilege_exec"
 3. "configuration"
-4. "special_configuration"
 
 Each privilege level has the following attributes:
 
 - pattern: regex pattern to associate prompt to privilege level with
 - name: name of the priv level, i.e. "exec"
-- deescalate_priv: name of next lower privilege or "" (to evaluate False)
-- deescalate: command to deescalate to next lower privilege or "" (to evaluate False)
-- escalate: name of next higher privilege or "" (to evaluate False)
-- escalate_auth: command to escalate to next higher privilege or "" (to evaluate False)
-- escalate_prompt: False or pattern to expect for escalation -- i.e. "Password:"
-- requestable: True/False if the privilege level is requestable
-- level: integer value of level i.e. 1
+- previous_priv: name of the "lower"/"previous" privilege level
+- deescalate: command used to deescalate *from* this privilege level (or an empty string if no lower privilege)
+- escalate: command used to escalate *to* this privilege level (from the lower/previous privilege)
+- escalate_auth: True/False there is auth required to escalate to this privilege level
+- escalate_prompt: pattern to expect when escalating to this privilege level, i.e. "Password:" or any empty string
 
 If you wish to manually enter a privilege level you can use the `acquire_priv` method, passing in the name of the
  privilege level you would like to enter. In general you probably won't need this too often though as the driver
@@ -953,6 +962,18 @@ In the future this functionality will likely be extended to the telnet transport
 See the [non core device example](/examples/non_core_device/wlc.py) to see this in action.
 
 
+## Transport Options
+
+Because each transport has different options/features available, it doesn't make sense to try to put all possible
+ arguments in the `Scrape` or `NetworkDriver` drivers, to address this an argument `transport_options` has been added
+ . This is exactly what it sounds like -- arguments that can be passed to the selected transport class. As these
+  arguments will be transport-specific, please check the docs/docstrings for your preferred transport to see what is
+   available.
+   
+A simple example of passing additional SSH arguments to the `SystemSSHTransport` class is available
+ [here](examples/transport_options/system_ssh_args.py).
+
+
 # FAQ
 
 - Question: Why build this? Netmiko exists, Paramiko exists, Ansible exists, etc...?
@@ -998,7 +1019,8 @@ See the [non core device example](/examples/non_core_device/wlc.py) to see this 
 
 ## paramiko
 
-- I'll think of something...
+- Currently there seems to be a cosmetic bug where there is an error message about some socket error... but
+ everything seems to work as expected.
 
 ### SSH Config Supported Arguments
 
