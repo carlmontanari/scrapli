@@ -2,6 +2,7 @@
 from typing import Any, List, Optional, Tuple, Union
 
 from scrapli.driver.driver import Scrape
+from scrapli.helper import resolve_file
 from scrapli.response import Response
 
 
@@ -93,6 +94,7 @@ class GenericDriver(Scrape):
         commands: List[str],
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
+        stop_on_failed: bool = False,
     ) -> List[Response]:
         """
         Send multiple commands
@@ -101,6 +103,8 @@ class GenericDriver(Scrape):
             commands: list of strings to send to device in privilege exec mode
             strip_prompt: True/False strip prompt from returned output
             failed_when_contains: string or list of strings indicating failure if found in response
+            stop_on_failed: True/False stop executing commands if a command fails, returns results
+                as of current execution
 
         Returns:
             responses: list of Scrapli Response objects
@@ -117,15 +121,56 @@ class GenericDriver(Scrape):
 
         responses = []
         for command in commands:
-            responses.append(
-                self.send_command(
-                    command=command,
-                    strip_prompt=strip_prompt,
-                    failed_when_contains=failed_when_contains,
-                )
+            response = self.send_command(
+                command=command,
+                strip_prompt=strip_prompt,
+                failed_when_contains=failed_when_contains,
             )
+            responses.append(response)
+            if stop_on_failed is True and response.failed is True:
+                return responses
 
         return responses
+
+    def send_commands_from_file(
+        self,
+        file: str,
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+        stop_on_failed: bool = False,
+    ) -> List[Response]:
+        """
+        Send command(s) from file
+
+        Args:
+            file: string path to file
+            strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
+            stop_on_failed: True/False stop executing commands if a command fails, returns results
+                as of current execution
+
+        Returns:
+            responses: list of Scrapli Response objects
+
+        Raises:
+            TypeError: if anything but a string is provided for `file`
+
+        """
+        if not isinstance(file, str):
+            raise TypeError(
+                f"`send_commands_from_file` expects a string path to file, got {type(file)}"
+            )
+        resolved_file = resolve_file(file)
+
+        with open(resolved_file, "r") as f:
+            commands = f.read().splitlines()
+
+        return self.send_commands(
+            commands=commands,
+            strip_prompt=strip_prompt,
+            failed_when_contains=failed_when_contains,
+            stop_on_failed=stop_on_failed,
+        )
 
     def send_interactive(
         self,

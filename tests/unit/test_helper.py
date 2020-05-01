@@ -32,7 +32,7 @@ def test_get_prompt_pattern_class_pattern():
 
 def test_get_prompt_pattern_class_pattern_no_line_start_end_markers():
     class_pattern = "averygoodpattern"
-    result = get_prompt_pattern("", class_pattern)
+    result = get_prompt_pattern(class_pattern, "")
     assert result == re.compile(b"averygoodpattern")
 
 

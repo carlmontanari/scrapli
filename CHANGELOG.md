@@ -1,6 +1,32 @@
 CHANGELOG
 =======
 
+# 2020.XX.XX
+- Continued improvement around `SystemSSHTransport` connection/auth failure logging
+- Fix for very intermittent issue where pty fd is not available for reading on SystemSSH/Telnet connections, now we
+ loop over the select statement checking the fd instead of failing if it isn't immediately readable
+- Implement atexit function if keepalives are enabled -- this originally just lived in the ssh2 transport, but needs
+ to be here in the base `Transport` class as the issue affected all transport types
+- Added `send_commands_from_file` method... does what it sounds like it does...
+- Added `send_configs_from_file` method (`NetworkDriver` and sub-classes)... also does what it sounds like it does
+- Simplified privilege levels and overhauled how auth escalation/deescalation works. Its still probably a bit more
+ complex than it should be, but its a bit more efficient and at least a little simpler/more flexible.
+- Removed `comms_prompt_pattern` from Network drivers and now build this as a big pattern matching all of the priv
+ levels for that device type. This is used only for initial connection/finding prompt then scrapli still sets the
+  explicit prompt for the particular privilege level.
+- Implemented lru_cache on some places where we have repetitive tasks... probably unmeasurable difference, but in
+ theory its a little faster now in some places
+- Moved some Network driver things into the  base `NetworkDriver` class to clean things up a bit.
+- Added an `_abort_config` method to abort configurations for IOSXR/Juniper, this is ignored on the other core platforms
+- *BREAKING CHANGE*: (minor) Removed now unneeded exception `CouldNotAcquirePrivLevel`
+- Made the `get_prompt_pattern` helper a little worse... should revisit to improve/make its use more clear
+- Fixed a screw up that had ridiculous transport timeouts -- at one point timeouts were in seconds, then milliseconds
+... went back to seconds, but left things setting millisecond values... fixed :D 
+- Added `transport_options` to base `Scrape` class -- this is a dict of arguments that can be passed down to your
+ selected transport class... for now this is very limited and is just for passing additional "open_cmd" arguments to
+  `SystemSSHTransport`. The current use case is adding args such as ciphers/kex to your ssh command so you don't need
+   to rely on having this in an ssh config file.
+
 # 2020.04.19
 - Increase character count for base prompt pattern for `Scrape`, `GenericDriver`, and core drivers. Example:
 `r"^[a-z0-9.\-@()/:]{1,32}[#>$]$"` for the base `IOSXEDriver` `comms_prompt_pattern` has been increased to:

@@ -17,6 +17,7 @@
 | get_prompt                   | 2020.03.29  |             |                                                           |
 | send_command                 | 2020.03.29  |             |                                                           |
 | send_commands                | 2020.03.29  |             |                                                           |
+| send_commands_from_file      | 2020.04.XX  |             |                                                           |
 | send_interactive             | 2020.03.29  | 2020.04.11  | changed to support list of "events" to interact with      |
 
 
@@ -27,7 +28,9 @@
 | acquire_priv                 | 2020.03.29  |             |                                                           |
 | send_command                 | 2020.03.29  |             |                                                           |
 | send_commands                | 2020.03.29  |             |                                                           |
+| send_commands_from_file      | 2020.04.XX  |             |                                                           |
 | send_configs                 | 2020.03.29  |             |                                                           |
+| send_configs_from_file       | 2020.04.XX  |             |                                                           |
                           
 
 ## Channel

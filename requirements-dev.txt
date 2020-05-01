@@ -9,7 +9,7 @@ pylama>=7.7.1
 pycodestyle>=2.5.0
 pydocstyle>=5.0.2
 pylint>=2.4.4
-darglint>=1.2.2
+darglint>=1.2.3
 pdoc3>=0.7.5 ; sys_platform != "win32"
 napalm>=2.5.0
 -r requirements.txt

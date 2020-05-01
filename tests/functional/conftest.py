@@ -65,8 +65,8 @@ def conn(device_type, transport):
 
     timeout_transport = 5
     timeout_ops = 5
-    if device_type == "juniper_junos":
-        # commits on vsrx take one whole eternity...
+    if device_type == "juniper_junos" or device_type == "cisco_iosxr":
+        # commits on vsrx take one whole eternity... and iosxr container is just flakey
         timeout_transport = 30
         timeout_ops = 30
 

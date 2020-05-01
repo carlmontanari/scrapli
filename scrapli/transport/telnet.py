@@ -1,6 +1,5 @@
 """scrapli.transport.telnet"""
 import re
-import time
 from logging import getLogger
 from select import select
 from telnetlib import Telnet
@@ -228,25 +227,30 @@ class TelnetTransport(Transport):
             telnet_session_fd = telnet_session.fileno()
             self.session_lock.acquire()
             telnet_session.write(self._comms_return_char.encode())
-            time.sleep(0.25)
-            fd_ready, _, _ = select([telnet_session_fd], [], [], 0)
-            if telnet_session_fd in fd_ready:
-                output = b""
-                while True:
-                    output += telnet_session.read_eager()
-                    # we do not need to deal w/ line replacement for the actual output, only for
-                    # parsing if a prompt-like thing is at the end of the output
-                    output = output.replace(b"\r", b"")
-                    if self._comms_ansi:
-                        output = strip_ansi(output=output)
-                    channel_match = re.search(pattern=prompt_pattern, string=output)
-                    if channel_match:
-                        self.session_lock.release()
-                        self._isauthenticated = True
-                        return True
-                    if b"password" in output.lower():
-                        # if we see "password" auth failed... hopefully true in all scenarios!
-                        return False
+            while True:
+                # almost all of the time we don't need a while loop here, but every once in a while
+                # fd won't be ready which causes a failure without an obvious root cause,
+                # loop/logging to hopefully help with that
+                fd_ready, _, _ = select([telnet_session_fd], [], [], 0)
+                if telnet_session_fd in fd_ready:
+                    break
+                LOG.debug("PTY fd not ready yet...")
+            output = b""
+            while True:
+                output += telnet_session.read_eager()
+                # we do not need to deal w/ line replacement for the actual output, only for
+                # parsing if a prompt-like thing is at the end of the output
+                output = output.replace(b"\r", b"")
+                if self._comms_ansi:
+                    output = strip_ansi(output=output)
+                channel_match = re.search(pattern=prompt_pattern, string=output)
+                if channel_match:
+                    self.session_lock.release()
+                    self._isauthenticated = True
+                    return True
+                if b"password" in output.lower():
+                    # if we see "password" auth failed... hopefully true in all scenarios!
+                    return False
         self.session_lock.release()
         return False
 
@@ -287,6 +291,7 @@ class TelnetTransport(Transport):
             return True
         return False
 
+    @operation_timeout("timeout_transport", "Timed out reading from transport")
     def read(self) -> bytes:
         """
         Read data from the channel
@@ -303,6 +308,7 @@ class TelnetTransport(Transport):
         """
         return self.session.read_eager()
 
+    @operation_timeout("timeout_transport", "Timed out writing to transport")
     def write(self, channel_input: str) -> None:
         """
         Write data to the channel
