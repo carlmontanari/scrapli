@@ -1,7 +1,7 @@
 CHANGELOG
 =======
 
-# 2020.XX.XX
+# 2020.04.30
 - Continued improvement around `SystemSSHTransport` connection/auth failure logging
 - Fix for very intermittent issue where pty fd is not available for reading on SystemSSH/Telnet connections, now we
  loop over the select statement checking the fd instead of failing if it isn't immediately readable
