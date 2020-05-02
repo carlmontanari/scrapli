@@ -40,7 +40,7 @@ def junos_on_close(conn: NetworkDriver) -> None:
     # write exit directly to the transport as channel would fail to find the prompt after sending
     # the exit command!
     conn.transport.write(channel_input="exit")
-    conn.transport.write(channel_input=conn.channel.comms_prompt_pattern)
+    conn.transport.write(channel_input=conn.channel.comms_return_char)
 
 
 PRIVS = {
@@ -146,11 +146,5 @@ class JunosDriver(NetworkDriver):
             N/A
 
         """
-        self.channel.comms_prompt_pattern = self.privilege_levels[
-            self.default_desired_privilege_level
-        ].pattern
-        interact_events = [
-            ("exit", "Exit with uncommitted changes? [yes,no] (yes)", False),
-            ("yes", self.channel.comms_prompt_pattern, False),
-        ]
-        self.channel.send_inputs_interact(interact_events=interact_events)
+        self.send_configs(["rollback 0", "exit"])
+        self._current_priv_level = self.privilege_levels["exec"]

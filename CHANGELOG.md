@@ -3,6 +3,17 @@ CHANGELOG
 
 # 2020.XX.XX
 - Add underscores to EOS config prompt matching
+- Actually fixed on_close methods that I could have sworn were fixed.... *gremlins*! (was sending prompt pattern
+ instead of a return char... for copypasta reasons probably)
+- No longer "exit" config mode... given that send_command like methods already check to ensure they are in the right
+ priv level there is no reason to exit config mode... just leave it when you need to. Should be a minor speed up if
+  using send_configs more than once in a row, and otherwise should be basically exactly the same.
+- For NetworkDrivers we no longer set the channel prompt pattern depending on the priv level -- it is now *always
+* the combined pattern that matches all priv levels... this should make doing manual things where you change
+ privileges and don't use scrapli's built in methods a little easier. Scrapli still checks that the current prompt
+  matches where it thinks it should be (i.e. config mode vs privileged exec) though, so nothing should change from a
+   user perspective.
+- Improve (fix?) the abort config setup for IOSXR/Junos.
 
 # 2020.04.30
 - Continued improvement around `SystemSSHTransport` connection/auth failure logging

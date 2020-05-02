@@ -13,9 +13,6 @@ logger = logging.getLogger("scrapli")
 conn = EOSDriver(**eos_device)
 conn.open()
 
-# vrnetlab eos has no enable password so we just enable this manually for now
-# conn.channel.send_inputs("enable")
-
 print("***** Get Prompt:")
 prompt = conn.get_prompt()
 print(prompt)

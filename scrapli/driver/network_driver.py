@@ -172,9 +172,7 @@ class NetworkDriver(GenericDriver, ABC):
                         (escalate_auth, next_prompt_pattern, True),
                     ],
                 )
-                self.channel.comms_prompt_pattern = next_prompt_pattern
                 return
-        self.channel.comms_prompt_pattern = next_prompt_pattern
         self.channel.send_input(channel_input=escalate_priv.escalate)
 
     def _deescalate(self, current_priv: PrivilegeLevel) -> None:
@@ -191,9 +189,6 @@ class NetworkDriver(GenericDriver, ABC):
             N/A
 
         """
-        self.channel.comms_prompt_pattern = self.privilege_levels[
-            current_priv.previous_priv
-        ].pattern
         self.channel.send_input(channel_input=current_priv.deescalate)
 
     def acquire_priv(self, desired_priv: str) -> None:
@@ -390,6 +385,7 @@ class NetworkDriver(GenericDriver, ABC):
         self,
         interact_events: List[Tuple[str, str, Optional[bool]]],
         failed_when_contains: Optional[Union[str, List[str]]] = None,
+        privilege_level: str = "",
     ) -> Response:
         """
         Interact with a device with changing prompts per input.
@@ -444,16 +440,28 @@ class NetworkDriver(GenericDriver, ABC):
                 not provided it is assumed the input is "normal" (not hidden)
             failed_when_contains: list of strings that, if present in final output, represent a
                 failed command/interaction
+            privilege_level: name of the privilege level to operate in
 
         Returns:
             Response: scrapli Response object
 
         Raises:
-            N/A
+            UnknownPrivLevel: if requesting to operate in an unknown priv level
 
         """
-        if self._current_priv_level.name != self.default_desired_privilege_level:
-            self.acquire_priv(desired_priv=self.default_desired_privilege_level)
+        if privilege_level:
+            desired_privilege_level = self.privilege_levels.get(privilege_level, None)
+            if desired_privilege_level is None:
+                raise UnknownPrivLevel(
+                    f"Requested privilege level `{privilege_level}` not a valid privilege level of "
+                    f"`{self.__class__.__name__}`"
+                )
+            resolved_privilege_level = desired_privilege_level.name
+        else:
+            resolved_privilege_level = self.default_desired_privilege_level
+
+        if self._current_priv_level.name != resolved_privilege_level:
+            self.acquire_priv(desired_priv=resolved_privilege_level)
         response = super().send_interactive(
             interact_events=interact_events, failed_when_contains=failed_when_contains
         )
@@ -528,7 +536,6 @@ class NetworkDriver(GenericDriver, ABC):
         if _failed_during_execution is True:
             self._abort_config()
 
-        self.acquire_priv(desired_priv=self.default_desired_privilege_level)
         return responses
 
     def send_configs_from_file(

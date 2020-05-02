@@ -142,7 +142,5 @@ class IOSXRDriver(NetworkDriver):
             N/A
 
         """
-        self.channel.comms_prompt_pattern = self.privilege_levels[
-            self.default_desired_privilege_level
-        ].pattern
         self.channel.send_input(channel_input="abort")
+        self._current_priv_level = self.privilege_levels["privilege_exec"]

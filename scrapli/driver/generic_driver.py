@@ -176,6 +176,7 @@ class GenericDriver(Scrape):
         self,
         interact_events: List[Tuple[str, str, Optional[bool]]],
         failed_when_contains: Optional[Union[str, List[str]]] = None,
+        privilege_level: str = "",
     ) -> Response:
         """
         Interact with a device with changing prompts per input.
@@ -230,6 +231,7 @@ class GenericDriver(Scrape):
                 not provided it is assumed the input is "normal" (not hidden)
             failed_when_contains: list of strings that, if present in final output, represent a
                 failed command/interaction
+            privilege_level: ignored in this base class; for LSP reasons for subclasses
 
         Returns:
             Response: scrapli Response object
@@ -238,6 +240,8 @@ class GenericDriver(Scrape):
             N/A
 
         """
+        _ = privilege_level
+
         joined_input = ", ".join([event[0] for event in interact_events])
         response = Response(
             self.transport.host,
