@@ -270,6 +270,30 @@ class NetworkDriver(GenericDriver, ABC):
         """
         self.channel.send_input(channel_input=current_priv.deescalate)
 
+    def _get_privilege_level_name(self, requested_priv: str) -> str:
+        """
+        Get privilege level name if provided privilege is valid
+
+        Args:
+            requested_priv: string name of desired privilege level
+                (see scrapli.driver.<driver_category.device_type>.driver for levels)
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+           UnknownPrivLevel: if attempting to acquire an unknown priv
+
+        """
+        desired_privilege_level = self.privilege_levels.get(requested_priv, None)
+        if desired_privilege_level is None:
+            raise UnknownPrivLevel(
+                f"Requested privilege level `{requested_priv}` not a valid privilege level of "
+                f"`{self.__class__.__name__}`"
+            )
+        resolved_privilege_level = desired_privilege_level.name
+        return resolved_privilege_level
+
     def acquire_priv(self, desired_priv: str) -> None:
         """
         Acquire desired priv level
@@ -286,18 +310,19 @@ class NetworkDriver(GenericDriver, ABC):
 
         """
         LOG.info(f"Attempting to acquire `{desired_priv}` privilege level")
-        if desired_priv not in self.privilege_levels.keys():
-            raise UnknownPrivLevel(
-                f"Requested privilege level `{desired_priv}` not a valid privilege level of "
-                f"`{self.__class__.__name__}`"
-            )
-
-        map_to_desired_priv = self._priv_map[desired_priv]
+        resolved_priv = self._get_privilege_level_name(requested_priv=desired_priv)
+        map_to_desired_priv = self._priv_map[resolved_priv]
 
         while True:
             # if we are already at the desired priv, we don't need to do any thing
             current_priv = self._determine_current_priv(current_prompt=self.channel.get_prompt())
-            if current_priv.name == desired_priv:
+
+            # startswith allows us to have different "configuration_XYZ" priv levels to represent
+            # things like configuration_exclusive or configuration_private or configuration_session
+            # that all have the exact same pattern, thus giving us no way to differentiate between
+            # "configuration" (normal) and "configuration_exclusive" (happens on iosxr & junos)
+            if resolved_priv.startswith(current_priv.name):
+                LOG.info(f"Acquired requested privilege level `{desired_priv}`")
                 self._current_priv_level = current_priv
                 return
 
@@ -308,7 +333,7 @@ class NetworkDriver(GenericDriver, ABC):
                 else map_to_desired_priv
             )
 
-            desired_priv_index = priv_map.index(desired_priv)
+            desired_priv_index = priv_map.index(resolved_priv)
             current_priv_index = priv_map.index(current_priv.name)
             if current_priv_index > desired_priv_index:
                 deescalate_priv = priv_map[current_priv_index - 1]
@@ -529,13 +554,9 @@ class NetworkDriver(GenericDriver, ABC):
 
         """
         if privilege_level:
-            desired_privilege_level = self.privilege_levels.get(privilege_level, None)
-            if desired_privilege_level is None:
-                raise UnknownPrivLevel(
-                    f"Requested privilege level `{privilege_level}` not a valid privilege level of "
-                    f"`{self.__class__.__name__}`"
-                )
-            resolved_privilege_level = desired_privilege_level.name
+            resolved_privilege_level = self._get_privilege_level_name(
+                requested_priv=f"configuration_{privilege_level}"
+            )
         else:
             resolved_privilege_level = self.default_desired_privilege_level
 
@@ -569,6 +590,7 @@ class NetworkDriver(GenericDriver, ABC):
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
+        privilege_level: str = "",
     ) -> List[Response]:
         """
         Send configuration(s)
@@ -578,7 +600,14 @@ class NetworkDriver(GenericDriver, ABC):
             strip_prompt: True/False strip prompt from returned output
             failed_when_contains: string or list of strings indicating failure if found in response
             stop_on_failed: True/False stop executing commands if a command fails, returns results
-                as of current execution
+                as of current execution; aborts configuration session if applicable (iosxr/junos or
+                eos/nxos if using a configuration session)
+            privilege_level: name of configuration privilege level/type to acquire; this is platform
+                dependant, so check the device driver for specifics. Examples of privilege_name
+                would be "exclusive" for IOSXRDriver, "private" for JunosDriver. You can also pass
+                in a name of a configuration session such as "session_mysession" if you have
+                registered a session using the "register_config_session" method of the EOSDriver or
+                NXOSDriver.
 
         Returns:
             responses: List of Scrape Response objects
@@ -590,8 +619,15 @@ class NetworkDriver(GenericDriver, ABC):
         if isinstance(configs, str):
             configs = [configs]
 
-        if not self._current_priv_level.name.startswith("configuration"):
-            self.acquire_priv(desired_priv="configuration")
+        if privilege_level:
+            resolved_privilege_level = self._get_privilege_level_name(
+                requested_priv=f"configuration_{privilege_level}"
+            )
+        else:
+            resolved_privilege_level = "configuration"
+
+        if self._current_priv_level.name != resolved_privilege_level:
+            self.acquire_priv(desired_priv=resolved_privilege_level)
 
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains
@@ -623,6 +659,7 @@ class NetworkDriver(GenericDriver, ABC):
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
+        privilege_level: str = "",
     ) -> List[Response]:
         """
         Send configuration(s) from a file
@@ -632,7 +669,14 @@ class NetworkDriver(GenericDriver, ABC):
             strip_prompt: True/False strip prompt from returned output
             failed_when_contains: string or list of strings indicating failure if found in response
             stop_on_failed: True/False stop executing commands if a command fails, returns results
-                as of current execution
+                as of current execution; aborts configuration session if applicable (iosxr/junos or
+                eos/nxos if using a configuration session)
+            privilege_level: name of configuration privilege level/type to acquire; this is platform
+                dependant, so check the device driver for specifics. Examples of privilege_name
+                would be "exclusive" for IOSXRDriver, "private" for JunosDriver. You can also pass
+                in a name of a configuration session such as "session_mysession" if you have
+                registered a session using the "register_config_session" method of the EOSDriver or
+                NXOSDriver.
 
         Returns:
             responses: List of Scrape Response objects
@@ -655,4 +699,5 @@ class NetworkDriver(GenericDriver, ABC):
             strip_prompt=strip_prompt,
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
+            privilege_level=privilege_level,
         )

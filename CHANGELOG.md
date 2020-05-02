@@ -18,6 +18,9 @@ CHANGELOG
 - Convert PrivilegeLevel from a namedtuple to a class with slots... better for typing and is also mutable so users
  can more easily update the pattern for a given privilege level if so desired
 - Minor clean up stuff for all the core platforms and network driver, all internal, mostly just about organization!
+- Add "configuration_exclusive" privilege level for IOSXRDriver, add "configuration_private" and
+ "configuration_exclusive" for JunosDriver, modify some of the privilege handling to support these modes -- these can
+  be accessed by simply passing `privilege_level="exclusive"` when using `send_configs` method
 
 # 2020.04.30
 - Continued improvement around `SystemSSHTransport` connection/auth failure logging

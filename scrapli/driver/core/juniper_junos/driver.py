@@ -56,6 +56,28 @@ PRIVS = {
             "",
         )
     ),
+    "configuration_exclusive": (
+        PrivilegeLevel(
+            r"^[a-z0-9.\-@()/:]{1,32}#\s?$",
+            "configuration_exclusive",
+            "exec",
+            "exit configuration-mode",
+            "configure exclusive",
+            False,
+            "",
+        )
+    ),
+    "configuration_private": (
+        PrivilegeLevel(
+            r"^[a-z0-9.\-@()/:]{1,32}#\s?$",
+            "configuration_private",
+            "exec",
+            "exit configuration-mode",
+            "configure private",
+            False,
+            "",
+        )
+    ),
 }
 
 

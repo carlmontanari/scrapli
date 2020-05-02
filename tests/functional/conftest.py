@@ -84,3 +84,53 @@ def conn(device_type, transport):
     )
     conn.open()
     return conn
+
+
+@pytest.fixture(scope="class")
+def iosxr_conn(transport):
+    device = DEVICES["cisco_iosxr"].copy()
+    driver = device.pop("driver")
+    device.pop("base_config")
+
+    timeout_transport = 30
+    timeout_ops = 30
+
+    port = 22
+    if transport == "telnet":
+        port = 23
+
+    conn = driver(
+        **device,
+        port=port,
+        transport=transport,
+        timeout_socket=5,
+        timeout_transport=timeout_transport,
+        timeout_ops=timeout_ops,
+    )
+    conn.open()
+    return conn
+
+
+@pytest.fixture(scope="class")
+def junos_conn(transport):
+    device = DEVICES["juniper_junos"].copy()
+    driver = device.pop("driver")
+    device.pop("base_config")
+
+    timeout_transport = 30
+    timeout_ops = 30
+
+    port = 22
+    if transport == "telnet":
+        port = 23
+
+    conn = driver(
+        **device,
+        port=port,
+        transport=transport,
+        timeout_socket=5,
+        timeout_transport=timeout_transport,
+        timeout_ops=timeout_ops,
+    )
+    conn.open()
+    return conn
