@@ -45,7 +45,7 @@ def operation_timeout(attribute: str, message: str = "") -> Callable[..., Any]:
 
             timeout_duration = getattr(channel_or_transport, attribute, None)
             if not timeout_duration:
-                LOG.error(
+                LOG.info(
                     f"Could not find {attribute} value of {channel_or_transport}, continuing "
                     "without timeout decorator"
                 )

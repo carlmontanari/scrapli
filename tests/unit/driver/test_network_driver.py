@@ -53,7 +53,8 @@ def test_send_commands_exceptions(attr_setup, mocked_network_driver):
 def test__determine_current_priv(mocked_network_driver):
     conn = mocked_network_driver([])
     current_priv = conn._determine_current_priv("execprompt>")
-    assert current_priv.name == "exec"
+    assert len(current_priv) == 1
+    assert current_priv[0] == "exec"
 
 
 def test__determine_current_priv_unknown(mocked_network_driver):

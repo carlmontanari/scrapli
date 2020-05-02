@@ -58,7 +58,7 @@ PRIVS = {
     ),
     "configuration": (
         PrivilegeLevel(
-            r"^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{0,32}\)#\s?$",
+            r"^[a-z0-9.\-@/:]{1,32}\(config(?!\-s)[a-z0-9.\-@/:]{0,32}\)#\s?$",
             "configuration",
             "privilege_exec",
             "end",
@@ -142,3 +142,36 @@ class NXOSDriver(NetworkDriver):
 
         if _telnet:
             self.transport.username_prompt = "login:"
+
+    def _abort_config(self) -> None:
+        """
+        Abort EOS configuration session (if using a config session!)
+
+        Args:
+            N/A
+
+        Returns:
+            N/A:  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+        if "session" in self._current_priv_level.name:
+            self.channel.send_input(channel_input="abort")
+            self._current_priv_level = self.privilege_levels["privilege_exec"]
+
+    def register_configuration_session(self, session_name: str) -> None:
+        pattern = r"^[a-z0-9.\-@/:]{1,32}\(config\-s[a-z0-9.\-@/:]{0,32}\)#\s?$"
+        name = f"configuration_session_{session_name}"
+        config_session = PrivilegeLevel(
+            pattern=pattern,
+            name=name,
+            previous_priv="privilege_exec",
+            deescalate="end",
+            escalate=f"configure session {session_name}",
+            escalate_auth=False,
+            escalate_prompt="",
+        )
+        self.privilege_levels[name] = config_session
+        self.update_privilege_levels(update_channel=True)

@@ -7,8 +7,8 @@ from functools import lru_cache
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from scrapli.driver.generic_driver import GenericDriver
-from scrapli.exceptions import UnknownPrivLevel
-from scrapli.helper import get_prompt_pattern, resolve_file
+from scrapli.exceptions import CouldNotAcquirePrivLevel, UnknownPrivLevel
+from scrapli.helper import resolve_file
 from scrapli.response import Response
 
 
@@ -183,7 +183,7 @@ class NetworkDriver(GenericDriver, ABC):
             self.channel.comms_prompt_pattern = self.comms_prompt_pattern_all
 
     @lru_cache()
-    def _determine_current_priv(self, current_prompt: str) -> PrivilegeLevel:
+    def _determine_current_priv(self, current_prompt: str) -> List[str]:
         """
         Determine current privilege level from prompt string
 
@@ -191,26 +191,26 @@ class NetworkDriver(GenericDriver, ABC):
             current_prompt: string of current prompt
 
         Returns:
-            PrivilegeLevel: NamedTuple of current privilege level
+            matching_priv_levels: list of string names of matching privilege levels
 
         Raises:
             UnknownPrivLevel: if privilege level cannot be determined
 
         """
-        prompt_pattern = get_prompt_pattern(prompt="", class_prompt=self.comms_prompt_pattern_all)
-        search_result = re.search(pattern=prompt_pattern, string=current_prompt.encode())
-        if search_result:
-            possible_priv_levels = [
-                priv_name
-                for priv_name, matched_prompt in search_result.groupdict().items()
-                if matched_prompt
-            ]
-            priv_level = self.privilege_levels[possible_priv_levels[0]]
-            LOG.debug(f"Determined current privilege level is `{priv_level.name}`")
-            return priv_level
-        raise UnknownPrivLevel(
-            f"Could not determine privilege level from provided prompt: `{current_prompt}`"
-        )
+        matching_priv_levels = []
+        for priv_level in self.privilege_levels.values():
+            search_result = re.search(
+                pattern=priv_level.pattern, string=current_prompt, flags=re.M | re.I
+            )
+            if not search_result:
+                continue
+            matching_priv_levels.append(priv_level.name)
+            LOG.debug(f"Determined current privilege level is one of `{priv_level.name}`")
+        if not matching_priv_levels:
+            raise UnknownPrivLevel(
+                f"Could not determine privilege level from provided prompt: `{current_prompt}`"
+            )
+        return matching_priv_levels
 
     def _escalate(self, escalate_priv: PrivilegeLevel) -> None:
         """
@@ -313,18 +313,22 @@ class NetworkDriver(GenericDriver, ABC):
         resolved_priv = self._get_privilege_level_name(requested_priv=desired_priv)
         map_to_desired_priv = self._priv_map[resolved_priv]
 
+        privilege_change_count = 0
         while True:
             # if we are already at the desired priv, we don't need to do any thing
-            current_priv = self._determine_current_priv(current_prompt=self.channel.get_prompt())
+            current_priv_patterns = self._determine_current_priv(
+                current_prompt=self.channel.get_prompt()
+            )
 
-            # startswith allows us to have different "configuration_XYZ" priv levels to represent
-            # things like configuration_exclusive or configuration_private or configuration_session
-            # that all have the exact same pattern, thus giving us no way to differentiate between
-            # "configuration" (normal) and "configuration_exclusive" (happens on iosxr & junos)
-            if resolved_priv.startswith(current_priv.name):
+            if desired_priv in current_priv_patterns:
                 LOG.info(f"Acquired requested privilege level `{desired_priv}`")
-                self._current_priv_level = current_priv
+                self._current_priv_level = self.privilege_levels[desired_priv]
                 return
+
+            # if multiple patterns match pick the zeroith... the only time patterns should be
+            # identical is if we have privilege levels like "configuration" or
+            # "configuration_exclusive" that have identical prompts (ex: IOSXRDriver)
+            current_priv = self.privilege_levels[current_priv_patterns[0]]
 
             map_to_current_priv = self._priv_map[current_priv.name]
             priv_map = (
@@ -334,7 +338,12 @@ class NetworkDriver(GenericDriver, ABC):
             )
 
             desired_priv_index = priv_map.index(resolved_priv)
-            current_priv_index = priv_map.index(current_priv.name)
+            try:
+                current_priv_index = priv_map.index(current_priv.name)
+            except ValueError:
+                # if the current priv is not in the map for the desired priv; set the current index
+                # to the "top" (end) of the priv map and work our way back down
+                current_priv_index = len(priv_map)
             if current_priv_index > desired_priv_index:
                 deescalate_priv = priv_map[current_priv_index - 1]
                 LOG.info(f"Attempting to deescalate from {current_priv.name} to {deescalate_priv}")
@@ -343,6 +352,10 @@ class NetworkDriver(GenericDriver, ABC):
                 escalate_priv = self.privilege_levels[priv_map[current_priv_index + 1]]
                 LOG.info(f"Attempting to escalate from {current_priv.name} to {escalate_priv.name}")
                 self._escalate(escalate_priv=escalate_priv)
+            privilege_change_count += 1
+            if privilege_change_count > len(self.privilege_levels) + 1:
+                msg = f"Failed to acquire requested privilege level {desired_priv}"
+                raise CouldNotAcquirePrivLevel(msg)
 
     def _update_response(self, response: Response) -> None:
         """
@@ -568,6 +581,24 @@ class NetworkDriver(GenericDriver, ABC):
         self._update_response(response=response)
 
         return response
+
+    def register_configuration_session(self, session_name: str) -> None:
+        """
+        If applicable, register a configuration session as a valid privilege level
+
+        Args:
+            session_name: name of config session to register
+
+        Returns:
+            N/A:  # noqa: DAR202
+
+        Raises:
+            NotImplementedError: unless overridden by concrete class
+
+        """
+        raise NotImplementedError(
+            f"Configuration sessions not supported for `{self.__class__.__name__}`"
+        )
 
     def _abort_config(self) -> None:
         """

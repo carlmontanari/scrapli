@@ -134,3 +134,37 @@ def junos_conn(transport):
     )
     conn.open()
     return conn
+
+
+@pytest.fixture(scope="class")
+def eos_conn(transport):
+    if transport == "ssh2":
+        pytest.skip(
+            "SSH2 (on pypi) doesn't support keyboard interactive auth, skipping ssh2 for arista_eos testing"
+        )
+    device = DEVICES["arista_eos"].copy()
+    driver = device.pop("driver")
+    device.pop("base_config")
+
+    port = 22
+    if transport == "telnet":
+        port = 23
+
+    conn = driver(**device, port=port, transport=transport, timeout_socket=5,)
+    conn.open()
+    return conn
+
+
+@pytest.fixture(scope="class")
+def nxos_conn(transport):
+    device = DEVICES["cisco_nxos"].copy()
+    driver = device.pop("driver")
+    device.pop("base_config")
+
+    port = 22
+    if transport == "telnet":
+        port = 23
+
+    conn = driver(**device, port=port, transport=transport, timeout_socket=5,)
+    conn.open()
+    return conn

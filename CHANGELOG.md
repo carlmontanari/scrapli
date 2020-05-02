@@ -21,6 +21,10 @@ CHANGELOG
 - Add "configuration_exclusive" privilege level for IOSXRDriver, add "configuration_private" and
  "configuration_exclusive" for JunosDriver, modify some of the privilege handling to support these modes -- these can
   be accessed by simply passing `privilege_level="exclusive"` when using `send_configs` method
+- Add support for configuration sessions for EOS/NXOS. At this time sessions need to be "registered" as a privilege
+ level, and then are requestable like any other privilege level, and can be used when sending configs by passing
+  "session_XYZ" as the privilege level argument for send config methods (of course where XYZ is the name of the
+   session you have registered)
 
 # 2020.04.30
 - Continued improvement around `SystemSSHTransport` connection/auth failure logging
