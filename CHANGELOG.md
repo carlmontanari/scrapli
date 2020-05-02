@@ -13,7 +13,8 @@ CHANGELOG
  privileges and don't use scrapli's built in methods a little easier. Scrapli still checks that the current prompt
   matches where it thinks it should be (i.e. config mode vs privileged exec) though, so nothing should change from a
    user perspective.
-- Improve (fix?) the abort config setup for IOSXR/Junos.
+- Improve (fix?) the abort config setup for IOSXR/Junos
+- Add more helpful exception if ssh key permissions are too open
 
 # 2020.04.30
 - Continued improvement around `SystemSSHTransport` connection/auth failure logging
