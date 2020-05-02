@@ -109,10 +109,20 @@ class JunosDriver(NetworkDriver):
         if transport == "telnet":
             _telnet = True
 
+        failed_when_contains = [
+            "is ambiguous",
+            "No valid completions",
+            "unknown command",
+            "syntax error",
+        ]
+
         super().__init__(
             privilege_levels=PRIVS,
             default_desired_privilege_level="exec",
             auth_secondary=auth_secondary,
+            failed_when_contains=failed_when_contains,
+            textfsm_platform="juniper_junos",
+            genie_platform="",
             on_open=on_open,
             on_close=on_close,
             transport=transport,
@@ -121,16 +131,6 @@ class JunosDriver(NetworkDriver):
 
         if _telnet:
             self.transport.username_prompt = "login:"
-
-        self.default_desired_priv = "exec"
-        self.textfsm_platform = "juniper_junos"
-
-        self.failed_when_contains = [
-            "is ambiguous",
-            "No valid completions",
-            "unknown command",
-            "syntax error",
-        ]
 
     def _abort_config(self) -> None:
         """

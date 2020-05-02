@@ -105,19 +105,20 @@ class EOSDriver(NetworkDriver):
         if on_close is None:
             on_close = eos_on_close
 
-        super().__init__(
-            privilege_levels=PRIVS,
-            default_desired_privilege_level="privilege_exec",
-            auth_secondary=auth_secondary,
-            on_open=on_open,
-            on_close=on_close,
-            **kwargs,
-        )
-
-        self.textfsm_platform = "arista_eos"
-
-        self.failed_when_contains = [
+        failed_when_contains = [
             "% Ambiguous command",
             "% Incomplete command",
             "% Invalid input",
         ]
+
+        super().__init__(
+            privilege_levels=PRIVS,
+            default_desired_privilege_level="privilege_exec",
+            auth_secondary=auth_secondary,
+            failed_when_contains=failed_when_contains,
+            textfsm_platform="arista_eos",
+            genie_platform="",
+            on_open=on_open,
+            on_close=on_close,
+            **kwargs,
+        )

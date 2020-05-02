@@ -61,7 +61,7 @@ class PrivilegeLevel:
         self.escalate_prompt = escalate_prompt
 
 
-NoPrivLevel = PrivilegeLevel("", "", "", "", "", False, "")
+DUMMY_PRIV_LEVEL = PrivilegeLevel("", "", "", "", "", False, "")
 
 
 PRIVS: Dict[str, PrivilegeLevel] = {}
@@ -76,6 +76,9 @@ class NetworkDriver(GenericDriver, ABC):
         privilege_levels: Dict[str, PrivilegeLevel],
         default_desired_privilege_level: str,
         auth_secondary: str = "",
+        failed_when_contains: Optional[List[str]] = None,
+        textfsm_platform: str = "",
+        genie_platform: str = "",
         **kwargs: Any,
     ):
         """
@@ -88,6 +91,9 @@ class NetworkDriver(GenericDriver, ABC):
                 like that upon first login, and is also the priv level scrapli will try to acquire
                 for normal "command" operations (`send_command`, `send_commands`)
             auth_secondary: password to use for secondary authentication (enable)
+            failed_when_contains: list of strings that indicate a command/configuration has failed
+            textfsm_platform: string name of platform to use for textfsm parsing
+            genie_platform: string name of platform to use for genie parsing
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -97,24 +103,39 @@ class NetworkDriver(GenericDriver, ABC):
             N/A
 
         """
+        self.comms_prompt_pattern_all: str
+
         self.privilege_levels = privilege_levels
         self.default_desired_privilege_level = default_desired_privilege_level
+        self._current_priv_level = DUMMY_PRIV_LEVEL
+        self._priv_map: Dict[str, List[str]] = {}
+        self.update_privilege_levels(update_channel=False)
 
+        self.auth_secondary = auth_secondary
+        self.textfsm_platform = textfsm_platform
+        self.genie_platform = genie_platform
+        self.failed_when_contains = failed_when_contains or []
+
+        super().__init__(comms_prompt_pattern=self.comms_prompt_pattern_all, **kwargs)
+
+    def _generate_comms_prompt_pattern_all(self) -> None:
+        """
+        Generate the `comms_prompt_pattern_all` from the currently assigned privilege levels
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
         self.comms_prompt_pattern_all = r"|".join(
             rf"(?P<{priv_level}>{priv_level_data.pattern})"
             for priv_level, priv_level_data in self.privilege_levels.items()
         )
-        self._current_priv_level = NoPrivLevel
-        self._priv_map: Dict[str, List[str]] = {}
-        self._build_priv_map()
-
-        self.auth_secondary = auth_secondary
-
-        self.textfsm_platform: str = ""
-        self.genie_platform: str = ""
-        self.failed_when_contains: List[str] = []
-
-        super().__init__(comms_prompt_pattern=self.comms_prompt_pattern_all, **kwargs)
 
     def _build_priv_map(self) -> None:
         """
@@ -140,6 +161,26 @@ class NetworkDriver(GenericDriver, ABC):
                 if not previous_priv:
                     break
                 self._priv_map[priv_level].insert(0, previous_priv)
+
+    def update_privilege_levels(self, update_channel: bool = True) -> None:
+        """
+        Re-generate the privilege map, and update the comms prompt pattern
+
+        Args:
+            update_channel: True/False update the channel pattern too -- likely only ever set to
+                False for class initialization before channel is opened
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+        self._build_priv_map()
+        self._generate_comms_prompt_pattern_all()
+        if update_channel is True:
+            self.channel.comms_prompt_pattern = self.comms_prompt_pattern_all
 
     @lru_cache()
     def _determine_current_priv(self, current_prompt: str) -> PrivilegeLevel:
@@ -509,7 +550,7 @@ class NetworkDriver(GenericDriver, ABC):
 
     def _abort_config(self) -> None:
         """
-        Abort a configuration session for platforms with commit type functionality; i.e iosxr/junos
+        Abort a configuration operation/session if applicable (for config sessions like junos/iosxr)
 
         Args:
             N/A

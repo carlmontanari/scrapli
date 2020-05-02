@@ -120,10 +120,20 @@ class NXOSDriver(NetworkDriver):
         if transport == "telnet":
             _telnet = True
 
+        failed_when_contains = [
+            "% Ambiguous command",
+            "% Incomplete command",
+            "% Invalid input detected",
+            "% Invalid command at",
+        ]
+
         super().__init__(
             privilege_levels=PRIVS,
             default_desired_privilege_level="privilege_exec",
             auth_secondary=auth_secondary,
+            failed_when_contains=failed_when_contains,
+            textfsm_platform="cisco_nxos",
+            genie_platform="nxos",
             on_open=on_open,
             on_close=on_close,
             transport=transport,
@@ -132,13 +142,3 @@ class NXOSDriver(NetworkDriver):
 
         if _telnet:
             self.transport.username_prompt = "login:"
-
-        self.textfsm_platform = "cisco_nxos"
-        self.genie_platform = "nxos"
-
-        self.failed_when_contains = [
-            "% Ambiguous command",
-            "% Incomplete command",
-            "% Invalid input detected",
-            "% Invalid command at",
-        ]

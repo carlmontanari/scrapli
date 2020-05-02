@@ -115,20 +115,20 @@ class IOSXEDriver(NetworkDriver):
         if on_close is None:
             on_close = iosxe_on_close
 
-        super().__init__(
-            privilege_levels=PRIVS,
-            default_desired_privilege_level="privilege_exec",
-            auth_secondary=auth_secondary,
-            on_open=on_open,
-            on_close=on_close,
-            **kwargs,
-        )
-
-        self.textfsm_platform = "cisco_ios"
-        self.genie_platform = "iosxe"
-
-        self.failed_when_contains = [
+        failed_when_contains = [
             "% Ambiguous command",
             "% Incomplete command",
             "% Invalid input detected",
         ]
+
+        super().__init__(
+            privilege_levels=PRIVS,
+            default_desired_privilege_level="privilege_exec",
+            auth_secondary=auth_secondary,
+            failed_when_contains=failed_when_contains,
+            textfsm_platform="cisco_ios",
+            genie_platform="iosxe",
+            on_open=on_open,
+            on_close=on_close,
+            **kwargs,
+        )

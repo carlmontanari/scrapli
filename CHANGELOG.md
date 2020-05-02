@@ -17,6 +17,7 @@ CHANGELOG
 - Add more helpful exception if ssh key permissions are too open
 - Convert PrivilegeLevel from a namedtuple to a class with slots... better for typing and is also mutable so users
  can more easily update the pattern for a given privilege level if so desired
+- Minor clean up stuff for all the core platforms and network driver, all internal, mostly just about organization!
 
 # 2020.04.30
 - Continued improvement around `SystemSSHTransport` connection/auth failure logging
