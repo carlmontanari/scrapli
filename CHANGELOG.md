@@ -15,6 +15,8 @@ CHANGELOG
    user perspective.
 - Improve (fix?) the abort config setup for IOSXR/Junos
 - Add more helpful exception if ssh key permissions are too open
+- Convert PrivilegeLevel from a namedtuple to a class with slots... better for typing and is also mutable so users
+ can more easily update the pattern for a given privilege level if so desired
 
 # 2020.04.30
 - Continued improvement around `SystemSSHTransport` connection/auth failure logging

@@ -3,7 +3,6 @@ import logging
 import re
 import warnings
 from abc import ABC, abstractmethod
-from collections import namedtuple
 from functools import lru_cache
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -12,18 +11,57 @@ from scrapli.exceptions import UnknownPrivLevel
 from scrapli.helper import get_prompt_pattern, resolve_file
 from scrapli.response import Response
 
-PrivilegeLevel = namedtuple(
-    "PrivilegeLevel",
-    "pattern "  # regex pattern for this priv level
-    "name "  # friendly name of the priv level
-    "previous_priv "  # name of the "lower"/"previous" priv level
-    "deescalate "  # how to deescalate *from* this priv level (to the lower/previous priv)
-    "escalate "  # how to escalate *to* this priv level (from the lower/previous priv)
-    "escalate_auth "  # is there auth to get *to* this priv level
-    "escalate_prompt ",  # what is the prompt to get *to* this priv level
-)
 
-NoPrivLevel = PrivilegeLevel("", "", "", "", "", "", "")
+class PrivilegeLevel:
+    __slots__ = (
+        "pattern",
+        "name",
+        "previous_priv",
+        "deescalate",
+        "escalate",
+        "escalate_auth",
+        "escalate_prompt",
+    )
+
+    def __init__(
+        self,
+        pattern: str,
+        name: str,
+        previous_priv: str,
+        deescalate: str,
+        escalate: str,
+        escalate_auth: bool,
+        escalate_prompt: str,
+    ):
+        """
+        PrivilegeLevel Object
+
+        Args:
+            pattern: regex pattern to use to identify this privilege level by the prompt
+            name: friendly name of this privilege level
+            previous_priv: name of the lower/previous privilege level
+            deescalate: how to deescalate *from* this privilege level (to the lower/previous priv)
+            escalate: how to escalate *to* this privilege level (from the lower/previous priv)
+            escalate_auth: True/False escalation requires authentication
+            escalate_prompt: prompt pattern to search for during escalation if escalate auth is True
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+        self.pattern = pattern
+        self.name = name
+        self.previous_priv = previous_priv
+        self.deescalate = deescalate
+        self.escalate = escalate
+        self.escalate_auth = escalate_auth
+        self.escalate_prompt = escalate_prompt
+
+
+NoPrivLevel = PrivilegeLevel("", "", "", "", "", False, "")
 
 
 PRIVS: Dict[str, PrivilegeLevel] = {}

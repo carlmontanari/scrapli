@@ -98,6 +98,7 @@ class EOSDriver(NetworkDriver):
 
         Raises:
             N/A
+
         """
         if on_open is None:
             on_open = eos_on_open

@@ -16,7 +16,11 @@ MY_DEVICE = {
 
 
 def main():
-    """Example demonstrating handling authentication with ssh private key"""
+    """
+    Example demonstrating handling authentication with ssh private key
+
+    Make sure the key permissions are 0600!
+    """
     with IOSXEDriver(**MY_DEVICE) as conn:
         # Platform drivers will auto-magically handle disabling paging for you
         result = conn.send_command("show run")
