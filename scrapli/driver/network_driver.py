@@ -353,7 +353,7 @@ class NetworkDriver(GenericDriver, ABC):
                 LOG.info(f"Attempting to escalate from {current_priv.name} to {escalate_priv.name}")
                 self._escalate(escalate_priv=escalate_priv)
             privilege_change_count += 1
-            if privilege_change_count > len(self.privilege_levels) + 1:
+            if privilege_change_count > len(self.privilege_levels) * 2:
                 msg = f"Failed to acquire requested privilege level {desired_priv}"
                 raise CouldNotAcquirePrivLevel(msg)
 

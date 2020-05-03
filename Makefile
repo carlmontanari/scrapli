@@ -117,6 +117,7 @@ cov_linux:
 
 test:
 	python -m pytest tests/
+	python -m pytest examples/
 
 test_unit:
 	python -m pytest tests/unit/

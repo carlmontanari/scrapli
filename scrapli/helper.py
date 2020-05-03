@@ -339,3 +339,23 @@ def resolve_file(file: str) -> str:
     if Path(os.path.expanduser(file)).is_file():
         return str(Path(os.path.expanduser(file)))
     raise ValueError(f"File path `{file}` could not be resolved")
+
+
+def validate_identifier(identifier: str) -> bool:
+    """
+    Validate if a given input is a valid python identifier
+
+    Args:
+        identifier: string to check
+
+    Returns:
+        bool: True if identifier is valid, otherwise False
+
+    Raises:
+        N/A
+
+    """
+    identifier_pattern = r"^[a-zA-Z_][a-zA-Z0-9_]*$"
+    if re.search(pattern=identifier_pattern, string=identifier):
+        return True
+    return False

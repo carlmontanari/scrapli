@@ -3,6 +3,7 @@ from typing import Any, Callable, Dict, Optional
 
 from scrapli.driver import NetworkDriver
 from scrapli.driver.network_driver import PrivilegeLevel
+from scrapli.helper import validate_identifier
 
 
 def eos_on_open(conn: NetworkDriver) -> None:
@@ -142,6 +143,12 @@ class EOSDriver(NetworkDriver):
             self._current_priv_level = self.privilege_levels["privilege_exec"]
 
     def register_configuration_session(self, session_name: str) -> None:
+        if not validate_identifier(identifier=session_name):
+            msg = (
+                "Scrapli requires configuration session names to be valid python identifiers, "
+                f"provided session_name `{session_name}` is not a valid identifier"
+            )
+            raise ValueError(msg)
         pattern = (
             rf"^[a-z0-9.\-@/:]{{1,32}}\(config\-s\-{session_name[:6]}[a-z0-9_.\-@/:]{{0,32}}\)#\s?$"
         )

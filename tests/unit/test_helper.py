@@ -11,9 +11,9 @@ from scrapli.helper import (
     _textfsm_get_template,
     genie_parse,
     get_prompt_pattern,
-    resolve_ssh_config,
     strip_ansi,
     textfsm_parse,
+    validate_identifier,
 )
 
 UNIT_TEST_DIR = f"{Path(scrapli.__file__).parents[1]}/tests/unit/"
@@ -147,3 +147,13 @@ def test_genie_parse_failure():
     # genie loads about nine million modules... for whatever reason these two upset pyfakefs
     del sys.modules["ats.configuration"]
     del sys.modules["pyats.configuration"]
+
+
+@pytest.mark.parametrize(
+    "identifier", [("racecar", True), ("1234", False)], ids=["valid", "invalid"],
+)
+def test_textfsm_parse_success_string_path(identifier):
+    identifier_string = identifier[0]
+    identifier_result = identifier[1]
+    result = validate_identifier(identifier=identifier_string)
+    assert result is identifier_result

@@ -25,6 +25,7 @@ CHANGELOG
  level, and then are requestable like any other privilege level, and can be used when sending configs by passing
   "session_XYZ" as the privilege level argument for send config methods (of course where XYZ is the name of the
    session you have registered)
+- Fixed issue that allowed users to assign an invalid (to scrapli/python) session name for EOS/NXOS drivers
 
 # 2020.04.30
 - Continued improvement around `SystemSSHTransport` connection/auth failure logging
