@@ -3,7 +3,6 @@ from typing import Any, Callable, Dict, Optional
 
 from scrapli.driver import NetworkDriver
 from scrapli.driver.network_driver import PrivilegeLevel
-from scrapli.helper import validate_identifier
 
 
 def nxos_on_open(conn: NetworkDriver) -> None:
@@ -163,14 +162,14 @@ class NXOSDriver(NetworkDriver):
             self._current_priv_level = self.privilege_levels["privilege_exec"]
 
     def register_configuration_session(self, session_name: str) -> None:
-        if not validate_identifier(identifier=session_name):
+        if session_name in self.privilege_levels.keys():
             msg = (
-                "Scrapli requires configuration session names to be valid python identifiers, "
-                f"provided session_name `{session_name}` is not a valid identifier"
+                f"session name `{session_name}` already registered as a privilege level, chose a "
+                "unique session name"
             )
             raise ValueError(msg)
         pattern = r"^[a-z0-9.\-@/:]{1,32}\(config\-s[a-z0-9.\-@/:]{0,32}\)#\s?$"
-        name = f"configuration_session_{session_name}"
+        name = session_name
         config_session = PrivilegeLevel(
             pattern=pattern,
             name=name,

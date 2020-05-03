@@ -103,7 +103,7 @@ class NetworkDriver(GenericDriver, ABC):
             N/A
 
         """
-        self.comms_prompt_pattern_all: str
+        self.comms_prompt_pattern: str
 
         self.privilege_levels = privilege_levels
         self.default_desired_privilege_level = default_desired_privilege_level
@@ -116,9 +116,9 @@ class NetworkDriver(GenericDriver, ABC):
         self.genie_platform = genie_platform
         self.failed_when_contains = failed_when_contains or []
 
-        super().__init__(comms_prompt_pattern=self.comms_prompt_pattern_all, **kwargs)
+        super().__init__(comms_prompt_pattern=self.comms_prompt_pattern, **kwargs)
 
-    def _generate_comms_prompt_pattern_all(self) -> None:
+    def _generate_comms_prompt_pattern(self) -> None:
         """
         Generate the `comms_prompt_pattern_all` from the currently assigned privilege levels
 
@@ -132,9 +132,8 @@ class NetworkDriver(GenericDriver, ABC):
             N/A
 
         """
-        self.comms_prompt_pattern_all = r"|".join(
-            rf"(?P<{priv_level}>{priv_level_data.pattern})"
-            for priv_level, priv_level_data in self.privilege_levels.items()
+        self.comms_prompt_pattern = r"|".join(
+            rf"({priv_level_data.pattern})" for priv_level_data in self.privilege_levels.values()
         )
 
     def _build_priv_map(self) -> None:
@@ -178,9 +177,11 @@ class NetworkDriver(GenericDriver, ABC):
 
         """
         self._build_priv_map()
-        self._generate_comms_prompt_pattern_all()
+        self._generate_comms_prompt_pattern()
+        # clear the lru cache as patterns may have been updated
+        self._determine_current_priv.cache_clear()
         if update_channel is True:
-            self.channel.comms_prompt_pattern = self.comms_prompt_pattern_all
+            self.channel.comms_prompt_pattern = self.comms_prompt_pattern
 
     @lru_cache()
     def _determine_current_priv(self, current_prompt: str) -> List[str]:
@@ -276,10 +277,9 @@ class NetworkDriver(GenericDriver, ABC):
 
         Args:
             requested_priv: string name of desired privilege level
-                (see scrapli.driver.<driver_category.device_type>.driver for levels)
 
         Returns:
-            N/A  # noqa: DAR202
+            str: name of the privilege level requested
 
         Raises:
            UnknownPrivLevel: if attempting to acquire an unknown priv
@@ -306,7 +306,7 @@ class NetworkDriver(GenericDriver, ABC):
             N/A  # noqa: DAR202
 
         Raises:
-           UnknownPrivLevel: if attempting to acquire an unknown priv
+           CouldNotAcquirePrivLevel: if scrapli cannot get to the requested privilege level
 
         """
         LOG.info(f"Attempting to acquire `{desired_priv}` privilege level")
@@ -563,7 +563,7 @@ class NetworkDriver(GenericDriver, ABC):
             Response: scrapli Response object
 
         Raises:
-            UnknownPrivLevel: if requesting to operate in an unknown priv level
+            N/A
 
         """
         if privilege_level:
@@ -636,7 +636,7 @@ class NetworkDriver(GenericDriver, ABC):
             privilege_level: name of configuration privilege level/type to acquire; this is platform
                 dependant, so check the device driver for specifics. Examples of privilege_name
                 would be "exclusive" for IOSXRDriver, "private" for JunosDriver. You can also pass
-                in a name of a configuration session such as "session_mysession" if you have
+                in a name of a configuration session such as "my-config-session" if you have
                 registered a session using the "register_config_session" method of the EOSDriver or
                 NXOSDriver.
 
@@ -652,7 +652,7 @@ class NetworkDriver(GenericDriver, ABC):
 
         if privilege_level:
             resolved_privilege_level = self._get_privilege_level_name(
-                requested_priv=f"configuration_{privilege_level}"
+                requested_priv=f"{privilege_level}"
             )
         else:
             resolved_privilege_level = "configuration"

@@ -61,8 +61,8 @@ def test_nxos_driver_init_telnet():
         (NXOSDriver, "mysession", r"^[a-z0-9.\-@/:]{1,32}\(config\-s[a-z0-9.\-@/:]{0,32}\)#\s?$"),
         (
             EOSDriver,
-            "mysession",
-            r"^[a-z0-9.\-@/:]{1,32}\(config\-s\-mysess[a-z0-9_.\-@/:]{0,32}\)#\s?$",
+            "my-session",
+            r"^[a-z0-9.\-@/:]{1,32}\(config\-s\-my\-ses[a-z0-9_.\-@/:]{0,32}\)#\s?$",
         ),
     ],
     ids=["nxos", "eos"],
@@ -73,17 +73,21 @@ def test_driver_register_configuration_session(session_data):
     session_pattern = session_data[2]
     conn = driver(host="myhost")
     conn.register_configuration_session(session_name=session_name)
-    assert conn.privilege_levels[f"configuration_session_{session_name}"].pattern == session_pattern
+    assert conn.privilege_levels[session_name].pattern == session_pattern
 
 
 @pytest.mark.parametrize(
-    "driver", [NXOSDriver, EOSDriver,], ids=["nxos", "eos"],
+    "session_data",
+    [(NXOSDriver, "configuration",), (EOSDriver, "configuration",),],
+    ids=["nxos", "eos"],
 )
-def test_driver_register_configuration_session_invalid_name(driver):
+def test_driver_register_configuration_session_duplicate_name(session_data):
+    driver = session_data[0]
+    session_name = session_data[1]
     conn = driver(host="myhost")
     with pytest.raises(ValueError) as exc:
-        conn.register_configuration_session(session_name="1234")
+        conn.register_configuration_session(session_name=session_name)
     assert (
         str(exc.value)
-        == "Scrapli requires configuration session names to be valid python identifiers, provided session_name `1234` is not a valid identifier"
+        == f"session name `{session_name}` already registered as a privilege level, chose a unique session name"
     )

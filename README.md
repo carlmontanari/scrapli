@@ -125,6 +125,8 @@ end
 - [Parse output with TextFSM/ntc-templates](/examples/structured_data/structured_data_textfsm.py)
 - [Parse output with Genie](/examples/structured_data/structured_data_genie.py)
 - [Transport Options](examples/transport_options/system_ssh_args.py)
+- [Configuration Modes - IOSXR Configure Exclusive](examples/configuration_modes/iosxr_configure_exclusive.py)
+- [Configuration Modes - EOS Configure Session](examples/configuration_modes/eos_configure_session.py)
 
 
 # scrapli: What is it
@@ -480,6 +482,10 @@ with IOSXEDriver(**my_device) as conn:
 There is also a `send_configs_from_file` method that behaves exactly like the commands version, but sends the
  commands in configuration mode as you would expect.
 
+If you need to get into any kind of "special" configuration mode, such as "configure exclusive", "configure private
+", or "configure session XYZ", you can pass the name of the corresponding privilege level via the `privilege_level
+` argument. Please see the [Driver Privilege Levels](#driver-privilege-levels) section for more details!
+
 ## Textfsm/NTC-Templates Integration
 
 scrapli supports parsing output with TextFSM and ntc-templates. This of course requires installing TextFSM and having
@@ -692,11 +698,11 @@ Due to the nature of Telnet/SSH there is no good way to know when a command has 
  prompt/starting point" scrapli uses a regular expression pattern to find that base prompt.
 
 This pattern is contained in the `comms_prompt_pattern` setting, and is perhaps the most important argument to getting
- scrapli working!
+ scrapli working! In general you should *not* change the patterns unless you have a good reason to do so!
 
-The "base" (default, but changeable) pattern is:
+The "base" `Scrape` (default, but changeable) pattern is:
 
-`"^[a-z0-9.\-@()/:]{1,20}[#>$]\s*$"`
+`"^^[a-z0-9.\-@()/:]{1,48}[#>$]\s*$"`
 
 *NOTE* all `comms_prompt_pattern` "should" use the start and end of line anchors as all regex searches in scrapli are
  multi-line (this is an important piece to making this all work!). While you don't *need* to use the line anchors its
@@ -706,10 +712,6 @@ The "base" (default, but changeable) pattern is:
 
 The above pattern works on all "core" platforms listed above for at the very least basic usage. Custom prompts or
  host names could in theory break this, so be careful!
-
-If you do not wish to match Cisco "config" level prompts you could use a `comms_prompt_pattern` such as:
-
-`"^[a-z0-9.-@]{1,20}[#>$]\s*$"`
 
 If you use a platform driver, the base prompt is set in the driver so you don't really need to worry about this!
 
@@ -816,7 +818,9 @@ In either case -- "standard" or "network" -- scrapli spawns a keepalive thread. 
 The "core" drivers understand the basic privilege levels of their respective device types. As mentioned previously
 , the drivers will automatically attain the "privilege_exec" (or equivalent) privilege level prior to executing "show
 " commands. If you don't want this "auto-magic" you can use the base driver (`Scrape`) or the `GenericDriver`. The
- privileges for each device are outlined in named tuples in the platforms `driver.py` file. 
+ privileges for each device are outlined in the platforms `driver.py` file - each privilege is an object of the base
+  `PrivilegeLevel` class which uses slots for the attributes. This used to be a named tuple, however as this was
+   immutable it was a bit of a pain for users to modify things on the fly. 
  
 As an example, the following privilege levels are supported by the `IOSXEDriver`:
 
@@ -850,6 +854,88 @@ my_device = {
 with IOSXEDriver(**my_device) as conn:
     conn.acquire_priv("configuration")
 ```
+
+### Configure Exclusive and Configure Private (IOSXR/Junos)
+ 
+IOSXR and Junos platforms have different configuration modes, such as "configure exclusive" or "configure private
+". These alternate configuration modes are represented as a privilege level just like the "regular" configuration mode
+, however they of course an appropriate value set for the "escalate" argument, such as "configure exclusive" for the
+ IOSXR Driver. You can acquire an "exclusive" configuration session on IOSXR as follows:
+ 
+```python
+from scrapli.driver.core import IOSXRDriver
+
+my_device = {
+    "host": "172.18.0.11",
+    "auth_username": "vrnetlab",
+    "auth_password": "VR-netlab9",
+    "auth_strict_key": False,
+}
+with IOSXRDriver(**my_device) as conn:
+    conn.acquire_priv("configuration_exclusive")
+```
+
+Of course you can also pass this privilege level name to the `send_configs` or `send_configs_from_file` methods as well:
+
+```python
+from scrapli.driver.core import IOSXRDriver
+
+my_device = {
+    "host": "172.18.0.11",
+    "auth_username": "vrnetlab",
+    "auth_password": "VR-netlab9",
+    "auth_strict_key": False,
+}
+with IOSXRDriver(**my_device) as conn:
+    conn.send_configs(configs=["configure things"], privilege_level="configuration_exclusive")
+```
+
+Note that the name of the privilege level is "configuration_exclusive" -- don't forget to write the whole thing out!
+ 
+
+### Configure Session (EOS/NXOS)
+
+EOS and NXOS devices support configuration "sessions", these sessions are a little bit of a special case for scrapli
+. In order to use a configuration session, the configuration session must first be "registered" with scrapli -- this
+ is so that scrapli can create a privilege level that is mapped to the given config session/config session name
+ . The `register_configuration_session` method that accepts a string name of the configuration session you would like
+  to create -- note that this method raises a `NotImplementedError` for platforms that do not support config sessions
+  . The`register_configuration_session` method creates a new privilege level for you and updates the transport class
+   with the appropriate information internally (see next section). An example of creating a session for an EOS device
+    called "my-config-session" can be seen here:
+    
+```python
+from scrapli.driver.core import EOSDriver
+
+my_device = {
+    "host": "172.18.0.14",
+    "auth_username": "vrnetlab",
+    "auth_password": "VR-netlab9",
+    "auth_secondary": "VR-netlab9",
+    "auth_strict_key": False,
+}
+with EOSDriver(**my_device) as conn:
+    conn.register_configuration_session(session_name="my-config-session")
+    print(conn.privilege_levels["my-config-session"])
+    print(conn.privilege_levels["my-config-session"].name)
+    print(conn.privilege_levels["my-config-session"].pattern)
+``` 
+
+```
+<scrapli.driver.network_driver.PrivilegeLevel object at 0x7fca10070820>
+my-config-session
+^[a-z0-9.\-@/:]{1,32}\(config\-s\-my\-con[a-z0-9_.\-@/:]{0,32}\)#\s?$
+```
+
+### Modifying Privilege Levels
+
+When creating a configuration session, or modifying a privilege level during runtime, scrapli needs to update some
+ internal arguments in order to always have a full "map" of how to escalate/deescalate, as well as to be able to
+  match prompts based on any/all of the patterns available in the privilege levels dictionary. The
+   `register_configuration_session` method will automatically handle updating these internal arguments, however if
+    you modify any of the privilege levels (or add a priv level on the fly without using the register method) then
+     you will need to manually call the `update_privilege_levels` method. 
+
 
 ## Using `Scrape` Directly
 
