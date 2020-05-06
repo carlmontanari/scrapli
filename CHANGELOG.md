@@ -24,6 +24,9 @@ CHANGELOG
 - Add support for configuration sessions for EOS/NXOS. At this time sessions need to be "registered" as a privilege
  level, and then are requestable like any other privilege level, and can be used when sending configs by passing
   the name of your session as the privilege level argument for send config methods
+- Add a space to EOS prompts -- it seems its very easy to add one to the prompts and scrapli did not enjoy that
+ previously!
+- Give users the option to pass in their own privilege levels for network drivers
 
 # 2020.04.30
 - Continued improvement around `SystemSSHTransport` connection/auth failure logging

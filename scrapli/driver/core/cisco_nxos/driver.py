@@ -73,6 +73,7 @@ PRIVS = {
 class NXOSDriver(NetworkDriver):
     def __init__(
         self,
+        privilege_levels: Optional[Dict[str, PrivilegeLevel]] = None,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         auth_secondary: str = "",
@@ -83,6 +84,8 @@ class NXOSDriver(NetworkDriver):
         NXOSDriver Object
 
         Args:
+            privilege_levels: optional user provided privilege levels, if left None will default to
+                scrapli standard privilege levels
             on_open: callable that accepts the class instance as its only argument. this callable,
                 if provided, is executed immediately after authentication is completed. Common use
                 cases for this callable would be to disable paging or accept any kind of banner
@@ -111,6 +114,9 @@ class NXOSDriver(NetworkDriver):
         Raises:
             N/A
         """
+        if privilege_levels is None:
+            privilege_levels = PRIVS
+
         if on_open is None:
             on_open = nxos_on_open
         if on_close is None:
@@ -128,7 +134,7 @@ class NXOSDriver(NetworkDriver):
         ]
 
         super().__init__(
-            privilege_levels=PRIVS,
+            privilege_levels=privilege_levels,
             default_desired_privilege_level="privilege_exec",
             auth_secondary=auth_secondary,
             failed_when_contains=failed_when_contains,
@@ -157,7 +163,8 @@ class NXOSDriver(NetworkDriver):
             N/A
 
         """
-        if "session" in self._current_priv_level.name:
+        # nxos pattern for config sessions should *always* have `config-s`
+        if "config\\-s" in self._current_priv_level.pattern:
             self.channel.send_input(channel_input="abort")
             self._current_priv_level = self.privilege_levels["privilege_exec"]
 

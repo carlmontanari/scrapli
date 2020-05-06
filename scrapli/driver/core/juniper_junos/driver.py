@@ -84,6 +84,7 @@ PRIVS = {
 class JunosDriver(NetworkDriver):
     def __init__(
         self,
+        privilege_levels: Optional[Dict[str, PrivilegeLevel]] = None,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         auth_secondary: str = "",
@@ -94,6 +95,8 @@ class JunosDriver(NetworkDriver):
         JunosDriver Object
 
         Args:
+            privilege_levels: optional user provided privilege levels, if left None will default to
+                scrapli standard privilege levels
             on_open: callable that accepts the class instance as its only argument. this callable,
                 if provided, is executed immediately after authentication is completed. Common use
                 cases for this callable would be to disable paging or accept any kind of banner
@@ -121,7 +124,11 @@ class JunosDriver(NetworkDriver):
 
         Raises:
             N/A
+
         """
+        if privilege_levels is None:
+            privilege_levels = PRIVS
+
         if on_open is None:
             on_open = junos_on_open
         if on_close is None:
@@ -139,7 +146,7 @@ class JunosDriver(NetworkDriver):
         ]
 
         super().__init__(
-            privilege_levels=PRIVS,
+            privilege_levels=privilege_levels,
             default_desired_privilege_level="exec",
             auth_secondary=auth_secondary,
             failed_when_contains=failed_when_contains,
