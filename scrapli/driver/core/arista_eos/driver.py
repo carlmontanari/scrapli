@@ -45,10 +45,10 @@ def eos_on_close(conn: NetworkDriver) -> None:
 
 
 PRIVS = {
-    "exec": (PrivilegeLevel(r"^[a-z0-9.\-@()/:]{1,32}>\s?$", "exec", "", "", "", False, "",)),
+    "exec": (PrivilegeLevel(r"^[a-z0-9.\-@()/: ]{1,32}>\s?$", "exec", "", "", "", False, "",)),
     "privilege_exec": (
         PrivilegeLevel(
-            r"^[a-z0-9.\-@/:]{1,32}#\s?$",
+            r"^[a-z0-9.\-@/: ]{1,32}#\s?$",
             "privilege_exec",
             "exec",
             "disable",
@@ -59,7 +59,7 @@ PRIVS = {
     ),
     "configuration": (
         PrivilegeLevel(
-            r"^[a-z0-9.\-@/:]{1,32}\(config(?!\-s\-)[a-z0-9_.\-@/:]{0,32}\)#\s?$",
+            r"^[a-z0-9.\-@/: ]{1,32}\(config(?!\-s\-)[a-z0-9_.\-@/:]{0,32}\)#\s?$",
             "configuration",
             "privilege_exec",
             "end",
@@ -139,7 +139,8 @@ class EOSDriver(NetworkDriver):
             N/A
 
         """
-        if "session" in self._current_priv_level.name:
+        # eos pattern for config sessions should *always* have `config-s`
+        if "config\\-s" in self._current_priv_level.pattern:
             self.channel.send_input(channel_input="abort")
             self._current_priv_level = self.privilege_levels["privilege_exec"]
 

@@ -206,11 +206,12 @@ class NetworkDriver(GenericDriver, ABC):
             if not search_result:
                 continue
             matching_priv_levels.append(priv_level.name)
-            LOG.debug(f"Determined current privilege level is one of `{priv_level.name}`")
+            LOG.debug(f"Current privilege level could be `{priv_level.name}`")
         if not matching_priv_levels:
             raise UnknownPrivLevel(
                 f"Could not determine privilege level from provided prompt: `{current_prompt}`"
             )
+        LOG.debug(f"Determined current privilege level is one of `{matching_priv_levels}`")
         return matching_priv_levels
 
     def _escalate(self, escalate_priv: PrivilegeLevel) -> None:
