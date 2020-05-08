@@ -3,13 +3,19 @@ import logging
 import re
 import warnings
 from abc import ABC, abstractmethod
+from collections import UserList
 from functools import lru_cache
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 from scrapli.driver.generic_driver import GenericDriver
 from scrapli.exceptions import CouldNotAcquirePrivLevel, UnknownPrivLevel
 from scrapli.helper import resolve_file
 from scrapli.response import Response
+
+if TYPE_CHECKING:
+    ScrapliMultiResponse = UserList[Response]  # pylint:  disable=E1136
+else:
+    ScrapliMultiResponse = UserList
 
 
 class PrivilegeLevel:
@@ -421,7 +427,7 @@ class NetworkDriver(GenericDriver, ABC):
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
-    ) -> List[Response]:
+    ) -> ScrapliMultiResponse:
         """
         Send multiple commands
 
@@ -465,7 +471,7 @@ class NetworkDriver(GenericDriver, ABC):
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
-    ) -> List[Response]:
+    ) -> ScrapliMultiResponse:
         """
         Send command(s) from file
 

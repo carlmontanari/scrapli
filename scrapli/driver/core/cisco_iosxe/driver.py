@@ -125,6 +125,7 @@ class IOSXEDriver(NetworkDriver):
             "% Ambiguous command",
             "% Incomplete command",
             "% Invalid input detected",
+            "% Unknown command",
         ]
 
         super().__init__(

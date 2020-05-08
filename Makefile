@@ -174,7 +174,8 @@ start_dev_env:
 		iosxe \
 		nxos \
 		junos \
-		iosxr
+		iosxr \
+		linux
 
 start_dev_env_iosxe:
 	${DOCKER_COMPOSE} \

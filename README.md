@@ -49,6 +49,7 @@ scrapli -- scrap(e c)li --  is a python library focused on connecting to devices
   - [Using a Different Transport](#using-a-different-transport)
   - [Auth Bypass](#auth-bypass)
   - [Transport Options](#transport-options)
+  - [Raise for Status](#raise-for-status)
 - [FAQ](#faq)
 - [Transport Notes, Caveats, and Known Issues](#transport-notes-caveats-and-known-issues)
   - [Paramiko](#paramiko)
@@ -445,7 +446,9 @@ print(response.elapsed_time)
 print(response.result)
 ```
 
-If using `send_commands` (plural!) then scrapli will return a list of Response objects.
+If using `send_commands` (plural!) then scrapli will return a `MultiResponse` object containing multiple Response
+ objects. The `MultiResponse` object is for all intents and purposes just a list of `Response` objects (with a few
+  very minor differences).
 
 In addition to containing the input and output of the command(s) that you sent, the `Response` object also contains a
  method `textfsm_parse_output` (for more on TextFSM support see
@@ -1058,6 +1061,54 @@ Because each transport has different options/features available, it doesn't make
    
 A simple example of passing additional SSH arguments to the `SystemSSHTransport` class is available
  [here](examples/transport_options/system_ssh_args.py).
+
+
+## Raise For Status
+
+The scrapli `Response` and `MultiResponse` objects both contain a method called `raise_for_status`. This method's
+ purpose is to provide a very simple way to raise an exception if any of the commands or configs sent in a method
+  have failed. 
+ 
+```python
+from scrapli.driver.core import IOSXEDriver
+
+my_device = {
+    "host": "172.18.0.11",
+    "auth_username": "vrnetlab",
+    "auth_password": "VR-netlab9",
+    "auth_strict_key": False,
+}
+
+with IOSXEDriver(**my_device) as conn:
+    commands = ["show run", "tacocat", "show version"]
+    responses = conn.send_commands(commands=commands)
+```
+
+Inspecting the `responses` object from the above example, we can see that it indeed is marked as `Success: False`, even
+ though the first and last commands were successful:
+
+```python
+>>> responses
+MultiResponse <Success: False; Response Elements: 3>
+>>> responses[0]
+Response <Success: True>
+>>> responses[1]
+Response <Success: False>
+>>> responses[2]
+Response <Success: True>
+```
+
+Finally, we can all the `raise_for_status` method to have scrapli raise the `ScrapliCommandFailure` exception if any
+ of the configs/commands failed:
+ 
+```python
+>>> responses.raise_for_status()
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/Users/carl/dev/github/scrapli/scrapli/response.py", line 270, in raise_for_status
+    raise ScrapliCommandFailure()
+scrapli.exceptions.ScrapliCommandFailure
+```
 
 
 # FAQ

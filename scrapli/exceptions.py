@@ -5,6 +5,10 @@ class ScrapliException(Exception):
     """Base Exception for scrapli"""
 
 
+class ScrapliCommandFailure(ScrapliException):
+    """Exception for scrapli command/config failures"""
+
+
 class ScrapliTimeout(ScrapliException):
     """Exception for any scrapli timeouts"""
 
