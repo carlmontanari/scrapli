@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 
 from scrapli.exceptions import ScrapliAuthenticationFailed
@@ -21,6 +23,7 @@ def test_creation():
     assert conn._isauthenticated is False
 
 
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="skipping on windows")
 def test_open_failure():
     conn = TelnetTransport("localhost", port=23)
     with pytest.raises(ScrapliAuthenticationFailed) as exc:
