@@ -587,7 +587,7 @@ class NetworkDriver(GenericDriver, ABC):
         """
         if privilege_level:
             resolved_privilege_level = self._get_privilege_level_name(
-                requested_priv=f"configuration_{privilege_level}"
+                requested_priv=privilege_level
             )
         else:
             resolved_privilege_level = self.default_desired_privilege_level
@@ -654,10 +654,10 @@ class NetworkDriver(GenericDriver, ABC):
                 eos/nxos if using a configuration session)
             privilege_level: name of configuration privilege level/type to acquire; this is platform
                 dependant, so check the device driver for specifics. Examples of privilege_name
-                would be "exclusive" for IOSXRDriver, "private" for JunosDriver. You can also pass
-                in a name of a configuration session such as "my-config-session" if you have
-                registered a session using the "register_config_session" method of the EOSDriver or
-                NXOSDriver.
+                would be "configuration_exclusive" for IOSXRDriver, or "configuration_private" for
+                JunosDriver. You can also pass in a name of a configuration session such as
+                "my-config-session" if you have registered a session using the
+                "register_config_session" method of the EOSDriver or NXOSDriver.
 
         Returns:
             responses: List of Scrape Response objects
@@ -671,7 +671,7 @@ class NetworkDriver(GenericDriver, ABC):
 
         if privilege_level:
             resolved_privilege_level = self._get_privilege_level_name(
-                requested_priv=f"{privilege_level}"
+                requested_priv=privilege_level
             )
         else:
             resolved_privilege_level = "configuration"
