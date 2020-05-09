@@ -32,6 +32,10 @@ class ScrapliException(Exception):
     &#34;&#34;&#34;Base Exception for scrapli&#34;&#34;&#34;
 
 
+class ScrapliCommandFailure(ScrapliException):
+    &#34;&#34;&#34;Exception for scrapli command/config failures&#34;&#34;&#34;
+
+
 class ScrapliTimeout(ScrapliException):
     &#34;&#34;&#34;Exception for any scrapli timeouts&#34;&#34;&#34;
 
@@ -153,6 +157,26 @@ class TransportPluginError(ScrapliException):
 <li>builtins.BaseException</li>
 </ul>
 </dd>
+<dt id="scrapli.exceptions.ScrapliCommandFailure"><code class="flex name class">
+<span>class <span class="ident">ScrapliCommandFailure</span></span>
+<span>(</span><span>...)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Exception for scrapli command/config failures</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ScrapliCommandFailure(ScrapliException):
+    &#34;&#34;&#34;Exception for scrapli command/config failures&#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scrapli.exceptions.ScrapliException" href="#scrapli.exceptions.ScrapliException">ScrapliException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
 <dt id="scrapli.exceptions.ScrapliException"><code class="flex name class">
 <span>class <span class="ident">ScrapliException</span></span>
 <span>(</span><span>...)</span>
@@ -177,6 +201,7 @@ class TransportPluginError(ScrapliException):
 <li><a title="scrapli.exceptions.KeyVerificationFailed" href="#scrapli.exceptions.KeyVerificationFailed">KeyVerificationFailed</a></li>
 <li><a title="scrapli.exceptions.MissingDependencies" href="#scrapli.exceptions.MissingDependencies">MissingDependencies</a></li>
 <li><a title="scrapli.exceptions.ScrapliAuthenticationFailed" href="#scrapli.exceptions.ScrapliAuthenticationFailed">ScrapliAuthenticationFailed</a></li>
+<li><a title="scrapli.exceptions.ScrapliCommandFailure" href="#scrapli.exceptions.ScrapliCommandFailure">ScrapliCommandFailure</a></li>
 <li><a title="scrapli.exceptions.ScrapliKeepaliveFailure" href="#scrapli.exceptions.ScrapliKeepaliveFailure">ScrapliKeepaliveFailure</a></li>
 <li><a title="scrapli.exceptions.ScrapliTimeout" href="#scrapli.exceptions.ScrapliTimeout">ScrapliTimeout</a></li>
 <li><a title="scrapli.exceptions.TransportPluginError" href="#scrapli.exceptions.TransportPluginError">TransportPluginError</a></li>
@@ -290,6 +315,9 @@ class TransportPluginError(ScrapliException):
 </li>
 <li>
 <h4><code><a title="scrapli.exceptions.ScrapliAuthenticationFailed" href="#scrapli.exceptions.ScrapliAuthenticationFailed">ScrapliAuthenticationFailed</a></code></h4>
+</li>
+<li>
+<h4><code><a title="scrapli.exceptions.ScrapliCommandFailure" href="#scrapli.exceptions.ScrapliCommandFailure">ScrapliCommandFailure</a></code></h4>
 </li>
 <li>
 <h4><code><a title="scrapli.exceptions.ScrapliException" href="#scrapli.exceptions.ScrapliException">ScrapliException</a></code></h4>

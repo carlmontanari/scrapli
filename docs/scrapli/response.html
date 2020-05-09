@@ -26,10 +26,12 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.response&#34;&#34;&#34;
+from collections import UserList
 from datetime import datetime
 from io import TextIOWrapper
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
+from scrapli.exceptions import ScrapliCommandFailure
 from scrapli.helper import _textfsm_get_template, genie_parse, textfsm_parse
 
 
@@ -97,7 +99,7 @@ class Response:
 
     def __repr__(self) -&gt; str:
         &#34;&#34;&#34;
-        Magic repr method for SSH2NetResponse class
+        Magic repr method for Response class
 
         Args:
             N/A
@@ -109,11 +111,11 @@ class Response:
             N/A
 
         &#34;&#34;&#34;
-        return f&#34;Scrape &lt;Success: {str(not self.failed)}&gt;&#34;
+        return f&#34;Response &lt;Success: {str(not self.failed)}&gt;&#34;
 
     def __str__(self) -&gt; str:
         &#34;&#34;&#34;
-        Magic str method for SSH2NetResponse class
+        Magic str method for Response class
 
         Args:
             N/A
@@ -125,7 +127,7 @@ class Response:
             N/A
 
         &#34;&#34;&#34;
-        return f&#34;Scrape &lt;Success: {str(not self.failed)}&gt;&#34;
+        return f&#34;Response &lt;Success: {str(not self.failed)}&gt;&#34;
 
     def _record_response(self, result: str) -&gt; None:
         &#34;&#34;&#34;
@@ -194,7 +196,105 @@ class Response:
         structured_result = genie_parse(
             platform=self.genie_platform, command=self.channel_input, output=self.result
         )
-        return structured_result</code></pre>
+        return structured_result
+
+    def raise_for_status(self) -&gt; None:
+        &#34;&#34;&#34;
+        Raise a `ScrapliCommandFailure` if command/config failed
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR201
+
+        Raises:
+            ScrapliCommandFailure: if command/config failed
+
+        &#34;&#34;&#34;
+        if self.failed:
+            raise ScrapliCommandFailure()
+
+
+if TYPE_CHECKING:
+    ScrapliMultiResponse = UserList[Response]  # pylint:  disable=E1136; # pragma:  no cover
+else:
+    ScrapliMultiResponse = UserList
+
+
+class MultiResponse(ScrapliMultiResponse):
+    def __repr__(self) -&gt; str:
+        &#34;&#34;&#34;
+        Magic repr method for MultiResponse class
+
+        Args:
+            N/A
+
+        Returns:
+            str: repr for class object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        return (
+            f&#34;MultiResponse &lt;Success: {str(not self._failed())}; &#34;
+            f&#34;Response Elements: {len(self.data)}&gt;&#34;
+        )
+
+    def __str__(self) -&gt; str:
+        &#34;&#34;&#34;
+        Magic str method for MultiResponse class
+
+        Args:
+            N/A
+
+        Returns:
+            str: str for class object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        return (
+            f&#34;MultiResponse &lt;Success: {str(not self._failed())}; &#34;
+            f&#34;Response Elements: {len(self.data)}&gt;&#34;
+        )
+
+    def _failed(self) -&gt; bool:
+        &#34;&#34;&#34;
+        Determine if any elements of MultiResponse are failed
+
+        Args:
+            N/A
+
+        Returns:
+            bool: True for failed
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        if any(response.failed for response in self.data):
+            return True
+        return False
+
+    def raise_for_status(self) -&gt; None:
+        &#34;&#34;&#34;
+        Raise a `ScrapliCommandFailure` if any elements are failed
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR201
+
+        Raises:
+            ScrapliCommandFailure: if any elements are failed
+
+        &#34;&#34;&#34;
+        if self._failed():
+            raise ScrapliCommandFailure()</code></pre>
 </details>
 </section>
 <section>
@@ -206,6 +306,145 @@ class Response:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="scrapli.response.MultiResponse"><code class="flex name class">
+<span>class <span class="ident">MultiResponse</span></span>
+<span>(</span><span>initlist=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A more or less complete user-defined wrapper around list objects.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MultiResponse(ScrapliMultiResponse):
+    def __repr__(self) -&gt; str:
+        &#34;&#34;&#34;
+        Magic repr method for MultiResponse class
+
+        Args:
+            N/A
+
+        Returns:
+            str: repr for class object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        return (
+            f&#34;MultiResponse &lt;Success: {str(not self._failed())}; &#34;
+            f&#34;Response Elements: {len(self.data)}&gt;&#34;
+        )
+
+    def __str__(self) -&gt; str:
+        &#34;&#34;&#34;
+        Magic str method for MultiResponse class
+
+        Args:
+            N/A
+
+        Returns:
+            str: str for class object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        return (
+            f&#34;MultiResponse &lt;Success: {str(not self._failed())}; &#34;
+            f&#34;Response Elements: {len(self.data)}&gt;&#34;
+        )
+
+    def _failed(self) -&gt; bool:
+        &#34;&#34;&#34;
+        Determine if any elements of MultiResponse are failed
+
+        Args:
+            N/A
+
+        Returns:
+            bool: True for failed
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        if any(response.failed for response in self.data):
+            return True
+        return False
+
+    def raise_for_status(self) -&gt; None:
+        &#34;&#34;&#34;
+        Raise a `ScrapliCommandFailure` if any elements are failed
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR201
+
+        Raises:
+            ScrapliCommandFailure: if any elements are failed
+
+        &#34;&#34;&#34;
+        if self._failed():
+            raise ScrapliCommandFailure()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>collections.UserList</li>
+<li>collections.abc.MutableSequence</li>
+<li>collections.abc.Sequence</li>
+<li>collections.abc.Reversible</li>
+<li>collections.abc.Collection</li>
+<li>collections.abc.Sized</li>
+<li>collections.abc.Iterable</li>
+<li>collections.abc.Container</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="scrapli.response.MultiResponse.raise_for_status"><code class="name flex">
+<span>def <span class="ident">raise_for_status</span></span>(<span>self) -> NoneType</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Raise a <code>ScrapliCommandFailure</code> if any elements are failed</p>
+<h2 id="args">Args</h2>
+<p>N/A</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N/A
+# noqa: DAR201</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ScrapliCommandFailure</code></dt>
+<dd>if any elements are failed</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def raise_for_status(self) -&gt; None:
+    &#34;&#34;&#34;
+    Raise a `ScrapliCommandFailure` if any elements are failed
+
+    Args:
+        N/A
+
+    Returns:
+        N/A  # noqa: DAR201
+
+    Raises:
+        ScrapliCommandFailure: if any elements are failed
+
+    &#34;&#34;&#34;
+    if self._failed():
+        raise ScrapliCommandFailure()</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
 <dt id="scrapli.response.Response"><code class="flex name class">
 <span>class <span class="ident">Response</span></span>
 <span>(</span><span>host: str, channel_input: str, textfsm_platform: str = '', genie_platform: str = '', failed_when_contains: Union[str, List[str], NoneType] = None)</span>
@@ -308,7 +547,7 @@ failed command/interaction</dd>
 
     def __repr__(self) -&gt; str:
         &#34;&#34;&#34;
-        Magic repr method for SSH2NetResponse class
+        Magic repr method for Response class
 
         Args:
             N/A
@@ -320,11 +559,11 @@ failed command/interaction</dd>
             N/A
 
         &#34;&#34;&#34;
-        return f&#34;Scrape &lt;Success: {str(not self.failed)}&gt;&#34;
+        return f&#34;Response &lt;Success: {str(not self.failed)}&gt;&#34;
 
     def __str__(self) -&gt; str:
         &#34;&#34;&#34;
-        Magic str method for SSH2NetResponse class
+        Magic str method for Response class
 
         Args:
             N/A
@@ -336,7 +575,7 @@ failed command/interaction</dd>
             N/A
 
         &#34;&#34;&#34;
-        return f&#34;Scrape &lt;Success: {str(not self.failed)}&gt;&#34;
+        return f&#34;Response &lt;Success: {str(not self.failed)}&gt;&#34;
 
     def _record_response(self, result: str) -&gt; None:
         &#34;&#34;&#34;
@@ -405,7 +644,24 @@ failed command/interaction</dd>
         structured_result = genie_parse(
             platform=self.genie_platform, command=self.channel_input, output=self.result
         )
-        return structured_result</code></pre>
+        return structured_result
+
+    def raise_for_status(self) -&gt; None:
+        &#34;&#34;&#34;
+        Raise a `ScrapliCommandFailure` if command/config failed
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR201
+
+        Raises:
+            ScrapliCommandFailure: if command/config failed
+
+        &#34;&#34;&#34;
+        if self.failed:
+            raise ScrapliCommandFailure()</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -451,6 +707,46 @@ failed command/interaction</dd>
         platform=self.genie_platform, command=self.channel_input, output=self.result
     )
     return structured_result</code></pre>
+</details>
+</dd>
+<dt id="scrapli.response.Response.raise_for_status"><code class="name flex">
+<span>def <span class="ident">raise_for_status</span></span>(<span>self) -> NoneType</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Raise a <code>ScrapliCommandFailure</code> if command/config failed</p>
+<h2 id="args">Args</h2>
+<p>N/A</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N/A
+# noqa: DAR201</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ScrapliCommandFailure</code></dt>
+<dd>if command/config failed</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def raise_for_status(self) -&gt; None:
+    &#34;&#34;&#34;
+    Raise a `ScrapliCommandFailure` if command/config failed
+
+    Args:
+        N/A
+
+    Returns:
+        N/A  # noqa: DAR201
+
+    Raises:
+        ScrapliCommandFailure: if command/config failed
+
+    &#34;&#34;&#34;
+    if self.failed:
+        raise ScrapliCommandFailure()</code></pre>
 </details>
 </dd>
 <dt id="scrapli.response.Response.textfsm_parse_output"><code class="name flex">
@@ -525,9 +821,16 @@ dict from header and row data so it is easier to read/parse the output</dd>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
+<h4><code><a title="scrapli.response.MultiResponse" href="#scrapli.response.MultiResponse">MultiResponse</a></code></h4>
+<ul class="">
+<li><code><a title="scrapli.response.MultiResponse.raise_for_status" href="#scrapli.response.MultiResponse.raise_for_status">raise_for_status</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="scrapli.response.Response" href="#scrapli.response.Response">Response</a></code></h4>
 <ul class="">
 <li><code><a title="scrapli.response.Response.genie_parse_output" href="#scrapli.response.Response.genie_parse_output">genie_parse_output</a></code></li>
+<li><code><a title="scrapli.response.Response.raise_for_status" href="#scrapli.response.Response.raise_for_status">raise_for_status</a></code></li>
 <li><code><a title="scrapli.response.Response.textfsm_parse_output" href="#scrapli.response.Response.textfsm_parse_output">textfsm_parse_output</a></code></li>
 </ul>
 </li>

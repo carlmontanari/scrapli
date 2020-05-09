@@ -26,11 +26,17 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.driver.generic_driver&#34;&#34;&#34;
-from typing import Any, List, Optional, Tuple, Union
+from collections import UserList
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union
 
 from scrapli.driver.driver import Scrape
 from scrapli.helper import resolve_file
-from scrapli.response import Response
+from scrapli.response import MultiResponse, Response
+
+if TYPE_CHECKING:
+    ScrapliMultiResponse = UserList[Response]  # pylint:  disable=E1136; # pragma:  no cover
+else:
+    ScrapliMultiResponse = UserList
 
 
 class GenericDriver(Scrape):
@@ -122,7 +128,7 @@ class GenericDriver(Scrape):
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
-    ) -&gt; List[Response]:
+    ) -&gt; ScrapliMultiResponse:
         &#34;&#34;&#34;
         Send multiple commands
 
@@ -146,7 +152,7 @@ class GenericDriver(Scrape):
                 &#34;to send a single command use the `send_command` method instead.&#34;
             )
 
-        responses = []
+        responses = MultiResponse()
         for command in commands:
             response = self.send_command(
                 command=command,
@@ -165,7 +171,7 @@ class GenericDriver(Scrape):
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
-    ) -&gt; List[Response]:
+    ) -&gt; ScrapliMultiResponse:
         &#34;&#34;&#34;
         Send command(s) from file
 
@@ -203,6 +209,7 @@ class GenericDriver(Scrape):
         self,
         interact_events: List[Tuple[str, str, Optional[bool]]],
         failed_when_contains: Optional[Union[str, List[str]]] = None,
+        privilege_level: str = &#34;&#34;,
     ) -&gt; Response:
         &#34;&#34;&#34;
         Interact with a device with changing prompts per input.
@@ -257,6 +264,7 @@ class GenericDriver(Scrape):
                 not provided it is assumed the input is &#34;normal&#34; (not hidden)
             failed_when_contains: list of strings that, if present in final output, represent a
                 failed command/interaction
+            privilege_level: ignored in this base class; for LSP reasons for subclasses
 
         Returns:
             Response: scrapli Response object
@@ -265,6 +273,8 @@ class GenericDriver(Scrape):
             N/A
 
         &#34;&#34;&#34;
+        _ = privilege_level
+
         joined_input = &#34;, &#34;.join([event[0] for event in interact_events])
         response = Response(
             self.transport.host,
@@ -443,7 +453,7 @@ prevent issues! Obviously can be overridden if desired.</dd>
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
-    ) -&gt; List[Response]:
+    ) -&gt; ScrapliMultiResponse:
         &#34;&#34;&#34;
         Send multiple commands
 
@@ -467,7 +477,7 @@ prevent issues! Obviously can be overridden if desired.</dd>
                 &#34;to send a single command use the `send_command` method instead.&#34;
             )
 
-        responses = []
+        responses = MultiResponse()
         for command in commands:
             response = self.send_command(
                 command=command,
@@ -486,7 +496,7 @@ prevent issues! Obviously can be overridden if desired.</dd>
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
-    ) -&gt; List[Response]:
+    ) -&gt; ScrapliMultiResponse:
         &#34;&#34;&#34;
         Send command(s) from file
 
@@ -524,6 +534,7 @@ prevent issues! Obviously can be overridden if desired.</dd>
         self,
         interact_events: List[Tuple[str, str, Optional[bool]]],
         failed_when_contains: Optional[Union[str, List[str]]] = None,
+        privilege_level: str = &#34;&#34;,
     ) -&gt; Response:
         &#34;&#34;&#34;
         Interact with a device with changing prompts per input.
@@ -578,6 +589,7 @@ prevent issues! Obviously can be overridden if desired.</dd>
                 not provided it is assumed the input is &#34;normal&#34; (not hidden)
             failed_when_contains: list of strings that, if present in final output, represent a
                 failed command/interaction
+            privilege_level: ignored in this base class; for LSP reasons for subclasses
 
         Returns:
             Response: scrapli Response object
@@ -586,6 +598,8 @@ prevent issues! Obviously can be overridden if desired.</dd>
             N/A
 
         &#34;&#34;&#34;
+        _ = privilege_level
+
         joined_input = &#34;, &#34;.join([event[0] for event in interact_events])
         response = Response(
             self.transport.host,
@@ -736,7 +750,7 @@ prevent issues! Obviously can be overridden if desired.</dd>
 </details>
 </dd>
 <dt id="scrapli.driver.generic_driver.GenericDriver.send_commands"><code class="name flex">
-<span>def <span class="ident">send_commands</span></span>(<span>self, commands: List[str], strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False) -> List[<a title="scrapli.response.Response" href="../response.html#scrapli.response.Response">Response</a>]</span>
+<span>def <span class="ident">send_commands</span></span>(<span>self, commands: List[str], strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False) -> collections.UserList</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send multiple commands</p>
@@ -772,7 +786,7 @@ as of current execution</dd>
     strip_prompt: bool = True,
     failed_when_contains: Optional[Union[str, List[str]]] = None,
     stop_on_failed: bool = False,
-) -&gt; List[Response]:
+) -&gt; ScrapliMultiResponse:
     &#34;&#34;&#34;
     Send multiple commands
 
@@ -796,7 +810,7 @@ as of current execution</dd>
             &#34;to send a single command use the `send_command` method instead.&#34;
         )
 
-    responses = []
+    responses = MultiResponse()
     for command in commands:
         response = self.send_command(
             command=command,
@@ -811,7 +825,7 @@ as of current execution</dd>
 </details>
 </dd>
 <dt id="scrapli.driver.generic_driver.GenericDriver.send_commands_from_file"><code class="name flex">
-<span>def <span class="ident">send_commands_from_file</span></span>(<span>self, file: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False) -> List[<a title="scrapli.response.Response" href="../response.html#scrapli.response.Response">Response</a>]</span>
+<span>def <span class="ident">send_commands_from_file</span></span>(<span>self, file: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False) -> collections.UserList</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send command(s) from file</p>
@@ -847,7 +861,7 @@ as of current execution</dd>
     strip_prompt: bool = True,
     failed_when_contains: Optional[Union[str, List[str]]] = None,
     stop_on_failed: bool = False,
-) -&gt; List[Response]:
+) -&gt; ScrapliMultiResponse:
     &#34;&#34;&#34;
     Send command(s) from file
 
@@ -883,7 +897,7 @@ as of current execution</dd>
 </details>
 </dd>
 <dt id="scrapli.driver.generic_driver.GenericDriver.send_interactive"><code class="name flex">
-<span>def <span class="ident">send_interactive</span></span>(<span>self, interact_events: List[Tuple[str, str, Union[bool, NoneType]]], failed_when_contains: Union[str, List[str], NoneType] = None) -> <a title="scrapli.response.Response" href="../response.html#scrapli.response.Response">Response</a></span>
+<span>def <span class="ident">send_interactive</span></span>(<span>self, interact_events: List[Tuple[str, str, Union[bool, NoneType]]], failed_when_contains: Union[str, List[str], NoneType] = None, privilege_level: str = '') -> <a title="scrapli.response.Response" href="../response.html#scrapli.response.Response">Response</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Interact with a device with changing prompts per input.</p>
@@ -932,6 +946,8 @@ not provided it is assumed the input is "normal" (not hidden)</dd>
 <dt><strong><code>failed_when_contains</code></strong></dt>
 <dd>list of strings that, if present in final output, represent a
 failed command/interaction</dd>
+<dt><strong><code>privilege_level</code></strong></dt>
+<dd>ignored in this base class; for LSP reasons for subclasses</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -951,6 +967,7 @@ failed command/interaction</dd>
     self,
     interact_events: List[Tuple[str, str, Optional[bool]]],
     failed_when_contains: Optional[Union[str, List[str]]] = None,
+    privilege_level: str = &#34;&#34;,
 ) -&gt; Response:
     &#34;&#34;&#34;
     Interact with a device with changing prompts per input.
@@ -1005,6 +1022,7 @@ failed command/interaction</dd>
             not provided it is assumed the input is &#34;normal&#34; (not hidden)
         failed_when_contains: list of strings that, if present in final output, represent a
             failed command/interaction
+        privilege_level: ignored in this base class; for LSP reasons for subclasses
 
     Returns:
         Response: scrapli Response object
@@ -1013,6 +1031,8 @@ failed command/interaction</dd>
         N/A
 
     &#34;&#34;&#34;
+    _ = privilege_level
+
     joined_input = &#34;, &#34;.join([event[0] for event in interact_events])
     response = Response(
         self.transport.host,

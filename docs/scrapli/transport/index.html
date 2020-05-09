@@ -576,6 +576,7 @@ terminal "normally", passing some bad arguments can break things!</dd>
 
         Raises:
             ScrapliTimeout: if `Operation timed out` in stderr output
+            ScrapliAuthenticationFailed: if private key permissions are too open
 
         &#34;&#34;&#34;
         if pipes_session.stderr is None:
@@ -587,8 +588,15 @@ terminal "normally", passing some bad arguments can break things!</dd>
             if f&#34;Authenticated to {self.host}&#34;.encode() in output:
                 self._isauthenticated = True
                 return True
-            if &#34;Operation timed out&#34;.encode() in output:
-                raise ScrapliTimeout(f&#34;Timed opening connection to host {self.host}&#34;)
+            if b&#34;Operation timed out&#34; in output:
+                msg = f&#34;Timed opening connection to host {self.host}&#34;
+                raise ScrapliTimeout(msg)
+            if b&#34;WARNING: UNPROTECTED PRIVATE KEY FILE!&#34; in output:
+                msg = (
+                    f&#34;Permissions for private key `{self.auth_private_key}` are too open, &#34;
+                    &#34;authentication failed!&#34;
+                )
+                raise ScrapliAuthenticationFailed(msg)
 
     def _open_pty(self, skip_auth: bool = False) -&gt; bool:
         &#34;&#34;&#34;
@@ -1317,7 +1325,15 @@ and is ignored after authentication is completed.</dd>
         &#34;&#34;&#34;
         self.session_lock.acquire()
         # establish session with &#34;socket&#34; timeout, then reset timeout to &#34;transport&#34; timeout
-        telnet_session = ScrapliTelnet(host=self.host, port=self.port, timeout=self.timeout_socket)
+        try:
+            telnet_session = ScrapliTelnet(
+                host=self.host, port=self.port, timeout=self.timeout_socket
+            )
+        except ConnectionError as exc:
+            msg = f&#34;Failed to open telnet session to host {self.host}&#34;
+            if &#34;connection refused&#34; in str(exc).lower():
+                msg = f&#34;Failed to open telnet session to host {self.host}, connection refused&#34;
+            raise ScrapliAuthenticationFailed(msg)
         telnet_session.timeout = self.timeout_transport
         LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
         self.session_lock.release()
@@ -1602,7 +1618,15 @@ and is ignored after authentication is completed.</dd>
     &#34;&#34;&#34;
     self.session_lock.acquire()
     # establish session with &#34;socket&#34; timeout, then reset timeout to &#34;transport&#34; timeout
-    telnet_session = ScrapliTelnet(host=self.host, port=self.port, timeout=self.timeout_socket)
+    try:
+        telnet_session = ScrapliTelnet(
+            host=self.host, port=self.port, timeout=self.timeout_socket
+        )
+    except ConnectionError as exc:
+        msg = f&#34;Failed to open telnet session to host {self.host}&#34;
+        if &#34;connection refused&#34; in str(exc).lower():
+            msg = f&#34;Failed to open telnet session to host {self.host}, connection refused&#34;
+        raise ScrapliAuthenticationFailed(msg)
     telnet_session.timeout = self.timeout_transport
     LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
     self.session_lock.release()
@@ -1788,6 +1812,7 @@ type is 'network'</dd>
         &#34;&#34;&#34;
         class_dict = self.__dict__.copy()
         class_dict[&#34;auth_password&#34;] = &#34;********&#34;
+        class_dict[&#34;session_lock&#34;] = self.session_lock.locked()
         return f&#34;Transport {class_dict}&#34;
 
     @abstractmethod

@@ -920,7 +920,7 @@ preferable to disable this type of behavior via the device itself if possible.</
 
     timeout_duration = getattr(channel_or_transport, attribute, None)
     if not timeout_duration:
-        LOG.error(
+        LOG.info(
             f&#34;Could not find {attribute} value of {channel_or_transport}, continuing &#34;
             &#34;without timeout decorator&#34;
         )
@@ -1027,7 +1027,7 @@ preferable to disable this type of behavior via the device itself if possible.</
 
     timeout_duration = getattr(channel_or_transport, attribute, None)
     if not timeout_duration:
-        LOG.error(
+        LOG.info(
             f&#34;Could not find {attribute} value of {channel_or_transport}, continuing &#34;
             &#34;without timeout decorator&#34;
         )

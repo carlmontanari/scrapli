@@ -67,7 +67,7 @@ def iosxe_on_close(conn: NetworkDriver) -&gt; None:
     # the exit command!
     conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
     conn.transport.write(channel_input=&#34;exit&#34;)
-    conn.transport.write(channel_input=conn.channel.comms_prompt_pattern)
+    conn.transport.write(channel_input=conn.channel.comms_return_char)
 
 
 PRIVS = {
@@ -85,22 +85,11 @@ PRIVS = {
     ),
     &#34;configuration&#34;: (
         PrivilegeLevel(
-            r&#34;^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{0,32}\)#$&#34;,
+            r&#34;^[a-z0-9.\-@/:]{1,32}\(conf[a-z0-9.\-@/:]{0,32}\)#$&#34;,
             &#34;configuration&#34;,
             &#34;privilege_exec&#34;,
             &#34;end&#34;,
             &#34;configure terminal&#34;,
-            False,
-            &#34;&#34;,
-        )
-    ),
-    &#34;configuration_exclusive&#34;: (
-        PrivilegeLevel(
-            r&#34;^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{0,32}\)#$&#34;,
-            &#34;configuration_exclusive&#34;,
-            &#34;privilege_exec&#34;,
-            &#34;end&#34;,
-            &#34;configure exclusive&#34;,
             False,
             &#34;&#34;,
         )
@@ -111,6 +100,7 @@ PRIVS = {
 class IOSXEDriver(NetworkDriver):
     def __init__(
         self,
+        privilege_levels: Optional[Dict[str, PrivilegeLevel]] = None,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         auth_secondary: str = &#34;&#34;,
@@ -120,6 +110,8 @@ class IOSXEDriver(NetworkDriver):
         IOSXEDriver Object
 
         Args:
+            privilege_levels: optional user provided privilege levels, if left None will default to
+                scrapli standard privilege levels
             on_open: callable that accepts the class instance as its only argument. this callable,
                 if provided, is executed immediately after authentication is completed. Common use
                 cases for this callable would be to disable paging or accept any kind of banner
@@ -137,28 +129,32 @@ class IOSXEDriver(NetworkDriver):
         Raises:
             N/A
         &#34;&#34;&#34;
+        if privilege_levels is None:
+            privilege_levels = PRIVS
+
         if on_open is None:
             on_open = iosxe_on_open
         if on_close is None:
             on_close = iosxe_on_close
 
-        super().__init__(
-            privilege_levels=PRIVS,
-            default_desired_privilege_level=&#34;privilege_exec&#34;,
-            auth_secondary=auth_secondary,
-            on_open=on_open,
-            on_close=on_close,
-            **kwargs,
-        )
-
-        self.textfsm_platform = &#34;cisco_ios&#34;
-        self.genie_platform = &#34;iosxe&#34;
-
-        self.failed_when_contains = [
+        failed_when_contains = [
             &#34;% Ambiguous command&#34;,
             &#34;% Incomplete command&#34;,
             &#34;% Invalid input detected&#34;,
-        ]</code></pre>
+            &#34;% Unknown command&#34;,
+        ]
+
+        super().__init__(
+            privilege_levels=privilege_levels,
+            default_desired_privilege_level=&#34;privilege_exec&#34;,
+            auth_secondary=auth_secondary,
+            failed_when_contains=failed_when_contains,
+            textfsm_platform=&#34;cisco_ios&#34;,
+            genie_platform=&#34;iosxe&#34;,
+            on_open=on_open,
+            on_close=on_close,
+            **kwargs,
+        )</code></pre>
 </details>
 </section>
 <section>
@@ -210,7 +206,7 @@ class IOSXEDriver(NetworkDriver):
     # the exit command!
     conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
     conn.transport.write(channel_input=&#34;exit&#34;)
-    conn.transport.write(channel_input=conn.channel.comms_prompt_pattern)</code></pre>
+    conn.transport.write(channel_input=conn.channel.comms_return_char)</code></pre>
 </details>
 </dd>
 <dt id="scrapli.driver.core.cisco_iosxe.driver.iosxe_on_open"><code class="name flex">
@@ -263,7 +259,7 @@ class IOSXEDriver(NetworkDriver):
 <dl>
 <dt id="scrapli.driver.core.cisco_iosxe.driver.IOSXEDriver"><code class="flex name class">
 <span>class <span class="ident">IOSXEDriver</span></span>
-<span>(</span><span>on_open: Union[Callable[..., Any], NoneType] = None, on_close: Union[Callable[..., Any], NoneType] = None, auth_secondary: str = '', **kwargs: Dict[str, Any])</span>
+<span>(</span><span>privilege_levels: Union[Dict[str, scrapli.driver.network_driver.PrivilegeLevel], NoneType] = None, on_open: Union[Callable[..., Any], NoneType] = None, on_close: Union[Callable[..., Any], NoneType] = None, auth_secondary: str = '', **kwargs: Dict[str, Any])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -271,6 +267,9 @@ inheritance.</p>
 <p>IOSXEDriver Object</p>
 <h2 id="args">Args</h2>
 <dl>
+<dt><strong><code>privilege_levels</code></strong></dt>
+<dd>optional user provided privilege levels, if left None will default to
+scrapli standard privilege levels</dd>
 <dt><strong><code>on_open</code></strong></dt>
 <dd>callable that accepts the class instance as its only argument. this callable,
 if provided, is executed immediately after authentication is completed. Common use
@@ -304,6 +303,7 @@ or to logout properly to free up vtys or similar.</dd>
 <pre><code class="python">class IOSXEDriver(NetworkDriver):
     def __init__(
         self,
+        privilege_levels: Optional[Dict[str, PrivilegeLevel]] = None,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         auth_secondary: str = &#34;&#34;,
@@ -313,6 +313,8 @@ or to logout properly to free up vtys or similar.</dd>
         IOSXEDriver Object
 
         Args:
+            privilege_levels: optional user provided privilege levels, if left None will default to
+                scrapli standard privilege levels
             on_open: callable that accepts the class instance as its only argument. this callable,
                 if provided, is executed immediately after authentication is completed. Common use
                 cases for this callable would be to disable paging or accept any kind of banner
@@ -330,28 +332,32 @@ or to logout properly to free up vtys or similar.</dd>
         Raises:
             N/A
         &#34;&#34;&#34;
+        if privilege_levels is None:
+            privilege_levels = PRIVS
+
         if on_open is None:
             on_open = iosxe_on_open
         if on_close is None:
             on_close = iosxe_on_close
 
-        super().__init__(
-            privilege_levels=PRIVS,
-            default_desired_privilege_level=&#34;privilege_exec&#34;,
-            auth_secondary=auth_secondary,
-            on_open=on_open,
-            on_close=on_close,
-            **kwargs,
-        )
-
-        self.textfsm_platform = &#34;cisco_ios&#34;
-        self.genie_platform = &#34;iosxe&#34;
-
-        self.failed_when_contains = [
+        failed_when_contains = [
             &#34;% Ambiguous command&#34;,
             &#34;% Incomplete command&#34;,
             &#34;% Invalid input detected&#34;,
-        ]</code></pre>
+            &#34;% Unknown command&#34;,
+        ]
+
+        super().__init__(
+            privilege_levels=privilege_levels,
+            default_desired_privilege_level=&#34;privilege_exec&#34;,
+            auth_secondary=auth_secondary,
+            failed_when_contains=failed_when_contains,
+            textfsm_platform=&#34;cisco_ios&#34;,
+            genie_platform=&#34;iosxe&#34;,
+            on_open=on_open,
+            on_close=on_close,
+            **kwargs,
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -369,12 +375,14 @@ or to logout properly to free up vtys or similar.</dd>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.get_prompt" href="../../generic_driver.html#scrapli.driver.generic_driver.GenericDriver.get_prompt">get_prompt</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.isalive" href="../../driver.html#scrapli.driver.driver.Scrape.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.open" href="../../driver.html#scrapli.driver.driver.Scrape.open">open</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.register_configuration_session" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.register_configuration_session">register_configuration_session</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_command" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_command">send_command</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_commands" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_commands">send_commands</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_commands_from_file" href="../../generic_driver.html#scrapli.driver.generic_driver.GenericDriver.send_commands_from_file">send_commands_from_file</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_configs" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_configs">send_configs</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_configs_from_file" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_configs_from_file">send_configs_from_file</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_interactive" href="../../generic_driver.html#scrapli.driver.generic_driver.GenericDriver.send_interactive">send_interactive</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_interactive" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_interactive">send_interactive</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.update_privilege_levels" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.update_privilege_levels">update_privilege_levels</a></code></li>
 </ul>
 </li>
 </ul>

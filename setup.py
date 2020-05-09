@@ -9,7 +9,7 @@ with open("README.md", "r", encoding="utf-8") as f:
 
 setuptools.setup(
     name="scrapli",
-    version="2020.04.30",
+    version="2020.05.09",
     author=__author__,
     author_email="carl.r.montanari@gmail.com",
     description="Screen scraping (ssh|telnet) client focused on network devices",
