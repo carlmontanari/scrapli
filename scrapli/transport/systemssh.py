@@ -410,6 +410,7 @@ class SystemSSHTransport(Transport):
 
         Raises:
             ScrapliTimeout: if `Operation timed out` in stderr output
+            ScrapliAuthenticationFailed: if private key permissions are too open
 
         """
         if pipes_session.stderr is None:
@@ -421,8 +422,15 @@ class SystemSSHTransport(Transport):
             if f"Authenticated to {self.host}".encode() in output:
                 self._isauthenticated = True
                 return True
-            if "Operation timed out".encode() in output:
-                raise ScrapliTimeout(f"Timed opening connection to host {self.host}")
+            if b"Operation timed out" in output:
+                msg = f"Timed opening connection to host {self.host}"
+                raise ScrapliTimeout(msg)
+            if b"WARNING: UNPROTECTED PRIVATE KEY FILE!" in output:
+                msg = (
+                    f"Permissions for private key `{self.auth_private_key}` are too open, "
+                    "authentication failed!"
+                )
+                raise ScrapliAuthenticationFailed(msg)
 
     def _open_pty(self, skip_auth: bool = False) -> bool:
         """

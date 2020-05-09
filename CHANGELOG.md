@@ -1,6 +1,39 @@
 CHANGELOG
 =======
 
+# 2020.XX.XX
+- Add underscores to EOS config prompt matching
+- Actually fixed on_close methods that I could have sworn were fixed.... *gremlins*! (was sending prompt pattern
+ instead of a return char... for copypasta reasons probably)
+- No longer "exit" config mode... given that send_command like methods already check to ensure they are in the right
+ priv level there is no reason to exit config mode... just leave it when you need to. Should be a minor speed up if
+  using send_configs more than once in a row, and otherwise should be basically exactly the same.
+- For NetworkDrivers we no longer set the channel prompt pattern depending on the priv level -- it is now *always
+* the combined pattern that matches all priv levels... this should make doing manual things where you change
+ privileges and don't use scrapli's built in methods a little easier. Scrapli still checks that the current prompt
+  matches where it thinks it should be (i.e. config mode vs privileged exec) though, so nothing should change from a
+   user perspective.
+- Improve (fix?) the abort config setup for IOSXR/Junos
+- Add more helpful exception if ssh key permissions are too open
+- Convert PrivilegeLevel from a namedtuple to a class with slots... better for typing and is also mutable so users
+ can more easily update the pattern for a given privilege level if so desired
+- Minor clean up stuff for all the core platforms and network driver, all internal, mostly just about organization!
+- Add "configuration_exclusive" privilege level for IOSXRDriver, add "configuration_private" and
+ "configuration_exclusive" for JunosDriver, modify some of the privilege handling to support these modes -- these can
+  be accessed by simply passing `privilege_level="configuration_exclusive"` when using `send_configs` method
+- Add support for configuration sessions for EOS/NXOS. At this time sessions need to be "registered" as a privilege
+ level, and then are requestable like any other privilege level, and can be used when sending configs by passing
+  the name of your session as the privilege level argument for send config methods
+- Add a space to EOS prompts -- it seems its very easy to add one to the prompts and scrapli did not enjoy that
+ previously!
+- Give users the option to pass in their own privilege levels for network drivers, and also throw a warning if users
+ try to pass `comms_prompt_pattern` when using network drivers (as this should all be handled by priv levels)
+- Created `MultiResponse` object to use instead of a generic list for grouping multiple `Response` objects 
+- Added `raise_for_status` methods to `Response` and `MultiResponse` -- copying the `requests` style method here to
+ raise an exception if any elements were failed
+- BUGFIX: fixed an issue with IOSXEDriver not matching the config mode pattern for ssh pub key entries.
+
+
 # 2020.04.30
 - Continued improvement around `SystemSSHTransport` connection/auth failure logging
 - Fix for very intermittent issue where pty fd is not available for reading on SystemSSH/Telnet connections, now we

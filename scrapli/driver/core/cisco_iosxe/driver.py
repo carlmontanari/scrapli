@@ -40,7 +40,7 @@ def iosxe_on_close(conn: NetworkDriver) -> None:
     # the exit command!
     conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
     conn.transport.write(channel_input="exit")
-    conn.transport.write(channel_input=conn.channel.comms_prompt_pattern)
+    conn.transport.write(channel_input=conn.channel.comms_return_char)
 
 
 PRIVS = {
@@ -58,22 +58,11 @@ PRIVS = {
     ),
     "configuration": (
         PrivilegeLevel(
-            r"^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{0,32}\)#$",
+            r"^[a-z0-9.\-@/:]{1,32}\(conf[a-z0-9.\-@/:]{0,32}\)#$",
             "configuration",
             "privilege_exec",
             "end",
             "configure terminal",
-            False,
-            "",
-        )
-    ),
-    "configuration_exclusive": (
-        PrivilegeLevel(
-            r"^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{0,32}\)#$",
-            "configuration_exclusive",
-            "privilege_exec",
-            "end",
-            "configure exclusive",
             False,
             "",
         )
@@ -84,6 +73,7 @@ PRIVS = {
 class IOSXEDriver(NetworkDriver):
     def __init__(
         self,
+        privilege_levels: Optional[Dict[str, PrivilegeLevel]] = None,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         auth_secondary: str = "",
@@ -93,6 +83,8 @@ class IOSXEDriver(NetworkDriver):
         IOSXEDriver Object
 
         Args:
+            privilege_levels: optional user provided privilege levels, if left None will default to
+                scrapli standard privilege levels
             on_open: callable that accepts the class instance as its only argument. this callable,
                 if provided, is executed immediately after authentication is completed. Common use
                 cases for this callable would be to disable paging or accept any kind of banner
@@ -110,25 +102,29 @@ class IOSXEDriver(NetworkDriver):
         Raises:
             N/A
         """
+        if privilege_levels is None:
+            privilege_levels = PRIVS
+
         if on_open is None:
             on_open = iosxe_on_open
         if on_close is None:
             on_close = iosxe_on_close
 
+        failed_when_contains = [
+            "% Ambiguous command",
+            "% Incomplete command",
+            "% Invalid input detected",
+            "% Unknown command",
+        ]
+
         super().__init__(
-            privilege_levels=PRIVS,
+            privilege_levels=privilege_levels,
             default_desired_privilege_level="privilege_exec",
             auth_secondary=auth_secondary,
+            failed_when_contains=failed_when_contains,
+            textfsm_platform="cisco_ios",
+            genie_platform="iosxe",
             on_open=on_open,
             on_close=on_close,
             **kwargs,
         )
-
-        self.textfsm_platform = "cisco_ios"
-        self.genie_platform = "iosxe"
-
-        self.failed_when_contains = [
-            "% Ambiguous command",
-            "% Incomplete command",
-            "% Invalid input detected",
-        ]

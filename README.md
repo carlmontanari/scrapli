@@ -14,6 +14,10 @@ scrapli -- scrap(e c)li --  is a python library focused on connecting to devices
  squished together! scrapli's goal is to be as fast and flexible as possible, while providing a thoroughly tested, well
   typed, well documented, simple API.
 
+Feel free to join the very awesome networktocode slack workspace [here](https://networktocode.slack.com/), where you
+ will find a `scrapli` channel where you can discuss anything about scrapli, as well as tons of other channels covering
+  all sorts of network/network-automation topics!
+
 
 # Table of Contents
 
@@ -49,6 +53,7 @@ scrapli -- scrap(e c)li --  is a python library focused on connecting to devices
   - [Using a Different Transport](#using-a-different-transport)
   - [Auth Bypass](#auth-bypass)
   - [Transport Options](#transport-options)
+  - [Raise for Status](#raise-for-status)
 - [FAQ](#faq)
 - [Transport Notes, Caveats, and Known Issues](#transport-notes-caveats-and-known-issues)
   - [Paramiko](#paramiko)
@@ -125,6 +130,8 @@ end
 - [Parse output with TextFSM/ntc-templates](/examples/structured_data/structured_data_textfsm.py)
 - [Parse output with Genie](/examples/structured_data/structured_data_genie.py)
 - [Transport Options](examples/transport_options/system_ssh_args.py)
+- [Configuration Modes - IOSXR Configure Exclusive](examples/configuration_modes/iosxr_configure_exclusive.py)
+- [Configuration Modes - EOS Configure Session](examples/configuration_modes/eos_configure_session.py)
 
 
 # scrapli: What is it
@@ -168,13 +175,13 @@ The last transport is telnet via telnetlib. This was trivial to add in as the in
  SystemSSH, and it turns out telnet is still actually useful for things like terminal servers and the like!
 
 The final piece of scrapli is the actual "driver" -- or the component that binds the transport and channel together and
- deals with instantiation of an scrapli object. There is a "base" driver object -- `Scrape` -- which provides essentially
+ deals with instantiation of a scrapli object. There is a "base" driver object -- `Scrape` -- which provides essentially
   a "raw" SSH (or telnet) connection that is created by instantiating a Transport object, and a Channel object
   . `Scrape` provides (via Channel) read/write methods and not much else -- this should feel familiar if you have
    used paramiko in the past. More specific "drivers" can inherit from this class to extend functionality of the
     driver to make it more friendly for network devices. In fact, there is a `GenericDriver` class that inherits from
      `Scrape` and provides a base driver to work with if you need to interact with a device not represented by one of
-      the "core" drivers. Next, the `NetworkDriver` abstract base class inherits from `GenericDriver` This
+      the "core" drivers. Next, the `NetworkDriver` abstract base class inherits from `GenericDriver`. The
        `NetworkDriver` isn't really meant to be used directly though (hence why it is an ABC), but to be further
         extended and built upon instead. As this library is focused on interacting with network devices, an example
          scrapli driver (built on the `NetworkDriver`) would be the `IOSXEDriver` -- to, as you may have guessed
@@ -220,8 +227,8 @@ The "driver" pattern is pretty much exactly like the implementation in NAPALM. T
   [ntc templates](https://github.com/networktocode/ntc-templates) for use with TextFSM, and so on.
 
 All of this is focused on network device type Telnet/SSH cli interfaces, but should work on pretty much any SSH
- connection (though there are almost certainly better options for non-network type devices!). The "base" (`Scrape
- `) and `GenericDriver` connections do not handle any kind of device-specific operations such as privilege
+ connection (though there are almost certainly better options for non-network type devices!). The "base" (`Scrape`)
+  and `GenericDriver` connections do not handle any kind of device-specific operations such as privilege
   escalation or saving configurations, they are simply intended to be a bare bones connection that can interact with
    nearly any device/platform if you are willing to send/parse inputs/outputs manually. In most cases it is assumed
     that users will use one of the "core" drivers.
@@ -393,9 +400,9 @@ with IOSXEDriver(**my_device) as conn:
 When using any of the core network drivers (`JunosDriver`, `EOSDriver`, etc.) or the `GenericDriver`, the `send_command
 ` and `send_commands` methods will respectively send a single command or list of commands to the device.
 
-When using the core network drivers, the command(s) will be sent at the `default_desired_priv` level which is
- typically "privilege exec" (or equivalent) privilege level. Please see [Driver Privilege Levels](#driver-privilege
- -levels) in the advanced usage section for more details on privilege levels. As the `GenericDriver` doesn't know or
+When using the core network drivers, the command(s) will be sent at the `default_desired_privilege_level` level which is
+ typically "privilege exec" (or equivalent) privilege level. Please see [Driver Privilege Levels](#driver-privilege-levels)
+  in the advanced usage section for more details on privilege levels. As the `GenericDriver` doesn't know or
   care about privilege levels you would need to manually handle acquiring the appropriate privilege level for you
    command yourself if using that driver.
 
@@ -417,8 +424,8 @@ response = conn.send_command("show version")
 responses = conn.send_commands(["show run", "show ip int brief"])
 ```
 
-Finally, if you prefer to have a list of commands to send, there is a `send_commands_from_file` method. This method
- excepts the provided file to have a single command to send per line in the file.
+Finally, if you prefer to have a file containing a list of commands to send, there is a `send_commands_from_file` method
+. This method excepts the provided file to have a single command to send per line in the file.
 
 ## Response Object
 
@@ -443,7 +450,9 @@ print(response.elapsed_time)
 print(response.result)
 ```
 
-If using `send_commands` (plural!) then scrapli will return a list of Response objects.
+If using `send_commands` (plural!) then scrapli will return a `MultiResponse` object containing multiple `Response`
+ objects. The `MultiResponse` object is for all intents and purposes just a list of `Response` objects (with a few
+  very minor differences).
 
 In addition to containing the input and output of the command(s) that you sent, the `Response` object also contains a
  method `textfsm_parse_output` (for more on TextFSM support see
@@ -479,6 +488,10 @@ with IOSXEDriver(**my_device) as conn:
 
 There is also a `send_configs_from_file` method that behaves exactly like the commands version, but sends the
  commands in configuration mode as you would expect.
+
+If you need to get into any kind of "special" configuration mode, such as "configure exclusive", "configure private
+", or "configure session XYZ", you can pass the name of the corresponding privilege level via the `privilege_level
+` argument. Please see the [Driver Privilege Levels](#driver-privilege-levels) section for more details!
 
 ## Textfsm/NTC-Templates Integration
 
@@ -576,6 +589,11 @@ In some cases you may need to run an "interactive" command on your device. The `
       
 This method can accept one or N "events" and thus can be used to deal with any number of subsequent prompts. 
 
+One last important item about this method is that it accepts an argument `privilege_level` -- the value of this
+ argument should be the name of the privilege level that you would like to execute the interactive command at
+ . This is an optional argument, with a default of the `default_desired_privilege_level` attribute which is normally
+  "privilege exec" or similar depending on the platform. 
+
 ```python
 from scrapli.driver.core import IOSXEDriver
 
@@ -619,8 +637,7 @@ If telnet for some reason becomes an important use case, the telnet Transport la
 
 scrapli supports using OpenSSH configuration files in a few ways. For "system" SSH transport (default setting
 ), passing a path to a config file will simply make scrapli "point" to that file, and therefore use that
- configuration files attributes (because it is just exec'ing system SSH!). See the [Transport Notes](#transport-notes
- -caveats-and-known-issues) section for details about what Transport supports what configuration options. You can
+ configuration files attributes (because it is just exec'ing system SSH!). See the [Transport Notes](#transport-notes-caveats-and-known-issues) section for details about what Transport supports what configuration options. You can
   also pass `True` to let scrapli search in system default locations for an ssh config file (`~/.ssh/config` and
    `/etc/ssh/ssh_config`.)
    
@@ -691,12 +708,13 @@ Due to the nature of Telnet/SSH there is no good way to know when a command has 
 " sending the output from the command that was executed. In order to know when the session is "back at the base
  prompt/starting point" scrapli uses a regular expression pattern to find that base prompt.
 
-This pattern is contained in the `comms_prompt_pattern` setting, and is perhaps the most important argument to getting
- scrapli working!
+This pattern is contained in the `comms_prompt_pattern` setting or is created by joining all possible prompt patterns
+ in the privilege levels for a "core" device type. In general you should *not* change the patterns unless you have a
+  good reason to do so!
 
-The "base" (default, but changeable) pattern is:
+The "base" `Scrape` (default, but changeable) pattern is:
 
-`"^[a-z0-9.\-@()/:]{1,20}[#>$]\s*$"`
+`"^[a-z0-9.\-@()/:]{1,48}[#>$]\s*$"`
 
 *NOTE* all `comms_prompt_pattern` "should" use the start and end of line anchors as all regex searches in scrapli are
  multi-line (this is an important piece to making this all work!). While you don't *need* to use the line anchors its
@@ -707,15 +725,12 @@ The "base" (default, but changeable) pattern is:
 The above pattern works on all "core" platforms listed above for at the very least basic usage. Custom prompts or
  host names could in theory break this, so be careful!
 
-If you do not wish to match Cisco "config" level prompts you could use a `comms_prompt_pattern` such as:
-
-`"^[a-z0-9.-@]{1,20}[#>$]\s*$"`
-
 If you use a platform driver, the base prompt is set in the driver so you don't really need to worry about this!
 
-The `comms_prompt_pattern` pattern can be changed at any time at or after instantiation of an scrapli object, and is
+The `comms_prompt_pattern` pattern can be changed at any time at or after instantiation of a scrapli object, and is
  done so by modifying `conn.channel.comms_prompt_pattern` where `conn` is your scrapli connection object. Changing
- this *can* break things though, so be careful!
+ this *can* break things though, so be careful! If using any `NetworkDriver` sub-classes you should modify the
+  privilege level(s) if necessary, and *not* the `comms_prompt_pattern`.
 
 ## On Open
 
@@ -803,9 +818,6 @@ In some cases it may be desirable to have a long running connection to a device,
  ". For "normal" ssh devices this could be basic SSH keepalives (with ssh2-python and system transports). As scrapli
   is generally focused on networking devices, and most networking devices don't support standard keepalives, scrapli
    also has the ability to send "network" keepalives.
-   
-In either case -- "standard" or "network" -- scrapli spawns a keepalive thread. This thread then sends either
- standard keepalive messages or "in band" keepalive messages in the case of "network" keepalives.
  
 "network" keepalives default to sending u"\005" which is equivalent of sending `CTRL-E` (jump to end (right side) of
  line). This is generally an innocuous command, and furthermore is never sent unless the keepalive thread can acquire
@@ -816,7 +828,9 @@ In either case -- "standard" or "network" -- scrapli spawns a keepalive thread. 
 The "core" drivers understand the basic privilege levels of their respective device types. As mentioned previously
 , the drivers will automatically attain the "privilege_exec" (or equivalent) privilege level prior to executing "show
 " commands. If you don't want this "auto-magic" you can use the base driver (`Scrape`) or the `GenericDriver`. The
- privileges for each device are outlined in named tuples in the platforms `driver.py` file. 
+ privileges for each device are outlined in the platforms `driver.py` file - each privilege is an object of the base
+  `PrivilegeLevel` class which uses slots for the attributes. This used to be a named tuple, however as this was
+   immutable it was a bit of a pain for users to modify things on the fly. 
  
 As an example, the following privilege levels are supported by the `IOSXEDriver`:
 
@@ -850,6 +864,87 @@ my_device = {
 with IOSXEDriver(**my_device) as conn:
     conn.acquire_priv("configuration")
 ```
+
+### Configure Exclusive and Configure Private (IOSXR/Junos)
+ 
+IOSXR and Junos platforms have different configuration modes, such as "configure exclusive" or "configure private
+". These alternate configuration modes are represented as a privilege level just like the "regular" configuration
+ mode. You can acquire an "exclusive" configuration session on IOSXR as follows:
+ 
+```python
+from scrapli.driver.core import IOSXRDriver
+
+my_device = {
+    "host": "172.18.0.11",
+    "auth_username": "vrnetlab",
+    "auth_password": "VR-netlab9",
+    "auth_strict_key": False,
+}
+with IOSXRDriver(**my_device) as conn:
+    conn.acquire_priv("configuration_exclusive")
+```
+
+Of course you can also pass this privilege level name to the `send_configs` or `send_configs_from_file` methods as well:
+
+```python
+from scrapli.driver.core import IOSXRDriver
+
+my_device = {
+    "host": "172.18.0.11",
+    "auth_username": "vrnetlab",
+    "auth_password": "VR-netlab9",
+    "auth_strict_key": False,
+}
+with IOSXRDriver(**my_device) as conn:
+    conn.send_configs(configs=["configure things"], privilege_level="configuration_exclusive")
+```
+
+Note that the name of the privilege level is "configuration_exclusive" -- don't forget to write the whole thing out!
+ 
+
+### Configure Session (EOS/NXOS)
+
+EOS and NXOS devices support configuration "sessions", these sessions are a little bit of a special case for scrapli
+. In order to use a configuration session, the configuration session must first be "registered" with scrapli -- this
+ is so that scrapli can create a privilege level that is mapped to the given config session/config session name
+ . The `register_configuration_session` method that accepts a string name of the configuration session you would like
+  to create -- note that this method raises a `NotImplementedError` for platforms that do not support config sessions
+  . The`register_configuration_session` method creates a new privilege level for you and updates the transport class
+   with the appropriate information internally (see next section). An example of creating a session for an EOS device
+    called "my-config-session" can be seen here:
+    
+```python
+from scrapli.driver.core import EOSDriver
+
+my_device = {
+    "host": "172.18.0.14",
+    "auth_username": "vrnetlab",
+    "auth_password": "VR-netlab9",
+    "auth_secondary": "VR-netlab9",
+    "auth_strict_key": False,
+}
+with EOSDriver(**my_device) as conn:
+    conn.register_configuration_session(session_name="my-config-session")
+    print(conn.privilege_levels["my-config-session"])
+    print(conn.privilege_levels["my-config-session"].name)
+    print(conn.privilege_levels["my-config-session"].pattern)
+``` 
+
+```
+<scrapli.driver.network_driver.PrivilegeLevel object at 0x7fca10070820>
+my-config-session
+^[a-z0-9.\-@/:]{1,32}\(config\-s\-my\-con[a-z0-9_.\-@/:]{0,32}\)#\s?$
+```
+
+### Modifying Privilege Levels
+
+When creating a configuration session, or modifying a privilege level during runtime, scrapli needs to update some
+ internal arguments in order to always have a full "map" of how to escalate/deescalate, as well as to be able to
+  match prompts based on any/all of the patterns available in the privilege levels dictionary. The
+   `register_configuration_session` method will automatically handle updating these internal arguments, however if
+    you modify any of the privilege levels (or add a priv level on the fly without using the register method) then
+     you will need to manually call the `update_privilege_levels` method. 
+
 
 ## Using `Scrape` Directly
 
@@ -974,6 +1069,54 @@ A simple example of passing additional SSH arguments to the `SystemSSHTransport`
  [here](examples/transport_options/system_ssh_args.py).
 
 
+## Raise For Status
+
+The scrapli `Response` and `MultiResponse` objects both contain a method called `raise_for_status`. This method's
+ purpose is to provide a very simple way to raise an exception if any of the commands or configs sent in a method
+  have failed. 
+ 
+```python
+from scrapli.driver.core import IOSXEDriver
+
+my_device = {
+    "host": "172.18.0.11",
+    "auth_username": "vrnetlab",
+    "auth_password": "VR-netlab9",
+    "auth_strict_key": False,
+}
+
+with IOSXEDriver(**my_device) as conn:
+    commands = ["show run", "tacocat", "show version"]
+    responses = conn.send_commands(commands=commands)
+```
+
+Inspecting the `responses` object from the above example, we can see that it indeed is marked as `Success: False`, even
+ though the first and last commands were successful:
+
+```python
+>>> responses
+MultiResponse <Success: False; Response Elements: 3>
+>>> responses[0]
+Response <Success: True>
+>>> responses[1]
+Response <Success: False>
+>>> responses[2]
+Response <Success: True>
+```
+
+Finally, we can all the `raise_for_status` method to have scrapli raise the `ScrapliCommandFailure` exception if any
+ of the configs/commands failed:
+ 
+```python
+>>> responses.raise_for_status()
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/Users/carl/dev/github/scrapli/scrapli/response.py", line 270, in raise_for_status
+    raise ScrapliCommandFailure()
+scrapli.exceptions.ScrapliCommandFailure
+```
+
+
 # FAQ
 
 - Question: Why build this? Netmiko exists, Paramiko exists, Ansible exists, etc...?
@@ -1092,8 +1235,8 @@ A simple example of passing additional SSH arguments to the `SystemSSHTransport`
 
 This project uses [black](https://github.com/psf/black) for auto-formatting. In addition to black, tox will execute
  [pylama](https://github.com/klen/pylama), and [pydocstyle](https://github.com/PyCQA/pydocstyle) for linting purposes
- . Tox will also run  [mypy](https://github.com/python/mypy), with strict type checking. Docstring linting with
-  [darglint](https://github.com/terrencepreilly/darglint) which has been quite handy!
+ . Tox will also run  [mypy](https://github.com/python/mypy), with strict type checking. Docstring linting is
+  handled by [darglint](https://github.com/terrencepreilly/darglint) which has been quite handy!
 
 All commits to this repository will trigger a GitHub action which runs tox, but of course its nicer to just run that
  before making a commit to ensure that it will pass all tests!

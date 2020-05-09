@@ -1,8 +1,10 @@
 """scrapli.response"""
+from collections import UserList
 from datetime import datetime
 from io import TextIOWrapper
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
+from scrapli.exceptions import ScrapliCommandFailure
 from scrapli.helper import _textfsm_get_template, genie_parse, textfsm_parse
 
 
@@ -70,7 +72,7 @@ class Response:
 
     def __repr__(self) -> str:
         """
-        Magic repr method for SSH2NetResponse class
+        Magic repr method for Response class
 
         Args:
             N/A
@@ -82,11 +84,11 @@ class Response:
             N/A
 
         """
-        return f"Scrape <Success: {str(not self.failed)}>"
+        return f"Response <Success: {str(not self.failed)}>"
 
     def __str__(self) -> str:
         """
-        Magic str method for SSH2NetResponse class
+        Magic str method for Response class
 
         Args:
             N/A
@@ -98,7 +100,7 @@ class Response:
             N/A
 
         """
-        return f"Scrape <Success: {str(not self.failed)}>"
+        return f"Response <Success: {str(not self.failed)}>"
 
     def _record_response(self, result: str) -> None:
         """
@@ -168,3 +170,101 @@ class Response:
             platform=self.genie_platform, command=self.channel_input, output=self.result
         )
         return structured_result
+
+    def raise_for_status(self) -> None:
+        """
+        Raise a `ScrapliCommandFailure` if command/config failed
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR201
+
+        Raises:
+            ScrapliCommandFailure: if command/config failed
+
+        """
+        if self.failed:
+            raise ScrapliCommandFailure()
+
+
+if TYPE_CHECKING:
+    ScrapliMultiResponse = UserList[Response]  # pylint:  disable=E1136; # pragma:  no cover
+else:
+    ScrapliMultiResponse = UserList
+
+
+class MultiResponse(ScrapliMultiResponse):
+    def __repr__(self) -> str:
+        """
+        Magic repr method for MultiResponse class
+
+        Args:
+            N/A
+
+        Returns:
+            str: repr for class object
+
+        Raises:
+            N/A
+
+        """
+        return (
+            f"MultiResponse <Success: {str(not self._failed())}; "
+            f"Response Elements: {len(self.data)}>"
+        )
+
+    def __str__(self) -> str:
+        """
+        Magic str method for MultiResponse class
+
+        Args:
+            N/A
+
+        Returns:
+            str: str for class object
+
+        Raises:
+            N/A
+
+        """
+        return (
+            f"MultiResponse <Success: {str(not self._failed())}; "
+            f"Response Elements: {len(self.data)}>"
+        )
+
+    def _failed(self) -> bool:
+        """
+        Determine if any elements of MultiResponse are failed
+
+        Args:
+            N/A
+
+        Returns:
+            bool: True for failed
+
+        Raises:
+            N/A
+
+        """
+        if any(response.failed for response in self.data):
+            return True
+        return False
+
+    def raise_for_status(self) -> None:
+        """
+        Raise a `ScrapliCommandFailure` if any elements are failed
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR201
+
+        Raises:
+            ScrapliCommandFailure: if any elements are failed
+
+        """
+        if self._failed():
+            raise ScrapliCommandFailure()

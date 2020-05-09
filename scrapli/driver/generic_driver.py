@@ -1,9 +1,15 @@
 """scrapli.driver.generic_driver"""
-from typing import Any, List, Optional, Tuple, Union
+from collections import UserList
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union
 
 from scrapli.driver.driver import Scrape
 from scrapli.helper import resolve_file
-from scrapli.response import Response
+from scrapli.response import MultiResponse, Response
+
+if TYPE_CHECKING:
+    ScrapliMultiResponse = UserList[Response]  # pylint:  disable=E1136; # pragma:  no cover
+else:
+    ScrapliMultiResponse = UserList
 
 
 class GenericDriver(Scrape):
@@ -95,7 +101,7 @@ class GenericDriver(Scrape):
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
-    ) -> List[Response]:
+    ) -> ScrapliMultiResponse:
         """
         Send multiple commands
 
@@ -119,7 +125,7 @@ class GenericDriver(Scrape):
                 "to send a single command use the `send_command` method instead."
             )
 
-        responses = []
+        responses = MultiResponse()
         for command in commands:
             response = self.send_command(
                 command=command,
@@ -138,7 +144,7 @@ class GenericDriver(Scrape):
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
-    ) -> List[Response]:
+    ) -> ScrapliMultiResponse:
         """
         Send command(s) from file
 
@@ -176,6 +182,7 @@ class GenericDriver(Scrape):
         self,
         interact_events: List[Tuple[str, str, Optional[bool]]],
         failed_when_contains: Optional[Union[str, List[str]]] = None,
+        privilege_level: str = "",
     ) -> Response:
         """
         Interact with a device with changing prompts per input.
@@ -230,6 +237,7 @@ class GenericDriver(Scrape):
                 not provided it is assumed the input is "normal" (not hidden)
             failed_when_contains: list of strings that, if present in final output, represent a
                 failed command/interaction
+            privilege_level: ignored in this base class; for LSP reasons for subclasses
 
         Returns:
             Response: scrapli Response object
@@ -238,6 +246,8 @@ class GenericDriver(Scrape):
             N/A
 
         """
+        _ = privilege_level
+
         joined_input = ", ".join([event[0] for event in interact_events])
         response = Response(
             self.transport.host,

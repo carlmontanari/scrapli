@@ -64,7 +64,7 @@ PRIVS = {
     ),
     "configuration_exclusive": (
         PrivilegeLevel(
-            r"^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{1,32}\)#\s?$",
+            r"^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{0,32}\)#\s?$",
             "configuration_exclusive",
             "privilege_exec",
             "end",
@@ -79,6 +79,7 @@ PRIVS = {
 class IOSXRDriver(NetworkDriver):
     def __init__(
         self,
+        privilege_levels: Optional[Dict[str, PrivilegeLevel]] = None,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         auth_secondary: str = "",
@@ -88,6 +89,8 @@ class IOSXRDriver(NetworkDriver):
         IOSXRDriver Object
 
         Args:
+            privilege_levels: optional user provided privilege levels, if left None will default to
+                scrapli standard privilege levels
             on_open: callable that accepts the class instance as its only argument. this callable,
                 if provided, is executed immediately after authentication is completed. Common use
                 cases for this callable would be to disable paging or accept any kind of banner
@@ -105,28 +108,31 @@ class IOSXRDriver(NetworkDriver):
         Raises:
             N/A
         """
+        if privilege_levels is None:
+            privilege_levels = PRIVS
+
         if on_open is None:
             on_open = iosxr_on_open
         if on_close is None:
             on_close = iosxr_on_close
 
-        super().__init__(
-            privilege_levels=PRIVS,
-            default_desired_privilege_level="privilege_exec",
-            auth_secondary=auth_secondary,
-            on_open=on_open,
-            on_close=on_close,
-            **kwargs,
-        )
-
-        self.textfsm_platform = "cisco_xr"
-        self.genie_platform = "iosxr"
-
-        self.failed_when_contains = [
+        failed_when_contains = [
             "% Ambiguous command",
             "% Incomplete command",
             "% Invalid input detected",
         ]
+
+        super().__init__(
+            privilege_levels=privilege_levels,
+            default_desired_privilege_level="privilege_exec",
+            auth_secondary=auth_secondary,
+            failed_when_contains=failed_when_contains,
+            textfsm_platform="cisco_xr",
+            genie_platform="iosxr",
+            on_open=on_open,
+            on_close=on_close,
+            **kwargs,
+        )
 
     def _abort_config(self) -> None:
         """
@@ -142,7 +148,5 @@ class IOSXRDriver(NetworkDriver):
             N/A
 
         """
-        self.channel.comms_prompt_pattern = self.privilege_levels[
-            self.default_desired_privilege_level
-        ].pattern
         self.channel.send_input(channel_input="abort")
+        self._current_priv_level = self.privilege_levels["privilege_exec"]
