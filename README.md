@@ -175,13 +175,13 @@ The last transport is telnet via telnetlib. This was trivial to add in as the in
  SystemSSH, and it turns out telnet is still actually useful for things like terminal servers and the like!
 
 The final piece of scrapli is the actual "driver" -- or the component that binds the transport and channel together and
- deals with instantiation of an scrapli object. There is a "base" driver object -- `Scrape` -- which provides essentially
+ deals with instantiation of a scrapli object. There is a "base" driver object -- `Scrape` -- which provides essentially
   a "raw" SSH (or telnet) connection that is created by instantiating a Transport object, and a Channel object
   . `Scrape` provides (via Channel) read/write methods and not much else -- this should feel familiar if you have
    used paramiko in the past. More specific "drivers" can inherit from this class to extend functionality of the
     driver to make it more friendly for network devices. In fact, there is a `GenericDriver` class that inherits from
      `Scrape` and provides a base driver to work with if you need to interact with a device not represented by one of
-      the "core" drivers. Next, the `NetworkDriver` abstract base class inherits from `GenericDriver` This
+      the "core" drivers. Next, the `NetworkDriver` abstract base class inherits from `GenericDriver`. The
        `NetworkDriver` isn't really meant to be used directly though (hence why it is an ABC), but to be further
         extended and built upon instead. As this library is focused on interacting with network devices, an example
          scrapli driver (built on the `NetworkDriver`) would be the `IOSXEDriver` -- to, as you may have guessed
@@ -227,8 +227,8 @@ The "driver" pattern is pretty much exactly like the implementation in NAPALM. T
   [ntc templates](https://github.com/networktocode/ntc-templates) for use with TextFSM, and so on.
 
 All of this is focused on network device type Telnet/SSH cli interfaces, but should work on pretty much any SSH
- connection (though there are almost certainly better options for non-network type devices!). The "base" (`Scrape
- `) and `GenericDriver` connections do not handle any kind of device-specific operations such as privilege
+ connection (though there are almost certainly better options for non-network type devices!). The "base" (`Scrape`)
+  and `GenericDriver` connections do not handle any kind of device-specific operations such as privilege
   escalation or saving configurations, they are simply intended to be a bare bones connection that can interact with
    nearly any device/platform if you are willing to send/parse inputs/outputs manually. In most cases it is assumed
     that users will use one of the "core" drivers.
@@ -401,8 +401,8 @@ When using any of the core network drivers (`JunosDriver`, `EOSDriver`, etc.) or
 ` and `send_commands` methods will respectively send a single command or list of commands to the device.
 
 When using the core network drivers, the command(s) will be sent at the `default_desired_privilege_level` level which is
- typically "privilege exec" (or equivalent) privilege level. Please see [Driver Privilege Levels](#driver-privilege
- -levels) in the advanced usage section for more details on privilege levels. As the `GenericDriver` doesn't know or
+ typically "privilege exec" (or equivalent) privilege level. Please see [Driver Privilege Levels](#driver-privilege-levels)
+  in the advanced usage section for more details on privilege levels. As the `GenericDriver` doesn't know or
   care about privilege levels you would need to manually handle acquiring the appropriate privilege level for you
    command yourself if using that driver.
 
@@ -424,8 +424,8 @@ response = conn.send_command("show version")
 responses = conn.send_commands(["show run", "show ip int brief"])
 ```
 
-Finally, if you prefer to have a list of commands to send, there is a `send_commands_from_file` method. This method
- excepts the provided file to have a single command to send per line in the file.
+Finally, if you prefer to have a file containing a list of commands to send, there is a `send_commands_from_file` method
+. This method excepts the provided file to have a single command to send per line in the file.
 
 ## Response Object
 
@@ -450,7 +450,7 @@ print(response.elapsed_time)
 print(response.result)
 ```
 
-If using `send_commands` (plural!) then scrapli will return a `MultiResponse` object containing multiple Response
+If using `send_commands` (plural!) then scrapli will return a `MultiResponse` object containing multiple `Response`
  objects. The `MultiResponse` object is for all intents and purposes just a list of `Response` objects (with a few
   very minor differences).
 
@@ -637,8 +637,7 @@ If telnet for some reason becomes an important use case, the telnet Transport la
 
 scrapli supports using OpenSSH configuration files in a few ways. For "system" SSH transport (default setting
 ), passing a path to a config file will simply make scrapli "point" to that file, and therefore use that
- configuration files attributes (because it is just exec'ing system SSH!). See the [Transport Notes](#transport-notes
- -caveats-and-known-issues) section for details about what Transport supports what configuration options. You can
+ configuration files attributes (because it is just exec'ing system SSH!). See the [Transport Notes](#transport-notes-caveats-and-known-issues) section for details about what Transport supports what configuration options. You can
   also pass `True` to let scrapli search in system default locations for an ssh config file (`~/.ssh/config` and
    `/etc/ssh/ssh_config`.)
    
@@ -709,12 +708,13 @@ Due to the nature of Telnet/SSH there is no good way to know when a command has 
 " sending the output from the command that was executed. In order to know when the session is "back at the base
  prompt/starting point" scrapli uses a regular expression pattern to find that base prompt.
 
-This pattern is contained in the `comms_prompt_pattern` setting, and is perhaps the most important argument to getting
- scrapli working! In general you should *not* change the patterns unless you have a good reason to do so!
+This pattern is contained in the `comms_prompt_pattern` setting or is created by joining all possible prompt patterns
+ in the privilege levels for a "core" device type. In general you should *not* change the patterns unless you have a
+  good reason to do so!
 
 The "base" `Scrape` (default, but changeable) pattern is:
 
-`"^^[a-z0-9.\-@()/:]{1,48}[#>$]\s*$"`
+`"^[a-z0-9.\-@()/:]{1,48}[#>$]\s*$"`
 
 *NOTE* all `comms_prompt_pattern` "should" use the start and end of line anchors as all regex searches in scrapli are
  multi-line (this is an important piece to making this all work!). While you don't *need* to use the line anchors its
@@ -727,9 +727,10 @@ The above pattern works on all "core" platforms listed above for at the very lea
 
 If you use a platform driver, the base prompt is set in the driver so you don't really need to worry about this!
 
-The `comms_prompt_pattern` pattern can be changed at any time at or after instantiation of an scrapli object, and is
+The `comms_prompt_pattern` pattern can be changed at any time at or after instantiation of a scrapli object, and is
  done so by modifying `conn.channel.comms_prompt_pattern` where `conn` is your scrapli connection object. Changing
- this *can* break things though, so be careful!
+ this *can* break things though, so be careful! If using any `NetworkDriver` sub-classes you should modify the
+  privilege level(s) if necessary, and *not* the `comms_prompt_pattern`.
 
 ## On Open
 
@@ -817,9 +818,6 @@ In some cases it may be desirable to have a long running connection to a device,
  ". For "normal" ssh devices this could be basic SSH keepalives (with ssh2-python and system transports). As scrapli
   is generally focused on networking devices, and most networking devices don't support standard keepalives, scrapli
    also has the ability to send "network" keepalives.
-   
-In either case -- "standard" or "network" -- scrapli spawns a keepalive thread. This thread then sends either
- standard keepalive messages or "in band" keepalive messages in the case of "network" keepalives.
  
 "network" keepalives default to sending u"\005" which is equivalent of sending `CTRL-E` (jump to end (right side) of
  line). This is generally an innocuous command, and furthermore is never sent unless the keepalive thread can acquire
@@ -870,9 +868,8 @@ with IOSXEDriver(**my_device) as conn:
 ### Configure Exclusive and Configure Private (IOSXR/Junos)
  
 IOSXR and Junos platforms have different configuration modes, such as "configure exclusive" or "configure private
-". These alternate configuration modes are represented as a privilege level just like the "regular" configuration mode
-, however they of course an appropriate value set for the "escalate" argument, such as "configure exclusive" for the
- IOSXR Driver. You can acquire an "exclusive" configuration session on IOSXR as follows:
+". These alternate configuration modes are represented as a privilege level just like the "regular" configuration
+ mode. You can acquire an "exclusive" configuration session on IOSXR as follows:
  
 ```python
 from scrapli.driver.core import IOSXRDriver
@@ -1238,8 +1235,8 @@ scrapli.exceptions.ScrapliCommandFailure
 
 This project uses [black](https://github.com/psf/black) for auto-formatting. In addition to black, tox will execute
  [pylama](https://github.com/klen/pylama), and [pydocstyle](https://github.com/PyCQA/pydocstyle) for linting purposes
- . Tox will also run  [mypy](https://github.com/python/mypy), with strict type checking. Docstring linting with
-  [darglint](https://github.com/terrencepreilly/darglint) which has been quite handy!
+ . Tox will also run  [mypy](https://github.com/python/mypy), with strict type checking. Docstring linting is
+  handled by [darglint](https://github.com/terrencepreilly/darglint) which has been quite handy!
 
 All commits to this repository will trigger a GitHub action which runs tox, but of course its nicer to just run that
  before making a commit to ensure that it will pass all tests!

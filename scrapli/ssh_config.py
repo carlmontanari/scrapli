@@ -8,7 +8,7 @@ from typing import Dict, Optional
 if sys.version_info >= (3, 8):
     Match = re.Match
 else:
-    from typing import Match
+    from typing import Match  # pragma:  no cover
 
 
 class SSHConfig:

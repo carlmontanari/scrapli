@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 from pathlib import Path
@@ -8,6 +9,7 @@ import scrapli
 from scrapli import Scrape
 
 UNIT_TEST_DIR = f"{Path(scrapli.__file__).parents[1]}/tests/unit/"
+LOG = logging.getLogger("scrapli")
 
 
 def test__str():
@@ -173,6 +175,12 @@ def test_attr_assignment(attr_setup):
         assert conn._initialization_args.get(attr_name) == attr_expected
 
 
+def test_log_non_core_transport(caplog):
+    with caplog.at_level(logging.INFO):
+        Scrape(host="myhost", transport="paramiko")
+    assert "Non-core transport `paramiko` selected" in caplog.text
+
+
 def test_valid_private_key_file():
     auth_private_key = f"{UNIT_TEST_DIR}_ssh_private_key"
     conn = Scrape(host="myhost", auth_private_key=auth_private_key)
@@ -249,3 +257,10 @@ def test_isalive(mocked_channel):
     conn = mocked_channel([])
     conn.open()
     assert conn.isalive() is True
+
+
+def test_isalive_no_transport():
+    # test to ensure we handle attribute error to show that scrape is not alive if transport does
+    # not exist yet
+    conn = Scrape(host="myhost")
+    assert conn.isalive() is False

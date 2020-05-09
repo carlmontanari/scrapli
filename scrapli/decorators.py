@@ -4,8 +4,8 @@ from concurrent.futures import ThreadPoolExecutor, wait
 from typing import TYPE_CHECKING, Any, Callable, Dict, Union
 
 if TYPE_CHECKING:
-    from scrapli.channel import Channel
-    from scrapli.transport import Transport
+    from scrapli.channel import Channel  # pragma:  no cover
+    from scrapli.transport import Transport  # pragma:  no cover
 
 LOG = logging.getLogger("scrapli")
 
