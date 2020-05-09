@@ -25,7 +25,7 @@ def test_drop_and_warn_comms_prompt_pattern():
         conn = IOSXEDriver(host="localhost", comms_prompt_pattern="something")
     assert (
         conn.comms_prompt_pattern
-        == "(^[a-z0-9.\\-@()/:]{1,32}>$)|(^[a-z0-9.\\-@/:]{1,32}#$)|(^[a-z0-9.\\-@/:]{1,32}\\(config[a-z0-9.\\-@/:]{"
+        == "(^[a-z0-9.\\-@()/:]{1,32}>$)|(^[a-z0-9.\\-@/:]{1,32}#$)|(^[a-z0-9.\\-@/:]{1,32}\\(conf[a-z0-9.\\-@/:]{"
         "0,32}\\)#$)"
     )
     assert (

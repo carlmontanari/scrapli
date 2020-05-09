@@ -31,6 +31,8 @@ CHANGELOG
 - Created `MultiResponse` object to use instead of a generic list for grouping multiple `Response` objects 
 - Added `raise_for_status` methods to `Response` and `MultiResponse` -- copying the `requests` style method here to
  raise an exception if any elements were failed
+- BUGFIX: fixed an issue with IOSXEDriver not matching the config mode pattern for ssh pub key entries.
+
 
 # 2020.04.30
 - Continued improvement around `SystemSSHTransport` connection/auth failure logging

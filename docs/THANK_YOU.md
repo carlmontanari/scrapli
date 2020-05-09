@@ -14,3 +14,9 @@ Thank you to the following people who have made contributions other than (and ma
  interactive inputs, and making the paramiko/ssh2-python transports plugins
 - [Eric Tedor](https://github.com/etedor) for some interesting and challenging use cases that helped to improve some
  of the prompt matching decisions
+ 
+ 
+The following people have helped identify and report bugs in scrapli, thank you all!
+
+- [Kirill Pletnev](https://github.com/horseinthesky)
+  - [IOSXEDriver configuration mode prompt pattern missed pub key config mode](https://github.com/carlmontanari/scrapli/issues/18)
