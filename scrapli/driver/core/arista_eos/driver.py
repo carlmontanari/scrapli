@@ -1,4 +1,5 @@
 """scrapli.driver.core.arista_eos.driver"""
+import re
 from typing import Any, Callable, Dict, Optional
 
 from scrapli.driver import NetworkDriver
@@ -40,14 +41,14 @@ def eos_on_close(conn: NetworkDriver) -> None:
     # the exit command!
     conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
     conn.transport.write(channel_input="exit")
-    conn.transport.write(channel_input=conn.channel.comms_prompt_pattern)
+    conn.transport.write(channel_input=conn.channel.comms_return_char)
 
 
 PRIVS = {
-    "exec": (PrivilegeLevel(r"^[a-z0-9.\-@()/:]{1,32}>\s?$", "exec", "", "", "", False, "",)),
+    "exec": (PrivilegeLevel(r"^[a-z0-9.\-@()/: ]{1,32}>\s?$", "exec", "", "", "", False, "",)),
     "privilege_exec": (
         PrivilegeLevel(
-            r"^[a-z0-9.\-@/:]{1,32}#\s?$",
+            r"^[a-z0-9.\-@/: ]{1,32}#\s?$",
             "privilege_exec",
             "exec",
             "disable",
@@ -58,7 +59,7 @@ PRIVS = {
     ),
     "configuration": (
         PrivilegeLevel(
-            r"^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{0,32}\)#\s?$",
+            r"^[a-z0-9.\-@/: ]{1,32}\(config(?!\-s\-)[a-z0-9_.\-@/:]{0,32}\)#\s?$",
             "configuration",
             "privilege_exec",
             "end",
@@ -73,6 +74,7 @@ PRIVS = {
 class EOSDriver(NetworkDriver):
     def __init__(
         self,
+        privilege_levels: Optional[Dict[str, PrivilegeLevel]] = None,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         auth_secondary: str = "",
@@ -82,6 +84,8 @@ class EOSDriver(NetworkDriver):
         EOSDriver Object
 
         Args:
+            privilege_levels: optional user provided privilege levels, if left None will default to
+                scrapli standard privilege levels
             on_open: callable that accepts the class instance as its only argument. this callable,
                 if provided, is executed immediately after authentication is completed. Common use
                 cases for this callable would be to disable paging or accept any kind of banner
@@ -98,25 +102,74 @@ class EOSDriver(NetworkDriver):
 
         Raises:
             N/A
+
         """
+        if privilege_levels is None:
+            privilege_levels = PRIVS
+
         if on_open is None:
             on_open = eos_on_open
         if on_close is None:
             on_close = eos_on_close
 
+        failed_when_contains = [
+            "% Ambiguous command",
+            "% Incomplete command",
+            "% Invalid input",
+            "% Cannot commit",
+        ]
+
         super().__init__(
-            privilege_levels=PRIVS,
+            privilege_levels=privilege_levels,
             default_desired_privilege_level="privilege_exec",
             auth_secondary=auth_secondary,
+            failed_when_contains=failed_when_contains,
+            textfsm_platform="arista_eos",
+            genie_platform="",
             on_open=on_open,
             on_close=on_close,
             **kwargs,
         )
 
-        self.textfsm_platform = "arista_eos"
+    def _abort_config(self) -> None:
+        """
+        Abort EOS configuration session (if using a config session!)
 
-        self.failed_when_contains = [
-            "% Ambiguous command",
-            "% Incomplete command",
-            "% Invalid input",
-        ]
+        Args:
+            N/A
+
+        Returns:
+            N/A:  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+        # eos pattern for config sessions should *always* have `config-s`
+        if "config\\-s" in self._current_priv_level.pattern:
+            self.channel.send_input(channel_input="abort")
+            self._current_priv_level = self.privilege_levels["privilege_exec"]
+
+    def register_configuration_session(self, session_name: str) -> None:
+        if session_name in self.privilege_levels.keys():
+            msg = (
+                f"session name `{session_name}` already registered as a privilege level, chose a "
+                "unique session name"
+            )
+            raise ValueError(msg)
+        session_prompt = re.escape(session_name[:6])
+        pattern = (
+            rf"^[a-z0-9.\-@/:]{{1,32}}\(config\-s\-{session_prompt}[a-z0-9_.\-@/:]{{0,32}}\)#\s?$"
+        )
+        name = session_name
+        config_session = PrivilegeLevel(
+            pattern=pattern,
+            name=name,
+            previous_priv="privilege_exec",
+            deescalate="end",
+            escalate=f"configure session {session_name}",
+            escalate_auth=False,
+            escalate_prompt="",
+        )
+        self.privilege_levels[name] = config_session
+        self.update_privilege_levels(update_channel=True)

@@ -118,6 +118,7 @@ class Transport(ABC):
         """
         class_dict = self.__dict__.copy()
         class_dict["auth_password"] = "********"
+        class_dict["session_lock"] = self.session_lock.locked()
         return f"Transport {class_dict}"
 
     @abstractmethod

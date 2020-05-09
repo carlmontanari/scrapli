@@ -40,7 +40,7 @@ def nxos_on_close(conn: NetworkDriver) -> None:
     # the exit command!
     conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
     conn.transport.write(channel_input="exit")
-    conn.transport.write(channel_input=conn.channel.comms_prompt_pattern)
+    conn.transport.write(channel_input=conn.channel.comms_return_char)
 
 
 PRIVS = {
@@ -58,7 +58,7 @@ PRIVS = {
     ),
     "configuration": (
         PrivilegeLevel(
-            r"^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{0,32}\)#\s?$",
+            r"^[a-z0-9.\-@/:]{1,32}\(config(?!\-s)[a-z0-9.\-@/:]{0,32}\)#\s?$",
             "configuration",
             "privilege_exec",
             "end",
@@ -73,6 +73,7 @@ PRIVS = {
 class NXOSDriver(NetworkDriver):
     def __init__(
         self,
+        privilege_levels: Optional[Dict[str, PrivilegeLevel]] = None,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         auth_secondary: str = "",
@@ -83,6 +84,8 @@ class NXOSDriver(NetworkDriver):
         NXOSDriver Object
 
         Args:
+            privilege_levels: optional user provided privilege levels, if left None will default to
+                scrapli standard privilege levels
             on_open: callable that accepts the class instance as its only argument. this callable,
                 if provided, is executed immediately after authentication is completed. Common use
                 cases for this callable would be to disable paging or accept any kind of banner
@@ -111,6 +114,9 @@ class NXOSDriver(NetworkDriver):
         Raises:
             N/A
         """
+        if privilege_levels is None:
+            privilege_levels = PRIVS
+
         if on_open is None:
             on_open = nxos_on_open
         if on_close is None:
@@ -120,10 +126,20 @@ class NXOSDriver(NetworkDriver):
         if transport == "telnet":
             _telnet = True
 
+        failed_when_contains = [
+            "% Ambiguous command",
+            "% Incomplete command",
+            "% Invalid input detected",
+            "% Invalid command at",
+        ]
+
         super().__init__(
-            privilege_levels=PRIVS,
+            privilege_levels=privilege_levels,
             default_desired_privilege_level="privilege_exec",
             auth_secondary=auth_secondary,
+            failed_when_contains=failed_when_contains,
+            textfsm_platform="cisco_nxos",
+            genie_platform="nxos",
             on_open=on_open,
             on_close=on_close,
             transport=transport,
@@ -133,12 +149,42 @@ class NXOSDriver(NetworkDriver):
         if _telnet:
             self.transport.username_prompt = "login:"
 
-        self.textfsm_platform = "cisco_nxos"
-        self.genie_platform = "nxos"
+    def _abort_config(self) -> None:
+        """
+        Abort EOS configuration session (if using a config session!)
 
-        self.failed_when_contains = [
-            "% Ambiguous command",
-            "% Incomplete command",
-            "% Invalid input detected",
-            "% Invalid command at",
-        ]
+        Args:
+            N/A
+
+        Returns:
+            N/A:  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+        # nxos pattern for config sessions should *always* have `config-s`
+        if "config\\-s" in self._current_priv_level.pattern:
+            self.channel.send_input(channel_input="abort")
+            self._current_priv_level = self.privilege_levels["privilege_exec"]
+
+    def register_configuration_session(self, session_name: str) -> None:
+        if session_name in self.privilege_levels.keys():
+            msg = (
+                f"session name `{session_name}` already registered as a privilege level, chose a "
+                "unique session name"
+            )
+            raise ValueError(msg)
+        pattern = r"^[a-z0-9.\-@/:]{1,32}\(config\-s[a-z0-9.\-@/:]{0,32}\)#\s?$"
+        name = session_name
+        config_session = PrivilegeLevel(
+            pattern=pattern,
+            name=name,
+            previous_priv="privilege_exec",
+            deescalate="end",
+            escalate=f"configure session {session_name}",
+            escalate_auth=False,
+            escalate_prompt="",
+        )
+        self.privilege_levels[name] = config_session
+        self.update_privilege_levels(update_channel=True)

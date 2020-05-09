@@ -161,7 +161,15 @@ class TelnetTransport(Transport):
         """
         self.session_lock.acquire()
         # establish session with "socket" timeout, then reset timeout to "transport" timeout
-        telnet_session = ScrapliTelnet(host=self.host, port=self.port, timeout=self.timeout_socket)
+        try:
+            telnet_session = ScrapliTelnet(
+                host=self.host, port=self.port, timeout=self.timeout_socket
+            )
+        except ConnectionError as exc:
+            msg = f"Failed to open telnet session to host {self.host}"
+            if "connection refused" in str(exc).lower():
+                msg = f"Failed to open telnet session to host {self.host}, connection refused"
+            raise ScrapliAuthenticationFailed(msg)
         telnet_session.timeout = self.timeout_transport
         LOG.debug(f"Session to host {self.host} spawned")
         self.session_lock.release()

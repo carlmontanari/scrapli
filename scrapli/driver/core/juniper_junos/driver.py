@@ -40,7 +40,7 @@ def junos_on_close(conn: NetworkDriver) -> None:
     # write exit directly to the transport as channel would fail to find the prompt after sending
     # the exit command!
     conn.transport.write(channel_input="exit")
-    conn.transport.write(channel_input=conn.channel.comms_prompt_pattern)
+    conn.transport.write(channel_input=conn.channel.comms_return_char)
 
 
 PRIVS = {
@@ -56,12 +56,35 @@ PRIVS = {
             "",
         )
     ),
+    "configuration_exclusive": (
+        PrivilegeLevel(
+            r"^[a-z0-9.\-@()/:]{1,32}#\s?$",
+            "configuration_exclusive",
+            "exec",
+            "exit configuration-mode",
+            "configure exclusive",
+            False,
+            "",
+        )
+    ),
+    "configuration_private": (
+        PrivilegeLevel(
+            r"^[a-z0-9.\-@()/:]{1,32}#\s?$",
+            "configuration_private",
+            "exec",
+            "exit configuration-mode",
+            "configure private",
+            False,
+            "",
+        )
+    ),
 }
 
 
 class JunosDriver(NetworkDriver):
     def __init__(
         self,
+        privilege_levels: Optional[Dict[str, PrivilegeLevel]] = None,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         auth_secondary: str = "",
@@ -72,6 +95,8 @@ class JunosDriver(NetworkDriver):
         JunosDriver Object
 
         Args:
+            privilege_levels: optional user provided privilege levels, if left None will default to
+                scrapli standard privilege levels
             on_open: callable that accepts the class instance as its only argument. this callable,
                 if provided, is executed immediately after authentication is completed. Common use
                 cases for this callable would be to disable paging or accept any kind of banner
@@ -99,7 +124,11 @@ class JunosDriver(NetworkDriver):
 
         Raises:
             N/A
+
         """
+        if privilege_levels is None:
+            privilege_levels = PRIVS
+
         if on_open is None:
             on_open = junos_on_open
         if on_close is None:
@@ -109,10 +138,20 @@ class JunosDriver(NetworkDriver):
         if transport == "telnet":
             _telnet = True
 
+        failed_when_contains = [
+            "is ambiguous",
+            "No valid completions",
+            "unknown command",
+            "syntax error",
+        ]
+
         super().__init__(
-            privilege_levels=PRIVS,
+            privilege_levels=privilege_levels,
             default_desired_privilege_level="exec",
             auth_secondary=auth_secondary,
+            failed_when_contains=failed_when_contains,
+            textfsm_platform="juniper_junos",
+            genie_platform="",
             on_open=on_open,
             on_close=on_close,
             transport=transport,
@@ -121,16 +160,6 @@ class JunosDriver(NetworkDriver):
 
         if _telnet:
             self.transport.username_prompt = "login:"
-
-        self.default_desired_priv = "exec"
-        self.textfsm_platform = "juniper_junos"
-
-        self.failed_when_contains = [
-            "is ambiguous",
-            "No valid completions",
-            "unknown command",
-            "syntax error",
-        ]
 
     def _abort_config(self) -> None:
         """
@@ -146,11 +175,5 @@ class JunosDriver(NetworkDriver):
             N/A
 
         """
-        self.channel.comms_prompt_pattern = self.privilege_levels[
-            self.default_desired_privilege_level
-        ].pattern
-        interact_events = [
-            ("exit", "Exit with uncommitted changes? [yes,no] (yes)", False),
-            ("yes", self.channel.comms_prompt_pattern, False),
-        ]
-        self.channel.send_inputs_interact(interact_events=interact_events)
+        self.send_configs(["rollback 0", "exit"])
+        self._current_priv_level = self.privilege_levels["exec"]

@@ -3,19 +3,41 @@ from datetime import datetime
 
 import pytest
 
-from scrapli.response import Response
+from scrapli.exceptions import ScrapliCommandFailure
+from scrapli.response import MultiResponse, Response
 
 
 def test_response_init():
-    response = Response("localhost", "ls -al")
+    response = Response("localhost", "ls -al", failed_when_contains="tacocat")
     response_start_time = str(datetime.now())[:-7]
     assert response.host == "localhost"
     assert response.channel_input == "ls -al"
     assert str(response.start_time)[:-7] == response_start_time
     assert response.failed is True
     assert bool(response) is True
-    assert repr(response) == "Scrape <Success: False>"
-    assert str(response) == "Scrape <Success: False>"
+    assert repr(response) == "Response <Success: False>"
+    assert str(response) == "Response <Success: False>"
+    assert response.failed_when_contains == ["tacocat"]
+    with pytest.raises(ScrapliCommandFailure):
+        response.raise_for_status()
+
+
+def test_multi_response():
+    response1 = Response("localhost", "ls -al")
+    response2 = Response("localhost", "ls -al")
+    multi_response = MultiResponse([response1, response2])
+    assert len(multi_response) == 2
+    assert multi_response._failed() is True
+    assert repr(multi_response) == "MultiResponse <Success: False; Response Elements: 2>"
+    assert str(multi_response) == "MultiResponse <Success: False; Response Elements: 2>"
+    with pytest.raises(ScrapliCommandFailure):
+        multi_response.raise_for_status()
+    multi_response[0].failed = False
+    multi_response[1].failed = False
+    assert multi_response._failed() is False
+    assert multi_response.raise_for_status() is None
+    assert repr(multi_response) == "MultiResponse <Success: True; Response Elements: 2>"
+    assert str(multi_response) == "MultiResponse <Success: True; Response Elements: 2>"
 
 
 def test_response_record_result():

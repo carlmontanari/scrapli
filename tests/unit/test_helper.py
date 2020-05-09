@@ -11,7 +11,6 @@ from scrapli.helper import (
     _textfsm_get_template,
     genie_parse,
     get_prompt_pattern,
-    resolve_ssh_config,
     strip_ansi,
     textfsm_parse,
 )
