@@ -1,10 +1,10 @@
 import sys
-import types
 from pathlib import Path
 
 import pytest
 
 import scrapli
+from scrapli.driver.core import IOSXEDriver
 from scrapli.driver.network_driver import PrivilegeLevel
 from scrapli.exceptions import CouldNotAcquirePrivLevel, UnknownPrivLevel
 from scrapli.response import Response
@@ -18,6 +18,23 @@ except ImportError:
     textfsm_avail = False
 
 TEST_DATA_PATH = f"{Path(scrapli.__file__).parents[1]}/tests/unit/test_data"
+
+
+def test_drop_and_warn_comms_prompt_pattern():
+    with pytest.warns(UserWarning) as warn:
+        conn = IOSXEDriver(host="localhost", comms_prompt_pattern="something")
+    assert (
+        conn.comms_prompt_pattern
+        == "(^[a-z0-9.\\-@()/:]{1,32}>$)|(^[a-z0-9.\\-@/:]{1,32}#$)|(^[a-z0-9.\\-@/:]{1,32}\\(config[a-z0-9.\\-@/:]{"
+        "0,32}\\)#$)"
+    )
+    assert (
+        str(warn[0].message) == "\n***** `comms_prompt_pattern` found in kwargs! "
+        "*****************************************\n`comms_prompt_pattern` is ignored (dropped) when using network "
+        "drivers. If you wish to modify the patterns for any network driver sub-classes, please do so by modifying "
+        "or providing your own `privilege_levels`.\n***** `comms_prompt_pattern` found in kwargs! "
+        "*****************************************"
+    )
 
 
 @pytest.mark.parametrize(
@@ -68,7 +85,6 @@ def test__escalate(mocked_network_driver):
     channel_output_1 = """Enter configuration commands, one per line.  End with CNTL/Z.
 3560CX(config)#"""
     channel_ops = [(channel_input_1, channel_output_1)]
-
     conn = mocked_network_driver(channel_ops)
     conn._escalate(conn.privilege_levels["configuration"])
 
@@ -82,46 +98,16 @@ def test__escalate_auth(mocked_network_driver):
         (channel_input_1, channel_output_1),
         (channel_input_2, channel_output_2),
     ]
-
     conn = mocked_network_driver(channel_ops)
-
-    mock_privs = {
-        "exec": (PrivilegeLevel(r"^[a-z0-9.\-@()/:]{1,32}>$", "exec", "", "", "", False, "",)),
-        "privilege_exec": (
-            PrivilegeLevel(
-                r"^[a-z0-9.\-@/:]{1,32}#$",
-                "privilege_exec",
-                "exec",
-                "disable",
-                "enable",
-                True,
-                "Password:",
-            )
-        ),
-    }
-    conn.privs = mock_privs
-    conn._current_priv_level = mock_privs["exec"]
-
-    conn._escalate(mock_privs["privilege_exec"])
+    conn._escalate(conn.privilege_levels["privilege_exec"])
 
 
 def test__deescalate(mocked_network_driver):
     channel_input_1 = "end"
     channel_output_1 = "3560CX>"
     channel_ops = [(channel_input_1, channel_output_1)]
-
     conn = mocked_network_driver(channel_ops)
-
-    priv_exec = PrivilegeLevel(
-        r"^[a-z0-9.\-@/:]{1,32}#$",
-        "privilege_exec",
-        "exec",
-        "disable",
-        "enable",
-        True,
-        "Password:",
-    )
-    conn._deescalate(priv_exec)
+    conn._deescalate(conn.privilege_levels["privilege_exec"])
 
 
 def test_acquire_priv(mocked_network_driver):
@@ -160,9 +146,46 @@ def test_acquire_unknown_priv(mocked_network_driver):
     channel_output_1 = """Enter configuration commands, one per line.  End with CNTL/Z.
     3560CX(config)#"""
     channel_ops = [(channel_input_1, channel_output_1)]
+    conn = mocked_network_driver(channel_ops)
+    with pytest.raises(UnknownPrivLevel):
+        conn.acquire_priv("tacocat")
+
+
+def test_could_not_acquire_priv(mocked_network_driver):
+    channel_input_1 = "\n"
+    channel_output_1 = "\n3560CX#"
+    channel_input_2 = "configure terminal"
+    channel_output_2 = "\n3560CX#"
+    channel_input_3 = "\n"
+    channel_output_3 = "\n3560CX#"
+    channel_input_4 = "configure terminal"
+    channel_output_4 = "\n3560CX#"
+    channel_input_5 = "configure terminal"
+    channel_output_5 = "\n3560CX#"
+    channel_input_6 = "\n"
+    channel_output_6 = "3560CX#"
+    channel_input_7 = "configure terminal"
+    channel_output_7 = "\n3560CX#"
+    channel_input_8 = "\n"
+    channel_output_8 = "3560CX#"
+    channel_input_9 = "configure terminal"
+    channel_output_9 = "\n3560CX#"
+    channel_input_10 = "\n"
+    channel_output_10 = "3560CX#"
+    channel_ops = [
+        (channel_input_1, channel_output_1),
+        (channel_input_2, channel_output_2),
+        (channel_input_3, channel_output_3),
+        (channel_input_4, channel_output_4),
+        (channel_input_5, channel_output_5),
+        (channel_input_6, channel_output_6),
+        (channel_input_7, channel_output_7),
+        (channel_input_8, channel_output_8),
+        (channel_input_9, channel_output_9),
+        (channel_input_10, channel_output_10),
+    ]
 
     conn = mocked_network_driver(channel_ops)
-
     mock_privs = {
         "privilege_exec": (
             PrivilegeLevel(
@@ -175,11 +198,22 @@ def test_acquire_unknown_priv(mocked_network_driver):
                 "Password:",
             )
         ),
+        "configuration": (
+            PrivilegeLevel(
+                r"^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{0,32}\)#$",
+                "configuration",
+                "privilege_exec",
+                "end",
+                "configure terminal",
+                False,
+                "",
+            )
+        ),
     }
-    conn.privs = mock_privs
-
-    with pytest.raises(UnknownPrivLevel):
-        conn.acquire_priv("tacocat")
+    conn.privilege_levels = mock_privs
+    with pytest.raises(CouldNotAcquirePrivLevel) as exc:
+        conn.acquire_priv("configuration")
+    assert str(exc.value) == "Failed to acquire requested privilege level configuration"
 
 
 def test_update_response(mocked_network_driver):

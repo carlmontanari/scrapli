@@ -14,6 +14,10 @@ scrapli -- scrap(e c)li --  is a python library focused on connecting to devices
  squished together! scrapli's goal is to be as fast and flexible as possible, while providing a thoroughly tested, well
   typed, well documented, simple API.
 
+Feel free to join the very awesome networktocode slack workspace [here](https://networktocode.slack.com/), where you
+ will find a `scrapli` channel where you can discuss anything about scrapli, as well as tons of other channels covering
+  all sorts of network/network-automation topics!
+
 
 # Table of Contents
 
@@ -396,7 +400,7 @@ with IOSXEDriver(**my_device) as conn:
 When using any of the core network drivers (`JunosDriver`, `EOSDriver`, etc.) or the `GenericDriver`, the `send_command
 ` and `send_commands` methods will respectively send a single command or list of commands to the device.
 
-When using the core network drivers, the command(s) will be sent at the `default_desired_priv` level which is
+When using the core network drivers, the command(s) will be sent at the `default_desired_privilege_level` level which is
  typically "privilege exec" (or equivalent) privilege level. Please see [Driver Privilege Levels](#driver-privilege
  -levels) in the advanced usage section for more details on privilege levels. As the `GenericDriver` doesn't know or
   care about privilege levels you would need to manually handle acquiring the appropriate privilege level for you
@@ -584,6 +588,11 @@ In some cases you may need to run an "interactive" command on your device. The `
       human are sitting on a terminal typing).
       
 This method can accept one or N "events" and thus can be used to deal with any number of subsequent prompts. 
+
+One last important item about this method is that it accepts an argument `privilege_level` -- the value of this
+ argument should be the name of the privilege level that you would like to execute the interactive command at
+ . This is an optional argument, with a default of the `default_desired_privilege_level` attribute which is normally
+  "privilege exec" or similar depending on the platform. 
 
 ```python
 from scrapli.driver.core import IOSXEDriver

@@ -109,6 +109,18 @@ class NetworkDriver(GenericDriver, ABC):
             N/A
 
         """
+        if "comms_prompt_pattern" in kwargs:
+            err = "`comms_prompt_pattern` found in kwargs!"
+            msg = f"***** {err} {'*' * (80 - len(err))}"
+            fix = (
+                "`comms_prompt_pattern` is ignored (dropped) when using network drivers. If you "
+                "wish to modify the patterns for any network driver sub-classes, please do so by "
+                "modifying or providing your own `privilege_levels`."
+            )
+            warning = "\n" + msg + "\n" + fix + "\n" + msg
+            warnings.warn(warning)
+            kwargs.pop("comms_prompt_pattern")
+
         self.comms_prompt_pattern: str
 
         self.privilege_levels = privilege_levels

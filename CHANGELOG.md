@@ -26,7 +26,11 @@ CHANGELOG
   the name of your session as the privilege level argument for send config methods
 - Add a space to EOS prompts -- it seems its very easy to add one to the prompts and scrapli did not enjoy that
  previously!
-- Give users the option to pass in their own privilege levels for network drivers
+- Give users the option to pass in their own privilege levels for network drivers, and also throw a warning if users
+ try to pass `comms_prompt_pattern` when using network drivers (as this should all be handled by priv levels)
+- Created `MultiResponse` object to use instead of a generic list for grouping multiple `Response` objects 
+- Added `raise_for_status` methods to `Response` and `MultiResponse` -- copying the `requests` style method here to
+ raise an exception if any elements were failed
 
 # 2020.04.30
 - Continued improvement around `SystemSSHTransport` connection/auth failure logging
