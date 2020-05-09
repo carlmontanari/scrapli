@@ -25,12 +25,12 @@
 
 | Method                        | Implemented | Last Change | Notes                                                        |
 |-------------------------------|-------------|-------------|--------------------------------------------------------------|
-| update_privilege_levels       | 2020.05.XX  |             | update priv map/all prompt pattern if adding/modifying privs |
+| update_privilege_levels       | 2020.05.09  |             | update priv map/all prompt pattern if adding/modifying privs |
 | acquire_priv                  | 2020.03.29  |             |                                                              |
-| register_configuration_session| 2020.05.XX  |             | register a config session so the priv level can be tracked   |
-| send_configs                  | 2020.03.29  | 2020.05.XX  | added `privilege_level` argument                             |
-| send_configs_from_file        | 2020.04.30  | 2020.05.XX  | added `privilege_level` argument                             |
-| send_interactive              | 2020.03.29  | 2020.05.XX  | added `privilege_level` argument                             |
+| register_configuration_session| 2020.05.09  |             | register a config session so the priv level can be tracked   |
+| send_configs                  | 2020.03.29  | 2020.05.09  | added `privilege_level` argument                             |
+| send_configs_from_file        | 2020.04.30  | 2020.05.09  | added `privilege_level` argument                             |
+| send_interactive              | 2020.03.29  | 2020.05.09  | added `privilege_level` argument                             |
 
 
 ## Channel
@@ -77,14 +77,14 @@
 |-------------------------------|-------------|-------------|--------------------------------------------------------------|
 | genie_parse_output            | 2020.03.29  |             |                                                              |
 | textfsm_parse_output          | 2020.03.29  |             |                                                              |
-| raise_for_status              | 2020.05.XX  |             |                                                              |
+| raise_for_status              | 2020.05.09  |             |                                                              |
 
 
 ## MultiResponse
 
 | Method                        | Implemented | Last Change | Notes                                                        |
 |-------------------------------|-------------|-------------|--------------------------------------------------------------|
-| raise_for_status              | 2020.05.XX  |             |                                                              |
+| raise_for_status              | 2020.05.09  |             |                                                              |
 
 
 ## SSHConfig

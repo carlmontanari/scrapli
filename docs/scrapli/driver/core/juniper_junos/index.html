@@ -49,7 +49,7 @@ __all__ = (&#34;JunosDriver&#34;,)</code></pre>
 <dl>
 <dt id="scrapli.driver.core.juniper_junos.JunosDriver"><code class="flex name class">
 <span>class <span class="ident">JunosDriver</span></span>
-<span>(</span><span>on_open: Union[Callable[..., Any], NoneType] = None, on_close: Union[Callable[..., Any], NoneType] = None, auth_secondary: str = '', transport: str = 'system', **kwargs: Dict[str, Any])</span>
+<span>(</span><span>privilege_levels: Union[Dict[str, scrapli.driver.network_driver.PrivilegeLevel], NoneType] = None, on_open: Union[Callable[..., Any], NoneType] = None, on_close: Union[Callable[..., Any], NoneType] = None, auth_secondary: str = '', transport: str = 'system', **kwargs: Dict[str, Any])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -57,6 +57,9 @@ inheritance.</p>
 <p>JunosDriver Object</p>
 <h2 id="args">Args</h2>
 <dl>
+<dt><strong><code>privilege_levels</code></strong></dt>
+<dd>optional user provided privilege levels, if left None will default to
+scrapli standard privilege levels</dd>
 <dt><strong><code>on_open</code></strong></dt>
 <dd>callable that accepts the class instance as its only argument. this callable,
 if provided, is executed immediately after authentication is completed. Common use
@@ -102,6 +105,7 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
 <pre><code class="python">class JunosDriver(NetworkDriver):
     def __init__(
         self,
+        privilege_levels: Optional[Dict[str, PrivilegeLevel]] = None,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         auth_secondary: str = &#34;&#34;,
@@ -112,6 +116,8 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
         JunosDriver Object
 
         Args:
+            privilege_levels: optional user provided privilege levels, if left None will default to
+                scrapli standard privilege levels
             on_open: callable that accepts the class instance as its only argument. this callable,
                 if provided, is executed immediately after authentication is completed. Common use
                 cases for this callable would be to disable paging or accept any kind of banner
@@ -139,7 +145,11 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
 
         Raises:
             N/A
+
         &#34;&#34;&#34;
+        if privilege_levels is None:
+            privilege_levels = PRIVS
+
         if on_open is None:
             on_open = junos_on_open
         if on_close is None:
@@ -149,10 +159,20 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
         if transport == &#34;telnet&#34;:
             _telnet = True
 
+        failed_when_contains = [
+            &#34;is ambiguous&#34;,
+            &#34;No valid completions&#34;,
+            &#34;unknown command&#34;,
+            &#34;syntax error&#34;,
+        ]
+
         super().__init__(
-            privilege_levels=PRIVS,
+            privilege_levels=privilege_levels,
             default_desired_privilege_level=&#34;exec&#34;,
             auth_secondary=auth_secondary,
+            failed_when_contains=failed_when_contains,
+            textfsm_platform=&#34;juniper_junos&#34;,
+            genie_platform=&#34;&#34;,
             on_open=on_open,
             on_close=on_close,
             transport=transport,
@@ -161,16 +181,6 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
 
         if _telnet:
             self.transport.username_prompt = &#34;login:&#34;
-
-        self.default_desired_priv = &#34;exec&#34;
-        self.textfsm_platform = &#34;juniper_junos&#34;
-
-        self.failed_when_contains = [
-            &#34;is ambiguous&#34;,
-            &#34;No valid completions&#34;,
-            &#34;unknown command&#34;,
-            &#34;syntax error&#34;,
-        ]
 
     def _abort_config(self) -&gt; None:
         &#34;&#34;&#34;
@@ -186,14 +196,8 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
             N/A
 
         &#34;&#34;&#34;
-        self.channel.comms_prompt_pattern = self.privilege_levels[
-            self.default_desired_privilege_level
-        ].pattern
-        interact_events = [
-            (&#34;exit&#34;, &#34;Exit with uncommitted changes? [yes,no] (yes)&#34;, False),
-            (&#34;yes&#34;, self.channel.comms_prompt_pattern, False),
-        ]
-        self.channel.send_inputs_interact(interact_events=interact_events)</code></pre>
+        self.send_configs([&#34;rollback 0&#34;, &#34;exit&#34;])
+        self._current_priv_level = self.privilege_levels[&#34;exec&#34;]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -211,12 +215,14 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.get_prompt" href="../../generic_driver.html#scrapli.driver.generic_driver.GenericDriver.get_prompt">get_prompt</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.isalive" href="../../driver.html#scrapli.driver.driver.Scrape.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.open" href="../../driver.html#scrapli.driver.driver.Scrape.open">open</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.register_configuration_session" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.register_configuration_session">register_configuration_session</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_command" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_command">send_command</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_commands" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_commands">send_commands</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_commands_from_file" href="../../generic_driver.html#scrapli.driver.generic_driver.GenericDriver.send_commands_from_file">send_commands_from_file</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_configs" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_configs">send_configs</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_configs_from_file" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_configs_from_file">send_configs_from_file</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_interactive" href="../../generic_driver.html#scrapli.driver.generic_driver.GenericDriver.send_interactive">send_interactive</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_interactive" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_interactive">send_interactive</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.update_privilege_levels" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.update_privilege_levels">update_privilege_levels</a></code></li>
 </ul>
 </li>
 </ul>

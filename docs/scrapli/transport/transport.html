@@ -145,6 +145,7 @@ class Transport(ABC):
         &#34;&#34;&#34;
         class_dict = self.__dict__.copy()
         class_dict[&#34;auth_password&#34;] = &#34;********&#34;
+        class_dict[&#34;session_lock&#34;] = self.session_lock.locked()
         return f&#34;Transport {class_dict}&#34;
 
     @abstractmethod
@@ -507,6 +508,7 @@ type is 'network'</dd>
         &#34;&#34;&#34;
         class_dict = self.__dict__.copy()
         class_dict[&#34;auth_password&#34;] = &#34;********&#34;
+        class_dict[&#34;session_lock&#34;] = self.session_lock.locked()
         return f&#34;Transport {class_dict}&#34;
 
     @abstractmethod

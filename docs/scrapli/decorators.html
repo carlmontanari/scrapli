@@ -31,8 +31,8 @@ from concurrent.futures import ThreadPoolExecutor, wait
 from typing import TYPE_CHECKING, Any, Callable, Dict, Union
 
 if TYPE_CHECKING:
-    from scrapli.channel import Channel
-    from scrapli.transport import Transport
+    from scrapli.channel import Channel  # pragma:  no cover
+    from scrapli.transport import Transport  # pragma:  no cover
 
 LOG = logging.getLogger(&#34;scrapli&#34;)
 
@@ -72,7 +72,7 @@ def operation_timeout(attribute: str, message: str = &#34;&#34;) -&gt; Callable[
 
             timeout_duration = getattr(channel_or_transport, attribute, None)
             if not timeout_duration:
-                LOG.error(
+                LOG.info(
                     f&#34;Could not find {attribute} value of {channel_or_transport}, continuing &#34;
                     &#34;without timeout decorator&#34;
                 )
@@ -183,7 +183,7 @@ login (as opposed to "normal" channel operations)</dd>
 
             timeout_duration = getattr(channel_or_transport, attribute, None)
             if not timeout_duration:
-                LOG.error(
+                LOG.info(
                     f&#34;Could not find {attribute} value of {channel_or_transport}, continuing &#34;
                     &#34;without timeout decorator&#34;
                 )
