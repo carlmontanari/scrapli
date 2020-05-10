@@ -298,6 +298,8 @@ class SystemSSHTransport(Transport):
         if self.auth_private_key:
             open_pipes_result = self._open_pipes()
             if open_pipes_result:
+                if self.keepalive:
+                    self._session_keepalive()
                 return
             if not self.auth_password or not self.auth_username:
                 msg = (
@@ -369,6 +371,8 @@ class SystemSSHTransport(Transport):
 
         try:
             self._pipes_isauthenticated(self.session)
+            if self._isauthenticated is False:
+                return False
         except TimeoutError:
             # If auth fails, kill the popen session, also need to manually close the stderr pipe
             # for some reason... unclear why, but w/out this it will hang open
@@ -422,6 +426,11 @@ class SystemSSHTransport(Transport):
             if f"Authenticated to {self.host}".encode() in output:
                 self._isauthenticated = True
                 return True
+            if (
+                b"Next authentication method: keyboard-interactive" in output
+                or b"Next authentication method: password" in output
+            ):
+                return False
             if b"Operation timed out" in output:
                 msg = f"Timed opening connection to host {self.host}"
                 raise ScrapliTimeout(msg)
