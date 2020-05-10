@@ -44,27 +44,37 @@ def iosxe_on_close(conn: NetworkDriver) -> None:
 
 
 PRIVS = {
-    "exec": (PrivilegeLevel(r"^[a-z0-9.\-@()/:]{1,32}>$", "exec", "", "", "", False, "",)),
+    "exec": (
+        PrivilegeLevel(
+            pattern=r"^[a-z0-9.\-@()/:]{1,32}>$",
+            name="exec",
+            previous_priv="",
+            deescalate="",
+            escalate="",
+            escalate_auth=False,
+            escalate_prompt="",
+        )
+    ),
     "privilege_exec": (
         PrivilegeLevel(
-            r"^[a-z0-9.\-@/:]{1,32}#$",
-            "privilege_exec",
-            "exec",
-            "disable",
-            "enable",
-            True,
-            "Password:",
+            pattern=r"^[a-z0-9.\-@/:]{1,32}#$",
+            name="privilege_exec",
+            previous_priv="exec",
+            deescalate="disable",
+            escalate="enable",
+            escalate_auth=True,
+            escalate_prompt="Password:",
         )
     ),
     "configuration": (
         PrivilegeLevel(
-            r"^[a-z0-9.\-@/:]{1,32}\(conf[a-z0-9.\-@/:]{0,32}\)#$",
-            "configuration",
-            "privilege_exec",
-            "end",
-            "configure terminal",
-            False,
-            "",
+            pattern=r"^[a-z0-9.\-@/:]{1,32}\(conf[a-z0-9.\-@/:]{0,32}\)#$",
+            name="configuration",
+            previous_priv="privilege_exec",
+            deescalate="end",
+            escalate="configure terminal",
+            escalate_auth=False,
+            escalate_prompt="",
         )
     ),
 }

@@ -44,38 +44,48 @@ def junos_on_close(conn: NetworkDriver) -> None:
 
 
 PRIVS = {
-    "exec": (PrivilegeLevel(r"^[a-z0-9.\-@()/:]{1,32}>\s?$", "exec", "", "", "", False, "",)),
+    "exec": (
+        PrivilegeLevel(
+            pattern=r"^({\w+:\d}\n){0,1}[a-z0-9.\-@()/:]{1,32}>\s?$",
+            name="exec",
+            previous_priv="",
+            deescalate="",
+            escalate="",
+            escalate_auth=False,
+            escalate_prompt="",
+        )
+    ),
     "configuration": (
         PrivilegeLevel(
-            r"^[a-z0-9.\-@()/:]{1,32}#\s?$",
-            "configuration",
-            "exec",
-            "exit configuration-mode",
-            "configure",
-            False,
-            "",
+            pattern=r"^({\w+:\d}\[edit\]\n){0,1}[a-z0-9.\-@()/:]{1,32}#\s?$",
+            name="configuration",
+            previous_priv="exec",
+            deescalate="exit configuration-mode",
+            escalate="configure",
+            escalate_auth=False,
+            escalate_prompt="",
         )
     ),
     "configuration_exclusive": (
         PrivilegeLevel(
-            r"^[a-z0-9.\-@()/:]{1,32}#\s?$",
-            "configuration_exclusive",
-            "exec",
-            "exit configuration-mode",
-            "configure exclusive",
-            False,
-            "",
+            pattern=r"^({\w+:\d}\[edit\]\n){0,1}[a-z0-9.\-@()/:]{1,32}#\s?$",
+            name="configuration_exclusive",
+            previous_priv="exec",
+            deescalate="exit configuration-mode",
+            escalate="configure exclusive",
+            escalate_auth=False,
+            escalate_prompt="",
         )
     ),
     "configuration_private": (
         PrivilegeLevel(
-            r"^[a-z0-9.\-@()/:]{1,32}#\s?$",
-            "configuration_private",
-            "exec",
-            "exit configuration-mode",
-            "configure private",
-            False,
-            "",
+            pattern=r"^({\w+:\d}\[edit\]\n){0,1}[a-z0-9.\-@()/:]{1,32}#\s?$",
+            name="configuration_private",
+            previous_priv="exec",
+            deescalate="exit configuration-mode",
+            escalate="configure private",
+            escalate_auth=False,
+            escalate_prompt="",
         )
     ),
 }

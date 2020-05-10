@@ -49,28 +49,36 @@ def iosxr_on_close(conn: NetworkDriver) -> None:
 
 PRIVS = {
     "privilege_exec": (
-        PrivilegeLevel(r"^[a-z0-9.\-@/:]{1,32}#\s?$", "privilege_exec", "", "", "", False, "",)
+        PrivilegeLevel(
+            pattern=r"^[a-z0-9.\-@/:]{1,32}#\s?$",
+            name="privilege_exec",
+            previous_priv="",
+            deescalate="",
+            escalate="",
+            escalate_auth=False,
+            escalate_prompt="",
+        )
     ),
     "configuration": (
         PrivilegeLevel(
-            r"^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{0,32}\)#\s?$",
-            "configuration",
-            "privilege_exec",
-            "end",
-            "configure terminal",
-            False,
-            "",
+            pattern=r"^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{0,32}\)#\s?$",
+            name="configuration",
+            previous_priv="privilege_exec",
+            deescalate="end",
+            escalate="configure terminal",
+            escalate_auth=False,
+            escalate_prompt="",
         )
     ),
     "configuration_exclusive": (
         PrivilegeLevel(
-            r"^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{0,32}\)#\s?$",
-            "configuration_exclusive",
-            "privilege_exec",
-            "end",
-            "configure exclusive",
-            False,
-            "",
+            pattern=r"^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{0,32}\)#\s?$",
+            name="configuration_exclusive",
+            previous_priv="privilege_exec",
+            deescalate="end",
+            escalate="configure exclusive",
+            escalate_auth=False,
+            escalate_prompt="",
         )
     ),
 }
