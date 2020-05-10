@@ -1,6 +1,8 @@
 CHANGELOG
 =======
 
+# 2020.XX.XX
+
 # 2020.05.09
 - Add underscores to EOS config prompt matching
 - Actually fixed on_close methods that I could have sworn were fixed.... *gremlins*! (was sending prompt pattern
