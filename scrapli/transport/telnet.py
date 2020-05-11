@@ -256,7 +256,7 @@ class TelnetTransport(Transport):
                     self.session_lock.release()
                     self._isauthenticated = True
                     return True
-                if b"password" in output.lower():
+                if b"password:" in output.lower():
                     # if we see "password" auth failed... hopefully true in all scenarios!
                     return False
         self.session_lock.release()

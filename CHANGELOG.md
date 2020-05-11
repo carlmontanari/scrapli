@@ -2,6 +2,9 @@ CHANGELOG
 =======
 
 # 2020.XX.XX
+- Converted all priv levels to be kwargs instead of just args for setup -- simple thing but makes it more readable IMO.
+- Added to the Juniper prompt pattern to include matching the RE prompt that is on the line "above" the "normal
+" prompt as this was getting included in command output instead of being seen as part of the prompt by scrapli.
 
 # 2020.05.09
 - Add underscores to EOS config prompt matching

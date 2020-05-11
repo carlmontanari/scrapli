@@ -1221,7 +1221,15 @@ scrapli.exceptions.ScrapliCommandFailure
 
 ### Known Issues
 
-- None yet!
+- When connecting to Juniper devices, if a user has setup control persist in their ssh_config file to the actual end
+ Juniper device (instead of or in addition to a jump/proxy host), the Junos device will force a pty which is not
+  readable by the "pipes" style session/setup, ultimately this will cause auth to fail. If no username/password is
+   setup, scrapli will raise a `ScrapliAuthenticationFailed` exception. If there is a username/password (that works
+   ), scrapli will continue authentication using that, however it will take forever because scrapli tries, and fails
+   , to connect/auth via private key first. The "fix" here is to *not* have control persist setup to the end network
+    device. Control persist does not seem to work with Juniper devices anyway, so not a big deal, but it is a bit
+     tricky to identify this problem as it just appears as an auth failure (and there isn't a terribly great way to
+      handle this).
 
 ## telnet
 
