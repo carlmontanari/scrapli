@@ -653,7 +653,7 @@ class NetworkDriver(GenericDriver, ABC):
                 as of current execution; aborts configuration session if applicable (iosxr/junos or
                 eos/nxos if using a configuration session)
             privilege_level: name of configuration privilege level/type to acquire; this is platform
-                dependant, so check the device driver for specifics. Examples of privilege_name
+                dependent, so check the device driver for specifics. Examples of privilege_name
                 would be "configuration_exclusive" for IOSXRDriver, or "configuration_private" for
                 JunosDriver. You can also pass in a name of a configuration session such as
                 "my-config-session" if you have registered a session using the
@@ -722,7 +722,7 @@ class NetworkDriver(GenericDriver, ABC):
                 as of current execution; aborts configuration session if applicable (iosxr/junos or
                 eos/nxos if using a configuration session)
             privilege_level: name of configuration privilege level/type to acquire; this is platform
-                dependant, so check the device driver for specifics. Examples of privilege_name
+                dependent, so check the device driver for specifics. Examples of privilege_name
                 would be "exclusive" for IOSXRDriver, "private" for JunosDriver. You can also pass
                 in a name of a configuration session such as "session_mysession" if you have
                 registered a session using the "register_config_session" method of the EOSDriver or

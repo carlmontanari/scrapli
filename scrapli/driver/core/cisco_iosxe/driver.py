@@ -63,7 +63,7 @@ PRIVS = {
             deescalate="disable",
             escalate="enable",
             escalate_auth=True,
-            escalate_prompt="Password:",
+            escalate_prompt="^[pP]assword:\s?$",
         )
     ),
     "configuration": (
