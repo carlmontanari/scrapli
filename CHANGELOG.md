@@ -6,6 +6,8 @@ CHANGELOG
 - Added to the Juniper prompt pattern to include matching the RE prompt that is on the line "above" the "normal
 " prompt as this was getting included in command output instead of being seen as part of the prompt by scrapli.
 - Convert driver privilege escalation prompts to use regex to match upper and lower case "P" in password prompt
+- Fix core drivers to actually allow for users to pass `failed_when_contains`, `textfsm_platform`, `genie_platform
+`, and `default_desired_privilege_level`
 
 # 2020.05.09
 - Add underscores to EOS config prompt matching

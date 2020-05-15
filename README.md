@@ -703,6 +703,9 @@ The basic usage section outlined the most commonly used driver arguments, this o
 | transport                       | system (default), paramiko, ssh2, or telnet                 | Scrape            |  
 | transport_options               | dictionary of transport-specific arguments                  | Scrape            |                
 | default_desired_privilege_level | privilege level for "show" commands to be executed at       | NetworkDriver     |
+| failed_when_contains            | list of strings indicating command/config failure           | NetworkDriver     |
+| textfsm_platform                | platform name for textfsm parser                            | NetworkDriver     |
+| genie_platform                  | platform name for genie parse                               | NetworkDriver     |
 
 Most of these attributes actually get passed from the `Scrape` (or sub-class such as `NXOSDriver`) into the
  `Transport` and `Channel` classes, so if you need to modify any of these values after instantiation you should do so
