@@ -3,7 +3,8 @@ from threading import Lock
 
 import pytest
 
-from scrapli.decorators import operation_timeout
+from scrapli.decorators import operation_timeout, requires_open_session
+from scrapli.exceptions import ConnectionNotOpened
 
 from .conftest import MockTransport
 
@@ -31,6 +32,10 @@ class SlowClass:
     def close(self):
         return
 
+    @requires_open_session()
+    def raise_attribute_error(self):
+        raise AttributeError
+
 
 def test_operation_timeout_timeout():
     slow = SlowClass()
@@ -48,3 +53,15 @@ def test_operation_timeout_no_class_attr():
     slow = SlowClass()
     result = slow.confused_function()
     assert result == "fast"
+
+
+def test_requires_open_session():
+    slow = SlowClass()
+    with pytest.raises(ConnectionNotOpened) as exc:
+        slow.raise_attribute_error()
+    assert (
+        str(exc.value)
+        == "Attempting to call method that requires an open connection, but connection is not open. "
+        "Call the `.open()` method of your connection object, or use a context manager to ensue "
+        "your connection has been opened."
+    )

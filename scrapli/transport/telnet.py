@@ -5,7 +5,7 @@ from select import select
 from telnetlib import Telnet
 from typing import Optional
 
-from scrapli.decorators import operation_timeout
+from scrapli.decorators import operation_timeout, requires_open_session
 from scrapli.exceptions import ScrapliAuthenticationFailed
 from scrapli.helper import get_prompt_pattern, strip_ansi
 from scrapli.transport.transport import Transport
@@ -299,6 +299,7 @@ class TelnetTransport(Transport):
             return True
         return False
 
+    @requires_open_session()
     @operation_timeout("timeout_transport", "Timed out reading from transport")
     def read(self) -> bytes:
         """
@@ -316,6 +317,7 @@ class TelnetTransport(Transport):
         """
         return self.session.read_eager()
 
+    @requires_open_session()
     @operation_timeout("timeout_transport", "Timed out writing to transport")
     def write(self, channel_input: str) -> None:
         """
@@ -333,6 +335,7 @@ class TelnetTransport(Transport):
         """
         self.session.write(channel_input.encode())
 
+    @requires_open_session()
     def set_timeout(self, timeout: Optional[int] = None) -> None:
         """
         Set session timeout

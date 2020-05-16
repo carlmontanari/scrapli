@@ -181,6 +181,11 @@ def test_log_non_core_transport(caplog):
     assert "Non-core transport `paramiko` selected" in caplog.text
 
 
+def test_transport_options():
+    conn = Scrape(host="localhost", transport_options={"someoption": "somethingneat"})
+    assert conn.transport_args["transport_options"] == {"someoption": "somethingneat"}
+
+
 def test_valid_private_key_file():
     auth_private_key = f"{UNIT_TEST_DIR}_ssh_private_key"
     conn = Scrape(host="myhost", auth_private_key=auth_private_key)

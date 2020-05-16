@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 from scrapli.driver.generic_driver import GenericDriver
 from scrapli.exceptions import CouldNotAcquirePrivLevel, UnknownPrivLevel
 from scrapli.helper import resolve_file
-from scrapli.response import Response
+from scrapli.response import MultiResponse, Response
 
 if TYPE_CHECKING:
     ScrapliMultiResponse = UserList[Response]  # pylint:  disable=E1136; # pragma:  no cover
@@ -453,7 +453,7 @@ class NetworkDriver(GenericDriver, ABC):
                 as of current execution
 
         Returns:
-            responses: list of Scrapli Response objects
+            responses: Scrapli MultiResponse object
 
         Raises:
             N/A
@@ -495,7 +495,7 @@ class NetworkDriver(GenericDriver, ABC):
                 as of current execution
 
         Returns:
-            responses: list of Scrapli Response objects
+            responses: Scrapli MultiResponse object
 
         Raises:
             TypeError: if anything but a string is provided for `file`
@@ -641,7 +641,7 @@ class NetworkDriver(GenericDriver, ABC):
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         privilege_level: str = "",
-    ) -> List[Response]:
+    ) -> ScrapliMultiResponse:
         """
         Send configuration(s)
 
@@ -660,7 +660,7 @@ class NetworkDriver(GenericDriver, ABC):
                 "register_config_session" method of the EOSDriver or NXOSDriver.
 
         Returns:
-            responses: List of Scrape Response objects
+            responses: Scrapli MultiResponse object
 
         Raises:
             N/A
@@ -682,7 +682,7 @@ class NetworkDriver(GenericDriver, ABC):
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains
 
-        responses = []
+        responses = MultiResponse()
         _failed_during_execution = False
         for config in configs:
             response = super().send_command(
@@ -710,7 +710,7 @@ class NetworkDriver(GenericDriver, ABC):
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         privilege_level: str = "",
-    ) -> List[Response]:
+    ) -> ScrapliMultiResponse:
         """
         Send configuration(s) from a file
 
@@ -729,7 +729,7 @@ class NetworkDriver(GenericDriver, ABC):
                 NXOSDriver.
 
         Returns:
-            responses: List of Scrape Response objects
+            responses: Scrapli MultiResponse object
 
         Raises:
             TypeError: if anything but a string is provided for `file`

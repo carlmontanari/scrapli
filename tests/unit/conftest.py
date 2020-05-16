@@ -5,7 +5,16 @@ import pytest
 
 from scrapli.channel import Channel
 from scrapli.driver import GenericDriver, NetworkDriver, Scrape
-from scrapli.driver.core.cisco_iosxe.driver import PRIVS
+from scrapli.driver.core.arista_eos.driver import PRIVS as EOSPrivs
+from scrapli.driver.core.arista_eos.driver import EOSDriver
+from scrapli.driver.core.cisco_iosxe.driver import PRIVS as IOSXEPrivs
+from scrapli.driver.core.cisco_iosxe.driver import IOSXEDriver
+from scrapli.driver.core.cisco_iosxr.driver import PRIVS as IOSXRPrivs
+from scrapli.driver.core.cisco_iosxr.driver import IOSXRDriver
+from scrapli.driver.core.cisco_nxos.driver import PRIVS as NXOSPrivs
+from scrapli.driver.core.cisco_nxos.driver import NXOSDriver
+from scrapli.driver.core.juniper_junos import JunosDriver
+from scrapli.driver.core.juniper_junos.driver import PRIVS as JunosPrivs
 from scrapli.transport.transport import Transport
 
 
@@ -88,10 +97,22 @@ class MockTransport(Transport):
         return
 
 
+class MockGenericDriver(MockScrape, GenericDriver):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def open(self):
+        # Overriding "normal" network driver open method as we don't need to worry about disable
+        # paging or pre login handles; ignoring this makes the mocked file read/write pieces simpler
+        self.transport = self.transport_class(**self.transport_args)
+        self.transport.open()
+        self.channel = Channel(self.transport, **self.channel_args)
+
+
 class MockNetworkDriver(MockScrape, NetworkDriver):
     def __init__(self, **kwargs):
         super().__init__(
-            privilege_levels=PRIVS,
+            privilege_levels=IOSXEPrivs,
             default_desired_privilege_level="privilege_exec",
             auth_secondary="password",
             **kwargs,
@@ -106,16 +127,54 @@ class MockNetworkDriver(MockScrape, NetworkDriver):
         self._current_priv_level = self.privilege_levels[self.default_desired_privilege_level]
 
 
-class MockGenericDriver(MockScrape, GenericDriver):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+class MockIOSXEDriver(MockScrape, IOSXEDriver):
+    def __init__(self, **kwargs):
+        super().__init__(
+            privilege_levels=IOSXEPrivs,
+            default_desired_privilege_level="privilege_exec",
+            auth_secondary="password",
+            **kwargs,
+        )
 
-    def open(self):
-        # Overriding "normal" network driver open method as we don't need to worry about disable
-        # paging or pre login handles; ignoring this makes the mocked file read/write pieces simpler
-        self.transport = self.transport_class(**self.transport_args)
-        self.transport.open()
-        self.channel = Channel(self.transport, **self.channel_args)
+
+class MockNXOSDriver(MockScrape, NXOSDriver):
+    def __init__(self, **kwargs):
+        super().__init__(
+            privilege_levels=NXOSPrivs,
+            default_desired_privilege_level="privilege_exec",
+            auth_secondary="password",
+            **kwargs,
+        )
+
+
+class MockIOSXRDriver(MockScrape, IOSXRDriver):
+    def __init__(self, **kwargs):
+        super().__init__(
+            privilege_levels=IOSXRPrivs,
+            default_desired_privilege_level="privilege_exec",
+            auth_secondary="password",
+            **kwargs,
+        )
+
+
+class MockEOSDriver(MockScrape, EOSDriver):
+    def __init__(self, **kwargs):
+        super().__init__(
+            privilege_levels=EOSPrivs,
+            default_desired_privilege_level="privilege_exec",
+            auth_secondary="password",
+            **kwargs,
+        )
+
+
+class MockJunosDriver(MockScrape, JunosDriver):
+    def __init__(self, **kwargs):
+        super().__init__(
+            privilege_levels=JunosPrivs,
+            default_desired_privilege_level="exec",
+            auth_secondary="password",
+            **kwargs,
+        )
 
 
 @pytest.fixture(scope="module")
@@ -131,6 +190,18 @@ def mocked_channel():
 
 
 @pytest.fixture(scope="module")
+def mocked_generic_driver():
+    def _create_mocked_generic_driver(test_operations, initial_bytes=b"3560CX#", **kwargs):
+        conn = MockGenericDriver(
+            host="localhost", channel_ops=test_operations, initial_bytes=initial_bytes, **kwargs
+        )
+        conn.open()
+        return conn
+
+    return _create_mocked_generic_driver
+
+
+@pytest.fixture(scope="module")
 def mocked_network_driver():
     def _create_mocked_network_driver(test_operations, initial_bytes=b"3560CX#", **kwargs):
         conn = MockNetworkDriver(
@@ -143,12 +214,60 @@ def mocked_network_driver():
 
 
 @pytest.fixture(scope="module")
-def mocked_generic_driver():
-    def _create_mocked_generic_driver(test_operations, initial_bytes=b"3560CX#", **kwargs):
-        conn = MockGenericDriver(
+def mocked_iosxe_driver():
+    def _create_mocked_iosxe_driver(test_operations, initial_bytes=b"3560CX#", **kwargs):
+        conn = MockIOSXEDriver(
             host="localhost", channel_ops=test_operations, initial_bytes=initial_bytes, **kwargs
         )
         conn.open()
         return conn
 
-    return _create_mocked_generic_driver
+    return _create_mocked_iosxe_driver
+
+
+@pytest.fixture(scope="module")
+def mocked_nxos_driver():
+    def _create_mocked_nxos_driver(test_operations, initial_bytes=b"switch#", **kwargs):
+        conn = MockNXOSDriver(
+            host="localhost", channel_ops=test_operations, initial_bytes=initial_bytes, **kwargs
+        )
+        conn.open()
+        return conn
+
+    return _create_mocked_nxos_driver
+
+
+@pytest.fixture(scope="module")
+def mocked_iosxr_driver():
+    def _create_mocked_iosxr_driver(test_operations, initial_bytes=b"RP/0/RP0/CPU0:ios#", **kwargs):
+        conn = MockIOSXRDriver(
+            host="localhost", channel_ops=test_operations, initial_bytes=initial_bytes, **kwargs
+        )
+        conn.open()
+        return conn
+
+    return _create_mocked_iosxr_driver
+
+
+@pytest.fixture(scope="module")
+def mocked_eos_driver():
+    def _create_mocked_eos_driver(test_operations, initial_bytes=b"localhost#", **kwargs):
+        conn = MockEOSDriver(
+            host="localhost", channel_ops=test_operations, initial_bytes=initial_bytes, **kwargs
+        )
+        conn.open()
+        return conn
+
+    return _create_mocked_eos_driver
+
+
+@pytest.fixture(scope="module")
+def mocked_junos_driver():
+    def _create_mocked_junos_driver(test_operations, initial_bytes=b"vrnetlab> ", **kwargs):
+        conn = MockJunosDriver(
+            host="localhost", channel_ops=test_operations, initial_bytes=initial_bytes, **kwargs
+        )
+        conn.open()
+        return conn
+
+    return _create_mocked_junos_driver

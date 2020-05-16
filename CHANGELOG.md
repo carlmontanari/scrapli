@@ -8,6 +8,8 @@ CHANGELOG
 - Convert driver privilege escalation prompts to use regex to match upper and lower case "P" in password prompt
 - Fix core drivers to actually allow for users to pass `failed_when_contains`, `textfsm_platform`, `genie_platform
 `, and `default_desired_privilege_level`
+- Add better exception/message for attempting to send command/config to a connection object that has not been opened
+- Add testing for on open/close methods of core drivers
 
 # 2020.05.09
 - Add underscores to EOS config prompt matching

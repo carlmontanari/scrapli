@@ -113,7 +113,7 @@ class GenericDriver(Scrape):
                 as of current execution
 
         Returns:
-            responses: list of Scrapli Response objects
+            responses: Scrapli MultiResponse object
 
         Raises:
             TypeError: if commands is anything but a list
@@ -156,7 +156,7 @@ class GenericDriver(Scrape):
                 as of current execution
 
         Returns:
-            responses: list of Scrapli Response objects
+            responses: Scrapli MultiResponse object
 
         Raises:
             TypeError: if anything but a string is provided for `file`

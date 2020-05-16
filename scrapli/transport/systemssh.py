@@ -6,7 +6,7 @@ from select import select
 from subprocess import PIPE, Popen
 from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 
-from scrapli.decorators import operation_timeout
+from scrapli.decorators import operation_timeout, requires_open_session
 from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliTimeout
 from scrapli.helper import get_prompt_pattern, strip_ansi
 from scrapli.ssh_config import SSHConfig
@@ -14,7 +14,7 @@ from scrapli.transport.ptyprocess import PtyProcess
 from scrapli.transport.transport import Transport
 
 if TYPE_CHECKING:
-    PopenBytes = Popen[bytes]  # pylint: disable=E1136
+    PopenBytes = Popen[bytes]  # pylint: disable=E1136; # pragma:  no cover
 
 LOG = getLogger("transport")
 
@@ -642,6 +642,7 @@ class SystemSSHTransport(Transport):
                 return True
         return False
 
+    @requires_open_session()
     @operation_timeout("timeout_transport", "Timed out reading from transport")
     def read(self) -> bytes:
         """
@@ -664,6 +665,7 @@ class SystemSSHTransport(Transport):
             return self.session.read(read_bytes)
         return b""
 
+    @requires_open_session()
     @operation_timeout("timeout_transport", "Timed out writing to transport")
     def write(self, channel_input: str) -> None:
         """
@@ -720,7 +722,7 @@ class SystemSSHTransport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            NotImplementedError: always, because this is not implemented for telnet
+            NotImplementedError: 'standard' keepalive mechanism not yet implemented for system
 
         """
         raise NotImplementedError("'standard' keepalive mechanism not yet implemented for system.")

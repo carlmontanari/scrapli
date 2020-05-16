@@ -3,6 +3,8 @@ import logging
 from concurrent.futures import ThreadPoolExecutor, wait
 from typing import TYPE_CHECKING, Any, Callable, Dict, Union
 
+from scrapli.exceptions import ConnectionNotOpened
+
 if TYPE_CHECKING:
     from scrapli.channel import Channel  # pragma:  no cover
     from scrapli.transport import Transport  # pragma:  no cover
@@ -78,5 +80,38 @@ def operation_timeout(attribute: str, message: str = "") -> Callable[..., Any]:
             return future.result()
 
         return timeout_wrapper
+
+    return decorate
+
+
+def requires_open_session() -> Callable[..., Any]:
+    """
+    Decorate an "operation" to require that the underlying scrapli session has been opened
+
+    Args:
+        N/A
+
+    Returns:
+        decorate: wrapped function
+
+    Raises:
+        ConnectionNotOpened: if scrapli connection has not been opened yet
+
+    """
+
+    def decorate(wrapped_func: Callable[..., Any]) -> Callable[..., Any]:
+        def requires_open_session_wrapper(
+            *args: Union[str, int], **kwargs: Dict[str, Union[str, int]],
+        ) -> Any:
+            try:
+                return wrapped_func(*args, **kwargs)
+            except AttributeError:
+                raise ConnectionNotOpened(
+                    "Attempting to call method that requires an open connection, but connection is "
+                    "not open. Call the `.open()` method of your connection object, or use a "
+                    "context manager to ensue your connection has been opened."
+                )
+
+        return requires_open_session_wrapper
 
     return decorate

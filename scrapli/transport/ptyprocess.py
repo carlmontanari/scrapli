@@ -83,7 +83,6 @@ def _make_eof_intr():
 
             (intr, eof) = (CINTR, CEOF)
         except ImportError:
-            #                         ^C, ^D
             (intr, eof) = (3, 4)
 
     _INTR = _byte(intr)

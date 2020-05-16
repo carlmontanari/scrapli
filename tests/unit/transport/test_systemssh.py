@@ -1,8 +1,14 @@
+import os
 import sys
+from pathlib import Path
 
 import pytest
 
+import scrapli
+from scrapli.exceptions import ConnectionNotOpened
 from scrapli.transport import SystemSSHTransport
+
+UNIT_TEST_DIR = f"{Path(scrapli.__file__).parents[1]}/tests/unit/"
 
 
 def test_str():
@@ -34,6 +40,12 @@ def test_creation():
     assert conn.host == "localhost"
     assert conn.port == 22
     assert conn._isauthenticated is False
+
+
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="systemssh not supported on windows")
+def test_process_ssh_config():
+    conn = SystemSSHTransport("1.2.3.4", ssh_config_file=f"{UNIT_TEST_DIR}_ssh_config")
+    assert conn.auth_private_key == f"{os.path.expanduser('~')}/.ssh/mysshkey"
 
 
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="systemssh not supported on windows")
@@ -125,3 +137,17 @@ def test_set_timeout():
     conn.timeout_transport = 9999
     conn.set_timeout()
     assert conn.timeout_transport == 9999
+
+
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="systemssh not supported on windows")
+@pytest.mark.parametrize(
+    "method_name", ["read", "write"], ids=["read", "write"],
+)
+def test_requires_open(method_name):
+    conn = SystemSSHTransport("localhost")
+    method = getattr(conn, method_name)
+    with pytest.raises(ConnectionNotOpened):
+        if method_name == "write":
+            method("blah")
+        else:
+            method()

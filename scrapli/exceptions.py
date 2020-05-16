@@ -39,3 +39,7 @@ class CouldNotAcquirePrivLevel(ScrapliException):
 
 class TransportPluginError(ScrapliException):
     """Exception for transport plugin loading errors"""
+
+
+class ConnectionNotOpened(ScrapliException):
+    """Exception for failures due to connection not being open"""

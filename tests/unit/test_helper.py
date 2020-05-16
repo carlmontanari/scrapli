@@ -1,3 +1,4 @@
+import os
 import re
 import sys
 from io import TextIOWrapper
@@ -11,6 +12,7 @@ from scrapli.helper import (
     _textfsm_get_template,
     genie_parse,
     get_prompt_pattern,
+    resolve_file,
     strip_ansi,
     textfsm_parse,
 )
@@ -146,3 +148,23 @@ def test_genie_parse_failure():
     # genie loads about nine million modules... for whatever reason these two upset pyfakefs
     del sys.modules["ats.configuration"]
     del sys.modules["pyats.configuration"]
+
+
+def test_resolve_file():
+    resolved_file = resolve_file(file=f"{UNIT_TEST_DIR}_ssh_config")
+    assert resolved_file == f"{UNIT_TEST_DIR}_ssh_config"
+
+
+def test_resolve_file_expanduser(fs):
+    fs.add_real_file(
+        source_path=f"{UNIT_TEST_DIR}_ssh_config",
+        target_path=f"{os.path.expanduser('~')}/myneatfile",
+    )
+    resolved_file = resolve_file(file=f"~/myneatfile")
+    assert resolved_file == f"{os.path.expanduser('~')}/myneatfile"
+
+
+def test_resolve_file_failure():
+    with pytest.raises(ValueError) as exc:
+        resolve_file(file=f"~/myneatfile")
+    assert str(exc.value) == "File path `~/myneatfile` could not be resolved"
