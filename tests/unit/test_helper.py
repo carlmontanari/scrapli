@@ -150,6 +150,7 @@ def test_genie_parse_failure():
     del sys.modules["pyats.configuration"]
 
 
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="not dealing with windows path things in tests")
 def test_resolve_file():
     resolved_file = resolve_file(file=f"{UNIT_TEST_DIR}_ssh_config")
     assert resolved_file == f"{UNIT_TEST_DIR}_ssh_config"
