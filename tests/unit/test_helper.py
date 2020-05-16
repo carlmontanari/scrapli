@@ -150,13 +150,17 @@ def test_genie_parse_failure():
     del sys.modules["pyats.configuration"]
 
 
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="not dealing with windows path things in tests")
+@pytest.mark.skipif(
+    sys.platform.startswith("win"), reason="not dealing with windows path things in tests"
+)
 def test_resolve_file():
     resolved_file = resolve_file(file=f"{UNIT_TEST_DIR}_ssh_config")
     assert resolved_file == f"{UNIT_TEST_DIR}_ssh_config"
 
 
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="not dealing with windows path things in tests")
+@pytest.mark.skipif(
+    sys.platform.startswith("win"), reason="not dealing with windows path things in tests"
+)
 def test_resolve_file_expanduser(fs):
     fs.add_real_file(
         source_path=f"{UNIT_TEST_DIR}_ssh_config",
@@ -166,7 +170,9 @@ def test_resolve_file_expanduser(fs):
     assert resolved_file == f"{os.path.expanduser('~')}/myneatfile"
 
 
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="not dealing with windows path things in tests")
+@pytest.mark.skipif(
+    sys.platform.startswith("win"), reason="not dealing with windows path things in tests"
+)
 def test_resolve_file_failure():
     with pytest.raises(ValueError) as exc:
         resolve_file(file=f"~/myneatfile")
