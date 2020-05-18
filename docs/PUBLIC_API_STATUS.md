@@ -28,7 +28,8 @@
 | update_privilege_levels       | 2020.05.09  |             | update priv map/all prompt pattern if adding/modifying privs |
 | acquire_priv                  | 2020.03.29  |             |                                                              |
 | register_configuration_session| 2020.05.09  |             | register a config session so the priv level can be tracked   |
-| send_configs                  | 2020.03.29  | 2020.05.09  | added `privilege_level` argument                             |
+| send_config                   | 2020.05.XX  |             | added to keep api for config/commands consistent             |
+| send_configs                  | 2020.03.29  | 2020.05.XX  | only supports list of configs now, see send_config           |
 | send_configs_from_file        | 2020.04.30  | 2020.05.09  | added `privilege_level` argument                             |
 | send_interactive              | 2020.03.29  | 2020.05.09  | added `privilege_level` argument                             |
 

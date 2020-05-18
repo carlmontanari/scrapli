@@ -4,6 +4,7 @@ import re
 import warnings
 from abc import ABC, abstractmethod
 from collections import UserList
+from datetime import datetime
 from functools import lru_cache
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
@@ -503,7 +504,7 @@ class NetworkDriver(GenericDriver, ABC):
         """
         if not isinstance(file, str):
             raise TypeError(
-                f"`send_commands_from_file` expects a string path to file, got {type(file)}"
+                f"`send_commands_from_file` expects a string path to a file, got {type(file)}"
             )
         resolved_file = resolve_file(file)
 
@@ -634,19 +635,19 @@ class NetworkDriver(GenericDriver, ABC):
 
         """
 
-    def send_configs(
+    def send_config(
         self,
-        configs: Union[str, List[str]],
+        config: str,
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         privilege_level: str = "",
-    ) -> ScrapliMultiResponse:
+    ) -> Response:
         """
         Send configuration(s)
 
         Args:
-            configs: string or list of strings to send to device in config mode
+            config: string configuration to send to the device, supports sending multi-line strings
             strip_prompt: True/False strip prompt from returned output
             failed_when_contains: string or list of strings indicating failure if found in response
             stop_on_failed: True/False stop executing commands if a command fails, returns results
@@ -663,11 +664,85 @@ class NetworkDriver(GenericDriver, ABC):
             responses: Scrapli MultiResponse object
 
         Raises:
-            N/A
+            TypeError: if config is anything but a string
 
         """
-        if isinstance(configs, str):
-            configs = [configs]
+        if not isinstance(config, str):
+            raise TypeError(
+                f"`send_config` expects a single string, got {type(config)}. "
+                "to send a list of configs use the `send_configs` method instead."
+            )
+
+        if failed_when_contains is None:
+            failed_when_contains = self.failed_when_contains
+
+        # in order to handle multi-line strings, we split lines
+        split_config = config.splitlines()
+
+        # now that we have a list of configs, just use send_configs to actually execute them
+        multi_response = self.send_configs(
+            configs=split_config,
+            strip_prompt=strip_prompt,
+            failed_when_contains=failed_when_contains,
+            stop_on_failed=stop_on_failed,
+            privilege_level=privilege_level,
+        )
+
+        # create a new unified response object
+        response = Response(
+            host=self.transport.host,
+            channel_input=config,
+            failed_when_contains=failed_when_contains,
+        )
+        response.start_time = multi_response[0].start_time
+        response.elapsed_time = (datetime.now() - response.start_time).total_seconds()
+
+        # join all the results together into a single final result
+        response.result = "\n".join(response.result for response in multi_response)
+        response.failed = False
+        if any([response.failed for response in multi_response]):
+            response.failed = True
+        self._update_response(response=response)
+
+        return response
+
+    def send_configs(
+        self,
+        configs: List[str],
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+        stop_on_failed: bool = False,
+        privilege_level: str = "",
+    ) -> ScrapliMultiResponse:
+        """
+        Send configuration(s)
+
+        Args:
+            configs: list of strings to send to device in config mode
+            strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
+            stop_on_failed: True/False stop executing commands if a command fails, returns results
+                as of current execution; aborts configuration session if applicable (iosxr/junos or
+                eos/nxos if using a configuration session)
+            privilege_level: name of configuration privilege level/type to acquire; this is platform
+                dependent, so check the device driver for specifics. Examples of privilege_name
+                would be "configuration_exclusive" for IOSXRDriver, or "configuration_private" for
+                JunosDriver. You can also pass in a name of a configuration session such as
+                "my-config-session" if you have registered a session using the
+                "register_config_session" method of the EOSDriver or NXOSDriver.
+
+        Returns:
+            responses: Scrapli MultiResponse object
+
+        Raises:
+            TypeError: if configs is anything but a list
+
+        """
+        if not isinstance(configs, list):
+            raise TypeError(
+                f"`send_configs` expects a list of strings, got {type(configs)}. "
+                "to send a single configuration line/string use the `send_config` method instead."
+            )
 
         if privilege_level:
             resolved_privilege_level = self._get_privilege_level_name(
@@ -737,7 +812,7 @@ class NetworkDriver(GenericDriver, ABC):
         """
         if not isinstance(file, str):
             raise TypeError(
-                f"`send_configs_from_file` expects a string path to file, got {type(file)}"
+                f"`send_configs_from_file` expects a string path to a file, got {type(file)}"
             )
         resolved_file = resolve_file(file)
 

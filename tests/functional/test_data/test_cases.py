@@ -45,6 +45,19 @@ TEST_CASES = {
             "expected": "clear logg\nClear logging buffer [confirm]\n\ncsr1000v#",
         },
         "send_interactive_hidden_response": None,
+        "send_config": {
+            "configs": "interface loopback123\ndescription scrapli was here",
+            "expected_no_strip": "csr1000v(config-if)#\ncsr1000v(config-if)#",
+            "expected_strip": "\n",
+            "verification": "show run int loopback123",
+            "verification_expected_no_strip": "Building configuration...\n\nCurrent configuration : CONFIG_BYTES"
+            "\n!\ninterface Loopback123\n description scrapli was here\n no ip"
+            " address\nend\n\ncsr1000v#",
+            "verification_expected_strip": "Building configuration...\n\nCurrent configuration : CONFIG_BYTES"
+            "\n!\ninterface Loopback123\n description scrapli was here\n no ip "
+            "address\nend",
+            "teardown_configs": "no interface loopback123",
+        },
         "send_configs": {
             "configs": ["interface loopback123", "description scrapli was here"],
             "expected_no_strip": ["csr1000v(config-if)#", "csr1000v(config-if)#"],
@@ -104,6 +117,21 @@ TEST_CASES = {
             "expected": 'delete bootflash:virtual-instance.conf\nDo you want to delete "/virtual-instance.conf" ? (yes/no/abort)   [y] n\nswitch#',
         },
         "send_interactive_hidden_response": None,
+        "send_config": {
+            "configs": "interface loopback123\ndescription scrapli was here",
+            "expected_no_strip": "switch(config-if)#\nswitch(config-if)#",
+            "expected_strip": "\n",
+            "verification": "show run int loopback123",
+            "verification_expected_no_strip": "!Command: show running-config interface loopback123\n!Running "
+            "configuration last done at: TIME_STAMP_REPLACED\n!Time: "
+            "TIME_STAMP_REPLACED\n\nversion 9.2(4) Bios:version\n\ninterface "
+            "loopback123\n  description scrapli was here\n\nswitch#",
+            "verification_expected_strip": "!Command: show running-config interface loopback123\n!Running "
+            "configuration last done at: TIME_STAMP_REPLACED\n!Time: "
+            "TIME_STAMP_REPLACED\n\nversion 9.2(4) Bios:version\n\ninterface "
+            "loopback123\n  description scrapli was here",
+            "teardown_configs": "no interface loopback123",
+        },
         "send_configs": {
             "configs": ["interface loopback123", "description scrapli was here"],
             "expected_no_strip": ["switch(config-if)#", "switch(config-if)#"],
@@ -165,6 +193,15 @@ TEST_CASES = {
         "send_commands_error": {"commands": ["show version", "show tacocat", "show version"],},
         "send_interactive_normal_response": None,
         "send_interactive_hidden_response": None,
+        "send_config": {
+            "configs": "interface loopback123\ndescription scrapli was here\ncommit",
+            "expected_no_strip": "RP/0/RP0/CPU0:ios(config-if)#\nRP/0/RP0/CPU0:ios(config-if)#\nTIME_STAMP_REPLACED\nRP/0/RP0/CPU0:ios(config-if)#",
+            "expected_strip": "\n\nTIME_STAMP_REPLACED",  # we get the timestamp of the commit in this output
+            "verification": "show run int loopback123",
+            "verification_expected_no_strip": "TIME_STAMP_REPLACED\ninterface Loopback123\n description scrapli was here\n!\n\nRP/0/RP0/CPU0:ios#",
+            "verification_expected_strip": "TIME_STAMP_REPLACED\ninterface Loopback123\n description scrapli was here\n!",
+            "teardown_configs": ["no interface loopback123", "commit"],
+        },
         "send_configs": {
             "configs": ["interface loopback123", "description scrapli was here", "commit"],
             "expected_no_strip": ["RP/0/RP0/CPU0:ios(config-if)#", "RP/0/RP0/CPU0:ios(config-if)#"],
@@ -182,7 +219,7 @@ TEST_CASES = {
         },
         "send_configs_error": {
             "configs": ["interface loopback123", "show tacocat", "description tacocat was here"],
-            "teardown_configs": "",
+            "teardown_configs": ["no interface loopback123", "commit"],
         },
         "sanitize_response": cisco_iosxr_clean_response,
     },
@@ -220,6 +257,15 @@ TEST_CASES = {
         "send_commands_error": {"commands": ["show version", "show tacocat", "show version"],},
         "send_interactive_normal_response": None,
         "send_interactive_hidden_response": None,
+        "send_config": {
+            "configs": "interface loopback123\ndescription scrapli was here",
+            "expected_no_strip": "localhost(config-if-Lo123)#\nlocalhost(config-if-Lo123)#",
+            "expected_strip": "\n",
+            "verification": "show run int loopback123",
+            "verification_expected_no_strip": "interface Loopback123\n   description scrapli was here\nlocalhost#",
+            "verification_expected_strip": "interface Loopback123\n   description scrapli was here",
+            "teardown_configs": "no interface loopback123",
+        },
         "send_configs": {
             "configs": ["interface loopback123", "description scrapli was here"],
             "expected_no_strip": ["localhost(config-if-Lo123)#", "localhost(config-if-Lo123)#"],
@@ -271,6 +317,15 @@ TEST_CASES = {
         "send_commands_error": {"commands": ["show version", "show tacocat", "show version"],},
         "send_interactive_normal_response": None,
         "send_interactive_hidden_response": None,
+        "send_config": {
+            "configs": 'set interfaces fxp0 unit 0 description "scrapli was here"\ncommit',
+            "expected_no_strip": "[edit]\nvrnetlab#\ncommit complete\n\n[edit]\nvrnetlab#",
+            "expected_strip": "[edit]\ncommit complete\n\n[edit]",
+            "verification": "show configuration interfaces fxp0",
+            "verification_expected_no_strip": 'unit 0 {\n    description "scrapli was here";\n    family inet {\n        address 10.0.0.15/24;\n    }\n}\n\nvrnetlab>',
+            "verification_expected_strip": 'unit 0 {\n    description "scrapli was here";\n    family inet {\n        address 10.0.0.15/24;\n    }\n}',
+            "teardown_configs": ["delete interfaces fxp0 unit 0 description", "commit"],
+        },
         "send_configs": {
             "configs": ['set interfaces fxp0 unit 0 description "scrapli was here"', "commit"],
             "expected_no_strip": ["[edit]\nvrnetlab#", "commit complete\n\n[edit]\nvrnetlab#"],
@@ -292,7 +347,7 @@ TEST_CASES = {
                 "show tacocat",
                 "set interfaces fxp0 description tacocat",
             ],
-            "teardown_configs": "delete interfaces fxp0 description",
+            "teardown_configs": ["delete interfaces fxp0 description", "commit"],
         },
         "sanitize_response": juniper_junos_clean_response,
     },

@@ -184,6 +184,28 @@ class TestNetworkDevice:
     @pytest.mark.parametrize(
         "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
     )
+    def test_send_config(self, conn, device_type, transport, strip_prompt):
+        config = TEST_CASES[device_type]["send_config"]["configs"]
+        expected_type = "expected_no_strip" if not strip_prompt else "expected_strip"
+        expected_response = TEST_CASES[device_type]["send_config"][expected_type]
+        verification = TEST_CASES[device_type]["send_config"]["verification"]
+        expected_verification = TEST_CASES[device_type]["send_config"][
+            f"verification_{expected_type}"
+        ]
+        teardown_configs = TEST_CASES[device_type]["send_config"]["teardown_configs"]
+        sanitize_response = TEST_CASES[device_type]["sanitize_response"]
+        response = conn.send_config(config=config, strip_prompt=strip_prompt)
+        assert sanitize_response(response.result) == expected_response
+        verification_response = conn.send_command(command=verification, strip_prompt=strip_prompt)
+        assert sanitize_response(verification_response.result) == expected_verification
+        if isinstance(teardown_configs, list):
+            conn.send_configs(configs=teardown_configs)
+        else:
+            conn.send_config(config=teardown_configs)
+
+    @pytest.mark.parametrize(
+        "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
+    )
     def test_send_configs(self, conn, device_type, transport, strip_prompt):
         configs = TEST_CASES[device_type]["send_configs"]["configs"]
         expected_type = "expected_no_strip" if not strip_prompt else "expected_strip"
@@ -199,7 +221,10 @@ class TestNetworkDevice:
             assert response.result == expected_response
         verification_response = conn.send_command(command=verification, strip_prompt=strip_prompt)
         assert sanitize_response(verification_response.result) == expected_verification
-        conn.send_configs(configs=teardown_configs)
+        if isinstance(teardown_configs, list):
+            conn.send_configs(configs=teardown_configs)
+        else:
+            conn.send_config(config=teardown_configs)
 
     @pytest.mark.parametrize(
         "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
@@ -219,7 +244,10 @@ class TestNetworkDevice:
             assert response.result == expected_response
         verification_response = conn.send_command(command=verification, strip_prompt=strip_prompt)
         assert sanitize_response(verification_response.result) == expected_verification
-        conn.send_configs(configs=teardown_configs)
+        if isinstance(teardown_configs, list):
+            conn.send_configs(configs=teardown_configs)
+        else:
+            conn.send_config(config=teardown_configs)
 
     def test_send_configs_stop_on_failed(self, conn, device_type, transport):
         if TEST_CASES[device_type]["send_configs_error"] is None:
@@ -232,7 +260,10 @@ class TestNetworkDevice:
         assert len(responses) == 2
         assert responses[0].failed is False
         assert responses[1].failed is True
-        conn.send_configs(configs=teardown_configs)
+        if isinstance(teardown_configs, list):
+            conn.send_configs(configs=teardown_configs)
+        else:
+            conn.send_config(config=teardown_configs)
 
     def test_isalive_and_close(self, conn, device_type, transport):
         assert conn.isalive() is True

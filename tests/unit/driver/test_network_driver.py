@@ -52,10 +52,52 @@ def test_drop_and_warn_comms_prompt_pattern():
             TypeError,
             "`send_commands` expects a list of strings, got <class 'str'>. to send a single command use the `send_command` method instead.",
         ),
+        (
+            "send_commands_from_file",
+            [],
+            TypeError,
+            "`send_commands_from_file` expects a string path to a file, got <class 'list'>",
+        ),
     ],
-    ids=["send_command", "send_commands",],
+    ids=["send_command", "send_commands", "send_commands_from_file"],
 )
 def test_send_commands_exceptions(attr_setup, mocked_network_driver):
+    method = attr_setup[0]
+    method_input = attr_setup[1]
+    method_exc = attr_setup[2]
+    method_msg = attr_setup[3]
+    conn = mocked_network_driver([])
+    method_to_call = getattr(conn, method)
+    with pytest.raises(method_exc) as exc:
+        method_to_call(method_input)
+    assert str(exc.value) == method_msg
+
+
+@pytest.mark.parametrize(
+    "attr_setup",
+    [
+        (
+            "send_config",
+            [],
+            TypeError,
+            "`send_config` expects a single string, got <class 'list'>. to send a list of configs use the `send_configs` method instead.",
+        ),
+        (
+            "send_configs",
+            "racecar",
+            TypeError,
+            "`send_configs` expects a list of strings, got <class 'str'>. to send a single configuration line/string use the `send_config` method instead.",
+        ),
+        (
+            "send_configs_from_file",
+            [],
+            TypeError,
+            "`send_configs_from_file` expects a string path to a file, got <class 'list'>",
+        ),
+    ],
+    ids=["send_command", "send_commands", "send_configs_from_file"],
+)
+def test_send_configs_exceptions(attr_setup, mocked_network_driver):
     method = attr_setup[0]
     method_input = attr_setup[1]
     method_exc = attr_setup[2]
@@ -297,6 +339,53 @@ def test_send_commands(mocked_network_driver):
     assert outputs[1].result == channel_output_2
 
 
+def test_send_commands_from_file(mocked_network_driver):
+    channel_input_1 = "show ip access-lists"
+    channel_output_1 = """Extended IP access list ext_acl_fw
+            10 deny ip 0.0.0.0 0.255.255.255 any
+            20 deny ip 10.0.0.0 0.255.255.255 any
+            30 deny ip 100.64.0.0 0.63.255.255 any (2 matches)
+            40 deny ip 127.0.0.0 0.255.255.255 any
+            50 deny ip 169.254.0.0 0.0.255.255 any
+            60 deny ip 172.16.0.0 0.15.255.255 any
+            70 deny ip 192.0.0.0 0.0.0.255 any
+            80 deny ip 192.0.2.0 0.0.0.255 any
+            90 deny ip 192.168.0.0 0.0.255.255 any
+            100 deny ip 198.18.0.0 0.1.255.255 any
+            110 deny ip 198.51.100.0 0.0.0.255 any
+            120 deny ip 203.0.113.0 0.0.0.255 any
+            130 deny ip 224.0.0.0 15.255.255.255 any
+            140 deny ip 240.0.0.0 15.255.255.255 any
+3560CX#"""
+    channel_input_2 = "show ip access-lists"
+    channel_output_2 = """Extended IP access list ext_acl_fw
+                10 deny ip 0.0.0.0 0.255.255.255 any
+                20 deny ip 10.0.0.0 0.255.255.255 any
+                30 deny ip 100.64.0.0 0.63.255.255 any (2 matches)
+                40 deny ip 127.0.0.0 0.255.255.255 any
+                50 deny ip 169.254.0.0 0.0.255.255 any
+                60 deny ip 172.16.0.0 0.15.255.255 any
+                70 deny ip 192.0.0.0 0.0.0.255 any
+                80 deny ip 192.0.2.0 0.0.0.255 any
+                90 deny ip 192.168.0.0 0.0.255.255 any
+                100 deny ip 198.18.0.0 0.1.255.255 any
+                110 deny ip 198.51.100.0 0.0.0.255 any
+                120 deny ip 203.0.113.0 0.0.0.255 any
+                130 deny ip 224.0.0.0 15.255.255.255 any
+                140 deny ip 240.0.0.0 15.255.255.255 any
+3560CX#"""
+    test_operations = [
+        (channel_input_1, channel_output_1),
+        (channel_input_2, channel_output_2),
+    ]
+    conn = mocked_network_driver(test_operations)
+    outputs = conn.send_commands_from_file(
+        file=f"{TEST_DATA_PATH}/send_commands", strip_prompt=False
+    )
+    assert outputs[0].result == channel_output_1
+    assert outputs[1].result == channel_output_2
+
+
 def test_send_inputs_interact(mocked_network_driver):
     channel_input_1 = "clear logg"
     channel_output_1 = "Clear logging buffer [confirm]"
@@ -313,25 +402,68 @@ def test_send_inputs_interact(mocked_network_driver):
     assert output.result == "clear logg\nClear logging buffer [confirm]\n3560CX#"
 
 
+def test_send_config(mocked_network_driver):
+    channel_input_1 = "configure terminal"
+    channel_output_1 = """Enter configuration commands, one per line.  End with CNTL/Z.
+3560CX(config)#"""
+    channel_input_2 = "hostname XC0653"
+    channel_output_2 = "XC0653(config)#"
+    test_operations = [
+        (channel_input_1, channel_output_1),
+        (channel_input_2, channel_output_2),
+    ]
+    conn = mocked_network_driver(test_operations)
+    output = conn.send_config(channel_input_2, strip_prompt=False)
+    assert output.result == channel_output_2
+
+
+def test_send_config_failed(mocked_network_driver):
+    channel_input_1 = "configure terminal"
+    channel_output_1 = """Enter configuration commands, one per line.  End with CNTL/Z.
+3560CX(config)#"""
+    channel_input_2 = "hostname XC0653"
+    channel_output_2 = "% FAILURE\nXC0653(config)#"
+    test_operations = [
+        (channel_input_1, channel_output_1),
+        (channel_input_2, channel_output_2),
+    ]
+    conn = mocked_network_driver(test_operations)
+    conn.failed_when_contains = ["% FAILURE"]
+    output = conn.send_config(channel_input_2, strip_prompt=False)
+    assert output.result == channel_output_2
+    assert output.failed is True
+
+
 def test_send_configs(mocked_network_driver):
     channel_input_1 = "configure terminal"
     channel_output_1 = """Enter configuration commands, one per line.  End with CNTL/Z.
 3560CX(config)#"""
     channel_input_2 = "hostname XC0653"
     channel_output_2 = "XC0653(config)#"
-    channel_input_3 = "\n"
-    channel_output_3 = "XC0653(config)#"
-    channel_input_4 = "end"
-    channel_output_4 = "XC0653#"
     test_operations = [
         (channel_input_1, channel_output_1),
         (channel_input_2, channel_output_2),
-        (channel_input_3, channel_output_3),
-        (channel_input_4, channel_output_4),
     ]
     conn = mocked_network_driver(test_operations)
-    output = conn.send_configs(channel_input_3, strip_prompt=False)
-    assert output[0].result == channel_output_3
+    output = conn.send_configs([channel_input_2], strip_prompt=False)
+    assert output[0].result == channel_output_2
+
+
+def test_send_configs_failed(mocked_network_driver):
+    channel_input_1 = "configure terminal"
+    channel_output_1 = """Enter configuration commands, one per line.  End with CNTL/Z.
+3560CX(config)#"""
+    channel_input_2 = "hostname XC0653"
+    channel_output_2 = "% FAILURE\nXC0653(config)#"
+    test_operations = [
+        (channel_input_1, channel_output_1),
+        (channel_input_2, channel_output_2),
+    ]
+    conn = mocked_network_driver(test_operations)
+    conn.failed_when_contains = ["% FAILURE"]
+    output = conn.send_configs([channel_input_2], strip_prompt=False)
+    assert output[0].result == channel_output_2
+    assert output[0].failed is True
 
 
 def test_send_configs_from_file(mocked_network_driver):
@@ -340,22 +472,35 @@ def test_send_configs_from_file(mocked_network_driver):
 3560CX(config)#"""
     channel_input_2 = "hostname XC0653"
     channel_output_2 = "XC0653(config)#"
-    channel_input_3 = "\n"
-    channel_output_3 = "XC0653(config)#"
-    channel_input_4 = "end"
-    channel_output_4 = "XC0653#"
-    channel_input_5 = "\n"
-    channel_output_5 = "XC0653#"
+    test_operations = [
+        (channel_input_1, channel_output_1),
+        (channel_input_2, channel_output_2),
+    ]
+    conn = mocked_network_driver(test_operations)
+    output = conn.send_configs_from_file(file=f"{TEST_DATA_PATH}/send_configs", strip_prompt=False)
+    assert output[0].result == channel_output_2
+
+
+def test_send_configs_stop_on_failed(mocked_network_driver):
+    channel_input_1 = "configure terminal"
+    channel_output_1 = """Enter configuration commands, one per line.  End with CNTL/Z.
+3560CX(config)#"""
+    channel_input_2 = "hostname XC0653"
+    channel_output_2 = "% FAILURE\nXC0653(config)#"
+    channel_input_3 = "hostname XC0653"
+    channel_output_3 = "\nXC0653(config)#"
     test_operations = [
         (channel_input_1, channel_output_1),
         (channel_input_2, channel_output_2),
         (channel_input_3, channel_output_3),
-        (channel_input_4, channel_output_4),
-        (channel_input_5, channel_output_5),
     ]
     conn = mocked_network_driver(test_operations)
-    output = conn.send_configs_from_file(file=f"{TEST_DATA_PATH}/send_configs", strip_prompt=False)
-    assert output[0].result == channel_output_3
+    conn.failed_when_contains = ["% FAILURE"]
+    output = conn.send_configs(
+        [channel_input_2, channel_input_3], strip_prompt=False, stop_on_failed=True
+    )
+    assert output[0].result == channel_output_2
+    assert len(output) == 1
 
 
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting textfsm on windows")

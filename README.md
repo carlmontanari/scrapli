@@ -288,6 +288,13 @@ The available optional installation extras options are:
 - textfsm (textfsm and ntc-templates)
 - genie (genie/pyats)
 
+
+If you would like to install all of the optional extras, you can do so with the `full` option:
+
+```
+pip isntall scrapli[full]
+``` 
+
 As for platforms to *run* scrapli on -- it has and will be tested on MacOS and Ubuntu regularly and should work on any
  POSIX system. Windows is now being tested very minimally via GitHub Actions builds, however it is important to note
   that if you wish to use Windows you will need to use paramiko or ssh2-python as the transport driver. It is
@@ -475,9 +482,16 @@ In addition to containing the input and output of the command(s) that you sent, 
 
 ## Sending Configurations
 
-When using any of the core drivers, you can send configurations via the `send_configs` method which will handle
- privilege escalation and de-escalation for you. `send_configs` accepts a single string or a list of strings to
-  send in "config mode".
+When using any of the core drivers, you can send configurations via the `send_config`, `send_configs` or
+ `send_configs_from_file` methods which will handle privilege escalation for you. `send_config` accepts a single
+  string, `send_configs` accepts a list of strings, and of course `send_configs_from_file` accepts a string path to a
+   file containing configurations to send. Note that `send_configs_from_file` -- just like with it's commands sibling
+    -- will treat each line in the file as a configuration element, in this way it behaves much like `send_configs`.
+
+Lastly, it is good to know that `send_config` (singular!) will parse the configuration string provided and split it
+ into lines -- this means that the underlying behavior is the same as `send_configs`, however this method returns a
+  single `Response` object. This `send_config` method can be used to send entire configurations to devices in a
+   reliable fashion.
 
 ```python
 from scrapli.driver.core import IOSXEDriver
@@ -493,12 +507,14 @@ with IOSXEDriver(**my_device) as conn:
     conn.send_configs(["interface loopback123", "description configured by scrapli"])
 ```
 
-There is also a `send_configs_from_file` method that behaves exactly like the commands version, but sends the
- commands in configuration mode as you would expect.
-
 If you need to get into any kind of "special" configuration mode, such as "configure exclusive", "configure private
 ", or "configure session XYZ", you can pass the name of the corresponding privilege level via the `privilege_level
 ` argument. Please see the [Driver Privilege Levels](#driver-privilege-levels) section for more details!
+
+Lastly, note that scrapli does *not* exit configuration mode at completion of a "configuration" event -- this is
+ because scrapli (with the Network drivers) will automatically acquire `default_desired_privilege_level` before
+  sending a "command" -- so there is no need, from a scrapli perspective, to explicitly exit config mode at end of
+   the configuration session.
 
 ## Textfsm/NTC-Templates Integration
 
@@ -774,7 +790,7 @@ my_device = {
     "auth_username": "vrnetlab",
     "auth_password": "VR-netlab9",
     "auth_strict_key": False,
-    "on_connect": iosxe_disable_paging
+    "on_open": iosxe_disable_paging
 }
 
 with IOSXEDriver(**my_device) as conn:

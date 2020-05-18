@@ -23,6 +23,14 @@ setuptools.setup(
         "genie": ["genie>=20.2", "pyats>=20.2"],
         "paramiko": ["scrapli_paramiko>=2020.04.30"],
         "ssh2": ["scrapli_ssh2>=2020.04.30"],
+        "full": [
+            "textfsm>=1.1.0",
+            "ntc-templates>=1.1.0",
+            "genie>=20.2",
+            "pyats>=20.2",
+            "scrapli_paramiko>=2020.04.30",
+            "scrapli_ssh2>=2020.04.30",
+        ],
     },
     classifiers=[
         "License :: OSI Approved :: MIT License",

@@ -10,6 +10,9 @@ CHANGELOG
 `, and `default_desired_privilege_level`
 - Add better exception/message for attempting to send command/config to a connection object that has not been opened
 - Add testing for on open/close methods of core drivers
+- Add `send_config` method to send a single configuration string -- this will automagically handle sending a full
+ configuration, breaking it into a list of configs, sending that list with `send_configs` and then joining the
+  responses into a single `Response` object... or of course you can just send a single config line with it too!
 
 # 2020.05.09
 - Add underscores to EOS config prompt matching
