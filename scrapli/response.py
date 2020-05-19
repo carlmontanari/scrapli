@@ -211,7 +211,7 @@ class MultiResponse(ScrapliMultiResponse):
 
         """
         return (
-            f"MultiResponse <Success: {str(not self._failed())}; "
+            f"MultiResponse <Success: {str(not self.failed)}; "
             f"Response Elements: {len(self.data)}>"
         )
 
@@ -230,11 +230,12 @@ class MultiResponse(ScrapliMultiResponse):
 
         """
         return (
-            f"MultiResponse <Success: {str(not self._failed())}; "
+            f"MultiResponse <Success: {str(not self.failed)}; "
             f"Response Elements: {len(self.data)}>"
         )
 
-    def _failed(self) -> bool:
+    @property
+    def failed(self) -> bool:
         """
         Determine if any elements of MultiResponse are failed
 
@@ -266,5 +267,5 @@ class MultiResponse(ScrapliMultiResponse):
             ScrapliCommandFailure: if any elements are failed
 
         """
-        if self._failed():
+        if self.failed:
             raise ScrapliCommandFailure()

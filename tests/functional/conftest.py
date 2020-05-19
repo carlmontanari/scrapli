@@ -87,6 +87,21 @@ def conn(device_type, transport):
 
 
 @pytest.fixture(scope="class")
+def iosxe_conn(transport):
+    device = DEVICES["cisco_iosxe"].copy()
+    driver = device.pop("driver")
+    device.pop("base_config")
+
+    port = 22
+    if transport == "telnet":
+        port = 23
+
+    iosxe_conn = driver(**device, port=port, transport=transport, timeout_socket=5,)
+    iosxe_conn.open()
+    return iosxe_conn
+
+
+@pytest.fixture(scope="class")
 def iosxr_conn(transport):
     device = DEVICES["cisco_iosxr"].copy()
     driver = device.pop("driver")

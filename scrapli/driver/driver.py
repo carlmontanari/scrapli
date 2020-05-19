@@ -326,6 +326,9 @@ class Scrape:
         self._initialization_args["host"] = host.strip()
         self._initialization_args["port"] = port
 
+        # set driver log name to include target host
+        LOG.name = f"driver-{host}"
+
     def _setup_auth(
         self,
         auth_username: str,

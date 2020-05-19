@@ -63,6 +63,8 @@ class Channel:
             N/A
 
         """
+        LOG.name = f"channel-{transport.host}"
+
         self.transport: Transport = transport
         self.comms_prompt_pattern = comms_prompt_pattern
         self.comms_return_char = comms_return_char

@@ -58,6 +58,8 @@ class Transport(ABC):
             N/A
 
         """
+        LOG.name = f"transport-{host}"
+
         self.host: str = host
         self.port: int = port
         self.timeout_socket: int = timeout_socket

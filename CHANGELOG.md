@@ -14,6 +14,8 @@ CHANGELOG
  configuration, breaking it into a list of configs, sending that list with `send_configs` and then joining the
   responses into a single `Response` object... or of course you can just send a single config line with it too!
 - Add better handling/logging for `SystemSSH` transport when key exchange cannot be negotiated
+- Convert the `_failed()` method of `MultiResponse` to be a property so users can check `.failed` on a `MultiResponse`
+ object more intuitively/sanely
 
 # 2020.05.09
 - Add underscores to EOS config prompt matching
