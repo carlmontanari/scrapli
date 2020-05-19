@@ -100,6 +100,11 @@ def test_build_open_cmd_user_options(user_options):
         (b"Operation timed out", "Timed out connecting to host localhost",),
         (b"Connection timed out", "Timed out connecting to host localhost",),
         (b"No route to host", "No route to host localhost",),
+        (b"no matching key exchange found.", "No matching key exchange found for host localhost",),
+        (
+            b"no matching key exchange found. Their offer: diffie-hellman-group-exchange-sha1,diffie-hellman-group14-sha1",
+            "No matching key exchange found for host localhost, their offer: diffie-hellman-group-exchange-sha1,diffie-hellman-group14-sha1",
+        ),
         (b"no matching cipher found", "No matching cipher found for host localhost",),
         (
             b"no matching cipher found, their offer: aes128-cbc,aes256-cbc",
@@ -115,6 +120,8 @@ def test_build_open_cmd_user_options(user_options):
         "operation time out",
         "connection time out",
         "no route to host",
+        "no matching key exchange",
+        "no matching key exchange found key exchange",
         "no matching cipher",
         "no matching cipher found ciphers",
         "unknown reason",

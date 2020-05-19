@@ -485,13 +485,25 @@ class SystemSSHTransport(Transport):
             f"Failed to open connection to host {self.host}. Do you need to disable "
             "`auth_strict_key`?"
         )
-        if b"Host key verification failed" in output:
+        if b"host key verification failed" in output.lower():
             msg = f"Host key verification failed for host {self.host}"
-        elif b"Operation timed out" in output or b"Connection timed out" in output:
+        elif b"operation timed out" in output.lower() or b"connection timed out" in output.lower():
             msg = f"Timed out connecting to host {self.host}"
-        elif b"No route to host" in output:
+        elif b"no route to host" in output.lower():
             msg = f"No route to host {self.host}"
-        elif b"no matching cipher found" in output:
+        elif b"no matching key exchange found" in output.lower():
+            msg = f"No matching key exchange found for host {self.host}"
+            key_exchange_pattern = re.compile(
+                pattern=rb"their offer: ([a-z0-9\-,]*)", flags=re.M | re.I
+            )
+            offered_key_exchanges_match = re.search(pattern=key_exchange_pattern, string=output)
+            if offered_key_exchanges_match:
+                offered_key_exchanges = offered_key_exchanges_match.group(1).decode()
+                msg = (
+                    f"No matching key exchange found for host {self.host}, their offer: "
+                    f"{offered_key_exchanges}"
+                )
+        elif b"no matching cipher found" in output.lower():
             msg = f"No matching cipher found for host {self.host}"
             ciphers_pattern = re.compile(pattern=rb"their offer: ([a-z0-9\-,]*)", flags=re.M | re.I)
             offered_ciphers_match = re.search(pattern=ciphers_pattern, string=output)

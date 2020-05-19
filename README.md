@@ -25,9 +25,9 @@ Feel free to join the very awesome networktocode slack workspace [here](https://
   - [Installation](#installation)
   - [A Simple Example](#a-simple-example)
   - [More Examples](#more-examples)
+  - [Documentation](#documentation)
   - [Wiki](#wiki)
 - [scrapli: What is it](#scrapli-what-is-it)
-- [Documentation](#documentation)
 - [Supported Platforms](#supported-platforms)
 - [Advanced Installation](#advanced-installation)
 - [Basic Usage](#basic-usage)
@@ -135,10 +135,25 @@ end
 - [Configuration Modes - EOS Configure Session](examples/configuration_modes/eos_configure_session.py)
 
 
+## Documentation
+
+[API Docs](https://carlmontanari.github.io/scrapli/docs/scrapli/index.html)
+[This README as a web page](https://carlmontanari.github.io/scrapli/)
+
+Documentation is auto-generated [using pdoc3](https://github.com/pdoc3/pdoc), and hosted in GitHub Pages. Docs are
+ linted (see Linting and Testing section) via [pydocstyle](https://github.com/PyCQA/pydocstyle/) and
+ [darglint](https://github.com/terrencepreilly/darglint).
+
+To regenerate documentation locally, use the following make command:
+
+```
+make docs
+```
+
 ## Wiki
 
-Extra, generally platform-specific, examples/documentation/information will be stored in the Wiki associated with
- this repository. You can find it [here](https://github.com/carlmontanari/scrapli/wiki).
+Extra, generally platform/transport-specific, examples/documentation/information will be stored in the Wiki associated
+ with this repository. You can find it [here](https://github.com/carlmontanari/scrapli/wiki).
 
 
 # scrapli: What is it
@@ -193,23 +208,6 @@ The final piece of scrapli is the actual "driver" -- or the component that binds
         extended and built upon instead. As this library is focused on interacting with network devices, an example
          scrapli driver (built on the `NetworkDriver`) would be the `IOSXEDriver` -- to, as you may have guessed
          , interact with devices running Cisco's IOS-XE operating system.
-
-
-# Documentation
-
-Documentation is auto-generated [using pdoc3](https://github.com/pdoc3/pdoc). Documentation is linted (see Linting and
- Testing section) via [pydocstyle](https://github.com/PyCQA/pydocstyle/) and
- [darglint](https://github.com/terrencepreilly/darglint).
-
-Documentation is hosted via GitHub Pages and can be found
-[here](https://carlmontanari.github.io/scrapli/docs/scrapli/index.html). You can also view this readme as a web page
- [here](https://carlmontanari.github.io/scrapli/).
-
-To regenerate documentation locally, use the following make command:
-
-```
-make docs
-```
 
 
 # Supported Platforms
