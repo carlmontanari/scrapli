@@ -137,9 +137,9 @@ end
 
 ## Documentation
 
-[API Docs](https://carlmontanari.github.io/scrapli/docs/scrapli/index.html)
-
-[This README as a web page](https://carlmontanari.github.io/scrapli/)
+- [API Docs](https://carlmontanari.github.io/scrapli/docs/scrapli/index.html)
+- [This README as a web page](https://carlmontanari.github.io/scrapli/)
+- [Public API Status](https://carlmontanari.github.io/scrapli/docs/PUBLIC_API_STATUS)
 
 Documentation is auto-generated [using pdoc3](https://github.com/pdoc3/pdoc), and hosted in GitHub Pages. Docs are
  linted (see Linting and Testing section) via [pydocstyle](https://github.com/PyCQA/pydocstyle/) and
