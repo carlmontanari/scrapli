@@ -7,7 +7,6 @@ from datetime import datetime
 from functools import lru_cache
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
-from scrapli.channel import Channel
 from scrapli.driver.generic_driver import GenericDriver
 from scrapli.exceptions import CouldNotAcquirePrivLevel, UnknownPrivLevel
 from scrapli.helper import resolve_file
@@ -98,7 +97,6 @@ class NetworkDriverMixin:
             N/A
 
         """
-        self.channel: Channel
         self.privilege_levels: Dict[str, PrivilegeLevel]
         self._priv_map: Dict[str, List[str]]
         self.textfsm_platform: str
@@ -167,7 +165,7 @@ class NetworkDriverMixin:
         # clear the lru cache as patterns may have been updated
         self._determine_current_priv.cache_clear()
         if update_channel is True:
-            self.channel.comms_prompt_pattern = self.comms_prompt_pattern
+            self.channel.comms_prompt_pattern = self.comms_prompt_pattern  # type: ignore
 
     @lru_cache()
     def _determine_current_priv(self, current_prompt: str) -> List[str]:

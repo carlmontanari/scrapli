@@ -2,6 +2,7 @@
 from collections import UserList
 from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union
 
+from scrapli.channel import Channel
 from scrapli.driver.driver import Scrape
 from scrapli.helper import resolve_file
 from scrapli.response import MultiResponse, Response
@@ -54,6 +55,7 @@ class GenericDriver(Scrape):
             N/A
         """
         super().__init__(comms_prompt_pattern=comms_prompt_pattern, comms_ansi=comms_ansi, **kwargs)
+        self.channel: Channel
 
     def send_command(
         self,

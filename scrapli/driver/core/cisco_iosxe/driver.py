@@ -55,8 +55,8 @@ def iosxe_on_open(conn: NetworkDriver) -> None:
         N/A
     """
     conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
-    conn.channel.send_input(channel_input="terminal length 0")
-    conn.channel.send_input(channel_input="terminal width 512")
+    conn.send_command(command="terminal length 0")
+    conn.send_command(command="terminal width 512")
 
 
 def iosxe_on_close(conn: NetworkDriver) -> None:
@@ -165,8 +165,8 @@ async def async_iosxe_on_open(conn: AsyncNetworkDriver) -> None:
         N/A
     """
     await conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
-    await conn.channel.send_input(channel_input="terminal length 0")
-    await conn.channel.send_input(channel_input="terminal width 512")
+    await conn.send_command(command="terminal length 0")
+    await conn.send_command(command="terminal width 512")
 
 
 async def async_iosxe_on_close(conn: AsyncNetworkDriver) -> None:

@@ -203,8 +203,7 @@ class Scrape:
                 continue
             self.channel_args[arg] = self._initialization_args.get(arg)
 
-        # TODO -- assigning this works but just setting typing to this breaks all sortsa shit?
-        self.channel = Union[Channel, AsyncChannel]
+        self.channel: Union[Channel, AsyncChannel]
         if "async" in transport:
             self.channel = AsyncChannel(transport=self.transport, **self.channel_args)
         else:

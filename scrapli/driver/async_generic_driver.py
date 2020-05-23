@@ -3,6 +3,7 @@ import logging
 from collections import UserList
 from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union
 
+from scrapli.channel import AsyncChannel
 from scrapli.driver.driver import Scrape
 from scrapli.helper import resolve_file
 from scrapli.response import MultiResponse, Response
@@ -57,6 +58,7 @@ class AsyncGenericDriver(Scrape):
             N/A
         """
         super().__init__(comms_prompt_pattern=comms_prompt_pattern, comms_ansi=comms_ansi, **kwargs)
+        self.channel: AsyncChannel
 
     async def open(self) -> None:  # type: ignore  # pylint: disable=W0236
         """
