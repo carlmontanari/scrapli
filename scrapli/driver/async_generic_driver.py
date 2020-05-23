@@ -82,6 +82,26 @@ class AsyncGenericDriver(Scrape):
             await self.on_open(self)
         LOG.info(f"Connection to {self._initialization_args['host']} opened successfully")
 
+    async def close(self) -> None:  # type: ignore  # pylint: disable=W0236
+        """
+        Close Transport (socket/session)
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+        LOG.info(f"Closing connection to {self._initialization_args['host']}")
+        if self.on_close:
+            await self.on_close(self)
+        self.transport.close()
+        LOG.info(f"Connection to {self._initialization_args['host']} closed successfully")
+
     async def send_command(
         self,
         command: str,
