@@ -1,167 +1,27 @@
-"""scrapli.channel.channel"""
+"""scrapli.channel.async_channel"""
 import re
-from abc import ABC
 from logging import getLogger
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple
 
+from scrapli.channel.channel import ChannelBase
 from scrapli.decorators import operation_timeout
-from scrapli.helper import get_prompt_pattern, normalize_lines, strip_ansi
+from scrapli.helper import get_prompt_pattern, strip_ansi
 from scrapli.transport.async_transport import AsyncTransport
-from scrapli.transport.transport import Transport
 
 LOG = getLogger("channel")
 
 
-CHANNEL_ARGS = (
-    "transport",
-    "comms_prompt_pattern",
-    "comms_return_char",
-    "comms_ansi",
-    "timeout_ops",
-)
-
-
-class ChannelBase(ABC):
-    def __init__(
-        self,
-        transport: Union[Transport, AsyncTransport],
-        comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
-        comms_return_char: str = "\n",
-        comms_ansi: bool = False,
-        comms_auto_expand: bool = False,
-        timeout_ops: int = 10,
-    ):
-        """
-        Channel Object
-
-        Args:
-            transport: Transport object of any transport provider (system|telnet or a plugin)
-                transport could in theory be any transport as long as it provides a read and a write
-                method... obviously its probably always going to be scrapli transport though
-            comms_prompt_pattern: raw string regex pattern -- use `^` and `$` for multi-line!
-            comms_return_char: character to use to send returns to host
-            comms_ansi: True/False strip comms_ansi characters from output
-            comms_auto_expand: bool to indicate if a device auto-expands commands, for example
-                juniper devices without `cli complete-on-space` disabled will convert `config` to
-                `configuration` after entering a space character after `config`; because scrapli
-                reads the channel until each command is entered, the command changing from `config`
-                to `configuration` will cause scrapli (by default) to never think the command has
-                been entered. Setting this value to `True` will force scrapli to zip the split lists
-                of inputs and outputs together to determine if each read output starts with the
-                corresponding input. For example, if the inputs are "sho ver" and the read output is
-                "show version", scrapli will zip the split strings together and confirm that in fact
-                "show" starts with "sho" and "version" starts with "ver", confirming that the
-                commands that were input were input properly. This is disabled by default, as it is
-                preferable to disable this type of behavior via the device itself if possible.
-            timeout_ops: timeout in seconds for channel operations (reads/writes)
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        """
-        LOG.name = f"channel-{transport.host}"
-
-        self.transport = transport
-        self.comms_prompt_pattern = comms_prompt_pattern
-        self.comms_return_char = comms_return_char
-        self.comms_ansi = comms_ansi
-        self.comms_auto_expand = comms_auto_expand
-        self.timeout_ops = timeout_ops
-
-    def __str__(self) -> str:
-        """
-        Magic str method for Channel
-
-        Args:
-            N/A
-
-        Returns:
-            str: str for class object
-
-        Raises:
-            N/A
-
-        """
-        return "scrapli Channel Object"
-
-    def __repr__(self) -> str:
-        """
-        Magic repr method for Channel
-
-        Args:
-            N/A
-
-        Returns:
-            str: repr for class object
-
-        Raises:
-            N/A
-
-        """
-        class_dict = self.__dict__.copy()
-        class_dict.pop("transport")
-        return f"scrapli Channel {class_dict}"
-
-    def _restructure_output(self, output: bytes, strip_prompt: bool = False) -> bytes:
-        """
-        Clean up preceding empty lines, and strip prompt if desired
-
-        Args:
-            output: bytes from channel
-            strip_prompt: bool True/False whether to strip prompt or not
-
-        Returns:
-            bytes: output of joined output lines optionally with prompt removed
-
-        Raises:
-            N/A
-
-        """
-        output = normalize_lines(output=output)
-
-        if not strip_prompt:
-            return output
-
-        # could be compiled elsewhere, but allow for users to modify the prompt whenever they want
-        prompt_pattern = get_prompt_pattern(prompt="", class_prompt=self.comms_prompt_pattern)
-        output = re.sub(pattern=prompt_pattern, repl=b"", string=output)
-        return output
-
-    def _send_return(self) -> None:
-        """
-        Send return char to device
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        """
-        self.transport.write(channel_input=self.comms_return_char)
-        LOG.debug(f"Write (sending return character): {repr(self.comms_return_char)}")
-
-
-class Channel(ChannelBase):
-    def __init__(self, transport: Transport, **kwargs: Any) -> None:
+class AsyncChannel(ChannelBase):
+    def __init__(self, transport: AsyncTransport, **kwargs: Any) -> None:
         super().__init__(transport, **kwargs)
 
         # ChannelBase supports union of Transport and AsyncTransport, but as this is the
-        # "normal" (sync) Channel, transport will always be async
-        self.transport: Transport
+        # AsyncChannel, transport will always be async
+        self.transport: AsyncTransport
 
-    def _read_chunk(self) -> bytes:
+    async def _async_read_chunk(self) -> bytes:
         """
-        Private method to read chunk and strip comms_ansi if needed
+        Private method to async read chunk and strip comms_ansi if needed
 
         Args:
             N/A
@@ -173,16 +33,18 @@ class Channel(ChannelBase):
             N/A
 
         """
-        new_output = self.transport.read()
+        new_output = await self.transport.read()
         new_output = new_output.replace(b"\r", b"")
         if self.comms_ansi:
             new_output = strip_ansi(output=new_output)
         LOG.debug(f"Read: {repr(new_output)}")
         return new_output
 
-    def _read_until_input(self, channel_input: bytes, auto_expand: Optional[bool] = None) -> bytes:
+    async def _async_read_until_input(
+        self, channel_input: bytes, auto_expand: Optional[bool] = None
+    ) -> bytes:
         """
-        Read until all input has been entered.
+        Async read until all input has been entered.
 
         Args:
             channel_input: string to write to channel
@@ -211,7 +73,7 @@ class Channel(ChannelBase):
 
         channel_input_split = channel_input.split()
         while True:
-            output += self._read_chunk()
+            output += await self._async_read_chunk()
             if not auto_expand and channel_input in output:
                 break
             if auto_expand and all(
@@ -223,9 +85,9 @@ class Channel(ChannelBase):
         LOG.info(f"Read: {repr(output)}")
         return output
 
-    def _read_until_prompt(self, output: bytes = b"", prompt: str = "") -> bytes:
+    async def _async_read_until_prompt(self, output: bytes = b"", prompt: str = "") -> bytes:
         """
-        Read until expected prompt is seen.
+        Async read until expected prompt is seen.
 
         Args:
             output: bytes from previous reads if needed
@@ -241,16 +103,16 @@ class Channel(ChannelBase):
         prompt_pattern = get_prompt_pattern(prompt=prompt, class_prompt=self.comms_prompt_pattern)
 
         while True:
-            output += self._read_chunk()
+            output += await self._async_read_chunk()
             channel_match = re.search(pattern=prompt_pattern, string=output)
             if channel_match:
                 LOG.info(f"Read: {repr(output)}")
                 return output
 
     @operation_timeout("timeout_ops", "Timed out determining prompt on device.")
-    def get_prompt(self) -> str:
+    async def get_prompt(self) -> str:
         """
-        Get current channel prompt
+        Async get current channel prompt
 
         Args:
             N/A
@@ -267,16 +129,16 @@ class Channel(ChannelBase):
         self._send_return()
         output = b""
         while True:
-            output += self._read_chunk()
+            output += await self._async_read_chunk()
             channel_match = re.search(pattern=prompt_pattern, string=output)
             if channel_match:
                 self.transport.set_timeout()
                 current_prompt = channel_match.group(0)
                 return current_prompt.decode().strip()
 
-    def send_input(self, channel_input: str, strip_prompt: bool = True,) -> Tuple[str, str]:
+    async def send_input(self, channel_input: str, strip_prompt: bool = True,) -> Tuple[str, str]:
         """
-        Primary entry point to send data to devices in shell mode; accept input and returns result
+        Primary entry point to send data to devices in async shell mode; accept input, return result
 
         Args:
             channel_input: string input to send to channel
@@ -295,15 +157,20 @@ class Channel(ChannelBase):
                 f"`send_input` expects a single string, got {type(channel_input)}. "
                 "to send a list of inputs use the `send_inputs` method instead"
             )
-        raw_result, processed_result = self._send_input(
+        raw_result, processed_result = await self._async_send_input(
             channel_input=channel_input, strip_prompt=strip_prompt
         )
         return raw_result.decode(), processed_result.decode()
 
     @operation_timeout("timeout_ops", "Timed out sending input to device.")
-    def _send_input(self, channel_input: str, strip_prompt: bool) -> Tuple[bytes, bytes]:
+    async def _async_send_input(
+        self, channel_input: str, strip_prompt: bool
+    ) -> Tuple[bytes, bytes]:
         """
-        Send input to device and return results
+        Async send input to device and return results
+
+        Note that write operations are sync, but all read ops are async, so this method must be
+        async
 
         Args:
             channel_input: string input to write to channel
@@ -322,9 +189,9 @@ class Channel(ChannelBase):
         LOG.info(f"Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}")
         self.transport.write(channel_input=channel_input)
         LOG.debug(f"Write: {repr(channel_input)}")
-        self._read_until_input(channel_input=bytes_channel_input)
+        await self._async_read_until_input(channel_input=bytes_channel_input)
         self._send_return()
-        output = self._read_until_prompt()
+        output = await self._async_read_until_prompt()
         self.transport.session_lock.release()
         processed_output = self._restructure_output(output=output, strip_prompt=strip_prompt)
         # lstrip the return character out of the final result before storing, also remove any extra
@@ -333,11 +200,11 @@ class Channel(ChannelBase):
         return output, processed_output
 
     @operation_timeout("timeout_ops", "Timed out sending interactive input to device.")
-    def send_inputs_interact(
+    async def send_inputs_interact(
         self, interact_events: List[Tuple[str, str, Optional[bool]]]
     ) -> Tuple[str, str]:
         """
-        Interact with a device with changing prompts per input.
+        Async interact with a device with changing prompts per input.
 
         Used to interact with devices where prompts change per input, and where inputs may be hidden
         such as in the case of a password input. This can be used to respond to challenges from
@@ -418,9 +285,9 @@ class Channel(ChannelBase):
             if not channel_response or hidden_input is True:
                 self._send_return()
             else:
-                output += self._read_until_input(channel_input=bytes_channel_input)
+                output += await self._async_read_until_input(channel_input=bytes_channel_input)
                 self._send_return()
-            output += self._read_until_prompt(prompt=channel_response)
+            output += await self._async_read_until_prompt(prompt=channel_response)
         # wait to release lock until after "interact" session is complete
         self.transport.session_lock.release()
         processed_output = self._restructure_output(output=output, strip_prompt=False)

@@ -1,15 +1,13 @@
-"""scrapli.driver.network_driver"""
+"""scrapli.driver.async_network_driver"""
 import logging
-import re
 import warnings
 from collections import UserList
 from datetime import datetime
-from functools import lru_cache
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
-from scrapli.channel import Channel
-from scrapli.driver.generic_driver import GenericDriver
-from scrapli.exceptions import CouldNotAcquirePrivLevel, UnknownPrivLevel
+from scrapli.driver.async_generic_driver import AsyncGenericDriver
+from scrapli.driver.network_driver import DUMMY_PRIV_LEVEL, NetworkDriverMixin, PrivilegeLevel
+from scrapli.exceptions import CouldNotAcquirePrivLevel
 from scrapli.helper import resolve_file
 from scrapli.response import MultiResponse, Response
 
@@ -18,267 +16,10 @@ if TYPE_CHECKING:
 else:
     ScrapliMultiResponse = UserList
 
-
-class PrivilegeLevel:
-    __slots__ = (
-        "pattern",
-        "name",
-        "previous_priv",
-        "deescalate",
-        "escalate",
-        "escalate_auth",
-        "escalate_prompt",
-    )
-
-    def __init__(
-        self,
-        pattern: str,
-        name: str,
-        previous_priv: str,
-        deescalate: str,
-        escalate: str,
-        escalate_auth: bool,
-        escalate_prompt: str,
-    ):
-        """
-        PrivilegeLevel Object
-
-        Args:
-            pattern: regex pattern to use to identify this privilege level by the prompt
-            name: friendly name of this privilege level
-            previous_priv: name of the lower/previous privilege level
-            deescalate: how to deescalate *from* this privilege level (to the lower/previous priv)
-            escalate: how to escalate *to* this privilege level (from the lower/previous priv)
-            escalate_auth: True/False escalation requires authentication
-            escalate_prompt: prompt pattern to search for during escalation if escalate auth is True
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        """
-        self.pattern = pattern
-        self.name = name
-        self.previous_priv = previous_priv
-        self.deescalate = deescalate
-        self.escalate = escalate
-        self.escalate_auth = escalate_auth
-        self.escalate_prompt = escalate_prompt
-
-
-DUMMY_PRIV_LEVEL = PrivilegeLevel("", "", "", "", "", False, "")
-
-
-PRIVS: Dict[str, PrivilegeLevel] = {}
-
 LOG = logging.getLogger("driver")
 
 
-class NetworkDriverMixin:
-    def __init__(self) -> None:
-        """
-        Mixin class to provide consistent methods to both sync and async NetworkDriver classes
-
-        Mixin is used so we dont need to mess with the mro; because both flavors of network driver
-        inherit from different GenericDriver classes (sync vs async) using a mixin seemed a cleaner
-        solution than trying to deal with appropriate inheritance.
-
-        This init method is strictly for appeasing mypy -- giving us a place to annotate types for
-        attributes in the classes that this gets mixed in with.
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        """
-        self.channel: Channel
-        self.privilege_levels: Dict[str, PrivilegeLevel]
-        self._priv_map: Dict[str, List[str]]
-        self.textfsm_platform: str
-        self.genie_platform: str
-
-    def _generate_comms_prompt_pattern(self) -> None:
-        """
-        Generate the `comms_prompt_pattern_all` from the currently assigned privilege levels
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        """
-        self.comms_prompt_pattern = r"|".join(
-            rf"({priv_level_data.pattern})" for priv_level_data in self.privilege_levels.values()
-        )
-
-    def _build_priv_map(self) -> None:
-        """
-        Build a "map" of privilege levels
-
-        `_priv_map` is a "map" of all privilege levels mapped out to the lowest available priv. This
-        map is used for determining how to escalate/deescalate.
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        """
-        for priv_level in self.privilege_levels:
-            self._priv_map[priv_level] = [priv_level]
-            while True:
-                previous_priv = self.privilege_levels[self._priv_map[priv_level][0]].previous_priv
-                if not previous_priv:
-                    break
-                self._priv_map[priv_level].insert(0, previous_priv)
-
-    def update_privilege_levels(self, update_channel: bool = True) -> None:
-        """
-        Re-generate the privilege map, and update the comms prompt pattern
-
-        Args:
-            update_channel: True/False update the channel pattern too -- likely only ever set to
-                False for class initialization before channel is opened
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        """
-        self._build_priv_map()
-        self._generate_comms_prompt_pattern()
-        # clear the lru cache as patterns may have been updated
-        self._determine_current_priv.cache_clear()
-        if update_channel is True:
-            self.channel.comms_prompt_pattern = self.comms_prompt_pattern
-
-    @lru_cache()
-    def _determine_current_priv(self, current_prompt: str) -> List[str]:
-        """
-        Determine current privilege level from prompt string
-
-        Args:
-            current_prompt: string of current prompt
-
-        Returns:
-            matching_priv_levels: list of string names of matching privilege levels
-
-        Raises:
-            UnknownPrivLevel: if privilege level cannot be determined
-
-        """
-        matching_priv_levels = []
-        for priv_level in self.privilege_levels.values():
-            search_result = re.search(
-                pattern=priv_level.pattern, string=current_prompt, flags=re.M | re.I
-            )
-            if not search_result:
-                continue
-            matching_priv_levels.append(priv_level.name)
-            LOG.debug(f"Current privilege level could be `{priv_level.name}`")
-        if not matching_priv_levels:
-            raise UnknownPrivLevel(
-                f"Could not determine privilege level from provided prompt: `{current_prompt}`"
-            )
-        LOG.debug(f"Determined current privilege level is one of `{matching_priv_levels}`")
-        return matching_priv_levels
-
-    def _get_privilege_level_name(self, requested_priv: str) -> str:
-        """
-        Get privilege level name if provided privilege is valid
-
-        Args:
-            requested_priv: string name of desired privilege level
-
-        Returns:
-            str: name of the privilege level requested
-
-        Raises:
-           UnknownPrivLevel: if attempting to acquire an unknown priv
-
-        """
-        desired_privilege_level = self.privilege_levels.get(requested_priv, None)
-        if desired_privilege_level is None:
-            raise UnknownPrivLevel(
-                f"Requested privilege level `{requested_priv}` not a valid privilege level of "
-                f"`{self.__class__.__name__}`"
-            )
-        resolved_privilege_level = desired_privilege_level.name
-        return resolved_privilege_level
-
-    def _update_response(self, response: Response) -> None:
-        """
-        Update response with network driver specific data
-
-        This happens here as the underlying channel provides a response object but is unaware of any
-        of the network/platform specific attributes that may need to get updated
-
-        Args:
-            response: response to update
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        """
-        response.textfsm_platform = self.textfsm_platform
-        response.genie_platform = self.genie_platform
-
-    def register_configuration_session(self, session_name: str) -> None:
-        """
-        If applicable, register a configuration session as a valid privilege level
-
-        Args:
-            session_name: name of config session to register
-
-        Returns:
-            N/A:  # noqa: DAR202
-
-        Raises:
-            NotImplementedError: unless overridden by concrete class
-
-        """
-        _ = session_name
-        raise NotImplementedError(
-            f"Configuration sessions not supported for `{self.__class__.__name__}`"
-        )
-
-    def _abort_config(self) -> None:
-        """
-        Abort a configuration operation/session if applicable (for config sessions like junos/iosxr)
-
-        Args:
-            N/A
-
-        Returns:
-            N/A:  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        """
-
-
-class NetworkDriver(GenericDriver, NetworkDriverMixin):
+class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverMixin):
     def __init__(
         self,
         privilege_levels: Dict[str, PrivilegeLevel],
@@ -290,7 +31,7 @@ class NetworkDriver(GenericDriver, NetworkDriverMixin):
         **kwargs: Any,
     ):
         """
-        BaseNetworkDriver Object
+        AsyncBaseNetworkDriver Object
 
         Args:
             privilege_levels: Dict of privilege levels for a given platform
@@ -338,7 +79,7 @@ class NetworkDriver(GenericDriver, NetworkDriverMixin):
 
         super().__init__(comms_prompt_pattern=self.comms_prompt_pattern, **kwargs)
 
-    def _escalate(self, escalate_priv: PrivilegeLevel) -> None:
+    async def _escalate(self, escalate_priv: PrivilegeLevel) -> None:
         """
         Escalate to the next privilege level up
 
@@ -371,7 +112,7 @@ class NetworkDriver(GenericDriver, NetworkDriverMixin):
                 escalate_cmd: str = escalate_priv.escalate
                 escalate_prompt: str = escalate_priv.escalate_prompt
                 escalate_auth = self.auth_secondary
-                super().send_interactive(
+                await super().send_interactive(
                     interact_events=[
                         (escalate_cmd, escalate_prompt, False),
                         (escalate_auth, next_prompt_pattern, True),
@@ -380,7 +121,7 @@ class NetworkDriver(GenericDriver, NetworkDriverMixin):
                 return
         self.channel.send_input(channel_input=escalate_priv.escalate)
 
-    def _deescalate(self, current_priv: PrivilegeLevel) -> None:
+    async def _deescalate(self, current_priv: PrivilegeLevel) -> None:
         """
         Deescalate to the next privilege level down
 
@@ -394,9 +135,9 @@ class NetworkDriver(GenericDriver, NetworkDriverMixin):
             N/A
 
         """
-        self.channel.send_input(channel_input=current_priv.deescalate)
+        await self.channel.send_input(channel_input=current_priv.deescalate)
 
-    def acquire_priv(self, desired_priv: str) -> None:
+    async def acquire_priv(self, desired_priv: str) -> None:
         """
         Acquire desired priv level
 
@@ -417,10 +158,9 @@ class NetworkDriver(GenericDriver, NetworkDriverMixin):
 
         privilege_change_count = 0
         while True:
+            current_prompt = await self.channel.get_prompt()
             # if we are already at the desired priv, we don't need to do any thing
-            current_priv_patterns = self._determine_current_priv(
-                current_prompt=self.channel.get_prompt()
-            )
+            current_priv_patterns = self._determine_current_priv(current_prompt=current_prompt)
 
             if desired_priv in current_priv_patterns:
                 LOG.info(f"Acquired requested privilege level `{desired_priv}`")
@@ -449,17 +189,17 @@ class NetworkDriver(GenericDriver, NetworkDriverMixin):
             if current_priv_index > desired_priv_index:
                 deescalate_priv = priv_map[current_priv_index - 1]
                 LOG.info(f"Attempting to deescalate from {current_priv.name} to {deescalate_priv}")
-                self._deescalate(current_priv=current_priv)
+                await self._deescalate(current_priv=current_priv)
             else:
                 escalate_priv = self.privilege_levels[priv_map[current_priv_index + 1]]
                 LOG.info(f"Attempting to escalate from {current_priv.name} to {escalate_priv.name}")
-                self._escalate(escalate_priv=escalate_priv)
+                await self._escalate(escalate_priv=escalate_priv)
             privilege_change_count += 1
             if privilege_change_count > len(self.privilege_levels) * 2:
                 msg = f"Failed to acquire requested privilege level {desired_priv}"
                 raise CouldNotAcquirePrivLevel(msg)
 
-    def send_command(
+    async def send_command(
         self,
         command: str,
         strip_prompt: bool = True,
@@ -483,12 +223,12 @@ class NetworkDriver(GenericDriver, NetworkDriverMixin):
 
         """
         if self._current_priv_level.name != self.default_desired_privilege_level:
-            self.acquire_priv(desired_priv=self.default_desired_privilege_level)
+            await self.acquire_priv(desired_priv=self.default_desired_privilege_level)
 
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains
 
-        response = super().send_command(
+        response = await super().send_command(
             command=command, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
         )
 
@@ -496,7 +236,7 @@ class NetworkDriver(GenericDriver, NetworkDriverMixin):
 
         return response
 
-    def send_commands(
+    async def send_commands(
         self,
         commands: List[str],
         strip_prompt: bool = True,
@@ -523,12 +263,12 @@ class NetworkDriver(GenericDriver, NetworkDriverMixin):
 
         """
         if self._current_priv_level.name != self.default_desired_privilege_level:
-            self.acquire_priv(desired_priv=self.default_desired_privilege_level)
+            await self.acquire_priv(desired_priv=self.default_desired_privilege_level)
 
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains
 
-        responses = super().send_commands(
+        responses = await super().send_commands(
             commands=commands,
             strip_prompt=strip_prompt,
             failed_when_contains=failed_when_contains,
@@ -540,7 +280,7 @@ class NetworkDriver(GenericDriver, NetworkDriverMixin):
 
         return responses
 
-    def send_commands_from_file(
+    async def send_commands_from_file(
         self,
         file: str,
         strip_prompt: bool = True,
@@ -573,14 +313,14 @@ class NetworkDriver(GenericDriver, NetworkDriverMixin):
         with open(resolved_file, "r") as f:
             commands = f.read().splitlines()
 
-        return self.send_commands(
+        return await self.send_commands(
             commands=commands,
             strip_prompt=strip_prompt,
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
         )
 
-    def send_interactive(
+    async def send_interactive(
         self,
         interact_events: List[Tuple[str, str, Optional[bool]]],
         failed_when_contains: Optional[Union[str, List[str]]] = None,
@@ -656,15 +396,15 @@ class NetworkDriver(GenericDriver, NetworkDriverMixin):
             resolved_privilege_level = self.default_desired_privilege_level
 
         if self._current_priv_level.name != resolved_privilege_level:
-            self.acquire_priv(desired_priv=resolved_privilege_level)
-        response = super().send_interactive(
+            await self.acquire_priv(desired_priv=resolved_privilege_level)
+        response = await super().send_interactive(
             interact_events=interact_events, failed_when_contains=failed_when_contains
         )
         self._update_response(response=response)
 
         return response
 
-    def send_config(
+    async def send_config(
         self,
         config: str,
         strip_prompt: bool = True,
@@ -709,7 +449,7 @@ class NetworkDriver(GenericDriver, NetworkDriverMixin):
         split_config = config.splitlines()
 
         # now that we have a list of configs, just use send_configs to actually execute them
-        multi_response = self.send_configs(
+        multi_response = await self.send_configs(
             configs=split_config,
             strip_prompt=strip_prompt,
             failed_when_contains=failed_when_contains,
@@ -735,7 +475,7 @@ class NetworkDriver(GenericDriver, NetworkDriverMixin):
 
         return response
 
-    def send_configs(
+    async def send_configs(
         self,
         configs: List[str],
         strip_prompt: bool = True,
@@ -781,7 +521,7 @@ class NetworkDriver(GenericDriver, NetworkDriverMixin):
             resolved_privilege_level = "configuration"
 
         if self._current_priv_level.name != resolved_privilege_level:
-            self.acquire_priv(desired_priv=resolved_privilege_level)
+            await self.acquire_priv(desired_priv=resolved_privilege_level)
 
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains
@@ -789,7 +529,7 @@ class NetworkDriver(GenericDriver, NetworkDriverMixin):
         responses = MultiResponse()
         _failed_during_execution = False
         for config in configs:
-            response = super().send_command(
+            response = await super().send_command(
                 command=config,
                 strip_prompt=strip_prompt,
                 failed_when_contains=failed_when_contains,
@@ -807,7 +547,7 @@ class NetworkDriver(GenericDriver, NetworkDriverMixin):
 
         return responses
 
-    def send_configs_from_file(
+    async def send_configs_from_file(
         self,
         file: str,
         strip_prompt: bool = True,
@@ -848,7 +588,7 @@ class NetworkDriver(GenericDriver, NetworkDriverMixin):
         with open(resolved_file, "r") as f:
             configs = f.read().splitlines()
 
-        return self.send_configs(
+        return await self.send_configs(
             configs=configs,
             strip_prompt=strip_prompt,
             failed_when_contains=failed_when_contains,

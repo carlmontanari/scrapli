@@ -6,7 +6,7 @@ from pathlib import Path
 from types import TracebackType
 from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
 
-from scrapli.channel import CHANNEL_ARGS, Channel
+from scrapli.channel import CHANNEL_ARGS, AsyncChannel, Channel
 from scrapli.helper import _find_transport_plugin, resolve_ssh_config, resolve_ssh_known_hosts
 from scrapli.transport import (
     SYSTEM_SSH_TRANSPORT_ARGS,
@@ -203,12 +203,11 @@ class Scrape:
                 continue
             self.channel_args[arg] = self._initialization_args.get(arg)
 
+        # TODO -- assigning this works but just setting typing to this breaks all sortsa shit?
+        self.channel = Union[Channel, AsyncChannel]
         if "async" in transport:
-            from scrapli.channel.channel import AsyncChannel
-            self._async = True
             self.channel = AsyncChannel(transport=self.transport, **self.channel_args)
         else:
-            self._async = False
             self.channel = Channel(transport=self.transport, **self.channel_args)
 
     def __enter__(self) -> "Scrape":

@@ -43,7 +43,7 @@ def operation_timeout(attribute: str, message: str = "") -> Callable[..., Any]:
             **kwargs: Dict[str, Union[str, int]],
         ) -> Any:
             # import here to avoid circular dependency
-            from scrapli.channel import Channel  # pylint: disable=C0415
+            from scrapli.channel import AsyncChannel, Channel  # pylint: disable=C0415
 
             timeout_duration = getattr(channel_or_transport, attribute, None)
             if not timeout_duration:
@@ -57,7 +57,7 @@ def operation_timeout(attribute: str, message: str = "") -> Callable[..., Any]:
             # to unlock and close the session. we need to unlock as the close will block
             # forever if the session is locked, and the session very likely is locked while
             # waiting for output from the device
-            if isinstance(channel_or_transport, Channel):
+            if isinstance(channel_or_transport, (AsyncChannel, Channel)):
                 timeout_exit = channel_or_transport.transport.timeout_exit
                 session_lock = channel_or_transport.transport.session_lock
                 close = channel_or_transport.transport.close

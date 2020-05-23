@@ -13,7 +13,7 @@ from scrapli.exceptions import ScrapliKeepaliveFailure
 LOG = getLogger("transport")
 
 
-class Transport(ABC):
+class TransportBase(ABC):
     def __init__(
         self,
         host: str = "",
@@ -124,22 +124,6 @@ class Transport(ABC):
         return f"Transport {class_dict}"
 
     @abstractmethod
-    def open(self) -> None:
-        """
-        Open channel, acquire pty, request interactive shell
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        """
-
-    @abstractmethod
     def close(self) -> None:
         """
         Close session and socket
@@ -159,6 +143,40 @@ class Transport(ABC):
     def isalive(self) -> bool:
         """
         Check if socket is alive and session is authenticated
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+
+    @abstractmethod
+    def set_timeout(self, timeout: Optional[int] = None) -> None:
+        """
+        Set session timeout
+
+        Args:
+            timeout: timeout in seconds
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+
+
+class Transport(TransportBase, ABC):
+    @abstractmethod
+    def open(self) -> None:
+        """
+        Open channel, acquire pty, request interactive shell
 
         Args:
             N/A
@@ -194,22 +212,6 @@ class Transport(ABC):
 
         Args:
             channel_input: string to send to channel
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        """
-
-    @abstractmethod
-    def set_timeout(self, timeout: Optional[int] = None) -> None:
-        """
-        Set session timeout
-
-        Args:
-            timeout: timeout in seconds
 
         Returns:
             N/A  # noqa: DAR202
@@ -301,40 +303,6 @@ class Transport(ABC):
     def _keepalive_standard(self) -> None:
         """
         Send "out of band" (protocol level) keepalives to devices.
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        """
-
-
-class AsyncTransport(Transport, ABC):
-    @abstractmethod
-    async def open(self) -> None:
-        """
-        Async open channel, acquire pty, request interactive shell
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        """
-
-    @abstractmethod
-    async def read(self) -> bytes:
-        """
-        Async read data from the channel
 
         Args:
             N/A

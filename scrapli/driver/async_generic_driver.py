@@ -1,4 +1,5 @@
-"""scrapli.driver.generic_driver"""
+"""scrapli.driver.async_generic_driver"""
+import logging
 from collections import UserList
 from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union
 
@@ -11,8 +12,10 @@ if TYPE_CHECKING:
 else:
     ScrapliMultiResponse = UserList
 
+LOG = logging.getLogger("driver")
 
-class GenericDriver(Scrape):
+
+class AsyncGenericDriver(Scrape):
     def __init__(
         self,
         comms_prompt_pattern: str = r"^\S{0,48}[#>$~@:\]]\s*$",
@@ -20,10 +23,10 @@ class GenericDriver(Scrape):
         **kwargs: Any,
     ):
         """
-        GenericDriver Object
+        AsyncGenericDriver Object
 
-        A generic network driver that will *hopefully* work for a broad variety of devices with
-        minimal to no modifications and provide a normal NetworkDriver type experience with
+        An async generic network driver that will *hopefully* work for a broad variety of devices
+        with minimal to no modifications and provide a normal NetworkDriver type experience with
         `send_command(s)`, `get_prompt` and `send_interactive` methods instead of forcing users to
         call Channel methods directly.
 
@@ -55,7 +58,29 @@ class GenericDriver(Scrape):
         """
         super().__init__(comms_prompt_pattern=comms_prompt_pattern, comms_ansi=comms_ansi, **kwargs)
 
-    def send_command(
+    async def open(self) -> None:  # type: ignore  # pylint: disable=W0236
+        """
+        Open Transport (socket/session) and establish channel
+
+        If on_open callable provided, execute that callable after opening connection
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+        LOG.info(f"Opening connection to {self._initialization_args['host']}")
+        await self.transport.open()
+        if self.on_open:
+            await self.on_open(self)
+        LOG.info(f"Connection to {self._initialization_args['host']} opened successfully")
+
+    async def send_command(
         self,
         command: str,
         strip_prompt: bool = True,
@@ -87,7 +112,7 @@ class GenericDriver(Scrape):
             channel_input=command,
             failed_when_contains=failed_when_contains,
         )
-        raw_response, processed_response = self.channel.send_input(
+        raw_response, processed_response = await self.channel.send_input(
             channel_input=command, strip_prompt=strip_prompt
         )
         response._record_response(result=processed_response)  # pylint: disable=W0212
@@ -95,7 +120,7 @@ class GenericDriver(Scrape):
 
         return response
 
-    def send_commands(
+    async def send_commands(
         self,
         commands: List[str],
         strip_prompt: bool = True,
@@ -127,7 +152,7 @@ class GenericDriver(Scrape):
 
         responses = MultiResponse()
         for command in commands:
-            response = self.send_command(
+            response = await self.send_command(
                 command=command,
                 strip_prompt=strip_prompt,
                 failed_when_contains=failed_when_contains,
@@ -138,7 +163,7 @@ class GenericDriver(Scrape):
 
         return responses
 
-    def send_commands_from_file(
+    async def send_commands_from_file(
         self,
         file: str,
         strip_prompt: bool = True,
@@ -171,14 +196,14 @@ class GenericDriver(Scrape):
         with open(resolved_file, "r") as f:
             commands = f.read().splitlines()
 
-        return self.send_commands(
+        return await self.send_commands(
             commands=commands,
             strip_prompt=strip_prompt,
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
         )
 
-    def send_interactive(
+    async def send_interactive(
         self,
         interact_events: List[Tuple[str, str, Optional[bool]]],
         failed_when_contains: Optional[Union[str, List[str]]] = None,
@@ -254,7 +279,7 @@ class GenericDriver(Scrape):
             channel_input=joined_input,
             failed_when_contains=failed_when_contains,
         )
-        raw_response, processed_response = self.channel.send_inputs_interact(
+        raw_response, processed_response = await self.channel.send_inputs_interact(
             interact_events=interact_events
         )
         response._record_response(result=processed_response)  # pylint: disable=W0212
@@ -262,7 +287,7 @@ class GenericDriver(Scrape):
 
         return response
 
-    def get_prompt(self) -> str:
+    async def get_prompt(self) -> str:
         """
         Convenience method to get device prompt from Channel
 
@@ -276,5 +301,5 @@ class GenericDriver(Scrape):
             N/A
 
         """
-        prompt: str = self.channel.get_prompt()
+        prompt: str = await self.channel.get_prompt()
         return prompt
