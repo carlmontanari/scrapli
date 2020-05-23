@@ -202,7 +202,14 @@ class Scrape:
             if arg == "transport":
                 continue
             self.channel_args[arg] = self._initialization_args.get(arg)
-        self.channel = Channel(transport=self.transport, **self.channel_args)
+
+        if "async" in transport:
+            from scrapli.channel.channel import AsyncChannel
+            self._async = True
+            self.channel = AsyncChannel(transport=self.transport, **self.channel_args)
+        else:
+            self._async = False
+            self.channel = Channel(transport=self.transport, **self.channel_args)
 
     def __enter__(self) -> "Scrape":
         """

@@ -312,3 +312,37 @@ class Transport(ABC):
             N/A
 
         """
+
+
+class AsyncTransport(Transport, ABC):
+    @abstractmethod
+    async def open(self) -> None:
+        """
+        Async open channel, acquire pty, request interactive shell
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+
+    @abstractmethod
+    async def read(self) -> bytes:
+        """
+        Async read data from the channel
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
