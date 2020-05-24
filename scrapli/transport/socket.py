@@ -1,11 +1,11 @@
 """scrapli.transport.socket"""
-import logging
 import socket
+from logging import getLogger
 from typing import Optional
 
 from scrapli.exceptions import ScrapliTimeout
 
-LOG = logging.getLogger("transport")
+LOG = getLogger("transport")
 
 
 class Socket:

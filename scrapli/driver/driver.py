@@ -1,12 +1,12 @@
 """scrapli.driver.driver"""
-import logging
+from logging import getLogger
 from types import TracebackType
 from typing import Any, Optional, Type
 
 from scrapli.channel import Channel
 from scrapli.driver.base_driver import ScrapeBase
 
-LOG = logging.getLogger("driver")
+LOG = getLogger("driver")
 
 
 class Scrape(ScrapeBase):

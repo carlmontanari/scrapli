@@ -1,10 +1,22 @@
 import pytest
 
 from scrapli.driver.core.arista_eos.async_driver import AsyncEOSDriver, eos_on_close, eos_on_open
-from scrapli.driver.core.cisco_iosxe.async_driver import AsyncIOSXEDriver, iosxe_on_close, iosxe_on_open
-from scrapli.driver.core.cisco_iosxr.async_driver import AsyncIOSXRDriver, iosxr_on_close, iosxr_on_open
+from scrapli.driver.core.cisco_iosxe.async_driver import (
+    AsyncIOSXEDriver,
+    iosxe_on_close,
+    iosxe_on_open,
+)
+from scrapli.driver.core.cisco_iosxr.async_driver import (
+    AsyncIOSXRDriver,
+    iosxr_on_close,
+    iosxr_on_open,
+)
 from scrapli.driver.core.cisco_nxos.async_driver import AsyncNXOSDriver, nxos_on_close, nxos_on_open
-from scrapli.driver.core.juniper_junos.async_driver import AsyncJunosDriver, junos_on_close, junos_on_open
+from scrapli.driver.core.juniper_junos.async_driver import (
+    AsyncJunosDriver,
+    junos_on_close,
+    junos_on_open,
+)
 
 
 def custom_open_close_func():
@@ -58,7 +70,11 @@ def test_nxos_driver_init_telnet():
 @pytest.mark.parametrize(
     "session_data",
     [
-        (AsyncNXOSDriver, "mysession-async", r"^[a-z0-9.\-@/:]{1,32}\(config\-s[a-z0-9.\-@/:]{0,32}\)#\s?$"),
+        (
+            AsyncNXOSDriver,
+            "mysession-async",
+            r"^[a-z0-9.\-@/:]{1,32}\(config\-s[a-z0-9.\-@/:]{0,32}\)#\s?$",
+        ),
         (
             AsyncEOSDriver,
             "my-session-async",

@@ -1,6 +1,6 @@
 """scrapli.driver.async_network_driver"""
-import logging
 from collections import UserList
+from logging import getLogger
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 from scrapli.driver.async_generic_driver import AsyncGenericDriver
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 else:
     ScrapliMultiResponse = UserList
 
-LOG = logging.getLogger("driver")
+LOG = getLogger("driver")
 
 
 class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):

@@ -1,11 +1,11 @@
 """scrapli.driver.base_network_driver"""
-import logging
 import re
 import warnings
 from collections import UserList
 from datetime import datetime
 from enum import Enum
 from functools import lru_cache
+from logging import getLogger
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 from scrapli.exceptions import UnknownPrivLevel
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 else:
     ScrapliMultiResponse = UserList
 
-LOG = logging.getLogger("driver")
+LOG = getLogger("driver")
 
 
 class PrivilegeLevel:

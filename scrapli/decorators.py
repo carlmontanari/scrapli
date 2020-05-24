@@ -1,6 +1,6 @@
 """scrapli.decorators"""
-import logging
 from concurrent.futures import ThreadPoolExecutor, wait
+from logging import getLogger
 from typing import TYPE_CHECKING, Any, Callable, Dict, Union
 
 from scrapli.exceptions import ConnectionNotOpened
@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from scrapli.channel import Channel  # pragma:  no cover
     from scrapli.transport import Transport  # pragma:  no cover
 
-LOG = logging.getLogger("scrapli")
+LOG = getLogger("scrapli")
 
 
 def operation_timeout(attribute: str, message: str = "") -> Callable[..., Any]:

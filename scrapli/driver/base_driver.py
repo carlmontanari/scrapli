@@ -1,7 +1,7 @@
 """scrapli.driver.base_driver"""
-import logging
 import os
 import re
+from logging import getLogger
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Tuple, Union
 
@@ -34,7 +34,7 @@ TRANSPORT_BASE_ARGS = (
     "timeout_transport",
     "timeout_exit",
 )
-LOG = logging.getLogger("driver")
+LOG = getLogger("driver")
 
 
 class ScrapeBase:

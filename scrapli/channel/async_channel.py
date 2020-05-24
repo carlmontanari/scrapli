@@ -3,7 +3,7 @@ import re
 from logging import getLogger
 from typing import Any, List, Optional, Tuple
 
-from scrapli.channel.channel import ChannelBase
+from scrapli.channel.base_channel import ChannelBase
 from scrapli.decorators import operation_timeout
 from scrapli.helper import get_prompt_pattern, strip_ansi
 from scrapli.transport.async_transport import AsyncTransport
