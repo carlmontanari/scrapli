@@ -2,46 +2,7 @@
 from typing import Any, Callable, Dict, List, Optional
 
 from scrapli.driver import NetworkDriver
-from scrapli.driver.network_driver import PrivilegeLevel
-
-
-def nxos_on_open(conn: NetworkDriver) -> None:
-    """
-    NXOSDriver default on_open callable
-
-    Args:
-        conn: NetworkDriver object
-
-    Returns:
-        N/A  # noqa: DAR202
-
-    Raises:
-        N/A
-    """
-    conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
-    conn.channel.send_input(channel_input="terminal length 0")
-    conn.channel.send_input(channel_input="terminal width 511")
-
-
-def nxos_on_close(conn: NetworkDriver) -> None:
-    """
-    NXOSDriver default on_close callable
-
-    Args:
-        conn: NetworkDriver object
-
-    Returns:
-        N/A  # noqa: DAR202
-
-    Raises:
-        N/A
-    """
-    # write exit directly to the transport as channel would fail to find the prompt after sending
-    # the exit command!
-    conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
-    conn.transport.write(channel_input="exit")
-    conn.transport.write(channel_input=conn.channel.comms_return_char)
-
+from scrapli.driver.base_network_driver import PrivilegeLevel
 
 PRIVS = {
     "exec": (
@@ -80,7 +41,82 @@ PRIVS = {
 }
 
 
-class NXOSDriver(NetworkDriver):
+def nxos_on_open(conn: NetworkDriver) -> None:
+    """
+    NXOSDriver default on_open callable
+
+    Args:
+        conn: NetworkDriver object
+
+    Returns:
+        N/A  # noqa: DAR202
+
+    Raises:
+        N/A
+    """
+    conn.send_command(command="terminal length 0")
+    conn.send_command(command="terminal width 511")
+
+
+def nxos_on_close(conn: NetworkDriver) -> None:
+    """
+    NXOSDriver default on_close callable
+
+    Args:
+        conn: NetworkDriver object
+
+    Returns:
+        N/A  # noqa: DAR202
+
+    Raises:
+        N/A
+    """
+    # write exit directly to the transport as channel would fail to find the prompt after sending
+    # the exit command!
+    conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
+    conn.transport.write(channel_input="exit")
+    conn.transport.write(channel_input=conn.channel.comms_return_char)
+
+
+class NXOSDriverBase:
+    # NXOSDriverBase Mixin values set in init of sync/async NetworkDriver classes
+    privilege_levels: Dict[str, PrivilegeLevel]
+
+    def _create_configuration_session(self, session_name: str) -> None:
+        """
+        Handle configuration session creation tasks for consistency between sync/async versions
+
+        Args:
+            session_name: name of session to register
+
+        Returns:
+            N/A:  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+        if session_name in self.privilege_levels.keys():
+            msg = (
+                f"session name `{session_name}` already registered as a privilege level, chose a "
+                "unique session name"
+            )
+            raise ValueError(msg)
+        pattern = r"^[a-z0-9.\-@/:]{1,32}\(config\-s[a-z0-9.\-@/:]{0,32}\)#\s?$"
+        name = session_name
+        config_session = PrivilegeLevel(
+            pattern=pattern,
+            name=name,
+            previous_priv="privilege_exec",
+            deescalate="end",
+            escalate=f"configure session {session_name}",
+            escalate_auth=False,
+            escalate_prompt="",
+        )
+        self.privilege_levels[name] = config_session
+
+
+class NXOSDriver(NetworkDriver, NXOSDriverBase):
     def __init__(
         self,
         privilege_levels: Optional[Dict[str, PrivilegeLevel]] = None,
@@ -173,7 +209,7 @@ class NXOSDriver(NetworkDriver):
 
     def _abort_config(self) -> None:
         """
-        Abort EOS configuration session (if using a config session!)
+        Abort NXOS configuration session (if using a config session!)
 
         Args:
             N/A
@@ -191,22 +227,18 @@ class NXOSDriver(NetworkDriver):
             self._current_priv_level = self.privilege_levels["privilege_exec"]
 
     def register_configuration_session(self, session_name: str) -> None:
-        if session_name in self.privilege_levels.keys():
-            msg = (
-                f"session name `{session_name}` already registered as a privilege level, chose a "
-                "unique session name"
-            )
-            raise ValueError(msg)
-        pattern = r"^[a-z0-9.\-@/:]{1,32}\(config\-s[a-z0-9.\-@/:]{0,32}\)#\s?$"
-        name = session_name
-        config_session = PrivilegeLevel(
-            pattern=pattern,
-            name=name,
-            previous_priv="privilege_exec",
-            deescalate="end",
-            escalate=f"configure session {session_name}",
-            escalate_auth=False,
-            escalate_prompt="",
-        )
-        self.privilege_levels[name] = config_session
+        """
+        NXOS specific implementation of register_configuration_session
+
+        Args:
+            session_name: name of session to register
+
+        Returns:
+            N/A:  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+        self._create_configuration_session(session_name=session_name)
         self.update_privilege_levels(update_channel=True)

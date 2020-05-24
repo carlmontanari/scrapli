@@ -26,7 +26,7 @@ class TransportBase(ABC):
         keepalive_type: str = "network",
         keepalive_pattern: str = "\005",
     ) -> None:
-        """
+        r"""
         Transport Base Object
 
         Args:

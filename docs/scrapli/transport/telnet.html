@@ -32,7 +32,7 @@ from select import select
 from telnetlib import Telnet
 from typing import Optional
 
-from scrapli.decorators import operation_timeout
+from scrapli.decorators import operation_timeout, requires_open_session
 from scrapli.exceptions import ScrapliAuthenticationFailed
 from scrapli.helper import get_prompt_pattern, strip_ansi
 from scrapli.transport.transport import Transport
@@ -51,6 +51,21 @@ TELNET_TRANSPORT_ARGS = (
 
 class ScrapliTelnet(Telnet):
     def __init__(self, host: str, port: int, timeout: int) -&gt; None:
+        &#34;&#34;&#34;
+        ScrapliTelnet class for typing purposes
+
+        Args:
+            host: string of host
+            port: integer port to connect to
+            timeout: timeout value in seconds
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
         self.eof: bool
         self.timeout: int
         super().__init__(host, port, timeout)
@@ -75,7 +90,7 @@ class TelnetTransport(Transport):
         comms_return_char: str = &#34;\n&#34;,
         comms_ansi: bool = False,
     ) -&gt; None:
-        &#34;&#34;&#34;
+        r&#34;&#34;&#34;
         TelnetTransport Object
 
         Inherit from Transport ABC
@@ -283,7 +298,7 @@ class TelnetTransport(Transport):
                     self.session_lock.release()
                     self._isauthenticated = True
                     return True
-                if b&#34;password&#34; in output.lower():
+                if b&#34;password:&#34; in output.lower():
                     # if we see &#34;password&#34; auth failed... hopefully true in all scenarios!
                     return False
         self.session_lock.release()
@@ -316,7 +331,7 @@ class TelnetTransport(Transport):
             N/A
 
         Returns:
-           bool: True if alive, else False
+           bool: True if alive, False otherwise.
 
         Raises:
             N/A
@@ -326,6 +341,7 @@ class TelnetTransport(Transport):
             return True
         return False
 
+    @requires_open_session()
     @operation_timeout(&#34;timeout_transport&#34;, &#34;Timed out reading from transport&#34;)
     def read(self) -&gt; bytes:
         &#34;&#34;&#34;
@@ -343,6 +359,7 @@ class TelnetTransport(Transport):
         &#34;&#34;&#34;
         return self.session.read_eager()
 
+    @requires_open_session()
     @operation_timeout(&#34;timeout_transport&#34;, &#34;Timed out writing to transport&#34;)
     def write(self, channel_input: str) -&gt; None:
         &#34;&#34;&#34;
@@ -360,6 +377,7 @@ class TelnetTransport(Transport):
         &#34;&#34;&#34;
         self.session.write(channel_input.encode())
 
+    @requires_open_session()
     def set_timeout(self, timeout: Optional[int] = None) -&gt; None:
         &#34;&#34;&#34;
         Set session timeout
@@ -453,16 +471,48 @@ Each time a telnet option is read on the input flow, this callback
 callback(telnet socket, command, option)
 option will be chr(0) when there is no option.
 No other action is done afterwards by telnetlib.</p>
-<p>Constructor.</p>
-<p>When called without arguments, create an unconnected instance.
-With a hostname argument, it connects the instance; port number
-and timeout are optional.</p></div>
+<p>ScrapliTelnet class for typing purposes</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>host</code></strong></dt>
+<dd>string of host</dd>
+<dt><strong><code>port</code></strong></dt>
+<dd>integer port to connect to</dd>
+<dt><strong><code>timeout</code></strong></dt>
+<dd>timeout value in seconds</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N/A
+# noqa: DAR202</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ScrapliTelnet(Telnet):
     def __init__(self, host: str, port: int, timeout: int) -&gt; None:
+        &#34;&#34;&#34;
+        ScrapliTelnet class for typing purposes
+
+        Args:
+            host: string of host
+            port: integer port to connect to
+            timeout: timeout value in seconds
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
         self.eof: bool
         self.timeout: int
         super().__init__(host, port, timeout)</code></pre>
@@ -525,7 +575,7 @@ transport channel. This is useful for network-y type devices that may not suppor
 "standard" keepalive mechanisms. 'standard' is not currently implemented for telnet</dd>
 <dt><strong><code>keepalive_pattern</code></strong></dt>
 <dd>pattern to send to keep network channel alive. Default is
-u'' which is equivalent to 'ctrl+e'. This pattern moves cursor to end of the
+u'\005' which is equivalent to 'ctrl+e'. This pattern moves cursor to end of the
 line which should be an innocuous pattern. This will only be entered <em>if</em> a lock
 can be acquired. This is only applicable if using keepalives and if the keepalive
 type is 'network'</dd>
@@ -585,7 +635,7 @@ and is ignored after authentication is completed.</dd>
         comms_return_char: str = &#34;\n&#34;,
         comms_ansi: bool = False,
     ) -&gt; None:
-        &#34;&#34;&#34;
+        r&#34;&#34;&#34;
         TelnetTransport Object
 
         Inherit from Transport ABC
@@ -793,7 +843,7 @@ and is ignored after authentication is completed.</dd>
                     self.session_lock.release()
                     self._isauthenticated = True
                     return True
-                if b&#34;password&#34; in output.lower():
+                if b&#34;password:&#34; in output.lower():
                     # if we see &#34;password&#34; auth failed... hopefully true in all scenarios!
                     return False
         self.session_lock.release()
@@ -826,7 +876,7 @@ and is ignored after authentication is completed.</dd>
             N/A
 
         Returns:
-           bool: True if alive, else False
+           bool: True if alive, False otherwise.
 
         Raises:
             N/A
@@ -836,6 +886,7 @@ and is ignored after authentication is completed.</dd>
             return True
         return False
 
+    @requires_open_session()
     @operation_timeout(&#34;timeout_transport&#34;, &#34;Timed out reading from transport&#34;)
     def read(self) -&gt; bytes:
         &#34;&#34;&#34;
@@ -853,6 +904,7 @@ and is ignored after authentication is completed.</dd>
         &#34;&#34;&#34;
         return self.session.read_eager()
 
+    @requires_open_session()
     @operation_timeout(&#34;timeout_transport&#34;, &#34;Timed out writing to transport&#34;)
     def write(self, channel_input: str) -&gt; None:
         &#34;&#34;&#34;
@@ -870,6 +922,7 @@ and is ignored after authentication is completed.</dd>
         &#34;&#34;&#34;
         self.session.write(channel_input.encode())
 
+    @requires_open_session()
     def set_timeout(self, timeout: Optional[int] = None) -&gt; None:
         &#34;&#34;&#34;
         Set session timeout
@@ -909,6 +962,7 @@ and is ignored after authentication is completed.</dd>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="scrapli.transport.transport.Transport" href="transport.html#scrapli.transport.transport.Transport">Transport</a></li>
+<li><a title="scrapli.transport.transport.TransportBase" href="transport.html#scrapli.transport.transport.TransportBase">TransportBase</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Methods</h3>
@@ -923,7 +977,7 @@ and is ignored after authentication is completed.</dd>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>bool</code></dt>
-<dd>True if alive, else False</dd>
+<dd>True if alive, False otherwise.</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
@@ -942,7 +996,7 @@ and is ignored after authentication is completed.</dd>
         N/A
 
     Returns:
-       bool: True if alive, else False
+       bool: True if alive, False otherwise.
 
     Raises:
         N/A
@@ -1017,9 +1071,9 @@ and is ignored after authentication is completed.</dd>
 <ul class="hlist">
 <li><code><b><a title="scrapli.transport.transport.Transport" href="transport.html#scrapli.transport.transport.Transport">Transport</a></b></code>:
 <ul class="hlist">
-<li><code><a title="scrapli.transport.transport.Transport.close" href="transport.html#scrapli.transport.transport.Transport.close">close</a></code></li>
+<li><code><a title="scrapli.transport.transport.Transport.close" href="transport.html#scrapli.transport.transport.TransportBase.close">close</a></code></li>
 <li><code><a title="scrapli.transport.transport.Transport.read" href="transport.html#scrapli.transport.transport.Transport.read">read</a></code></li>
-<li><code><a title="scrapli.transport.transport.Transport.set_timeout" href="transport.html#scrapli.transport.transport.Transport.set_timeout">set_timeout</a></code></li>
+<li><code><a title="scrapli.transport.transport.Transport.set_timeout" href="transport.html#scrapli.transport.transport.TransportBase.set_timeout">set_timeout</a></code></li>
 <li><code><a title="scrapli.transport.transport.Transport.write" href="transport.html#scrapli.transport.transport.Transport.write">write</a></code></li>
 </ul>
 </li>

@@ -3,49 +3,7 @@ import time
 from typing import Any, Callable, Dict, List, Optional
 
 from scrapli.driver import NetworkDriver
-from scrapli.driver.network_driver import PrivilegeLevel
-
-
-def iosxr_on_open(conn: NetworkDriver) -> None:
-    """
-    IOSXRDriver default on_open callable
-
-    Args:
-        conn: NetworkDriver object
-
-    Returns:
-        N/A  # noqa: DAR202
-
-    Raises:
-        N/A
-    """
-    # sleep for session to establish; without this we never find base prompt for some reason?
-    # maybe this is an artifact from previous iterations/tests and can be done away with...
-    time.sleep(1)
-    conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
-    conn.channel.send_input(channel_input="terminal length 0")
-    conn.channel.send_input(channel_input="terminal width 512")
-
-
-def iosxr_on_close(conn: NetworkDriver) -> None:
-    """
-    IOSXRDriver default on_close callable
-
-    Args:
-        conn: NetworkDriver object
-
-    Returns:
-        N/A  # noqa: DAR202
-
-    Raises:
-        N/A
-    """
-    # write exit directly to the transport as channel would fail to find the prompt after sending
-    # the exit command!
-    conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
-    conn.transport.write(channel_input="exit")
-    conn.transport.write(channel_input=conn.channel.comms_return_char)
-
+from scrapli.driver.base_network_driver import PrivilegeLevel
 
 PRIVS = {
     "privilege_exec": (
@@ -82,6 +40,47 @@ PRIVS = {
         )
     ),
 }
+
+
+def iosxr_on_open(conn: NetworkDriver) -> None:
+    """
+    IOSXRDriver default on_open callable
+
+    Args:
+        conn: NetworkDriver object
+
+    Returns:
+        N/A  # noqa: DAR202
+
+    Raises:
+        N/A
+    """
+    # sleep for session to establish; without this we never find base prompt for some reason?
+    # maybe this is an artifact from previous iterations/tests and can be done away with...
+    time.sleep(1)
+    conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
+    conn.send_command(command="terminal length 0")
+    conn.send_command(command="terminal width 512")
+
+
+def iosxr_on_close(conn: NetworkDriver) -> None:
+    """
+    IOSXRDriver default on_close callable
+
+    Args:
+        conn: NetworkDriver object
+
+    Returns:
+        N/A  # noqa: DAR202
+
+    Raises:
+        N/A
+    """
+    # write exit directly to the transport as channel would fail to find the prompt after sending
+    # the exit command!
+    conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
+    conn.transport.write(channel_input="exit")
+    conn.transport.write(channel_input=conn.channel.comms_return_char)
 
 
 class IOSXRDriver(NetworkDriver):

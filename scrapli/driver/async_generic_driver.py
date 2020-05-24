@@ -4,9 +4,9 @@ from collections import UserList
 from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union
 
 from scrapli.channel import AsyncChannel
-from scrapli.driver.driver import Scrape
-from scrapli.helper import resolve_file
-from scrapli.response import MultiResponse, Response
+from scrapli.driver.async_driver import AsyncScrape
+from scrapli.driver.base_generic_driver import GenericDriverBase
+from scrapli.response import Response
 
 if TYPE_CHECKING:
     ScrapliMultiResponse = UserList[Response]  # pylint:  disable=E1136; # pragma:  no cover
@@ -16,7 +16,7 @@ else:
 LOG = logging.getLogger("driver")
 
 
-class AsyncGenericDriver(Scrape):
+class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
     def __init__(
         self,
         comms_prompt_pattern: str = r"^\S{0,48}[#>$~@:\]]\s*$",
@@ -25,15 +25,6 @@ class AsyncGenericDriver(Scrape):
     ):
         """
         AsyncGenericDriver Object
-
-        An async generic network driver that will *hopefully* work for a broad variety of devices
-        with minimal to no modifications and provide a normal NetworkDriver type experience with
-        `send_command(s)`, `get_prompt` and `send_interactive` methods instead of forcing users to
-        call Channel methods directly.
-
-        This driver doesn't know anything about privilege levels (or any type of "config modes",
-        disabling paging, gracefully exiting, or anything like that, and as such should be treated
-        similar to the base `Scrape` object from that perspective.
 
         Args:
             comms_prompt_pattern: raw string regex pattern -- preferably use `^` and `$` anchors!
@@ -60,48 +51,6 @@ class AsyncGenericDriver(Scrape):
         super().__init__(comms_prompt_pattern=comms_prompt_pattern, comms_ansi=comms_ansi, **kwargs)
         self.channel: AsyncChannel
 
-    async def open(self) -> None:  # type: ignore  # pylint: disable=W0236
-        """
-        Open Transport (socket/session) and establish channel
-
-        If on_open callable provided, execute that callable after opening connection
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        """
-        LOG.info(f"Opening connection to {self._initialization_args['host']}")
-        await self.transport.open()
-        if self.on_open:
-            await self.on_open(self)
-        LOG.info(f"Connection to {self._initialization_args['host']} opened successfully")
-
-    async def close(self) -> None:  # type: ignore  # pylint: disable=W0236
-        """
-        Close Transport (socket/session)
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        """
-        LOG.info(f"Closing connection to {self._initialization_args['host']}")
-        if self.on_close:
-            await self.on_close(self)
-        self.transport.close()
-        LOG.info(f"Connection to {self._initialization_args['host']} closed successfully")
-
     async def send_command(
         self,
         command: str,
@@ -120,27 +69,18 @@ class AsyncGenericDriver(Scrape):
             Response: Scrapli Response object
 
         Raises:
-            TypeError: if command is anything but a string
+            N/A
 
         """
-        if not isinstance(command, str):
-            raise TypeError(
-                f"`send_command` expects a single string, got {type(command)}. "
-                "to send a list of commands use the `send_commands` method instead."
-            )
-
-        response = Response(
-            host=self.transport.host,
-            channel_input=command,
-            failed_when_contains=failed_when_contains,
+        response = self._pre_send_command(
+            host=self.transport.host, command=command, failed_when_contains=failed_when_contains
         )
         raw_response, processed_response = await self.channel.send_input(
             channel_input=command, strip_prompt=strip_prompt
         )
-        response._record_response(result=processed_response)  # pylint: disable=W0212
-        response.raw_result = raw_response
-
-        return response
+        return self._post_send_command(
+            raw_response=raw_response, processed_response=processed_response, response=response
+        )
 
     async def send_commands(
         self,
@@ -160,19 +100,13 @@ class AsyncGenericDriver(Scrape):
                 as of current execution
 
         Returns:
-            responses: Scrapli MultiResponse object
+            ScrapliMultiResponse: Scrapli MultiResponse object
 
         Raises:
-            TypeError: if commands is anything but a list
+            N/A
 
         """
-        if not isinstance(commands, list):
-            raise TypeError(
-                f"`send_commands` expects a list of strings, got {type(commands)}. "
-                "to send a single command use the `send_command` method instead."
-            )
-
-        responses = MultiResponse()
+        responses = self._pre_send_commands(commands=commands)
         for command in commands:
             response = await self.send_command(
                 command=command,
@@ -203,20 +137,13 @@ class AsyncGenericDriver(Scrape):
                 as of current execution
 
         Returns:
-            responses: Scrapli MultiResponse object
+            ScrapliMultiResponse: Scrapli MultiResponse object
 
         Raises:
-            TypeError: if anything but a string is provided for `file`
+            N/A
 
         """
-        if not isinstance(file, str):
-            raise TypeError(
-                f"`send_commands_from_file` expects a string path to file, got {type(file)}"
-            )
-        resolved_file = resolve_file(file)
-
-        with open(resolved_file, "r") as f:
-            commands = f.read().splitlines()
+        commands = self._pre_send_commands_from_file(file=file)
 
         return await self.send_commands(
             commands=commands,
@@ -295,19 +222,17 @@ class AsyncGenericDriver(Scrape):
         """
         _ = privilege_level
 
-        joined_input = ", ".join([event[0] for event in interact_events])
-        response = Response(
-            self.transport.host,
-            channel_input=joined_input,
+        response = self._pre_send_interactive(
+            host=self.transport.host,
+            interact_events=interact_events,
             failed_when_contains=failed_when_contains,
         )
         raw_response, processed_response = await self.channel.send_inputs_interact(
             interact_events=interact_events
         )
-        response._record_response(result=processed_response)  # pylint: disable=W0212
-        response.raw_result = raw_response
-
-        return response
+        return self._post_send_command(
+            raw_response=raw_response, processed_response=processed_response, response=response
+        )
 
     async def get_prompt(self) -> str:
         """

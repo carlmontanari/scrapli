@@ -2,47 +2,7 @@
 from typing import Any, Callable, Dict, List, Optional
 
 from scrapli.driver import NetworkDriver
-from scrapli.driver.network_driver import PrivilegeLevel
-
-
-def junos_on_open(conn: NetworkDriver) -> None:
-    """
-    JunosDriver default on_open callable
-
-    Args:
-        conn: NetworkDriver object
-
-    Returns:
-        N/A  # noqa: DAR202
-
-    Raises:
-        N/A
-    """
-    conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
-    conn.channel.send_input(channel_input="set cli complete-on-space off")
-    conn.channel.send_input(channel_input="set cli screen-length 0")
-    conn.channel.send_input(channel_input="set cli screen-width 511")
-
-
-def junos_on_close(conn: NetworkDriver) -> None:
-    """
-    JunosDriver default on_close callable
-
-    Args:
-        conn: NetworkDriver object
-
-    Returns:
-        N/A  # noqa: DAR202
-
-    Raises:
-        N/A
-    """
-    # write exit directly to the transport as channel would fail to find the prompt after sending
-    # the exit command!
-    conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
-    conn.transport.write(channel_input="exit")
-    conn.transport.write(channel_input=conn.channel.comms_return_char)
-
+from scrapli.driver.base_network_driver import PrivilegeLevel
 
 PRIVS = {
     "exec": (
@@ -90,6 +50,45 @@ PRIVS = {
         )
     ),
 }
+
+
+def junos_on_open(conn: NetworkDriver) -> None:
+    """
+    JunosDriver default on_open callable
+
+    Args:
+        conn: NetworkDriver object
+
+    Returns:
+        N/A  # noqa: DAR202
+
+    Raises:
+        N/A
+    """
+    conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
+    conn.send_command(command="set cli complete-on-space off")
+    conn.send_command(command="set cli screen-length 0")
+    conn.send_command(command="set cli screen-width 511")
+
+
+def junos_on_close(conn: NetworkDriver) -> None:
+    """
+    JunosDriver default on_close callable
+
+    Args:
+        conn: NetworkDriver object
+
+    Returns:
+        N/A  # noqa: DAR202
+
+    Raises:
+        N/A
+    """
+    # write exit directly to the transport as channel would fail to find the prompt after sending
+    # the exit command!
+    conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
+    conn.transport.write(channel_input="exit")
+    conn.transport.write(channel_input=conn.channel.comms_return_char)
 
 
 class JunosDriver(NetworkDriver):

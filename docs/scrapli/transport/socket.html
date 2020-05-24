@@ -37,6 +37,21 @@ LOG = logging.getLogger(&#34;transport&#34;)
 
 class Socket:
     def __init__(self, host: str, port: int, timeout: int):
+        &#34;&#34;&#34;
+        Socket object
+
+        Args:
+            host: host to connect to
+            port: port to connect to
+            timeout: timeout in seconds
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
         self.host: str = host
         self.port: int = port
         self.timeout: int = timeout
@@ -180,13 +195,48 @@ class Socket:
 <span>(</span><span>host: str, port: int, timeout: int)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Socket object</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>host</code></strong></dt>
+<dd>host to connect to</dd>
+<dt><strong><code>port</code></strong></dt>
+<dd>port to connect to</dd>
+<dt><strong><code>timeout</code></strong></dt>
+<dd>timeout in seconds</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N/A
+# noqa: DAR202</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Socket:
     def __init__(self, host: str, port: int, timeout: int):
+        &#34;&#34;&#34;
+        Socket object
+
+        Args:
+            host: host to connect to
+            port: port to connect to
+            timeout: timeout in seconds
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
         self.host: str = host
         self.port: int = port
         self.timeout: int = timeout

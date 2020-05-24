@@ -3,10 +3,13 @@ import logging
 from logging import NullHandler
 from typing import Optional, Tuple
 
-from scrapli.driver import Scrape
+from scrapli.driver import AsyncScrape, Scrape
 
 __version__ = "2020.05.09"
-__all__ = ("Scrape",)
+__all__ = (
+    "AsyncScrape",
+    "Scrape",
+)
 
 
 class DuplicateFilter(logging.Filter):

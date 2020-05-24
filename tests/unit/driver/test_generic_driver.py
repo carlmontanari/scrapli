@@ -35,7 +35,7 @@ TEST_DATA_PATH = f"{Path(scrapli.__file__).parents[1]}/tests/unit/test_data"
             "send_commands_from_file",
             False,
             TypeError,
-            "`send_commands_from_file` expects a string path to file, got <class 'bool'>",
+            "`send_commands_from_file` expects a string path to a file, got <class 'bool'>",
         ),
     ],
     ids=["send_command", "send_commands", "send_commands_from_file"],

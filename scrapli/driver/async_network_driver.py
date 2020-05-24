@@ -1,14 +1,11 @@
 """scrapli.driver.async_network_driver"""
 import logging
-import warnings
 from collections import UserList
-from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 from scrapli.driver.async_generic_driver import AsyncGenericDriver
-from scrapli.driver.network_driver import DUMMY_PRIV_LEVEL, NetworkDriverMixin, PrivilegeLevel
+from scrapli.driver.base_network_driver import NetworkDriverBase, PrivilegeAction, PrivilegeLevel
 from scrapli.exceptions import CouldNotAcquirePrivLevel
-from scrapli.helper import resolve_file
 from scrapli.response import MultiResponse, Response
 
 if TYPE_CHECKING:
@@ -19,7 +16,7 @@ else:
 LOG = logging.getLogger("driver")
 
 
-class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverMixin):
+class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
     def __init__(
         self,
         privilege_levels: Dict[str, PrivilegeLevel],
@@ -31,7 +28,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverMixin):
         **kwargs: Any,
     ):
         """
-        AsyncBaseNetworkDriver Object
+        AsyncNetworkDriver Object
 
         Args:
             privilege_levels: Dict of privilege levels for a given platform
@@ -52,27 +49,13 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverMixin):
             N/A
 
         """
-        if "comms_prompt_pattern" in kwargs:
-            err = "`comms_prompt_pattern` found in kwargs!"
-            msg = f"***** {err} {'*' * (80 - len(err))}"
-            fix = (
-                "`comms_prompt_pattern` is ignored (dropped) when using network drivers. If you "
-                "wish to modify the patterns for any network driver sub-classes, please do so by "
-                "modifying or providing your own `privilege_levels`."
-            )
-            warning = "\n" + msg + "\n" + fix + "\n" + msg
-            warnings.warn(warning)
-            kwargs.pop("comms_prompt_pattern")
-
-        self.comms_prompt_pattern: str
-
-        self.privilege_levels = privilege_levels
-        self.default_desired_privilege_level = default_desired_privilege_level
-        self._current_priv_level = DUMMY_PRIV_LEVEL
-        self._priv_map: Dict[str, List[str]] = {}
-        self.update_privilege_levels(update_channel=False)
+        self._check_kwargs_comms_prompt_pattern(kwargs=kwargs)
 
         self.auth_secondary = auth_secondary
+        self.privilege_levels = privilege_levels
+        self.default_desired_privilege_level = default_desired_privilege_level
+        self.update_privilege_levels(update_channel=False)
+
         self.textfsm_platform = textfsm_platform
         self.genie_platform = genie_platform
         self.failed_when_contains = failed_when_contains or []
@@ -93,33 +76,17 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverMixin):
             N/A
 
         """
-        next_prompt_pattern = escalate_priv.pattern
+        self._pre_escalate(escalate_priv=escalate_priv)
+
         if escalate_priv.escalate_auth is True:
-            if not self.auth_secondary:
-                err = (
-                    "Privilege escalation generally requires an `auth_secondary` password, "
-                    "but none is set!"
-                )
-                msg = f"***** {err} {'*' * (80 - len(err))}"
-                fix = (
-                    "scrapli will try to escalate privilege without entering a password but may "
-                    "fail.\nSet an `auth_secondary` password if your device requires a password to "
-                    "increase privilege, otherwise ignore this message."
-                )
-                warning = "\n" + msg + "\n" + fix + "\n" + msg
-                warnings.warn(warning)
-            else:
-                escalate_cmd: str = escalate_priv.escalate
-                escalate_prompt: str = escalate_priv.escalate_prompt
-                escalate_auth = self.auth_secondary
-                await super().send_interactive(
-                    interact_events=[
-                        (escalate_cmd, escalate_prompt, False),
-                        (escalate_auth, next_prompt_pattern, True),
-                    ],
-                )
-                return
-        self.channel.send_input(channel_input=escalate_priv.escalate)
+            await super().send_interactive(
+                interact_events=[
+                    (escalate_priv.escalate, escalate_priv.escalate_prompt, False),
+                    (self.auth_secondary, escalate_priv.pattern, True),
+                ],
+            )
+        else:
+            await self.channel.send_input(channel_input=escalate_priv.escalate)
 
     async def _deescalate(self, current_priv: PrivilegeLevel) -> None:
         """
@@ -152,51 +119,27 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverMixin):
            CouldNotAcquirePrivLevel: if scrapli cannot get to the requested privilege level
 
         """
-        LOG.info(f"Attempting to acquire `{desired_priv}` privilege level")
-        resolved_priv = self._get_privilege_level_name(requested_priv=desired_priv)
-        map_to_desired_priv = self._priv_map[resolved_priv]
+        resolved_priv, map_to_desired_priv = self._pre_acquire_priv(desired_priv=desired_priv)
 
         privilege_change_count = 0
         while True:
             current_prompt = await self.channel.get_prompt()
-            # if we are already at the desired priv, we don't need to do any thing
-            current_priv_patterns = self._determine_current_priv(current_prompt=current_prompt)
-
-            if desired_priv in current_priv_patterns:
-                LOG.info(f"Acquired requested privilege level `{desired_priv}`")
-                self._current_priv_level = self.privilege_levels[desired_priv]
-                return
-
-            # if multiple patterns match pick the zeroith... the only time patterns should be
-            # identical is if we have privilege levels like "configuration" or
-            # "configuration_exclusive" that have identical prompts (ex: IOSXRDriver)
-            current_priv = self.privilege_levels[current_priv_patterns[0]]
-
-            map_to_current_priv = self._priv_map[current_priv.name]
-            priv_map = (
-                map_to_current_priv
-                if map_to_current_priv > map_to_desired_priv
-                else map_to_desired_priv
+            privilege_action, target_priv = self._process_acquire_priv(
+                resolved_priv=resolved_priv,
+                map_to_desired_priv=map_to_desired_priv,
+                current_prompt=current_prompt,
             )
 
-            desired_priv_index = priv_map.index(resolved_priv)
-            try:
-                current_priv_index = priv_map.index(current_priv.name)
-            except ValueError:
-                # if the current priv is not in the map for the desired priv; set the current index
-                # to the "top" (end) of the priv map and work our way back down
-                current_priv_index = len(priv_map)
-            if current_priv_index > desired_priv_index:
-                deescalate_priv = priv_map[current_priv_index - 1]
-                LOG.info(f"Attempting to deescalate from {current_priv.name} to {deescalate_priv}")
-                await self._deescalate(current_priv=current_priv)
-            else:
-                escalate_priv = self.privilege_levels[priv_map[current_priv_index + 1]]
-                LOG.info(f"Attempting to escalate from {current_priv.name} to {escalate_priv.name}")
-                await self._escalate(escalate_priv=escalate_priv)
+            if privilege_action == PrivilegeAction.NO_ACTION:
+                return
+            if privilege_action == PrivilegeAction.DEESCALATE:
+                await self._deescalate(current_priv=target_priv)
+            if privilege_action == PrivilegeAction.ESCALATE:
+                await self._escalate(escalate_priv=target_priv)
+
             privilege_change_count += 1
             if privilege_change_count > len(self.privilege_levels) * 2:
-                msg = f"Failed to acquire requested privilege level {desired_priv}"
+                msg = f"Failed to acquire requested privilege level {resolved_priv}"
                 raise CouldNotAcquirePrivLevel(msg)
 
     async def send_command(
@@ -256,7 +199,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverMixin):
                 as of current execution
 
         Returns:
-            responses: Scrapli MultiResponse object
+            ScrapliMultiResponse: Scrapli MultiResponse object
 
         Raises:
             N/A
@@ -298,20 +241,13 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverMixin):
                 as of current execution
 
         Returns:
-            responses: Scrapli MultiResponse object
+            ScrapliMultiResponse: Scrapli MultiResponse object
 
         Raises:
-            TypeError: if anything but a string is provided for `file`
+            N/A
 
         """
-        if not isinstance(file, str):
-            raise TypeError(
-                f"`send_commands_from_file` expects a string path to a file, got {type(file)}"
-            )
-        resolved_file = resolve_file(file)
-
-        with open(resolved_file, "r") as f:
-            commands = f.read().splitlines()
+        commands = self._pre_send_commands_from_file(file=file)
 
         return await self.send_commands(
             commands=commands,
@@ -404,6 +340,21 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverMixin):
 
         return response
 
+    async def _abort_config(self) -> None:
+        """
+        Abort a configuration operation/session if applicable (for config sessions like junos/iosxr)
+
+        Args:
+            N/A
+
+        Returns:
+            N/A:  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+
     async def send_config(
         self,
         config: str,
@@ -430,23 +381,13 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverMixin):
                 "register_config_session" method of the EOSDriver or NXOSDriver.
 
         Returns:
-            responses: Scrapli MultiResponse object
+            Response: Scrapli Response object
 
         Raises:
-            TypeError: if config is anything but a string
+            N/A
 
         """
-        if not isinstance(config, str):
-            raise TypeError(
-                f"`send_config` expects a single string, got {type(config)}. "
-                "to send a list of configs use the `send_configs` method instead."
-            )
-
-        if failed_when_contains is None:
-            failed_when_contains = self.failed_when_contains
-
-        # in order to handle multi-line strings, we split lines
-        split_config = config.splitlines()
+        split_config = self._pre_send_config(config=config)
 
         # now that we have a list of configs, just use send_configs to actually execute them
         multi_response = await self.send_configs(
@@ -456,24 +397,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverMixin):
             stop_on_failed=stop_on_failed,
             privilege_level=privilege_level,
         )
-
-        # create a new unified response object
-        response = Response(
-            host=self.transport.host,
-            channel_input=config,
-            failed_when_contains=failed_when_contains,
-        )
-        response.start_time = multi_response[0].start_time
-        response.elapsed_time = (datetime.now() - response.start_time).total_seconds()
-
-        # join all the results together into a single final result
-        response.result = "\n".join(response.result for response in multi_response)
-        response.failed = False
-        if any([response.failed for response in multi_response]):
-            response.failed = True
-        self._update_response(response=response)
-
-        return response
+        return self._post_send_config(config=config, multi_response=multi_response)
 
     async def send_configs(
         self,
@@ -501,30 +425,20 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverMixin):
                 "register_config_session" method of the EOSDriver or NXOSDriver.
 
         Returns:
-            responses: Scrapli MultiResponse object
+            ScrapliMultiResponse: Scrapli MultiResponse object
 
         Raises:
-            TypeError: if configs is anything but a list
+            N/A
 
         """
-        if not isinstance(configs, list):
-            raise TypeError(
-                f"`send_configs` expects a list of strings, got {type(configs)}. "
-                "to send a single configuration line/string use the `send_config` method instead."
-            )
-
-        if privilege_level:
-            resolved_privilege_level = self._get_privilege_level_name(
-                requested_priv=privilege_level
-            )
-        else:
-            resolved_privilege_level = "configuration"
+        resolved_privilege_level, failed_when_contains = self._pre_send_configs(
+            configs=configs,
+            failed_when_contains=failed_when_contains,
+            privilege_level=privilege_level,
+        )
 
         if self._current_priv_level.name != resolved_privilege_level:
             await self.acquire_priv(desired_priv=resolved_privilege_level)
-
-        if failed_when_contains is None:
-            failed_when_contains = self.failed_when_contains
 
         responses = MultiResponse()
         _failed_during_execution = False
@@ -535,17 +449,15 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverMixin):
                 failed_when_contains=failed_when_contains,
             )
             responses.append(response)
-            if stop_on_failed is True and response.failed is True:
+            if response.failed is True:
                 _failed_during_execution = True
-                break
-
-        for response in responses:
-            self._update_response(response=response)
+                if stop_on_failed is True:
+                    break
 
         if _failed_during_execution is True:
-            self._abort_config()
+            await self._abort_config()
 
-        return responses
+        return self._post_send_configs(responses=responses)
 
     async def send_configs_from_file(
         self,
@@ -573,20 +485,13 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverMixin):
                 NXOSDriver.
 
         Returns:
-            responses: Scrapli MultiResponse object
+            ScrapliMultiResponse: Scrapli MultiResponse object
 
         Raises:
-            TypeError: if anything but a string is provided for `file`
+            N/A
 
         """
-        if not isinstance(file, str):
-            raise TypeError(
-                f"`send_configs_from_file` expects a string path to a file, got {type(file)}"
-            )
-        resolved_file = resolve_file(file)
-
-        with open(resolved_file, "r") as f:
-            configs = f.read().splitlines()
+        configs = self._pre_send_configs_from_file(file=file)
 
         return await self.send_configs(
             configs=configs,

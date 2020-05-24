@@ -13,6 +13,20 @@ LOG = getLogger("channel")
 
 class AsyncChannel(ChannelBase):
     def __init__(self, transport: AsyncTransport, **kwargs: Any) -> None:
+        """
+        AsyncChannel Object
+
+        Args:
+            transport: Scrapli Transport class
+            kwargs: keyword arguments to pass to ChannelBase
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
         super().__init__(transport, **kwargs)
 
         # ChannelBase supports union of Transport and AsyncTransport, but as this is the

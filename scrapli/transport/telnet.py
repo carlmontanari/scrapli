@@ -24,6 +24,21 @@ TELNET_TRANSPORT_ARGS = (
 
 class ScrapliTelnet(Telnet):
     def __init__(self, host: str, port: int, timeout: int) -> None:
+        """
+        ScrapliTelnet class for typing purposes
+
+        Args:
+            host: string of host
+            port: integer port to connect to
+            timeout: timeout value in seconds
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
         self.eof: bool
         self.timeout: int
         super().__init__(host, port, timeout)
@@ -48,7 +63,7 @@ class TelnetTransport(Transport):
         comms_return_char: str = "\n",
         comms_ansi: bool = False,
     ) -> None:
-        """
+        r"""
         TelnetTransport Object
 
         Inherit from Transport ABC
@@ -289,7 +304,7 @@ class TelnetTransport(Transport):
             N/A
 
         Returns:
-           bool: True if alive, else False
+           bool: True if alive, False otherwise.
 
         Raises:
             N/A

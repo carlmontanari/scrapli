@@ -238,7 +238,7 @@ class MultiResponse(ScrapliMultiResponse):
 
         &#34;&#34;&#34;
         return (
-            f&#34;MultiResponse &lt;Success: {str(not self._failed())}; &#34;
+            f&#34;MultiResponse &lt;Success: {str(not self.failed)}; &#34;
             f&#34;Response Elements: {len(self.data)}&gt;&#34;
         )
 
@@ -257,11 +257,12 @@ class MultiResponse(ScrapliMultiResponse):
 
         &#34;&#34;&#34;
         return (
-            f&#34;MultiResponse &lt;Success: {str(not self._failed())}; &#34;
+            f&#34;MultiResponse &lt;Success: {str(not self.failed)}; &#34;
             f&#34;Response Elements: {len(self.data)}&gt;&#34;
         )
 
-    def _failed(self) -&gt; bool:
+    @property
+    def failed(self) -&gt; bool:
         &#34;&#34;&#34;
         Determine if any elements of MultiResponse are failed
 
@@ -293,7 +294,7 @@ class MultiResponse(ScrapliMultiResponse):
             ScrapliCommandFailure: if any elements are failed
 
         &#34;&#34;&#34;
-        if self._failed():
+        if self.failed:
             raise ScrapliCommandFailure()</code></pre>
 </details>
 </section>
@@ -332,7 +333,7 @@ class MultiResponse(ScrapliMultiResponse):
 
         &#34;&#34;&#34;
         return (
-            f&#34;MultiResponse &lt;Success: {str(not self._failed())}; &#34;
+            f&#34;MultiResponse &lt;Success: {str(not self.failed)}; &#34;
             f&#34;Response Elements: {len(self.data)}&gt;&#34;
         )
 
@@ -351,11 +352,12 @@ class MultiResponse(ScrapliMultiResponse):
 
         &#34;&#34;&#34;
         return (
-            f&#34;MultiResponse &lt;Success: {str(not self._failed())}; &#34;
+            f&#34;MultiResponse &lt;Success: {str(not self.failed)}; &#34;
             f&#34;Response Elements: {len(self.data)}&gt;&#34;
         )
 
-    def _failed(self) -&gt; bool:
+    @property
+    def failed(self) -&gt; bool:
         &#34;&#34;&#34;
         Determine if any elements of MultiResponse are failed
 
@@ -387,7 +389,7 @@ class MultiResponse(ScrapliMultiResponse):
             ScrapliCommandFailure: if any elements are failed
 
         &#34;&#34;&#34;
-        if self._failed():
+        if self.failed:
             raise ScrapliCommandFailure()</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -401,6 +403,48 @@ class MultiResponse(ScrapliMultiResponse):
 <li>collections.abc.Iterable</li>
 <li>collections.abc.Container</li>
 </ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="scrapli.response.MultiResponse.failed"><code class="name">var <span class="ident">failed</span> : bool</code></dt>
+<dd>
+<div class="desc"><p>Determine if any elements of MultiResponse are failed</p>
+<h2 id="args">Args</h2>
+<p>N/A</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>bool</code></dt>
+<dd>True for failed</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def failed(self) -&gt; bool:
+    &#34;&#34;&#34;
+    Determine if any elements of MultiResponse are failed
+
+    Args:
+        N/A
+
+    Returns:
+        bool: True for failed
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    if any(response.failed for response in self.data):
+        return True
+    return False</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="scrapli.response.MultiResponse.raise_for_status"><code class="name flex">
@@ -439,7 +483,7 @@ class MultiResponse(ScrapliMultiResponse):
         ScrapliCommandFailure: if any elements are failed
 
     &#34;&#34;&#34;
-    if self._failed():
+    if self.failed:
         raise ScrapliCommandFailure()</code></pre>
 </details>
 </dd>
@@ -823,6 +867,7 @@ dict from header and row data so it is easier to read/parse the output</dd>
 <li>
 <h4><code><a title="scrapli.response.MultiResponse" href="#scrapli.response.MultiResponse">MultiResponse</a></code></h4>
 <ul class="">
+<li><code><a title="scrapli.response.MultiResponse.failed" href="#scrapli.response.MultiResponse.failed">failed</a></code></li>
 <li><code><a title="scrapli.response.MultiResponse.raise_for_status" href="#scrapli.response.MultiResponse.raise_for_status">raise_for_status</a></code></li>
 </ul>
 </li>

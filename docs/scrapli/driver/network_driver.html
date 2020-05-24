@@ -27,83 +27,23 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.driver.network_driver&#34;&#34;&#34;
 import logging
-import re
-import warnings
-from abc import ABC, abstractmethod
 from collections import UserList
-from functools import lru_cache
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
+from scrapli.driver.base_network_driver import NetworkDriverBase, PrivilegeAction, PrivilegeLevel
 from scrapli.driver.generic_driver import GenericDriver
-from scrapli.exceptions import CouldNotAcquirePrivLevel, UnknownPrivLevel
-from scrapli.helper import resolve_file
-from scrapli.response import Response
+from scrapli.exceptions import CouldNotAcquirePrivLevel
+from scrapli.response import MultiResponse, Response
 
 if TYPE_CHECKING:
     ScrapliMultiResponse = UserList[Response]  # pylint:  disable=E1136; # pragma:  no cover
 else:
     ScrapliMultiResponse = UserList
 
-
-class PrivilegeLevel:
-    __slots__ = (
-        &#34;pattern&#34;,
-        &#34;name&#34;,
-        &#34;previous_priv&#34;,
-        &#34;deescalate&#34;,
-        &#34;escalate&#34;,
-        &#34;escalate_auth&#34;,
-        &#34;escalate_prompt&#34;,
-    )
-
-    def __init__(
-        self,
-        pattern: str,
-        name: str,
-        previous_priv: str,
-        deescalate: str,
-        escalate: str,
-        escalate_auth: bool,
-        escalate_prompt: str,
-    ):
-        &#34;&#34;&#34;
-        PrivilegeLevel Object
-
-        Args:
-            pattern: regex pattern to use to identify this privilege level by the prompt
-            name: friendly name of this privilege level
-            previous_priv: name of the lower/previous privilege level
-            deescalate: how to deescalate *from* this privilege level (to the lower/previous priv)
-            escalate: how to escalate *to* this privilege level (from the lower/previous priv)
-            escalate_auth: True/False escalation requires authentication
-            escalate_prompt: prompt pattern to search for during escalation if escalate auth is True
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.pattern = pattern
-        self.name = name
-        self.previous_priv = previous_priv
-        self.deescalate = deescalate
-        self.escalate = escalate
-        self.escalate_auth = escalate_auth
-        self.escalate_prompt = escalate_prompt
-
-
-DUMMY_PRIV_LEVEL = PrivilegeLevel(&#34;&#34;, &#34;&#34;, &#34;&#34;, &#34;&#34;, &#34;&#34;, False, &#34;&#34;)
-
-
-PRIVS: Dict[str, PrivilegeLevel] = {}
-
 LOG = logging.getLogger(&#34;driver&#34;)
 
 
-class NetworkDriver(GenericDriver, ABC):
-    @abstractmethod
+class NetworkDriver(GenericDriver, NetworkDriverBase):
     def __init__(
         self,
         privilege_levels: Dict[str, PrivilegeLevel],
@@ -136,128 +76,18 @@ class NetworkDriver(GenericDriver, ABC):
             N/A
 
         &#34;&#34;&#34;
-        if &#34;comms_prompt_pattern&#34; in kwargs:
-            err = &#34;`comms_prompt_pattern` found in kwargs!&#34;
-            msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
-            fix = (
-                &#34;`comms_prompt_pattern` is ignored (dropped) when using network drivers. If you &#34;
-                &#34;wish to modify the patterns for any network driver sub-classes, please do so by &#34;
-                &#34;modifying or providing your own `privilege_levels`.&#34;
-            )
-            warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
-            warnings.warn(warning)
-            kwargs.pop(&#34;comms_prompt_pattern&#34;)
-
-        self.comms_prompt_pattern: str
-
-        self.privilege_levels = privilege_levels
-        self.default_desired_privilege_level = default_desired_privilege_level
-        self._current_priv_level = DUMMY_PRIV_LEVEL
-        self._priv_map: Dict[str, List[str]] = {}
-        self.update_privilege_levels(update_channel=False)
+        self._check_kwargs_comms_prompt_pattern(kwargs=kwargs)
 
         self.auth_secondary = auth_secondary
+        self.privilege_levels = privilege_levels
+        self.default_desired_privilege_level = default_desired_privilege_level
+        self.update_privilege_levels(update_channel=False)
+
         self.textfsm_platform = textfsm_platform
         self.genie_platform = genie_platform
         self.failed_when_contains = failed_when_contains or []
 
         super().__init__(comms_prompt_pattern=self.comms_prompt_pattern, **kwargs)
-
-    def _generate_comms_prompt_pattern(self) -&gt; None:
-        &#34;&#34;&#34;
-        Generate the `comms_prompt_pattern_all` from the currently assigned privilege levels
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.comms_prompt_pattern = r&#34;|&#34;.join(
-            rf&#34;({priv_level_data.pattern})&#34; for priv_level_data in self.privilege_levels.values()
-        )
-
-    def _build_priv_map(self) -&gt; None:
-        &#34;&#34;&#34;
-        Build a &#34;map&#34; of privilege levels
-
-        `_priv_map` is a &#34;map&#34; of all privilege levels mapped out to the lowest available priv. This
-        map is used for determining how to escalate/deescalate.
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        for priv_level in self.privilege_levels:
-            self._priv_map[priv_level] = [priv_level]
-            while True:
-                previous_priv = self.privilege_levels[self._priv_map[priv_level][0]].previous_priv
-                if not previous_priv:
-                    break
-                self._priv_map[priv_level].insert(0, previous_priv)
-
-    def update_privilege_levels(self, update_channel: bool = True) -&gt; None:
-        &#34;&#34;&#34;
-        Re-generate the privilege map, and update the comms prompt pattern
-
-        Args:
-            update_channel: True/False update the channel pattern too -- likely only ever set to
-                False for class initialization before channel is opened
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self._build_priv_map()
-        self._generate_comms_prompt_pattern()
-        # clear the lru cache as patterns may have been updated
-        self._determine_current_priv.cache_clear()
-        if update_channel is True:
-            self.channel.comms_prompt_pattern = self.comms_prompt_pattern
-
-    @lru_cache()
-    def _determine_current_priv(self, current_prompt: str) -&gt; List[str]:
-        &#34;&#34;&#34;
-        Determine current privilege level from prompt string
-
-        Args:
-            current_prompt: string of current prompt
-
-        Returns:
-            matching_priv_levels: list of string names of matching privilege levels
-
-        Raises:
-            UnknownPrivLevel: if privilege level cannot be determined
-
-        &#34;&#34;&#34;
-        matching_priv_levels = []
-        for priv_level in self.privilege_levels.values():
-            search_result = re.search(
-                pattern=priv_level.pattern, string=current_prompt, flags=re.M | re.I
-            )
-            if not search_result:
-                continue
-            matching_priv_levels.append(priv_level.name)
-            LOG.debug(f&#34;Current privilege level could be `{priv_level.name}`&#34;)
-        if not matching_priv_levels:
-            raise UnknownPrivLevel(
-                f&#34;Could not determine privilege level from provided prompt: `{current_prompt}`&#34;
-            )
-        LOG.debug(f&#34;Determined current privilege level is one of `{matching_priv_levels}`&#34;)
-        return matching_priv_levels
 
     def _escalate(self, escalate_priv: PrivilegeLevel) -&gt; None:
         &#34;&#34;&#34;
@@ -273,33 +103,17 @@ class NetworkDriver(GenericDriver, ABC):
             N/A
 
         &#34;&#34;&#34;
-        next_prompt_pattern = escalate_priv.pattern
+        self._pre_escalate(escalate_priv=escalate_priv)
+
         if escalate_priv.escalate_auth is True:
-            if not self.auth_secondary:
-                err = (
-                    &#34;Privilege escalation generally requires an `auth_secondary` password, &#34;
-                    &#34;but none is set!&#34;
-                )
-                msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
-                fix = (
-                    &#34;scrapli will try to escalate privilege without entering a password but may &#34;
-                    &#34;fail.\nSet an `auth_secondary` password if your device requires a password to &#34;
-                    &#34;increase privilege, otherwise ignore this message.&#34;
-                )
-                warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
-                warnings.warn(warning)
-            else:
-                escalate_cmd: str = escalate_priv.escalate
-                escalate_prompt: str = escalate_priv.escalate_prompt
-                escalate_auth = self.auth_secondary
-                super().send_interactive(
-                    interact_events=[
-                        (escalate_cmd, escalate_prompt, False),
-                        (escalate_auth, next_prompt_pattern, True),
-                    ],
-                )
-                return
-        self.channel.send_input(channel_input=escalate_priv.escalate)
+            super().send_interactive(
+                interact_events=[
+                    (escalate_priv.escalate, escalate_priv.escalate_prompt, False),
+                    (self.auth_secondary, escalate_priv.pattern, True),
+                ],
+            )
+        else:
+            self.channel.send_input(channel_input=escalate_priv.escalate)
 
     def _deescalate(self, current_priv: PrivilegeLevel) -&gt; None:
         &#34;&#34;&#34;
@@ -317,29 +131,6 @@ class NetworkDriver(GenericDriver, ABC):
         &#34;&#34;&#34;
         self.channel.send_input(channel_input=current_priv.deescalate)
 
-    def _get_privilege_level_name(self, requested_priv: str) -&gt; str:
-        &#34;&#34;&#34;
-        Get privilege level name if provided privilege is valid
-
-        Args:
-            requested_priv: string name of desired privilege level
-
-        Returns:
-            str: name of the privilege level requested
-
-        Raises:
-           UnknownPrivLevel: if attempting to acquire an unknown priv
-
-        &#34;&#34;&#34;
-        desired_privilege_level = self.privilege_levels.get(requested_priv, None)
-        if desired_privilege_level is None:
-            raise UnknownPrivLevel(
-                f&#34;Requested privilege level `{requested_priv}` not a valid privilege level of &#34;
-                f&#34;`{self.__class__.__name__}`&#34;
-            )
-        resolved_privilege_level = desired_privilege_level.name
-        return resolved_privilege_level
-
     def acquire_priv(self, desired_priv: str) -&gt; None:
         &#34;&#34;&#34;
         Acquire desired priv level
@@ -355,73 +146,28 @@ class NetworkDriver(GenericDriver, ABC):
            CouldNotAcquirePrivLevel: if scrapli cannot get to the requested privilege level
 
         &#34;&#34;&#34;
-        LOG.info(f&#34;Attempting to acquire `{desired_priv}` privilege level&#34;)
-        resolved_priv = self._get_privilege_level_name(requested_priv=desired_priv)
-        map_to_desired_priv = self._priv_map[resolved_priv]
+        resolved_priv, map_to_desired_priv = self._pre_acquire_priv(desired_priv=desired_priv)
 
         privilege_change_count = 0
         while True:
-            # if we are already at the desired priv, we don&#39;t need to do any thing
-            current_priv_patterns = self._determine_current_priv(
-                current_prompt=self.channel.get_prompt()
+            current_prompt = self.channel.get_prompt()
+            privilege_action, target_priv = self._process_acquire_priv(
+                resolved_priv=resolved_priv,
+                map_to_desired_priv=map_to_desired_priv,
+                current_prompt=current_prompt,
             )
 
-            if desired_priv in current_priv_patterns:
-                LOG.info(f&#34;Acquired requested privilege level `{desired_priv}`&#34;)
-                self._current_priv_level = self.privilege_levels[desired_priv]
+            if privilege_action == PrivilegeAction.NO_ACTION:
                 return
+            if privilege_action == PrivilegeAction.DEESCALATE:
+                self._deescalate(current_priv=target_priv)
+            if privilege_action == PrivilegeAction.ESCALATE:
+                self._escalate(escalate_priv=target_priv)
 
-            # if multiple patterns match pick the zeroith... the only time patterns should be
-            # identical is if we have privilege levels like &#34;configuration&#34; or
-            # &#34;configuration_exclusive&#34; that have identical prompts (ex: IOSXRDriver)
-            current_priv = self.privilege_levels[current_priv_patterns[0]]
-
-            map_to_current_priv = self._priv_map[current_priv.name]
-            priv_map = (
-                map_to_current_priv
-                if map_to_current_priv &gt; map_to_desired_priv
-                else map_to_desired_priv
-            )
-
-            desired_priv_index = priv_map.index(resolved_priv)
-            try:
-                current_priv_index = priv_map.index(current_priv.name)
-            except ValueError:
-                # if the current priv is not in the map for the desired priv; set the current index
-                # to the &#34;top&#34; (end) of the priv map and work our way back down
-                current_priv_index = len(priv_map)
-            if current_priv_index &gt; desired_priv_index:
-                deescalate_priv = priv_map[current_priv_index - 1]
-                LOG.info(f&#34;Attempting to deescalate from {current_priv.name} to {deescalate_priv}&#34;)
-                self._deescalate(current_priv=current_priv)
-            else:
-                escalate_priv = self.privilege_levels[priv_map[current_priv_index + 1]]
-                LOG.info(f&#34;Attempting to escalate from {current_priv.name} to {escalate_priv.name}&#34;)
-                self._escalate(escalate_priv=escalate_priv)
             privilege_change_count += 1
             if privilege_change_count &gt; len(self.privilege_levels) * 2:
-                msg = f&#34;Failed to acquire requested privilege level {desired_priv}&#34;
+                msg = f&#34;Failed to acquire requested privilege level {resolved_priv}&#34;
                 raise CouldNotAcquirePrivLevel(msg)
-
-    def _update_response(self, response: Response) -&gt; None:
-        &#34;&#34;&#34;
-        Update response with network driver specific data
-
-        This happens here as the underlying channel provides a response object but is unaware of any
-        of the network/platform specific attributes that may need to get updated
-
-        Args:
-            response: response to update
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        response.textfsm_platform = self.textfsm_platform
-        response.genie_platform = self.genie_platform
 
     def send_command(
         self,
@@ -480,7 +226,7 @@ class NetworkDriver(GenericDriver, ABC):
                 as of current execution
 
         Returns:
-            responses: list of Scrapli Response objects
+            ScrapliMultiResponse: Scrapli MultiResponse object
 
         Raises:
             N/A
@@ -522,20 +268,13 @@ class NetworkDriver(GenericDriver, ABC):
                 as of current execution
 
         Returns:
-            responses: list of Scrapli Response objects
+            ScrapliMultiResponse: Scrapli MultiResponse object
 
         Raises:
-            TypeError: if anything but a string is provided for `file`
+            N/A
 
         &#34;&#34;&#34;
-        if not isinstance(file, str):
-            raise TypeError(
-                f&#34;`send_commands_from_file` expects a string path to file, got {type(file)}&#34;
-            )
-        resolved_file = resolve_file(file)
-
-        with open(resolved_file, &#34;r&#34;) as f:
-            commands = f.read().splitlines()
+        commands = self._pre_send_commands_from_file(file=file)
 
         return self.send_commands(
             commands=commands,
@@ -628,24 +367,6 @@ class NetworkDriver(GenericDriver, ABC):
 
         return response
 
-    def register_configuration_session(self, session_name: str) -&gt; None:
-        &#34;&#34;&#34;
-        If applicable, register a configuration session as a valid privilege level
-
-        Args:
-            session_name: name of config session to register
-
-        Returns:
-            N/A:  # noqa: DAR202
-
-        Raises:
-            NotImplementedError: unless overridden by concrete class
-
-        &#34;&#34;&#34;
-        raise NotImplementedError(
-            f&#34;Configuration sessions not supported for `{self.__class__.__name__}`&#34;
-        )
-
     def _abort_config(self) -&gt; None:
         &#34;&#34;&#34;
         Abort a configuration operation/session if applicable (for config sessions like junos/iosxr)
@@ -661,55 +382,92 @@ class NetworkDriver(GenericDriver, ABC):
 
         &#34;&#34;&#34;
 
-    def send_configs(
+    def send_config(
         self,
-        configs: Union[str, List[str]],
+        config: str,
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         privilege_level: str = &#34;&#34;,
-    ) -&gt; List[Response]:
+    ) -&gt; Response:
         &#34;&#34;&#34;
         Send configuration(s)
 
         Args:
-            configs: string or list of strings to send to device in config mode
+            config: string configuration to send to the device, supports sending multi-line strings
             strip_prompt: True/False strip prompt from returned output
             failed_when_contains: string or list of strings indicating failure if found in response
             stop_on_failed: True/False stop executing commands if a command fails, returns results
                 as of current execution; aborts configuration session if applicable (iosxr/junos or
                 eos/nxos if using a configuration session)
             privilege_level: name of configuration privilege level/type to acquire; this is platform
-                dependant, so check the device driver for specifics. Examples of privilege_name
+                dependent, so check the device driver for specifics. Examples of privilege_name
                 would be &#34;configuration_exclusive&#34; for IOSXRDriver, or &#34;configuration_private&#34; for
                 JunosDriver. You can also pass in a name of a configuration session such as
                 &#34;my-config-session&#34; if you have registered a session using the
                 &#34;register_config_session&#34; method of the EOSDriver or NXOSDriver.
 
         Returns:
-            responses: List of Scrape Response objects
+            Response: Scrapli Response object
 
         Raises:
             N/A
 
         &#34;&#34;&#34;
-        if isinstance(configs, str):
-            configs = [configs]
+        split_config = self._pre_send_config(config=config)
 
-        if privilege_level:
-            resolved_privilege_level = self._get_privilege_level_name(
-                requested_priv=privilege_level
-            )
-        else:
-            resolved_privilege_level = &#34;configuration&#34;
+        # now that we have a list of configs, just use send_configs to actually execute them
+        multi_response = self.send_configs(
+            configs=split_config,
+            strip_prompt=strip_prompt,
+            failed_when_contains=failed_when_contains,
+            stop_on_failed=stop_on_failed,
+            privilege_level=privilege_level,
+        )
+        return self._post_send_config(config=config, multi_response=multi_response)
+
+    def send_configs(
+        self,
+        configs: List[str],
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+        stop_on_failed: bool = False,
+        privilege_level: str = &#34;&#34;,
+    ) -&gt; ScrapliMultiResponse:
+        &#34;&#34;&#34;
+        Send configuration(s)
+
+        Args:
+            configs: list of strings to send to device in config mode
+            strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
+            stop_on_failed: True/False stop executing commands if a command fails, returns results
+                as of current execution; aborts configuration session if applicable (iosxr/junos or
+                eos/nxos if using a configuration session)
+            privilege_level: name of configuration privilege level/type to acquire; this is platform
+                dependent, so check the device driver for specifics. Examples of privilege_name
+                would be &#34;configuration_exclusive&#34; for IOSXRDriver, or &#34;configuration_private&#34; for
+                JunosDriver. You can also pass in a name of a configuration session such as
+                &#34;my-config-session&#34; if you have registered a session using the
+                &#34;register_config_session&#34; method of the EOSDriver or NXOSDriver.
+
+        Returns:
+            ScrapliMultiResponse: Scrapli MultiResponse object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        resolved_privilege_level, failed_when_contains = self._pre_send_configs(
+            configs=configs,
+            failed_when_contains=failed_when_contains,
+            privilege_level=privilege_level,
+        )
 
         if self._current_priv_level.name != resolved_privilege_level:
             self.acquire_priv(desired_priv=resolved_privilege_level)
 
-        if failed_when_contains is None:
-            failed_when_contains = self.failed_when_contains
-
-        responses = []
+        responses = MultiResponse()
         _failed_during_execution = False
         for config in configs:
             response = super().send_command(
@@ -718,17 +476,15 @@ class NetworkDriver(GenericDriver, ABC):
                 failed_when_contains=failed_when_contains,
             )
             responses.append(response)
-            if stop_on_failed is True and response.failed is True:
+            if response.failed is True:
                 _failed_during_execution = True
-                break
-
-        for response in responses:
-            self._update_response(response=response)
+                if stop_on_failed is True:
+                    break
 
         if _failed_during_execution is True:
             self._abort_config()
 
-        return responses
+        return self._post_send_configs(responses=responses)
 
     def send_configs_from_file(
         self,
@@ -737,7 +493,7 @@ class NetworkDriver(GenericDriver, ABC):
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         privilege_level: str = &#34;&#34;,
-    ) -&gt; List[Response]:
+    ) -&gt; ScrapliMultiResponse:
         &#34;&#34;&#34;
         Send configuration(s) from a file
 
@@ -749,27 +505,20 @@ class NetworkDriver(GenericDriver, ABC):
                 as of current execution; aborts configuration session if applicable (iosxr/junos or
                 eos/nxos if using a configuration session)
             privilege_level: name of configuration privilege level/type to acquire; this is platform
-                dependant, so check the device driver for specifics. Examples of privilege_name
+                dependent, so check the device driver for specifics. Examples of privilege_name
                 would be &#34;exclusive&#34; for IOSXRDriver, &#34;private&#34; for JunosDriver. You can also pass
                 in a name of a configuration session such as &#34;session_mysession&#34; if you have
                 registered a session using the &#34;register_config_session&#34; method of the EOSDriver or
                 NXOSDriver.
 
         Returns:
-            responses: List of Scrape Response objects
+            ScrapliMultiResponse: Scrapli MultiResponse object
 
         Raises:
-            TypeError: if anything but a string is provided for `file`
+            N/A
 
         &#34;&#34;&#34;
-        if not isinstance(file, str):
-            raise TypeError(
-                f&#34;`send_configs_from_file` expects a string path to file, got {type(file)}&#34;
-            )
-        resolved_file = resolve_file(file)
-
-        with open(resolved_file, &#34;r&#34;) as f:
-            configs = f.read().splitlines()
+        configs = self._pre_send_configs_from_file(file=file)
 
         return self.send_configs(
             configs=configs,
@@ -791,11 +540,17 @@ class NetworkDriver(GenericDriver, ABC):
 <dl>
 <dt id="scrapli.driver.network_driver.NetworkDriver"><code class="flex name class">
 <span>class <span class="ident">NetworkDriver</span></span>
-<span>(</span><span>privilege_levels: Dict[str, scrapli.driver.network_driver.PrivilegeLevel], default_desired_privilege_level: str, auth_secondary: str = '', failed_when_contains: Union[List[str], NoneType] = None, textfsm_platform: str = '', genie_platform: str = '', **kwargs: Any)</span>
+<span>(</span><span>privilege_levels: Dict[str, scrapli.driver.base_network_driver.PrivilegeLevel], default_desired_privilege_level: str, auth_secondary: str = '', failed_when_contains: Union[List[str], NoneType] = None, textfsm_platform: str = '', genie_platform: str = '', **kwargs: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Helper class that provides a standard way to create an ABC using
-inheritance.</p>
+<div class="desc"><p>GenericDriverBase Object</p>
+<p>A generic network driver that will <em>hopefully</em> work for a broad variety of devices with
+minimal to no modifications and provide a normal NetworkDriver type experience with
+<code>send_command(s)</code>, <code>get_prompt</code> and <code>send_interactive</code> methods instead of forcing users to
+call Channel methods directly.</p>
+<p>This driver doesn't know anything about privilege levels (or any type of "config modes",
+disabling paging, gracefully exiting, or anything like that, and as such should be treated
+similar to the base <code>Scrape</code> object from that perspective.</p>
 <p>BaseNetworkDriver Object</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -832,8 +587,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class NetworkDriver(GenericDriver, ABC):
-    @abstractmethod
+<pre><code class="python">class NetworkDriver(GenericDriver, NetworkDriverBase):
     def __init__(
         self,
         privilege_levels: Dict[str, PrivilegeLevel],
@@ -866,128 +620,18 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
             N/A
 
         &#34;&#34;&#34;
-        if &#34;comms_prompt_pattern&#34; in kwargs:
-            err = &#34;`comms_prompt_pattern` found in kwargs!&#34;
-            msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
-            fix = (
-                &#34;`comms_prompt_pattern` is ignored (dropped) when using network drivers. If you &#34;
-                &#34;wish to modify the patterns for any network driver sub-classes, please do so by &#34;
-                &#34;modifying or providing your own `privilege_levels`.&#34;
-            )
-            warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
-            warnings.warn(warning)
-            kwargs.pop(&#34;comms_prompt_pattern&#34;)
-
-        self.comms_prompt_pattern: str
-
-        self.privilege_levels = privilege_levels
-        self.default_desired_privilege_level = default_desired_privilege_level
-        self._current_priv_level = DUMMY_PRIV_LEVEL
-        self._priv_map: Dict[str, List[str]] = {}
-        self.update_privilege_levels(update_channel=False)
+        self._check_kwargs_comms_prompt_pattern(kwargs=kwargs)
 
         self.auth_secondary = auth_secondary
+        self.privilege_levels = privilege_levels
+        self.default_desired_privilege_level = default_desired_privilege_level
+        self.update_privilege_levels(update_channel=False)
+
         self.textfsm_platform = textfsm_platform
         self.genie_platform = genie_platform
         self.failed_when_contains = failed_when_contains or []
 
         super().__init__(comms_prompt_pattern=self.comms_prompt_pattern, **kwargs)
-
-    def _generate_comms_prompt_pattern(self) -&gt; None:
-        &#34;&#34;&#34;
-        Generate the `comms_prompt_pattern_all` from the currently assigned privilege levels
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.comms_prompt_pattern = r&#34;|&#34;.join(
-            rf&#34;({priv_level_data.pattern})&#34; for priv_level_data in self.privilege_levels.values()
-        )
-
-    def _build_priv_map(self) -&gt; None:
-        &#34;&#34;&#34;
-        Build a &#34;map&#34; of privilege levels
-
-        `_priv_map` is a &#34;map&#34; of all privilege levels mapped out to the lowest available priv. This
-        map is used for determining how to escalate/deescalate.
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        for priv_level in self.privilege_levels:
-            self._priv_map[priv_level] = [priv_level]
-            while True:
-                previous_priv = self.privilege_levels[self._priv_map[priv_level][0]].previous_priv
-                if not previous_priv:
-                    break
-                self._priv_map[priv_level].insert(0, previous_priv)
-
-    def update_privilege_levels(self, update_channel: bool = True) -&gt; None:
-        &#34;&#34;&#34;
-        Re-generate the privilege map, and update the comms prompt pattern
-
-        Args:
-            update_channel: True/False update the channel pattern too -- likely only ever set to
-                False for class initialization before channel is opened
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self._build_priv_map()
-        self._generate_comms_prompt_pattern()
-        # clear the lru cache as patterns may have been updated
-        self._determine_current_priv.cache_clear()
-        if update_channel is True:
-            self.channel.comms_prompt_pattern = self.comms_prompt_pattern
-
-    @lru_cache()
-    def _determine_current_priv(self, current_prompt: str) -&gt; List[str]:
-        &#34;&#34;&#34;
-        Determine current privilege level from prompt string
-
-        Args:
-            current_prompt: string of current prompt
-
-        Returns:
-            matching_priv_levels: list of string names of matching privilege levels
-
-        Raises:
-            UnknownPrivLevel: if privilege level cannot be determined
-
-        &#34;&#34;&#34;
-        matching_priv_levels = []
-        for priv_level in self.privilege_levels.values():
-            search_result = re.search(
-                pattern=priv_level.pattern, string=current_prompt, flags=re.M | re.I
-            )
-            if not search_result:
-                continue
-            matching_priv_levels.append(priv_level.name)
-            LOG.debug(f&#34;Current privilege level could be `{priv_level.name}`&#34;)
-        if not matching_priv_levels:
-            raise UnknownPrivLevel(
-                f&#34;Could not determine privilege level from provided prompt: `{current_prompt}`&#34;
-            )
-        LOG.debug(f&#34;Determined current privilege level is one of `{matching_priv_levels}`&#34;)
-        return matching_priv_levels
 
     def _escalate(self, escalate_priv: PrivilegeLevel) -&gt; None:
         &#34;&#34;&#34;
@@ -1003,33 +647,17 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
             N/A
 
         &#34;&#34;&#34;
-        next_prompt_pattern = escalate_priv.pattern
+        self._pre_escalate(escalate_priv=escalate_priv)
+
         if escalate_priv.escalate_auth is True:
-            if not self.auth_secondary:
-                err = (
-                    &#34;Privilege escalation generally requires an `auth_secondary` password, &#34;
-                    &#34;but none is set!&#34;
-                )
-                msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
-                fix = (
-                    &#34;scrapli will try to escalate privilege without entering a password but may &#34;
-                    &#34;fail.\nSet an `auth_secondary` password if your device requires a password to &#34;
-                    &#34;increase privilege, otherwise ignore this message.&#34;
-                )
-                warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
-                warnings.warn(warning)
-            else:
-                escalate_cmd: str = escalate_priv.escalate
-                escalate_prompt: str = escalate_priv.escalate_prompt
-                escalate_auth = self.auth_secondary
-                super().send_interactive(
-                    interact_events=[
-                        (escalate_cmd, escalate_prompt, False),
-                        (escalate_auth, next_prompt_pattern, True),
-                    ],
-                )
-                return
-        self.channel.send_input(channel_input=escalate_priv.escalate)
+            super().send_interactive(
+                interact_events=[
+                    (escalate_priv.escalate, escalate_priv.escalate_prompt, False),
+                    (self.auth_secondary, escalate_priv.pattern, True),
+                ],
+            )
+        else:
+            self.channel.send_input(channel_input=escalate_priv.escalate)
 
     def _deescalate(self, current_priv: PrivilegeLevel) -&gt; None:
         &#34;&#34;&#34;
@@ -1047,29 +675,6 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         &#34;&#34;&#34;
         self.channel.send_input(channel_input=current_priv.deescalate)
 
-    def _get_privilege_level_name(self, requested_priv: str) -&gt; str:
-        &#34;&#34;&#34;
-        Get privilege level name if provided privilege is valid
-
-        Args:
-            requested_priv: string name of desired privilege level
-
-        Returns:
-            str: name of the privilege level requested
-
-        Raises:
-           UnknownPrivLevel: if attempting to acquire an unknown priv
-
-        &#34;&#34;&#34;
-        desired_privilege_level = self.privilege_levels.get(requested_priv, None)
-        if desired_privilege_level is None:
-            raise UnknownPrivLevel(
-                f&#34;Requested privilege level `{requested_priv}` not a valid privilege level of &#34;
-                f&#34;`{self.__class__.__name__}`&#34;
-            )
-        resolved_privilege_level = desired_privilege_level.name
-        return resolved_privilege_level
-
     def acquire_priv(self, desired_priv: str) -&gt; None:
         &#34;&#34;&#34;
         Acquire desired priv level
@@ -1085,73 +690,28 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
            CouldNotAcquirePrivLevel: if scrapli cannot get to the requested privilege level
 
         &#34;&#34;&#34;
-        LOG.info(f&#34;Attempting to acquire `{desired_priv}` privilege level&#34;)
-        resolved_priv = self._get_privilege_level_name(requested_priv=desired_priv)
-        map_to_desired_priv = self._priv_map[resolved_priv]
+        resolved_priv, map_to_desired_priv = self._pre_acquire_priv(desired_priv=desired_priv)
 
         privilege_change_count = 0
         while True:
-            # if we are already at the desired priv, we don&#39;t need to do any thing
-            current_priv_patterns = self._determine_current_priv(
-                current_prompt=self.channel.get_prompt()
+            current_prompt = self.channel.get_prompt()
+            privilege_action, target_priv = self._process_acquire_priv(
+                resolved_priv=resolved_priv,
+                map_to_desired_priv=map_to_desired_priv,
+                current_prompt=current_prompt,
             )
 
-            if desired_priv in current_priv_patterns:
-                LOG.info(f&#34;Acquired requested privilege level `{desired_priv}`&#34;)
-                self._current_priv_level = self.privilege_levels[desired_priv]
+            if privilege_action == PrivilegeAction.NO_ACTION:
                 return
+            if privilege_action == PrivilegeAction.DEESCALATE:
+                self._deescalate(current_priv=target_priv)
+            if privilege_action == PrivilegeAction.ESCALATE:
+                self._escalate(escalate_priv=target_priv)
 
-            # if multiple patterns match pick the zeroith... the only time patterns should be
-            # identical is if we have privilege levels like &#34;configuration&#34; or
-            # &#34;configuration_exclusive&#34; that have identical prompts (ex: IOSXRDriver)
-            current_priv = self.privilege_levels[current_priv_patterns[0]]
-
-            map_to_current_priv = self._priv_map[current_priv.name]
-            priv_map = (
-                map_to_current_priv
-                if map_to_current_priv &gt; map_to_desired_priv
-                else map_to_desired_priv
-            )
-
-            desired_priv_index = priv_map.index(resolved_priv)
-            try:
-                current_priv_index = priv_map.index(current_priv.name)
-            except ValueError:
-                # if the current priv is not in the map for the desired priv; set the current index
-                # to the &#34;top&#34; (end) of the priv map and work our way back down
-                current_priv_index = len(priv_map)
-            if current_priv_index &gt; desired_priv_index:
-                deescalate_priv = priv_map[current_priv_index - 1]
-                LOG.info(f&#34;Attempting to deescalate from {current_priv.name} to {deescalate_priv}&#34;)
-                self._deescalate(current_priv=current_priv)
-            else:
-                escalate_priv = self.privilege_levels[priv_map[current_priv_index + 1]]
-                LOG.info(f&#34;Attempting to escalate from {current_priv.name} to {escalate_priv.name}&#34;)
-                self._escalate(escalate_priv=escalate_priv)
             privilege_change_count += 1
             if privilege_change_count &gt; len(self.privilege_levels) * 2:
-                msg = f&#34;Failed to acquire requested privilege level {desired_priv}&#34;
+                msg = f&#34;Failed to acquire requested privilege level {resolved_priv}&#34;
                 raise CouldNotAcquirePrivLevel(msg)
-
-    def _update_response(self, response: Response) -&gt; None:
-        &#34;&#34;&#34;
-        Update response with network driver specific data
-
-        This happens here as the underlying channel provides a response object but is unaware of any
-        of the network/platform specific attributes that may need to get updated
-
-        Args:
-            response: response to update
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        response.textfsm_platform = self.textfsm_platform
-        response.genie_platform = self.genie_platform
 
     def send_command(
         self,
@@ -1210,7 +770,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
                 as of current execution
 
         Returns:
-            responses: list of Scrapli Response objects
+            ScrapliMultiResponse: Scrapli MultiResponse object
 
         Raises:
             N/A
@@ -1252,20 +812,13 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
                 as of current execution
 
         Returns:
-            responses: list of Scrapli Response objects
+            ScrapliMultiResponse: Scrapli MultiResponse object
 
         Raises:
-            TypeError: if anything but a string is provided for `file`
+            N/A
 
         &#34;&#34;&#34;
-        if not isinstance(file, str):
-            raise TypeError(
-                f&#34;`send_commands_from_file` expects a string path to file, got {type(file)}&#34;
-            )
-        resolved_file = resolve_file(file)
-
-        with open(resolved_file, &#34;r&#34;) as f:
-            commands = f.read().splitlines()
+        commands = self._pre_send_commands_from_file(file=file)
 
         return self.send_commands(
             commands=commands,
@@ -1358,24 +911,6 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 
         return response
 
-    def register_configuration_session(self, session_name: str) -&gt; None:
-        &#34;&#34;&#34;
-        If applicable, register a configuration session as a valid privilege level
-
-        Args:
-            session_name: name of config session to register
-
-        Returns:
-            N/A:  # noqa: DAR202
-
-        Raises:
-            NotImplementedError: unless overridden by concrete class
-
-        &#34;&#34;&#34;
-        raise NotImplementedError(
-            f&#34;Configuration sessions not supported for `{self.__class__.__name__}`&#34;
-        )
-
     def _abort_config(self) -&gt; None:
         &#34;&#34;&#34;
         Abort a configuration operation/session if applicable (for config sessions like junos/iosxr)
@@ -1391,55 +926,92 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 
         &#34;&#34;&#34;
 
-    def send_configs(
+    def send_config(
         self,
-        configs: Union[str, List[str]],
+        config: str,
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         privilege_level: str = &#34;&#34;,
-    ) -&gt; List[Response]:
+    ) -&gt; Response:
         &#34;&#34;&#34;
         Send configuration(s)
 
         Args:
-            configs: string or list of strings to send to device in config mode
+            config: string configuration to send to the device, supports sending multi-line strings
             strip_prompt: True/False strip prompt from returned output
             failed_when_contains: string or list of strings indicating failure if found in response
             stop_on_failed: True/False stop executing commands if a command fails, returns results
                 as of current execution; aborts configuration session if applicable (iosxr/junos or
                 eos/nxos if using a configuration session)
             privilege_level: name of configuration privilege level/type to acquire; this is platform
-                dependant, so check the device driver for specifics. Examples of privilege_name
+                dependent, so check the device driver for specifics. Examples of privilege_name
                 would be &#34;configuration_exclusive&#34; for IOSXRDriver, or &#34;configuration_private&#34; for
                 JunosDriver. You can also pass in a name of a configuration session such as
                 &#34;my-config-session&#34; if you have registered a session using the
                 &#34;register_config_session&#34; method of the EOSDriver or NXOSDriver.
 
         Returns:
-            responses: List of Scrape Response objects
+            Response: Scrapli Response object
 
         Raises:
             N/A
 
         &#34;&#34;&#34;
-        if isinstance(configs, str):
-            configs = [configs]
+        split_config = self._pre_send_config(config=config)
 
-        if privilege_level:
-            resolved_privilege_level = self._get_privilege_level_name(
-                requested_priv=privilege_level
-            )
-        else:
-            resolved_privilege_level = &#34;configuration&#34;
+        # now that we have a list of configs, just use send_configs to actually execute them
+        multi_response = self.send_configs(
+            configs=split_config,
+            strip_prompt=strip_prompt,
+            failed_when_contains=failed_when_contains,
+            stop_on_failed=stop_on_failed,
+            privilege_level=privilege_level,
+        )
+        return self._post_send_config(config=config, multi_response=multi_response)
+
+    def send_configs(
+        self,
+        configs: List[str],
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+        stop_on_failed: bool = False,
+        privilege_level: str = &#34;&#34;,
+    ) -&gt; ScrapliMultiResponse:
+        &#34;&#34;&#34;
+        Send configuration(s)
+
+        Args:
+            configs: list of strings to send to device in config mode
+            strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
+            stop_on_failed: True/False stop executing commands if a command fails, returns results
+                as of current execution; aborts configuration session if applicable (iosxr/junos or
+                eos/nxos if using a configuration session)
+            privilege_level: name of configuration privilege level/type to acquire; this is platform
+                dependent, so check the device driver for specifics. Examples of privilege_name
+                would be &#34;configuration_exclusive&#34; for IOSXRDriver, or &#34;configuration_private&#34; for
+                JunosDriver. You can also pass in a name of a configuration session such as
+                &#34;my-config-session&#34; if you have registered a session using the
+                &#34;register_config_session&#34; method of the EOSDriver or NXOSDriver.
+
+        Returns:
+            ScrapliMultiResponse: Scrapli MultiResponse object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        resolved_privilege_level, failed_when_contains = self._pre_send_configs(
+            configs=configs,
+            failed_when_contains=failed_when_contains,
+            privilege_level=privilege_level,
+        )
 
         if self._current_priv_level.name != resolved_privilege_level:
             self.acquire_priv(desired_priv=resolved_privilege_level)
 
-        if failed_when_contains is None:
-            failed_when_contains = self.failed_when_contains
-
-        responses = []
+        responses = MultiResponse()
         _failed_during_execution = False
         for config in configs:
             response = super().send_command(
@@ -1448,17 +1020,15 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
                 failed_when_contains=failed_when_contains,
             )
             responses.append(response)
-            if stop_on_failed is True and response.failed is True:
+            if response.failed is True:
                 _failed_during_execution = True
-                break
-
-        for response in responses:
-            self._update_response(response=response)
+                if stop_on_failed is True:
+                    break
 
         if _failed_during_execution is True:
             self._abort_config()
 
-        return responses
+        return self._post_send_configs(responses=responses)
 
     def send_configs_from_file(
         self,
@@ -1467,7 +1037,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         privilege_level: str = &#34;&#34;,
-    ) -&gt; List[Response]:
+    ) -&gt; ScrapliMultiResponse:
         &#34;&#34;&#34;
         Send configuration(s) from a file
 
@@ -1479,27 +1049,20 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
                 as of current execution; aborts configuration session if applicable (iosxr/junos or
                 eos/nxos if using a configuration session)
             privilege_level: name of configuration privilege level/type to acquire; this is platform
-                dependant, so check the device driver for specifics. Examples of privilege_name
+                dependent, so check the device driver for specifics. Examples of privilege_name
                 would be &#34;exclusive&#34; for IOSXRDriver, &#34;private&#34; for JunosDriver. You can also pass
                 in a name of a configuration session such as &#34;session_mysession&#34; if you have
                 registered a session using the &#34;register_config_session&#34; method of the EOSDriver or
                 NXOSDriver.
 
         Returns:
-            responses: List of Scrape Response objects
+            ScrapliMultiResponse: Scrapli MultiResponse object
 
         Raises:
-            TypeError: if anything but a string is provided for `file`
+            N/A
 
         &#34;&#34;&#34;
-        if not isinstance(file, str):
-            raise TypeError(
-                f&#34;`send_configs_from_file` expects a string path to file, got {type(file)}&#34;
-            )
-        resolved_file = resolve_file(file)
-
-        with open(resolved_file, &#34;r&#34;) as f:
-            configs = f.read().splitlines()
+        configs = self._pre_send_configs_from_file(file=file)
 
         return self.send_configs(
             configs=configs,
@@ -1513,7 +1076,9 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 <ul class="hlist">
 <li><a title="scrapli.driver.generic_driver.GenericDriver" href="generic_driver.html#scrapli.driver.generic_driver.GenericDriver">GenericDriver</a></li>
 <li><a title="scrapli.driver.driver.Scrape" href="driver.html#scrapli.driver.driver.Scrape">Scrape</a></li>
-<li>abc.ABC</li>
+<li><a title="scrapli.driver.base_driver.ScrapeBase" href="base_driver.html#scrapli.driver.base_driver.ScrapeBase">ScrapeBase</a></li>
+<li><a title="scrapli.driver.base_generic_driver.GenericDriverBase" href="base_generic_driver.html#scrapli.driver.base_generic_driver.GenericDriverBase">GenericDriverBase</a></li>
+<li><a title="scrapli.driver.base_network_driver.NetworkDriverBase" href="base_network_driver.html#scrapli.driver.base_network_driver.NetworkDriverBase">NetworkDriverBase</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -1566,97 +1131,28 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
        CouldNotAcquirePrivLevel: if scrapli cannot get to the requested privilege level
 
     &#34;&#34;&#34;
-    LOG.info(f&#34;Attempting to acquire `{desired_priv}` privilege level&#34;)
-    resolved_priv = self._get_privilege_level_name(requested_priv=desired_priv)
-    map_to_desired_priv = self._priv_map[resolved_priv]
+    resolved_priv, map_to_desired_priv = self._pre_acquire_priv(desired_priv=desired_priv)
 
     privilege_change_count = 0
     while True:
-        # if we are already at the desired priv, we don&#39;t need to do any thing
-        current_priv_patterns = self._determine_current_priv(
-            current_prompt=self.channel.get_prompt()
+        current_prompt = self.channel.get_prompt()
+        privilege_action, target_priv = self._process_acquire_priv(
+            resolved_priv=resolved_priv,
+            map_to_desired_priv=map_to_desired_priv,
+            current_prompt=current_prompt,
         )
 
-        if desired_priv in current_priv_patterns:
-            LOG.info(f&#34;Acquired requested privilege level `{desired_priv}`&#34;)
-            self._current_priv_level = self.privilege_levels[desired_priv]
+        if privilege_action == PrivilegeAction.NO_ACTION:
             return
+        if privilege_action == PrivilegeAction.DEESCALATE:
+            self._deescalate(current_priv=target_priv)
+        if privilege_action == PrivilegeAction.ESCALATE:
+            self._escalate(escalate_priv=target_priv)
 
-        # if multiple patterns match pick the zeroith... the only time patterns should be
-        # identical is if we have privilege levels like &#34;configuration&#34; or
-        # &#34;configuration_exclusive&#34; that have identical prompts (ex: IOSXRDriver)
-        current_priv = self.privilege_levels[current_priv_patterns[0]]
-
-        map_to_current_priv = self._priv_map[current_priv.name]
-        priv_map = (
-            map_to_current_priv
-            if map_to_current_priv &gt; map_to_desired_priv
-            else map_to_desired_priv
-        )
-
-        desired_priv_index = priv_map.index(resolved_priv)
-        try:
-            current_priv_index = priv_map.index(current_priv.name)
-        except ValueError:
-            # if the current priv is not in the map for the desired priv; set the current index
-            # to the &#34;top&#34; (end) of the priv map and work our way back down
-            current_priv_index = len(priv_map)
-        if current_priv_index &gt; desired_priv_index:
-            deescalate_priv = priv_map[current_priv_index - 1]
-            LOG.info(f&#34;Attempting to deescalate from {current_priv.name} to {deescalate_priv}&#34;)
-            self._deescalate(current_priv=current_priv)
-        else:
-            escalate_priv = self.privilege_levels[priv_map[current_priv_index + 1]]
-            LOG.info(f&#34;Attempting to escalate from {current_priv.name} to {escalate_priv.name}&#34;)
-            self._escalate(escalate_priv=escalate_priv)
         privilege_change_count += 1
         if privilege_change_count &gt; len(self.privilege_levels) * 2:
-            msg = f&#34;Failed to acquire requested privilege level {desired_priv}&#34;
+            msg = f&#34;Failed to acquire requested privilege level {resolved_priv}&#34;
             raise CouldNotAcquirePrivLevel(msg)</code></pre>
-</details>
-</dd>
-<dt id="scrapli.driver.network_driver.NetworkDriver.register_configuration_session"><code class="name flex">
-<span>def <span class="ident">register_configuration_session</span></span>(<span>self, session_name: str) -> NoneType</span>
-</code></dt>
-<dd>
-<div class="desc"><p>If applicable, register a configuration session as a valid privilege level</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>session_name</code></strong></dt>
-<dd>name of config session to register</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N/A:
-# noqa: DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>NotImplementedError</code></dt>
-<dd>unless overridden by concrete class</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def register_configuration_session(self, session_name: str) -&gt; None:
-    &#34;&#34;&#34;
-    If applicable, register a configuration session as a valid privilege level
-
-    Args:
-        session_name: name of config session to register
-
-    Returns:
-        N/A:  # noqa: DAR202
-
-    Raises:
-        NotImplementedError: unless overridden by concrete class
-
-    &#34;&#34;&#34;
-    raise NotImplementedError(
-        f&#34;Configuration sessions not supported for `{self.__class__.__name__}`&#34;
-    )</code></pre>
 </details>
 </dd>
 <dt id="scrapli.driver.network_driver.NetworkDriver.send_command"><code class="name flex">
@@ -1746,8 +1242,8 @@ as of current execution</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>responses</code></dt>
-<dd>list of Scrapli Response objects</dd>
+<dt><code>ScrapliMultiResponse</code></dt>
+<dd>Scrapli MultiResponse object</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
@@ -1778,7 +1274,7 @@ as of current execution</dd>
             as of current execution
 
     Returns:
-        responses: list of Scrapli Response objects
+        ScrapliMultiResponse: Scrapli MultiResponse object
 
     Raises:
         N/A
@@ -1803,15 +1299,15 @@ as of current execution</dd>
     return responses</code></pre>
 </details>
 </dd>
-<dt id="scrapli.driver.network_driver.NetworkDriver.send_configs"><code class="name flex">
-<span>def <span class="ident">send_configs</span></span>(<span>self, configs: Union[str, List[str]], strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '') -> List[<a title="scrapli.response.Response" href="../response.html#scrapli.response.Response">Response</a>]</span>
+<dt id="scrapli.driver.network_driver.NetworkDriver.send_config"><code class="name flex">
+<span>def <span class="ident">send_config</span></span>(<span>self, config: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '') -> <a title="scrapli.response.Response" href="../response.html#scrapli.response.Response">Response</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send configuration(s)</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>configs</code></strong></dt>
-<dd>string or list of strings to send to device in config mode</dd>
+<dt><strong><code>config</code></strong></dt>
+<dd>string configuration to send to the device, supports sending multi-line strings</dd>
 <dt><strong><code>strip_prompt</code></strong></dt>
 <dd>True/False strip prompt from returned output</dd>
 <dt><strong><code>failed_when_contains</code></strong></dt>
@@ -1822,7 +1318,7 @@ as of current execution; aborts configuration session if applicable (iosxr/junos
 eos/nxos if using a configuration session)</dd>
 <dt><strong><code>privilege_level</code></strong></dt>
 <dd>name of configuration privilege level/type to acquire; this is platform
-dependant, so check the device driver for specifics. Examples of privilege_name
+dependent, so check the device driver for specifics. Examples of privilege_name
 would be "configuration_exclusive" for IOSXRDriver, or "configuration_private" for
 JunosDriver. You can also pass in a name of a configuration session such as
 "my-config-session" if you have registered a session using the
@@ -1830,8 +1326,92 @@ JunosDriver. You can also pass in a name of a configuration session such as
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>responses</code></dt>
-<dd>List of Scrape Response objects</dd>
+<dt><code>Response</code></dt>
+<dd>Scrapli Response object</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def send_config(
+    self,
+    config: str,
+    strip_prompt: bool = True,
+    failed_when_contains: Optional[Union[str, List[str]]] = None,
+    stop_on_failed: bool = False,
+    privilege_level: str = &#34;&#34;,
+) -&gt; Response:
+    &#34;&#34;&#34;
+    Send configuration(s)
+
+    Args:
+        config: string configuration to send to the device, supports sending multi-line strings
+        strip_prompt: True/False strip prompt from returned output
+        failed_when_contains: string or list of strings indicating failure if found in response
+        stop_on_failed: True/False stop executing commands if a command fails, returns results
+            as of current execution; aborts configuration session if applicable (iosxr/junos or
+            eos/nxos if using a configuration session)
+        privilege_level: name of configuration privilege level/type to acquire; this is platform
+            dependent, so check the device driver for specifics. Examples of privilege_name
+            would be &#34;configuration_exclusive&#34; for IOSXRDriver, or &#34;configuration_private&#34; for
+            JunosDriver. You can also pass in a name of a configuration session such as
+            &#34;my-config-session&#34; if you have registered a session using the
+            &#34;register_config_session&#34; method of the EOSDriver or NXOSDriver.
+
+    Returns:
+        Response: Scrapli Response object
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    split_config = self._pre_send_config(config=config)
+
+    # now that we have a list of configs, just use send_configs to actually execute them
+    multi_response = self.send_configs(
+        configs=split_config,
+        strip_prompt=strip_prompt,
+        failed_when_contains=failed_when_contains,
+        stop_on_failed=stop_on_failed,
+        privilege_level=privilege_level,
+    )
+    return self._post_send_config(config=config, multi_response=multi_response)</code></pre>
+</details>
+</dd>
+<dt id="scrapli.driver.network_driver.NetworkDriver.send_configs"><code class="name flex">
+<span>def <span class="ident">send_configs</span></span>(<span>self, configs: List[str], strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '') -> collections.UserList</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send configuration(s)</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>configs</code></strong></dt>
+<dd>list of strings to send to device in config mode</dd>
+<dt><strong><code>strip_prompt</code></strong></dt>
+<dd>True/False strip prompt from returned output</dd>
+<dt><strong><code>failed_when_contains</code></strong></dt>
+<dd>string or list of strings indicating failure if found in response</dd>
+<dt><strong><code>stop_on_failed</code></strong></dt>
+<dd>True/False stop executing commands if a command fails, returns results
+as of current execution; aborts configuration session if applicable (iosxr/junos or
+eos/nxos if using a configuration session)</dd>
+<dt><strong><code>privilege_level</code></strong></dt>
+<dd>name of configuration privilege level/type to acquire; this is platform
+dependent, so check the device driver for specifics. Examples of privilege_name
+would be "configuration_exclusive" for IOSXRDriver, or "configuration_private" for
+JunosDriver. You can also pass in a name of a configuration session such as
+"my-config-session" if you have registered a session using the
+"register_config_session" method of the EOSDriver or NXOSDriver.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>ScrapliMultiResponse</code></dt>
+<dd>Scrapli MultiResponse object</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
@@ -1844,53 +1424,46 @@ JunosDriver. You can also pass in a name of a configuration session such as
 </summary>
 <pre><code class="python">def send_configs(
     self,
-    configs: Union[str, List[str]],
+    configs: List[str],
     strip_prompt: bool = True,
     failed_when_contains: Optional[Union[str, List[str]]] = None,
     stop_on_failed: bool = False,
     privilege_level: str = &#34;&#34;,
-) -&gt; List[Response]:
+) -&gt; ScrapliMultiResponse:
     &#34;&#34;&#34;
     Send configuration(s)
 
     Args:
-        configs: string or list of strings to send to device in config mode
+        configs: list of strings to send to device in config mode
         strip_prompt: True/False strip prompt from returned output
         failed_when_contains: string or list of strings indicating failure if found in response
         stop_on_failed: True/False stop executing commands if a command fails, returns results
             as of current execution; aborts configuration session if applicable (iosxr/junos or
             eos/nxos if using a configuration session)
         privilege_level: name of configuration privilege level/type to acquire; this is platform
-            dependant, so check the device driver for specifics. Examples of privilege_name
+            dependent, so check the device driver for specifics. Examples of privilege_name
             would be &#34;configuration_exclusive&#34; for IOSXRDriver, or &#34;configuration_private&#34; for
             JunosDriver. You can also pass in a name of a configuration session such as
             &#34;my-config-session&#34; if you have registered a session using the
             &#34;register_config_session&#34; method of the EOSDriver or NXOSDriver.
 
     Returns:
-        responses: List of Scrape Response objects
+        ScrapliMultiResponse: Scrapli MultiResponse object
 
     Raises:
         N/A
 
     &#34;&#34;&#34;
-    if isinstance(configs, str):
-        configs = [configs]
-
-    if privilege_level:
-        resolved_privilege_level = self._get_privilege_level_name(
-            requested_priv=privilege_level
-        )
-    else:
-        resolved_privilege_level = &#34;configuration&#34;
+    resolved_privilege_level, failed_when_contains = self._pre_send_configs(
+        configs=configs,
+        failed_when_contains=failed_when_contains,
+        privilege_level=privilege_level,
+    )
 
     if self._current_priv_level.name != resolved_privilege_level:
         self.acquire_priv(desired_priv=resolved_privilege_level)
 
-    if failed_when_contains is None:
-        failed_when_contains = self.failed_when_contains
-
-    responses = []
+    responses = MultiResponse()
     _failed_during_execution = False
     for config in configs:
         response = super().send_command(
@@ -1899,21 +1472,19 @@ JunosDriver. You can also pass in a name of a configuration session such as
             failed_when_contains=failed_when_contains,
         )
         responses.append(response)
-        if stop_on_failed is True and response.failed is True:
+        if response.failed is True:
             _failed_during_execution = True
-            break
-
-    for response in responses:
-        self._update_response(response=response)
+            if stop_on_failed is True:
+                break
 
     if _failed_during_execution is True:
         self._abort_config()
 
-    return responses</code></pre>
+    return self._post_send_configs(responses=responses)</code></pre>
 </details>
 </dd>
 <dt id="scrapli.driver.network_driver.NetworkDriver.send_configs_from_file"><code class="name flex">
-<span>def <span class="ident">send_configs_from_file</span></span>(<span>self, file: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '') -> List[<a title="scrapli.response.Response" href="../response.html#scrapli.response.Response">Response</a>]</span>
+<span>def <span class="ident">send_configs_from_file</span></span>(<span>self, file: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '') -> collections.UserList</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send configuration(s) from a file</p>
@@ -1931,7 +1502,7 @@ as of current execution; aborts configuration session if applicable (iosxr/junos
 eos/nxos if using a configuration session)</dd>
 <dt><strong><code>privilege_level</code></strong></dt>
 <dd>name of configuration privilege level/type to acquire; this is platform
-dependant, so check the device driver for specifics. Examples of privilege_name
+dependent, so check the device driver for specifics. Examples of privilege_name
 would be "exclusive" for IOSXRDriver, "private" for JunosDriver. You can also pass
 in a name of a configuration session such as "session_mysession" if you have
 registered a session using the "register_config_session" method of the EOSDriver or
@@ -1939,13 +1510,13 @@ NXOSDriver.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>responses</code></dt>
-<dd>List of Scrape Response objects</dd>
+<dt><code>ScrapliMultiResponse</code></dt>
+<dd>Scrapli MultiResponse object</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><code>TypeError</code></dt>
-<dd>if anything but a string is provided for <code>file</code></dd>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -1958,7 +1529,7 @@ NXOSDriver.</dd>
     failed_when_contains: Optional[Union[str, List[str]]] = None,
     stop_on_failed: bool = False,
     privilege_level: str = &#34;&#34;,
-) -&gt; List[Response]:
+) -&gt; ScrapliMultiResponse:
     &#34;&#34;&#34;
     Send configuration(s) from a file
 
@@ -1970,27 +1541,20 @@ NXOSDriver.</dd>
             as of current execution; aborts configuration session if applicable (iosxr/junos or
             eos/nxos if using a configuration session)
         privilege_level: name of configuration privilege level/type to acquire; this is platform
-            dependant, so check the device driver for specifics. Examples of privilege_name
+            dependent, so check the device driver for specifics. Examples of privilege_name
             would be &#34;exclusive&#34; for IOSXRDriver, &#34;private&#34; for JunosDriver. You can also pass
             in a name of a configuration session such as &#34;session_mysession&#34; if you have
             registered a session using the &#34;register_config_session&#34; method of the EOSDriver or
             NXOSDriver.
 
     Returns:
-        responses: List of Scrape Response objects
+        ScrapliMultiResponse: Scrapli MultiResponse object
 
     Raises:
-        TypeError: if anything but a string is provided for `file`
+        N/A
 
     &#34;&#34;&#34;
-    if not isinstance(file, str):
-        raise TypeError(
-            f&#34;`send_configs_from_file` expects a string path to file, got {type(file)}&#34;
-        )
-    resolved_file = resolve_file(file)
-
-    with open(resolved_file, &#34;r&#34;) as f:
-        configs = f.read().splitlines()
+    configs = self._pre_send_configs_from_file(file=file)
 
     return self.send_configs(
         configs=configs,
@@ -2153,55 +1717,6 @@ failed command/interaction</dd>
     return response</code></pre>
 </details>
 </dd>
-<dt id="scrapli.driver.network_driver.NetworkDriver.update_privilege_levels"><code class="name flex">
-<span>def <span class="ident">update_privilege_levels</span></span>(<span>self, update_channel: bool = True) -> NoneType</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Re-generate the privilege map, and update the comms prompt pattern</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>update_channel</code></strong></dt>
-<dd>True/False update the channel pattern too &ndash; likely only ever set to
-False for class initialization before channel is opened</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N/A
-# noqa: DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N/A</code></dt>
-<dd>&nbsp;</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def update_privilege_levels(self, update_channel: bool = True) -&gt; None:
-    &#34;&#34;&#34;
-    Re-generate the privilege map, and update the comms prompt pattern
-
-    Args:
-        update_channel: True/False update the channel pattern too -- likely only ever set to
-            False for class initialization before channel is opened
-
-    Returns:
-        N/A  # noqa: DAR202
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    self._build_priv_map()
-    self._generate_comms_prompt_pattern()
-    # clear the lru cache as patterns may have been updated
-    self._determine_current_priv.cache_clear()
-    if update_channel is True:
-        self.channel.comms_prompt_pattern = self.comms_prompt_pattern</code></pre>
-</details>
-</dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -2209,130 +1724,18 @@ False for class initialization before channel is opened</dd>
 <ul class="hlist">
 <li><code><a title="scrapli.driver.generic_driver.GenericDriver.close" href="driver.html#scrapli.driver.driver.Scrape.close">close</a></code></li>
 <li><code><a title="scrapli.driver.generic_driver.GenericDriver.get_prompt" href="generic_driver.html#scrapli.driver.generic_driver.GenericDriver.get_prompt">get_prompt</a></code></li>
-<li><code><a title="scrapli.driver.generic_driver.GenericDriver.isalive" href="driver.html#scrapli.driver.driver.Scrape.isalive">isalive</a></code></li>
+<li><code><a title="scrapli.driver.generic_driver.GenericDriver.isalive" href="base_driver.html#scrapli.driver.base_driver.ScrapeBase.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.driver.generic_driver.GenericDriver.open" href="driver.html#scrapli.driver.driver.Scrape.open">open</a></code></li>
 <li><code><a title="scrapli.driver.generic_driver.GenericDriver.send_commands_from_file" href="generic_driver.html#scrapli.driver.generic_driver.GenericDriver.send_commands_from_file">send_commands_from_file</a></code></li>
 </ul>
 </li>
+<li><code><b><a title="scrapli.driver.base_network_driver.NetworkDriverBase" href="base_network_driver.html#scrapli.driver.base_network_driver.NetworkDriverBase">NetworkDriverBase</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scrapli.driver.base_network_driver.NetworkDriverBase.register_configuration_session" href="base_network_driver.html#scrapli.driver.base_network_driver.NetworkDriverBase.register_configuration_session">register_configuration_session</a></code></li>
+<li><code><a title="scrapli.driver.base_network_driver.NetworkDriverBase.update_privilege_levels" href="base_network_driver.html#scrapli.driver.base_network_driver.NetworkDriverBase.update_privilege_levels">update_privilege_levels</a></code></li>
 </ul>
-</dd>
-<dt id="scrapli.driver.network_driver.PrivilegeLevel"><code class="flex name class">
-<span>class <span class="ident">PrivilegeLevel</span></span>
-<span>(</span><span>pattern: str, name: str, previous_priv: str, deescalate: str, escalate: str, escalate_auth: bool, escalate_prompt: str)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>PrivilegeLevel Object</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>pattern</code></strong></dt>
-<dd>regex pattern to use to identify this privilege level by the prompt</dd>
-<dt><strong><code>name</code></strong></dt>
-<dd>friendly name of this privilege level</dd>
-<dt><strong><code>previous_priv</code></strong></dt>
-<dd>name of the lower/previous privilege level</dd>
-<dt><strong><code>deescalate</code></strong></dt>
-<dd>how to deescalate <em>from</em> this privilege level (to the lower/previous priv)</dd>
-<dt><strong><code>escalate</code></strong></dt>
-<dd>how to escalate <em>to</em> this privilege level (from the lower/previous priv)</dd>
-<dt><strong><code>escalate_auth</code></strong></dt>
-<dd>True/False escalation requires authentication</dd>
-<dt><strong><code>escalate_prompt</code></strong></dt>
-<dd>prompt pattern to search for during escalation if escalate auth is True</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N/A
-# noqa: DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N/A</code></dt>
-<dd>&nbsp;</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class PrivilegeLevel:
-    __slots__ = (
-        &#34;pattern&#34;,
-        &#34;name&#34;,
-        &#34;previous_priv&#34;,
-        &#34;deescalate&#34;,
-        &#34;escalate&#34;,
-        &#34;escalate_auth&#34;,
-        &#34;escalate_prompt&#34;,
-    )
-
-    def __init__(
-        self,
-        pattern: str,
-        name: str,
-        previous_priv: str,
-        deescalate: str,
-        escalate: str,
-        escalate_auth: bool,
-        escalate_prompt: str,
-    ):
-        &#34;&#34;&#34;
-        PrivilegeLevel Object
-
-        Args:
-            pattern: regex pattern to use to identify this privilege level by the prompt
-            name: friendly name of this privilege level
-            previous_priv: name of the lower/previous privilege level
-            deescalate: how to deescalate *from* this privilege level (to the lower/previous priv)
-            escalate: how to escalate *to* this privilege level (from the lower/previous priv)
-            escalate_auth: True/False escalation requires authentication
-            escalate_prompt: prompt pattern to search for during escalation if escalate auth is True
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.pattern = pattern
-        self.name = name
-        self.previous_priv = previous_priv
-        self.deescalate = deescalate
-        self.escalate = escalate
-        self.escalate_auth = escalate_auth
-        self.escalate_prompt = escalate_prompt</code></pre>
-</details>
-<h3>Instance variables</h3>
-<dl>
-<dt id="scrapli.driver.network_driver.PrivilegeLevel.deescalate"><code class="name">var <span class="ident">deescalate</span></code></dt>
-<dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
-</dd>
-<dt id="scrapli.driver.network_driver.PrivilegeLevel.escalate"><code class="name">var <span class="ident">escalate</span></code></dt>
-<dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
-</dd>
-<dt id="scrapli.driver.network_driver.PrivilegeLevel.escalate_auth"><code class="name">var <span class="ident">escalate_auth</span></code></dt>
-<dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
-</dd>
-<dt id="scrapli.driver.network_driver.PrivilegeLevel.escalate_prompt"><code class="name">var <span class="ident">escalate_prompt</span></code></dt>
-<dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
-</dd>
-<dt id="scrapli.driver.network_driver.PrivilegeLevel.name"><code class="name">var <span class="ident">name</span></code></dt>
-<dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
-</dd>
-<dt id="scrapli.driver.network_driver.PrivilegeLevel.pattern"><code class="name">var <span class="ident">pattern</span></code></dt>
-<dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
-</dd>
-<dt id="scrapli.driver.network_driver.PrivilegeLevel.previous_priv"><code class="name">var <span class="ident">previous_priv</span></code></dt>
-<dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
-</dd>
-</dl>
+</li>
+</ul>
 </dd>
 </dl>
 </section>
@@ -2354,25 +1757,12 @@ False for class initialization before channel is opened</dd>
 <h4><code><a title="scrapli.driver.network_driver.NetworkDriver" href="#scrapli.driver.network_driver.NetworkDriver">NetworkDriver</a></code></h4>
 <ul class="">
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.acquire_priv" href="#scrapli.driver.network_driver.NetworkDriver.acquire_priv">acquire_priv</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.register_configuration_session" href="#scrapli.driver.network_driver.NetworkDriver.register_configuration_session">register_configuration_session</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_command" href="#scrapli.driver.network_driver.NetworkDriver.send_command">send_command</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_commands" href="#scrapli.driver.network_driver.NetworkDriver.send_commands">send_commands</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_config" href="#scrapli.driver.network_driver.NetworkDriver.send_config">send_config</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_configs" href="#scrapli.driver.network_driver.NetworkDriver.send_configs">send_configs</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_configs_from_file" href="#scrapli.driver.network_driver.NetworkDriver.send_configs_from_file">send_configs_from_file</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_interactive" href="#scrapli.driver.network_driver.NetworkDriver.send_interactive">send_interactive</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.update_privilege_levels" href="#scrapli.driver.network_driver.NetworkDriver.update_privilege_levels">update_privilege_levels</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="scrapli.driver.network_driver.PrivilegeLevel" href="#scrapli.driver.network_driver.PrivilegeLevel">PrivilegeLevel</a></code></h4>
-<ul class="two-column">
-<li><code><a title="scrapli.driver.network_driver.PrivilegeLevel.deescalate" href="#scrapli.driver.network_driver.PrivilegeLevel.deescalate">deescalate</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.PrivilegeLevel.escalate" href="#scrapli.driver.network_driver.PrivilegeLevel.escalate">escalate</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.PrivilegeLevel.escalate_auth" href="#scrapli.driver.network_driver.PrivilegeLevel.escalate_auth">escalate_auth</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.PrivilegeLevel.escalate_prompt" href="#scrapli.driver.network_driver.PrivilegeLevel.escalate_prompt">escalate_prompt</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.PrivilegeLevel.name" href="#scrapli.driver.network_driver.PrivilegeLevel.name">name</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.PrivilegeLevel.pattern" href="#scrapli.driver.network_driver.PrivilegeLevel.pattern">pattern</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.PrivilegeLevel.previous_priv" href="#scrapli.driver.network_driver.PrivilegeLevel.previous_priv">previous_priv</a></code></li>
 </ul>
 </li>
 </ul>

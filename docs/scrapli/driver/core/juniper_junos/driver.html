@@ -26,10 +26,57 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.driver.core.juniper_junos.driver&#34;&#34;&#34;
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from scrapli.driver import NetworkDriver
-from scrapli.driver.network_driver import PrivilegeLevel
+from scrapli.driver.base_network_driver import PrivilegeLevel
+
+PRIVS = {
+    &#34;exec&#34;: (
+        PrivilegeLevel(
+            pattern=r&#34;^({\w+:\d}\n){0,1}[a-z0-9.\-@()/:]{1,32}&gt;\s?$&#34;,
+            name=&#34;exec&#34;,
+            previous_priv=&#34;&#34;,
+            deescalate=&#34;&#34;,
+            escalate=&#34;&#34;,
+            escalate_auth=False,
+            escalate_prompt=&#34;&#34;,
+        )
+    ),
+    &#34;configuration&#34;: (
+        PrivilegeLevel(
+            pattern=r&#34;^({\w+:\d}\[edit\]\n){0,1}[a-z0-9.\-@()/:]{1,32}#\s?$&#34;,
+            name=&#34;configuration&#34;,
+            previous_priv=&#34;exec&#34;,
+            deescalate=&#34;exit configuration-mode&#34;,
+            escalate=&#34;configure&#34;,
+            escalate_auth=False,
+            escalate_prompt=&#34;&#34;,
+        )
+    ),
+    &#34;configuration_exclusive&#34;: (
+        PrivilegeLevel(
+            pattern=r&#34;^({\w+:\d}\[edit\]\n){0,1}[a-z0-9.\-@()/:]{1,32}#\s?$&#34;,
+            name=&#34;configuration_exclusive&#34;,
+            previous_priv=&#34;exec&#34;,
+            deescalate=&#34;exit configuration-mode&#34;,
+            escalate=&#34;configure exclusive&#34;,
+            escalate_auth=False,
+            escalate_prompt=&#34;&#34;,
+        )
+    ),
+    &#34;configuration_private&#34;: (
+        PrivilegeLevel(
+            pattern=r&#34;^({\w+:\d}\[edit\]\n){0,1}[a-z0-9.\-@()/:]{1,32}#\s?$&#34;,
+            name=&#34;configuration_private&#34;,
+            previous_priv=&#34;exec&#34;,
+            deescalate=&#34;exit configuration-mode&#34;,
+            escalate=&#34;configure private&#34;,
+            escalate_auth=False,
+            escalate_prompt=&#34;&#34;,
+        )
+    ),
+}
 
 
 def junos_on_open(conn: NetworkDriver) -&gt; None:
@@ -46,9 +93,9 @@ def junos_on_open(conn: NetworkDriver) -&gt; None:
         N/A
     &#34;&#34;&#34;
     conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
-    conn.channel.send_input(channel_input=&#34;set cli complete-on-space off&#34;)
-    conn.channel.send_input(channel_input=&#34;set cli screen-length 0&#34;)
-    conn.channel.send_input(channel_input=&#34;set cli screen-width 511&#34;)
+    conn.send_command(command=&#34;set cli complete-on-space off&#34;)
+    conn.send_command(command=&#34;set cli screen-length 0&#34;)
+    conn.send_command(command=&#34;set cli screen-width 511&#34;)
 
 
 def junos_on_close(conn: NetworkDriver) -&gt; None:
@@ -66,55 +113,22 @@ def junos_on_close(conn: NetworkDriver) -&gt; None:
     &#34;&#34;&#34;
     # write exit directly to the transport as channel would fail to find the prompt after sending
     # the exit command!
+    conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
     conn.transport.write(channel_input=&#34;exit&#34;)
     conn.transport.write(channel_input=conn.channel.comms_return_char)
-
-
-PRIVS = {
-    &#34;exec&#34;: (PrivilegeLevel(r&#34;^[a-z0-9.\-@()/:]{1,32}&gt;\s?$&#34;, &#34;exec&#34;, &#34;&#34;, &#34;&#34;, &#34;&#34;, False, &#34;&#34;,)),
-    &#34;configuration&#34;: (
-        PrivilegeLevel(
-            r&#34;^[a-z0-9.\-@()/:]{1,32}#\s?$&#34;,
-            &#34;configuration&#34;,
-            &#34;exec&#34;,
-            &#34;exit configuration-mode&#34;,
-            &#34;configure&#34;,
-            False,
-            &#34;&#34;,
-        )
-    ),
-    &#34;configuration_exclusive&#34;: (
-        PrivilegeLevel(
-            r&#34;^[a-z0-9.\-@()/:]{1,32}#\s?$&#34;,
-            &#34;configuration_exclusive&#34;,
-            &#34;exec&#34;,
-            &#34;exit configuration-mode&#34;,
-            &#34;configure exclusive&#34;,
-            False,
-            &#34;&#34;,
-        )
-    ),
-    &#34;configuration_private&#34;: (
-        PrivilegeLevel(
-            r&#34;^[a-z0-9.\-@()/:]{1,32}#\s?$&#34;,
-            &#34;configuration_private&#34;,
-            &#34;exec&#34;,
-            &#34;exit configuration-mode&#34;,
-            &#34;configure private&#34;,
-            False,
-            &#34;&#34;,
-        )
-    ),
-}
 
 
 class JunosDriver(NetworkDriver):
     def __init__(
         self,
         privilege_levels: Optional[Dict[str, PrivilegeLevel]] = None,
+        default_desired_privilege_level: str = &#34;exec&#34;,
+        auth_secondary: str = &#34;&#34;,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
-        auth_secondary: str = &#34;&#34;,
+        textfsm_platform: str = &#34;juniper_junos&#34;,
+        genie_platform: str = &#34;&#34;,
+        failed_when_contains: Optional[List[str]] = None,
         transport: str = &#34;system&#34;,
         **kwargs: Dict[str, Any],
     ):
@@ -124,6 +138,11 @@ class JunosDriver(NetworkDriver):
         Args:
             privilege_levels: optional user provided privilege levels, if left None will default to
                 scrapli standard privilege levels
+            default_desired_privilege_level: string of name of default desired priv, this is the
+                priv level that is generally used to disable paging/set terminal width and things
+                like that upon first login, and is also the priv level scrapli will try to acquire
+                for normal &#34;command&#34; operations (`send_command`, `send_commands`)
+            auth_secondary: password to use for secondary authentication (enable)
             on_open: callable that accepts the class instance as its only argument. this callable,
                 if provided, is executed immediately after authentication is completed. Common use
                 cases for this callable would be to disable paging or accept any kind of banner
@@ -132,7 +151,9 @@ class JunosDriver(NetworkDriver):
                 if provided, is executed immediately prior to closing the underlying transport.
                 Common use cases for this callable would be to save configurations prior to exiting,
                 or to logout properly to free up vtys or similar.
-            auth_secondary: password to use for secondary authentication (enable)
+            textfsm_platform: string name of textfsm parser platform
+            genie_platform: string name of cisco genie parser platform
+            failed_when_contains: List of strings that indicate a command/config has failed
             transport: system|telnet or a plugin -- type of transport to use for connection
                 system uses system available ssh (/usr/bin/ssh)
                 ssh2 uses ssh2-python *has been migrated to a plugin
@@ -165,20 +186,21 @@ class JunosDriver(NetworkDriver):
         if transport == &#34;telnet&#34;:
             _telnet = True
 
-        failed_when_contains = [
-            &#34;is ambiguous&#34;,
-            &#34;No valid completions&#34;,
-            &#34;unknown command&#34;,
-            &#34;syntax error&#34;,
-        ]
+        if failed_when_contains is None:
+            failed_when_contains = [
+                &#34;is ambiguous&#34;,
+                &#34;No valid completions&#34;,
+                &#34;unknown command&#34;,
+                &#34;syntax error&#34;,
+            ]
 
         super().__init__(
             privilege_levels=privilege_levels,
-            default_desired_privilege_level=&#34;exec&#34;,
+            default_desired_privilege_level=default_desired_privilege_level,
             auth_secondary=auth_secondary,
             failed_when_contains=failed_when_contains,
-            textfsm_platform=&#34;juniper_junos&#34;,
-            genie_platform=&#34;&#34;,
+            textfsm_platform=textfsm_platform,
+            genie_platform=genie_platform,
             on_open=on_open,
             on_close=on_close,
             transport=transport,
@@ -253,6 +275,7 @@ class JunosDriver(NetworkDriver):
     &#34;&#34;&#34;
     # write exit directly to the transport as channel would fail to find the prompt after sending
     # the exit command!
+    conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
     conn.transport.write(channel_input=&#34;exit&#34;)
     conn.transport.write(channel_input=conn.channel.comms_return_char)</code></pre>
 </details>
@@ -296,9 +319,9 @@ class JunosDriver(NetworkDriver):
         N/A
     &#34;&#34;&#34;
     conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
-    conn.channel.send_input(channel_input=&#34;set cli complete-on-space off&#34;)
-    conn.channel.send_input(channel_input=&#34;set cli screen-length 0&#34;)
-    conn.channel.send_input(channel_input=&#34;set cli screen-width 511&#34;)</code></pre>
+    conn.send_command(command=&#34;set cli complete-on-space off&#34;)
+    conn.send_command(command=&#34;set cli screen-length 0&#34;)
+    conn.send_command(command=&#34;set cli screen-width 511&#34;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -308,17 +331,30 @@ class JunosDriver(NetworkDriver):
 <dl>
 <dt id="scrapli.driver.core.juniper_junos.driver.JunosDriver"><code class="flex name class">
 <span>class <span class="ident">JunosDriver</span></span>
-<span>(</span><span>privilege_levels: Union[Dict[str, scrapli.driver.network_driver.PrivilegeLevel], NoneType] = None, on_open: Union[Callable[..., Any], NoneType] = None, on_close: Union[Callable[..., Any], NoneType] = None, auth_secondary: str = '', transport: str = 'system', **kwargs: Dict[str, Any])</span>
+<span>(</span><span>privilege_levels: Union[Dict[str, scrapli.driver.base_network_driver.PrivilegeLevel], NoneType] = None, default_desired_privilege_level: str = 'exec', auth_secondary: str = '', on_open: Union[Callable[..., Any], NoneType] = None, on_close: Union[Callable[..., Any], NoneType] = None, textfsm_platform: str = 'juniper_junos', genie_platform: str = '', failed_when_contains: Union[List[str], NoneType] = None, transport: str = 'system', **kwargs: Dict[str, Any])</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Helper class that provides a standard way to create an ABC using
-inheritance.</p>
+<div class="desc"><p>GenericDriverBase Object</p>
+<p>A generic network driver that will <em>hopefully</em> work for a broad variety of devices with
+minimal to no modifications and provide a normal NetworkDriver type experience with
+<code>send_command(s)</code>, <code>get_prompt</code> and <code>send_interactive</code> methods instead of forcing users to
+call Channel methods directly.</p>
+<p>This driver doesn't know anything about privilege levels (or any type of "config modes",
+disabling paging, gracefully exiting, or anything like that, and as such should be treated
+similar to the base <code>Scrape</code> object from that perspective.</p>
 <p>JunosDriver Object</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>privilege_levels</code></strong></dt>
 <dd>optional user provided privilege levels, if left None will default to
 scrapli standard privilege levels</dd>
+<dt><strong><code>default_desired_privilege_level</code></strong></dt>
+<dd>string of name of default desired priv, this is the
+priv level that is generally used to disable paging/set terminal width and things
+like that upon first login, and is also the priv level scrapli will try to acquire
+for normal "command" operations (<code>send_command</code>, <code>send_commands</code>)</dd>
+<dt><strong><code>auth_secondary</code></strong></dt>
+<dd>password to use for secondary authentication (enable)</dd>
 <dt><strong><code>on_open</code></strong></dt>
 <dd>callable that accepts the class instance as its only argument. this callable,
 if provided, is executed immediately after authentication is completed. Common use
@@ -329,8 +365,12 @@ message that prompts a user upon connection</dd>
 if provided, is executed immediately prior to closing the underlying transport.
 Common use cases for this callable would be to save configurations prior to exiting,
 or to logout properly to free up vtys or similar.</dd>
-<dt><strong><code>auth_secondary</code></strong></dt>
-<dd>password to use for secondary authentication (enable)</dd>
+<dt><strong><code>textfsm_platform</code></strong></dt>
+<dd>string name of textfsm parser platform</dd>
+<dt><strong><code>genie_platform</code></strong></dt>
+<dd>string name of cisco genie parser platform</dd>
+<dt><strong><code>failed_when_contains</code></strong></dt>
+<dd>List of strings that indicate a command/config has failed</dd>
 <dt><strong><code>transport</code></strong></dt>
 <dd>system|telnet or a plugin &ndash; type of transport to use for connection
 system uses system available ssh (/usr/bin/ssh)
@@ -365,9 +405,13 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
     def __init__(
         self,
         privilege_levels: Optional[Dict[str, PrivilegeLevel]] = None,
+        default_desired_privilege_level: str = &#34;exec&#34;,
+        auth_secondary: str = &#34;&#34;,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
-        auth_secondary: str = &#34;&#34;,
+        textfsm_platform: str = &#34;juniper_junos&#34;,
+        genie_platform: str = &#34;&#34;,
+        failed_when_contains: Optional[List[str]] = None,
         transport: str = &#34;system&#34;,
         **kwargs: Dict[str, Any],
     ):
@@ -377,6 +421,11 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
         Args:
             privilege_levels: optional user provided privilege levels, if left None will default to
                 scrapli standard privilege levels
+            default_desired_privilege_level: string of name of default desired priv, this is the
+                priv level that is generally used to disable paging/set terminal width and things
+                like that upon first login, and is also the priv level scrapli will try to acquire
+                for normal &#34;command&#34; operations (`send_command`, `send_commands`)
+            auth_secondary: password to use for secondary authentication (enable)
             on_open: callable that accepts the class instance as its only argument. this callable,
                 if provided, is executed immediately after authentication is completed. Common use
                 cases for this callable would be to disable paging or accept any kind of banner
@@ -385,7 +434,9 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
                 if provided, is executed immediately prior to closing the underlying transport.
                 Common use cases for this callable would be to save configurations prior to exiting,
                 or to logout properly to free up vtys or similar.
-            auth_secondary: password to use for secondary authentication (enable)
+            textfsm_platform: string name of textfsm parser platform
+            genie_platform: string name of cisco genie parser platform
+            failed_when_contains: List of strings that indicate a command/config has failed
             transport: system|telnet or a plugin -- type of transport to use for connection
                 system uses system available ssh (/usr/bin/ssh)
                 ssh2 uses ssh2-python *has been migrated to a plugin
@@ -418,20 +469,21 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
         if transport == &#34;telnet&#34;:
             _telnet = True
 
-        failed_when_contains = [
-            &#34;is ambiguous&#34;,
-            &#34;No valid completions&#34;,
-            &#34;unknown command&#34;,
-            &#34;syntax error&#34;,
-        ]
+        if failed_when_contains is None:
+            failed_when_contains = [
+                &#34;is ambiguous&#34;,
+                &#34;No valid completions&#34;,
+                &#34;unknown command&#34;,
+                &#34;syntax error&#34;,
+            ]
 
         super().__init__(
             privilege_levels=privilege_levels,
-            default_desired_privilege_level=&#34;exec&#34;,
+            default_desired_privilege_level=default_desired_privilege_level,
             auth_secondary=auth_secondary,
             failed_when_contains=failed_when_contains,
-            textfsm_platform=&#34;juniper_junos&#34;,
-            genie_platform=&#34;&#34;,
+            textfsm_platform=textfsm_platform,
+            genie_platform=genie_platform,
             on_open=on_open,
             on_close=on_close,
             transport=transport,
@@ -463,7 +515,9 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
 <li><a title="scrapli.driver.network_driver.NetworkDriver" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver">NetworkDriver</a></li>
 <li><a title="scrapli.driver.generic_driver.GenericDriver" href="../../generic_driver.html#scrapli.driver.generic_driver.GenericDriver">GenericDriver</a></li>
 <li><a title="scrapli.driver.driver.Scrape" href="../../driver.html#scrapli.driver.driver.Scrape">Scrape</a></li>
-<li>abc.ABC</li>
+<li><a title="scrapli.driver.base_driver.ScrapeBase" href="../../base_driver.html#scrapli.driver.base_driver.ScrapeBase">ScrapeBase</a></li>
+<li><a title="scrapli.driver.base_generic_driver.GenericDriverBase" href="../../base_generic_driver.html#scrapli.driver.base_generic_driver.GenericDriverBase">GenericDriverBase</a></li>
+<li><a title="scrapli.driver.base_network_driver.NetworkDriverBase" href="../../base_network_driver.html#scrapli.driver.base_network_driver.NetworkDriverBase">NetworkDriverBase</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -472,16 +526,17 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.acquire_priv" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.acquire_priv">acquire_priv</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.close" href="../../driver.html#scrapli.driver.driver.Scrape.close">close</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.get_prompt" href="../../generic_driver.html#scrapli.driver.generic_driver.GenericDriver.get_prompt">get_prompt</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.isalive" href="../../driver.html#scrapli.driver.driver.Scrape.isalive">isalive</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.isalive" href="../../base_driver.html#scrapli.driver.base_driver.ScrapeBase.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.open" href="../../driver.html#scrapli.driver.driver.Scrape.open">open</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.register_configuration_session" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.register_configuration_session">register_configuration_session</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.register_configuration_session" href="../../base_network_driver.html#scrapli.driver.base_network_driver.NetworkDriverBase.register_configuration_session">register_configuration_session</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_command" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_command">send_command</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_commands" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_commands">send_commands</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_commands_from_file" href="../../generic_driver.html#scrapli.driver.generic_driver.GenericDriver.send_commands_from_file">send_commands_from_file</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_config" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_config">send_config</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_configs" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_configs">send_configs</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_configs_from_file" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_configs_from_file">send_configs_from_file</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_interactive" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_interactive">send_interactive</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.update_privilege_levels" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.update_privilege_levels">update_privilege_levels</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.update_privilege_levels" href="../../base_network_driver.html#scrapli.driver.base_network_driver.NetworkDriverBase.update_privilege_levels">update_privilege_levels</a></code></li>
 </ul>
 </li>
 </ul>
