@@ -1,3 +1,4 @@
+asyncssh>=2.2.1
 tox>=3.15.1
 black>=19.10b0
 isort>=4.3.21

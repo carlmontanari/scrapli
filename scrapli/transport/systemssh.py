@@ -628,7 +628,8 @@ class SystemSSHTransport(Transport):
         if isinstance(self.session, Popen):
             self.session.kill()
         elif isinstance(self.session, PtyProcess):
-            self.session.kill(1)
+            # killing ptyprocess seems to make things hang open?
+            self.session.terminated = True
         LOG.debug(f"Channel to host {self.host} closed")
         self.session_lock.release()
 

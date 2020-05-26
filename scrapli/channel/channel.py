@@ -35,7 +35,7 @@ class Channel(ChannelBase):
 
     def _read_chunk(self) -> bytes:
         """
-        Private method to read chunk and strip comms_ansi if needed
+        Private method to read chunk from channel
 
         Args:
             N/A
@@ -49,8 +49,6 @@ class Channel(ChannelBase):
         """
         new_output = self.transport.read()
         new_output = new_output.replace(b"\r", b"")
-        if self.comms_ansi:
-            new_output = strip_ansi(output=new_output)
         LOG.debug(f"Read: {repr(new_output)}")
         return new_output
 
@@ -83,14 +81,12 @@ class Channel(ChannelBase):
         if auto_expand is None:
             auto_expand = self.comms_auto_expand
 
-        channel_input_split = channel_input.split()
         while True:
             output += self._read_chunk()
             if not auto_expand and channel_input in output:
                 break
-            if auto_expand and all(
-                _channel_output.startswith(_channel_input)
-                for _channel_input, _channel_output in zip(channel_input_split, output.split())
+            if auto_expand and self._process_auto_expand(
+                output=output, channel_input=channel_input
             ):
                 break
 
@@ -116,6 +112,8 @@ class Channel(ChannelBase):
 
         while True:
             output += self._read_chunk()
+            if self.comms_ansi:
+                output = strip_ansi(output=output)
             channel_match = re.search(pattern=prompt_pattern, string=output)
             if channel_match:
                 LOG.info(f"Read: {repr(output)}")
@@ -142,6 +140,8 @@ class Channel(ChannelBase):
         output = b""
         while True:
             output += self._read_chunk()
+            if self.comms_ansi:
+                output = strip_ansi(output=output)
             channel_match = re.search(pattern=prompt_pattern, string=output)
             if channel_match:
                 self.transport.set_timeout()
@@ -161,14 +161,10 @@ class Channel(ChannelBase):
             processed_result: output read from the channel that has been cleaned up
 
         Raises:
-            TypeError: if input is anything but a string
+            N/A
 
         """
-        if not isinstance(channel_input, str):
-            raise TypeError(
-                f"`send_input` expects a single string, got {type(channel_input)}. "
-                "to send a list of inputs use the `send_inputs` method instead"
-            )
+        self._pre_send_input(channel_input=channel_input)
         raw_result, processed_result = self._send_input(
             channel_input=channel_input, strip_prompt=strip_prompt
         )
@@ -267,10 +263,10 @@ class Channel(ChannelBase):
             processed_result: output read from the channel that has been cleaned up
 
         Raises:
-            TypeError: if inputs is not tuple or list
+            N/A
+
         """
-        if not isinstance(interact_events, list):
-            raise TypeError(f"`interact_events` expects a List, got {type(interact_events)}")
+        self._pre_send_inputs_interact(interact_events=interact_events)
 
         self.transport.session_lock.acquire()
         output = b""
@@ -297,7 +293,4 @@ class Channel(ChannelBase):
             output += self._read_until_prompt(prompt=channel_response)
         # wait to release lock until after "interact" session is complete
         self.transport.session_lock.release()
-        processed_output = self._restructure_output(output=output, strip_prompt=False)
-        raw_result = output.decode()
-        processed_result = processed_output.decode()
-        return raw_result, processed_result
+        return self._post_send_inputs_interact(output=output)

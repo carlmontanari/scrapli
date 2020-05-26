@@ -19,6 +19,7 @@ async def iosxe_on_open(conn: AsyncNetworkDriver) -> None:
     Raises:
         N/A
     """
+    await conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
     await conn.send_command(command="terminal length 0")
     await conn.send_command(command="terminal width 512")
 

@@ -22,7 +22,7 @@ def test__repr(mocked_channel):
             "send_input",
             {"channel_input": ["stuff", "more stuff"]},
             TypeError,
-            "`send_input` expects a single string, got <class 'list'>. to send a list of inputs use the `send_inputs` method instead",
+            "`send_input` expects a single string, got <class 'list'>.",
         ),
         (
             "send_inputs_interact",
@@ -46,12 +46,7 @@ def test_exceptions_raised(attr_setup, mocked_channel):
 
 
 @pytest.mark.parametrize(
-    "attr_setup",
-    [
-        ({"strip_prompt": True}, b"hostname 3560CX\n"),
-        ({"strip_prompt": False}, b"hostname 3560CX\n3560CX#"),
-    ],
-    ids=["strip_prompt_true", "strip_prompt_false",],
+    "attr_setup", [({"strip_prompt": True}, b"hostname 3560CX\n"),], ids=["strip_prompt_true"],
 )
 def test__restructure_output(attr_setup, mocked_channel):
     args = attr_setup[0]
@@ -63,12 +58,7 @@ def test__restructure_output(attr_setup, mocked_channel):
 
 
 @pytest.mark.parametrize(
-    "attr_setup",
-    [
-        ({"comms_ansi": False}, b"3560CX#", b"3560CX#"),
-        ({"comms_ansi": True}, b"\x1b[0;0m3560CX#\x1b[0;0m", b"3560CX#"),
-    ],
-    ids=["read_chunk", "read_chunk_strip_ansi",],
+    "attr_setup", [({"comms_ansi": False}, b"3560CX#", b"3560CX#"),], ids=["read_chunk"],
 )
 def test__read_chunk(attr_setup, mocked_channel):
     args = attr_setup[0]
@@ -80,12 +70,7 @@ def test__read_chunk(attr_setup, mocked_channel):
 
 
 @pytest.mark.parametrize(
-    "attr_setup",
-    [
-        ({"comms_ansi": False}, b"3560CX#", b"3560CX#"),
-        ({"comms_ansi": True}, b"\x1b[0;0m3560CX#\x1b[0;0m", b"3560CX#"),
-    ],
-    ids=["read_chunk", "read_chunk_strip_ansi"],
+    "attr_setup", [({"comms_ansi": False}, b"3560CX#", b"3560CX#"),], ids=["read_chunk"],
 )
 def test__read_until_input(attr_setup, mocked_channel):
     args = attr_setup[0]

@@ -2,7 +2,7 @@
 import re
 from abc import ABC
 from logging import getLogger
-from typing import Union
+from typing import List, Optional, Tuple, Union
 
 from scrapli.helper import get_prompt_pattern, normalize_lines
 from scrapli.transport.async_transport import AsyncTransport
@@ -131,6 +131,28 @@ class ChannelBase(ABC):
         output = re.sub(pattern=prompt_pattern, repl=b"", string=output)
         return output
 
+    @staticmethod
+    def _process_auto_expand(output: bytes, channel_input: bytes) -> bool:
+        """
+        Determine if output has been auto expanded to canonical syntax
+
+        Args:
+            output: output from the device
+            channel_input: command input to the device
+
+        Returns:
+            bool: True if it appears the output was auto-expanded, otherwise False
+
+        Raises:
+            N/A
+
+        """
+        channel_input_split = channel_input.split()
+        return all(
+            _channel_output.startswith(_channel_input)
+            for _channel_input, _channel_output in zip(channel_input_split, output.split())
+        )
+
     def _send_return(self) -> None:
         """
         Send return char to device
@@ -147,3 +169,58 @@ class ChannelBase(ABC):
         """
         self.transport.write(channel_input=self.comms_return_char)
         LOG.debug(f"Write (sending return character): {repr(self.comms_return_char)}")
+
+    @staticmethod
+    def _pre_send_input(channel_input: str) -> None:
+        """
+        Handle pre "send_input" tasks for consistency between sync/async versions
+
+        Args:
+            channel_input: string input to send to channel
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            TypeError: if input is anything but a string
+
+        """
+        if not isinstance(channel_input, str):
+            raise TypeError(f"`send_input` expects a single string, got {type(channel_input)}.")
+
+    @staticmethod
+    def _pre_send_inputs_interact(interact_events: List[Tuple[str, str, Optional[bool]]]) -> None:
+        """
+        Handle pre "send_inputs_interact" tasks for consistency between sync/async versions
+
+        Args:
+            interact_events: interact events passed to `send_inputs_interact`
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            TypeError: if input is anything but a string
+
+        """
+        if not isinstance(interact_events, list):
+            raise TypeError(f"`interact_events` expects a List, got {type(interact_events)}")
+
+    def _post_send_inputs_interact(self, output: bytes) -> Tuple[str, str]:
+        """
+        Handle pre "send_inputs_interact" tasks for consistency between sync/async versions
+
+        Args:
+            output: output from `send_inputs_interact` method
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+        processed_output = self._restructure_output(output=output, strip_prompt=False)
+        raw_result = output.decode()
+        processed_result = processed_output.decode()
+        return raw_result, processed_result

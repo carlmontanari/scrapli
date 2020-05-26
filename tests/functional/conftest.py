@@ -4,14 +4,6 @@ from scrapli.driver import GenericDriver
 
 from .test_data.devices import DEVICES
 
-NAPALM_DEVICE_TYPE_MAP = {
-    "cisco_iosxe": "ios",
-    "cisco_nxos": "nxos",
-    "cisco_iosxr": "iosxr",
-    "arista_eos": "eos",
-    "juniper_junos": "junos",
-}
-
 
 @pytest.fixture(
     scope="class",
