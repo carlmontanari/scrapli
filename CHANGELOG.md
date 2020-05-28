@@ -16,6 +16,9 @@ CHANGELOG
 - Add better handling/logging for `SystemSSH` transport when key exchange cannot be negotiated
 - Convert the `_failed()` method of `MultiResponse` to be a property so users can check `.failed` on a `MultiResponse`
  object more intuitively/sanely
+- ASYNC ALL THE THINGS... basically only an internal change, but hugely modified the guts of scrapli to try to be
+ able to best support asyncio while still having the same api for sync and async. Again, if you dont care about
+  aysncio this probably doesnt matter at all as all the "public" stuff has not changed for sync versions of things.
 
 # 2020.05.09
 - Add underscores to EOS config prompt matching

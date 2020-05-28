@@ -3,7 +3,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 from scrapli.driver import AsyncNetworkDriver
 from scrapli.driver.base_network_driver import PrivilegeLevel
-from scrapli.driver.core.cisco_iosxe.driver import PRIVS
+from scrapli.driver.core.cisco_iosxe.base_driver import PRIVS
 
 
 async def iosxe_on_open(conn: AsyncNetworkDriver) -> None:

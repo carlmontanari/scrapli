@@ -1,45 +1,9 @@
 """scrapli.driver.core.arista_eos.driver"""
-import re
 from typing import Any, Callable, Dict, List, Optional
 
 from scrapli.driver import NetworkDriver
 from scrapli.driver.base_network_driver import PrivilegeLevel
-
-PRIVS = {
-    "exec": (
-        PrivilegeLevel(
-            pattern=r"^[a-z0-9.\-@()/: ]{1,32}>\s?$",
-            name="exec",
-            previous_priv="",
-            deescalate="",
-            escalate="",
-            escalate_auth=False,
-            escalate_prompt="",
-        )
-    ),
-    "privilege_exec": (
-        PrivilegeLevel(
-            pattern=r"^[a-z0-9.\-@/: ]{1,32}#\s?$",
-            name="privilege_exec",
-            previous_priv="exec",
-            deescalate="disable",
-            escalate="enable",
-            escalate_auth=True,
-            escalate_prompt=r"^[pP]assword:\s?$",
-        )
-    ),
-    "configuration": (
-        PrivilegeLevel(
-            pattern=r"^[a-z0-9.\-@/: ]{1,32}\(config(?!\-s\-)[a-z0-9_.\-@/:]{0,32}\)#\s?$",
-            name="configuration",
-            previous_priv="privilege_exec",
-            deescalate="end",
-            escalate="configure terminal",
-            escalate_auth=False,
-            escalate_prompt="",
-        )
-    ),
-}
+from scrapli.driver.core.arista_eos.base_driver import PRIVS, EOSDriverBase
 
 
 def eos_on_open(conn: NetworkDriver) -> None:
@@ -78,47 +42,6 @@ def eos_on_close(conn: NetworkDriver) -> None:
     conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
     conn.transport.write(channel_input="exit")
     conn.transport.write(channel_input=conn.channel.comms_return_char)
-
-
-class EOSDriverBase:
-    # EOSDriverBase Mixin values set in init of sync/async NetworkDriver classes
-    privilege_levels: Dict[str, PrivilegeLevel]
-
-    def _create_configuration_session(self, session_name: str) -> None:
-        """
-        Handle configuration session creation tasks for consistency between sync/async versions
-
-        Args:
-            session_name: name of session to register
-
-        Returns:
-            N/A:  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        """
-        if session_name in self.privilege_levels.keys():
-            msg = (
-                f"session name `{session_name}` already registered as a privilege level, chose a "
-                "unique session name"
-            )
-            raise ValueError(msg)
-        session_prompt = re.escape(session_name[:6])
-        pattern = (
-            rf"^[a-z0-9.\-@/:]{{1,32}}\(config\-s\-{session_prompt}[a-z0-9_.\-@/:]{{0,32}}\)#\s?$"
-        )
-        name = session_name
-        config_session = PrivilegeLevel(
-            pattern=pattern,
-            name=name,
-            previous_priv="privilege_exec",
-            deescalate="end",
-            escalate=f"configure session {session_name}",
-            escalate_auth=False,
-            escalate_prompt="",
-        )
-        self.privilege_levels[name] = config_session
 
 
 class EOSDriver(NetworkDriver, EOSDriverBase):

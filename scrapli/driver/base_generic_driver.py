@@ -41,7 +41,7 @@ class GenericDriverBase:
         """
         if not isinstance(command, str):
             raise TypeError(
-                f"`send_command` expects a single string, got {type(command)}. "
+                f"`send_command` expects a single string, got {type(command)}, "
                 "to send a list of commands use the `send_commands` method instead."
             )
 
@@ -91,7 +91,7 @@ class GenericDriverBase:
         """
         if not isinstance(commands, list):
             raise TypeError(
-                f"`send_commands` expects a list of strings, got {type(commands)}. "
+                f"`send_commands` expects a list of strings, got {type(commands)}, "
                 "to send a single command use the `send_command` method instead."
             )
 

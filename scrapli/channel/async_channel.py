@@ -33,7 +33,7 @@ class AsyncChannel(ChannelBase):
         # AsyncChannel, transport will always be async
         self.transport: AsyncTransport
 
-    async def _async_read_chunk(self) -> bytes:
+    async def _read_chunk(self) -> bytes:
         """
         Private method to async read chunk
 
@@ -52,7 +52,7 @@ class AsyncChannel(ChannelBase):
         LOG.debug(f"Read: {repr(new_output)}")
         return new_output
 
-    async def _async_read_until_input(
+    async def _read_until_input(
         self, channel_input: bytes, auto_expand: Optional[bool] = None
     ) -> bytes:
         """
@@ -84,7 +84,7 @@ class AsyncChannel(ChannelBase):
             auto_expand = self.comms_auto_expand
 
         while True:
-            output += await self._async_read_chunk()
+            output += await self._read_chunk()
             if not auto_expand and channel_input in output:
                 break
             if auto_expand and self._process_auto_expand(
@@ -95,7 +95,7 @@ class AsyncChannel(ChannelBase):
         LOG.info(f"Read: {repr(output)}")
         return output
 
-    async def _async_read_until_prompt(self, output: bytes = b"", prompt: str = "") -> bytes:
+    async def _read_until_prompt(self, output: bytes = b"", prompt: str = "") -> bytes:
         """
         Async read until expected prompt is seen.
 
@@ -113,7 +113,7 @@ class AsyncChannel(ChannelBase):
         prompt_pattern = get_prompt_pattern(prompt=prompt, class_prompt=self.comms_prompt_pattern)
 
         while True:
-            output += await self._async_read_chunk()
+            output += await self._read_chunk()
             if self.comms_ansi:
                 output = strip_ansi(output=output)
             channel_match = re.search(pattern=prompt_pattern, string=output)
@@ -141,7 +141,7 @@ class AsyncChannel(ChannelBase):
         self._send_return()
         output = b""
         while True:
-            output += await self._async_read_chunk()
+            output += await self._read_chunk()
             channel_match = re.search(pattern=prompt_pattern, string=output)
             if channel_match:
                 self.transport.set_timeout()
@@ -197,9 +197,9 @@ class AsyncChannel(ChannelBase):
         LOG.info(f"Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}")
         self.transport.write(channel_input=channel_input)
         LOG.debug(f"Write: {repr(channel_input)}")
-        await self._async_read_until_input(channel_input=bytes_channel_input)
+        await self._read_until_input(channel_input=bytes_channel_input)
         self._send_return()
-        output = await self._async_read_until_prompt()
+        output = await self._read_until_prompt()
         self.transport.session_lock.release()
         processed_output = self._restructure_output(output=output, strip_prompt=strip_prompt)
         # lstrip the return character out of the final result before storing, also remove any extra
@@ -293,9 +293,9 @@ class AsyncChannel(ChannelBase):
             if not channel_response or hidden_input is True:
                 self._send_return()
             else:
-                output += await self._async_read_until_input(channel_input=bytes_channel_input)
+                output += await self._read_until_input(channel_input=bytes_channel_input)
                 self._send_return()
-            output += await self._async_read_until_prompt(prompt=channel_response)
+            output += await self._read_until_prompt(prompt=channel_response)
         # wait to release lock until after "interact" session is complete
         self.transport.session_lock.release()
         return self._post_send_inputs_interact(output=output)

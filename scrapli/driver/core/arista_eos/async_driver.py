@@ -3,7 +3,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 from scrapli.driver import AsyncNetworkDriver
 from scrapli.driver.base_network_driver import PrivilegeLevel
-from scrapli.driver.core.arista_eos.driver import PRIVS, EOSDriverBase
+from scrapli.driver.core.arista_eos.base_driver import PRIVS, EOSDriverBase
 
 
 async def eos_on_open(conn: AsyncNetworkDriver) -> None:

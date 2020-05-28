@@ -3,42 +3,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 from scrapli.driver import NetworkDriver
 from scrapli.driver.base_network_driver import PrivilegeLevel
-
-PRIVS = {
-    "exec": (
-        PrivilegeLevel(
-            pattern=r"^[a-z0-9.\-@()/:]{1,32}>$",
-            name="exec",
-            previous_priv="",
-            deescalate="",
-            escalate="",
-            escalate_auth=False,
-            escalate_prompt="",
-        )
-    ),
-    "privilege_exec": (
-        PrivilegeLevel(
-            pattern=r"^[a-z0-9.\-@/:]{1,32}#$",
-            name="privilege_exec",
-            previous_priv="exec",
-            deescalate="disable",
-            escalate="enable",
-            escalate_auth=True,
-            escalate_prompt=r"^[pP]assword:\s?$",
-        )
-    ),
-    "configuration": (
-        PrivilegeLevel(
-            pattern=r"^[a-z0-9.\-@/:]{1,32}\(conf[a-z0-9.\-@/:]{0,32}\)#$",
-            name="configuration",
-            previous_priv="privilege_exec",
-            deescalate="end",
-            escalate="configure terminal",
-            escalate_auth=False,
-            escalate_prompt="",
-        )
-    ),
-}
+from scrapli.driver.core.cisco_iosxe.base_driver import PRIVS
 
 
 def iosxe_on_open(conn: NetworkDriver) -> None:

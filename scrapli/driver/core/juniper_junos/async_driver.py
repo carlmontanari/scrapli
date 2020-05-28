@@ -3,7 +3,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 from scrapli.driver import AsyncNetworkDriver
 from scrapli.driver.base_network_driver import PrivilegeLevel
-from scrapli.driver.core.juniper_junos.driver import PRIVS
+from scrapli.driver.core.juniper_junos.base_driver import PRIVS
 
 
 async def junos_on_open(conn: AsyncNetworkDriver) -> None:
