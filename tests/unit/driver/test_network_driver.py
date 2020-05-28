@@ -44,13 +44,13 @@ def test_drop_and_warn_comms_prompt_pattern():
             "send_command",
             [],
             TypeError,
-            "`send_command` expects a single string, got <class 'list'>. to send a list of commands use the `send_commands` method instead.",
+            "`send_command` expects a single string, got <class 'list'>, to send a list of commands use the `send_commands` method instead.",
         ),
         (
             "send_commands",
             "racecar",
             TypeError,
-            "`send_commands` expects a list of strings, got <class 'str'>. to send a single command use the `send_command` method instead.",
+            "`send_commands` expects a list of strings, got <class 'str'>, to send a single command use the `send_command` method instead.",
         ),
         (
             "send_commands_from_file",
