@@ -402,7 +402,7 @@ class NetworkDriverBase:
         """
         if not isinstance(config, str):
             raise TypeError(
-                f"`send_config` expects a single string, got {type(config)}. "
+                f"`send_config` expects a single string, got {type(config)}, "
                 "to send a list of configs use the `send_configs` method instead."
             )
 
@@ -444,6 +444,7 @@ class NetworkDriverBase:
         # join all the results together into a single final result
         response.result = "\n".join(response.result for response in multi_response)
         response.failed = False
+
         if any(response.failed for response in multi_response):
             response.failed = True
         self._update_response(response=response)
@@ -478,7 +479,7 @@ class NetworkDriverBase:
         """
         if not isinstance(configs, list):
             raise TypeError(
-                f"`send_configs` expects a list of strings, got {type(configs)}. "
+                f"`send_configs` expects a list of strings, got {type(configs)}, "
                 "to send a single configuration line/string use the `send_config` method instead."
             )
 

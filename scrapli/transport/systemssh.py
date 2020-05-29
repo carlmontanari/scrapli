@@ -585,7 +585,7 @@ class SystemSSHTransport(Transport):
             while True:
                 new_output = pty_session.read()
                 output += new_output
-                LOG.debug(f"Attempting validate authentication. Read: {repr(new_output)}")
+                LOG.debug(f"Attempting to validate authentication. Read: {repr(new_output)}")
                 # we do not need to deal w/ line replacement for the actual output, only for
                 # parsing if a prompt-like thing is at the end of the output
                 output = output.replace(b"\r", b"")

@@ -80,13 +80,13 @@ def test_send_commands_exceptions(attr_setup, mocked_network_driver):
             "send_config",
             [],
             TypeError,
-            "`send_config` expects a single string, got <class 'list'>. to send a list of configs use the `send_configs` method instead.",
+            "`send_config` expects a single string, got <class 'list'>, to send a list of configs use the `send_configs` method instead.",
         ),
         (
             "send_configs",
             "racecar",
             TypeError,
-            "`send_configs` expects a list of strings, got <class 'str'>. to send a single configuration line/string use the `send_config` method instead.",
+            "`send_configs` expects a list of strings, got <class 'str'>, to send a single configuration line/string use the `send_config` method instead.",
         ),
         (
             "send_configs_from_file",
