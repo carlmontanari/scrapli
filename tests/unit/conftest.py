@@ -1,15 +1,19 @@
 import asyncio
 import sys
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 
 import asyncssh
 import pytest
 
+import scrapli
 from scrapli.driver import AsyncGenericDriver, GenericDriver
 from scrapli.driver.core import AsyncIOSXEDriver, IOSXEDriver
 
 from ..test_data.devices import DEVICES
 from .mock_cisco_iosxe_server import IOSXEServer
+
+TEST_DATA_DIR = f"{Path(scrapli.__file__).parents[1]}/tests/test_data"
 
 SERVERS = {"cisco_iosxe": {"server": IOSXEServer, "port": 2211}}
 SYNC_DRIVERS = {"cisco_iosxe": IOSXEDriver, "generic_driver": GenericDriver}
@@ -21,7 +25,7 @@ SERVER_LOOP = asyncio.new_event_loop()
 async def _start_server(server_name: str):
     server = SERVERS.get(server_name).get("server")
     port = SERVERS.get(server_name).get("port")
-    await asyncssh.create_server(server, "", port, server_host_keys=["/Users/carl/.ssh/carl@home"])
+    await asyncssh.create_server(server, "", port, server_host_keys=[f"{TEST_DATA_DIR}/files/vrnetlab_key"])
 
 
 def start_server(server_name: str):

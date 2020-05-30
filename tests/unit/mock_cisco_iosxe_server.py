@@ -245,9 +245,6 @@ class IOSXEServerSession(asyncssh.SSHServerSession):
 
     def eof_received(self):
         self._chan.exit(0)
-        # if we exit, kill the event loop so this doesnt hang and keep pytest open
-        # current_loop = asyncio.get_event_loop()
-        # current_loop.stop()
 
     def break_received(self, msec):
         self.eof_received()
