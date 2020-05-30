@@ -5,38 +5,11 @@ on: [push]
 
 jobs:
   build_linux:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      max-parallel: 6
-      matrix:
-        os: [ubuntu-latest]
-        version: [3.6, 3.7, 3.8]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: set up python ${{ matrix.version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.version }}
-      - name: install openssh-client
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y openssh-client
-          sudo apt-get install net-tools
-      - name: setup test env
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install setuptools
-          python -m pip install nox
-          python -m pip install asyncssh
-          python -m pip install -e .
-          chmod 0600 tests/test_data/files/vrnetlab_key
-      - name: run test stuff
-        run: |
-          sudo netstat -plnt
-          which ssh
-          nohup python tests/start_ssh_server.py &
-          sudo netstat -plnt
-          python tests/stream_log_ssh.py
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v2
 
 
 #jobs:
