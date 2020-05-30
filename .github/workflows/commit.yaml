@@ -27,6 +27,7 @@ jobs:
           python -m pip install setuptools
           python -m pip install nox
           python -m pip install asyncssh
+          python -m pip install -e .
           chmod 0600 tests/test_data/files/vrnetlab_key
       - name: run test stuff
         run: |
