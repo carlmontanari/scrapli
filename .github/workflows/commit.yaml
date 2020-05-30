@@ -33,7 +33,6 @@ jobs:
       - name: run test stuff
         run: |
           netstat -plnt
-          ssh --version
           which ssh
           nohup python tests/start_ssh_server.py &
           netstat -plnt
