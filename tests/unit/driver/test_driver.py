@@ -1,11 +1,5 @@
-from scrapli.driver.core import IOSXEDriver
-
-from ...test_data.devices import DEVICES
-
-
 def test_context_manager(sync_cisco_iosxe_conn):
-    device = DEVICES["mock_cisco_iosxe"].copy()
-    with IOSXEDriver(**device) as conn:
+    with sync_cisco_iosxe_conn as conn:
         assert conn.isalive() is True
     assert conn.isalive() is False
 

@@ -6,8 +6,8 @@ TEST_DATA_PATH = f"{Path(scrapli.__file__).parents[1]}/tests/test_data"
 
 FUNCTIONAL_USERNAME = "vrnetlab"
 FUNCTIONAL_PASSWORD = "VR-netlab9"
-PRIVATE_KEY = f"{TEST_DATA_PATH}/vrnetlab_key"
-INVALID_PRIVATE_KEY = f"{TEST_DATA_PATH}/invalid_key"
+PRIVATE_KEY = f"{TEST_DATA_PATH}/files/vrnetlab_key"
+INVALID_PRIVATE_KEY = f"{TEST_DATA_PATH}/files/invalid_key"
 MOCK_USERNAME = "scrapli"
 MOCK_PASSWORD = "scrapli"
 

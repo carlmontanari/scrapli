@@ -260,7 +260,15 @@ class IOSXEServer(asyncssh.SSHServer):
     def password_auth_supported(self) -> bool:
         return True
 
+    def public_key_auth_supported(self) -> bool:
+        return True
+
     def validate_password(self, username, password) -> bool:
         if username == password == "scrapli":
+            return True
+        return False
+
+    def validate_public_key(self, username, key) -> bool:
+        if username == "scrapli" and key.get_fingerprint() == "SHA256:rb1CVtQCkWBAzm1AxV7xR7BLBawUwFUlUVFVu+QYQBM":
             return True
         return False

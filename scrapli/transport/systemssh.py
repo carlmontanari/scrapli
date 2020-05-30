@@ -627,6 +627,8 @@ class SystemSSHTransport(Transport):
         self.session_lock.acquire()
         if isinstance(self.session, Popen):
             self.session.kill()
+            os.close(self._stdout_fd)
+            os.close(self._stdin_fd)
         elif isinstance(self.session, PtyProcess):
             # killing ptyprocess seems to make things hang open?
             self.session.terminated = True
@@ -648,8 +650,12 @@ class SystemSSHTransport(Transport):
 
         """
         if isinstance(self.session, Popen):
-            if self.session.poll() is None and self._isauthenticated:
+            try:
+                os.stat(self._stdout_fd)
+                os.stat(self._stdin_fd)
                 return True
+            except OSError:
+                return False
         elif isinstance(self.session, PtyProcess):
             if self.session.isalive() and self._isauthenticated and not self.session.eof():
                 return True

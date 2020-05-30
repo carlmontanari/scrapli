@@ -10,7 +10,7 @@ import scrapli
 from scrapli.driver import AsyncGenericDriver, GenericDriver
 from scrapli.driver.core import AsyncIOSXEDriver, IOSXEDriver
 
-from ..test_data.devices import DEVICES
+from ..test_data.devices import DEVICES, PRIVATE_KEY
 from .mock_cisco_iosxe_server import IOSXEServer
 
 TEST_DATA_DIR = f"{Path(scrapli.__file__).parents[1]}/tests/test_data"
@@ -73,7 +73,9 @@ async def async_generic_driver_conn():
 
 @pytest.fixture(scope="function")
 def sync_cisco_iosxe_conn():
-    device = DEVICES["mock_cisco_iosxe"]
+    device = DEVICES["mock_cisco_iosxe"].copy()
+    device.pop("auth_password")
+    device["auth_private_key"] = PRIVATE_KEY
     driver = SYNC_DRIVERS["cisco_iosxe"]
     conn = driver(**device)
     yield conn
