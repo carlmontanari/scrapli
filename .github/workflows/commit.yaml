@@ -32,10 +32,10 @@ jobs:
           chmod 0600 tests/test_data/files/vrnetlab_key
       - name: run test stuff
         run: |
-          netstat -plnt
+          sudo netstat -plnt
           which ssh
           nohup python tests/start_ssh_server.py &
-          netstat -plnt
+          sudo netstat -plnt
           python tests/stream_log_ssh.py
 
 

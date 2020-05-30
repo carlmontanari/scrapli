@@ -20,6 +20,7 @@ def iosxe_on_open(conn: NetworkDriver) -> None:
     Raises:
         N/A
     """
+    print(conn.get_prompt())
     conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
     conn.send_command(command="terminal length 0")
     conn.send_command(command="terminal width 512")
