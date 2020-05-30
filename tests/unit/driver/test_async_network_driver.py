@@ -171,8 +171,8 @@ async def test_send_interactive(async_cisco_iosxe_conn):
     interact_events = TEST_CASES["cisco_iosxe"]["test_send_inputs_interact"]["interact_events"]
     await async_cisco_iosxe_conn.open()
     response = await async_cisco_iosxe_conn.send_interactive(interact_events=interact_events)
-    assert response.raw_result == expected_raw
-    assert response.result == expected_processed
+    assert expected_raw in response.raw_result
+    assert expected_processed in response.result
 
 
 @pytest.mark.asyncio

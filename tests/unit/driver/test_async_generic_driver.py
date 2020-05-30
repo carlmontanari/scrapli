@@ -83,8 +83,6 @@ async def test_send_interactive(async_generic_driver_conn):
     interact_events = TEST_CASES["cisco_iosxe"]["test_send_inputs_interact"]["interact_events"]
     await async_generic_driver_conn.open()
     response = await async_generic_driver_conn.send_interactive(interact_events=interact_events)
-    # TODO seems like only async retains the router prompt -- there is no obvious diff between async and sync on this
-    # but just async still has prompt...
     assert expected_raw in response.raw_result
     assert expected_processed in response.result
 

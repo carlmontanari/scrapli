@@ -5,7 +5,7 @@ from ...test_data.devices import DEVICES
 
 def test_context_manager(sync_cisco_iosxe_conn):
     device = DEVICES["mock_cisco_iosxe"].copy()
-    with IOSXEDriver(**device) as conn:
+    with IOSXEDriver(transport="paramiko", **device) as conn:
         assert conn.isalive() is True
     assert conn.isalive() is False
 
