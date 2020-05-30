@@ -6,8 +6,6 @@ import pytest
 from scrapli.decorators import operation_timeout, requires_open_session
 from scrapli.exceptions import ConnectionNotOpened
 
-from .conftest import MockTransport
-
 
 class SlowClass:
     def __init__(self):
@@ -15,7 +13,6 @@ class SlowClass:
         self.timeout_exit = True
         self.session_lock = Lock()
         self.session_lock.acquire()
-        self.transport = MockTransport("\n", b"", [])
 
     @operation_timeout("timeout_test")
     def slow_function(self):

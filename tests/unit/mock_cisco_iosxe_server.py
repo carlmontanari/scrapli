@@ -96,6 +96,7 @@ SPECIAL_COMMANDS = {
     "enable": "handle_enable",
     "disable": "handle_disable",
     "configure terminal": "handle_configure_terminal",
+    "end": "handle_end",
     "exit": "handle_exit",
     "terminal length 0": "handle_disable_paging",
     "clear logging": "handle_clear_logging",
@@ -163,6 +164,15 @@ class IOSXEServerSession(asyncssh.SSHServerSession):
         else:
             self._chan.write("")
             self._priv_level = "config"
+            self._chan.write(PRIVILEGE_LEVELS.get(self._priv_level))
+
+    def handle_end(self) -> None:
+        if self._priv_level != "config":
+            self._chan.write(INVALID_INPUT)
+            self._chan.write(PRIVILEGE_LEVELS.get(self._priv_level))
+        else:
+            self._chan.write("")
+            self._priv_level = "priv_exec"
             self._chan.write(PRIVILEGE_LEVELS.get(self._priv_level))
 
     def handle_exit(self) -> None:

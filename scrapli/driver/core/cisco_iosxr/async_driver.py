@@ -1,5 +1,6 @@
 """scrapli.driver.core.cisco_iosxr.async_driver"""
 import time
+from copy import deepcopy
 from typing import Any, Callable, Dict, List, Optional
 
 from scrapli.driver import AsyncNetworkDriver
@@ -92,7 +93,7 @@ class AsyncIOSXRDriver(AsyncNetworkDriver):
             N/A
         """
         if privilege_levels is None:
-            privilege_levels = PRIVS
+            privilege_levels = deepcopy(PRIVS)
 
         if on_open is None:
             on_open = iosxr_on_open

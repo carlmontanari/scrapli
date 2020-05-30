@@ -1,4 +1,5 @@
 """scrapli.driver.core.juniper_junos.driver"""
+from copy import deepcopy
 from typing import Any, Callable, Dict, List, Optional
 
 from scrapli.driver import NetworkDriver
@@ -102,7 +103,7 @@ class JunosDriver(NetworkDriver):
 
         """
         if privilege_levels is None:
-            privilege_levels = PRIVS
+            privilege_levels = deepcopy(PRIVS)
 
         if on_open is None:
             on_open = junos_on_open

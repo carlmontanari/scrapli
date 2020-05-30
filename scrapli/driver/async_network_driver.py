@@ -131,6 +131,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
             )
 
             if privilege_action == PrivilegeAction.NO_ACTION:
+                self._current_priv_level = target_priv
                 return
             if privilege_action == PrivilegeAction.DEESCALATE:
                 await self._deescalate(current_priv=target_priv)

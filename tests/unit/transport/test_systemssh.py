@@ -8,7 +8,7 @@ import scrapli
 from scrapli.exceptions import ConnectionNotOpened
 from scrapli.transport import SystemSSHTransport
 
-UNIT_TEST_DIR = f"{Path(scrapli.__file__).parents[1]}/tests/unit/"
+TEST_DATA_DIR = f"{Path(scrapli.__file__).parents[1]}/tests/test_data"
 
 
 def test_str():
@@ -44,7 +44,7 @@ def test_creation():
 
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="systemssh not supported on windows")
 def test_process_ssh_config():
-    conn = SystemSSHTransport("1.2.3.4", ssh_config_file=f"{UNIT_TEST_DIR}_ssh_config")
+    conn = SystemSSHTransport("1.2.3.4", ssh_config_file=f"{TEST_DATA_DIR}/files/_ssh_config")
     assert conn.auth_private_key == f"{os.path.expanduser('~')}/.ssh/mysshkey"
 
 

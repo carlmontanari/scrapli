@@ -1,4 +1,5 @@
 """scrapli.driver.core.arista_eos.async_driver"""
+from copy import deepcopy
 from typing import Any, Callable, Dict, List, Optional
 
 from scrapli.driver import AsyncNetworkDriver
@@ -88,7 +89,7 @@ class AsyncEOSDriver(AsyncNetworkDriver, EOSDriverBase):
 
         """
         if privilege_levels is None:
-            privilege_levels = PRIVS
+            privilege_levels = deepcopy(PRIVS)
 
         if on_open is None:
             on_open = eos_on_open

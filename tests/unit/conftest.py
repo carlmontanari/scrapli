@@ -1,273 +1,85 @@
-from io import BytesIO
-from typing import Any, Callable, Dict, Optional, Tuple
+import asyncio
+import sys
+from concurrent.futures import ThreadPoolExecutor
 
+import asyncssh
 import pytest
 
-from scrapli.channel import Channel
-from scrapli.driver import GenericDriver, NetworkDriver, Scrape
-from scrapli.driver.core.arista_eos.driver import PRIVS as EOSPrivs
-from scrapli.driver.core.arista_eos.driver import EOSDriver
-from scrapli.driver.core.cisco_iosxe.driver import PRIVS as IOSXEPrivs
-from scrapli.driver.core.cisco_iosxe.driver import IOSXEDriver
-from scrapli.driver.core.cisco_iosxr.driver import PRIVS as IOSXRPrivs
-from scrapli.driver.core.cisco_iosxr.driver import IOSXRDriver
-from scrapli.driver.core.cisco_nxos.driver import PRIVS as NXOSPrivs
-from scrapli.driver.core.cisco_nxos.driver import NXOSDriver
-from scrapli.driver.core.juniper_junos import JunosDriver
-from scrapli.driver.core.juniper_junos.driver import PRIVS as JunosPrivs
-from scrapli.transport.transport import Transport
+from scrapli.driver import AsyncGenericDriver, GenericDriver
+from scrapli.driver.core import AsyncIOSXEDriver, IOSXEDriver
+
+from ..test_data.devices import DEVICES
+from .mock_cisco_iosxe_server import IOSXEServer
+
+SERVERS = {"cisco_iosxe": {"server": IOSXEServer, "port": 2211}}
+SYNC_DRIVERS = {"cisco_iosxe": IOSXEDriver, "generic_driver": GenericDriver}
+ASYNC_DRIVERS = {"cisco_iosxe": AsyncIOSXEDriver, "generic_driver": AsyncGenericDriver}
+
+SERVER_LOOP = asyncio.new_event_loop()
 
 
-class MockScrape(Scrape):
-    def __init__(self, channel_ops, initial_bytes, **kwargs):
-        self.channel_ops = channel_ops
-        self.initial_bytes = initial_bytes
-        super().__init__(**kwargs)
-
-    def _transport_factory(self, transport: str) -> Tuple[Callable[..., Any], Dict[str, Any]]:
-        """
-        Private factory method to produce mock transport class
-
-        Args:
-            transport: string name of transport class to use
-
-        Returns:
-            Transport: initialized Transport class
-
-        Raises:
-            N/A  # noqa
-
-        """
-        transport_class = MockTransport
-        required_transport_args = (
-            "comms_return_char",
-            "channel_ops",
-            "initial_bytes",
-        )
-        transport_args = {}
-        for arg in required_transport_args:
-            transport_args[arg] = self._initialization_args.get(arg)
-        transport_args["channel_ops"] = self.channel_ops
-        transport_args["initial_bytes"] = self.initial_bytes
-        return transport_class, transport_args
+async def _start_server(server_name: str):
+    server = SERVERS.get(server_name).get("server")
+    port = SERVERS.get(server_name).get("port")
+    await asyncssh.create_server(server, "", port, server_host_keys=["/Users/carl/.ssh/carl@home"])
 
 
-class MockTransport(Transport):
-    def __init__(self, comms_return_char, initial_bytes, channel_ops):
-        super().__init__()
-        self.comms_return_char = comms_return_char
-        self.channel_ops = channel_ops
-        self.fd = BytesIO(initial_bytes=initial_bytes)
-        self.input_counter = 0
-        self.return_counter = 0
+def start_server(server_name: str):
+    try:
+        SERVER_LOOP.run_until_complete(_start_server(server_name=server_name))
+    except (OSError, asyncssh.Error) as exc:
+        sys.exit(f"Error starting server {server_name}; Exception: {str(exc)}")
 
-    def open(self) -> None:
-        return
-
-    def close(self) -> None:
-        return
-
-    def isalive(self) -> bool:
-        return True
-
-    def read(self) -> bytes:
-        return self.fd.read(65535)
-
-    def write(self, channel_input: str) -> None:
-        if channel_input == self.comms_return_char:
-            cur_input, cur_output = self.channel_ops[self.input_counter]
-            self.input_counter += 1
-            self.return_counter += 1
-
-            self.fd.write(cur_output.encode())
-
-            if self.return_counter == 1:
-                self.return_counter = 0
-                self.fd.seek(-len(cur_output) - 1, 1)
-            else:
-                self.fd.seek(len(cur_input) - 1)
-        seek_offset = len(channel_input)
-        self.fd.write(channel_input.encode())
-        self.fd.seek(-seek_offset, 1)
-
-    def set_timeout(self, timeout: Optional[int] = None) -> None:
-        return
-
-    def _keepalive_standard(self) -> None:
-        return
+    SERVER_LOOP.run_forever()
 
 
-class MockGenericDriver(MockScrape, GenericDriver):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def open(self):
-        # Overriding "normal" network driver open method as we don't need to worry about disable
-        # paging or pre login handles; ignoring this makes the mocked file read/write pieces simpler
-        self.transport = self.transport_class(**self.transport_args)
-        self.transport.open()
-        self.channel = Channel(self.transport, **self.channel_args)
+@pytest.fixture(scope="session", autouse=True)
+def mock_cisco_iosxe_server():
+    pool = ThreadPoolExecutor(max_workers=1)
+    pool.submit(start_server, "cisco_iosxe")
+    # yield to let all the tests run, then we can deal w/ cleaning up the thread/loop
+    yield
+    SERVER_LOOP.call_soon_threadsafe(SERVER_LOOP.stop())
+    pool.shutdown()
 
 
-class MockNetworkDriver(MockScrape, NetworkDriver):
-    def __init__(self, **kwargs):
-        super().__init__(
-            privilege_levels=IOSXEPrivs,
-            default_desired_privilege_level="privilege_exec",
-            auth_secondary="password",
-            **kwargs,
-        )
-
-    def open(self):
-        # Overriding "normal" network driver open method as we don't need to worry about disable
-        # paging or pre login handles; ignoring this makes the mocked file read/write pieces simpler
-        self.transport = self.transport_class(**self.transport_args)
-        self.transport.open()
-        self.channel = Channel(self.transport, **self.channel_args)
-        self._current_priv_level = self.privilege_levels[self.default_desired_privilege_level]
+@pytest.fixture(scope="function")
+def sync_generic_driver_conn():
+    device = DEVICES["mock_cisco_iosxe"].copy()
+    device.pop("auth_secondary")
+    driver = SYNC_DRIVERS["generic_driver"]
+    conn = driver(**device)
+    yield conn
+    if conn.isalive():
+        conn.close()
 
 
-class MockIOSXEDriver(MockScrape, IOSXEDriver):
-    def __init__(self, **kwargs):
-        super().__init__(
-            privilege_levels=IOSXEPrivs,
-            default_desired_privilege_level="privilege_exec",
-            auth_secondary="password",
-            **kwargs,
-        )
+@pytest.fixture(scope="function")
+async def async_generic_driver_conn():
+    device = DEVICES["mock_cisco_iosxe"].copy()
+    device.pop("auth_secondary")
+    driver = ASYNC_DRIVERS["generic_driver"]
+    conn = driver(transport="asyncssh", **device)
+    yield conn
+    if conn.isalive():
+        await conn.close()
 
 
-class MockNXOSDriver(MockScrape, NXOSDriver):
-    def __init__(self, **kwargs):
-        super().__init__(
-            privilege_levels=NXOSPrivs,
-            default_desired_privilege_level="privilege_exec",
-            auth_secondary="password",
-            **kwargs,
-        )
+@pytest.fixture(scope="function")
+def sync_cisco_iosxe_conn():
+    device = DEVICES["mock_cisco_iosxe"]
+    driver = SYNC_DRIVERS["cisco_iosxe"]
+    conn = driver(**device)
+    yield conn
+    if conn.isalive():
+        conn.close()
 
 
-class MockIOSXRDriver(MockScrape, IOSXRDriver):
-    def __init__(self, **kwargs):
-        super().__init__(
-            privilege_levels=IOSXRPrivs,
-            default_desired_privilege_level="privilege_exec",
-            auth_secondary="password",
-            **kwargs,
-        )
-
-
-class MockEOSDriver(MockScrape, EOSDriver):
-    def __init__(self, **kwargs):
-        super().__init__(
-            privilege_levels=EOSPrivs,
-            default_desired_privilege_level="privilege_exec",
-            auth_secondary="password",
-            **kwargs,
-        )
-
-
-class MockJunosDriver(MockScrape, JunosDriver):
-    def __init__(self, **kwargs):
-        super().__init__(
-            privilege_levels=JunosPrivs,
-            default_desired_privilege_level="exec",
-            auth_secondary="password",
-            **kwargs,
-        )
-
-
-@pytest.fixture(scope="module")
-def mocked_channel():
-    def _create_mocked_channel(test_operations, initial_bytes=b"3560CX#", **kwargs):
-        conn = MockScrape(
-            host="localhost", channel_ops=test_operations, initial_bytes=initial_bytes, **kwargs
-        )
-        conn.open()
-        return conn
-
-    return _create_mocked_channel
-
-
-@pytest.fixture(scope="module")
-def mocked_generic_driver():
-    def _create_mocked_generic_driver(test_operations, initial_bytes=b"3560CX#", **kwargs):
-        conn = MockGenericDriver(
-            host="localhost", channel_ops=test_operations, initial_bytes=initial_bytes, **kwargs
-        )
-        conn.open()
-        return conn
-
-    return _create_mocked_generic_driver
-
-
-@pytest.fixture(scope="module")
-def mocked_network_driver():
-    def _create_mocked_network_driver(test_operations, initial_bytes=b"3560CX#", **kwargs):
-        conn = MockNetworkDriver(
-            host="localhost", channel_ops=test_operations, initial_bytes=initial_bytes, **kwargs
-        )
-        conn.open()
-        return conn
-
-    return _create_mocked_network_driver
-
-
-@pytest.fixture(scope="module")
-def mocked_iosxe_driver():
-    def _create_mocked_iosxe_driver(test_operations, initial_bytes=b"3560CX#", **kwargs):
-        conn = MockIOSXEDriver(
-            host="localhost", channel_ops=test_operations, initial_bytes=initial_bytes, **kwargs
-        )
-        conn.open()
-        return conn
-
-    return _create_mocked_iosxe_driver
-
-
-@pytest.fixture(scope="module")
-def mocked_nxos_driver():
-    def _create_mocked_nxos_driver(test_operations, initial_bytes=b"switch#", **kwargs):
-        conn = MockNXOSDriver(
-            host="localhost", channel_ops=test_operations, initial_bytes=initial_bytes, **kwargs
-        )
-        conn.open()
-        return conn
-
-    return _create_mocked_nxos_driver
-
-
-@pytest.fixture(scope="module")
-def mocked_iosxr_driver():
-    def _create_mocked_iosxr_driver(test_operations, initial_bytes=b"RP/0/RP0/CPU0:ios#", **kwargs):
-        conn = MockIOSXRDriver(
-            host="localhost", channel_ops=test_operations, initial_bytes=initial_bytes, **kwargs
-        )
-        conn.open()
-        return conn
-
-    return _create_mocked_iosxr_driver
-
-
-@pytest.fixture(scope="module")
-def mocked_eos_driver():
-    def _create_mocked_eos_driver(test_operations, initial_bytes=b"localhost#", **kwargs):
-        conn = MockEOSDriver(
-            host="localhost", channel_ops=test_operations, initial_bytes=initial_bytes, **kwargs
-        )
-        conn.open()
-        return conn
-
-    return _create_mocked_eos_driver
-
-
-@pytest.fixture(scope="module")
-def mocked_junos_driver():
-    def _create_mocked_junos_driver(test_operations, initial_bytes=b"vrnetlab> ", **kwargs):
-        conn = MockJunosDriver(
-            host="localhost", channel_ops=test_operations, initial_bytes=initial_bytes, **kwargs
-        )
-        conn.open()
-        return conn
-
-    return _create_mocked_junos_driver
+@pytest.fixture(scope="function")
+async def async_cisco_iosxe_conn():
+    device = DEVICES["mock_cisco_iosxe"]
+    driver = ASYNC_DRIVERS["cisco_iosxe"]
+    conn = driver(transport="asyncssh", **device)
+    yield conn
+    if conn.isalive():
+        await conn.close()
