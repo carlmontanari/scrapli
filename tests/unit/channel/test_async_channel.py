@@ -67,7 +67,7 @@ async def test_read_until_prompt(async_cisco_iosxe_conn):
         channel_input=chunk.encode()
     )
     found_prompt = await async_cisco_iosxe_conn.get_prompt()
-    assert read_chunk == chunk.encode()
+    assert chunk.encode() in read_chunk
     assert found_prompt == expected_prompt
 
 

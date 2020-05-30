@@ -60,7 +60,7 @@ def test_read_until_prompt(sync_cisco_iosxe_conn):
     sync_cisco_iosxe_conn.transport.write(sync_cisco_iosxe_conn.channel.comms_return_char)
     read_chunk = sync_cisco_iosxe_conn.channel._read_until_input(channel_input=chunk.encode())
     found_prompt = sync_cisco_iosxe_conn.get_prompt()
-    assert read_chunk == chunk.encode()
+    assert chunk.encode() in read_chunk
     assert found_prompt == expected_prompt
 
 

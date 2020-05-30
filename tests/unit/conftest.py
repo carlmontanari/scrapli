@@ -1,4 +1,5 @@
 import asyncio
+import time
 import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -9,6 +10,7 @@ import pytest
 import scrapli
 from scrapli.driver import AsyncGenericDriver, GenericDriver
 from scrapli.driver.core import AsyncIOSXEDriver, IOSXEDriver
+from scrapli.exceptions import ScrapliException
 
 from ..test_data.devices import DEVICES
 from .mock_cisco_iosxe_server import IOSXEServer
@@ -43,6 +45,25 @@ def start_server(server_name: str):
 def mock_cisco_iosxe_server():
     pool = ThreadPoolExecutor(max_workers=1)
     pool.submit(start_server, "cisco_iosxe")
+
+    # check to make sure we can connect to localhost on port 2211 before yielding to tests
+    server_check_counter = 0
+    while True:
+        try:
+            print("trying to connect to started server")
+            device = DEVICES["mock_cisco_iosxe"]
+            driver = SYNC_DRIVERS["cisco_iosxe"]
+            conn = driver(**device)
+            conn.open()
+            conn.close()
+            break
+        except ScrapliException as exc:
+            server_check_counter += 1
+            if server_check_counter > 4:
+                sys.exit()
+            time.sleep(0.5)
+            print(str(exc))
+
     # yield to let all the tests run, then we can deal w/ cleaning up the thread/loop
     yield
     SERVER_LOOP.call_soon_threadsafe(SERVER_LOOP.stop())
