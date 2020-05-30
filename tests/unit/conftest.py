@@ -54,8 +54,7 @@ def sync_generic_driver_conn():
     device = DEVICES["mock_cisco_iosxe"].copy()
     device.pop("auth_secondary")
     driver = SYNC_DRIVERS["generic_driver"]
-    # system doesnt like to work in tox... i would assume because of some arcane pty/tty thing??
-    conn = driver(transport="paramiko", **device)
+    conn = driver(**device)
     yield conn
     if conn.isalive():
         conn.close()
@@ -76,8 +75,7 @@ async def async_generic_driver_conn():
 def sync_cisco_iosxe_conn():
     device = DEVICES["mock_cisco_iosxe"]
     driver = SYNC_DRIVERS["cisco_iosxe"]
-    # system doesnt like to work in tox... i would assume because of some arcane pty/tty thing??
-    conn = driver(transport="paramiko", **device)
+    conn = driver(**device)
     yield conn
     if conn.isalive():
         conn.close()
