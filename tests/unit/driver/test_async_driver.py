@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 
 from scrapli.driver.core import AsyncIOSXEDriver
@@ -5,6 +7,8 @@ from scrapli.driver.core import AsyncIOSXEDriver
 from ...test_data.devices import DEVICES
 
 
+# very unclear why this needs to be skipped with the module level skip...?
+@pytest.mark.skipif(sys.platform == "win32", reason="no asyncssh on windows")
 @pytest.mark.asyncio
 async def test_context_manager():
     device = DEVICES["mock_cisco_iosxe"].copy()

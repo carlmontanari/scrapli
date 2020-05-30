@@ -25,7 +25,9 @@ SERVER_LOOP = asyncio.new_event_loop()
 async def _start_server(server_name: str):
     server = SERVERS.get(server_name).get("server")
     port = SERVERS.get(server_name).get("port")
-    await asyncssh.create_server(server, "", port, server_host_keys=[f"{TEST_DATA_DIR}/files/vrnetlab_key"])
+    await asyncssh.create_server(
+        server, "", port, server_host_keys=[f"{TEST_DATA_DIR}/files/vrnetlab_key"]
+    )
 
 
 def start_server(server_name: str):
