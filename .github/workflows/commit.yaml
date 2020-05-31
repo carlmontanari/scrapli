@@ -16,7 +16,7 @@ jobs:
   build_linux:
     runs-on: ${{ matrix.os }}
     strategy:
-      max-parallel: 6
+      max-parallel: 3
       matrix:
         os: [ubuntu-latest]
         version: [3.6, 3.7, 3.8]
@@ -38,13 +38,14 @@ jobs:
           chmod 0600 tests/test_data/files/vrnetlab_key
       - name: run nox
         env:
+          # needed to make the terminal a tty (i think? without this system ssh is super broken)
           TERM: xterm
-        run: python -m nox
+        run: python -m nox -p ${{ matrix.version }}
 
 #  build_macos:
 #    runs-on: ${{ matrix.os }}
 #    strategy:
-#      max-parallel: 6
+#      max-parallel: 3
 #      matrix:
 #        os: [macos-latest]
 #        version: [3.6, 3.7, 3.8]
@@ -63,8 +64,12 @@ jobs:
 #          python -m pip install --upgrade pip
 #          python -m pip install setuptools
 #          python -m pip install nox
+#          chmod 0600 tests/test_data/files/vrnetlab_key
 #      - name: run nox
-#        run: python -m nox
+#        env:
+#          # needed to make the terminal a tty (i think? without this system ssh is super broken)
+#          TERM: xterm
+#        run: python -m nox -p ${{ matrix.version }}
 
 #  # no ssh2 for windows python3.8, so just peeling this out into its own job for now and running just py37 tests
 #  build_windows:

@@ -269,6 +269,9 @@ class IOSXEServer(asyncssh.SSHServer):
         return False
 
     def validate_public_key(self, username, key) -> bool:
-        if username == "scrapli" and key.get_fingerprint() == "SHA256:rb1CVtQCkWBAzm1AxV7xR7BLBawUwFUlUVFVu+QYQBM":
+        if (
+            username == "scrapli"
+            and key.get_fingerprint() == "SHA256:rb1CVtQCkWBAzm1AxV7xR7BLBawUwFUlUVFVu+QYQBM"
+        ):
             return True
         return False
