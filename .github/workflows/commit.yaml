@@ -13,12 +13,12 @@ on: [push]
 
 
 jobs:
-  build_linux:
+  build_posix:
     runs-on: ${{ matrix.os }}
     strategy:
-      max-parallel: 3
+      max-parallel: 6
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest]
         version: [3.6, 3.7, 3.8]
     steps:
       - uses: actions/checkout@v2
@@ -26,10 +26,6 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.version }}
-#      - name: install openssh-client
-#        run: |
-#          sudo apt-get update -y
-#          sudo apt-get install -y openssh-client
       - name: setup test env
         run: |
           python -m pip install --upgrade pip
@@ -42,53 +38,24 @@ jobs:
           TERM: xterm
         run: python -m nox -p ${{ matrix.version }}
 
-#  build_macos:
-#    runs-on: ${{ matrix.os }}
-#    strategy:
-#      max-parallel: 3
-#      matrix:
-#        os: [macos-latest]
-#        version: [3.6, 3.7, 3.8]
-#    steps:
-#      - uses: actions/checkout@v2
-#      - name: set up python ${{ matrix.version }}
-#        uses: actions/setup-python@v2
-#        with:
-#          python-version: ${{ matrix.version }}
-#      - name: install openssh-client
-#        run: |
-#          sudo apt-get update -y
-#          sudo apt-get install -y openssh-client
-#      - name: setup test env
-#        run: |
-#          python -m pip install --upgrade pip
-#          python -m pip install setuptools
-#          python -m pip install nox
-#          chmod 0600 tests/test_data/files/vrnetlab_key
-#      - name: run nox
-#        env:
-#          # needed to make the terminal a tty (i think? without this system ssh is super broken)
-#          TERM: xterm
-#        run: python -m nox -p ${{ matrix.version }}
-
-#  # no ssh2 for windows python3.8, so just peeling this out into its own job for now and running just py37 tests
-#  build_windows:
-#    runs-on: ${{ matrix.os }}
-#    strategy:
-#      max-parallel: 1
-#      matrix:
-#        os: [windows-latest]
-#        version: [3.7]
-#    steps:
-#      - uses: actions/checkout@v2
-#      - name: set up python ${{ matrix.version }}
-#        uses: actions/setup-python@v2
-#        with:
-#          python-version: ${{ matrix.version }}
-#      - name: setup test env
-#        run: |
-#          python -m pip install --upgrade pip
-#          python -m pip install setuptools
-#          python -m pip install nox
-#      - name: run nox
-#        run: python -m nox -e unit_tests-3.7
+  # no ssh2 for windows python3.8, so just peeling this out into its own job for now and running just py37 tests
+  build_windows:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      max-parallel: 1
+      matrix:
+        os: [windows-latest]
+        version: [3.7]
+    steps:
+      - uses: actions/checkout@v2
+      - name: set up python ${{ matrix.version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.version }}
+      - name: setup test env
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install setuptools
+          python -m pip install nox
+      - name: run nox
+        run: python -m nox -e unit_tests-3.7
