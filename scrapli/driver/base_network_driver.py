@@ -225,7 +225,7 @@ class NetworkDriverBase:
             str: name of the privilege level requested
 
         Raises:
-           UnknownPrivLevel: if attempting to acquire an unknown priv
+            UnknownPrivLevel: if attempting to acquire an unknown priv
 
         """
         desired_privilege_level = self.privilege_levels.get(requested_priv, None)

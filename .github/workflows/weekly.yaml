@@ -52,7 +52,7 @@ jobs:
         env:
           # needed to make the terminal a tty (i think? without this system ssh is super broken)
           TERM: xterm
-        run: python -m nox -p ${{ matrix.version }}
+        run: python -m nox -p ${{ matrix.version }} -k "not darglint"
 
   # no ssh2 for windows python3.8, so just peeling this out into its own job for now and running just py37 tests
   build_windows:

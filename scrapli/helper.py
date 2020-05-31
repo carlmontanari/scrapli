@@ -102,15 +102,13 @@ def normalize_lines(output: bytes) -> bytes:
 
 def strip_ansi(output: bytes) -> bytes:
     """
-    Strip comms_ansi
-
-    Strip comms_ansi characters from output
+    Strip ansi characters from output
 
     Args:
         output: bytes from previous reads if needed
 
     Returns:
-        bytes: bytes output read from channel with comms_ansi characters removed
+        bytes: bytes output read from channel with ansi characters removed
 
     Raises:
         N/A
