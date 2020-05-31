@@ -27,11 +27,13 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.channel.channel&#34;&#34;&#34;
 import re
+from abc import ABC
 from logging import getLogger
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple, Union
 
 from scrapli.decorators import operation_timeout
 from scrapli.helper import get_prompt_pattern, normalize_lines, strip_ansi
+from scrapli.transport.async_transport import AsyncTransport
 from scrapli.transport.transport import Transport
 
 LOG = getLogger(&#34;channel&#34;)
@@ -46,10 +48,10 @@ CHANNEL_ARGS = (
 )
 
 
-class Channel:
+class ChannelBase(ABC):
     def __init__(
         self,
-        transport: Transport,
+        transport: Union[Transport, AsyncTransport],
         comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]$&#34;,
         comms_return_char: str = &#34;\n&#34;,
         comms_ansi: bool = False,
@@ -90,7 +92,9 @@ class Channel:
             N/A
 
         &#34;&#34;&#34;
-        self.transport: Transport = transport
+        LOG.name = f&#34;channel-{transport.host}&#34;
+
+        self.transport = transport
         self.comms_prompt_pattern = comms_prompt_pattern
         self.comms_return_char = comms_return_char
         self.comms_ansi = comms_ansi
@@ -155,6 +159,46 @@ class Channel:
         prompt_pattern = get_prompt_pattern(prompt=&#34;&#34;, class_prompt=self.comms_prompt_pattern)
         output = re.sub(pattern=prompt_pattern, repl=b&#34;&#34;, string=output)
         return output
+
+    def _send_return(self) -&gt; None:
+        &#34;&#34;&#34;
+        Send return char to device
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.transport.write(channel_input=self.comms_return_char)
+        LOG.debug(f&#34;Write (sending return character): {repr(self.comms_return_char)}&#34;)
+
+
+class Channel(ChannelBase):
+    def __init__(self, transport: Transport, **kwargs: Any) -&gt; None:
+        &#34;&#34;&#34;
+        Channel Object
+
+        Args:
+            transport: Scrapli Transport class
+            kwargs: keyword arguments to pass to ChannelBase
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        super().__init__(transport, **kwargs)
+
+        # ChannelBase supports union of Transport and AsyncTransport, but as this is the
+        # &#34;normal&#34; (sync) Channel, transport will always be async
+        self.transport: Transport
 
     def _read_chunk(self) -&gt; bytes:
         &#34;&#34;&#34;
@@ -328,23 +372,6 @@ class Channel:
         # whitespace to the right if any
         processed_output = processed_output.lstrip(self.comms_return_char.encode()).rstrip()
         return output, processed_output
-
-    def _send_return(self) -&gt; None:
-        &#34;&#34;&#34;
-        Send return char to device
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.transport.write(channel_input=self.comms_return_char)
-        LOG.debug(f&#34;Write (sending return character): {repr(self.comms_return_char)}&#34;)
 
     @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out sending interactive input to device.&#34;)
     def send_inputs_interact(
@@ -454,40 +481,19 @@ class Channel:
 <dl>
 <dt id="scrapli.channel.channel.Channel"><code class="flex name class">
 <span>class <span class="ident">Channel</span></span>
-<span>(</span><span>transport: <a title="scrapli.transport.transport.Transport" href="../transport/transport.html#scrapli.transport.transport.Transport">Transport</a>, comms_prompt_pattern: str = &#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char: str = '\n', comms_ansi: bool = False, comms_auto_expand: bool = False, timeout_ops: int = 10)</span>
+<span>(</span><span>transport: <a title="scrapli.transport.transport.Transport" href="../transport/transport.html#scrapli.transport.transport.Transport">Transport</a>, **kwargs: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Channel Object</p>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<p>Channel Object</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>transport</code></strong></dt>
-<dd>Transport object of any transport provider (system|telnet or a plugin)
-transport could in theory be any transport as long as it provides a read and a write
-method&hellip; obviously its probably always going to be scrapli transport though</dd>
-<dt><strong><code>comms_prompt_pattern</code></strong></dt>
-<dd>raw string regex pattern &ndash; use <code>^</code> and <code>$</code> for multi-line!</dd>
-<dt><strong><code>comms_return_char</code></strong></dt>
-<dd>character to use to send returns to host</dd>
-<dt><strong><code>comms_ansi</code></strong></dt>
-<dd>True/False strip comms_ansi characters from output</dd>
-<dt><strong><code>comms_auto_expand</code></strong></dt>
-<dd>bool to indicate if a device auto-expands commands, for example
-juniper devices without <code>cli complete-on-space</code> disabled will convert <code>config</code> to
-<code>configuration</code> after entering a space character after <code>config</code>; because scrapli
-reads the channel until each command is entered, the command changing from <code>config</code>
-to <code>configuration</code> will cause scrapli (by default) to never think the command has
-been entered. Setting this value to <code>True</code> will force scrapli to zip the split lists
-of inputs and outputs together to determine if each read output starts with the
-corresponding input. For example, if the inputs are "sho ver" and the read output is
-"show version", scrapli will zip the split strings together and confirm that in fact
-"show" starts with "sho" and "version" starts with "ver", confirming that the
-commands that were input were input properly. This is disabled by default, as it is
-preferable to disable this type of behavior via the device itself if possible.</dd>
-<dt><strong><code>timeout_ops</code></strong></dt>
-<dd>timeout in seconds for channel operations (reads/writes)</dd>
+<dd>Scrapli Transport class</dd>
+<dt><strong><code>kwargs</code></strong></dt>
+<dd>keyword arguments to pass to ChannelBase</dd>
 </dl>
-<h2 id="args_1">Args</h2>
-<p>N/A</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>N/A
@@ -503,42 +509,14 @@ preferable to disable this type of behavior via the device itself if possible.</
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Channel:
-    def __init__(
-        self,
-        transport: Transport,
-        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]$&#34;,
-        comms_return_char: str = &#34;\n&#34;,
-        comms_ansi: bool = False,
-        comms_auto_expand: bool = False,
-        timeout_ops: int = 10,
-    ):
+<pre><code class="python">class Channel(ChannelBase):
+    def __init__(self, transport: Transport, **kwargs: Any) -&gt; None:
         &#34;&#34;&#34;
         Channel Object
 
         Args:
-            transport: Transport object of any transport provider (system|telnet or a plugin)
-                transport could in theory be any transport as long as it provides a read and a write
-                method... obviously its probably always going to be scrapli transport though
-            comms_prompt_pattern: raw string regex pattern -- use `^` and `$` for multi-line!
-            comms_return_char: character to use to send returns to host
-            comms_ansi: True/False strip comms_ansi characters from output
-            comms_auto_expand: bool to indicate if a device auto-expands commands, for example
-                juniper devices without `cli complete-on-space` disabled will convert `config` to
-                `configuration` after entering a space character after `config`; because scrapli
-                reads the channel until each command is entered, the command changing from `config`
-                to `configuration` will cause scrapli (by default) to never think the command has
-                been entered. Setting this value to `True` will force scrapli to zip the split lists
-                of inputs and outputs together to determine if each read output starts with the
-                corresponding input. For example, if the inputs are &#34;sho ver&#34; and the read output is
-                &#34;show version&#34;, scrapli will zip the split strings together and confirm that in fact
-                &#34;show&#34; starts with &#34;sho&#34; and &#34;version&#34; starts with &#34;ver&#34;, confirming that the
-                commands that were input were input properly. This is disabled by default, as it is
-                preferable to disable this type of behavior via the device itself if possible.
-            timeout_ops: timeout in seconds for channel operations (reads/writes)
-
-        Args:
-            N/A
+            transport: Scrapli Transport class
+            kwargs: keyword arguments to pass to ChannelBase
 
         Returns:
             N/A  # noqa: DAR202
@@ -547,71 +525,11 @@ preferable to disable this type of behavior via the device itself if possible.</
             N/A
 
         &#34;&#34;&#34;
-        self.transport: Transport = transport
-        self.comms_prompt_pattern = comms_prompt_pattern
-        self.comms_return_char = comms_return_char
-        self.comms_ansi = comms_ansi
-        self.comms_auto_expand = comms_auto_expand
-        self.timeout_ops = timeout_ops
+        super().__init__(transport, **kwargs)
 
-    def __str__(self) -&gt; str:
-        &#34;&#34;&#34;
-        Magic str method for Channel
-
-        Args:
-            N/A
-
-        Returns:
-            str: str for class object
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        return &#34;scrapli Channel Object&#34;
-
-    def __repr__(self) -&gt; str:
-        &#34;&#34;&#34;
-        Magic repr method for Channel
-
-        Args:
-            N/A
-
-        Returns:
-            str: repr for class object
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        class_dict = self.__dict__.copy()
-        class_dict.pop(&#34;transport&#34;)
-        return f&#34;scrapli Channel {class_dict}&#34;
-
-    def _restructure_output(self, output: bytes, strip_prompt: bool = False) -&gt; bytes:
-        &#34;&#34;&#34;
-        Clean up preceding empty lines, and strip prompt if desired
-
-        Args:
-            output: bytes from channel
-            strip_prompt: bool True/False whether to strip prompt or not
-
-        Returns:
-            bytes: output of joined output lines optionally with prompt removed
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        output = normalize_lines(output=output)
-
-        if not strip_prompt:
-            return output
-
-        # could be compiled elsewhere, but allow for users to modify the prompt whenever they want
-        prompt_pattern = get_prompt_pattern(prompt=&#34;&#34;, class_prompt=self.comms_prompt_pattern)
-        output = re.sub(pattern=prompt_pattern, repl=b&#34;&#34;, string=output)
-        return output
+        # ChannelBase supports union of Transport and AsyncTransport, but as this is the
+        # &#34;normal&#34; (sync) Channel, transport will always be async
+        self.transport: Transport
 
     def _read_chunk(self) -&gt; bytes:
         &#34;&#34;&#34;
@@ -786,23 +704,6 @@ preferable to disable this type of behavior via the device itself if possible.</
         processed_output = processed_output.lstrip(self.comms_return_char.encode()).rstrip()
         return output, processed_output
 
-    def _send_return(self) -&gt; None:
-        &#34;&#34;&#34;
-        Send return char to device
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.transport.write(channel_input=self.comms_return_char)
-        LOG.debug(f&#34;Write (sending return character): {repr(self.comms_return_char)}&#34;)
-
     @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out sending interactive input to device.&#34;)
     def send_inputs_interact(
         self, interact_events: List[Tuple[str, str, Optional[bool]]]
@@ -899,6 +800,11 @@ preferable to disable this type of behavior via the device itself if possible.</
         processed_result = processed_output.decode()
         return raw_result, processed_result</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scrapli.channel.channel.ChannelBase" href="#scrapli.channel.channel.ChannelBase">ChannelBase</a></li>
+<li>abc.ABC</li>
+</ul>
 <h3>Methods</h3>
 <dl>
 <dt id="scrapli.channel.channel.Channel.get_prompt"><code class="name flex">
@@ -916,7 +822,7 @@ preferable to disable this type of behavior via the device itself if possible.</
     **kwargs: Dict[str, Union[str, int]],
 ) -&gt; Any:
     # import here to avoid circular dependency
-    from scrapli.channel import Channel  # pylint: disable=C0415
+    from scrapli.channel import AsyncChannel, Channel  # pylint: disable=C0415
 
     timeout_duration = getattr(channel_or_transport, attribute, None)
     if not timeout_duration:
@@ -930,7 +836,7 @@ preferable to disable this type of behavior via the device itself if possible.</
     # to unlock and close the session. we need to unlock as the close will block
     # forever if the session is locked, and the session very likely is locked while
     # waiting for output from the device
-    if isinstance(channel_or_transport, Channel):
+    if isinstance(channel_or_transport, (AsyncChannel, Channel)):
         timeout_exit = channel_or_transport.transport.timeout_exit
         session_lock = channel_or_transport.transport.session_lock
         close = channel_or_transport.transport.close
@@ -1023,7 +929,7 @@ preferable to disable this type of behavior via the device itself if possible.</
     **kwargs: Dict[str, Union[str, int]],
 ) -&gt; Any:
     # import here to avoid circular dependency
-    from scrapli.channel import Channel  # pylint: disable=C0415
+    from scrapli.channel import AsyncChannel, Channel  # pylint: disable=C0415
 
     timeout_duration = getattr(channel_or_transport, attribute, None)
     if not timeout_duration:
@@ -1037,7 +943,7 @@ preferable to disable this type of behavior via the device itself if possible.</
     # to unlock and close the session. we need to unlock as the close will block
     # forever if the session is locked, and the session very likely is locked while
     # waiting for output from the device
-    if isinstance(channel_or_transport, Channel):
+    if isinstance(channel_or_transport, (AsyncChannel, Channel)):
         timeout_exit = channel_or_transport.transport.timeout_exit
         session_lock = channel_or_transport.transport.session_lock
         close = channel_or_transport.transport.close
@@ -1062,6 +968,198 @@ preferable to disable this type of behavior via the device itself if possible.</
 </dd>
 </dl>
 </dd>
+<dt id="scrapli.channel.channel.ChannelBase"><code class="flex name class">
+<span>class <span class="ident">ChannelBase</span></span>
+<span>(</span><span>transport: Union[scrapli.transport.transport.Transport, scrapli.transport.async_transport.AsyncTransport], comms_prompt_pattern: str = &#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char: str = '\n', comms_ansi: bool = False, comms_auto_expand: bool = False, timeout_ops: int = 10)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<p>Channel Object</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>transport</code></strong></dt>
+<dd>Transport object of any transport provider (system|telnet or a plugin)
+transport could in theory be any transport as long as it provides a read and a write
+method&hellip; obviously its probably always going to be scrapli transport though</dd>
+<dt><strong><code>comms_prompt_pattern</code></strong></dt>
+<dd>raw string regex pattern &ndash; use <code>^</code> and <code>$</code> for multi-line!</dd>
+<dt><strong><code>comms_return_char</code></strong></dt>
+<dd>character to use to send returns to host</dd>
+<dt><strong><code>comms_ansi</code></strong></dt>
+<dd>True/False strip comms_ansi characters from output</dd>
+<dt><strong><code>comms_auto_expand</code></strong></dt>
+<dd>bool to indicate if a device auto-expands commands, for example
+juniper devices without <code>cli complete-on-space</code> disabled will convert <code>config</code> to
+<code>configuration</code> after entering a space character after <code>config</code>; because scrapli
+reads the channel until each command is entered, the command changing from <code>config</code>
+to <code>configuration</code> will cause scrapli (by default) to never think the command has
+been entered. Setting this value to <code>True</code> will force scrapli to zip the split lists
+of inputs and outputs together to determine if each read output starts with the
+corresponding input. For example, if the inputs are "sho ver" and the read output is
+"show version", scrapli will zip the split strings together and confirm that in fact
+"show" starts with "sho" and "version" starts with "ver", confirming that the
+commands that were input were input properly. This is disabled by default, as it is
+preferable to disable this type of behavior via the device itself if possible.</dd>
+<dt><strong><code>timeout_ops</code></strong></dt>
+<dd>timeout in seconds for channel operations (reads/writes)</dd>
+</dl>
+<h2 id="args_1">Args</h2>
+<p>N/A</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N/A
+# noqa: DAR202</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ChannelBase(ABC):
+    def __init__(
+        self,
+        transport: Union[Transport, AsyncTransport],
+        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]$&#34;,
+        comms_return_char: str = &#34;\n&#34;,
+        comms_ansi: bool = False,
+        comms_auto_expand: bool = False,
+        timeout_ops: int = 10,
+    ):
+        &#34;&#34;&#34;
+        Channel Object
+
+        Args:
+            transport: Transport object of any transport provider (system|telnet or a plugin)
+                transport could in theory be any transport as long as it provides a read and a write
+                method... obviously its probably always going to be scrapli transport though
+            comms_prompt_pattern: raw string regex pattern -- use `^` and `$` for multi-line!
+            comms_return_char: character to use to send returns to host
+            comms_ansi: True/False strip comms_ansi characters from output
+            comms_auto_expand: bool to indicate if a device auto-expands commands, for example
+                juniper devices without `cli complete-on-space` disabled will convert `config` to
+                `configuration` after entering a space character after `config`; because scrapli
+                reads the channel until each command is entered, the command changing from `config`
+                to `configuration` will cause scrapli (by default) to never think the command has
+                been entered. Setting this value to `True` will force scrapli to zip the split lists
+                of inputs and outputs together to determine if each read output starts with the
+                corresponding input. For example, if the inputs are &#34;sho ver&#34; and the read output is
+                &#34;show version&#34;, scrapli will zip the split strings together and confirm that in fact
+                &#34;show&#34; starts with &#34;sho&#34; and &#34;version&#34; starts with &#34;ver&#34;, confirming that the
+                commands that were input were input properly. This is disabled by default, as it is
+                preferable to disable this type of behavior via the device itself if possible.
+            timeout_ops: timeout in seconds for channel operations (reads/writes)
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        LOG.name = f&#34;channel-{transport.host}&#34;
+
+        self.transport = transport
+        self.comms_prompt_pattern = comms_prompt_pattern
+        self.comms_return_char = comms_return_char
+        self.comms_ansi = comms_ansi
+        self.comms_auto_expand = comms_auto_expand
+        self.timeout_ops = timeout_ops
+
+    def __str__(self) -&gt; str:
+        &#34;&#34;&#34;
+        Magic str method for Channel
+
+        Args:
+            N/A
+
+        Returns:
+            str: str for class object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        return &#34;scrapli Channel Object&#34;
+
+    def __repr__(self) -&gt; str:
+        &#34;&#34;&#34;
+        Magic repr method for Channel
+
+        Args:
+            N/A
+
+        Returns:
+            str: repr for class object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        class_dict = self.__dict__.copy()
+        class_dict.pop(&#34;transport&#34;)
+        return f&#34;scrapli Channel {class_dict}&#34;
+
+    def _restructure_output(self, output: bytes, strip_prompt: bool = False) -&gt; bytes:
+        &#34;&#34;&#34;
+        Clean up preceding empty lines, and strip prompt if desired
+
+        Args:
+            output: bytes from channel
+            strip_prompt: bool True/False whether to strip prompt or not
+
+        Returns:
+            bytes: output of joined output lines optionally with prompt removed
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        output = normalize_lines(output=output)
+
+        if not strip_prompt:
+            return output
+
+        # could be compiled elsewhere, but allow for users to modify the prompt whenever they want
+        prompt_pattern = get_prompt_pattern(prompt=&#34;&#34;, class_prompt=self.comms_prompt_pattern)
+        output = re.sub(pattern=prompt_pattern, repl=b&#34;&#34;, string=output)
+        return output
+
+    def _send_return(self) -&gt; None:
+        &#34;&#34;&#34;
+        Send return char to device
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.transport.write(channel_input=self.comms_return_char)
+        LOG.debug(f&#34;Write (sending return character): {repr(self.comms_return_char)}&#34;)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="scrapli.channel.async_channel.AsyncChannel" href="async_channel.html#scrapli.channel.async_channel.AsyncChannel">AsyncChannel</a></li>
+<li><a title="scrapli.channel.channel.Channel" href="#scrapli.channel.channel.Channel">Channel</a></li>
+</ul>
+</dd>
 </dl>
 </section>
 </article>
@@ -1085,6 +1183,9 @@ preferable to disable this type of behavior via the device itself if possible.</
 <li><code><a title="scrapli.channel.channel.Channel.send_input" href="#scrapli.channel.channel.Channel.send_input">send_input</a></code></li>
 <li><code><a title="scrapli.channel.channel.Channel.send_inputs_interact" href="#scrapli.channel.channel.Channel.send_inputs_interact">send_inputs_interact</a></code></li>
 </ul>
+</li>
+<li>
+<h4><code><a title="scrapli.channel.channel.ChannelBase" href="#scrapli.channel.channel.ChannelBase">ChannelBase</a></code></h4>
 </li>
 </ul>
 </li>

@@ -1,9 +1,11 @@
 """scrapli.driver.core.cisco_iosxr.driver"""
 import time
+from copy import deepcopy
 from typing import Any, Callable, Dict, List, Optional
 
 from scrapli.driver import NetworkDriver
-from scrapli.driver.network_driver import PrivilegeLevel
+from scrapli.driver.base_network_driver import PrivilegeLevel
+from scrapli.driver.core.cisco_iosxr.base_driver import PRIVS
 
 
 def iosxr_on_open(conn: NetworkDriver) -> None:
@@ -23,8 +25,8 @@ def iosxr_on_open(conn: NetworkDriver) -> None:
     # maybe this is an artifact from previous iterations/tests and can be done away with...
     time.sleep(1)
     conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
-    conn.channel.send_input(channel_input="terminal length 0")
-    conn.channel.send_input(channel_input="terminal width 512")
+    conn.send_command(command="terminal length 0")
+    conn.send_command(command="terminal width 512")
 
 
 def iosxr_on_close(conn: NetworkDriver) -> None:
@@ -45,43 +47,6 @@ def iosxr_on_close(conn: NetworkDriver) -> None:
     conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
     conn.transport.write(channel_input="exit")
     conn.transport.write(channel_input=conn.channel.comms_return_char)
-
-
-PRIVS = {
-    "privilege_exec": (
-        PrivilegeLevel(
-            pattern=r"^[a-z0-9.\-@/:]{1,32}#\s?$",
-            name="privilege_exec",
-            previous_priv="",
-            deescalate="",
-            escalate="",
-            escalate_auth=False,
-            escalate_prompt="",
-        )
-    ),
-    "configuration": (
-        PrivilegeLevel(
-            pattern=r"^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{0,32}\)#\s?$",
-            name="configuration",
-            previous_priv="privilege_exec",
-            deescalate="end",
-            escalate="configure terminal",
-            escalate_auth=False,
-            escalate_prompt="",
-        )
-    ),
-    "configuration_exclusive": (
-        PrivilegeLevel(
-            pattern=r"^[a-z0-9.\-@/:]{1,32}\(config[a-z0-9.\-@/:]{0,32}\)#\s?$",
-            name="configuration_exclusive",
-            previous_priv="privilege_exec",
-            deescalate="end",
-            escalate="configure exclusive",
-            escalate_auth=False,
-            escalate_prompt="",
-        )
-    ),
-}
 
 
 class IOSXRDriver(NetworkDriver):
@@ -128,7 +93,7 @@ class IOSXRDriver(NetworkDriver):
             N/A
         """
         if privilege_levels is None:
-            privilege_levels = PRIVS
+            privilege_levels = deepcopy(PRIVS)
 
         if on_open is None:
             on_open = iosxr_on_open

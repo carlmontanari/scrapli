@@ -1,8 +1,10 @@
 """scrapli.driver.core.juniper_junos.driver"""
+from copy import deepcopy
 from typing import Any, Callable, Dict, List, Optional
 
 from scrapli.driver import NetworkDriver
-from scrapli.driver.network_driver import PrivilegeLevel
+from scrapli.driver.base_network_driver import PrivilegeLevel
+from scrapli.driver.core.juniper_junos.base_driver import PRIVS
 
 
 def junos_on_open(conn: NetworkDriver) -> None:
@@ -19,9 +21,9 @@ def junos_on_open(conn: NetworkDriver) -> None:
         N/A
     """
     conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
-    conn.channel.send_input(channel_input="set cli complete-on-space off")
-    conn.channel.send_input(channel_input="set cli screen-length 0")
-    conn.channel.send_input(channel_input="set cli screen-width 511")
+    conn.send_command(command="set cli complete-on-space off")
+    conn.send_command(command="set cli screen-length 0")
+    conn.send_command(command="set cli screen-width 511")
 
 
 def junos_on_close(conn: NetworkDriver) -> None:
@@ -42,54 +44,6 @@ def junos_on_close(conn: NetworkDriver) -> None:
     conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
     conn.transport.write(channel_input="exit")
     conn.transport.write(channel_input=conn.channel.comms_return_char)
-
-
-PRIVS = {
-    "exec": (
-        PrivilegeLevel(
-            pattern=r"^({\w+:\d}\n){0,1}[a-z0-9.\-@()/:]{1,32}>\s?$",
-            name="exec",
-            previous_priv="",
-            deescalate="",
-            escalate="",
-            escalate_auth=False,
-            escalate_prompt="",
-        )
-    ),
-    "configuration": (
-        PrivilegeLevel(
-            pattern=r"^({\w+:\d}\[edit\]\n){0,1}[a-z0-9.\-@()/:]{1,32}#\s?$",
-            name="configuration",
-            previous_priv="exec",
-            deescalate="exit configuration-mode",
-            escalate="configure",
-            escalate_auth=False,
-            escalate_prompt="",
-        )
-    ),
-    "configuration_exclusive": (
-        PrivilegeLevel(
-            pattern=r"^({\w+:\d}\[edit\]\n){0,1}[a-z0-9.\-@()/:]{1,32}#\s?$",
-            name="configuration_exclusive",
-            previous_priv="exec",
-            deescalate="exit configuration-mode",
-            escalate="configure exclusive",
-            escalate_auth=False,
-            escalate_prompt="",
-        )
-    ),
-    "configuration_private": (
-        PrivilegeLevel(
-            pattern=r"^({\w+:\d}\[edit\]\n){0,1}[a-z0-9.\-@()/:]{1,32}#\s?$",
-            name="configuration_private",
-            previous_priv="exec",
-            deescalate="exit configuration-mode",
-            escalate="configure private",
-            escalate_auth=False,
-            escalate_prompt="",
-        )
-    ),
-}
 
 
 class JunosDriver(NetworkDriver):
@@ -149,7 +103,7 @@ class JunosDriver(NetworkDriver):
 
         """
         if privilege_levels is None:
-            privilege_levels = PRIVS
+            privilege_levels = deepcopy(PRIVS)
 
         if on_open is None:
             on_open = junos_on_open

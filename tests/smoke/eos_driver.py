@@ -10,7 +10,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("scrapli")
 
-conn = EOSDriver(**eos_device)
+conn = EOSDriver(**eos_device, auth_secondary="VR-netlab9")
 conn.open()
 
 print("***** Get Prompt:")

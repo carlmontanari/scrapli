@@ -65,7 +65,11 @@ class CouldNotAcquirePrivLevel(ScrapliException):
 
 
 class TransportPluginError(ScrapliException):
-    &#34;&#34;&#34;Exception for transport plugin loading errors&#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;Exception for transport plugin loading errors&#34;&#34;&#34;
+
+
+class ConnectionNotOpened(ScrapliException):
+    &#34;&#34;&#34;Exception for failures due to connection not being open&#34;&#34;&#34;</code></pre>
 </details>
 </section>
 <section>
@@ -77,6 +81,26 @@ class TransportPluginError(ScrapliException):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="scrapli.exceptions.ConnectionNotOpened"><code class="flex name class">
+<span>class <span class="ident">ConnectionNotOpened</span></span>
+<span>(</span><span>...)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Exception for failures due to connection not being open</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ConnectionNotOpened(ScrapliException):
+    &#34;&#34;&#34;Exception for failures due to connection not being open&#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scrapli.exceptions.ScrapliException" href="#scrapli.exceptions.ScrapliException">ScrapliException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
 <dt id="scrapli.exceptions.CouldNotAcquirePrivLevel"><code class="flex name class">
 <span>class <span class="ident">CouldNotAcquirePrivLevel</span></span>
 <span>(</span><span>...)</span>
@@ -197,6 +221,7 @@ class TransportPluginError(ScrapliException):
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
+<li><a title="scrapli.exceptions.ConnectionNotOpened" href="#scrapli.exceptions.ConnectionNotOpened">ConnectionNotOpened</a></li>
 <li><a title="scrapli.exceptions.CouldNotAcquirePrivLevel" href="#scrapli.exceptions.CouldNotAcquirePrivLevel">CouldNotAcquirePrivLevel</a></li>
 <li><a title="scrapli.exceptions.KeyVerificationFailed" href="#scrapli.exceptions.KeyVerificationFailed">KeyVerificationFailed</a></li>
 <li><a title="scrapli.exceptions.MissingDependencies" href="#scrapli.exceptions.MissingDependencies">MissingDependencies</a></li>
@@ -304,6 +329,9 @@ class TransportPluginError(ScrapliException):
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
+<li>
+<h4><code><a title="scrapli.exceptions.ConnectionNotOpened" href="#scrapli.exceptions.ConnectionNotOpened">ConnectionNotOpened</a></code></h4>
+</li>
 <li>
 <h4><code><a title="scrapli.exceptions.CouldNotAcquirePrivLevel" href="#scrapli.exceptions.CouldNotAcquirePrivLevel">CouldNotAcquirePrivLevel</a></code></h4>
 </li>

@@ -144,7 +144,6 @@ class SSHConfig:
             N/A
 
         """
-
         # uncomment next line and handle global patterns (stuff before hosts) at some point
         # global_config_pattern = re.compile(r"^.*?\b(?=host)", flags=re.I | re.S)
         # use word boundaries with a positive lookahead to get everything between the word host

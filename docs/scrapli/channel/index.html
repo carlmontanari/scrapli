@@ -26,14 +26,19 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.channel&#34;&#34;&#34;
+from scrapli.channel.async_channel import AsyncChannel
 from scrapli.channel.channel import CHANNEL_ARGS, Channel
 
-__all__ = (&#34;Channel&#34;, &#34;CHANNEL_ARGS&#34;)</code></pre>
+__all__ = (&#34;AsyncChannel&#34;, &#34;Channel&#34;, &#34;CHANNEL_ARGS&#34;)</code></pre>
 </details>
 </section>
 <section>
 <h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
+<dt><code class="name"><a title="scrapli.channel.async_channel" href="async_channel.html">scrapli.channel.async_channel</a></code></dt>
+<dd>
+<div class="desc"><p>scrapli.channel.async_channel</p></div>
+</dd>
 <dt><code class="name"><a title="scrapli.channel.channel" href="channel.html">scrapli.channel.channel</a></code></dt>
 <dd>
 <div class="desc"><p>scrapli.channel.channel</p></div>
@@ -47,42 +52,21 @@ __all__ = (&#34;Channel&#34;, &#34;CHANNEL_ARGS&#34;)</code></pre>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="scrapli.channel.Channel"><code class="flex name class">
-<span>class <span class="ident">Channel</span></span>
-<span>(</span><span>transport: <a title="scrapli.transport.transport.Transport" href="../transport/transport.html#scrapli.transport.transport.Transport">Transport</a>, comms_prompt_pattern: str = &#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char: str = '\n', comms_ansi: bool = False, comms_auto_expand: bool = False, timeout_ops: int = 10)</span>
+<dt id="scrapli.channel.AsyncChannel"><code class="flex name class">
+<span>class <span class="ident">AsyncChannel</span></span>
+<span>(</span><span>transport: <a title="scrapli.transport.async_transport.AsyncTransport" href="../transport/async_transport.html#scrapli.transport.async_transport.AsyncTransport">AsyncTransport</a>, **kwargs: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Channel Object</p>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<p>AsyncChannel Object</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>transport</code></strong></dt>
-<dd>Transport object of any transport provider (system|telnet or a plugin)
-transport could in theory be any transport as long as it provides a read and a write
-method&hellip; obviously its probably always going to be scrapli transport though</dd>
-<dt><strong><code>comms_prompt_pattern</code></strong></dt>
-<dd>raw string regex pattern &ndash; use <code>^</code> and <code>$</code> for multi-line!</dd>
-<dt><strong><code>comms_return_char</code></strong></dt>
-<dd>character to use to send returns to host</dd>
-<dt><strong><code>comms_ansi</code></strong></dt>
-<dd>True/False strip comms_ansi characters from output</dd>
-<dt><strong><code>comms_auto_expand</code></strong></dt>
-<dd>bool to indicate if a device auto-expands commands, for example
-juniper devices without <code>cli complete-on-space</code> disabled will convert <code>config</code> to
-<code>configuration</code> after entering a space character after <code>config</code>; because scrapli
-reads the channel until each command is entered, the command changing from <code>config</code>
-to <code>configuration</code> will cause scrapli (by default) to never think the command has
-been entered. Setting this value to <code>True</code> will force scrapli to zip the split lists
-of inputs and outputs together to determine if each read output starts with the
-corresponding input. For example, if the inputs are "sho ver" and the read output is
-"show version", scrapli will zip the split strings together and confirm that in fact
-"show" starts with "sho" and "version" starts with "ver", confirming that the
-commands that were input were input properly. This is disabled by default, as it is
-preferable to disable this type of behavior via the device itself if possible.</dd>
-<dt><strong><code>timeout_ops</code></strong></dt>
-<dd>timeout in seconds for channel operations (reads/writes)</dd>
+<dd>Scrapli Transport class</dd>
+<dt><strong><code>kwargs</code></strong></dt>
+<dd>keyword arguments to pass to ChannelBase</dd>
 </dl>
-<h2 id="args_1">Args</h2>
-<p>N/A</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>N/A
@@ -98,39 +82,122 @@ preferable to disable this type of behavior via the device itself if possible.</
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Channel:
-    def __init__(
-        self,
-        transport: Transport,
-        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]$&#34;,
-        comms_return_char: str = &#34;\n&#34;,
-        comms_ansi: bool = False,
-        comms_auto_expand: bool = False,
-        timeout_ops: int = 10,
-    ):
+<pre><code class="python">class AsyncChannel(ChannelBase):
+    def __init__(self, transport: AsyncTransport, **kwargs: Any) -&gt; None:
         &#34;&#34;&#34;
-        Channel Object
+        AsyncChannel Object
 
         Args:
-            transport: Transport object of any transport provider (system|telnet or a plugin)
-                transport could in theory be any transport as long as it provides a read and a write
-                method... obviously its probably always going to be scrapli transport though
-            comms_prompt_pattern: raw string regex pattern -- use `^` and `$` for multi-line!
-            comms_return_char: character to use to send returns to host
-            comms_ansi: True/False strip comms_ansi characters from output
-            comms_auto_expand: bool to indicate if a device auto-expands commands, for example
-                juniper devices without `cli complete-on-space` disabled will convert `config` to
+            transport: Scrapli Transport class
+            kwargs: keyword arguments to pass to ChannelBase
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        super().__init__(transport, **kwargs)
+
+        # ChannelBase supports union of Transport and AsyncTransport, but as this is the
+        # AsyncChannel, transport will always be async
+        self.transport: AsyncTransport
+
+    async def _async_read_chunk(self) -&gt; bytes:
+        &#34;&#34;&#34;
+        Private method to async read chunk and strip comms_ansi if needed
+
+        Args:
+            N/A
+
+        Returns:
+            bytes: output read from channel
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        new_output = await self.transport.read()
+        new_output = new_output.replace(b&#34;\r&#34;, b&#34;&#34;)
+        if self.comms_ansi:
+            new_output = strip_ansi(output=new_output)
+        LOG.debug(f&#34;Read: {repr(new_output)}&#34;)
+        return new_output
+
+    async def _async_read_until_input(
+        self, channel_input: bytes, auto_expand: Optional[bool] = None
+    ) -&gt; bytes:
+        &#34;&#34;&#34;
+        Async read until all input has been entered.
+
+        Args:
+            channel_input: string to write to channel
+            auto_expand: bool to indicate if a device auto-expands commands, for example juniper
+                devices without `cli complete-on-space` disabled will convert `config` to
                 `configuration` after entering a space character after `config`; because scrapli
                 reads the channel until each command is entered, the command changing from `config`
                 to `configuration` will cause scrapli (by default) to never think the command has
-                been entered. Setting this value to `True` will force scrapli to zip the split lists
-                of inputs and outputs together to determine if each read output starts with the
-                corresponding input. For example, if the inputs are &#34;sho ver&#34; and the read output is
-                &#34;show version&#34;, scrapli will zip the split strings together and confirm that in fact
-                &#34;show&#34; starts with &#34;sho&#34; and &#34;version&#34; starts with &#34;ver&#34;, confirming that the
-                commands that were input were input properly. This is disabled by default, as it is
-                preferable to disable this type of behavior via the device itself if possible.
-            timeout_ops: timeout in seconds for channel operations (reads/writes)
+                been entered.
+
+        Returns:
+            bytes: output read from channel
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        output = b&#34;&#34;
+
+        if not channel_input:
+            LOG.info(f&#34;Read: {repr(output)}&#34;)
+            return output
+
+        if auto_expand is None:
+            auto_expand = self.comms_auto_expand
+
+        channel_input_split = channel_input.split()
+        while True:
+            output += await self._async_read_chunk()
+            if not auto_expand and channel_input in output:
+                break
+            if auto_expand and all(
+                _channel_output.startswith(_channel_input)
+                for _channel_input, _channel_output in zip(channel_input_split, output.split())
+            ):
+                break
+
+        LOG.info(f&#34;Read: {repr(output)}&#34;)
+        return output
+
+    async def _async_read_until_prompt(self, output: bytes = b&#34;&#34;, prompt: str = &#34;&#34;) -&gt; bytes:
+        &#34;&#34;&#34;
+        Async read until expected prompt is seen.
+
+        Args:
+            output: bytes from previous reads if needed
+            prompt: prompt to look for if not looking for base prompt (self.comms_prompt_pattern)
+
+        Returns:
+            bytes: output read from channel
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        prompt_pattern = get_prompt_pattern(prompt=prompt, class_prompt=self.comms_prompt_pattern)
+
+        while True:
+            output += await self._async_read_chunk()
+            channel_match = re.search(pattern=prompt_pattern, string=output)
+            if channel_match:
+                LOG.info(f&#34;Read: {repr(output)}&#34;)
+                return output
+
+    @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out determining prompt on device.&#34;)
+    async def get_prompt(self) -&gt; str:
+        &#34;&#34;&#34;
+        Async get current channel prompt
 
         Args:
             N/A
@@ -142,71 +209,396 @@ preferable to disable this type of behavior via the device itself if possible.</
             N/A
 
         &#34;&#34;&#34;
-        self.transport: Transport = transport
-        self.comms_prompt_pattern = comms_prompt_pattern
-        self.comms_return_char = comms_return_char
-        self.comms_ansi = comms_ansi
-        self.comms_auto_expand = comms_auto_expand
-        self.timeout_ops = timeout_ops
-
-    def __str__(self) -&gt; str:
-        &#34;&#34;&#34;
-        Magic str method for Channel
-
-        Args:
-            N/A
-
-        Returns:
-            str: str for class object
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        return &#34;scrapli Channel Object&#34;
-
-    def __repr__(self) -&gt; str:
-        &#34;&#34;&#34;
-        Magic repr method for Channel
-
-        Args:
-            N/A
-
-        Returns:
-            str: repr for class object
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        class_dict = self.__dict__.copy()
-        class_dict.pop(&#34;transport&#34;)
-        return f&#34;scrapli Channel {class_dict}&#34;
-
-    def _restructure_output(self, output: bytes, strip_prompt: bool = False) -&gt; bytes:
-        &#34;&#34;&#34;
-        Clean up preceding empty lines, and strip prompt if desired
-
-        Args:
-            output: bytes from channel
-            strip_prompt: bool True/False whether to strip prompt or not
-
-        Returns:
-            bytes: output of joined output lines optionally with prompt removed
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        output = normalize_lines(output=output)
-
-        if not strip_prompt:
-            return output
-
-        # could be compiled elsewhere, but allow for users to modify the prompt whenever they want
         prompt_pattern = get_prompt_pattern(prompt=&#34;&#34;, class_prompt=self.comms_prompt_pattern)
-        output = re.sub(pattern=prompt_pattern, repl=b&#34;&#34;, string=output)
-        return output
+        self.transport.set_timeout(timeout=10)
+        self._send_return()
+        output = b&#34;&#34;
+        while True:
+            output += await self._async_read_chunk()
+            channel_match = re.search(pattern=prompt_pattern, string=output)
+            if channel_match:
+                self.transport.set_timeout()
+                current_prompt = channel_match.group(0)
+                return current_prompt.decode().strip()
+
+    async def send_input(self, channel_input: str, strip_prompt: bool = True,) -&gt; Tuple[str, str]:
+        &#34;&#34;&#34;
+        Primary entry point to send data to devices in async shell mode; accept input, return result
+
+        Args:
+            channel_input: string input to send to channel
+            strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
+
+        Returns:
+            raw_result: output read from the channel with no whitespace trimming/cleaning
+            processed_result: output read from the channel that has been cleaned up
+
+        Raises:
+            TypeError: if input is anything but a string
+
+        &#34;&#34;&#34;
+        if not isinstance(channel_input, str):
+            raise TypeError(
+                f&#34;`send_input` expects a single string, got {type(channel_input)}. &#34;
+                &#34;to send a list of inputs use the `send_inputs` method instead&#34;
+            )
+        raw_result, processed_result = await self._async_send_input(
+            channel_input=channel_input, strip_prompt=strip_prompt
+        )
+        return raw_result.decode(), processed_result.decode()
+
+    @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out sending input to device.&#34;)
+    async def _async_send_input(
+        self, channel_input: str, strip_prompt: bool
+    ) -&gt; Tuple[bytes, bytes]:
+        &#34;&#34;&#34;
+        Async send input to device and return results
+
+        Note that write operations are sync, but all read ops are async, so this method must be
+        async
+
+        Args:
+            channel_input: string input to write to channel
+            strip_prompt: bool True/False for whether or not to strip prompt
+
+        Returns:
+            raw_result: output read from the channel with no whitespace trimming/cleaning
+            processed_result: output read from the channel that has been cleaned up
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        bytes_channel_input = channel_input.encode()
+        self.transport.session_lock.acquire()
+        LOG.info(f&#34;Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}&#34;)
+        self.transport.write(channel_input=channel_input)
+        LOG.debug(f&#34;Write: {repr(channel_input)}&#34;)
+        await self._async_read_until_input(channel_input=bytes_channel_input)
+        self._send_return()
+        output = await self._async_read_until_prompt()
+        self.transport.session_lock.release()
+        processed_output = self._restructure_output(output=output, strip_prompt=strip_prompt)
+        # lstrip the return character out of the final result before storing, also remove any extra
+        # whitespace to the right if any
+        processed_output = processed_output.lstrip(self.comms_return_char.encode()).rstrip()
+        return output, processed_output
+
+    @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out sending interactive input to device.&#34;)
+    async def send_inputs_interact(
+        self, interact_events: List[Tuple[str, str, Optional[bool]]]
+    ) -&gt; Tuple[str, str]:
+        &#34;&#34;&#34;
+        Async interact with a device with changing prompts per input.
+
+        Used to interact with devices where prompts change per input, and where inputs may be hidden
+        such as in the case of a password input. This can be used to respond to challenges from
+        devices such as the confirmation for the command &#34;clear logging&#34; on IOSXE devices for
+        example. You may have as many elements in the &#34;interact_events&#34; list as needed, and each
+        element of that list should be a tuple of two or three elements. The first element is always
+        the input to send as a string, the second should be the expected response as a string, and
+        the optional third a bool for whether or not the input is &#34;hidden&#34; (i.e. password input)
+
+        An example where we need this sort of capability:
+
+        ```
+        3560CX#copy flash: scp:
+        Source filename []? test1.txt
+        Address or name of remote host []? 172.31.254.100
+        Destination username [carl]?
+        Writing test1.txt
+        Password:
+
+        Password:
+         Sink: C0644 639 test1.txt
+        !
+        639 bytes copied in 12.066 secs (53 bytes/sec)
+        3560CX#
+        ```
+
+        To accomplish this we can use the following:
+
+        ```
+        interact = conn.channel.send_inputs_interact(
+            [
+                (&#34;copy flash: scp:&#34;, &#34;Source filename []?&#34;, False),
+                (&#34;test1.txt&#34;, &#34;Address or name of remote host []?&#34;, False),
+                (&#34;172.31.254.100&#34;, &#34;Destination username [carl]?&#34;, False),
+                (&#34;carl&#34;, &#34;Password:&#34;, False),
+                (&#34;super_secure_password&#34;, prompt, True),
+            ]
+        )
+        ```
+
+        If we needed to deal with more prompts we could simply continue adding tuples to the list of
+        interact &#34;events&#34;.
+
+        Args:
+            interact_events: list of tuples containing the &#34;interactions&#34; with the device
+                each list element must have an input and an expected response, and may have an
+                optional bool for the third and final element -- the optional bool specifies if the
+                input that is sent to the device is &#34;hidden&#34; (ex: password), if the hidden param is
+                not provided it is assumed the input is &#34;normal&#34; (not hidden)
+
+        Returns:
+            raw_result: output read from the channel with no whitespace trimming/cleaning
+            processed_result: output read from the channel that has been cleaned up
+
+        Raises:
+            TypeError: if inputs is not tuple or list
+        &#34;&#34;&#34;
+        if not isinstance(interact_events, list):
+            raise TypeError(f&#34;`interact_events` expects a List, got {type(interact_events)}&#34;)
+
+        self.transport.session_lock.acquire()
+        output = b&#34;&#34;
+        for interact_event in interact_events:
+            channel_input = interact_event[0]
+            bytes_channel_input = channel_input.encode()
+            channel_response = interact_event[1]
+            try:
+                hidden_input = interact_event[2]
+            except IndexError:
+                hidden_input = False
+            LOG.info(
+                f&#34;Attempting to send input interact: {channel_input}; &#34;
+                f&#34;\texpecting: {channel_response};&#34;
+                f&#34;\thidden_input: {hidden_input}&#34;
+            )
+            self.transport.write(channel_input=channel_input)
+            LOG.debug(f&#34;Write: {repr(channel_input)}&#34;)
+            if not channel_response or hidden_input is True:
+                self._send_return()
+            else:
+                output += await self._async_read_until_input(channel_input=bytes_channel_input)
+                self._send_return()
+            output += await self._async_read_until_prompt(prompt=channel_response)
+        # wait to release lock until after &#34;interact&#34; session is complete
+        self.transport.session_lock.release()
+        processed_output = self._restructure_output(output=output, strip_prompt=False)
+        raw_result = output.decode()
+        processed_result = processed_output.decode()
+        return raw_result, processed_result</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scrapli.channel.channel.ChannelBase" href="channel.html#scrapli.channel.channel.ChannelBase">ChannelBase</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="scrapli.channel.AsyncChannel.get_prompt"><code class="name flex">
+<span>def <span class="ident">get_prompt</span></span>(<span>channel_or_transport: Union[ForwardRef('Channel'), ForwardRef('Transport')], *args: Union[str, int], **kwargs: Dict[str, Union[str, int]]) -> Any</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def timeout_wrapper(
+    channel_or_transport: Union[&#34;Channel&#34;, &#34;Transport&#34;],
+    *args: Union[str, int],
+    **kwargs: Dict[str, Union[str, int]],
+) -&gt; Any:
+    # import here to avoid circular dependency
+    from scrapli.channel import AsyncChannel, Channel  # pylint: disable=C0415
+
+    timeout_duration = getattr(channel_or_transport, attribute, None)
+    if not timeout_duration:
+        LOG.info(
+            f&#34;Could not find {attribute} value of {channel_or_transport}, continuing &#34;
+            &#34;without timeout decorator&#34;
+        )
+        return wrapped_func(channel_or_transport, *args, **kwargs)
+
+    # as this can be called from transport or channel get the appropriate objects
+    # to unlock and close the session. we need to unlock as the close will block
+    # forever if the session is locked, and the session very likely is locked while
+    # waiting for output from the device
+    if isinstance(channel_or_transport, (AsyncChannel, Channel)):
+        timeout_exit = channel_or_transport.transport.timeout_exit
+        session_lock = channel_or_transport.transport.session_lock
+        close = channel_or_transport.transport.close
+    else:
+        timeout_exit = channel_or_transport.timeout_exit
+        session_lock = channel_or_transport.session_lock
+        close = channel_or_transport.close
+
+    pool = ThreadPoolExecutor(max_workers=1)
+    future = pool.submit(wrapped_func, channel_or_transport, *args, **kwargs)
+    wait([future], timeout=timeout_duration)
+    if not future.done():
+        LOG.info(message)
+        if timeout_exit:
+            LOG.info(&#34;timeout_exit is True, closing transport&#34;)
+            if session_lock.locked():
+                session_lock.release()
+            close()
+        raise TimeoutError(message)
+    return future.result()</code></pre>
+</details>
+</dd>
+<dt id="scrapli.channel.AsyncChannel.send_input"><code class="name flex">
+<span>async def <span class="ident">send_input</span></span>(<span>self, channel_input: str, strip_prompt: bool = True) -> Tuple[str, str]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Primary entry point to send data to devices in async shell mode; accept input, return result</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>channel_input</code></strong></dt>
+<dd>string input to send to channel</dd>
+<dt><strong><code>strip_prompt</code></strong></dt>
+<dd>strip prompt or not, defaults to True (yes, strip the prompt)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>raw_result</code></dt>
+<dd>output read from the channel with no whitespace trimming/cleaning</dd>
+<dt><code>processed_result</code></dt>
+<dd>output read from the channel that has been cleaned up</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>TypeError</code></dt>
+<dd>if input is anything but a string</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_input(self, channel_input: str, strip_prompt: bool = True,) -&gt; Tuple[str, str]:
+    &#34;&#34;&#34;
+    Primary entry point to send data to devices in async shell mode; accept input, return result
+
+    Args:
+        channel_input: string input to send to channel
+        strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
+
+    Returns:
+        raw_result: output read from the channel with no whitespace trimming/cleaning
+        processed_result: output read from the channel that has been cleaned up
+
+    Raises:
+        TypeError: if input is anything but a string
+
+    &#34;&#34;&#34;
+    if not isinstance(channel_input, str):
+        raise TypeError(
+            f&#34;`send_input` expects a single string, got {type(channel_input)}. &#34;
+            &#34;to send a list of inputs use the `send_inputs` method instead&#34;
+        )
+    raw_result, processed_result = await self._async_send_input(
+        channel_input=channel_input, strip_prompt=strip_prompt
+    )
+    return raw_result.decode(), processed_result.decode()</code></pre>
+</details>
+</dd>
+<dt id="scrapli.channel.AsyncChannel.send_inputs_interact"><code class="name flex">
+<span>def <span class="ident">send_inputs_interact</span></span>(<span>channel_or_transport: Union[ForwardRef('Channel'), ForwardRef('Transport')], *args: Union[str, int], **kwargs: Dict[str, Union[str, int]]) -> Any</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def timeout_wrapper(
+    channel_or_transport: Union[&#34;Channel&#34;, &#34;Transport&#34;],
+    *args: Union[str, int],
+    **kwargs: Dict[str, Union[str, int]],
+) -&gt; Any:
+    # import here to avoid circular dependency
+    from scrapli.channel import AsyncChannel, Channel  # pylint: disable=C0415
+
+    timeout_duration = getattr(channel_or_transport, attribute, None)
+    if not timeout_duration:
+        LOG.info(
+            f&#34;Could not find {attribute} value of {channel_or_transport}, continuing &#34;
+            &#34;without timeout decorator&#34;
+        )
+        return wrapped_func(channel_or_transport, *args, **kwargs)
+
+    # as this can be called from transport or channel get the appropriate objects
+    # to unlock and close the session. we need to unlock as the close will block
+    # forever if the session is locked, and the session very likely is locked while
+    # waiting for output from the device
+    if isinstance(channel_or_transport, (AsyncChannel, Channel)):
+        timeout_exit = channel_or_transport.transport.timeout_exit
+        session_lock = channel_or_transport.transport.session_lock
+        close = channel_or_transport.transport.close
+    else:
+        timeout_exit = channel_or_transport.timeout_exit
+        session_lock = channel_or_transport.session_lock
+        close = channel_or_transport.close
+
+    pool = ThreadPoolExecutor(max_workers=1)
+    future = pool.submit(wrapped_func, channel_or_transport, *args, **kwargs)
+    wait([future], timeout=timeout_duration)
+    if not future.done():
+        LOG.info(message)
+        if timeout_exit:
+            LOG.info(&#34;timeout_exit is True, closing transport&#34;)
+            if session_lock.locked():
+                session_lock.release()
+            close()
+        raise TimeoutError(message)
+    return future.result()</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="scrapli.channel.Channel"><code class="flex name class">
+<span>class <span class="ident">Channel</span></span>
+<span>(</span><span>transport: <a title="scrapli.transport.transport.Transport" href="../transport/transport.html#scrapli.transport.transport.Transport">Transport</a>, **kwargs: Any)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<p>Channel Object</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>transport</code></strong></dt>
+<dd>Scrapli Transport class</dd>
+<dt><strong><code>kwargs</code></strong></dt>
+<dd>keyword arguments to pass to ChannelBase</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N/A
+# noqa: DAR202</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Channel(ChannelBase):
+    def __init__(self, transport: Transport, **kwargs: Any) -&gt; None:
+        &#34;&#34;&#34;
+        Channel Object
+
+        Args:
+            transport: Scrapli Transport class
+            kwargs: keyword arguments to pass to ChannelBase
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        super().__init__(transport, **kwargs)
+
+        # ChannelBase supports union of Transport and AsyncTransport, but as this is the
+        # &#34;normal&#34; (sync) Channel, transport will always be async
+        self.transport: Transport
 
     def _read_chunk(self) -&gt; bytes:
         &#34;&#34;&#34;
@@ -381,23 +773,6 @@ preferable to disable this type of behavior via the device itself if possible.</
         processed_output = processed_output.lstrip(self.comms_return_char.encode()).rstrip()
         return output, processed_output
 
-    def _send_return(self) -&gt; None:
-        &#34;&#34;&#34;
-        Send return char to device
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.transport.write(channel_input=self.comms_return_char)
-        LOG.debug(f&#34;Write (sending return character): {repr(self.comms_return_char)}&#34;)
-
     @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out sending interactive input to device.&#34;)
     def send_inputs_interact(
         self, interact_events: List[Tuple[str, str, Optional[bool]]]
@@ -494,6 +869,11 @@ preferable to disable this type of behavior via the device itself if possible.</
         processed_result = processed_output.decode()
         return raw_result, processed_result</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scrapli.channel.channel.ChannelBase" href="channel.html#scrapli.channel.channel.ChannelBase">ChannelBase</a></li>
+<li>abc.ABC</li>
+</ul>
 <h3>Methods</h3>
 <dl>
 <dt id="scrapli.channel.Channel.get_prompt"><code class="name flex">
@@ -511,7 +891,7 @@ preferable to disable this type of behavior via the device itself if possible.</
     **kwargs: Dict[str, Union[str, int]],
 ) -&gt; Any:
     # import here to avoid circular dependency
-    from scrapli.channel import Channel  # pylint: disable=C0415
+    from scrapli.channel import AsyncChannel, Channel  # pylint: disable=C0415
 
     timeout_duration = getattr(channel_or_transport, attribute, None)
     if not timeout_duration:
@@ -525,7 +905,7 @@ preferable to disable this type of behavior via the device itself if possible.</
     # to unlock and close the session. we need to unlock as the close will block
     # forever if the session is locked, and the session very likely is locked while
     # waiting for output from the device
-    if isinstance(channel_or_transport, Channel):
+    if isinstance(channel_or_transport, (AsyncChannel, Channel)):
         timeout_exit = channel_or_transport.transport.timeout_exit
         session_lock = channel_or_transport.transport.session_lock
         close = channel_or_transport.transport.close
@@ -618,7 +998,7 @@ preferable to disable this type of behavior via the device itself if possible.</
     **kwargs: Dict[str, Union[str, int]],
 ) -&gt; Any:
     # import here to avoid circular dependency
-    from scrapli.channel import Channel  # pylint: disable=C0415
+    from scrapli.channel import AsyncChannel, Channel  # pylint: disable=C0415
 
     timeout_duration = getattr(channel_or_transport, attribute, None)
     if not timeout_duration:
@@ -632,7 +1012,7 @@ preferable to disable this type of behavior via the device itself if possible.</
     # to unlock and close the session. we need to unlock as the close will block
     # forever if the session is locked, and the session very likely is locked while
     # waiting for output from the device
-    if isinstance(channel_or_transport, Channel):
+    if isinstance(channel_or_transport, (AsyncChannel, Channel)):
         timeout_exit = channel_or_transport.transport.timeout_exit
         session_lock = channel_or_transport.transport.session_lock
         close = channel_or_transport.transport.close
@@ -673,11 +1053,20 @@ preferable to disable this type of behavior via the device itself if possible.</
 </li>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
+<li><code><a title="scrapli.channel.async_channel" href="async_channel.html">scrapli.channel.async_channel</a></code></li>
 <li><code><a title="scrapli.channel.channel" href="channel.html">scrapli.channel.channel</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
+<li>
+<h4><code><a title="scrapli.channel.AsyncChannel" href="#scrapli.channel.AsyncChannel">AsyncChannel</a></code></h4>
+<ul class="">
+<li><code><a title="scrapli.channel.AsyncChannel.get_prompt" href="#scrapli.channel.AsyncChannel.get_prompt">get_prompt</a></code></li>
+<li><code><a title="scrapli.channel.AsyncChannel.send_input" href="#scrapli.channel.AsyncChannel.send_input">send_input</a></code></li>
+<li><code><a title="scrapli.channel.AsyncChannel.send_inputs_interact" href="#scrapli.channel.AsyncChannel.send_inputs_interact">send_inputs_interact</a></code></li>
+</ul>
+</li>
 <li>
 <h4><code><a title="scrapli.channel.Channel" href="#scrapli.channel.Channel">Channel</a></code></h4>
 <ul class="">

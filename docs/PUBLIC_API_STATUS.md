@@ -1,5 +1,9 @@
 # Public API Status
 
+Note that all public methods, unless otherwise noted, are available in sync and async form depending on the driver
+ you have selected.
+
+
 ## Drivers
 
 ### Scrape
@@ -21,7 +25,7 @@
 | send_interactive              | 2020.03.29  | 2020.04.11  | changed to support list of "events" to interact with         |
 
 
-### NetworkDriver ABC (and Platform driver sub-classes unless overridden)
+### NetworkDriver (and Platform driver sub-classes unless overridden)
 
 | Method                        | Implemented | Last Change | Notes                                                        |
 |-------------------------------|-------------|-------------|--------------------------------------------------------------|
@@ -55,21 +59,6 @@
 | read                          | 2020.03.29  |             |                                                              |
 | write                         | 2020.03.29  |             |                                                              |
 | set_timeout                   | 2020.03.29  |             |                                                              |
-
-### SystemSSHTransport
-
-| Method                        | Implemented | Last Change | Notes                                                        |
-|-------------------------------|-------------|-------------|--------------------------------------------------------------|
-| open                          | 2020.03.29  |             |                                                              |
-| isalive                       | 2020.03.29  |             |                                                              |
-| set_timeout                   | 2020.03.29  |             |                                                              |
-
-### TelnetTransport
-
-| Method                        | Implemented | Last Change | Notes                                                        |
-|-------------------------------|-------------|-------------|--------------------------------------------------------------|
-| open                          | 2020.03.29  |             |                                                              |
-| isalive                       | 2020.03.29  |             |                                                              |
 
 
 ## Response

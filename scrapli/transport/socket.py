@@ -1,15 +1,30 @@
 """scrapli.transport.socket"""
-import logging
 import socket
+from logging import getLogger
 from typing import Optional
 
 from scrapli.exceptions import ScrapliTimeout
 
-LOG = logging.getLogger("transport")
+LOG = getLogger("transport")
 
 
 class Socket:
     def __init__(self, host: str, port: int, timeout: int):
+        """
+        Socket object
+
+        Args:
+            host: host to connect to
+            port: port to connect to
+            timeout: timeout in seconds
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
         self.host: str = host
         self.port: int = port
         self.timeout: int = timeout

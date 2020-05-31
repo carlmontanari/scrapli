@@ -1,0 +1,1019 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.1" />
+<title>scrapli.driver.async_generic_driver API documentation</title>
+<meta name="description" content="scrapli.driver.async_generic_driver" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>scrapli.driver.async_generic_driver</code></h1>
+</header>
+<section id="section-intro">
+<p>scrapli.driver.async_generic_driver</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;scrapli.driver.async_generic_driver&#34;&#34;&#34;
+import logging
+from collections import UserList
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union
+
+from scrapli.channel import AsyncChannel
+from scrapli.driver.async_driver import AsyncScrape
+from scrapli.driver.base_generic_driver import GenericDriverBase
+from scrapli.response import Response
+
+if TYPE_CHECKING:
+    ScrapliMultiResponse = UserList[Response]  # pylint:  disable=E1136; # pragma:  no cover
+else:
+    ScrapliMultiResponse = UserList
+
+LOG = logging.getLogger(&#34;driver&#34;)
+
+
+class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
+    def __init__(
+        self,
+        comms_prompt_pattern: str = r&#34;^\S{0,48}[#&gt;$~@:\]]\s*$&#34;,
+        comms_ansi: bool = True,
+        **kwargs: Any,
+    ):
+        &#34;&#34;&#34;
+        AsyncGenericDriver Object
+
+        Args:
+            comms_prompt_pattern: raw string regex pattern -- preferably use `^` and `$` anchors!
+                this is the single most important attribute here! if this does not match a prompt,
+                scrapli will not work!
+                For this GenericDriver the prompt pattern matches a really wide range of things...
+                the general pattern is start of line, match any character 0-32 times, then match a
+                prompt termination character from the following character set: `#`, `&gt;`, `$`, `~`,
+                `@`, `:`, `]`, finally match any or no whitespace till the end of the line. This
+                pattern works on all of the &#34;core&#34; platforms and should work on a wide range of
+                other devices, however because it is so broad it may also accidentally match too
+                many things and cause issues, so be careful!
+            comms_ansi: True/False strip comms_ansi characters from output; in the case of the
+                GenericDriver, always strip ansi; this may slow things down but will hopefully help
+                prevent issues! Obviously can be overridden if desired.
+            **kwargs: keyword args to pass to inherited class(es)
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+        &#34;&#34;&#34;
+        super().__init__(comms_prompt_pattern=comms_prompt_pattern, comms_ansi=comms_ansi, **kwargs)
+        self.channel: AsyncChannel
+
+    async def send_command(
+        self,
+        command: str,
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+    ) -&gt; Response:
+        &#34;&#34;&#34;
+        Send a command
+
+        Args:
+            command: string to send to device in privilege exec mode
+            strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
+
+        Returns:
+            Response: Scrapli Response object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        response = self._pre_send_command(
+            host=self.transport.host, command=command, failed_when_contains=failed_when_contains
+        )
+        raw_response, processed_response = await self.channel.send_input(
+            channel_input=command, strip_prompt=strip_prompt
+        )
+        return self._post_send_command(
+            raw_response=raw_response, processed_response=processed_response, response=response
+        )
+
+    async def send_commands(
+        self,
+        commands: List[str],
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+        stop_on_failed: bool = False,
+    ) -&gt; ScrapliMultiResponse:
+        &#34;&#34;&#34;
+        Send multiple commands
+
+        Args:
+            commands: list of strings to send to device in privilege exec mode
+            strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
+            stop_on_failed: True/False stop executing commands if a command fails, returns results
+                as of current execution
+
+        Returns:
+            ScrapliMultiResponse: Scrapli MultiResponse object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        responses = self._pre_send_commands(commands=commands)
+        for command in commands:
+            response = await self.send_command(
+                command=command,
+                strip_prompt=strip_prompt,
+                failed_when_contains=failed_when_contains,
+            )
+            responses.append(response)
+            if stop_on_failed is True and response.failed is True:
+                return responses
+
+        return responses
+
+    async def send_commands_from_file(
+        self,
+        file: str,
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+        stop_on_failed: bool = False,
+    ) -&gt; ScrapliMultiResponse:
+        &#34;&#34;&#34;
+        Send command(s) from file
+
+        Args:
+            file: string path to file
+            strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
+            stop_on_failed: True/False stop executing commands if a command fails, returns results
+                as of current execution
+
+        Returns:
+            ScrapliMultiResponse: Scrapli MultiResponse object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        commands = self._pre_send_commands_from_file(file=file)
+
+        return await self.send_commands(
+            commands=commands,
+            strip_prompt=strip_prompt,
+            failed_when_contains=failed_when_contains,
+            stop_on_failed=stop_on_failed,
+        )
+
+    async def send_interactive(
+        self,
+        interact_events: List[Tuple[str, str, Optional[bool]]],
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+        privilege_level: str = &#34;&#34;,
+    ) -&gt; Response:
+        &#34;&#34;&#34;
+        Interact with a device with changing prompts per input.
+
+        Used to interact with devices where prompts change per input, and where inputs may be hidden
+        such as in the case of a password input. This can be used to respond to challenges from
+        devices such as the confirmation for the command &#34;clear logging&#34; on IOSXE devices for
+        example. You may have as many elements in the &#34;interact_events&#34; list as needed, and each
+        element of that list should be a tuple of two or three elements. The first element is always
+        the input to send as a string, the second should be the expected response as a string, and
+        the optional third a bool for whether or not the input is &#34;hidden&#34; (i.e. password input)
+
+        An example where we need this sort of capability:
+
+        ```
+        3560CX#copy flash: scp:
+        Source filename []? test1.txt
+        Address or name of remote host []? 172.31.254.100
+        Destination username [carl]?
+        Writing test1.txt
+        Password:
+
+        Password:
+         Sink: C0644 639 test1.txt
+        !
+        639 bytes copied in 12.066 secs (53 bytes/sec)
+        3560CX#
+        ```
+
+        To accomplish this we can use the following:
+
+        ```
+        interact = conn.channel.send_inputs_interact(
+            [
+                (&#34;copy flash: scp:&#34;, &#34;Source filename []?&#34;, False),
+                (&#34;test1.txt&#34;, &#34;Address or name of remote host []?&#34;, False),
+                (&#34;172.31.254.100&#34;, &#34;Destination username [carl]?&#34;, False),
+                (&#34;carl&#34;, &#34;Password:&#34;, False),
+                (&#34;super_secure_password&#34;, prompt, True),
+            ]
+        )
+        ```
+
+        If we needed to deal with more prompts we could simply continue adding tuples to the list of
+        interact &#34;events&#34;.
+
+        Args:
+            interact_events: list of tuples containing the &#34;interactions&#34; with the device
+                each list element must have an input and an expected response, and may have an
+                optional bool for the third and final element -- the optional bool specifies if the
+                input that is sent to the device is &#34;hidden&#34; (ex: password), if the hidden param is
+                not provided it is assumed the input is &#34;normal&#34; (not hidden)
+            failed_when_contains: list of strings that, if present in final output, represent a
+                failed command/interaction
+            privilege_level: ignored in this base class; for LSP reasons for subclasses
+
+        Returns:
+            Response: scrapli Response object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        _ = privilege_level
+
+        response = self._pre_send_interactive(
+            host=self.transport.host,
+            interact_events=interact_events,
+            failed_when_contains=failed_when_contains,
+        )
+        raw_response, processed_response = await self.channel.send_inputs_interact(
+            interact_events=interact_events
+        )
+        return self._post_send_command(
+            raw_response=raw_response, processed_response=processed_response, response=response
+        )
+
+    async def get_prompt(self) -&gt; str:
+        &#34;&#34;&#34;
+        Convenience method to get device prompt from Channel
+
+        Args:
+            N/A
+
+        Returns:
+            str: prompt received from channel.get_prompt
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        prompt: str = await self.channel.get_prompt()
+        return prompt</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="scrapli.driver.async_generic_driver.AsyncGenericDriver"><code class="flex name class">
+<span>class <span class="ident">AsyncGenericDriver</span></span>
+<span>(</span><span>comms_prompt_pattern: str = &#x27;^\\S{0,48}[#&gt;$~@:\\]]\\s*$&#x27;, comms_ansi: bool = True, **kwargs: Any)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>GenericDriverBase Object</p>
+<p>A generic network driver that will <em>hopefully</em> work for a broad variety of devices with
+minimal to no modifications and provide a normal NetworkDriver type experience with
+<code>send_command(s)</code>, <code>get_prompt</code> and <code>send_interactive</code> methods instead of forcing users to
+call Channel methods directly.</p>
+<p>This driver doesn't know anything about privilege levels (or any type of "config modes",
+disabling paging, gracefully exiting, or anything like that, and as such should be treated
+similar to the base <code>Scrape</code> object from that perspective.</p>
+<p>AsyncGenericDriver Object</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>comms_prompt_pattern</code></strong></dt>
+<dd>raw string regex pattern &ndash; preferably use <code>^</code> and <code>$</code> anchors!
+this is the single most important attribute here! if this does not match a prompt,
+scrapli will not work!
+For this GenericDriver the prompt pattern matches a really wide range of things&hellip;
+the general pattern is start of line, match any character 0-32 times, then match a
+prompt termination character from the following character set: <code>#</code>, <code>&gt;</code>, <code>$</code>, <code>~</code>,
+<code>@</code>, <code>:</code>, <code>]</code>, finally match any or no whitespace till the end of the line. This
+pattern works on all of the "core" platforms and should work on a wide range of
+other devices, however because it is so broad it may also accidentally match too
+many things and cause issues, so be careful!</dd>
+<dt><strong><code>comms_ansi</code></strong></dt>
+<dd>True/False strip comms_ansi characters from output; in the case of the
+GenericDriver, always strip ansi; this may slow things down but will hopefully help
+prevent issues! Obviously can be overridden if desired.</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>keyword args to pass to inherited class(es)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N/A
+# noqa: DAR202</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
+    def __init__(
+        self,
+        comms_prompt_pattern: str = r&#34;^\S{0,48}[#&gt;$~@:\]]\s*$&#34;,
+        comms_ansi: bool = True,
+        **kwargs: Any,
+    ):
+        &#34;&#34;&#34;
+        AsyncGenericDriver Object
+
+        Args:
+            comms_prompt_pattern: raw string regex pattern -- preferably use `^` and `$` anchors!
+                this is the single most important attribute here! if this does not match a prompt,
+                scrapli will not work!
+                For this GenericDriver the prompt pattern matches a really wide range of things...
+                the general pattern is start of line, match any character 0-32 times, then match a
+                prompt termination character from the following character set: `#`, `&gt;`, `$`, `~`,
+                `@`, `:`, `]`, finally match any or no whitespace till the end of the line. This
+                pattern works on all of the &#34;core&#34; platforms and should work on a wide range of
+                other devices, however because it is so broad it may also accidentally match too
+                many things and cause issues, so be careful!
+            comms_ansi: True/False strip comms_ansi characters from output; in the case of the
+                GenericDriver, always strip ansi; this may slow things down but will hopefully help
+                prevent issues! Obviously can be overridden if desired.
+            **kwargs: keyword args to pass to inherited class(es)
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+        &#34;&#34;&#34;
+        super().__init__(comms_prompt_pattern=comms_prompt_pattern, comms_ansi=comms_ansi, **kwargs)
+        self.channel: AsyncChannel
+
+    async def send_command(
+        self,
+        command: str,
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+    ) -&gt; Response:
+        &#34;&#34;&#34;
+        Send a command
+
+        Args:
+            command: string to send to device in privilege exec mode
+            strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
+
+        Returns:
+            Response: Scrapli Response object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        response = self._pre_send_command(
+            host=self.transport.host, command=command, failed_when_contains=failed_when_contains
+        )
+        raw_response, processed_response = await self.channel.send_input(
+            channel_input=command, strip_prompt=strip_prompt
+        )
+        return self._post_send_command(
+            raw_response=raw_response, processed_response=processed_response, response=response
+        )
+
+    async def send_commands(
+        self,
+        commands: List[str],
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+        stop_on_failed: bool = False,
+    ) -&gt; ScrapliMultiResponse:
+        &#34;&#34;&#34;
+        Send multiple commands
+
+        Args:
+            commands: list of strings to send to device in privilege exec mode
+            strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
+            stop_on_failed: True/False stop executing commands if a command fails, returns results
+                as of current execution
+
+        Returns:
+            ScrapliMultiResponse: Scrapli MultiResponse object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        responses = self._pre_send_commands(commands=commands)
+        for command in commands:
+            response = await self.send_command(
+                command=command,
+                strip_prompt=strip_prompt,
+                failed_when_contains=failed_when_contains,
+            )
+            responses.append(response)
+            if stop_on_failed is True and response.failed is True:
+                return responses
+
+        return responses
+
+    async def send_commands_from_file(
+        self,
+        file: str,
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+        stop_on_failed: bool = False,
+    ) -&gt; ScrapliMultiResponse:
+        &#34;&#34;&#34;
+        Send command(s) from file
+
+        Args:
+            file: string path to file
+            strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
+            stop_on_failed: True/False stop executing commands if a command fails, returns results
+                as of current execution
+
+        Returns:
+            ScrapliMultiResponse: Scrapli MultiResponse object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        commands = self._pre_send_commands_from_file(file=file)
+
+        return await self.send_commands(
+            commands=commands,
+            strip_prompt=strip_prompt,
+            failed_when_contains=failed_when_contains,
+            stop_on_failed=stop_on_failed,
+        )
+
+    async def send_interactive(
+        self,
+        interact_events: List[Tuple[str, str, Optional[bool]]],
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+        privilege_level: str = &#34;&#34;,
+    ) -&gt; Response:
+        &#34;&#34;&#34;
+        Interact with a device with changing prompts per input.
+
+        Used to interact with devices where prompts change per input, and where inputs may be hidden
+        such as in the case of a password input. This can be used to respond to challenges from
+        devices such as the confirmation for the command &#34;clear logging&#34; on IOSXE devices for
+        example. You may have as many elements in the &#34;interact_events&#34; list as needed, and each
+        element of that list should be a tuple of two or three elements. The first element is always
+        the input to send as a string, the second should be the expected response as a string, and
+        the optional third a bool for whether or not the input is &#34;hidden&#34; (i.e. password input)
+
+        An example where we need this sort of capability:
+
+        ```
+        3560CX#copy flash: scp:
+        Source filename []? test1.txt
+        Address or name of remote host []? 172.31.254.100
+        Destination username [carl]?
+        Writing test1.txt
+        Password:
+
+        Password:
+         Sink: C0644 639 test1.txt
+        !
+        639 bytes copied in 12.066 secs (53 bytes/sec)
+        3560CX#
+        ```
+
+        To accomplish this we can use the following:
+
+        ```
+        interact = conn.channel.send_inputs_interact(
+            [
+                (&#34;copy flash: scp:&#34;, &#34;Source filename []?&#34;, False),
+                (&#34;test1.txt&#34;, &#34;Address or name of remote host []?&#34;, False),
+                (&#34;172.31.254.100&#34;, &#34;Destination username [carl]?&#34;, False),
+                (&#34;carl&#34;, &#34;Password:&#34;, False),
+                (&#34;super_secure_password&#34;, prompt, True),
+            ]
+        )
+        ```
+
+        If we needed to deal with more prompts we could simply continue adding tuples to the list of
+        interact &#34;events&#34;.
+
+        Args:
+            interact_events: list of tuples containing the &#34;interactions&#34; with the device
+                each list element must have an input and an expected response, and may have an
+                optional bool for the third and final element -- the optional bool specifies if the
+                input that is sent to the device is &#34;hidden&#34; (ex: password), if the hidden param is
+                not provided it is assumed the input is &#34;normal&#34; (not hidden)
+            failed_when_contains: list of strings that, if present in final output, represent a
+                failed command/interaction
+            privilege_level: ignored in this base class; for LSP reasons for subclasses
+
+        Returns:
+            Response: scrapli Response object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        _ = privilege_level
+
+        response = self._pre_send_interactive(
+            host=self.transport.host,
+            interact_events=interact_events,
+            failed_when_contains=failed_when_contains,
+        )
+        raw_response, processed_response = await self.channel.send_inputs_interact(
+            interact_events=interact_events
+        )
+        return self._post_send_command(
+            raw_response=raw_response, processed_response=processed_response, response=response
+        )
+
+    async def get_prompt(self) -&gt; str:
+        &#34;&#34;&#34;
+        Convenience method to get device prompt from Channel
+
+        Args:
+            N/A
+
+        Returns:
+            str: prompt received from channel.get_prompt
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        prompt: str = await self.channel.get_prompt()
+        return prompt</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scrapli.driver.async_driver.AsyncScrape" href="async_driver.html#scrapli.driver.async_driver.AsyncScrape">AsyncScrape</a></li>
+<li><a title="scrapli.driver.base_driver.ScrapeBase" href="base_driver.html#scrapli.driver.base_driver.ScrapeBase">ScrapeBase</a></li>
+<li><a title="scrapli.driver.base_generic_driver.GenericDriverBase" href="base_generic_driver.html#scrapli.driver.base_generic_driver.GenericDriverBase">GenericDriverBase</a></li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="scrapli.driver.async_network_driver.AsyncNetworkDriver" href="async_network_driver.html#scrapli.driver.async_network_driver.AsyncNetworkDriver">AsyncNetworkDriver</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="scrapli.driver.async_generic_driver.AsyncGenericDriver.get_prompt"><code class="name flex">
+<span>async def <span class="ident">get_prompt</span></span>(<span>self) -> str</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convenience method to get device prompt from Channel</p>
+<h2 id="args">Args</h2>
+<p>N/A</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>prompt received from channel.get_prompt</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def get_prompt(self) -&gt; str:
+    &#34;&#34;&#34;
+    Convenience method to get device prompt from Channel
+
+    Args:
+        N/A
+
+    Returns:
+        str: prompt received from channel.get_prompt
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    prompt: str = await self.channel.get_prompt()
+    return prompt</code></pre>
+</details>
+</dd>
+<dt id="scrapli.driver.async_generic_driver.AsyncGenericDriver.send_command"><code class="name flex">
+<span>async def <span class="ident">send_command</span></span>(<span>self, command: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None) -> <a title="scrapli.response.Response" href="../response.html#scrapli.response.Response">Response</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send a command</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>command</code></strong></dt>
+<dd>string to send to device in privilege exec mode</dd>
+<dt><strong><code>strip_prompt</code></strong></dt>
+<dd>True/False strip prompt from returned output</dd>
+<dt><strong><code>failed_when_contains</code></strong></dt>
+<dd>string or list of strings indicating failure if found in response</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Response</code></dt>
+<dd>Scrapli Response object</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_command(
+    self,
+    command: str,
+    strip_prompt: bool = True,
+    failed_when_contains: Optional[Union[str, List[str]]] = None,
+) -&gt; Response:
+    &#34;&#34;&#34;
+    Send a command
+
+    Args:
+        command: string to send to device in privilege exec mode
+        strip_prompt: True/False strip prompt from returned output
+        failed_when_contains: string or list of strings indicating failure if found in response
+
+    Returns:
+        Response: Scrapli Response object
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    response = self._pre_send_command(
+        host=self.transport.host, command=command, failed_when_contains=failed_when_contains
+    )
+    raw_response, processed_response = await self.channel.send_input(
+        channel_input=command, strip_prompt=strip_prompt
+    )
+    return self._post_send_command(
+        raw_response=raw_response, processed_response=processed_response, response=response
+    )</code></pre>
+</details>
+</dd>
+<dt id="scrapli.driver.async_generic_driver.AsyncGenericDriver.send_commands"><code class="name flex">
+<span>async def <span class="ident">send_commands</span></span>(<span>self, commands: List[str], strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False) -> collections.UserList</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send multiple commands</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>commands</code></strong></dt>
+<dd>list of strings to send to device in privilege exec mode</dd>
+<dt><strong><code>strip_prompt</code></strong></dt>
+<dd>True/False strip prompt from returned output</dd>
+<dt><strong><code>failed_when_contains</code></strong></dt>
+<dd>string or list of strings indicating failure if found in response</dd>
+<dt><strong><code>stop_on_failed</code></strong></dt>
+<dd>True/False stop executing commands if a command fails, returns results
+as of current execution</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>ScrapliMultiResponse</code></dt>
+<dd>Scrapli MultiResponse object</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_commands(
+    self,
+    commands: List[str],
+    strip_prompt: bool = True,
+    failed_when_contains: Optional[Union[str, List[str]]] = None,
+    stop_on_failed: bool = False,
+) -&gt; ScrapliMultiResponse:
+    &#34;&#34;&#34;
+    Send multiple commands
+
+    Args:
+        commands: list of strings to send to device in privilege exec mode
+        strip_prompt: True/False strip prompt from returned output
+        failed_when_contains: string or list of strings indicating failure if found in response
+        stop_on_failed: True/False stop executing commands if a command fails, returns results
+            as of current execution
+
+    Returns:
+        ScrapliMultiResponse: Scrapli MultiResponse object
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    responses = self._pre_send_commands(commands=commands)
+    for command in commands:
+        response = await self.send_command(
+            command=command,
+            strip_prompt=strip_prompt,
+            failed_when_contains=failed_when_contains,
+        )
+        responses.append(response)
+        if stop_on_failed is True and response.failed is True:
+            return responses
+
+    return responses</code></pre>
+</details>
+</dd>
+<dt id="scrapli.driver.async_generic_driver.AsyncGenericDriver.send_commands_from_file"><code class="name flex">
+<span>async def <span class="ident">send_commands_from_file</span></span>(<span>self, file: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False) -> collections.UserList</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send command(s) from file</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>file</code></strong></dt>
+<dd>string path to file</dd>
+<dt><strong><code>strip_prompt</code></strong></dt>
+<dd>True/False strip prompt from returned output</dd>
+<dt><strong><code>failed_when_contains</code></strong></dt>
+<dd>string or list of strings indicating failure if found in response</dd>
+<dt><strong><code>stop_on_failed</code></strong></dt>
+<dd>True/False stop executing commands if a command fails, returns results
+as of current execution</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>ScrapliMultiResponse</code></dt>
+<dd>Scrapli MultiResponse object</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_commands_from_file(
+    self,
+    file: str,
+    strip_prompt: bool = True,
+    failed_when_contains: Optional[Union[str, List[str]]] = None,
+    stop_on_failed: bool = False,
+) -&gt; ScrapliMultiResponse:
+    &#34;&#34;&#34;
+    Send command(s) from file
+
+    Args:
+        file: string path to file
+        strip_prompt: True/False strip prompt from returned output
+        failed_when_contains: string or list of strings indicating failure if found in response
+        stop_on_failed: True/False stop executing commands if a command fails, returns results
+            as of current execution
+
+    Returns:
+        ScrapliMultiResponse: Scrapli MultiResponse object
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    commands = self._pre_send_commands_from_file(file=file)
+
+    return await self.send_commands(
+        commands=commands,
+        strip_prompt=strip_prompt,
+        failed_when_contains=failed_when_contains,
+        stop_on_failed=stop_on_failed,
+    )</code></pre>
+</details>
+</dd>
+<dt id="scrapli.driver.async_generic_driver.AsyncGenericDriver.send_interactive"><code class="name flex">
+<span>async def <span class="ident">send_interactive</span></span>(<span>self, interact_events: List[Tuple[str, str, Union[bool, NoneType]]], failed_when_contains: Union[str, List[str], NoneType] = None, privilege_level: str = '') -> <a title="scrapli.response.Response" href="../response.html#scrapli.response.Response">Response</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Interact with a device with changing prompts per input.</p>
+<p>Used to interact with devices where prompts change per input, and where inputs may be hidden
+such as in the case of a password input. This can be used to respond to challenges from
+devices such as the confirmation for the command "clear logging" on IOSXE devices for
+example. You may have as many elements in the "interact_events" list as needed, and each
+element of that list should be a tuple of two or three elements. The first element is always
+the input to send as a string, the second should be the expected response as a string, and
+the optional third a bool for whether or not the input is "hidden" (i.e. password input)</p>
+<p>An example where we need this sort of capability:</p>
+<pre><code>3560CX#copy flash: scp:
+Source filename []? test1.txt
+Address or name of remote host []? 172.31.254.100
+Destination username [carl]?
+Writing test1.txt
+Password:
+
+Password:
+ Sink: C0644 639 test1.txt
+!
+639 bytes copied in 12.066 secs (53 bytes/sec)
+3560CX#
+</code></pre>
+<p>To accomplish this we can use the following:</p>
+<pre><code>interact = conn.channel.send_inputs_interact(
+    [
+        (&quot;copy flash: scp:&quot;, &quot;Source filename []?&quot;, False),
+        (&quot;test1.txt&quot;, &quot;Address or name of remote host []?&quot;, False),
+        (&quot;172.31.254.100&quot;, &quot;Destination username [carl]?&quot;, False),
+        (&quot;carl&quot;, &quot;Password:&quot;, False),
+        (&quot;super_secure_password&quot;, prompt, True),
+    ]
+)
+</code></pre>
+<p>If we needed to deal with more prompts we could simply continue adding tuples to the list of
+interact "events".</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>interact_events</code></strong></dt>
+<dd>list of tuples containing the "interactions" with the device
+each list element must have an input and an expected response, and may have an
+optional bool for the third and final element &ndash; the optional bool specifies if the
+input that is sent to the device is "hidden" (ex: password), if the hidden param is
+not provided it is assumed the input is "normal" (not hidden)</dd>
+<dt><strong><code>failed_when_contains</code></strong></dt>
+<dd>list of strings that, if present in final output, represent a
+failed command/interaction</dd>
+<dt><strong><code>privilege_level</code></strong></dt>
+<dd>ignored in this base class; for LSP reasons for subclasses</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Response</code></dt>
+<dd>scrapli Response object</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_interactive(
+    self,
+    interact_events: List[Tuple[str, str, Optional[bool]]],
+    failed_when_contains: Optional[Union[str, List[str]]] = None,
+    privilege_level: str = &#34;&#34;,
+) -&gt; Response:
+    &#34;&#34;&#34;
+    Interact with a device with changing prompts per input.
+
+    Used to interact with devices where prompts change per input, and where inputs may be hidden
+    such as in the case of a password input. This can be used to respond to challenges from
+    devices such as the confirmation for the command &#34;clear logging&#34; on IOSXE devices for
+    example. You may have as many elements in the &#34;interact_events&#34; list as needed, and each
+    element of that list should be a tuple of two or three elements. The first element is always
+    the input to send as a string, the second should be the expected response as a string, and
+    the optional third a bool for whether or not the input is &#34;hidden&#34; (i.e. password input)
+
+    An example where we need this sort of capability:
+
+    ```
+    3560CX#copy flash: scp:
+    Source filename []? test1.txt
+    Address or name of remote host []? 172.31.254.100
+    Destination username [carl]?
+    Writing test1.txt
+    Password:
+
+    Password:
+     Sink: C0644 639 test1.txt
+    !
+    639 bytes copied in 12.066 secs (53 bytes/sec)
+    3560CX#
+    ```
+
+    To accomplish this we can use the following:
+
+    ```
+    interact = conn.channel.send_inputs_interact(
+        [
+            (&#34;copy flash: scp:&#34;, &#34;Source filename []?&#34;, False),
+            (&#34;test1.txt&#34;, &#34;Address or name of remote host []?&#34;, False),
+            (&#34;172.31.254.100&#34;, &#34;Destination username [carl]?&#34;, False),
+            (&#34;carl&#34;, &#34;Password:&#34;, False),
+            (&#34;super_secure_password&#34;, prompt, True),
+        ]
+    )
+    ```
+
+    If we needed to deal with more prompts we could simply continue adding tuples to the list of
+    interact &#34;events&#34;.
+
+    Args:
+        interact_events: list of tuples containing the &#34;interactions&#34; with the device
+            each list element must have an input and an expected response, and may have an
+            optional bool for the third and final element -- the optional bool specifies if the
+            input that is sent to the device is &#34;hidden&#34; (ex: password), if the hidden param is
+            not provided it is assumed the input is &#34;normal&#34; (not hidden)
+        failed_when_contains: list of strings that, if present in final output, represent a
+            failed command/interaction
+        privilege_level: ignored in this base class; for LSP reasons for subclasses
+
+    Returns:
+        Response: scrapli Response object
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    _ = privilege_level
+
+    response = self._pre_send_interactive(
+        host=self.transport.host,
+        interact_events=interact_events,
+        failed_when_contains=failed_when_contains,
+    )
+    raw_response, processed_response = await self.channel.send_inputs_interact(
+        interact_events=interact_events
+    )
+    return self._post_send_command(
+        raw_response=raw_response, processed_response=processed_response, response=response
+    )</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scrapli.driver.async_driver.AsyncScrape" href="async_driver.html#scrapli.driver.async_driver.AsyncScrape">AsyncScrape</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scrapli.driver.async_driver.AsyncScrape.close" href="async_driver.html#scrapli.driver.async_driver.AsyncScrape.close">close</a></code></li>
+<li><code><a title="scrapli.driver.async_driver.AsyncScrape.isalive" href="base_driver.html#scrapli.driver.base_driver.ScrapeBase.isalive">isalive</a></code></li>
+<li><code><a title="scrapli.driver.async_driver.AsyncScrape.open" href="async_driver.html#scrapli.driver.async_driver.AsyncScrape.open">open</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="scrapli.driver" href="index.html">scrapli.driver</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="scrapli.driver.async_generic_driver.AsyncGenericDriver" href="#scrapli.driver.async_generic_driver.AsyncGenericDriver">AsyncGenericDriver</a></code></h4>
+<ul class="">
+<li><code><a title="scrapli.driver.async_generic_driver.AsyncGenericDriver.get_prompt" href="#scrapli.driver.async_generic_driver.AsyncGenericDriver.get_prompt">get_prompt</a></code></li>
+<li><code><a title="scrapli.driver.async_generic_driver.AsyncGenericDriver.send_command" href="#scrapli.driver.async_generic_driver.AsyncGenericDriver.send_command">send_command</a></code></li>
+<li><code><a title="scrapli.driver.async_generic_driver.AsyncGenericDriver.send_commands" href="#scrapli.driver.async_generic_driver.AsyncGenericDriver.send_commands">send_commands</a></code></li>
+<li><code><a title="scrapli.driver.async_generic_driver.AsyncGenericDriver.send_commands_from_file" href="#scrapli.driver.async_generic_driver.AsyncGenericDriver.send_commands_from_file">send_commands_from_file</a></code></li>
+<li><code><a title="scrapli.driver.async_generic_driver.AsyncGenericDriver.send_interactive" href="#scrapli.driver.async_generic_driver.AsyncGenericDriver.send_interactive">send_interactive</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.1</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

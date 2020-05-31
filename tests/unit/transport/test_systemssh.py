@@ -5,10 +5,10 @@ from pathlib import Path
 import pytest
 
 import scrapli
-from scrapli.exceptions import ConnectionNotOpened
+from scrapli.exceptions import ConnectionNotOpened, ScrapliAuthenticationFailed
 from scrapli.transport import SystemSSHTransport
 
-UNIT_TEST_DIR = f"{Path(scrapli.__file__).parents[1]}/tests/unit/"
+TEST_DATA_DIR = f"{Path(scrapli.__file__).parents[1]}/tests/test_data"
 
 
 def test_str():
@@ -44,7 +44,7 @@ def test_creation():
 
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="systemssh not supported on windows")
 def test_process_ssh_config():
-    conn = SystemSSHTransport("1.2.3.4", ssh_config_file=f"{UNIT_TEST_DIR}_ssh_config")
+    conn = SystemSSHTransport("1.2.3.4", ssh_config_file=f"{TEST_DATA_DIR}/files/_ssh_config")
     assert conn.auth_private_key == f"{os.path.expanduser('~')}/.ssh/mysshkey"
 
 
@@ -111,8 +111,14 @@ def test_build_open_cmd_user_options(user_options):
             "No matching cipher found for host localhost, their offer: aes128-cbc,aes256-cbc",
         ),
         (
-            b"blah blah blah",
-            "Failed to open connection to host localhost. Do you need to disable `auth_strict_key`?",
+            b"WARNING: UNPROTECTED PRIVATE KEY FILE!",
+            # note: empty quotes in the middle is where private key filename would be
+            "Permissions for private key `` are too open, authentication failed!",
+        ),
+        (
+            b"Could not resolve hostname BLAH: No address associated with hostname",
+            # note: empty quotes in the middle is where private key filename would be
+            "Could not resolve address for host `localhost`",
         ),
     ],
     ids=[
@@ -124,15 +130,17 @@ def test_build_open_cmd_user_options(user_options):
         "no matching key exchange found key exchange",
         "no matching cipher",
         "no matching cipher found ciphers",
-        "unknown reason",
+        "unprotected key",
+        "could not resolve host",
     ],
 )
-def test_pty_authentication_error_messages(eof_msg):
+def test_ssh_message_handler(eof_msg):
     conn = SystemSSHTransport("localhost")
     error_msg = eof_msg[0]
     expected_msg = eof_msg[1]
-    actual_msg = conn._pty_authentication_eof_handler(error_msg)
-    assert actual_msg == expected_msg
+    with pytest.raises(ScrapliAuthenticationFailed) as exc:
+        conn._ssh_message_handler(error_msg)
+    assert str(exc.value) == expected_msg
 
 
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="systemssh not supported on windows")

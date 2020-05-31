@@ -179,7 +179,7 @@ class Response:
             N/A
 
         Returns:
-            N/A  # noqa: DAR201
+            N/A  # noqa: DAR202
 
         Raises:
             ScrapliCommandFailure: if command/config failed
@@ -261,7 +261,7 @@ class MultiResponse(ScrapliMultiResponse):
             N/A
 
         Returns:
-            N/A  # noqa: DAR201
+            N/A  # noqa: DAR202
 
         Raises:
             ScrapliCommandFailure: if any elements are failed

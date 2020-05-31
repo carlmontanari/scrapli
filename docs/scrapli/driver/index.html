@@ -26,16 +26,50 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.driver&#34;&#34;&#34;
+from scrapli.driver.async_driver import AsyncScrape
+from scrapli.driver.async_generic_driver import AsyncGenericDriver
+from scrapli.driver.async_network_driver import AsyncNetworkDriver
 from scrapli.driver.driver import Scrape
 from scrapli.driver.generic_driver import GenericDriver
 from scrapli.driver.network_driver import NetworkDriver
 
-__all__ = (&#34;Scrape&#34;, &#34;GenericDriver&#34;, &#34;NetworkDriver&#34;)</code></pre>
+__all__ = (
+    &#34;AsyncScrape&#34;,
+    &#34;Scrape&#34;,
+    &#34;AsyncGenericDriver&#34;,
+    &#34;GenericDriver&#34;,
+    &#34;AsyncNetworkDriver&#34;,
+    &#34;NetworkDriver&#34;,
+)</code></pre>
 </details>
 </section>
 <section>
 <h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
+<dt><code class="name"><a title="scrapli.driver.async_driver" href="async_driver.html">scrapli.driver.async_driver</a></code></dt>
+<dd>
+<div class="desc"><p>scrapli.driver.async_driver</p></div>
+</dd>
+<dt><code class="name"><a title="scrapli.driver.async_generic_driver" href="async_generic_driver.html">scrapli.driver.async_generic_driver</a></code></dt>
+<dd>
+<div class="desc"><p>scrapli.driver.async_generic_driver</p></div>
+</dd>
+<dt><code class="name"><a title="scrapli.driver.async_network_driver" href="async_network_driver.html">scrapli.driver.async_network_driver</a></code></dt>
+<dd>
+<div class="desc"><p>scrapli.driver.async_network_driver</p></div>
+</dd>
+<dt><code class="name"><a title="scrapli.driver.base_driver" href="base_driver.html">scrapli.driver.base_driver</a></code></dt>
+<dd>
+<div class="desc"><p>scrapli.driver.base_driver</p></div>
+</dd>
+<dt><code class="name"><a title="scrapli.driver.base_generic_driver" href="base_generic_driver.html">scrapli.driver.base_generic_driver</a></code></dt>
+<dd>
+<div class="desc"><p>scrapli.driver.base_generic_driver</p></div>
+</dd>
+<dt><code class="name"><a title="scrapli.driver.base_network_driver" href="base_network_driver.html">scrapli.driver.base_network_driver</a></code></dt>
+<dd>
+<div class="desc"><p>scrapli.driver.base_network_driver</p></div>
+</dd>
 <dt><code class="name"><a title="scrapli.driver.core" href="core/index.html">scrapli.driver.core</a></code></dt>
 <dd>
 <div class="desc"><p>scrapli.driver.core</p></div>
@@ -61,12 +95,12 @@ __all__ = (&#34;Scrape&#34;, &#34;GenericDriver&#34;, &#34;NetworkDriver&#34;)</
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="scrapli.driver.GenericDriver"><code class="flex name class">
-<span>class <span class="ident">GenericDriver</span></span>
+<dt id="scrapli.driver.AsyncGenericDriver"><code class="flex name class">
+<span>class <span class="ident">AsyncGenericDriver</span></span>
 <span>(</span><span>comms_prompt_pattern: str = &#x27;^\\S{0,48}[#&gt;$~@:\\]]\\s*$&#x27;, comms_ansi: bool = True, **kwargs: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>GenericDriver Object</p>
+<div class="desc"><p>GenericDriverBase Object</p>
 <p>A generic network driver that will <em>hopefully</em> work for a broad variety of devices with
 minimal to no modifications and provide a normal NetworkDriver type experience with
 <code>send_command(s)</code>, <code>get_prompt</code> and <code>send_interactive</code> methods instead of forcing users to
@@ -74,6 +108,7 @@ call Channel methods directly.</p>
 <p>This driver doesn't know anything about privilege levels (or any type of "config modes",
 disabling paging, gracefully exiting, or anything like that, and as such should be treated
 similar to the base <code><a title="scrapli.driver.Scrape" href="#scrapli.driver.Scrape">Scrape</a></code> object from that perspective.</p>
+<p>AsyncGenericDriver Object</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>comms_prompt_pattern</code></strong></dt>
@@ -109,7 +144,7 @@ prevent issues! Obviously can be overridden if desired.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class GenericDriver(Scrape):
+<pre><code class="python">class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
     def __init__(
         self,
         comms_prompt_pattern: str = r&#34;^\S{0,48}[#&gt;$~@:\]]\s*$&#34;,
@@ -117,16 +152,7 @@ prevent issues! Obviously can be overridden if desired.</dd>
         **kwargs: Any,
     ):
         &#34;&#34;&#34;
-        GenericDriver Object
-
-        A generic network driver that will *hopefully* work for a broad variety of devices with
-        minimal to no modifications and provide a normal NetworkDriver type experience with
-        `send_command(s)`, `get_prompt` and `send_interactive` methods instead of forcing users to
-        call Channel methods directly.
-
-        This driver doesn&#39;t know anything about privilege levels (or any type of &#34;config modes&#34;,
-        disabling paging, gracefully exiting, or anything like that, and as such should be treated
-        similar to the base `Scrape` object from that perspective.
+        AsyncGenericDriver Object
 
         Args:
             comms_prompt_pattern: raw string regex pattern -- preferably use `^` and `$` anchors!
@@ -151,6 +177,2148 @@ prevent issues! Obviously can be overridden if desired.</dd>
             N/A
         &#34;&#34;&#34;
         super().__init__(comms_prompt_pattern=comms_prompt_pattern, comms_ansi=comms_ansi, **kwargs)
+        self.channel: AsyncChannel
+
+    async def send_command(
+        self,
+        command: str,
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+    ) -&gt; Response:
+        &#34;&#34;&#34;
+        Send a command
+
+        Args:
+            command: string to send to device in privilege exec mode
+            strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
+
+        Returns:
+            Response: Scrapli Response object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        response = self._pre_send_command(
+            host=self.transport.host, command=command, failed_when_contains=failed_when_contains
+        )
+        raw_response, processed_response = await self.channel.send_input(
+            channel_input=command, strip_prompt=strip_prompt
+        )
+        return self._post_send_command(
+            raw_response=raw_response, processed_response=processed_response, response=response
+        )
+
+    async def send_commands(
+        self,
+        commands: List[str],
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+        stop_on_failed: bool = False,
+    ) -&gt; ScrapliMultiResponse:
+        &#34;&#34;&#34;
+        Send multiple commands
+
+        Args:
+            commands: list of strings to send to device in privilege exec mode
+            strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
+            stop_on_failed: True/False stop executing commands if a command fails, returns results
+                as of current execution
+
+        Returns:
+            ScrapliMultiResponse: Scrapli MultiResponse object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        responses = self._pre_send_commands(commands=commands)
+        for command in commands:
+            response = await self.send_command(
+                command=command,
+                strip_prompt=strip_prompt,
+                failed_when_contains=failed_when_contains,
+            )
+            responses.append(response)
+            if stop_on_failed is True and response.failed is True:
+                return responses
+
+        return responses
+
+    async def send_commands_from_file(
+        self,
+        file: str,
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+        stop_on_failed: bool = False,
+    ) -&gt; ScrapliMultiResponse:
+        &#34;&#34;&#34;
+        Send command(s) from file
+
+        Args:
+            file: string path to file
+            strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
+            stop_on_failed: True/False stop executing commands if a command fails, returns results
+                as of current execution
+
+        Returns:
+            ScrapliMultiResponse: Scrapli MultiResponse object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        commands = self._pre_send_commands_from_file(file=file)
+
+        return await self.send_commands(
+            commands=commands,
+            strip_prompt=strip_prompt,
+            failed_when_contains=failed_when_contains,
+            stop_on_failed=stop_on_failed,
+        )
+
+    async def send_interactive(
+        self,
+        interact_events: List[Tuple[str, str, Optional[bool]]],
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+        privilege_level: str = &#34;&#34;,
+    ) -&gt; Response:
+        &#34;&#34;&#34;
+        Interact with a device with changing prompts per input.
+
+        Used to interact with devices where prompts change per input, and where inputs may be hidden
+        such as in the case of a password input. This can be used to respond to challenges from
+        devices such as the confirmation for the command &#34;clear logging&#34; on IOSXE devices for
+        example. You may have as many elements in the &#34;interact_events&#34; list as needed, and each
+        element of that list should be a tuple of two or three elements. The first element is always
+        the input to send as a string, the second should be the expected response as a string, and
+        the optional third a bool for whether or not the input is &#34;hidden&#34; (i.e. password input)
+
+        An example where we need this sort of capability:
+
+        ```
+        3560CX#copy flash: scp:
+        Source filename []? test1.txt
+        Address or name of remote host []? 172.31.254.100
+        Destination username [carl]?
+        Writing test1.txt
+        Password:
+
+        Password:
+         Sink: C0644 639 test1.txt
+        !
+        639 bytes copied in 12.066 secs (53 bytes/sec)
+        3560CX#
+        ```
+
+        To accomplish this we can use the following:
+
+        ```
+        interact = conn.channel.send_inputs_interact(
+            [
+                (&#34;copy flash: scp:&#34;, &#34;Source filename []?&#34;, False),
+                (&#34;test1.txt&#34;, &#34;Address or name of remote host []?&#34;, False),
+                (&#34;172.31.254.100&#34;, &#34;Destination username [carl]?&#34;, False),
+                (&#34;carl&#34;, &#34;Password:&#34;, False),
+                (&#34;super_secure_password&#34;, prompt, True),
+            ]
+        )
+        ```
+
+        If we needed to deal with more prompts we could simply continue adding tuples to the list of
+        interact &#34;events&#34;.
+
+        Args:
+            interact_events: list of tuples containing the &#34;interactions&#34; with the device
+                each list element must have an input and an expected response, and may have an
+                optional bool for the third and final element -- the optional bool specifies if the
+                input that is sent to the device is &#34;hidden&#34; (ex: password), if the hidden param is
+                not provided it is assumed the input is &#34;normal&#34; (not hidden)
+            failed_when_contains: list of strings that, if present in final output, represent a
+                failed command/interaction
+            privilege_level: ignored in this base class; for LSP reasons for subclasses
+
+        Returns:
+            Response: scrapli Response object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        _ = privilege_level
+
+        response = self._pre_send_interactive(
+            host=self.transport.host,
+            interact_events=interact_events,
+            failed_when_contains=failed_when_contains,
+        )
+        raw_response, processed_response = await self.channel.send_inputs_interact(
+            interact_events=interact_events
+        )
+        return self._post_send_command(
+            raw_response=raw_response, processed_response=processed_response, response=response
+        )
+
+    async def get_prompt(self) -&gt; str:
+        &#34;&#34;&#34;
+        Convenience method to get device prompt from Channel
+
+        Args:
+            N/A
+
+        Returns:
+            str: prompt received from channel.get_prompt
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        prompt: str = await self.channel.get_prompt()
+        return prompt</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scrapli.driver.async_driver.AsyncScrape" href="async_driver.html#scrapli.driver.async_driver.AsyncScrape">AsyncScrape</a></li>
+<li><a title="scrapli.driver.base_driver.ScrapeBase" href="base_driver.html#scrapli.driver.base_driver.ScrapeBase">ScrapeBase</a></li>
+<li><a title="scrapli.driver.base_generic_driver.GenericDriverBase" href="base_generic_driver.html#scrapli.driver.base_generic_driver.GenericDriverBase">GenericDriverBase</a></li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="scrapli.driver.async_network_driver.AsyncNetworkDriver" href="async_network_driver.html#scrapli.driver.async_network_driver.AsyncNetworkDriver">AsyncNetworkDriver</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="scrapli.driver.AsyncGenericDriver.get_prompt"><code class="name flex">
+<span>async def <span class="ident">get_prompt</span></span>(<span>self) -> str</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convenience method to get device prompt from Channel</p>
+<h2 id="args">Args</h2>
+<p>N/A</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>prompt received from channel.get_prompt</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def get_prompt(self) -&gt; str:
+    &#34;&#34;&#34;
+    Convenience method to get device prompt from Channel
+
+    Args:
+        N/A
+
+    Returns:
+        str: prompt received from channel.get_prompt
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    prompt: str = await self.channel.get_prompt()
+    return prompt</code></pre>
+</details>
+</dd>
+<dt id="scrapli.driver.AsyncGenericDriver.send_command"><code class="name flex">
+<span>async def <span class="ident">send_command</span></span>(<span>self, command: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None) -> <a title="scrapli.response.Response" href="../response.html#scrapli.response.Response">Response</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send a command</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>command</code></strong></dt>
+<dd>string to send to device in privilege exec mode</dd>
+<dt><strong><code>strip_prompt</code></strong></dt>
+<dd>True/False strip prompt from returned output</dd>
+<dt><strong><code>failed_when_contains</code></strong></dt>
+<dd>string or list of strings indicating failure if found in response</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Response</code></dt>
+<dd>Scrapli Response object</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_command(
+    self,
+    command: str,
+    strip_prompt: bool = True,
+    failed_when_contains: Optional[Union[str, List[str]]] = None,
+) -&gt; Response:
+    &#34;&#34;&#34;
+    Send a command
+
+    Args:
+        command: string to send to device in privilege exec mode
+        strip_prompt: True/False strip prompt from returned output
+        failed_when_contains: string or list of strings indicating failure if found in response
+
+    Returns:
+        Response: Scrapli Response object
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    response = self._pre_send_command(
+        host=self.transport.host, command=command, failed_when_contains=failed_when_contains
+    )
+    raw_response, processed_response = await self.channel.send_input(
+        channel_input=command, strip_prompt=strip_prompt
+    )
+    return self._post_send_command(
+        raw_response=raw_response, processed_response=processed_response, response=response
+    )</code></pre>
+</details>
+</dd>
+<dt id="scrapli.driver.AsyncGenericDriver.send_commands"><code class="name flex">
+<span>async def <span class="ident">send_commands</span></span>(<span>self, commands: List[str], strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False) -> collections.UserList</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send multiple commands</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>commands</code></strong></dt>
+<dd>list of strings to send to device in privilege exec mode</dd>
+<dt><strong><code>strip_prompt</code></strong></dt>
+<dd>True/False strip prompt from returned output</dd>
+<dt><strong><code>failed_when_contains</code></strong></dt>
+<dd>string or list of strings indicating failure if found in response</dd>
+<dt><strong><code>stop_on_failed</code></strong></dt>
+<dd>True/False stop executing commands if a command fails, returns results
+as of current execution</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>ScrapliMultiResponse</code></dt>
+<dd>Scrapli MultiResponse object</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_commands(
+    self,
+    commands: List[str],
+    strip_prompt: bool = True,
+    failed_when_contains: Optional[Union[str, List[str]]] = None,
+    stop_on_failed: bool = False,
+) -&gt; ScrapliMultiResponse:
+    &#34;&#34;&#34;
+    Send multiple commands
+
+    Args:
+        commands: list of strings to send to device in privilege exec mode
+        strip_prompt: True/False strip prompt from returned output
+        failed_when_contains: string or list of strings indicating failure if found in response
+        stop_on_failed: True/False stop executing commands if a command fails, returns results
+            as of current execution
+
+    Returns:
+        ScrapliMultiResponse: Scrapli MultiResponse object
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    responses = self._pre_send_commands(commands=commands)
+    for command in commands:
+        response = await self.send_command(
+            command=command,
+            strip_prompt=strip_prompt,
+            failed_when_contains=failed_when_contains,
+        )
+        responses.append(response)
+        if stop_on_failed is True and response.failed is True:
+            return responses
+
+    return responses</code></pre>
+</details>
+</dd>
+<dt id="scrapli.driver.AsyncGenericDriver.send_commands_from_file"><code class="name flex">
+<span>async def <span class="ident">send_commands_from_file</span></span>(<span>self, file: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False) -> collections.UserList</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send command(s) from file</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>file</code></strong></dt>
+<dd>string path to file</dd>
+<dt><strong><code>strip_prompt</code></strong></dt>
+<dd>True/False strip prompt from returned output</dd>
+<dt><strong><code>failed_when_contains</code></strong></dt>
+<dd>string or list of strings indicating failure if found in response</dd>
+<dt><strong><code>stop_on_failed</code></strong></dt>
+<dd>True/False stop executing commands if a command fails, returns results
+as of current execution</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>ScrapliMultiResponse</code></dt>
+<dd>Scrapli MultiResponse object</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_commands_from_file(
+    self,
+    file: str,
+    strip_prompt: bool = True,
+    failed_when_contains: Optional[Union[str, List[str]]] = None,
+    stop_on_failed: bool = False,
+) -&gt; ScrapliMultiResponse:
+    &#34;&#34;&#34;
+    Send command(s) from file
+
+    Args:
+        file: string path to file
+        strip_prompt: True/False strip prompt from returned output
+        failed_when_contains: string or list of strings indicating failure if found in response
+        stop_on_failed: True/False stop executing commands if a command fails, returns results
+            as of current execution
+
+    Returns:
+        ScrapliMultiResponse: Scrapli MultiResponse object
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    commands = self._pre_send_commands_from_file(file=file)
+
+    return await self.send_commands(
+        commands=commands,
+        strip_prompt=strip_prompt,
+        failed_when_contains=failed_when_contains,
+        stop_on_failed=stop_on_failed,
+    )</code></pre>
+</details>
+</dd>
+<dt id="scrapli.driver.AsyncGenericDriver.send_interactive"><code class="name flex">
+<span>async def <span class="ident">send_interactive</span></span>(<span>self, interact_events: List[Tuple[str, str, Union[bool, NoneType]]], failed_when_contains: Union[str, List[str], NoneType] = None, privilege_level: str = '') -> <a title="scrapli.response.Response" href="../response.html#scrapli.response.Response">Response</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Interact with a device with changing prompts per input.</p>
+<p>Used to interact with devices where prompts change per input, and where inputs may be hidden
+such as in the case of a password input. This can be used to respond to challenges from
+devices such as the confirmation for the command "clear logging" on IOSXE devices for
+example. You may have as many elements in the "interact_events" list as needed, and each
+element of that list should be a tuple of two or three elements. The first element is always
+the input to send as a string, the second should be the expected response as a string, and
+the optional third a bool for whether or not the input is "hidden" (i.e. password input)</p>
+<p>An example where we need this sort of capability:</p>
+<pre><code>3560CX#copy flash: scp:
+Source filename []? test1.txt
+Address or name of remote host []? 172.31.254.100
+Destination username [carl]?
+Writing test1.txt
+Password:
+
+Password:
+ Sink: C0644 639 test1.txt
+!
+639 bytes copied in 12.066 secs (53 bytes/sec)
+3560CX#
+</code></pre>
+<p>To accomplish this we can use the following:</p>
+<pre><code>interact = conn.channel.send_inputs_interact(
+    [
+        (&quot;copy flash: scp:&quot;, &quot;Source filename []?&quot;, False),
+        (&quot;test1.txt&quot;, &quot;Address or name of remote host []?&quot;, False),
+        (&quot;172.31.254.100&quot;, &quot;Destination username [carl]?&quot;, False),
+        (&quot;carl&quot;, &quot;Password:&quot;, False),
+        (&quot;super_secure_password&quot;, prompt, True),
+    ]
+)
+</code></pre>
+<p>If we needed to deal with more prompts we could simply continue adding tuples to the list of
+interact "events".</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>interact_events</code></strong></dt>
+<dd>list of tuples containing the "interactions" with the device
+each list element must have an input and an expected response, and may have an
+optional bool for the third and final element &ndash; the optional bool specifies if the
+input that is sent to the device is "hidden" (ex: password), if the hidden param is
+not provided it is assumed the input is "normal" (not hidden)</dd>
+<dt><strong><code>failed_when_contains</code></strong></dt>
+<dd>list of strings that, if present in final output, represent a
+failed command/interaction</dd>
+<dt><strong><code>privilege_level</code></strong></dt>
+<dd>ignored in this base class; for LSP reasons for subclasses</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Response</code></dt>
+<dd>scrapli Response object</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_interactive(
+    self,
+    interact_events: List[Tuple[str, str, Optional[bool]]],
+    failed_when_contains: Optional[Union[str, List[str]]] = None,
+    privilege_level: str = &#34;&#34;,
+) -&gt; Response:
+    &#34;&#34;&#34;
+    Interact with a device with changing prompts per input.
+
+    Used to interact with devices where prompts change per input, and where inputs may be hidden
+    such as in the case of a password input. This can be used to respond to challenges from
+    devices such as the confirmation for the command &#34;clear logging&#34; on IOSXE devices for
+    example. You may have as many elements in the &#34;interact_events&#34; list as needed, and each
+    element of that list should be a tuple of two or three elements. The first element is always
+    the input to send as a string, the second should be the expected response as a string, and
+    the optional third a bool for whether or not the input is &#34;hidden&#34; (i.e. password input)
+
+    An example where we need this sort of capability:
+
+    ```
+    3560CX#copy flash: scp:
+    Source filename []? test1.txt
+    Address or name of remote host []? 172.31.254.100
+    Destination username [carl]?
+    Writing test1.txt
+    Password:
+
+    Password:
+     Sink: C0644 639 test1.txt
+    !
+    639 bytes copied in 12.066 secs (53 bytes/sec)
+    3560CX#
+    ```
+
+    To accomplish this we can use the following:
+
+    ```
+    interact = conn.channel.send_inputs_interact(
+        [
+            (&#34;copy flash: scp:&#34;, &#34;Source filename []?&#34;, False),
+            (&#34;test1.txt&#34;, &#34;Address or name of remote host []?&#34;, False),
+            (&#34;172.31.254.100&#34;, &#34;Destination username [carl]?&#34;, False),
+            (&#34;carl&#34;, &#34;Password:&#34;, False),
+            (&#34;super_secure_password&#34;, prompt, True),
+        ]
+    )
+    ```
+
+    If we needed to deal with more prompts we could simply continue adding tuples to the list of
+    interact &#34;events&#34;.
+
+    Args:
+        interact_events: list of tuples containing the &#34;interactions&#34; with the device
+            each list element must have an input and an expected response, and may have an
+            optional bool for the third and final element -- the optional bool specifies if the
+            input that is sent to the device is &#34;hidden&#34; (ex: password), if the hidden param is
+            not provided it is assumed the input is &#34;normal&#34; (not hidden)
+        failed_when_contains: list of strings that, if present in final output, represent a
+            failed command/interaction
+        privilege_level: ignored in this base class; for LSP reasons for subclasses
+
+    Returns:
+        Response: scrapli Response object
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    _ = privilege_level
+
+    response = self._pre_send_interactive(
+        host=self.transport.host,
+        interact_events=interact_events,
+        failed_when_contains=failed_when_contains,
+    )
+    raw_response, processed_response = await self.channel.send_inputs_interact(
+        interact_events=interact_events
+    )
+    return self._post_send_command(
+        raw_response=raw_response, processed_response=processed_response, response=response
+    )</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scrapli.driver.async_driver.AsyncScrape" href="async_driver.html#scrapli.driver.async_driver.AsyncScrape">AsyncScrape</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scrapli.driver.async_driver.AsyncScrape.close" href="async_driver.html#scrapli.driver.async_driver.AsyncScrape.close">close</a></code></li>
+<li><code><a title="scrapli.driver.async_driver.AsyncScrape.isalive" href="base_driver.html#scrapli.driver.base_driver.ScrapeBase.isalive">isalive</a></code></li>
+<li><code><a title="scrapli.driver.async_driver.AsyncScrape.open" href="async_driver.html#scrapli.driver.async_driver.AsyncScrape.open">open</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="scrapli.driver.AsyncNetworkDriver"><code class="flex name class">
+<span>class <span class="ident">AsyncNetworkDriver</span></span>
+<span>(</span><span>privilege_levels: Dict[str, scrapli.driver.base_network_driver.PrivilegeLevel], default_desired_privilege_level: str, auth_secondary: str = '', failed_when_contains: Union[List[str], NoneType] = None, textfsm_platform: str = '', genie_platform: str = '', **kwargs: Any)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>GenericDriverBase Object</p>
+<p>A generic network driver that will <em>hopefully</em> work for a broad variety of devices with
+minimal to no modifications and provide a normal NetworkDriver type experience with
+<code>send_command(s)</code>, <code>get_prompt</code> and <code>send_interactive</code> methods instead of forcing users to
+call Channel methods directly.</p>
+<p>This driver doesn't know anything about privilege levels (or any type of "config modes",
+disabling paging, gracefully exiting, or anything like that, and as such should be treated
+similar to the base <code><a title="scrapli.driver.Scrape" href="#scrapli.driver.Scrape">Scrape</a></code> object from that perspective.</p>
+<p>AsyncNetworkDriver Object</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>privilege_levels</code></strong></dt>
+<dd>Dict of privilege levels for a given platform</dd>
+<dt><strong><code>default_desired_privilege_level</code></strong></dt>
+<dd>string of name of default desired priv, this is the
+priv level that is generally used to disable paging/set terminal width and things
+like that upon first login, and is also the priv level scrapli will try to acquire
+for normal "command" operations (<code>send_command</code>, <code>send_commands</code>)</dd>
+<dt><strong><code>auth_secondary</code></strong></dt>
+<dd>password to use for secondary authentication (enable)</dd>
+<dt><strong><code>failed_when_contains</code></strong></dt>
+<dd>list of strings that indicate a command/configuration has failed</dd>
+<dt><strong><code>textfsm_platform</code></strong></dt>
+<dd>string name of platform to use for textfsm parsing</dd>
+<dt><strong><code>genie_platform</code></strong></dt>
+<dd>string name of platform to use for genie parsing</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>keyword args to pass to inherited class(es)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N/A
+# noqa: DAR202</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
+    def __init__(
+        self,
+        privilege_levels: Dict[str, PrivilegeLevel],
+        default_desired_privilege_level: str,
+        auth_secondary: str = &#34;&#34;,
+        failed_when_contains: Optional[List[str]] = None,
+        textfsm_platform: str = &#34;&#34;,
+        genie_platform: str = &#34;&#34;,
+        **kwargs: Any,
+    ):
+        &#34;&#34;&#34;
+        AsyncNetworkDriver Object
+
+        Args:
+            privilege_levels: Dict of privilege levels for a given platform
+            default_desired_privilege_level: string of name of default desired priv, this is the
+                priv level that is generally used to disable paging/set terminal width and things
+                like that upon first login, and is also the priv level scrapli will try to acquire
+                for normal &#34;command&#34; operations (`send_command`, `send_commands`)
+            auth_secondary: password to use for secondary authentication (enable)
+            failed_when_contains: list of strings that indicate a command/configuration has failed
+            textfsm_platform: string name of platform to use for textfsm parsing
+            genie_platform: string name of platform to use for genie parsing
+            **kwargs: keyword args to pass to inherited class(es)
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self._check_kwargs_comms_prompt_pattern(kwargs=kwargs)
+
+        self.auth_secondary = auth_secondary
+        self.privilege_levels = privilege_levels
+        self.default_desired_privilege_level = default_desired_privilege_level
+        self.update_privilege_levels(update_channel=False)
+
+        self.textfsm_platform = textfsm_platform
+        self.genie_platform = genie_platform
+        self.failed_when_contains = failed_when_contains or []
+
+        super().__init__(comms_prompt_pattern=self.comms_prompt_pattern, **kwargs)
+
+    async def _escalate(self, escalate_priv: PrivilegeLevel) -&gt; None:
+        &#34;&#34;&#34;
+        Escalate to the next privilege level up
+
+        Args:
+            escalate_priv: privilege level to escalate to
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self._pre_escalate(escalate_priv=escalate_priv)
+
+        if escalate_priv.escalate_auth is True:
+            await super().send_interactive(
+                interact_events=[
+                    (escalate_priv.escalate, escalate_priv.escalate_prompt, False),
+                    (self.auth_secondary, escalate_priv.pattern, True),
+                ],
+            )
+        else:
+            await self.channel.send_input(channel_input=escalate_priv.escalate)
+
+    async def _deescalate(self, current_priv: PrivilegeLevel) -&gt; None:
+        &#34;&#34;&#34;
+        Deescalate to the next privilege level down
+
+        Args:
+            current_priv: current privilege level
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        await self.channel.send_input(channel_input=current_priv.deescalate)
+
+    async def acquire_priv(self, desired_priv: str) -&gt; None:
+        &#34;&#34;&#34;
+        Acquire desired priv level
+
+        Args:
+            desired_priv: string name of desired privilege level
+                (see scrapli.driver.&lt;driver_category.device_type&gt;.driver for levels)
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+           CouldNotAcquirePrivLevel: if scrapli cannot get to the requested privilege level
+
+        &#34;&#34;&#34;
+        resolved_priv, map_to_desired_priv = self._pre_acquire_priv(desired_priv=desired_priv)
+
+        privilege_change_count = 0
+        while True:
+            current_prompt = await self.channel.get_prompt()
+            privilege_action, target_priv = self._process_acquire_priv(
+                resolved_priv=resolved_priv,
+                map_to_desired_priv=map_to_desired_priv,
+                current_prompt=current_prompt,
+            )
+
+            if privilege_action == PrivilegeAction.NO_ACTION:
+                return
+            if privilege_action == PrivilegeAction.DEESCALATE:
+                await self._deescalate(current_priv=target_priv)
+            if privilege_action == PrivilegeAction.ESCALATE:
+                await self._escalate(escalate_priv=target_priv)
+
+            privilege_change_count += 1
+            if privilege_change_count &gt; len(self.privilege_levels) * 2:
+                msg = f&#34;Failed to acquire requested privilege level {resolved_priv}&#34;
+                raise CouldNotAcquirePrivLevel(msg)
+
+    async def send_command(
+        self,
+        command: str,
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+    ) -&gt; Response:
+        &#34;&#34;&#34;
+        Send a command
+
+        Super method will raise TypeError if anything but a string is passed here!
+
+        Args:
+            command: string to send to device in privilege exec mode
+            strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
+
+        Returns:
+            Response: Scrapli Response object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        if self._current_priv_level.name != self.default_desired_privilege_level:
+            await self.acquire_priv(desired_priv=self.default_desired_privilege_level)
+
+        if failed_when_contains is None:
+            failed_when_contains = self.failed_when_contains
+
+        response = await super().send_command(
+            command=command, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+        )
+
+        self._update_response(response)
+
+        return response
+
+    async def send_commands(
+        self,
+        commands: List[str],
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+        stop_on_failed: bool = False,
+    ) -&gt; ScrapliMultiResponse:
+        &#34;&#34;&#34;
+        Send multiple commands
+
+        Super method will raise TypeError if anything but a list of strings is passed here!
+
+        Args:
+            commands: list of strings to send to device in privilege exec mode
+            strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
+            stop_on_failed: True/False stop executing commands if a command fails, returns results
+                as of current execution
+
+        Returns:
+            ScrapliMultiResponse: Scrapli MultiResponse object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        if self._current_priv_level.name != self.default_desired_privilege_level:
+            await self.acquire_priv(desired_priv=self.default_desired_privilege_level)
+
+        if failed_when_contains is None:
+            failed_when_contains = self.failed_when_contains
+
+        responses = await super().send_commands(
+            commands=commands,
+            strip_prompt=strip_prompt,
+            failed_when_contains=failed_when_contains,
+            stop_on_failed=stop_on_failed,
+        )
+
+        for response in responses:
+            self._update_response(response=response)
+
+        return responses
+
+    async def send_commands_from_file(
+        self,
+        file: str,
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+        stop_on_failed: bool = False,
+    ) -&gt; ScrapliMultiResponse:
+        &#34;&#34;&#34;
+        Send command(s) from file
+
+        Args:
+            file: string path to file
+            strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
+            stop_on_failed: True/False stop executing commands if a command fails, returns results
+                as of current execution
+
+        Returns:
+            ScrapliMultiResponse: Scrapli MultiResponse object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        commands = self._pre_send_commands_from_file(file=file)
+
+        return await self.send_commands(
+            commands=commands,
+            strip_prompt=strip_prompt,
+            failed_when_contains=failed_when_contains,
+            stop_on_failed=stop_on_failed,
+        )
+
+    async def send_interactive(
+        self,
+        interact_events: List[Tuple[str, str, Optional[bool]]],
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+        privilege_level: str = &#34;&#34;,
+    ) -&gt; Response:
+        &#34;&#34;&#34;
+        Interact with a device with changing prompts per input.
+
+        Used to interact with devices where prompts change per input, and where inputs may be hidden
+        such as in the case of a password input. This can be used to respond to challenges from
+        devices such as the confirmation for the command &#34;clear logging&#34; on IOSXE devices for
+        example. You may have as many elements in the &#34;interact_events&#34; list as needed, and each
+        element of that list should be a tuple of two or three elements. The first element is always
+        the input to send as a string, the second should be the expected response as a string, and
+        the optional third a bool for whether or not the input is &#34;hidden&#34; (i.e. password input)
+
+        An example where we need this sort of capability:
+
+        ```
+        3560CX#copy flash: scp:
+        Source filename []? test1.txt
+        Address or name of remote host []? 172.31.254.100
+        Destination username [carl]?
+        Writing test1.txt
+        Password:
+
+        Password:
+         Sink: C0644 639 test1.txt
+        !
+        639 bytes copied in 12.066 secs (53 bytes/sec)
+        3560CX#
+        ```
+
+        To accomplish this we can use the following:
+
+        ```
+        interact = conn.channel.send_inputs_interact(
+            [
+                (&#34;copy flash: scp:&#34;, &#34;Source filename []?&#34;, False),
+                (&#34;test1.txt&#34;, &#34;Address or name of remote host []?&#34;, False),
+                (&#34;172.31.254.100&#34;, &#34;Destination username [carl]?&#34;, False),
+                (&#34;carl&#34;, &#34;Password:&#34;, False),
+                (&#34;super_secure_password&#34;, prompt, True),
+            ]
+        )
+        ```
+
+        If we needed to deal with more prompts we could simply continue adding tuples to the list of
+        interact &#34;events&#34;.
+
+        Args:
+            interact_events: list of tuples containing the &#34;interactions&#34; with the device
+                each list element must have an input and an expected response, and may have an
+                optional bool for the third and final element -- the optional bool specifies if the
+                input that is sent to the device is &#34;hidden&#34; (ex: password), if the hidden param is
+                not provided it is assumed the input is &#34;normal&#34; (not hidden)
+            failed_when_contains: list of strings that, if present in final output, represent a
+                failed command/interaction
+            privilege_level: name of the privilege level to operate in
+
+        Returns:
+            Response: scrapli Response object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        if privilege_level:
+            resolved_privilege_level = self._get_privilege_level_name(
+                requested_priv=privilege_level
+            )
+        else:
+            resolved_privilege_level = self.default_desired_privilege_level
+
+        if self._current_priv_level.name != resolved_privilege_level:
+            await self.acquire_priv(desired_priv=resolved_privilege_level)
+        response = await super().send_interactive(
+            interact_events=interact_events, failed_when_contains=failed_when_contains
+        )
+        self._update_response(response=response)
+
+        return response
+
+    async def _abort_config(self) -&gt; None:
+        &#34;&#34;&#34;
+        Abort a configuration operation/session if applicable (for config sessions like junos/iosxr)
+
+        Args:
+            N/A
+
+        Returns:
+            N/A:  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+
+    async def send_config(
+        self,
+        config: str,
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+        stop_on_failed: bool = False,
+        privilege_level: str = &#34;&#34;,
+    ) -&gt; Response:
+        &#34;&#34;&#34;
+        Send configuration(s)
+
+        Args:
+            config: string configuration to send to the device, supports sending multi-line strings
+            strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
+            stop_on_failed: True/False stop executing commands if a command fails, returns results
+                as of current execution; aborts configuration session if applicable (iosxr/junos or
+                eos/nxos if using a configuration session)
+            privilege_level: name of configuration privilege level/type to acquire; this is platform
+                dependent, so check the device driver for specifics. Examples of privilege_name
+                would be &#34;configuration_exclusive&#34; for IOSXRDriver, or &#34;configuration_private&#34; for
+                JunosDriver. You can also pass in a name of a configuration session such as
+                &#34;my-config-session&#34; if you have registered a session using the
+                &#34;register_config_session&#34; method of the EOSDriver or NXOSDriver.
+
+        Returns:
+            Response: Scrapli Response object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        split_config = self._pre_send_config(config=config)
+
+        # now that we have a list of configs, just use send_configs to actually execute them
+        multi_response = await self.send_configs(
+            configs=split_config,
+            strip_prompt=strip_prompt,
+            failed_when_contains=failed_when_contains,
+            stop_on_failed=stop_on_failed,
+            privilege_level=privilege_level,
+        )
+        return self._post_send_config(config=config, multi_response=multi_response)
+
+    async def send_configs(
+        self,
+        configs: List[str],
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+        stop_on_failed: bool = False,
+        privilege_level: str = &#34;&#34;,
+    ) -&gt; ScrapliMultiResponse:
+        &#34;&#34;&#34;
+        Send configuration(s)
+
+        Args:
+            configs: list of strings to send to device in config mode
+            strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
+            stop_on_failed: True/False stop executing commands if a command fails, returns results
+                as of current execution; aborts configuration session if applicable (iosxr/junos or
+                eos/nxos if using a configuration session)
+            privilege_level: name of configuration privilege level/type to acquire; this is platform
+                dependent, so check the device driver for specifics. Examples of privilege_name
+                would be &#34;configuration_exclusive&#34; for IOSXRDriver, or &#34;configuration_private&#34; for
+                JunosDriver. You can also pass in a name of a configuration session such as
+                &#34;my-config-session&#34; if you have registered a session using the
+                &#34;register_config_session&#34; method of the EOSDriver or NXOSDriver.
+
+        Returns:
+            ScrapliMultiResponse: Scrapli MultiResponse object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        resolved_privilege_level, failed_when_contains = self._pre_send_configs(
+            configs=configs,
+            failed_when_contains=failed_when_contains,
+            privilege_level=privilege_level,
+        )
+
+        if self._current_priv_level.name != resolved_privilege_level:
+            await self.acquire_priv(desired_priv=resolved_privilege_level)
+
+        responses = MultiResponse()
+        _failed_during_execution = False
+        for config in configs:
+            response = await super().send_command(
+                command=config,
+                strip_prompt=strip_prompt,
+                failed_when_contains=failed_when_contains,
+            )
+            responses.append(response)
+            if response.failed is True:
+                _failed_during_execution = True
+                if stop_on_failed is True:
+                    break
+
+        if _failed_during_execution is True:
+            await self._abort_config()
+
+        return self._post_send_configs(responses=responses)
+
+    async def send_configs_from_file(
+        self,
+        file: str,
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+        stop_on_failed: bool = False,
+        privilege_level: str = &#34;&#34;,
+    ) -&gt; ScrapliMultiResponse:
+        &#34;&#34;&#34;
+        Send configuration(s) from a file
+
+        Args:
+            file: string path to file
+            strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
+            stop_on_failed: True/False stop executing commands if a command fails, returns results
+                as of current execution; aborts configuration session if applicable (iosxr/junos or
+                eos/nxos if using a configuration session)
+            privilege_level: name of configuration privilege level/type to acquire; this is platform
+                dependent, so check the device driver for specifics. Examples of privilege_name
+                would be &#34;exclusive&#34; for IOSXRDriver, &#34;private&#34; for JunosDriver. You can also pass
+                in a name of a configuration session such as &#34;session_mysession&#34; if you have
+                registered a session using the &#34;register_config_session&#34; method of the EOSDriver or
+                NXOSDriver.
+
+        Returns:
+            ScrapliMultiResponse: Scrapli MultiResponse object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        configs = self._pre_send_configs_from_file(file=file)
+
+        return await self.send_configs(
+            configs=configs,
+            strip_prompt=strip_prompt,
+            failed_when_contains=failed_when_contains,
+            stop_on_failed=stop_on_failed,
+            privilege_level=privilege_level,
+        )</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scrapli.driver.async_generic_driver.AsyncGenericDriver" href="async_generic_driver.html#scrapli.driver.async_generic_driver.AsyncGenericDriver">AsyncGenericDriver</a></li>
+<li><a title="scrapli.driver.async_driver.AsyncScrape" href="async_driver.html#scrapli.driver.async_driver.AsyncScrape">AsyncScrape</a></li>
+<li><a title="scrapli.driver.base_driver.ScrapeBase" href="base_driver.html#scrapli.driver.base_driver.ScrapeBase">ScrapeBase</a></li>
+<li><a title="scrapli.driver.base_generic_driver.GenericDriverBase" href="base_generic_driver.html#scrapli.driver.base_generic_driver.GenericDriverBase">GenericDriverBase</a></li>
+<li><a title="scrapli.driver.base_network_driver.NetworkDriverBase" href="base_network_driver.html#scrapli.driver.base_network_driver.NetworkDriverBase">NetworkDriverBase</a></li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="scrapli.driver.core.arista_eos.async_driver.AsyncEOSDriver" href="core/arista_eos/async_driver.html#scrapli.driver.core.arista_eos.async_driver.AsyncEOSDriver">AsyncEOSDriver</a></li>
+<li><a title="scrapli.driver.core.cisco_iosxe.async_driver.AsyncIOSXEDriver" href="core/cisco_iosxe/async_driver.html#scrapli.driver.core.cisco_iosxe.async_driver.AsyncIOSXEDriver">AsyncIOSXEDriver</a></li>
+<li><a title="scrapli.driver.core.cisco_iosxr.async_driver.AsyncIOSXRDriver" href="core/cisco_iosxr/async_driver.html#scrapli.driver.core.cisco_iosxr.async_driver.AsyncIOSXRDriver">AsyncIOSXRDriver</a></li>
+<li><a title="scrapli.driver.core.cisco_nxos.async_driver.AsyncNXOSDriver" href="core/cisco_nxos/async_driver.html#scrapli.driver.core.cisco_nxos.async_driver.AsyncNXOSDriver">AsyncNXOSDriver</a></li>
+<li><a title="scrapli.driver.core.juniper_junos.async_driver.AsyncJunosDriver" href="core/juniper_junos/async_driver.html#scrapli.driver.core.juniper_junos.async_driver.AsyncJunosDriver">AsyncJunosDriver</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="scrapli.driver.AsyncNetworkDriver.acquire_priv"><code class="name flex">
+<span>async def <span class="ident">acquire_priv</span></span>(<span>self, desired_priv: str) -> NoneType</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Acquire desired priv level</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>desired_priv</code></strong></dt>
+<dd>string name of desired privilege level
+(see scrapli.driver.<driver_category.device_type>.driver for levels)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N/A
+# noqa: DAR202</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>CouldNotAcquirePrivLevel</code></dt>
+<dd>if scrapli cannot get to the requested privilege level</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def acquire_priv(self, desired_priv: str) -&gt; None:
+    &#34;&#34;&#34;
+    Acquire desired priv level
+
+    Args:
+        desired_priv: string name of desired privilege level
+            (see scrapli.driver.&lt;driver_category.device_type&gt;.driver for levels)
+
+    Returns:
+        N/A  # noqa: DAR202
+
+    Raises:
+       CouldNotAcquirePrivLevel: if scrapli cannot get to the requested privilege level
+
+    &#34;&#34;&#34;
+    resolved_priv, map_to_desired_priv = self._pre_acquire_priv(desired_priv=desired_priv)
+
+    privilege_change_count = 0
+    while True:
+        current_prompt = await self.channel.get_prompt()
+        privilege_action, target_priv = self._process_acquire_priv(
+            resolved_priv=resolved_priv,
+            map_to_desired_priv=map_to_desired_priv,
+            current_prompt=current_prompt,
+        )
+
+        if privilege_action == PrivilegeAction.NO_ACTION:
+            return
+        if privilege_action == PrivilegeAction.DEESCALATE:
+            await self._deescalate(current_priv=target_priv)
+        if privilege_action == PrivilegeAction.ESCALATE:
+            await self._escalate(escalate_priv=target_priv)
+
+        privilege_change_count += 1
+        if privilege_change_count &gt; len(self.privilege_levels) * 2:
+            msg = f&#34;Failed to acquire requested privilege level {resolved_priv}&#34;
+            raise CouldNotAcquirePrivLevel(msg)</code></pre>
+</details>
+</dd>
+<dt id="scrapli.driver.AsyncNetworkDriver.send_command"><code class="name flex">
+<span>async def <span class="ident">send_command</span></span>(<span>self, command: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None) -> <a title="scrapli.response.Response" href="../response.html#scrapli.response.Response">Response</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send a command</p>
+<p>Super method will raise TypeError if anything but a string is passed here!</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>command</code></strong></dt>
+<dd>string to send to device in privilege exec mode</dd>
+<dt><strong><code>strip_prompt</code></strong></dt>
+<dd>True/False strip prompt from returned output</dd>
+<dt><strong><code>failed_when_contains</code></strong></dt>
+<dd>string or list of strings indicating failure if found in response</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Response</code></dt>
+<dd>Scrapli Response object</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_command(
+    self,
+    command: str,
+    strip_prompt: bool = True,
+    failed_when_contains: Optional[Union[str, List[str]]] = None,
+) -&gt; Response:
+    &#34;&#34;&#34;
+    Send a command
+
+    Super method will raise TypeError if anything but a string is passed here!
+
+    Args:
+        command: string to send to device in privilege exec mode
+        strip_prompt: True/False strip prompt from returned output
+        failed_when_contains: string or list of strings indicating failure if found in response
+
+    Returns:
+        Response: Scrapli Response object
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    if self._current_priv_level.name != self.default_desired_privilege_level:
+        await self.acquire_priv(desired_priv=self.default_desired_privilege_level)
+
+    if failed_when_contains is None:
+        failed_when_contains = self.failed_when_contains
+
+    response = await super().send_command(
+        command=command, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+    )
+
+    self._update_response(response)
+
+    return response</code></pre>
+</details>
+</dd>
+<dt id="scrapli.driver.AsyncNetworkDriver.send_commands"><code class="name flex">
+<span>async def <span class="ident">send_commands</span></span>(<span>self, commands: List[str], strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False) -> collections.UserList</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send multiple commands</p>
+<p>Super method will raise TypeError if anything but a list of strings is passed here!</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>commands</code></strong></dt>
+<dd>list of strings to send to device in privilege exec mode</dd>
+<dt><strong><code>strip_prompt</code></strong></dt>
+<dd>True/False strip prompt from returned output</dd>
+<dt><strong><code>failed_when_contains</code></strong></dt>
+<dd>string or list of strings indicating failure if found in response</dd>
+<dt><strong><code>stop_on_failed</code></strong></dt>
+<dd>True/False stop executing commands if a command fails, returns results
+as of current execution</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>ScrapliMultiResponse</code></dt>
+<dd>Scrapli MultiResponse object</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_commands(
+    self,
+    commands: List[str],
+    strip_prompt: bool = True,
+    failed_when_contains: Optional[Union[str, List[str]]] = None,
+    stop_on_failed: bool = False,
+) -&gt; ScrapliMultiResponse:
+    &#34;&#34;&#34;
+    Send multiple commands
+
+    Super method will raise TypeError if anything but a list of strings is passed here!
+
+    Args:
+        commands: list of strings to send to device in privilege exec mode
+        strip_prompt: True/False strip prompt from returned output
+        failed_when_contains: string or list of strings indicating failure if found in response
+        stop_on_failed: True/False stop executing commands if a command fails, returns results
+            as of current execution
+
+    Returns:
+        ScrapliMultiResponse: Scrapli MultiResponse object
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    if self._current_priv_level.name != self.default_desired_privilege_level:
+        await self.acquire_priv(desired_priv=self.default_desired_privilege_level)
+
+    if failed_when_contains is None:
+        failed_when_contains = self.failed_when_contains
+
+    responses = await super().send_commands(
+        commands=commands,
+        strip_prompt=strip_prompt,
+        failed_when_contains=failed_when_contains,
+        stop_on_failed=stop_on_failed,
+    )
+
+    for response in responses:
+        self._update_response(response=response)
+
+    return responses</code></pre>
+</details>
+</dd>
+<dt id="scrapli.driver.AsyncNetworkDriver.send_config"><code class="name flex">
+<span>async def <span class="ident">send_config</span></span>(<span>self, config: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '') -> <a title="scrapli.response.Response" href="../response.html#scrapli.response.Response">Response</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send configuration(s)</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>config</code></strong></dt>
+<dd>string configuration to send to the device, supports sending multi-line strings</dd>
+<dt><strong><code>strip_prompt</code></strong></dt>
+<dd>True/False strip prompt from returned output</dd>
+<dt><strong><code>failed_when_contains</code></strong></dt>
+<dd>string or list of strings indicating failure if found in response</dd>
+<dt><strong><code>stop_on_failed</code></strong></dt>
+<dd>True/False stop executing commands if a command fails, returns results
+as of current execution; aborts configuration session if applicable (iosxr/junos or
+eos/nxos if using a configuration session)</dd>
+<dt><strong><code>privilege_level</code></strong></dt>
+<dd>name of configuration privilege level/type to acquire; this is platform
+dependent, so check the device driver for specifics. Examples of privilege_name
+would be "configuration_exclusive" for IOSXRDriver, or "configuration_private" for
+JunosDriver. You can also pass in a name of a configuration session such as
+"my-config-session" if you have registered a session using the
+"register_config_session" method of the EOSDriver or NXOSDriver.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Response</code></dt>
+<dd>Scrapli Response object</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_config(
+    self,
+    config: str,
+    strip_prompt: bool = True,
+    failed_when_contains: Optional[Union[str, List[str]]] = None,
+    stop_on_failed: bool = False,
+    privilege_level: str = &#34;&#34;,
+) -&gt; Response:
+    &#34;&#34;&#34;
+    Send configuration(s)
+
+    Args:
+        config: string configuration to send to the device, supports sending multi-line strings
+        strip_prompt: True/False strip prompt from returned output
+        failed_when_contains: string or list of strings indicating failure if found in response
+        stop_on_failed: True/False stop executing commands if a command fails, returns results
+            as of current execution; aborts configuration session if applicable (iosxr/junos or
+            eos/nxos if using a configuration session)
+        privilege_level: name of configuration privilege level/type to acquire; this is platform
+            dependent, so check the device driver for specifics. Examples of privilege_name
+            would be &#34;configuration_exclusive&#34; for IOSXRDriver, or &#34;configuration_private&#34; for
+            JunosDriver. You can also pass in a name of a configuration session such as
+            &#34;my-config-session&#34; if you have registered a session using the
+            &#34;register_config_session&#34; method of the EOSDriver or NXOSDriver.
+
+    Returns:
+        Response: Scrapli Response object
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    split_config = self._pre_send_config(config=config)
+
+    # now that we have a list of configs, just use send_configs to actually execute them
+    multi_response = await self.send_configs(
+        configs=split_config,
+        strip_prompt=strip_prompt,
+        failed_when_contains=failed_when_contains,
+        stop_on_failed=stop_on_failed,
+        privilege_level=privilege_level,
+    )
+    return self._post_send_config(config=config, multi_response=multi_response)</code></pre>
+</details>
+</dd>
+<dt id="scrapli.driver.AsyncNetworkDriver.send_configs"><code class="name flex">
+<span>async def <span class="ident">send_configs</span></span>(<span>self, configs: List[str], strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '') -> collections.UserList</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send configuration(s)</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>configs</code></strong></dt>
+<dd>list of strings to send to device in config mode</dd>
+<dt><strong><code>strip_prompt</code></strong></dt>
+<dd>True/False strip prompt from returned output</dd>
+<dt><strong><code>failed_when_contains</code></strong></dt>
+<dd>string or list of strings indicating failure if found in response</dd>
+<dt><strong><code>stop_on_failed</code></strong></dt>
+<dd>True/False stop executing commands if a command fails, returns results
+as of current execution; aborts configuration session if applicable (iosxr/junos or
+eos/nxos if using a configuration session)</dd>
+<dt><strong><code>privilege_level</code></strong></dt>
+<dd>name of configuration privilege level/type to acquire; this is platform
+dependent, so check the device driver for specifics. Examples of privilege_name
+would be "configuration_exclusive" for IOSXRDriver, or "configuration_private" for
+JunosDriver. You can also pass in a name of a configuration session such as
+"my-config-session" if you have registered a session using the
+"register_config_session" method of the EOSDriver or NXOSDriver.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>ScrapliMultiResponse</code></dt>
+<dd>Scrapli MultiResponse object</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_configs(
+    self,
+    configs: List[str],
+    strip_prompt: bool = True,
+    failed_when_contains: Optional[Union[str, List[str]]] = None,
+    stop_on_failed: bool = False,
+    privilege_level: str = &#34;&#34;,
+) -&gt; ScrapliMultiResponse:
+    &#34;&#34;&#34;
+    Send configuration(s)
+
+    Args:
+        configs: list of strings to send to device in config mode
+        strip_prompt: True/False strip prompt from returned output
+        failed_when_contains: string or list of strings indicating failure if found in response
+        stop_on_failed: True/False stop executing commands if a command fails, returns results
+            as of current execution; aborts configuration session if applicable (iosxr/junos or
+            eos/nxos if using a configuration session)
+        privilege_level: name of configuration privilege level/type to acquire; this is platform
+            dependent, so check the device driver for specifics. Examples of privilege_name
+            would be &#34;configuration_exclusive&#34; for IOSXRDriver, or &#34;configuration_private&#34; for
+            JunosDriver. You can also pass in a name of a configuration session such as
+            &#34;my-config-session&#34; if you have registered a session using the
+            &#34;register_config_session&#34; method of the EOSDriver or NXOSDriver.
+
+    Returns:
+        ScrapliMultiResponse: Scrapli MultiResponse object
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    resolved_privilege_level, failed_when_contains = self._pre_send_configs(
+        configs=configs,
+        failed_when_contains=failed_when_contains,
+        privilege_level=privilege_level,
+    )
+
+    if self._current_priv_level.name != resolved_privilege_level:
+        await self.acquire_priv(desired_priv=resolved_privilege_level)
+
+    responses = MultiResponse()
+    _failed_during_execution = False
+    for config in configs:
+        response = await super().send_command(
+            command=config,
+            strip_prompt=strip_prompt,
+            failed_when_contains=failed_when_contains,
+        )
+        responses.append(response)
+        if response.failed is True:
+            _failed_during_execution = True
+            if stop_on_failed is True:
+                break
+
+    if _failed_during_execution is True:
+        await self._abort_config()
+
+    return self._post_send_configs(responses=responses)</code></pre>
+</details>
+</dd>
+<dt id="scrapli.driver.AsyncNetworkDriver.send_configs_from_file"><code class="name flex">
+<span>async def <span class="ident">send_configs_from_file</span></span>(<span>self, file: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '') -> collections.UserList</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send configuration(s) from a file</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>file</code></strong></dt>
+<dd>string path to file</dd>
+<dt><strong><code>strip_prompt</code></strong></dt>
+<dd>True/False strip prompt from returned output</dd>
+<dt><strong><code>failed_when_contains</code></strong></dt>
+<dd>string or list of strings indicating failure if found in response</dd>
+<dt><strong><code>stop_on_failed</code></strong></dt>
+<dd>True/False stop executing commands if a command fails, returns results
+as of current execution; aborts configuration session if applicable (iosxr/junos or
+eos/nxos if using a configuration session)</dd>
+<dt><strong><code>privilege_level</code></strong></dt>
+<dd>name of configuration privilege level/type to acquire; this is platform
+dependent, so check the device driver for specifics. Examples of privilege_name
+would be "exclusive" for IOSXRDriver, "private" for JunosDriver. You can also pass
+in a name of a configuration session such as "session_mysession" if you have
+registered a session using the "register_config_session" method of the EOSDriver or
+NXOSDriver.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>ScrapliMultiResponse</code></dt>
+<dd>Scrapli MultiResponse object</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_configs_from_file(
+    self,
+    file: str,
+    strip_prompt: bool = True,
+    failed_when_contains: Optional[Union[str, List[str]]] = None,
+    stop_on_failed: bool = False,
+    privilege_level: str = &#34;&#34;,
+) -&gt; ScrapliMultiResponse:
+    &#34;&#34;&#34;
+    Send configuration(s) from a file
+
+    Args:
+        file: string path to file
+        strip_prompt: True/False strip prompt from returned output
+        failed_when_contains: string or list of strings indicating failure if found in response
+        stop_on_failed: True/False stop executing commands if a command fails, returns results
+            as of current execution; aborts configuration session if applicable (iosxr/junos or
+            eos/nxos if using a configuration session)
+        privilege_level: name of configuration privilege level/type to acquire; this is platform
+            dependent, so check the device driver for specifics. Examples of privilege_name
+            would be &#34;exclusive&#34; for IOSXRDriver, &#34;private&#34; for JunosDriver. You can also pass
+            in a name of a configuration session such as &#34;session_mysession&#34; if you have
+            registered a session using the &#34;register_config_session&#34; method of the EOSDriver or
+            NXOSDriver.
+
+    Returns:
+        ScrapliMultiResponse: Scrapli MultiResponse object
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    configs = self._pre_send_configs_from_file(file=file)
+
+    return await self.send_configs(
+        configs=configs,
+        strip_prompt=strip_prompt,
+        failed_when_contains=failed_when_contains,
+        stop_on_failed=stop_on_failed,
+        privilege_level=privilege_level,
+    )</code></pre>
+</details>
+</dd>
+<dt id="scrapli.driver.AsyncNetworkDriver.send_interactive"><code class="name flex">
+<span>async def <span class="ident">send_interactive</span></span>(<span>self, interact_events: List[Tuple[str, str, Union[bool, NoneType]]], failed_when_contains: Union[str, List[str], NoneType] = None, privilege_level: str = '') -> <a title="scrapli.response.Response" href="../response.html#scrapli.response.Response">Response</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Interact with a device with changing prompts per input.</p>
+<p>Used to interact with devices where prompts change per input, and where inputs may be hidden
+such as in the case of a password input. This can be used to respond to challenges from
+devices such as the confirmation for the command "clear logging" on IOSXE devices for
+example. You may have as many elements in the "interact_events" list as needed, and each
+element of that list should be a tuple of two or three elements. The first element is always
+the input to send as a string, the second should be the expected response as a string, and
+the optional third a bool for whether or not the input is "hidden" (i.e. password input)</p>
+<p>An example where we need this sort of capability:</p>
+<pre><code>3560CX#copy flash: scp:
+Source filename []? test1.txt
+Address or name of remote host []? 172.31.254.100
+Destination username [carl]?
+Writing test1.txt
+Password:
+
+Password:
+ Sink: C0644 639 test1.txt
+!
+639 bytes copied in 12.066 secs (53 bytes/sec)
+3560CX#
+</code></pre>
+<p>To accomplish this we can use the following:</p>
+<pre><code>interact = conn.channel.send_inputs_interact(
+    [
+        (&quot;copy flash: scp:&quot;, &quot;Source filename []?&quot;, False),
+        (&quot;test1.txt&quot;, &quot;Address or name of remote host []?&quot;, False),
+        (&quot;172.31.254.100&quot;, &quot;Destination username [carl]?&quot;, False),
+        (&quot;carl&quot;, &quot;Password:&quot;, False),
+        (&quot;super_secure_password&quot;, prompt, True),
+    ]
+)
+</code></pre>
+<p>If we needed to deal with more prompts we could simply continue adding tuples to the list of
+interact "events".</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>interact_events</code></strong></dt>
+<dd>list of tuples containing the "interactions" with the device
+each list element must have an input and an expected response, and may have an
+optional bool for the third and final element &ndash; the optional bool specifies if the
+input that is sent to the device is "hidden" (ex: password), if the hidden param is
+not provided it is assumed the input is "normal" (not hidden)</dd>
+<dt><strong><code>failed_when_contains</code></strong></dt>
+<dd>list of strings that, if present in final output, represent a
+failed command/interaction</dd>
+<dt><strong><code>privilege_level</code></strong></dt>
+<dd>name of the privilege level to operate in</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Response</code></dt>
+<dd>scrapli Response object</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_interactive(
+    self,
+    interact_events: List[Tuple[str, str, Optional[bool]]],
+    failed_when_contains: Optional[Union[str, List[str]]] = None,
+    privilege_level: str = &#34;&#34;,
+) -&gt; Response:
+    &#34;&#34;&#34;
+    Interact with a device with changing prompts per input.
+
+    Used to interact with devices where prompts change per input, and where inputs may be hidden
+    such as in the case of a password input. This can be used to respond to challenges from
+    devices such as the confirmation for the command &#34;clear logging&#34; on IOSXE devices for
+    example. You may have as many elements in the &#34;interact_events&#34; list as needed, and each
+    element of that list should be a tuple of two or three elements. The first element is always
+    the input to send as a string, the second should be the expected response as a string, and
+    the optional third a bool for whether or not the input is &#34;hidden&#34; (i.e. password input)
+
+    An example where we need this sort of capability:
+
+    ```
+    3560CX#copy flash: scp:
+    Source filename []? test1.txt
+    Address or name of remote host []? 172.31.254.100
+    Destination username [carl]?
+    Writing test1.txt
+    Password:
+
+    Password:
+     Sink: C0644 639 test1.txt
+    !
+    639 bytes copied in 12.066 secs (53 bytes/sec)
+    3560CX#
+    ```
+
+    To accomplish this we can use the following:
+
+    ```
+    interact = conn.channel.send_inputs_interact(
+        [
+            (&#34;copy flash: scp:&#34;, &#34;Source filename []?&#34;, False),
+            (&#34;test1.txt&#34;, &#34;Address or name of remote host []?&#34;, False),
+            (&#34;172.31.254.100&#34;, &#34;Destination username [carl]?&#34;, False),
+            (&#34;carl&#34;, &#34;Password:&#34;, False),
+            (&#34;super_secure_password&#34;, prompt, True),
+        ]
+    )
+    ```
+
+    If we needed to deal with more prompts we could simply continue adding tuples to the list of
+    interact &#34;events&#34;.
+
+    Args:
+        interact_events: list of tuples containing the &#34;interactions&#34; with the device
+            each list element must have an input and an expected response, and may have an
+            optional bool for the third and final element -- the optional bool specifies if the
+            input that is sent to the device is &#34;hidden&#34; (ex: password), if the hidden param is
+            not provided it is assumed the input is &#34;normal&#34; (not hidden)
+        failed_when_contains: list of strings that, if present in final output, represent a
+            failed command/interaction
+        privilege_level: name of the privilege level to operate in
+
+    Returns:
+        Response: scrapli Response object
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    if privilege_level:
+        resolved_privilege_level = self._get_privilege_level_name(
+            requested_priv=privilege_level
+        )
+    else:
+        resolved_privilege_level = self.default_desired_privilege_level
+
+    if self._current_priv_level.name != resolved_privilege_level:
+        await self.acquire_priv(desired_priv=resolved_privilege_level)
+    response = await super().send_interactive(
+        interact_events=interact_events, failed_when_contains=failed_when_contains
+    )
+    self._update_response(response=response)
+
+    return response</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scrapli.driver.async_generic_driver.AsyncGenericDriver" href="async_generic_driver.html#scrapli.driver.async_generic_driver.AsyncGenericDriver">AsyncGenericDriver</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scrapli.driver.async_generic_driver.AsyncGenericDriver.close" href="async_driver.html#scrapli.driver.async_driver.AsyncScrape.close">close</a></code></li>
+<li><code><a title="scrapli.driver.async_generic_driver.AsyncGenericDriver.get_prompt" href="async_generic_driver.html#scrapli.driver.async_generic_driver.AsyncGenericDriver.get_prompt">get_prompt</a></code></li>
+<li><code><a title="scrapli.driver.async_generic_driver.AsyncGenericDriver.isalive" href="base_driver.html#scrapli.driver.base_driver.ScrapeBase.isalive">isalive</a></code></li>
+<li><code><a title="scrapli.driver.async_generic_driver.AsyncGenericDriver.open" href="async_driver.html#scrapli.driver.async_driver.AsyncScrape.open">open</a></code></li>
+<li><code><a title="scrapli.driver.async_generic_driver.AsyncGenericDriver.send_commands_from_file" href="async_generic_driver.html#scrapli.driver.async_generic_driver.AsyncGenericDriver.send_commands_from_file">send_commands_from_file</a></code></li>
+</ul>
+</li>
+<li><code><b><a title="scrapli.driver.base_network_driver.NetworkDriverBase" href="base_network_driver.html#scrapli.driver.base_network_driver.NetworkDriverBase">NetworkDriverBase</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scrapli.driver.base_network_driver.NetworkDriverBase.register_configuration_session" href="base_network_driver.html#scrapli.driver.base_network_driver.NetworkDriverBase.register_configuration_session">register_configuration_session</a></code></li>
+<li><code><a title="scrapli.driver.base_network_driver.NetworkDriverBase.update_privilege_levels" href="base_network_driver.html#scrapli.driver.base_network_driver.NetworkDriverBase.update_privilege_levels">update_privilege_levels</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="scrapli.driver.AsyncScrape"><code class="flex name class">
+<span>class <span class="ident">AsyncScrape</span></span>
+<span>(</span><span>**kwargs: Any)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>AsyncScrape Object</p>
+<p>AsyncScrape is the base class for AsyncNetworkDriver, and subsequent async platform specific
+drivers (i.e. AsyncIOSXEDriver). AsyncScrape can be used on its own and offers a
+semi-pexpect like experience in that it doesn't know or care about privilege levels,
+platform types, and things like that.</p>
+<p><em>Note</em> most arguments passed to Scrape do not actually get assigned to the scrape object
+itself, but instead are used to construct the Transport and Channel classes that Scrape
+relies on, see Transport and Channel docs for details.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>kwargs</code></strong></dt>
+<dd>Keyword arguments to pass to <code>ScrapeBase</code> &ndash; see <code>ScrapeBase</code> for available args</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N/A
+# noqa: DAR202</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AsyncScrape(ScrapeBase):
+    def __init__(self, **kwargs: Any) -&gt; None:
+        &#34;&#34;&#34;
+        AsyncScrape Object
+
+        AsyncScrape is the base class for AsyncNetworkDriver, and subsequent async platform specific
+        drivers (i.e. AsyncIOSXEDriver). AsyncScrape can be used on its own and offers a
+        semi-pexpect like experience in that it doesn&#39;t know or care about privilege levels,
+        platform types, and things like that.
+
+        *Note* most arguments passed to Scrape do not actually get assigned to the scrape object
+        itself, but instead are used to construct the Transport and Channel classes that Scrape
+        relies on, see Transport and Channel docs for details.
+
+        Args:
+            kwargs: Keyword arguments to pass to `ScrapeBase` -- see `ScrapeBase` for available args
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        super().__init__(**kwargs)
+        self.channel = AsyncChannel(transport=self.transport, **self.channel_args)
+
+    async def __aenter__(self) -&gt; &#34;AsyncScrape&#34;:
+        &#34;&#34;&#34;
+        Enter method for context manager
+
+        Args:
+            N/A
+
+        Returns:
+            self: instance of self
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        await self.open()
+        return self
+
+    async def __aexit__(
+        self,
+        exception_type: Optional[Type[BaseException]],
+        exception_value: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -&gt; None:
+        &#34;&#34;&#34;
+        Exit method to cleanup for context manager
+
+        Args:
+            exception_type: exception type being raised
+            exception_value: message from exception being raised
+            traceback: traceback from exception being raised
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        await self.close()
+
+    async def open(self) -&gt; None:
+        &#34;&#34;&#34;
+        Open Transport (socket/session) and establish channel
+
+        If on_open callable provided, execute that callable after opening connection
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        LOG.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+        await self.transport.open()
+        if self.on_open:
+            await self.on_open(self)
+        LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)
+
+    async def close(self) -&gt; None:
+        &#34;&#34;&#34;
+        Close Transport (socket/session)
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        LOG.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+        if self.on_close:
+            await self.on_close(self)
+        self.transport.close()
+        LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scrapli.driver.base_driver.ScrapeBase" href="base_driver.html#scrapli.driver.base_driver.ScrapeBase">ScrapeBase</a></li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="scrapli.driver.async_generic_driver.AsyncGenericDriver" href="async_generic_driver.html#scrapli.driver.async_generic_driver.AsyncGenericDriver">AsyncGenericDriver</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="scrapli.driver.AsyncScrape.close"><code class="name flex">
+<span>async def <span class="ident">close</span></span>(<span>self) -> NoneType</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Close Transport (socket/session)</p>
+<h2 id="args">Args</h2>
+<p>N/A</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N/A
+# noqa: DAR202</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def close(self) -&gt; None:
+    &#34;&#34;&#34;
+    Close Transport (socket/session)
+
+    Args:
+        N/A
+
+    Returns:
+        N/A  # noqa: DAR202
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    LOG.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+    if self.on_close:
+        await self.on_close(self)
+    self.transport.close()
+    LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
+</details>
+</dd>
+<dt id="scrapli.driver.AsyncScrape.open"><code class="name flex">
+<span>async def <span class="ident">open</span></span>(<span>self) -> NoneType</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Open Transport (socket/session) and establish channel</p>
+<p>If on_open callable provided, execute that callable after opening connection</p>
+<h2 id="args">Args</h2>
+<p>N/A</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N/A
+# noqa: DAR202</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def open(self) -&gt; None:
+    &#34;&#34;&#34;
+    Open Transport (socket/session) and establish channel
+
+    If on_open callable provided, execute that callable after opening connection
+
+    Args:
+        N/A
+
+    Returns:
+        N/A  # noqa: DAR202
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    LOG.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+    await self.transport.open()
+    if self.on_open:
+        await self.on_open(self)
+    LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scrapli.driver.base_driver.ScrapeBase" href="base_driver.html#scrapli.driver.base_driver.ScrapeBase">ScrapeBase</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scrapli.driver.base_driver.ScrapeBase.isalive" href="base_driver.html#scrapli.driver.base_driver.ScrapeBase.isalive">isalive</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="scrapli.driver.GenericDriver"><code class="flex name class">
+<span>class <span class="ident">GenericDriver</span></span>
+<span>(</span><span>comms_prompt_pattern: str = &#x27;^\\S{0,48}[#&gt;$~@:\\]]\\s*$&#x27;, comms_ansi: bool = True, **kwargs: Any)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>GenericDriverBase Object</p>
+<p>A generic network driver that will <em>hopefully</em> work for a broad variety of devices with
+minimal to no modifications and provide a normal NetworkDriver type experience with
+<code>send_command(s)</code>, <code>get_prompt</code> and <code>send_interactive</code> methods instead of forcing users to
+call Channel methods directly.</p>
+<p>This driver doesn't know anything about privilege levels (or any type of "config modes",
+disabling paging, gracefully exiting, or anything like that, and as such should be treated
+similar to the base <code><a title="scrapli.driver.Scrape" href="#scrapli.driver.Scrape">Scrape</a></code> object from that perspective.</p>
+<p>GenericDriver Object</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>comms_prompt_pattern</code></strong></dt>
+<dd>raw string regex pattern &ndash; preferably use <code>^</code> and <code>$</code> anchors!
+this is the single most important attribute here! if this does not match a prompt,
+scrapli will not work!
+For this GenericDriver the prompt pattern matches a really wide range of things&hellip;
+the general pattern is start of line, match any character 0-32 times, then match a
+prompt termination character from the following character set: <code>#</code>, <code>&gt;</code>, <code>$</code>, <code>~</code>,
+<code>@</code>, <code>:</code>, <code>]</code>, finally match any or no whitespace till the end of the line. This
+pattern works on all of the "core" platforms and should work on a wide range of
+other devices, however because it is so broad it may also accidentally match too
+many things and cause issues, so be careful!</dd>
+<dt><strong><code>comms_ansi</code></strong></dt>
+<dd>True/False strip comms_ansi characters from output; in the case of the
+GenericDriver, always strip ansi; this may slow things down but will hopefully help
+prevent issues! Obviously can be overridden if desired.</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>keyword args to pass to inherited class(es)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N/A
+# noqa: DAR202</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class GenericDriver(Scrape, GenericDriverBase):
+    def __init__(
+        self,
+        comms_prompt_pattern: str = r&#34;^\S{0,48}[#&gt;$~@:\]]\s*$&#34;,
+        comms_ansi: bool = True,
+        **kwargs: Any,
+    ):
+        &#34;&#34;&#34;
+        GenericDriver Object
+
+        Args:
+            comms_prompt_pattern: raw string regex pattern -- preferably use `^` and `$` anchors!
+                this is the single most important attribute here! if this does not match a prompt,
+                scrapli will not work!
+                For this GenericDriver the prompt pattern matches a really wide range of things...
+                the general pattern is start of line, match any character 0-32 times, then match a
+                prompt termination character from the following character set: `#`, `&gt;`, `$`, `~`,
+                `@`, `:`, `]`, finally match any or no whitespace till the end of the line. This
+                pattern works on all of the &#34;core&#34; platforms and should work on a wide range of
+                other devices, however because it is so broad it may also accidentally match too
+                many things and cause issues, so be careful!
+            comms_ansi: True/False strip comms_ansi characters from output; in the case of the
+                GenericDriver, always strip ansi; this may slow things down but will hopefully help
+                prevent issues! Obviously can be overridden if desired.
+            **kwargs: keyword args to pass to inherited class(es)
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+        &#34;&#34;&#34;
+        super().__init__(comms_prompt_pattern=comms_prompt_pattern, comms_ansi=comms_ansi, **kwargs)
+        self.channel: Channel
 
     def send_command(
         self,
@@ -170,27 +2338,18 @@ prevent issues! Obviously can be overridden if desired.</dd>
             Response: Scrapli Response object
 
         Raises:
-            TypeError: if command is anything but a string
+            N/A
 
         &#34;&#34;&#34;
-        if not isinstance(command, str):
-            raise TypeError(
-                f&#34;`send_command` expects a single string, got {type(command)}. &#34;
-                &#34;to send a list of commands use the `send_commands` method instead.&#34;
-            )
-
-        response = Response(
-            host=self.transport.host,
-            channel_input=command,
-            failed_when_contains=failed_when_contains,
+        response = self._pre_send_command(
+            host=self.transport.host, command=command, failed_when_contains=failed_when_contains
         )
         raw_response, processed_response = self.channel.send_input(
             channel_input=command, strip_prompt=strip_prompt
         )
-        response._record_response(result=processed_response)  # pylint: disable=W0212
-        response.raw_result = raw_response
-
-        return response
+        return self._post_send_command(
+            raw_response=raw_response, processed_response=processed_response, response=response
+        )
 
     def send_commands(
         self,
@@ -210,19 +2369,13 @@ prevent issues! Obviously can be overridden if desired.</dd>
                 as of current execution
 
         Returns:
-            responses: list of Scrapli Response objects
+            ScrapliMultiResponse: Scrapli MultiResponse object
 
         Raises:
-            TypeError: if commands is anything but a list
+            N/A
 
         &#34;&#34;&#34;
-        if not isinstance(commands, list):
-            raise TypeError(
-                f&#34;`send_commands` expects a list of strings, got {type(commands)}. &#34;
-                &#34;to send a single command use the `send_command` method instead.&#34;
-            )
-
-        responses = MultiResponse()
+        responses = self._pre_send_commands(commands=commands)
         for command in commands:
             response = self.send_command(
                 command=command,
@@ -253,20 +2406,13 @@ prevent issues! Obviously can be overridden if desired.</dd>
                 as of current execution
 
         Returns:
-            responses: list of Scrapli Response objects
+            ScrapliMultiResponse: Scrapli MultiResponse object
 
         Raises:
-            TypeError: if anything but a string is provided for `file`
+            N/A
 
         &#34;&#34;&#34;
-        if not isinstance(file, str):
-            raise TypeError(
-                f&#34;`send_commands_from_file` expects a string path to file, got {type(file)}&#34;
-            )
-        resolved_file = resolve_file(file)
-
-        with open(resolved_file, &#34;r&#34;) as f:
-            commands = f.read().splitlines()
+        commands = self._pre_send_commands_from_file(file=file)
 
         return self.send_commands(
             commands=commands,
@@ -345,19 +2491,17 @@ prevent issues! Obviously can be overridden if desired.</dd>
         &#34;&#34;&#34;
         _ = privilege_level
 
-        joined_input = &#34;, &#34;.join([event[0] for event in interact_events])
-        response = Response(
-            self.transport.host,
-            channel_input=joined_input,
+        response = self._pre_send_interactive(
+            host=self.transport.host,
+            interact_events=interact_events,
             failed_when_contains=failed_when_contains,
         )
         raw_response, processed_response = self.channel.send_inputs_interact(
             interact_events=interact_events
         )
-        response._record_response(result=processed_response)  # pylint: disable=W0212
-        response.raw_result = raw_response
-
-        return response
+        return self._post_send_command(
+            raw_response=raw_response, processed_response=processed_response, response=response
+        )
 
     def get_prompt(self) -&gt; str:
         &#34;&#34;&#34;
@@ -379,6 +2523,8 @@ prevent issues! Obviously can be overridden if desired.</dd>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="scrapli.driver.driver.Scrape" href="driver.html#scrapli.driver.driver.Scrape">Scrape</a></li>
+<li><a title="scrapli.driver.base_driver.ScrapeBase" href="base_driver.html#scrapli.driver.base_driver.ScrapeBase">ScrapeBase</a></li>
+<li><a title="scrapli.driver.base_generic_driver.GenericDriverBase" href="base_generic_driver.html#scrapli.driver.base_generic_driver.GenericDriverBase">GenericDriverBase</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -446,8 +2592,8 @@ prevent issues! Obviously can be overridden if desired.</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><code>TypeError</code></dt>
-<dd>if command is anything but a string</dd>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -471,27 +2617,18 @@ prevent issues! Obviously can be overridden if desired.</dd>
         Response: Scrapli Response object
 
     Raises:
-        TypeError: if command is anything but a string
+        N/A
 
     &#34;&#34;&#34;
-    if not isinstance(command, str):
-        raise TypeError(
-            f&#34;`send_command` expects a single string, got {type(command)}. &#34;
-            &#34;to send a list of commands use the `send_commands` method instead.&#34;
-        )
-
-    response = Response(
-        host=self.transport.host,
-        channel_input=command,
-        failed_when_contains=failed_when_contains,
+    response = self._pre_send_command(
+        host=self.transport.host, command=command, failed_when_contains=failed_when_contains
     )
     raw_response, processed_response = self.channel.send_input(
         channel_input=command, strip_prompt=strip_prompt
     )
-    response._record_response(result=processed_response)  # pylint: disable=W0212
-    response.raw_result = raw_response
-
-    return response</code></pre>
+    return self._post_send_command(
+        raw_response=raw_response, processed_response=processed_response, response=response
+    )</code></pre>
 </details>
 </dd>
 <dt id="scrapli.driver.GenericDriver.send_commands"><code class="name flex">
@@ -513,13 +2650,13 @@ as of current execution</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>responses</code></dt>
-<dd>list of Scrapli Response objects</dd>
+<dt><code>ScrapliMultiResponse</code></dt>
+<dd>Scrapli MultiResponse object</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><code>TypeError</code></dt>
-<dd>if commands is anything but a list</dd>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -543,19 +2680,13 @@ as of current execution</dd>
             as of current execution
 
     Returns:
-        responses: list of Scrapli Response objects
+        ScrapliMultiResponse: Scrapli MultiResponse object
 
     Raises:
-        TypeError: if commands is anything but a list
+        N/A
 
     &#34;&#34;&#34;
-    if not isinstance(commands, list):
-        raise TypeError(
-            f&#34;`send_commands` expects a list of strings, got {type(commands)}. &#34;
-            &#34;to send a single command use the `send_command` method instead.&#34;
-        )
-
-    responses = MultiResponse()
+    responses = self._pre_send_commands(commands=commands)
     for command in commands:
         response = self.send_command(
             command=command,
@@ -588,13 +2719,13 @@ as of current execution</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>responses</code></dt>
-<dd>list of Scrapli Response objects</dd>
+<dt><code>ScrapliMultiResponse</code></dt>
+<dd>Scrapli MultiResponse object</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><code>TypeError</code></dt>
-<dd>if anything but a string is provided for <code>file</code></dd>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -618,20 +2749,13 @@ as of current execution</dd>
             as of current execution
 
     Returns:
-        responses: list of Scrapli Response objects
+        ScrapliMultiResponse: Scrapli MultiResponse object
 
     Raises:
-        TypeError: if anything but a string is provided for `file`
+        N/A
 
     &#34;&#34;&#34;
-    if not isinstance(file, str):
-        raise TypeError(
-            f&#34;`send_commands_from_file` expects a string path to file, got {type(file)}&#34;
-        )
-    resolved_file = resolve_file(file)
-
-    with open(resolved_file, &#34;r&#34;) as f:
-        commands = f.read().splitlines()
+    commands = self._pre_send_commands_from_file(file=file)
 
     return self.send_commands(
         commands=commands,
@@ -778,19 +2902,17 @@ failed command/interaction</dd>
     &#34;&#34;&#34;
     _ = privilege_level
 
-    joined_input = &#34;, &#34;.join([event[0] for event in interact_events])
-    response = Response(
-        self.transport.host,
-        channel_input=joined_input,
+    response = self._pre_send_interactive(
+        host=self.transport.host,
+        interact_events=interact_events,
         failed_when_contains=failed_when_contains,
     )
     raw_response, processed_response = self.channel.send_inputs_interact(
         interact_events=interact_events
     )
-    response._record_response(result=processed_response)  # pylint: disable=W0212
-    response.raw_result = raw_response
-
-    return response</code></pre>
+    return self._post_send_command(
+        raw_response=raw_response, processed_response=processed_response, response=response
+    )</code></pre>
 </details>
 </dd>
 </dl>
@@ -799,7 +2921,7 @@ failed command/interaction</dd>
 <li><code><b><a title="scrapli.driver.driver.Scrape" href="driver.html#scrapli.driver.driver.Scrape">Scrape</a></b></code>:
 <ul class="hlist">
 <li><code><a title="scrapli.driver.driver.Scrape.close" href="driver.html#scrapli.driver.driver.Scrape.close">close</a></code></li>
-<li><code><a title="scrapli.driver.driver.Scrape.isalive" href="driver.html#scrapli.driver.driver.Scrape.isalive">isalive</a></code></li>
+<li><code><a title="scrapli.driver.driver.Scrape.isalive" href="base_driver.html#scrapli.driver.base_driver.ScrapeBase.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.driver.driver.Scrape.open" href="driver.html#scrapli.driver.driver.Scrape.open">open</a></code></li>
 </ul>
 </li>
@@ -807,11 +2929,17 @@ failed command/interaction</dd>
 </dd>
 <dt id="scrapli.driver.NetworkDriver"><code class="flex name class">
 <span>class <span class="ident">NetworkDriver</span></span>
-<span>(</span><span>privilege_levels: Dict[str, scrapli.driver.network_driver.PrivilegeLevel], default_desired_privilege_level: str, auth_secondary: str = '', failed_when_contains: Union[List[str], NoneType] = None, textfsm_platform: str = '', genie_platform: str = '', **kwargs: Any)</span>
+<span>(</span><span>privilege_levels: Dict[str, scrapli.driver.base_network_driver.PrivilegeLevel], default_desired_privilege_level: str, auth_secondary: str = '', failed_when_contains: Union[List[str], NoneType] = None, textfsm_platform: str = '', genie_platform: str = '', **kwargs: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Helper class that provides a standard way to create an ABC using
-inheritance.</p>
+<div class="desc"><p>GenericDriverBase Object</p>
+<p>A generic network driver that will <em>hopefully</em> work for a broad variety of devices with
+minimal to no modifications and provide a normal NetworkDriver type experience with
+<code>send_command(s)</code>, <code>get_prompt</code> and <code>send_interactive</code> methods instead of forcing users to
+call Channel methods directly.</p>
+<p>This driver doesn't know anything about privilege levels (or any type of "config modes",
+disabling paging, gracefully exiting, or anything like that, and as such should be treated
+similar to the base <code><a title="scrapli.driver.Scrape" href="#scrapli.driver.Scrape">Scrape</a></code> object from that perspective.</p>
 <p>BaseNetworkDriver Object</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -848,8 +2976,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class NetworkDriver(GenericDriver, ABC):
-    @abstractmethod
+<pre><code class="python">class NetworkDriver(GenericDriver, NetworkDriverBase):
     def __init__(
         self,
         privilege_levels: Dict[str, PrivilegeLevel],
@@ -882,128 +3009,18 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
             N/A
 
         &#34;&#34;&#34;
-        if &#34;comms_prompt_pattern&#34; in kwargs:
-            err = &#34;`comms_prompt_pattern` found in kwargs!&#34;
-            msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
-            fix = (
-                &#34;`comms_prompt_pattern` is ignored (dropped) when using network drivers. If you &#34;
-                &#34;wish to modify the patterns for any network driver sub-classes, please do so by &#34;
-                &#34;modifying or providing your own `privilege_levels`.&#34;
-            )
-            warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
-            warnings.warn(warning)
-            kwargs.pop(&#34;comms_prompt_pattern&#34;)
-
-        self.comms_prompt_pattern: str
-
-        self.privilege_levels = privilege_levels
-        self.default_desired_privilege_level = default_desired_privilege_level
-        self._current_priv_level = DUMMY_PRIV_LEVEL
-        self._priv_map: Dict[str, List[str]] = {}
-        self.update_privilege_levels(update_channel=False)
+        self._check_kwargs_comms_prompt_pattern(kwargs=kwargs)
 
         self.auth_secondary = auth_secondary
+        self.privilege_levels = privilege_levels
+        self.default_desired_privilege_level = default_desired_privilege_level
+        self.update_privilege_levels(update_channel=False)
+
         self.textfsm_platform = textfsm_platform
         self.genie_platform = genie_platform
         self.failed_when_contains = failed_when_contains or []
 
         super().__init__(comms_prompt_pattern=self.comms_prompt_pattern, **kwargs)
-
-    def _generate_comms_prompt_pattern(self) -&gt; None:
-        &#34;&#34;&#34;
-        Generate the `comms_prompt_pattern_all` from the currently assigned privilege levels
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.comms_prompt_pattern = r&#34;|&#34;.join(
-            rf&#34;({priv_level_data.pattern})&#34; for priv_level_data in self.privilege_levels.values()
-        )
-
-    def _build_priv_map(self) -&gt; None:
-        &#34;&#34;&#34;
-        Build a &#34;map&#34; of privilege levels
-
-        `_priv_map` is a &#34;map&#34; of all privilege levels mapped out to the lowest available priv. This
-        map is used for determining how to escalate/deescalate.
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        for priv_level in self.privilege_levels:
-            self._priv_map[priv_level] = [priv_level]
-            while True:
-                previous_priv = self.privilege_levels[self._priv_map[priv_level][0]].previous_priv
-                if not previous_priv:
-                    break
-                self._priv_map[priv_level].insert(0, previous_priv)
-
-    def update_privilege_levels(self, update_channel: bool = True) -&gt; None:
-        &#34;&#34;&#34;
-        Re-generate the privilege map, and update the comms prompt pattern
-
-        Args:
-            update_channel: True/False update the channel pattern too -- likely only ever set to
-                False for class initialization before channel is opened
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self._build_priv_map()
-        self._generate_comms_prompt_pattern()
-        # clear the lru cache as patterns may have been updated
-        self._determine_current_priv.cache_clear()
-        if update_channel is True:
-            self.channel.comms_prompt_pattern = self.comms_prompt_pattern
-
-    @lru_cache()
-    def _determine_current_priv(self, current_prompt: str) -&gt; List[str]:
-        &#34;&#34;&#34;
-        Determine current privilege level from prompt string
-
-        Args:
-            current_prompt: string of current prompt
-
-        Returns:
-            matching_priv_levels: list of string names of matching privilege levels
-
-        Raises:
-            UnknownPrivLevel: if privilege level cannot be determined
-
-        &#34;&#34;&#34;
-        matching_priv_levels = []
-        for priv_level in self.privilege_levels.values():
-            search_result = re.search(
-                pattern=priv_level.pattern, string=current_prompt, flags=re.M | re.I
-            )
-            if not search_result:
-                continue
-            matching_priv_levels.append(priv_level.name)
-            LOG.debug(f&#34;Current privilege level could be `{priv_level.name}`&#34;)
-        if not matching_priv_levels:
-            raise UnknownPrivLevel(
-                f&#34;Could not determine privilege level from provided prompt: `{current_prompt}`&#34;
-            )
-        LOG.debug(f&#34;Determined current privilege level is one of `{matching_priv_levels}`&#34;)
-        return matching_priv_levels
 
     def _escalate(self, escalate_priv: PrivilegeLevel) -&gt; None:
         &#34;&#34;&#34;
@@ -1019,33 +3036,17 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
             N/A
 
         &#34;&#34;&#34;
-        next_prompt_pattern = escalate_priv.pattern
+        self._pre_escalate(escalate_priv=escalate_priv)
+
         if escalate_priv.escalate_auth is True:
-            if not self.auth_secondary:
-                err = (
-                    &#34;Privilege escalation generally requires an `auth_secondary` password, &#34;
-                    &#34;but none is set!&#34;
-                )
-                msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
-                fix = (
-                    &#34;scrapli will try to escalate privilege without entering a password but may &#34;
-                    &#34;fail.\nSet an `auth_secondary` password if your device requires a password to &#34;
-                    &#34;increase privilege, otherwise ignore this message.&#34;
-                )
-                warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
-                warnings.warn(warning)
-            else:
-                escalate_cmd: str = escalate_priv.escalate
-                escalate_prompt: str = escalate_priv.escalate_prompt
-                escalate_auth = self.auth_secondary
-                super().send_interactive(
-                    interact_events=[
-                        (escalate_cmd, escalate_prompt, False),
-                        (escalate_auth, next_prompt_pattern, True),
-                    ],
-                )
-                return
-        self.channel.send_input(channel_input=escalate_priv.escalate)
+            super().send_interactive(
+                interact_events=[
+                    (escalate_priv.escalate, escalate_priv.escalate_prompt, False),
+                    (self.auth_secondary, escalate_priv.pattern, True),
+                ],
+            )
+        else:
+            self.channel.send_input(channel_input=escalate_priv.escalate)
 
     def _deescalate(self, current_priv: PrivilegeLevel) -&gt; None:
         &#34;&#34;&#34;
@@ -1063,29 +3064,6 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         &#34;&#34;&#34;
         self.channel.send_input(channel_input=current_priv.deescalate)
 
-    def _get_privilege_level_name(self, requested_priv: str) -&gt; str:
-        &#34;&#34;&#34;
-        Get privilege level name if provided privilege is valid
-
-        Args:
-            requested_priv: string name of desired privilege level
-
-        Returns:
-            str: name of the privilege level requested
-
-        Raises:
-           UnknownPrivLevel: if attempting to acquire an unknown priv
-
-        &#34;&#34;&#34;
-        desired_privilege_level = self.privilege_levels.get(requested_priv, None)
-        if desired_privilege_level is None:
-            raise UnknownPrivLevel(
-                f&#34;Requested privilege level `{requested_priv}` not a valid privilege level of &#34;
-                f&#34;`{self.__class__.__name__}`&#34;
-            )
-        resolved_privilege_level = desired_privilege_level.name
-        return resolved_privilege_level
-
     def acquire_priv(self, desired_priv: str) -&gt; None:
         &#34;&#34;&#34;
         Acquire desired priv level
@@ -1101,73 +3079,28 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
            CouldNotAcquirePrivLevel: if scrapli cannot get to the requested privilege level
 
         &#34;&#34;&#34;
-        LOG.info(f&#34;Attempting to acquire `{desired_priv}` privilege level&#34;)
-        resolved_priv = self._get_privilege_level_name(requested_priv=desired_priv)
-        map_to_desired_priv = self._priv_map[resolved_priv]
+        resolved_priv, map_to_desired_priv = self._pre_acquire_priv(desired_priv=desired_priv)
 
         privilege_change_count = 0
         while True:
-            # if we are already at the desired priv, we don&#39;t need to do any thing
-            current_priv_patterns = self._determine_current_priv(
-                current_prompt=self.channel.get_prompt()
+            current_prompt = self.channel.get_prompt()
+            privilege_action, target_priv = self._process_acquire_priv(
+                resolved_priv=resolved_priv,
+                map_to_desired_priv=map_to_desired_priv,
+                current_prompt=current_prompt,
             )
 
-            if desired_priv in current_priv_patterns:
-                LOG.info(f&#34;Acquired requested privilege level `{desired_priv}`&#34;)
-                self._current_priv_level = self.privilege_levels[desired_priv]
+            if privilege_action == PrivilegeAction.NO_ACTION:
                 return
+            if privilege_action == PrivilegeAction.DEESCALATE:
+                self._deescalate(current_priv=target_priv)
+            if privilege_action == PrivilegeAction.ESCALATE:
+                self._escalate(escalate_priv=target_priv)
 
-            # if multiple patterns match pick the zeroith... the only time patterns should be
-            # identical is if we have privilege levels like &#34;configuration&#34; or
-            # &#34;configuration_exclusive&#34; that have identical prompts (ex: IOSXRDriver)
-            current_priv = self.privilege_levels[current_priv_patterns[0]]
-
-            map_to_current_priv = self._priv_map[current_priv.name]
-            priv_map = (
-                map_to_current_priv
-                if map_to_current_priv &gt; map_to_desired_priv
-                else map_to_desired_priv
-            )
-
-            desired_priv_index = priv_map.index(resolved_priv)
-            try:
-                current_priv_index = priv_map.index(current_priv.name)
-            except ValueError:
-                # if the current priv is not in the map for the desired priv; set the current index
-                # to the &#34;top&#34; (end) of the priv map and work our way back down
-                current_priv_index = len(priv_map)
-            if current_priv_index &gt; desired_priv_index:
-                deescalate_priv = priv_map[current_priv_index - 1]
-                LOG.info(f&#34;Attempting to deescalate from {current_priv.name} to {deescalate_priv}&#34;)
-                self._deescalate(current_priv=current_priv)
-            else:
-                escalate_priv = self.privilege_levels[priv_map[current_priv_index + 1]]
-                LOG.info(f&#34;Attempting to escalate from {current_priv.name} to {escalate_priv.name}&#34;)
-                self._escalate(escalate_priv=escalate_priv)
             privilege_change_count += 1
             if privilege_change_count &gt; len(self.privilege_levels) * 2:
-                msg = f&#34;Failed to acquire requested privilege level {desired_priv}&#34;
+                msg = f&#34;Failed to acquire requested privilege level {resolved_priv}&#34;
                 raise CouldNotAcquirePrivLevel(msg)
-
-    def _update_response(self, response: Response) -&gt; None:
-        &#34;&#34;&#34;
-        Update response with network driver specific data
-
-        This happens here as the underlying channel provides a response object but is unaware of any
-        of the network/platform specific attributes that may need to get updated
-
-        Args:
-            response: response to update
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        response.textfsm_platform = self.textfsm_platform
-        response.genie_platform = self.genie_platform
 
     def send_command(
         self,
@@ -1226,7 +3159,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
                 as of current execution
 
         Returns:
-            responses: list of Scrapli Response objects
+            ScrapliMultiResponse: Scrapli MultiResponse object
 
         Raises:
             N/A
@@ -1268,20 +3201,13 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
                 as of current execution
 
         Returns:
-            responses: list of Scrapli Response objects
+            ScrapliMultiResponse: Scrapli MultiResponse object
 
         Raises:
-            TypeError: if anything but a string is provided for `file`
+            N/A
 
         &#34;&#34;&#34;
-        if not isinstance(file, str):
-            raise TypeError(
-                f&#34;`send_commands_from_file` expects a string path to file, got {type(file)}&#34;
-            )
-        resolved_file = resolve_file(file)
-
-        with open(resolved_file, &#34;r&#34;) as f:
-            commands = f.read().splitlines()
+        commands = self._pre_send_commands_from_file(file=file)
 
         return self.send_commands(
             commands=commands,
@@ -1374,24 +3300,6 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 
         return response
 
-    def register_configuration_session(self, session_name: str) -&gt; None:
-        &#34;&#34;&#34;
-        If applicable, register a configuration session as a valid privilege level
-
-        Args:
-            session_name: name of config session to register
-
-        Returns:
-            N/A:  # noqa: DAR202
-
-        Raises:
-            NotImplementedError: unless overridden by concrete class
-
-        &#34;&#34;&#34;
-        raise NotImplementedError(
-            f&#34;Configuration sessions not supported for `{self.__class__.__name__}`&#34;
-        )
-
     def _abort_config(self) -&gt; None:
         &#34;&#34;&#34;
         Abort a configuration operation/session if applicable (for config sessions like junos/iosxr)
@@ -1407,55 +3315,92 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 
         &#34;&#34;&#34;
 
-    def send_configs(
+    def send_config(
         self,
-        configs: Union[str, List[str]],
+        config: str,
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         privilege_level: str = &#34;&#34;,
-    ) -&gt; List[Response]:
+    ) -&gt; Response:
         &#34;&#34;&#34;
         Send configuration(s)
 
         Args:
-            configs: string or list of strings to send to device in config mode
+            config: string configuration to send to the device, supports sending multi-line strings
             strip_prompt: True/False strip prompt from returned output
             failed_when_contains: string or list of strings indicating failure if found in response
             stop_on_failed: True/False stop executing commands if a command fails, returns results
                 as of current execution; aborts configuration session if applicable (iosxr/junos or
                 eos/nxos if using a configuration session)
             privilege_level: name of configuration privilege level/type to acquire; this is platform
-                dependant, so check the device driver for specifics. Examples of privilege_name
+                dependent, so check the device driver for specifics. Examples of privilege_name
                 would be &#34;configuration_exclusive&#34; for IOSXRDriver, or &#34;configuration_private&#34; for
                 JunosDriver. You can also pass in a name of a configuration session such as
                 &#34;my-config-session&#34; if you have registered a session using the
                 &#34;register_config_session&#34; method of the EOSDriver or NXOSDriver.
 
         Returns:
-            responses: List of Scrape Response objects
+            Response: Scrapli Response object
 
         Raises:
             N/A
 
         &#34;&#34;&#34;
-        if isinstance(configs, str):
-            configs = [configs]
+        split_config = self._pre_send_config(config=config)
 
-        if privilege_level:
-            resolved_privilege_level = self._get_privilege_level_name(
-                requested_priv=privilege_level
-            )
-        else:
-            resolved_privilege_level = &#34;configuration&#34;
+        # now that we have a list of configs, just use send_configs to actually execute them
+        multi_response = self.send_configs(
+            configs=split_config,
+            strip_prompt=strip_prompt,
+            failed_when_contains=failed_when_contains,
+            stop_on_failed=stop_on_failed,
+            privilege_level=privilege_level,
+        )
+        return self._post_send_config(config=config, multi_response=multi_response)
+
+    def send_configs(
+        self,
+        configs: List[str],
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+        stop_on_failed: bool = False,
+        privilege_level: str = &#34;&#34;,
+    ) -&gt; ScrapliMultiResponse:
+        &#34;&#34;&#34;
+        Send configuration(s)
+
+        Args:
+            configs: list of strings to send to device in config mode
+            strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
+            stop_on_failed: True/False stop executing commands if a command fails, returns results
+                as of current execution; aborts configuration session if applicable (iosxr/junos or
+                eos/nxos if using a configuration session)
+            privilege_level: name of configuration privilege level/type to acquire; this is platform
+                dependent, so check the device driver for specifics. Examples of privilege_name
+                would be &#34;configuration_exclusive&#34; for IOSXRDriver, or &#34;configuration_private&#34; for
+                JunosDriver. You can also pass in a name of a configuration session such as
+                &#34;my-config-session&#34; if you have registered a session using the
+                &#34;register_config_session&#34; method of the EOSDriver or NXOSDriver.
+
+        Returns:
+            ScrapliMultiResponse: Scrapli MultiResponse object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        resolved_privilege_level, failed_when_contains = self._pre_send_configs(
+            configs=configs,
+            failed_when_contains=failed_when_contains,
+            privilege_level=privilege_level,
+        )
 
         if self._current_priv_level.name != resolved_privilege_level:
             self.acquire_priv(desired_priv=resolved_privilege_level)
 
-        if failed_when_contains is None:
-            failed_when_contains = self.failed_when_contains
-
-        responses = []
+        responses = MultiResponse()
         _failed_during_execution = False
         for config in configs:
             response = super().send_command(
@@ -1464,17 +3409,15 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
                 failed_when_contains=failed_when_contains,
             )
             responses.append(response)
-            if stop_on_failed is True and response.failed is True:
+            if response.failed is True:
                 _failed_during_execution = True
-                break
-
-        for response in responses:
-            self._update_response(response=response)
+                if stop_on_failed is True:
+                    break
 
         if _failed_during_execution is True:
             self._abort_config()
 
-        return responses
+        return self._post_send_configs(responses=responses)
 
     def send_configs_from_file(
         self,
@@ -1483,7 +3426,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         privilege_level: str = &#34;&#34;,
-    ) -&gt; List[Response]:
+    ) -&gt; ScrapliMultiResponse:
         &#34;&#34;&#34;
         Send configuration(s) from a file
 
@@ -1495,27 +3438,20 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
                 as of current execution; aborts configuration session if applicable (iosxr/junos or
                 eos/nxos if using a configuration session)
             privilege_level: name of configuration privilege level/type to acquire; this is platform
-                dependant, so check the device driver for specifics. Examples of privilege_name
+                dependent, so check the device driver for specifics. Examples of privilege_name
                 would be &#34;exclusive&#34; for IOSXRDriver, &#34;private&#34; for JunosDriver. You can also pass
                 in a name of a configuration session such as &#34;session_mysession&#34; if you have
                 registered a session using the &#34;register_config_session&#34; method of the EOSDriver or
                 NXOSDriver.
 
         Returns:
-            responses: List of Scrape Response objects
+            ScrapliMultiResponse: Scrapli MultiResponse object
 
         Raises:
-            TypeError: if anything but a string is provided for `file`
+            N/A
 
         &#34;&#34;&#34;
-        if not isinstance(file, str):
-            raise TypeError(
-                f&#34;`send_configs_from_file` expects a string path to file, got {type(file)}&#34;
-            )
-        resolved_file = resolve_file(file)
-
-        with open(resolved_file, &#34;r&#34;) as f:
-            configs = f.read().splitlines()
+        configs = self._pre_send_configs_from_file(file=file)
 
         return self.send_configs(
             configs=configs,
@@ -1529,7 +3465,9 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 <ul class="hlist">
 <li><a title="scrapli.driver.generic_driver.GenericDriver" href="generic_driver.html#scrapli.driver.generic_driver.GenericDriver">GenericDriver</a></li>
 <li><a title="scrapli.driver.driver.Scrape" href="driver.html#scrapli.driver.driver.Scrape">Scrape</a></li>
-<li>abc.ABC</li>
+<li><a title="scrapli.driver.base_driver.ScrapeBase" href="base_driver.html#scrapli.driver.base_driver.ScrapeBase">ScrapeBase</a></li>
+<li><a title="scrapli.driver.base_generic_driver.GenericDriverBase" href="base_generic_driver.html#scrapli.driver.base_generic_driver.GenericDriverBase">GenericDriverBase</a></li>
+<li><a title="scrapli.driver.base_network_driver.NetworkDriverBase" href="base_network_driver.html#scrapli.driver.base_network_driver.NetworkDriverBase">NetworkDriverBase</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -1582,97 +3520,28 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
        CouldNotAcquirePrivLevel: if scrapli cannot get to the requested privilege level
 
     &#34;&#34;&#34;
-    LOG.info(f&#34;Attempting to acquire `{desired_priv}` privilege level&#34;)
-    resolved_priv = self._get_privilege_level_name(requested_priv=desired_priv)
-    map_to_desired_priv = self._priv_map[resolved_priv]
+    resolved_priv, map_to_desired_priv = self._pre_acquire_priv(desired_priv=desired_priv)
 
     privilege_change_count = 0
     while True:
-        # if we are already at the desired priv, we don&#39;t need to do any thing
-        current_priv_patterns = self._determine_current_priv(
-            current_prompt=self.channel.get_prompt()
+        current_prompt = self.channel.get_prompt()
+        privilege_action, target_priv = self._process_acquire_priv(
+            resolved_priv=resolved_priv,
+            map_to_desired_priv=map_to_desired_priv,
+            current_prompt=current_prompt,
         )
 
-        if desired_priv in current_priv_patterns:
-            LOG.info(f&#34;Acquired requested privilege level `{desired_priv}`&#34;)
-            self._current_priv_level = self.privilege_levels[desired_priv]
+        if privilege_action == PrivilegeAction.NO_ACTION:
             return
+        if privilege_action == PrivilegeAction.DEESCALATE:
+            self._deescalate(current_priv=target_priv)
+        if privilege_action == PrivilegeAction.ESCALATE:
+            self._escalate(escalate_priv=target_priv)
 
-        # if multiple patterns match pick the zeroith... the only time patterns should be
-        # identical is if we have privilege levels like &#34;configuration&#34; or
-        # &#34;configuration_exclusive&#34; that have identical prompts (ex: IOSXRDriver)
-        current_priv = self.privilege_levels[current_priv_patterns[0]]
-
-        map_to_current_priv = self._priv_map[current_priv.name]
-        priv_map = (
-            map_to_current_priv
-            if map_to_current_priv &gt; map_to_desired_priv
-            else map_to_desired_priv
-        )
-
-        desired_priv_index = priv_map.index(resolved_priv)
-        try:
-            current_priv_index = priv_map.index(current_priv.name)
-        except ValueError:
-            # if the current priv is not in the map for the desired priv; set the current index
-            # to the &#34;top&#34; (end) of the priv map and work our way back down
-            current_priv_index = len(priv_map)
-        if current_priv_index &gt; desired_priv_index:
-            deescalate_priv = priv_map[current_priv_index - 1]
-            LOG.info(f&#34;Attempting to deescalate from {current_priv.name} to {deescalate_priv}&#34;)
-            self._deescalate(current_priv=current_priv)
-        else:
-            escalate_priv = self.privilege_levels[priv_map[current_priv_index + 1]]
-            LOG.info(f&#34;Attempting to escalate from {current_priv.name} to {escalate_priv.name}&#34;)
-            self._escalate(escalate_priv=escalate_priv)
         privilege_change_count += 1
         if privilege_change_count &gt; len(self.privilege_levels) * 2:
-            msg = f&#34;Failed to acquire requested privilege level {desired_priv}&#34;
+            msg = f&#34;Failed to acquire requested privilege level {resolved_priv}&#34;
             raise CouldNotAcquirePrivLevel(msg)</code></pre>
-</details>
-</dd>
-<dt id="scrapli.driver.NetworkDriver.register_configuration_session"><code class="name flex">
-<span>def <span class="ident">register_configuration_session</span></span>(<span>self, session_name: str) -> NoneType</span>
-</code></dt>
-<dd>
-<div class="desc"><p>If applicable, register a configuration session as a valid privilege level</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>session_name</code></strong></dt>
-<dd>name of config session to register</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N/A:
-# noqa: DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>NotImplementedError</code></dt>
-<dd>unless overridden by concrete class</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def register_configuration_session(self, session_name: str) -&gt; None:
-    &#34;&#34;&#34;
-    If applicable, register a configuration session as a valid privilege level
-
-    Args:
-        session_name: name of config session to register
-
-    Returns:
-        N/A:  # noqa: DAR202
-
-    Raises:
-        NotImplementedError: unless overridden by concrete class
-
-    &#34;&#34;&#34;
-    raise NotImplementedError(
-        f&#34;Configuration sessions not supported for `{self.__class__.__name__}`&#34;
-    )</code></pre>
 </details>
 </dd>
 <dt id="scrapli.driver.NetworkDriver.send_command"><code class="name flex">
@@ -1762,8 +3631,8 @@ as of current execution</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>responses</code></dt>
-<dd>list of Scrapli Response objects</dd>
+<dt><code>ScrapliMultiResponse</code></dt>
+<dd>Scrapli MultiResponse object</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
@@ -1794,7 +3663,7 @@ as of current execution</dd>
             as of current execution
 
     Returns:
-        responses: list of Scrapli Response objects
+        ScrapliMultiResponse: Scrapli MultiResponse object
 
     Raises:
         N/A
@@ -1819,15 +3688,15 @@ as of current execution</dd>
     return responses</code></pre>
 </details>
 </dd>
-<dt id="scrapli.driver.NetworkDriver.send_configs"><code class="name flex">
-<span>def <span class="ident">send_configs</span></span>(<span>self, configs: Union[str, List[str]], strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '') -> List[<a title="scrapli.response.Response" href="../response.html#scrapli.response.Response">Response</a>]</span>
+<dt id="scrapli.driver.NetworkDriver.send_config"><code class="name flex">
+<span>def <span class="ident">send_config</span></span>(<span>self, config: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '') -> <a title="scrapli.response.Response" href="../response.html#scrapli.response.Response">Response</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send configuration(s)</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>configs</code></strong></dt>
-<dd>string or list of strings to send to device in config mode</dd>
+<dt><strong><code>config</code></strong></dt>
+<dd>string configuration to send to the device, supports sending multi-line strings</dd>
 <dt><strong><code>strip_prompt</code></strong></dt>
 <dd>True/False strip prompt from returned output</dd>
 <dt><strong><code>failed_when_contains</code></strong></dt>
@@ -1838,7 +3707,7 @@ as of current execution; aborts configuration session if applicable (iosxr/junos
 eos/nxos if using a configuration session)</dd>
 <dt><strong><code>privilege_level</code></strong></dt>
 <dd>name of configuration privilege level/type to acquire; this is platform
-dependant, so check the device driver for specifics. Examples of privilege_name
+dependent, so check the device driver for specifics. Examples of privilege_name
 would be "configuration_exclusive" for IOSXRDriver, or "configuration_private" for
 JunosDriver. You can also pass in a name of a configuration session such as
 "my-config-session" if you have registered a session using the
@@ -1846,8 +3715,92 @@ JunosDriver. You can also pass in a name of a configuration session such as
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>responses</code></dt>
-<dd>List of Scrape Response objects</dd>
+<dt><code>Response</code></dt>
+<dd>Scrapli Response object</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def send_config(
+    self,
+    config: str,
+    strip_prompt: bool = True,
+    failed_when_contains: Optional[Union[str, List[str]]] = None,
+    stop_on_failed: bool = False,
+    privilege_level: str = &#34;&#34;,
+) -&gt; Response:
+    &#34;&#34;&#34;
+    Send configuration(s)
+
+    Args:
+        config: string configuration to send to the device, supports sending multi-line strings
+        strip_prompt: True/False strip prompt from returned output
+        failed_when_contains: string or list of strings indicating failure if found in response
+        stop_on_failed: True/False stop executing commands if a command fails, returns results
+            as of current execution; aborts configuration session if applicable (iosxr/junos or
+            eos/nxos if using a configuration session)
+        privilege_level: name of configuration privilege level/type to acquire; this is platform
+            dependent, so check the device driver for specifics. Examples of privilege_name
+            would be &#34;configuration_exclusive&#34; for IOSXRDriver, or &#34;configuration_private&#34; for
+            JunosDriver. You can also pass in a name of a configuration session such as
+            &#34;my-config-session&#34; if you have registered a session using the
+            &#34;register_config_session&#34; method of the EOSDriver or NXOSDriver.
+
+    Returns:
+        Response: Scrapli Response object
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    split_config = self._pre_send_config(config=config)
+
+    # now that we have a list of configs, just use send_configs to actually execute them
+    multi_response = self.send_configs(
+        configs=split_config,
+        strip_prompt=strip_prompt,
+        failed_when_contains=failed_when_contains,
+        stop_on_failed=stop_on_failed,
+        privilege_level=privilege_level,
+    )
+    return self._post_send_config(config=config, multi_response=multi_response)</code></pre>
+</details>
+</dd>
+<dt id="scrapli.driver.NetworkDriver.send_configs"><code class="name flex">
+<span>def <span class="ident">send_configs</span></span>(<span>self, configs: List[str], strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '') -> collections.UserList</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send configuration(s)</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>configs</code></strong></dt>
+<dd>list of strings to send to device in config mode</dd>
+<dt><strong><code>strip_prompt</code></strong></dt>
+<dd>True/False strip prompt from returned output</dd>
+<dt><strong><code>failed_when_contains</code></strong></dt>
+<dd>string or list of strings indicating failure if found in response</dd>
+<dt><strong><code>stop_on_failed</code></strong></dt>
+<dd>True/False stop executing commands if a command fails, returns results
+as of current execution; aborts configuration session if applicable (iosxr/junos or
+eos/nxos if using a configuration session)</dd>
+<dt><strong><code>privilege_level</code></strong></dt>
+<dd>name of configuration privilege level/type to acquire; this is platform
+dependent, so check the device driver for specifics. Examples of privilege_name
+would be "configuration_exclusive" for IOSXRDriver, or "configuration_private" for
+JunosDriver. You can also pass in a name of a configuration session such as
+"my-config-session" if you have registered a session using the
+"register_config_session" method of the EOSDriver or NXOSDriver.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>ScrapliMultiResponse</code></dt>
+<dd>Scrapli MultiResponse object</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
@@ -1860,53 +3813,46 @@ JunosDriver. You can also pass in a name of a configuration session such as
 </summary>
 <pre><code class="python">def send_configs(
     self,
-    configs: Union[str, List[str]],
+    configs: List[str],
     strip_prompt: bool = True,
     failed_when_contains: Optional[Union[str, List[str]]] = None,
     stop_on_failed: bool = False,
     privilege_level: str = &#34;&#34;,
-) -&gt; List[Response]:
+) -&gt; ScrapliMultiResponse:
     &#34;&#34;&#34;
     Send configuration(s)
 
     Args:
-        configs: string or list of strings to send to device in config mode
+        configs: list of strings to send to device in config mode
         strip_prompt: True/False strip prompt from returned output
         failed_when_contains: string or list of strings indicating failure if found in response
         stop_on_failed: True/False stop executing commands if a command fails, returns results
             as of current execution; aborts configuration session if applicable (iosxr/junos or
             eos/nxos if using a configuration session)
         privilege_level: name of configuration privilege level/type to acquire; this is platform
-            dependant, so check the device driver for specifics. Examples of privilege_name
+            dependent, so check the device driver for specifics. Examples of privilege_name
             would be &#34;configuration_exclusive&#34; for IOSXRDriver, or &#34;configuration_private&#34; for
             JunosDriver. You can also pass in a name of a configuration session such as
             &#34;my-config-session&#34; if you have registered a session using the
             &#34;register_config_session&#34; method of the EOSDriver or NXOSDriver.
 
     Returns:
-        responses: List of Scrape Response objects
+        ScrapliMultiResponse: Scrapli MultiResponse object
 
     Raises:
         N/A
 
     &#34;&#34;&#34;
-    if isinstance(configs, str):
-        configs = [configs]
-
-    if privilege_level:
-        resolved_privilege_level = self._get_privilege_level_name(
-            requested_priv=privilege_level
-        )
-    else:
-        resolved_privilege_level = &#34;configuration&#34;
+    resolved_privilege_level, failed_when_contains = self._pre_send_configs(
+        configs=configs,
+        failed_when_contains=failed_when_contains,
+        privilege_level=privilege_level,
+    )
 
     if self._current_priv_level.name != resolved_privilege_level:
         self.acquire_priv(desired_priv=resolved_privilege_level)
 
-    if failed_when_contains is None:
-        failed_when_contains = self.failed_when_contains
-
-    responses = []
+    responses = MultiResponse()
     _failed_during_execution = False
     for config in configs:
         response = super().send_command(
@@ -1915,21 +3861,19 @@ JunosDriver. You can also pass in a name of a configuration session such as
             failed_when_contains=failed_when_contains,
         )
         responses.append(response)
-        if stop_on_failed is True and response.failed is True:
+        if response.failed is True:
             _failed_during_execution = True
-            break
-
-    for response in responses:
-        self._update_response(response=response)
+            if stop_on_failed is True:
+                break
 
     if _failed_during_execution is True:
         self._abort_config()
 
-    return responses</code></pre>
+    return self._post_send_configs(responses=responses)</code></pre>
 </details>
 </dd>
 <dt id="scrapli.driver.NetworkDriver.send_configs_from_file"><code class="name flex">
-<span>def <span class="ident">send_configs_from_file</span></span>(<span>self, file: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '') -> List[<a title="scrapli.response.Response" href="../response.html#scrapli.response.Response">Response</a>]</span>
+<span>def <span class="ident">send_configs_from_file</span></span>(<span>self, file: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '') -> collections.UserList</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send configuration(s) from a file</p>
@@ -1947,7 +3891,7 @@ as of current execution; aborts configuration session if applicable (iosxr/junos
 eos/nxos if using a configuration session)</dd>
 <dt><strong><code>privilege_level</code></strong></dt>
 <dd>name of configuration privilege level/type to acquire; this is platform
-dependant, so check the device driver for specifics. Examples of privilege_name
+dependent, so check the device driver for specifics. Examples of privilege_name
 would be "exclusive" for IOSXRDriver, "private" for JunosDriver. You can also pass
 in a name of a configuration session such as "session_mysession" if you have
 registered a session using the "register_config_session" method of the EOSDriver or
@@ -1955,13 +3899,13 @@ NXOSDriver.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>responses</code></dt>
-<dd>List of Scrape Response objects</dd>
+<dt><code>ScrapliMultiResponse</code></dt>
+<dd>Scrapli MultiResponse object</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><code>TypeError</code></dt>
-<dd>if anything but a string is provided for <code>file</code></dd>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -1974,7 +3918,7 @@ NXOSDriver.</dd>
     failed_when_contains: Optional[Union[str, List[str]]] = None,
     stop_on_failed: bool = False,
     privilege_level: str = &#34;&#34;,
-) -&gt; List[Response]:
+) -&gt; ScrapliMultiResponse:
     &#34;&#34;&#34;
     Send configuration(s) from a file
 
@@ -1986,27 +3930,20 @@ NXOSDriver.</dd>
             as of current execution; aborts configuration session if applicable (iosxr/junos or
             eos/nxos if using a configuration session)
         privilege_level: name of configuration privilege level/type to acquire; this is platform
-            dependant, so check the device driver for specifics. Examples of privilege_name
+            dependent, so check the device driver for specifics. Examples of privilege_name
             would be &#34;exclusive&#34; for IOSXRDriver, &#34;private&#34; for JunosDriver. You can also pass
             in a name of a configuration session such as &#34;session_mysession&#34; if you have
             registered a session using the &#34;register_config_session&#34; method of the EOSDriver or
             NXOSDriver.
 
     Returns:
-        responses: List of Scrape Response objects
+        ScrapliMultiResponse: Scrapli MultiResponse object
 
     Raises:
-        TypeError: if anything but a string is provided for `file`
+        N/A
 
     &#34;&#34;&#34;
-    if not isinstance(file, str):
-        raise TypeError(
-            f&#34;`send_configs_from_file` expects a string path to file, got {type(file)}&#34;
-        )
-    resolved_file = resolve_file(file)
-
-    with open(resolved_file, &#34;r&#34;) as f:
-        configs = f.read().splitlines()
+    configs = self._pre_send_configs_from_file(file=file)
 
     return self.send_configs(
         configs=configs,
@@ -2169,55 +4106,6 @@ failed command/interaction</dd>
     return response</code></pre>
 </details>
 </dd>
-<dt id="scrapli.driver.NetworkDriver.update_privilege_levels"><code class="name flex">
-<span>def <span class="ident">update_privilege_levels</span></span>(<span>self, update_channel: bool = True) -> NoneType</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Re-generate the privilege map, and update the comms prompt pattern</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>update_channel</code></strong></dt>
-<dd>True/False update the channel pattern too &ndash; likely only ever set to
-False for class initialization before channel is opened</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N/A
-# noqa: DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N/A</code></dt>
-<dd>&nbsp;</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def update_privilege_levels(self, update_channel: bool = True) -&gt; None:
-    &#34;&#34;&#34;
-    Re-generate the privilege map, and update the comms prompt pattern
-
-    Args:
-        update_channel: True/False update the channel pattern too -- likely only ever set to
-            False for class initialization before channel is opened
-
-    Returns:
-        N/A  # noqa: DAR202
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    self._build_priv_map()
-    self._generate_comms_prompt_pattern()
-    # clear the lru cache as patterns may have been updated
-    self._determine_current_priv.cache_clear()
-    if update_channel is True:
-        self.channel.comms_prompt_pattern = self.comms_prompt_pattern</code></pre>
-</details>
-</dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -2225,16 +4113,22 @@ False for class initialization before channel is opened</dd>
 <ul class="hlist">
 <li><code><a title="scrapli.driver.generic_driver.GenericDriver.close" href="driver.html#scrapli.driver.driver.Scrape.close">close</a></code></li>
 <li><code><a title="scrapli.driver.generic_driver.GenericDriver.get_prompt" href="generic_driver.html#scrapli.driver.generic_driver.GenericDriver.get_prompt">get_prompt</a></code></li>
-<li><code><a title="scrapli.driver.generic_driver.GenericDriver.isalive" href="driver.html#scrapli.driver.driver.Scrape.isalive">isalive</a></code></li>
+<li><code><a title="scrapli.driver.generic_driver.GenericDriver.isalive" href="base_driver.html#scrapli.driver.base_driver.ScrapeBase.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.driver.generic_driver.GenericDriver.open" href="driver.html#scrapli.driver.driver.Scrape.open">open</a></code></li>
 <li><code><a title="scrapli.driver.generic_driver.GenericDriver.send_commands_from_file" href="generic_driver.html#scrapli.driver.generic_driver.GenericDriver.send_commands_from_file">send_commands_from_file</a></code></li>
+</ul>
+</li>
+<li><code><b><a title="scrapli.driver.base_network_driver.NetworkDriverBase" href="base_network_driver.html#scrapli.driver.base_network_driver.NetworkDriverBase">NetworkDriverBase</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scrapli.driver.base_network_driver.NetworkDriverBase.register_configuration_session" href="base_network_driver.html#scrapli.driver.base_network_driver.NetworkDriverBase.register_configuration_session">register_configuration_session</a></code></li>
+<li><code><a title="scrapli.driver.base_network_driver.NetworkDriverBase.update_privilege_levels" href="base_network_driver.html#scrapli.driver.base_network_driver.NetworkDriverBase.update_privilege_levels">update_privilege_levels</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
 <dt id="scrapli.driver.Scrape"><code class="flex name class">
 <span>class <span class="ident">Scrape</span></span>
-<span>(</span><span>host: str = '', port: int = 22, auth_username: str = '', auth_password: str = '', auth_private_key: str = '', auth_strict_key: bool = True, auth_bypass: bool = False, timeout_socket: int = 5, timeout_transport: int = 10, timeout_ops: int = 30, timeout_exit: bool = True, keepalive: bool = False, keepalive_interval: int = 30, keepalive_type: str = 'network', keepalive_pattern: str = '\x05', comms_prompt_pattern: str = &#x27;^[a-z0-9.\\-@()/:]{1,48}[#&gt;$]\\s*$&#x27;, comms_return_char: str = '\n', comms_ansi: bool = False, ssh_config_file: Union[str, bool] = False, ssh_known_hosts_file: Union[str, bool] = False, on_open: Union[Callable[..., Any], NoneType] = None, on_close: Union[Callable[..., Any], NoneType] = None, transport: str = 'system', transport_options: Union[Dict[str, Any], NoneType] = None)</span>
+<span>(</span><span>**kwargs: Any)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Scrape Object</p>
@@ -2246,92 +4140,8 @@ itself, but instead are used to construct the Transport and Channel classes that
 relies on, see Transport and Channel docs for details.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>host</code></strong></dt>
-<dd>host ip/name to connect to</dd>
-<dt><strong><code>port</code></strong></dt>
-<dd>port to connect to</dd>
-<dt><strong><code>auth_username</code></strong></dt>
-<dd>username for authentication</dd>
-<dt><strong><code>auth_private_key</code></strong></dt>
-<dd>path to private key for authentication</dd>
-<dt><strong><code>auth_password</code></strong></dt>
-<dd>password for authentication</dd>
-<dt><strong><code>auth_strict_key</code></strong></dt>
-<dd>strict host checking or not &ndash; applicable for system ssh driver only</dd>
-<dt><strong><code>auth_bypass</code></strong></dt>
-<dd>bypass ssh key or password auth for devices without authentication, or that
-have auth prompts after ssh session establishment. Currently only supported on
-system transport; ignored on other transports</dd>
-<dt><strong><code>timeout_socket</code></strong></dt>
-<dd>timeout for establishing socket in seconds</dd>
-<dt><strong><code>timeout_transport</code></strong></dt>
-<dd>timeout for ssh|telnet transport in seconds</dd>
-<dt><strong><code>timeout_ops</code></strong></dt>
-<dd>timeout for ssh channel operations</dd>
-<dt><strong><code>timeout_exit</code></strong></dt>
-<dd>True/False close transport if timeout encountered. If False and keepalives
-are in use, keepalives will prevent program from exiting so you should be sure to
-catch Timeout exceptions and handle them appropriately</dd>
-<dt><strong><code>keepalive</code></strong></dt>
-<dd>whether or not to try to keep session alive</dd>
-<dt><strong><code>keepalive_interval</code></strong></dt>
-<dd>interval to use for session keepalives</dd>
-<dt><strong><code>keepalive_type</code></strong></dt>
-<dd>network|standard &ndash; 'network' sends actual characters over the
-transport channel. This is useful for network-y type devices that may not support
-'standard' keepalive mechanisms. 'standard' attempts to use whatever 'standard'
-keepalive mechanisms are available in the selected transport mechanism. Check the
-transport documentation for details on what is supported and/or how it is
-implemented for any given transport driver</dd>
-<dt><strong><code>keepalive_pattern</code></strong></dt>
-<dd>pattern to send to keep network channel alive. Default is
-u'' which is equivalent to 'ctrl+e'. This pattern moves cursor to end of the
-line which should be an innocuous pattern. This will only be entered <em>if</em> a lock
-can be acquired. This is only applicable if using keepalives and if the keepalive
-type is 'network'</dd>
-<dt><strong><code>comms_prompt_pattern</code></strong></dt>
-<dd>raw string regex pattern &ndash; preferably use <code>^</code> and <code>$</code> anchors!
-this is the single most important attribute here! if this does not match a prompt,
-scrapli will not work!
-IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
-for highly reliably matching for prompts however we do NOT strip trailing whitespace
-for each line, so be sure to add '\s?' or similar if your device needs that. This
-should be mostly sorted for you if using network drivers (i.e. <code>IOSXEDriver</code>).
-Lastly, the case insensitive is just a convenience factor so i can be lazy.</dd>
-<dt><strong><code>comms_return_char</code></strong></dt>
-<dd>character to use to send returns to host</dd>
-<dt><strong><code>comms_ansi</code></strong></dt>
-<dd>True/False strip comms_ansi characters from output</dd>
-<dt><strong><code>ssh_config_file</code></strong></dt>
-<dd>string to path for ssh config file, True to use default ssh config file
-or False to ignore default ssh config file</dd>
-<dt><strong><code>ssh_known_hosts_file</code></strong></dt>
-<dd>string to path for ssh known hosts file, True to use default known
-file locations. Only applicable/needed if <code>auth_strict_key</code> is set to True</dd>
-<dt><strong><code>on_open</code></strong></dt>
-<dd>callable that accepts the class instance as its only argument. this callable,
-if provided, is executed immediately after authentication is completed. Common use
-cases for this callable would be to disable paging or accept any kind of banner
-message that prompts a user upon connection</dd>
-<dt><strong><code>on_close</code></strong></dt>
-<dd>callable that accepts the class instance as its only argument. this callable,
-if provided, is executed immediately prior to closing the underlying transport.
-Common use cases for this callable would be to save configurations prior to exiting,
-or to logout properly to free up vtys or similar.</dd>
-<dt><strong><code>transport</code></strong></dt>
-<dd>system|telnet or a plugin &ndash; type of transport to use for connection
-system uses system available ssh (/usr/bin/ssh)
-ssh2 uses ssh2-python <em>has been migrated to a plugin
-paramiko uses&hellip; paramiko </em>has been migrated to a plugin
-telnet uses telnetlib
-choice of driver depends on the features you need. in general system is easiest as
-it will just 'auto-magically' use your ssh config file ('~/.ssh/config' or
-'/etc/ssh/config_file'). ssh2 is very very fast as it is a thin wrapper around
-libssh2 however it is slightly feature limited. paramiko is slower than ssh2, but
-has more features built in (though scrapli does not expose/support them all).</dd>
-<dt><strong><code>transport_options</code></strong></dt>
-<dd>dictionary of options to pass to selected transport class; see
-docs for given transport class for details of what to pass here</dd>
+<dt><strong><code>kwargs</code></strong></dt>
+<dd>Keyword arguments to pass to <code>ScrapeBase</code> &ndash; see <code>ScrapeBase</code> for available args</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -2348,34 +4158,8 @@ docs for given transport class for details of what to pass here</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Scrape:
-    def __init__(
-        self,
-        host: str = &#34;&#34;,
-        port: int = 22,
-        auth_username: str = &#34;&#34;,
-        auth_password: str = &#34;&#34;,
-        auth_private_key: str = &#34;&#34;,
-        auth_strict_key: bool = True,
-        auth_bypass: bool = False,
-        timeout_socket: int = 5,
-        timeout_transport: int = 10,
-        timeout_ops: int = 30,
-        timeout_exit: bool = True,
-        keepalive: bool = False,
-        keepalive_interval: int = 30,
-        keepalive_type: str = &#34;network&#34;,
-        keepalive_pattern: str = &#34;\005&#34;,
-        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,48}[#&gt;$]\s*$&#34;,
-        comms_return_char: str = &#34;\n&#34;,
-        comms_ansi: bool = False,
-        ssh_config_file: Union[str, bool] = False,
-        ssh_known_hosts_file: Union[str, bool] = False,
-        on_open: Optional[Callable[..., Any]] = None,
-        on_close: Optional[Callable[..., Any]] = None,
-        transport: str = &#34;system&#34;,
-        transport_options: Optional[Dict[str, Any]] = None,
-    ):
+<pre><code class="python">class Scrape(ScrapeBase):
+    def __init__(self, **kwargs: Any) -&gt; None:
         &#34;&#34;&#34;
         Scrape Object
 
@@ -2388,68 +4172,7 @@ docs for given transport class for details of what to pass here</dd>
         relies on, see Transport and Channel docs for details.
 
         Args:
-            host: host ip/name to connect to
-            port: port to connect to
-            auth_username: username for authentication
-            auth_private_key: path to private key for authentication
-            auth_password: password for authentication
-            auth_strict_key: strict host checking or not -- applicable for system ssh driver only
-            auth_bypass: bypass ssh key or password auth for devices without authentication, or that
-                have auth prompts after ssh session establishment. Currently only supported on
-                system transport; ignored on other transports
-            timeout_socket: timeout for establishing socket in seconds
-            timeout_transport: timeout for ssh|telnet transport in seconds
-            timeout_ops: timeout for ssh channel operations
-            timeout_exit: True/False close transport if timeout encountered. If False and keepalives
-                are in use, keepalives will prevent program from exiting so you should be sure to
-                catch Timeout exceptions and handle them appropriately
-            keepalive: whether or not to try to keep session alive
-            keepalive_interval: interval to use for session keepalives
-            keepalive_type: network|standard -- &#39;network&#39; sends actual characters over the
-                transport channel. This is useful for network-y type devices that may not support
-                &#39;standard&#39; keepalive mechanisms. &#39;standard&#39; attempts to use whatever &#39;standard&#39;
-                keepalive mechanisms are available in the selected transport mechanism. Check the
-                transport documentation for details on what is supported and/or how it is
-                implemented for any given transport driver
-            keepalive_pattern: pattern to send to keep network channel alive. Default is
-                u&#39;\005&#39; which is equivalent to &#39;ctrl+e&#39;. This pattern moves cursor to end of the
-                line which should be an innocuous pattern. This will only be entered *if* a lock
-                can be acquired. This is only applicable if using keepalives and if the keepalive
-                type is &#39;network&#39;
-            comms_prompt_pattern: raw string regex pattern -- preferably use `^` and `$` anchors!
-                this is the single most important attribute here! if this does not match a prompt,
-                scrapli will not work!
-                IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
-                for highly reliably matching for prompts however we do NOT strip trailing whitespace
-                for each line, so be sure to add &#39;\\s?&#39; or similar if your device needs that. This
-                should be mostly sorted for you if using network drivers (i.e. `IOSXEDriver`).
-                Lastly, the case insensitive is just a convenience factor so i can be lazy.
-            comms_return_char: character to use to send returns to host
-            comms_ansi: True/False strip comms_ansi characters from output
-            ssh_config_file: string to path for ssh config file, True to use default ssh config file
-                or False to ignore default ssh config file
-            ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
-                file locations. Only applicable/needed if `auth_strict_key` is set to True
-            on_open: callable that accepts the class instance as its only argument. this callable,
-                if provided, is executed immediately after authentication is completed. Common use
-                cases for this callable would be to disable paging or accept any kind of banner
-                message that prompts a user upon connection
-            on_close: callable that accepts the class instance as its only argument. this callable,
-                if provided, is executed immediately prior to closing the underlying transport.
-                Common use cases for this callable would be to save configurations prior to exiting,
-                or to logout properly to free up vtys or similar.
-            transport: system|telnet or a plugin -- type of transport to use for connection
-                system uses system available ssh (/usr/bin/ssh)
-                ssh2 uses ssh2-python *has been migrated to a plugin
-                paramiko uses... paramiko *has been migrated to a plugin
-                telnet uses telnetlib
-                choice of driver depends on the features you need. in general system is easiest as
-                it will just &#39;auto-magically&#39; use your ssh config file (&#39;~/.ssh/config&#39; or
-                &#39;/etc/ssh/config_file&#39;). ssh2 is very very fast as it is a thin wrapper around
-                libssh2 however it is slightly feature limited. paramiko is slower than ssh2, but
-                has more features built in (though scrapli does not expose/support them all).
-            transport_options: dictionary of options to pass to selected transport class; see
-                docs for given transport class for details of what to pass here
+            kwargs: Keyword arguments to pass to `ScrapeBase` -- see `ScrapeBase` for available args
 
         Returns:
             N/A  # noqa: DAR202
@@ -2458,60 +4181,7 @@ docs for given transport class for details of what to pass here</dd>
             N/A
 
         &#34;&#34;&#34;
-        # create a dict of all &#34;initialization&#34; args for posterity and for passing to Transport
-        # and Channel objects
-        self._initialization_args: Dict[str, Any] = {}
-
-        self._setup_host(host=host, port=port)
-        self._setup_auth(
-            auth_username=auth_username,
-            auth_password=auth_password,
-            auth_private_key=auth_private_key,
-            auth_strict_key=auth_strict_key,
-            auth_bypass=auth_bypass,
-        )
-        self._setup_timeouts(
-            timeout_socket=timeout_socket,
-            timeout_transport=timeout_transport,
-            timeout_ops=timeout_ops,
-            timeout_exit=timeout_exit,
-        )
-        self._setup_keepalive(
-            keepalive=keepalive,
-            keepalive_type=keepalive_type,
-            keepalive_interval=keepalive_interval,
-            keepalive_pattern=keepalive_pattern,
-        )
-        self._setup_comms(
-            comms_prompt_pattern=comms_prompt_pattern,
-            comms_return_char=comms_return_char,
-            comms_ansi=comms_ansi,
-        )
-        self._setup_callables(on_open=on_open, on_close=on_close)
-
-        if transport not in (&#34;system&#34;, &#34;telnet&#34;):
-            LOG.info(f&#34;Non-core transport `{transport}` selected&#34;)
-        self._transport = transport
-
-        if transport != &#34;telnet&#34;:
-            self._setup_ssh_args(
-                ssh_config_file=ssh_config_file, ssh_known_hosts_file=ssh_known_hosts_file
-            )
-
-        self._initialization_args[&#34;transport_options&#34;] = transport_options
-        self.transport_class, self.transport_args = self._transport_factory(transport=transport)
-        # so transport drivers don&#39;t need to support `transport_options` as an argument, if no
-        # transport options provided, do nothing, otherwise add this to the args we ship to the
-        # transport class
-        if transport_options is not None:
-            self.transport_args[&#34;transport_options&#34;] = transport_options
-        self.transport = self.transport_class(**self.transport_args)
-
-        self.channel_args: Dict[str, Any] = {}
-        for arg in CHANNEL_ARGS:
-            if arg == &#34;transport&#34;:
-                continue
-            self.channel_args[arg] = self._initialization_args.get(arg)
+        super().__init__(**kwargs)
         self.channel = Channel(transport=self.transport, **self.channel_args)
 
     def __enter__(self) -&gt; &#34;Scrape&#34;:
@@ -2554,319 +4224,6 @@ docs for given transport class for details of what to pass here</dd>
         &#34;&#34;&#34;
         self.close()
 
-    def __str__(self) -&gt; str:
-        &#34;&#34;&#34;
-        Magic str method for Scrape
-
-        Args:
-            N/A
-
-        Returns:
-            str: str representation of object
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        return f&#34;Scrape Object for host {self._host}&#34;
-
-    def __repr__(self) -&gt; str:
-        &#34;&#34;&#34;
-        Magic repr method for Scrape
-
-        Args:
-            N/A
-
-        Returns:
-            str: repr for class object
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        return (
-            f&#34;{self.__class__.__name__}(&#34;
-            f&#34;host={self._initialization_args[&#39;host&#39;]!r}, &#34;
-            f&#34;port={self._initialization_args[&#39;port&#39;]!r}, &#34;
-            f&#34;auth_username={self._initialization_args[&#39;auth_username&#39;]!r}, &#34;
-            f&#34;auth_password={self._initialization_args[&#39;auth_password&#39;]!r}, &#34;
-            f&#34;auth_private_key={self._initialization_args[&#39;auth_private_key&#39;]!r}, &#34;
-            f&#34;auth_strict_key={self._initialization_args[&#39;auth_strict_key&#39;]!r}, &#34;
-            f&#34;auth_bypass={self._initialization_args[&#39;auth_bypass&#39;]!r}, &#34;
-            f&#34;timeout_socket={self._initialization_args[&#39;timeout_socket&#39;]!r}, &#34;
-            f&#34;timeout_transport={self._initialization_args[&#39;timeout_transport&#39;]!r}, &#34;
-            f&#34;timeout_ops={self._initialization_args[&#39;timeout_ops&#39;]!r}, &#34;
-            f&#34;timeout_exit={self._initialization_args[&#39;timeout_exit&#39;]!r}, &#34;
-            f&#34;keepalive={self._initialization_args[&#39;keepalive&#39;]!r}, &#34;
-            f&#34;keepalive_interval={self._initialization_args[&#39;keepalive_interval&#39;]!r}, &#34;
-            f&#34;keepalive_type={self._initialization_args[&#39;keepalive_type&#39;]!r}, &#34;
-            f&#34;keepalive_pattern={self._initialization_args[&#39;keepalive_pattern&#39;]!r}, &#34;
-            f&#34;comms_prompt_pattern={self._initialization_args[&#39;comms_prompt_pattern&#39;]!r}, &#34;
-            f&#34;comms_return_char={self._initialization_args[&#39;comms_return_char&#39;]!r}, &#34;
-            f&#34;comms_ansi={self._initialization_args[&#39;comms_ansi&#39;]!r}, &#34;
-            f&#34;ssh_config_file={self._initialization_args.get(&#39;ssh_config_file&#39;)!r}, &#34;
-            f&#34;ssh_known_hosts_file={self._initialization_args.get(&#39;ssh_known_hosts_file&#39;)!r}, &#34;
-            f&#34;on_open={self.on_open!r}, &#34;
-            f&#34;on_close={self.on_close!r}, &#34;
-            f&#34;transport={self._transport!r}, &#34;
-            f&#34;transport_options={self._initialization_args.get(&#39;transport_options&#39;)!r})&#34;
-        )
-
-    def _setup_host(self, host: str, port: int) -&gt; None:
-        &#34;&#34;&#34;
-        Parse and setup host attributes
-
-        Args:
-            host: host to parse/set
-            port: port to parse/set
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            ValueError: if host is not provided
-            TypeError: if port is not an integer
-
-        &#34;&#34;&#34;
-        if not host:
-            raise ValueError(&#34;`host` should be a hostname/ip address, got nothing!&#34;)
-        if not isinstance(port, int):
-            raise TypeError(f&#34;`port` should be int, got {type(port)}&#34;)
-        self._host = host.strip()
-        self._initialization_args[&#34;host&#34;] = host.strip()
-        self._initialization_args[&#34;port&#34;] = port
-
-    def _setup_auth(
-        self,
-        auth_username: str,
-        auth_password: str,
-        auth_private_key: str,
-        auth_strict_key: bool,
-        auth_bypass: bool,
-    ) -&gt; None:
-        &#34;&#34;&#34;
-        Parse and setup auth attributes
-
-        Args:
-            auth_username: username to parse/set
-            auth_password: password to parse/set
-            auth_private_key: public key to parse/set
-            auth_strict_key: strict key to parse/set
-            auth_bypass: bypass to parse/set
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            TypeError: if auth_strict_key is not a bool
-            ValueError: if auth_private_key is not a valid file
-
-        &#34;&#34;&#34;
-        if not isinstance(auth_strict_key, bool):
-            raise TypeError(f&#34;`auth_strict_key` should be bool, got {type(auth_strict_key)}&#34;)
-        if not isinstance(auth_bypass, bool):
-            raise TypeError(f&#34;`auth_bypass` should be bool, got {type(auth_bypass)}&#34;)
-
-        self._initialization_args[&#34;auth_strict_key&#34;] = auth_strict_key
-        self._initialization_args[&#34;auth_bypass&#34;] = auth_bypass
-        self._initialization_args[&#34;auth_username&#34;] = auth_username.strip()
-        self._initialization_args[&#34;auth_password&#34;] = auth_password.strip()
-
-        if auth_private_key:
-            private_key_path = Path.expanduser(Path(auth_private_key.strip()))
-            if not private_key_path.is_file():
-                raise ValueError(f&#34;Provided public key `{auth_private_key}` is not a file&#34;)
-            self._initialization_args[&#34;auth_private_key&#34;] = os.path.expanduser(
-                auth_private_key.strip()
-            )
-        else:
-            self._initialization_args[&#34;auth_private_key&#34;] = auth_private_key
-
-    def _setup_timeouts(
-        self, timeout_socket: int, timeout_transport: int, timeout_ops: int, timeout_exit: bool
-    ) -&gt; None:
-        &#34;&#34;&#34;
-        Parse and setup timeout attributes
-
-        Args:
-            timeout_socket: socket timeout to parse/set
-            timeout_transport: transport timeout to parse/set
-            timeout_ops: ops timeout to parse/set
-            timeout_exit: timeout exit bool to parse/set
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            TypeError: if invalid type args provided
-
-        &#34;&#34;&#34;
-        if not isinstance(timeout_exit, bool):
-            raise TypeError(f&#34;`timeout_exit` should be bool, got {type(timeout_exit)}&#34;)
-
-        self._initialization_args[&#34;timeout_socket&#34;] = int(timeout_socket)
-        self._initialization_args[&#34;timeout_transport&#34;] = int(timeout_transport)
-        self._initialization_args[&#34;timeout_ops&#34;] = int(timeout_ops)
-        self._initialization_args[&#34;timeout_exit&#34;] = timeout_exit
-
-    def _setup_keepalive(
-        self, keepalive: bool, keepalive_type: str, keepalive_interval: int, keepalive_pattern: str
-    ) -&gt; None:
-        &#34;&#34;&#34;
-        Parse and setup keepalive attributes
-
-        Args:
-            keepalive: keepalive to parse/set
-            keepalive_type: keepalive_type to parse/set
-            keepalive_interval: keepalive_interval to parse/set
-            keepalive_pattern: keepalive_pattern to parse/set
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            TypeError: if keepalive is not a bool
-            ValueError: if keepalive_type is not valid
-
-        &#34;&#34;&#34;
-        if not isinstance(keepalive, bool):
-            raise TypeError(f&#34;`keepalive` should be bool, got {type(keepalive)}&#34;)
-        if keepalive_type not in [&#34;network&#34;, &#34;standard&#34;]:
-            raise ValueError(
-                f&#34;`{keepalive_type}` is an invalid keepalive_type; must be &#39;network&#39; or &#39;standard&#39;&#34;
-            )
-        self._initialization_args[&#34;keepalive&#34;] = keepalive
-        self._initialization_args[&#34;keepalive_interval&#34;] = int(keepalive_interval)
-        self._initialization_args[&#34;keepalive_type&#34;] = keepalive_type
-        self._initialization_args[&#34;keepalive_pattern&#34;] = keepalive_pattern
-
-    def _setup_comms(
-        self, comms_prompt_pattern: str, comms_return_char: str, comms_ansi: bool
-    ) -&gt; None:
-        &#34;&#34;&#34;
-        Parse and setup auth attributes
-
-        Args:
-            comms_prompt_pattern: prompt pattern to parse/set
-            comms_return_char: return char to parse/set
-            comms_ansi: ansi val to parse/set
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            TypeError: if invalid type args provided
-
-        &#34;&#34;&#34;
-        # try to compile prompt to raise TypeError before opening any connections
-        re.compile(comms_prompt_pattern, flags=re.M | re.I)
-
-        if not isinstance(comms_return_char, str):
-            raise TypeError(f&#34;`comms_return_char` should be str, got {type(comms_return_char)}&#34;)
-        if not isinstance(comms_ansi, bool):
-            raise TypeError(f&#34;`comms_ansi` should be bool, got {type(comms_ansi)}&#34;)
-
-        self._initialization_args[&#34;comms_prompt_pattern&#34;] = comms_prompt_pattern
-        self._initialization_args[&#34;comms_return_char&#34;] = comms_return_char
-        self._initialization_args[&#34;comms_ansi&#34;] = comms_ansi
-
-    def _setup_callables(
-        self, on_open: Optional[Callable[..., Any]], on_close: Optional[Callable[..., Any]]
-    ) -&gt; None:
-        &#34;&#34;&#34;
-        Parse and setup callables (on_open/on_close)
-
-        Args:
-            on_open: on_open to parse/set
-            on_close: on_close to parse/set
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            TypeError: if port is not an integer
-
-        &#34;&#34;&#34;
-        if on_open is not None and not callable(on_open):
-            raise TypeError(f&#34;`on_open` must be a callable, got {type(on_open)}&#34;)
-        if on_close is not None and not callable(on_close):
-            raise TypeError(f&#34;`on_close` must be a callable, got {type(on_close)}&#34;)
-        self.on_open = on_open
-        self.on_close = on_close
-        self._initialization_args[&#34;on_open&#34;] = on_open
-        self._initialization_args[&#34;on_close&#34;] = on_close
-
-    def _setup_ssh_args(
-        self, ssh_config_file: Union[str, bool], ssh_known_hosts_file: Union[str, bool]
-    ) -&gt; None:
-        &#34;&#34;&#34;
-        Parse and setup ssh related arguments
-
-        Args:
-            ssh_config_file: string to path for ssh config file, True to use default ssh config file
-                or False to ignore default ssh config file
-            ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
-                file locations. Only applicable/needed if `auth_strict_key` is set to True
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            TypeError: if invalid config file or known hosts file value provided
-
-        &#34;&#34;&#34;
-        if not isinstance(ssh_config_file, (str, bool)):
-            raise TypeError(f&#34;`ssh_config_file` must be str or bool, got {type(ssh_config_file)}&#34;)
-        if not isinstance(ssh_known_hosts_file, (str, bool)):
-            raise TypeError(
-                &#34;`ssh_known_hosts_file` must be str or bool, got &#34; f&#34;{type(ssh_known_hosts_file)}&#34;
-            )
-
-        if ssh_config_file is not False:
-            if isinstance(ssh_config_file, bool):
-                cfg = &#34;&#34;
-            else:
-                cfg = ssh_config_file
-            self._initialization_args[&#34;ssh_config_file&#34;] = resolve_ssh_config(cfg)
-        else:
-            self._initialization_args[&#34;ssh_config_file&#34;] = &#34;&#34;
-
-        if ssh_known_hosts_file is not False:
-            if isinstance(ssh_known_hosts_file, bool):
-                known_hosts = &#34;&#34;
-            else:
-                known_hosts = ssh_known_hosts_file
-            self._initialization_args[&#34;ssh_known_hosts_file&#34;] = resolve_ssh_known_hosts(known_hosts)
-        else:
-            self._initialization_args[&#34;ssh_known_hosts_file&#34;] = &#34;&#34;
-
-    def _transport_factory(self, transport: str) -&gt; Tuple[Callable[..., Any], Dict[str, Any]]:
-        &#34;&#34;&#34;
-        Private factory method to produce transport class
-
-        Args:
-            transport: string name of transport class to use
-
-        Returns:
-            Transport: initialized Transport class
-
-        Raises:
-            N/A  # noqa
-
-        &#34;&#34;&#34;
-        transport_class = TRANSPORT_CLASS.get(transport, None)
-        required_transport_args = TRANSPORT_ARGS.get(transport, ())
-
-        if transport_class is None:
-            transport_class, required_transport_args = _find_transport_plugin(transport=transport)
-
-        transport_args = {}
-        for arg in TRANSPORT_BASE_ARGS:
-            transport_args[arg] = self._initialization_args.get(arg)
-        for arg in required_transport_args:
-            transport_args[arg] = self._initialization_args.get(arg)
-        return transport_class, transport_args
-
     def open(self) -&gt; None:
         &#34;&#34;&#34;
         Open Transport (socket/session) and establish channel
@@ -2907,29 +4264,12 @@ docs for given transport class for details of what to pass here</dd>
         if self.on_close:
             self.on_close(self)
         self.transport.close()
-        LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)
-
-    def isalive(self) -&gt; bool:
-        &#34;&#34;&#34;
-        Check if underlying socket/channel is alive
-
-        Args:
-            N/A
-
-        Returns:
-            bool: True/False if socket/channel is alive
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        alive = False
-        try:
-            alive = self.transport.isalive()
-        except AttributeError:
-            pass
-        return alive</code></pre>
+        LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scrapli.driver.base_driver.ScrapeBase" href="base_driver.html#scrapli.driver.base_driver.ScrapeBase">ScrapeBase</a></li>
+</ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="scrapli.driver.generic_driver.GenericDriver" href="generic_driver.html#scrapli.driver.generic_driver.GenericDriver">GenericDriver</a></li>
@@ -2979,49 +4319,6 @@ docs for given transport class for details of what to pass here</dd>
     LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
 </details>
 </dd>
-<dt id="scrapli.driver.Scrape.isalive"><code class="name flex">
-<span>def <span class="ident">isalive</span></span>(<span>self) -> bool</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Check if underlying socket/channel is alive</p>
-<h2 id="args">Args</h2>
-<p>N/A</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>bool</code></dt>
-<dd>True/False if socket/channel is alive</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N/A</code></dt>
-<dd>&nbsp;</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def isalive(self) -&gt; bool:
-    &#34;&#34;&#34;
-    Check if underlying socket/channel is alive
-
-    Args:
-        N/A
-
-    Returns:
-        bool: True/False if socket/channel is alive
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    alive = False
-    try:
-        alive = self.transport.isalive()
-    except AttributeError:
-        pass
-    return alive</code></pre>
-</details>
-</dd>
 <dt id="scrapli.driver.Scrape.open"><code class="name flex">
 <span>def <span class="ident">open</span></span>(<span>self) -> NoneType</span>
 </code></dt>
@@ -3069,6 +4366,14 @@ docs for given transport class for details of what to pass here</dd>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scrapli.driver.base_driver.ScrapeBase" href="base_driver.html#scrapli.driver.base_driver.ScrapeBase">ScrapeBase</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scrapli.driver.base_driver.ScrapeBase.isalive" href="base_driver.html#scrapli.driver.base_driver.ScrapeBase.isalive">isalive</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 </dl>
 </section>
@@ -3086,6 +4391,12 @@ docs for given transport class for details of what to pass here</dd>
 </li>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
+<li><code><a title="scrapli.driver.async_driver" href="async_driver.html">scrapli.driver.async_driver</a></code></li>
+<li><code><a title="scrapli.driver.async_generic_driver" href="async_generic_driver.html">scrapli.driver.async_generic_driver</a></code></li>
+<li><code><a title="scrapli.driver.async_network_driver" href="async_network_driver.html">scrapli.driver.async_network_driver</a></code></li>
+<li><code><a title="scrapli.driver.base_driver" href="base_driver.html">scrapli.driver.base_driver</a></code></li>
+<li><code><a title="scrapli.driver.base_generic_driver" href="base_generic_driver.html">scrapli.driver.base_generic_driver</a></code></li>
+<li><code><a title="scrapli.driver.base_network_driver" href="base_network_driver.html">scrapli.driver.base_network_driver</a></code></li>
 <li><code><a title="scrapli.driver.core" href="core/index.html">scrapli.driver.core</a></code></li>
 <li><code><a title="scrapli.driver.driver" href="driver.html">scrapli.driver.driver</a></code></li>
 <li><code><a title="scrapli.driver.generic_driver" href="generic_driver.html">scrapli.driver.generic_driver</a></code></li>
@@ -3094,6 +4405,35 @@ docs for given transport class for details of what to pass here</dd>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
+<li>
+<h4><code><a title="scrapli.driver.AsyncGenericDriver" href="#scrapli.driver.AsyncGenericDriver">AsyncGenericDriver</a></code></h4>
+<ul class="">
+<li><code><a title="scrapli.driver.AsyncGenericDriver.get_prompt" href="#scrapli.driver.AsyncGenericDriver.get_prompt">get_prompt</a></code></li>
+<li><code><a title="scrapli.driver.AsyncGenericDriver.send_command" href="#scrapli.driver.AsyncGenericDriver.send_command">send_command</a></code></li>
+<li><code><a title="scrapli.driver.AsyncGenericDriver.send_commands" href="#scrapli.driver.AsyncGenericDriver.send_commands">send_commands</a></code></li>
+<li><code><a title="scrapli.driver.AsyncGenericDriver.send_commands_from_file" href="#scrapli.driver.AsyncGenericDriver.send_commands_from_file">send_commands_from_file</a></code></li>
+<li><code><a title="scrapli.driver.AsyncGenericDriver.send_interactive" href="#scrapli.driver.AsyncGenericDriver.send_interactive">send_interactive</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="scrapli.driver.AsyncNetworkDriver" href="#scrapli.driver.AsyncNetworkDriver">AsyncNetworkDriver</a></code></h4>
+<ul class="">
+<li><code><a title="scrapli.driver.AsyncNetworkDriver.acquire_priv" href="#scrapli.driver.AsyncNetworkDriver.acquire_priv">acquire_priv</a></code></li>
+<li><code><a title="scrapli.driver.AsyncNetworkDriver.send_command" href="#scrapli.driver.AsyncNetworkDriver.send_command">send_command</a></code></li>
+<li><code><a title="scrapli.driver.AsyncNetworkDriver.send_commands" href="#scrapli.driver.AsyncNetworkDriver.send_commands">send_commands</a></code></li>
+<li><code><a title="scrapli.driver.AsyncNetworkDriver.send_config" href="#scrapli.driver.AsyncNetworkDriver.send_config">send_config</a></code></li>
+<li><code><a title="scrapli.driver.AsyncNetworkDriver.send_configs" href="#scrapli.driver.AsyncNetworkDriver.send_configs">send_configs</a></code></li>
+<li><code><a title="scrapli.driver.AsyncNetworkDriver.send_configs_from_file" href="#scrapli.driver.AsyncNetworkDriver.send_configs_from_file">send_configs_from_file</a></code></li>
+<li><code><a title="scrapli.driver.AsyncNetworkDriver.send_interactive" href="#scrapli.driver.AsyncNetworkDriver.send_interactive">send_interactive</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="scrapli.driver.AsyncScrape" href="#scrapli.driver.AsyncScrape">AsyncScrape</a></code></h4>
+<ul class="">
+<li><code><a title="scrapli.driver.AsyncScrape.close" href="#scrapli.driver.AsyncScrape.close">close</a></code></li>
+<li><code><a title="scrapli.driver.AsyncScrape.open" href="#scrapli.driver.AsyncScrape.open">open</a></code></li>
+</ul>
+</li>
 <li>
 <h4><code><a title="scrapli.driver.GenericDriver" href="#scrapli.driver.GenericDriver">GenericDriver</a></code></h4>
 <ul class="">
@@ -3108,20 +4448,18 @@ docs for given transport class for details of what to pass here</dd>
 <h4><code><a title="scrapli.driver.NetworkDriver" href="#scrapli.driver.NetworkDriver">NetworkDriver</a></code></h4>
 <ul class="">
 <li><code><a title="scrapli.driver.NetworkDriver.acquire_priv" href="#scrapli.driver.NetworkDriver.acquire_priv">acquire_priv</a></code></li>
-<li><code><a title="scrapli.driver.NetworkDriver.register_configuration_session" href="#scrapli.driver.NetworkDriver.register_configuration_session">register_configuration_session</a></code></li>
 <li><code><a title="scrapli.driver.NetworkDriver.send_command" href="#scrapli.driver.NetworkDriver.send_command">send_command</a></code></li>
 <li><code><a title="scrapli.driver.NetworkDriver.send_commands" href="#scrapli.driver.NetworkDriver.send_commands">send_commands</a></code></li>
+<li><code><a title="scrapli.driver.NetworkDriver.send_config" href="#scrapli.driver.NetworkDriver.send_config">send_config</a></code></li>
 <li><code><a title="scrapli.driver.NetworkDriver.send_configs" href="#scrapli.driver.NetworkDriver.send_configs">send_configs</a></code></li>
 <li><code><a title="scrapli.driver.NetworkDriver.send_configs_from_file" href="#scrapli.driver.NetworkDriver.send_configs_from_file">send_configs_from_file</a></code></li>
 <li><code><a title="scrapli.driver.NetworkDriver.send_interactive" href="#scrapli.driver.NetworkDriver.send_interactive">send_interactive</a></code></li>
-<li><code><a title="scrapli.driver.NetworkDriver.update_privilege_levels" href="#scrapli.driver.NetworkDriver.update_privilege_levels">update_privilege_levels</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="scrapli.driver.Scrape" href="#scrapli.driver.Scrape">Scrape</a></code></h4>
 <ul class="">
 <li><code><a title="scrapli.driver.Scrape.close" href="#scrapli.driver.Scrape.close">close</a></code></li>
-<li><code><a title="scrapli.driver.Scrape.isalive" href="#scrapli.driver.Scrape.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.driver.Scrape.open" href="#scrapli.driver.Scrape.open">open</a></code></li>
 </ul>
 </li>
