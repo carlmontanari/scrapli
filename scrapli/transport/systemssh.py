@@ -356,13 +356,6 @@ class SystemSSHTransport(Transport):
         stdout_master_pty, stdout_slave_pty = pty.openpty()
         stdin_master_pty, stdin_slave_pty = pty.openpty()
 
-        # ensure that scrapli has xterm set for TERM env var; w/out this we dont have a guaranteed
-        # tty is my understanding. this came up as an issue when testing in github action runners
-        # where they are obviously headless and thus didnt have a tty -- other transports worked
-        # but system failed because of the lack of tty
-        session_env = os.environ.copy()
-        session_env["TERM"] = "xterm"
-
         self.session = Popen(
             open_cmd,
             bufsize=0,
@@ -370,7 +363,6 @@ class SystemSSHTransport(Transport):
             stdin=stdin_slave_pty,
             stdout=stdout_slave_pty,
             stderr=PIPE,
-            env=session_env,
         )
         # close the slave fds, don't need them anymore
         os.close(stdin_slave_pty)
@@ -406,7 +398,7 @@ class SystemSSHTransport(Transport):
         self.session_lock.release()
         return True
 
-    def _ssh_message_handler(self, output: bytes) -> None:
+    def _ssh_message_handler(self, output: bytes) -> None:  # noqa: C901
         """
         Parse EOF messages from _pty_authenticate and create log/stack exception message
 
@@ -414,10 +406,10 @@ class SystemSSHTransport(Transport):
             output: bytes output from _pty_authenticate
 
         Returns:
-            N/A
+            N/A  # noqa: DAR202
 
         Raises:
-            ScrapliAuthenticationFailed:
+            ScrapliAuthenticationFailed: if any errors are read in the output
 
         """
         msg = ""
@@ -453,6 +445,8 @@ class SystemSSHTransport(Transport):
                 f"Permissions for private key `{self.auth_private_key}` are too open, "
                 "authentication failed!"
             )
+        elif b"could not resolve hostname" in output.lower():
+            msg = f"Could not resolve address for host `{self.host}`"
         if msg:
             LOG.critical(msg)
             raise ScrapliAuthenticationFailed(msg)
@@ -472,7 +466,7 @@ class SystemSSHTransport(Transport):
             bool: True/False session was authenticated
 
         Raises:
-            N/A
+            ScrapliTimeout: if we cant read from stderr of the session
 
         """
         if pipes_session.stderr is None:

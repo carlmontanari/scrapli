@@ -1,12 +1,9 @@
 """scrapli.driver.async_driver"""
-import logging
 from types import TracebackType
 from typing import Any, Optional, Type
 
 from scrapli.channel import AsyncChannel
 from scrapli.driver.base_driver import ScrapeBase
-
-LOG = logging.getLogger("driver")
 
 
 class AsyncScrape(ScrapeBase):
@@ -92,11 +89,11 @@ class AsyncScrape(ScrapeBase):
             N/A
 
         """
-        LOG.info(f"Opening connection to {self._initialization_args['host']}")
+        self.logger.info(f"Opening connection to {self._initialization_args['host']}")
         await self.transport.open()
         if self.on_open:
             await self.on_open(self)
-        LOG.info(f"Connection to {self._initialization_args['host']} opened successfully")
+        self.logger.info(f"Connection to {self._initialization_args['host']} opened successfully")
 
     async def close(self) -> None:
         """
@@ -112,8 +109,8 @@ class AsyncScrape(ScrapeBase):
             N/A
 
         """
-        LOG.info(f"Closing connection to {self._initialization_args['host']}")
+        self.logger.info(f"Closing connection to {self._initialization_args['host']}")
         if self.on_close:
             await self.on_close(self)
         self.transport.close()
-        LOG.info(f"Connection to {self._initialization_args['host']} closed successfully")
+        self.logger.info(f"Connection to {self._initialization_args['host']} closed successfully")

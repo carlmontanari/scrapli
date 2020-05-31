@@ -1,6 +1,5 @@
 """scrapli.driver.network_driver"""
 from collections import UserList
-from logging import getLogger
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 from scrapli.driver.base_network_driver import NetworkDriverBase, PrivilegeAction, PrivilegeLevel
@@ -12,8 +11,6 @@ if TYPE_CHECKING:
     ScrapliMultiResponse = UserList[Response]  # pylint:  disable=E1136; # pragma:  no cover
 else:
     ScrapliMultiResponse = UserList
-
-LOG = getLogger("driver")
 
 
 class NetworkDriver(GenericDriver, NetworkDriverBase):
@@ -110,14 +107,14 @@ class NetworkDriver(GenericDriver, NetworkDriverBase):
         Acquire desired priv level
 
         Args:
-            desired_priv: string name of desired privilege level
-                (see scrapli.driver.<driver_category.device_type>.driver for levels)
+            desired_priv: string name of desired privilege level see
+                `scrapli.driver.<driver_category.device_type>.driver` for levels
 
         Returns:
             N/A  # noqa: DAR202
 
         Raises:
-           CouldNotAcquirePrivLevel: if scrapli cannot get to the requested privilege level
+            CouldNotAcquirePrivLevel: if desired_priv cannot be attained
 
         """
         resolved_priv, map_to_desired_priv = self._pre_acquire_priv(desired_priv=desired_priv)

@@ -1,6 +1,5 @@
 """scrapli.driver.async_generic_driver"""
 from collections import UserList
-from logging import getLogger
 from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union
 
 from scrapli.channel import AsyncChannel
@@ -12,8 +11,6 @@ if TYPE_CHECKING:
     ScrapliMultiResponse = UserList[Response]  # pylint:  disable=E1136; # pragma:  no cover
 else:
     ScrapliMultiResponse = UserList
-
-LOG = getLogger("driver")
 
 
 class AsyncGenericDriver(AsyncScrape, GenericDriverBase):

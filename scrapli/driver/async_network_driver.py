@@ -1,6 +1,5 @@
 """scrapli.driver.async_network_driver"""
 from collections import UserList
-from logging import getLogger
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 from scrapli.driver.async_generic_driver import AsyncGenericDriver
@@ -12,8 +11,6 @@ if TYPE_CHECKING:
     ScrapliMultiResponse = UserList[Response]  # pylint:  disable=E1136; # pragma:  no cover
 else:
     ScrapliMultiResponse = UserList
-
-LOG = getLogger("driver")
 
 
 class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
@@ -117,7 +114,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
             N/A  # noqa: DAR202
 
         Raises:
-           CouldNotAcquirePrivLevel: if scrapli cannot get to the requested privilege level
+            CouldNotAcquirePrivLevel: if scrapli cannot get to the requested privilege level
 
         """
         resolved_priv, map_to_desired_priv = self._pre_acquire_priv(desired_priv=desired_priv)

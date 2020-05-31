@@ -7,7 +7,7 @@ from scrapli.driver.base_network_driver import PrivilegeLevel
 PRIVS = {
     "exec": (
         PrivilegeLevel(
-            pattern=r"^[a-z0-9.\-@()/: ]{1,32}>\s?$",
+            pattern=r"^[a-z0-9.\-@()/: ]{1,63}>\s?$",
             name="exec",
             previous_priv="",
             deescalate="",
@@ -18,7 +18,7 @@ PRIVS = {
     ),
     "privilege_exec": (
         PrivilegeLevel(
-            pattern=r"^[a-z0-9.\-@/: ]{1,32}#\s?$",
+            pattern=r"^[a-z0-9.\-@/: ]{1,63}#\s?$",
             name="privilege_exec",
             previous_priv="exec",
             deescalate="disable",
@@ -29,7 +29,7 @@ PRIVS = {
     ),
     "configuration": (
         PrivilegeLevel(
-            pattern=r"^[a-z0-9.\-@/: ]{1,32}\(config(?!\-s\-)[a-z0-9_.\-@/:]{0,32}\)#\s?$",
+            pattern=r"^[a-z0-9.\-@/: ]{1,63}\(config(?!\-s\-)[a-z0-9_.\-@/:]{0,32}\)#\s?$",
             name="configuration",
             previous_priv="privilege_exec",
             deescalate="end",
@@ -56,7 +56,7 @@ class EOSDriverBase:
             N/A:  # noqa: DAR202
 
         Raises:
-            N/A
+            ValueError: if a session of given name already exists
 
         """
         if session_name in self.privilege_levels.keys():

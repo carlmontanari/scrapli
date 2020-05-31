@@ -19,6 +19,18 @@ CHANGELOG
 - ASYNC ALL THE THINGS... basically only an internal change, but hugely modified the guts of scrapli to try to be
  able to best support asyncio while still having the same api for sync and async. Again, if you dont care about
   aysncio this probably doesnt matter at all as all the "public" stuff has not changed for sync versions of things.
+- Completely overhaul unit tests -- unit tests now spin up an SSH server using asyncssh, this server is a very basic
+ implementation of an IOSXE device. This fake IOSXE device allows for connecting/sending commands/handling log on
+  stuff like disabling paging all in as close to the real thing as possible while being completely self contained and
+   completely in python. Additionally since there was a lot of changes to break things out to be more granular with the
+    async implementation the testing has evolved to support this.
+- Increased all hostname patterns to match up to 63 characters -- this is the hostname length limit for Cisco IOSXE
+ at least and should be a reasonable value that hopefully doesnt really ever need to be changed/expanded now
+- Changing logging to create a logger associated with each object instance and include the name/ip of the host in the
+ log name -- should make things a lot nicer with threads/asyncio/etc.
+- Moved from tox to using nox for handling tests/linting; originally this was because of some of the unit testing
+ failing when ran via tox (now I believe this was because there was no TERM env var set in tox), but at this point
+  nox is quite nice so we'll stick with it!
 
 # 2020.05.09
 - Add underscores to EOS config prompt matching

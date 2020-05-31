@@ -1,14 +1,11 @@
 """scrapli.channel.channel"""
 import re
-from logging import getLogger
 from typing import Any, List, Optional, Tuple
 
 from scrapli.channel.base_channel import ChannelBase
 from scrapli.decorators import operation_timeout
 from scrapli.helper import get_prompt_pattern, strip_ansi
 from scrapli.transport.transport import Transport
-
-LOG = getLogger("channel")
 
 
 class Channel(ChannelBase):
@@ -49,7 +46,7 @@ class Channel(ChannelBase):
         """
         new_output = self.transport.read()
         new_output = new_output.replace(b"\r", b"")
-        LOG.debug(f"Read: {repr(new_output)}")
+        self.logger.debug(f"Read: {repr(new_output)}")
         return new_output
 
     def _read_until_input(self, channel_input: bytes, auto_expand: Optional[bool] = None) -> bytes:
@@ -75,7 +72,7 @@ class Channel(ChannelBase):
         output = b""
 
         if not channel_input:
-            LOG.info(f"Read: {repr(output)}")
+            self.logger.info(f"Read: {repr(output)}")
             return output
 
         if auto_expand is None:
@@ -90,7 +87,7 @@ class Channel(ChannelBase):
             ):
                 break
 
-        LOG.info(f"Read: {repr(output)}")
+        self.logger.info(f"Read: {repr(output)}")
         return output
 
     def _read_until_prompt(self, output: bytes = b"", prompt: str = "") -> bytes:
@@ -116,7 +113,7 @@ class Channel(ChannelBase):
                 output = strip_ansi(output=output)
             channel_match = re.search(pattern=prompt_pattern, string=output)
             if channel_match:
-                LOG.info(f"Read: {repr(output)}")
+                self.logger.info(f"Read: {repr(output)}")
                 return output
 
     @operation_timeout("timeout_ops", "Timed out determining prompt on device.")
@@ -189,9 +186,9 @@ class Channel(ChannelBase):
         """
         bytes_channel_input = channel_input.encode()
         self.transport.session_lock.acquire()
-        LOG.info(f"Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}")
+        self.logger.info(f"Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}")
         self.transport.write(channel_input=channel_input)
-        LOG.debug(f"Write: {repr(channel_input)}")
+        self.logger.debug(f"Write: {repr(channel_input)}")
         self._read_until_input(channel_input=bytes_channel_input)
         self._send_return()
         output = self._read_until_prompt()
@@ -278,13 +275,13 @@ class Channel(ChannelBase):
                 hidden_input = interact_event[2]
             except IndexError:
                 hidden_input = False
-            LOG.info(
+            self.logger.info(
                 f"Attempting to send input interact: {channel_input}; "
                 f"\texpecting: {channel_response};"
                 f"\thidden_input: {hidden_input}"
             )
             self.transport.write(channel_input=channel_input)
-            LOG.debug(f"Write: {repr(channel_input)}")
+            self.logger.debug(f"Write: {repr(channel_input)}")
             if not channel_response or hidden_input is True:
                 self._send_return()
             else:

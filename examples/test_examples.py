@@ -1,6 +1,7 @@
 """examples.test_examples"""
 import pytest
 
+from .async_usage import async_iosxe_driver
 from .basic_usage import generic_driver, iosxe_driver, scrapli_driver
 from .configuration_modes import eos_configure_session, iosxr_configure_exclusive
 from .logging import basic_logging
@@ -8,6 +9,11 @@ from .ssh_keys import ssh_keys
 from .structured_data import structured_data_genie
 
 # simply making sure the examples don't blow up!
+
+
+@pytest.mark.asyncio
+async def test_async_usage():
+    await async_iosxe_driver.main()
 
 
 @pytest.mark.parametrize(

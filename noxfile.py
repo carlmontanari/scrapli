@@ -1,5 +1,6 @@
 """scrapli.noxfile"""
 import re
+from pathlib import Path
 from typing import Dict, List
 
 import nox
@@ -144,3 +145,27 @@ def mypy(session):
     """
     session.install(f"mypy{DEV_REQUIREMENTS['mypy']}")
     session.run("mypy", "--strict", "scrapli/")
+
+
+@nox.session(python=["3.8"])
+def darglint(session):
+    """
+    Nox run darglint
+
+    Args:
+        session: nox session
+
+    Returns:
+        N/A  # noqa: DAR202
+
+    Raises:
+        N/A
+
+    """
+    session.install(f"darglint{DEV_REQUIREMENTS['darglint']}")
+    # snag all the files other than ptyprocess.py -- not linting/covering that file at this time
+    files_to_darglint = [
+        path for path in Path("scrapli").rglob("*.py") if not path.name.endswith("ptyprocess.py")
+    ]
+    for file in files_to_darglint:
+        session.run("darglint", f"{file.absolute()}")

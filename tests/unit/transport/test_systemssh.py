@@ -115,6 +115,11 @@ def test_build_open_cmd_user_options(user_options):
             # note: empty quotes in the middle is where private key filename would be
             "Permissions for private key `` are too open, authentication failed!",
         ),
+        (
+            b"Could not resolve hostname BLAH: No address associated with hostname",
+            # note: empty quotes in the middle is where private key filename would be
+            "Could not resolve address for host `localhost`",
+        ),
     ],
     ids=[
         "host key verification",
@@ -126,6 +131,7 @@ def test_build_open_cmd_user_options(user_options):
         "no matching cipher",
         "no matching cipher found ciphers",
         "unprotected key",
+        "could not resolve host",
     ],
 )
 def test_ssh_message_handler(eof_msg):

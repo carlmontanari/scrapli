@@ -5,7 +5,7 @@ from collections import UserList
 from datetime import datetime
 from enum import Enum
 from functools import lru_cache
-from logging import getLogger
+from logging import Logger
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 from scrapli.exceptions import UnknownPrivLevel
@@ -16,8 +16,6 @@ if TYPE_CHECKING:
     ScrapliMultiResponse = UserList[Response]  # pylint:  disable=E1136; # pragma:  no cover
 else:
     ScrapliMultiResponse = UserList
-
-LOG = getLogger("driver")
 
 
 class PrivilegeLevel:
@@ -80,12 +78,11 @@ class PrivilegeAction(Enum):
 
 
 class NetworkDriverBase:
-    # NetworkDriverBase Mixin default values
+    # NetworkDriverBase Mixin vars for typing/linting purposes
+    logger: Logger
     comms_prompt_pattern: str
-    _priv_map: Dict[str, List[str]]
     _current_priv_level = DUMMY_PRIV_LEVEL
-
-    # NetworkDriverBase Mixin values set in init of sync/async NetworkDriver classes
+    _priv_map: Dict[str, List[str]]
     failed_when_contains: Optional[List[str]]
     privilege_levels: Dict[str, PrivilegeLevel]
     auth_secondary: str
@@ -209,12 +206,12 @@ class NetworkDriverBase:
             if not search_result:
                 continue
             matching_priv_levels.append(priv_level.name)
-            LOG.debug(f"Current privilege level could be `{priv_level.name}`")
+            self.logger.debug(f"Current privilege level could be `{priv_level.name}`")
         if not matching_priv_levels:
             raise UnknownPrivLevel(
                 f"Could not determine privilege level from provided prompt: `{current_prompt}`"
             )
-        LOG.debug(f"Determined current privilege level is one of `{matching_priv_levels}`")
+        self.logger.debug(f"Determined current privilege level is one of `{matching_priv_levels}`")
         return matching_priv_levels
 
     def _get_privilege_level_name(self, requested_priv: str) -> str:
@@ -323,7 +320,7 @@ class NetworkDriverBase:
             N/A
 
         """
-        LOG.info(f"Attempting to acquire `{desired_priv}` privilege level")
+        self.logger.info(f"Attempting to acquire `{desired_priv}` privilege level")
         resolved_priv = self._get_privilege_level_name(requested_priv=desired_priv)
         map_to_desired_priv = self._priv_map[resolved_priv]
         return resolved_priv, map_to_desired_priv
@@ -357,7 +354,7 @@ class NetworkDriverBase:
         current_priv = self.privilege_levels[current_priv_patterns[0]]
 
         if resolved_priv in current_priv_patterns:
-            LOG.info(f"Acquired requested privilege level `{resolved_priv}`")
+            self.logger.info(f"Acquired requested privilege level `{resolved_priv}`")
             self._current_priv_level = self.privilege_levels[resolved_priv]
             return PrivilegeAction.NO_ACTION, current_priv
 
@@ -378,11 +375,13 @@ class NetworkDriverBase:
 
         if current_priv_index > desired_priv_index:
             deescalate_priv = priv_map[current_priv_index - 1]
-            LOG.info(f"Attempting to deescalate from {current_priv.name} to {deescalate_priv}")
+            self.logger.info(
+                f"Attempting to deescalate from {current_priv.name} to {deescalate_priv}"
+            )
             return PrivilegeAction.DEESCALATE, current_priv
 
         escalate_priv = self.privilege_levels[priv_map[current_priv_index + 1]]
-        LOG.info(f"Attempting to escalate from {current_priv.name} to {escalate_priv.name}")
+        self.logger.info(f"Attempting to escalate from {current_priv.name} to {escalate_priv.name}")
         return PrivilegeAction.ESCALATE, escalate_priv
 
     @staticmethod

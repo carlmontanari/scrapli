@@ -12,7 +12,7 @@ scrapli
 scrapli -- scrap(e c)li --  is a python library focused on connecting to devices, specifically network devices
  (routers/switches/firewalls/etc.) via SSH or Telnet. The name scrapli -- is just "scrape cli" (as in screen scrape)
  squished together! scrapli's goal is to be as fast and flexible as possible, while providing a thoroughly tested, well
-  typed, well documented, simple API.
+  typed, well documented, simple API that supports both synchronous and asynchronous usage.
 
 Feel free to join the very awesome networktocode slack workspace [here](https://networktocode.slack.com/), where you
  will find a `scrapli` channel where you can discuss anything about scrapli, as well as tons of other channels covering
@@ -125,6 +125,7 @@ end
 - [Basic "native" Scrape operations](/examples/basic_usage/scrapli_driver.py)
 - [Basic "GenericDriver" operations](/examples/basic_usage/generic_driver.py)
 - [Basic "core" Driver operations](/examples/basic_usage/iosxe_driver.py)
+- [Basic async operations](/examples/async_usage/async_iosxe_driver.py)
 - [Setting up basic logging](/examples/logging/basic_logging.py)
 - [Using SSH Key for authentication](/examples/ssh_keys/ssh_keys.py)
 - [Using SSH config file](/examples/ssh_config_files/ssh_config_file.py)
@@ -137,7 +138,11 @@ end
 
 ## Documentation
 
-- [API Docs](https://carlmontanari.github.io/scrapli/docs/scrapli/index.html)
+- API Docs
+  - [Root](https://carlmontanari.github.io/scrapli/docs/scrapli/index.html)
+  - [Channel](https://carlmontanari.github.io/scrapli/docs/scrapli/channel/index.html)
+  - [Transport](https://carlmontanari.github.io/scrapli/docs/scrapli/transport/index.html)
+  - [Drivers](https://carlmontanari.github.io/scrapli/docs/scrapli/driver/index.html)
 - [This README as a web page](https://carlmontanari.github.io/scrapli/)
 - [Public API Status](https://carlmontanari.github.io/scrapli/docs/PUBLIC_API_STATUS)
 
@@ -166,13 +171,14 @@ scrapli is built primarily in three parts: transport, channel, and driver. The t
   to the provided file-like interface. Finally, the driver provides the user facing API/interface to scrapli.
 
 There are two available "transports" in scrapli "core" -- both of which inherit from a base transport class
- and provide the same file-like interface to the upstream channel. There are also (currently!) two transport plugins
-  available -- both of which are installable as optional extras. The transport options are:
+ and provide the same file-like interface to the upstream channel. There are also (currently!) three transport plugins
+  available -- all of which are installable as optional extras. The transport options are:
 
 - [paramiko](https://github.com/paramiko/paramiko) (optional extra)
 - [ssh2-python](https://github.com/ParallelSSH/ssh2-python) (optional extra)
-- OpenSSH/System available SSH
-- telnetlib
+- OpenSSH/System available SSH (scrapli core)
+- telnetlib (scrapli core)
+- [asyncssh](https://github.com/ronf/asyncssh) (optional extra)
 
 A good question to ask at this point is probably "why?". Why multiple transport options? Why not just use paramiko
  like most folks do? Historically the reason for moving away from paramiko was simply speed. ssh2-python is a wrapper
@@ -194,8 +200,13 @@ With the goal of supporting all of the OpenSSH configuration options the primary
      focus of most development for this project, though I will try to keep the other transport drivers -- in
       particular ssh2-python -- as close to parity as is possible/practical.
 
-The last transport is telnet via telnetlib. This was trivial to add in as the interface is basically the same as
- SystemSSH, and it turns out telnet is still actually useful for things like terminal servers and the like!
+Adding telnet support via telnetlib was trivial, as the interface is basically the same as SystemSSH, and it turns out
+ telnet is still actually useful for things like terminal servers and the like!
+
+Finally, the most recent scrapli transport plugin is the `asyncssh` transport. This transport option represents a
+ very big change for scrapli as the entire "backend" was basically re-worked in order to provide the exact same API
+  for both synchronous and asynchronous applications. Currently asyncssh is the only asynchronous transport supported
+  , but of course there could be additional transports (telnetlib3 perhaps?) in the future!
 
 The final piece of scrapli is the actual "driver" -- or the component that binds the transport and channel together and
  deals with instantiation of a scrapli object. There is a "base" driver object -- `Scrape` -- which provides essentially
@@ -210,12 +221,21 @@ The final piece of scrapli is the actual "driver" -- or the component that binds
          scrapli driver (built on the `NetworkDriver`) would be the `IOSXEDriver` -- to, as you may have guessed
          , interact with devices running Cisco's IOS-XE operating system.
 
+It should be noted that this is a bit of an oversimplification of the architecture of scrapli, but it is accurate
+. Scrapli has "base", "sync", and "async" versions of the core components. The "base" portion is made up fo mixin
+ classes that get "mixed in" to the sync or async versions of the component. For example there is a
+  `NetworkDriverBase` class that is "mixed in" to the `NetworkDriver` and `AsyncNetworkDriver` classes. The mixin
+   provides consistent helper like functions (sync functions) that can be used by the two driver classes -- this
+    allows the sync/async components to have as little code as possible helping to keep the API consistent for both
+     synchronous and asynchronous users.
+
 
 # Supported Platforms
 
 scrapli "core" drivers cover basically the [NAPALM](https://github.com/napalm-automation/napalm) platforms -- Cisco
  IOS-XE, IOS-XR, NX-OS, Arista EOS, and Juniper JunOS. These drivers provide an interface tailored to network device
-  "screen-scraping" rather than just a generic SSH connection/channel. Below are the core driver platforms and
+  "screen-scraping" rather than just a generic SSH connection/channel. It is important to note that there is a
+   synchronous and an asynchronous version of each of these drivers. Below are the core driver platforms and
    currently tested version.
 
 - Cisco IOS-XE (tested on: 16.04.01)
@@ -286,6 +306,7 @@ The available optional installation extras options are:
 - ssh2 (ssh2-python and the scrapli_ssh2 transport)
 - textfsm (textfsm and ntc-templates)
 - genie (genie/pyats)
+- asynchssh (asyncssh and the scrapli_asyncssh transport)
 
 
 If you would like to install all of the optional extras, you can do so with the `full` option:
@@ -312,15 +333,22 @@ Assuming you are using scrapli to connect to one of the five "core" platforms, y
 from scrapli.driver.core import EOSDriver
 ```
 
+If you are using asyncio, you can use the async variant of the driver:
+
+```python
+from scrapli.driver.core import AsyncEOSDriver
+```
+
+
 The core drivers and associated platforms are outlined below:
 
-| Platform/OS   | Scrapli Driver  |
-|---------------|-----------------|
-| Cisco IOS-XE  | IOSXEDriver     |
-| Cisco NX-OS   | NXOSDriver      |
-| Cisco IOS-XR  | IOSXRDriver     |
-| Arista EOS    | EOSDriver       |
-| Juniper JunOS | JunosDriver     |
+| Platform/OS   | Scrapli Driver  | Scrapli Async Driver |
+|---------------|-----------------|----------------------|
+| Cisco IOS-XE  | IOSXEDriver     | AsyncIOSXEDriver     | 
+| Cisco NX-OS   | NXOSDriver      | AsyncNXOSDriver      |
+| Cisco IOS-XR  | IOSXRDriver     | AsyncIOSXRDriver     |
+| Arista EOS    | EOSDriver       | AsyncEOSDriver       |
+| Juniper JunOS | JunosDriver     | AsyncJunosDriver     |
 
 All drivers can be imported from `scrapli.driver.core`.
 
@@ -328,6 +356,9 @@ If you are working with a platform not listed above, you have two options: you c
 , which you can read about [here](#using-scrape-directly) or you can use the `GenericDriver` which which you can read
  about [here](#using-the-genericdriver). In general you should probably use the `GenericDriver` and not mess about
   using `Scrape` directly.
+
+Note: if you are using async you *must* set the transport to `asyncssh` -- this is the only async transport supported
+ at this time!
 
 
 ## Basic Driver Arguments
@@ -1040,8 +1071,9 @@ In the spirit of being highly flexible, scrapli allows users to swap out this "s
  transport mechanism. The other supported transport mechanisms are `paramiko`, `ssh2-python` and `telnetlib
  `. `paramiko` and `ssh2-python` were originally part of the core of scrapli, but have since been moved to their own
   repositories to be used as plugins to keep the codebase as simple as possible. The transport selection can be made
-   when instantiating the scrapli connection object by passing in `paramiko`, `ssh2`, or `telnet` to force scrapli to
-    use the corresponding transport mechanism.
+   when instantiating the scrapli connection object by passing in `paramiko`, `ssh2`, `telnet`, or `asyncssh` to force
+    scrapli to use the corresponding transport mechanism. If you are using the `asyncssh` transport you must use an
+     async driver!
   
 While it will be a goal to ensure that these other transport mechanisms are supported and useful, the focus of
  scrapli development will be on the "system" SSH transport.
@@ -1064,7 +1096,7 @@ with IOSXEDriver(**my_device) as conn:
 ```
 
 Currently the only reason I can think of to use anything other than "system" as the transport would be to test
- scrapli on a Windows host or to use telnet. If there are other good reasons please do let me know!
+ scrapli on a Windows host, to use telnet, or to use asyncio. If there are other good reasons please do let me know!
 
 
 ## Auth Bypass
@@ -1177,7 +1209,7 @@ scrapli.exceptions.ScrapliCommandFailure
       using your system ssh.... which is almost certainly libssh2/openssh which is also C. There is a thin layer of
        abstraction between scrapli and your system ssh but really its just reading/writing to a file which Python
         should be doing in C anyway I would think. In summary... while `ssh2` is probably the fastest you can go with
-         scrapli, the difference between `ssh2` and `system` transports in limited testing is microscopic, and the
+         scrapli, the difference between `ssh2` and `system` transports in limited testing is very small, and the
           benefits of using system transport (native ssh config file support!!) probably should outweigh the speed of
            ssh2 -- especially if you have control persist and can take advantage of that with system transport!
 - Other questions? Ask away!
@@ -1232,6 +1264,12 @@ scrapli.exceptions.ScrapliCommandFailure
 - There is zero Windows support for system ssh transport - I would strongly encourage the use of WSL or cygwin and
  sticking with systemssh instead of using paramiko/ssh2 natively in Windows -- system ssh is very much the focus of
   development for scrapli!
+- SystemSSH needs to have a terminal set -- without this it fails. My understanding is that without a terminal being
+ set there is no tty which causes the popen/ptyprocess portions of scrapli to not be able to read from the session
+ . The fix for this is simply to ensure that there is a `TERM` set -- for example in the GitHub Actions setup for
+  systemssh tests we simply set `TERM=xterm` as an environment variable. Setting this within scrapli did not seem to
+   have any affect, but is something worth revisiting later -- meaning it would be nice to have scrapli be able to set
+    this for itself so users don't have to care about it.
 
 ### SSH Config Supported Arguments
 
@@ -1261,17 +1299,29 @@ scrapli.exceptions.ScrapliCommandFailure
 
 - None yet!
 
+## asyncssh
+
+- scrapli asyncssh is not production ready yet! 
+
+### SSH Config Supported Arguments
+
+- None yet
+
+### Known Issues
+
+- scrapli asyncssh is not production ready yet! 
+
 
 # Linting and Testing
 
 ## Linting
 
-This project uses [black](https://github.com/psf/black) for auto-formatting. In addition to black, tox will execute
+This project uses [black](https://github.com/psf/black) for auto-formatting. In addition to black, nox will execute
  [pylama](https://github.com/klen/pylama), and [pydocstyle](https://github.com/PyCQA/pydocstyle) for linting purposes
- . Tox will also run  [mypy](https://github.com/python/mypy), with strict type checking. Docstring linting is
+ . Nox will also run  [mypy](https://github.com/python/mypy), with strict type checking. Docstring linting is
   handled by [darglint](https://github.com/terrencepreilly/darglint) which has been quite handy!
 
-All commits to this repository will trigger a GitHub action which runs tox, but of course its nicer to just run that
+All commits to this repository will trigger a GitHub action which runs nox, but of course its nicer to just run that
  before making a commit to ensure that it will pass all tests!
 
 ### Typing
@@ -1454,8 +1504,6 @@ This section may not get updated much, but will hopefully reflect the priority i
 
 ## Roadmap
 
-- Async support. This is a bit of a question mark as I personally don't know even where to start to implement this
-, and have no real current use case... that said I think it would be cool if for no other reason than to learn!
 - Plugins -- build framework to allow for others to easily build driver plugins if desired
 - Ensure v6 stuff works as expected.
 - Continue to add/support ssh config file things.

@@ -1,12 +1,9 @@
 """scrapli.driver.driver"""
-from logging import getLogger
 from types import TracebackType
 from typing import Any, Optional, Type
 
 from scrapli.channel import Channel
 from scrapli.driver.base_driver import ScrapeBase
-
-LOG = getLogger("driver")
 
 
 class Scrape(ScrapeBase):
@@ -91,11 +88,11 @@ class Scrape(ScrapeBase):
             N/A
 
         """
-        LOG.info(f"Opening connection to {self._initialization_args['host']}")
+        self.logger.info(f"Opening connection to {self._initialization_args['host']}")
         self.transport.open()
         if self.on_open:
             self.on_open(self)
-        LOG.info(f"Connection to {self._initialization_args['host']} opened successfully")
+        self.logger.info(f"Connection to {self._initialization_args['host']} opened successfully")
 
     def close(self) -> None:
         """
@@ -111,8 +108,8 @@ class Scrape(ScrapeBase):
             N/A
 
         """
-        LOG.info(f"Closing connection to {self._initialization_args['host']}")
+        self.logger.info(f"Closing connection to {self._initialization_args['host']}")
         if self.on_close:
             self.on_close(self)
         self.transport.close()
-        LOG.info(f"Connection to {self._initialization_args['host']} closed successfully")
+        self.logger.info(f"Connection to {self._initialization_args['host']} closed successfully")

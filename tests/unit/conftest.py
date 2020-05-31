@@ -71,11 +71,18 @@ async def async_generic_driver_conn():
         await conn.close()
 
 
+@pytest.fixture(scope="session", params=["password", "key"])
+def sync_conn_auth_type(request):
+    # fixture to ensue we use password and key based auth with SystemSSHTransport
+    yield request.param
+
+
 @pytest.fixture(scope="function")
-def sync_cisco_iosxe_conn():
+def sync_cisco_iosxe_conn(sync_conn_auth_type):
     device = DEVICES["mock_cisco_iosxe"].copy()
-    device.pop("auth_password")
-    device["auth_private_key"] = PRIVATE_KEY
+    if sync_conn_auth_type == "key":
+        device.pop("auth_password")
+        device["auth_private_key"] = PRIVATE_KEY
     driver = SYNC_DRIVERS["cisco_iosxe"]
     conn = driver(**device)
     yield conn

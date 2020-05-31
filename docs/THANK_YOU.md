@@ -14,6 +14,7 @@ Thank you to the following people who have made contributions other than (and ma
  interactive inputs, and making the paramiko/ssh2-python transports plugins
 - [Eric Tedor](https://github.com/etedor) for some interesting and challenging use cases that helped to improve some
  of the prompt matching decisions
+- [Ron Frederick](https://github.com/ronf) for building the very awesome asyncssh library!
  
  
 The following people have helped identify and report bugs in scrapli, thank you all!

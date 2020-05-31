@@ -8,8 +8,6 @@ from scrapli.helper import get_prompt_pattern, normalize_lines
 from scrapli.transport.async_transport import AsyncTransport
 from scrapli.transport.transport import Transport
 
-LOG = getLogger("channel")
-
 CHANNEL_ARGS = (
     "transport",
     "comms_prompt_pattern",
@@ -63,7 +61,7 @@ class ChannelBase(ABC):
             N/A
 
         """
-        LOG.name = f"channel-{transport.host}"
+        self.logger = getLogger(f"channel-{transport.host}")
 
         self.transport = transport
         self.comms_prompt_pattern = comms_prompt_pattern
@@ -168,7 +166,7 @@ class ChannelBase(ABC):
 
         """
         self.transport.write(channel_input=self.comms_return_char)
-        LOG.debug(f"Write (sending return character): {repr(self.comms_return_char)}")
+        self.logger.debug(f"Write (sending return character): {repr(self.comms_return_char)}")
 
     @staticmethod
     def _pre_send_input(channel_input: str) -> None:

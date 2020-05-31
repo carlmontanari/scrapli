@@ -34,7 +34,6 @@ TRANSPORT_BASE_ARGS = (
     "timeout_transport",
     "timeout_exit",
 )
-LOG = getLogger("driver")
 
 
 class ScrapeBase:
@@ -152,6 +151,8 @@ class ScrapeBase:
         self._initialization_args: Dict[str, Any] = {}
 
         self._setup_host(host=host, port=port)
+        self.logger = getLogger(f"driver-{self._host}")
+
         self._setup_auth(
             auth_username=auth_username,
             auth_password=auth_password,
@@ -179,7 +180,7 @@ class ScrapeBase:
         self._setup_callables(on_open=on_open, on_close=on_close)
 
         if transport not in ("system", "telnet"):
-            LOG.info(f"Non-core transport `{transport}` selected")
+            self.logger.info(f"Non-core transport `{transport}` selected")
         self._transport = transport
 
         if transport != "telnet":
@@ -283,9 +284,6 @@ class ScrapeBase:
         self._host = host.strip()
         self._initialization_args["host"] = host.strip()
         self._initialization_args["port"] = port
-
-        # set driver log name to include target host
-        LOG.name = f"driver-{host}"
 
     def _setup_auth(
         self,

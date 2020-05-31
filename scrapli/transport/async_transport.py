@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod
 from logging import getLogger
 
-from scrapli.transport.transport import TransportBase
+from scrapli.transport.base_transport import TransportBase
 
 LOG = getLogger("transport")
 
