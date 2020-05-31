@@ -53,6 +53,7 @@ class NetworkDriver(GenericDriver, NetworkDriverBase):
 
         self.auth_secondary = auth_secondary
         self.privilege_levels = privilege_levels
+        self._priv_map = {}
         self.default_desired_privilege_level = default_desired_privilege_level
         self.update_privilege_levels(update_channel=False)
 

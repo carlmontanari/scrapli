@@ -356,6 +356,13 @@ class SystemSSHTransport(Transport):
         stdout_master_pty, stdout_slave_pty = pty.openpty()
         stdin_master_pty, stdin_slave_pty = pty.openpty()
 
+        # ensure that scrapli has xterm set for TERM env var; w/out this we dont have a guaranteed
+        # tty is my understanding. this came up as an issue when testing in github action runners
+        # where they are obviously headless and thus didnt have a tty -- other transports worked
+        # but system failed because of the lack of tty
+        session_env = os.environ.copy()
+        session_env["TERM"] = "xterm"
+
         self.session = Popen(
             open_cmd,
             bufsize=0,
@@ -363,6 +370,7 @@ class SystemSSHTransport(Transport):
             stdin=stdin_slave_pty,
             stdout=stdout_slave_pty,
             stderr=PIPE,
+            env=session_env,
         )
         # close the slave fds, don't need them anymore
         os.close(stdin_slave_pty)
@@ -398,76 +406,7 @@ class SystemSSHTransport(Transport):
         self.session_lock.release()
         return True
 
-    @operation_timeout("_timeout_ops", "Timed out determining if session is authenticated")
-    def _pipes_isauthenticated(self, pipes_session: "PopenBytes") -> bool:
-        """
-        Private method to check initial authentication when using subprocess.Popen
-
-        Since we always run ssh with `-v` we can simply check the stderr (where verbose output goes)
-        to see if `Authenticated to [our host]` is in the output.
-
-        Args:
-            pipes_session: Popen pipes session object
-
-        Returns:
-            bool: True/False session was authenticated
-
-        Raises:
-            ScrapliTimeout: if `Operation timed out` in stderr output
-            ScrapliAuthenticationFailed: if private key permissions are too open
-
-        """
-        if pipes_session.stderr is None:
-            raise ScrapliTimeout(f"Could not read stderr while connecting to host {self.host}")
-
-        output = b""
-        while True:
-            output += pipes_session.stderr.read(65535)
-            if f"Authenticated to {self.host}".encode() in output:
-                self._isauthenticated = True
-                return True
-            if (
-                b"Next authentication method: keyboard-interactive" in output
-                or b"Next authentication method: password" in output
-            ):
-                return False
-            if b"Operation timed out" in output:
-                msg = f"Timed opening connection to host {self.host}"
-                raise ScrapliTimeout(msg)
-            if b"WARNING: UNPROTECTED PRIVATE KEY FILE!" in output:
-                msg = (
-                    f"Permissions for private key `{self.auth_private_key}` are too open, "
-                    "authentication failed!"
-                )
-                raise ScrapliAuthenticationFailed(msg)
-
-    def _open_pty(self, skip_auth: bool = False) -> bool:
-        """
-        Private method to open session with PtyProcess
-
-        Args:
-            skip_auth: skip auth in the case of auth_bypass mode
-
-        Returns:
-            bool: True/False session was opened and authenticated
-
-        Raises:
-            N/A
-
-        """
-        LOG.info(f"Attempting to open session with the following command: {self.open_cmd}")
-        self.session = PtyProcess.spawn(self.open_cmd)
-        LOG.debug(f"Session to host {self.host} spawned")
-        self.session_lock.release()
-        if skip_auth:
-            return True
-        self._pty_authenticate(pty_session=self.session)
-        if not self._pty_isauthenticated(self.session):
-            return False
-        LOG.debug(f"Authenticated to host {self.host} with password")
-        return True
-
-    def _pty_authentication_eof_handler(self, output: bytes) -> str:
+    def _ssh_message_handler(self, output: bytes) -> None:
         """
         Parse EOF messages from _pty_authenticate and create log/stack exception message
 
@@ -475,16 +414,13 @@ class SystemSSHTransport(Transport):
             output: bytes output from _pty_authenticate
 
         Returns:
-            str: message for logging/stack trace
-
-        Raises:
             N/A
 
+        Raises:
+            ScrapliAuthenticationFailed:
+
         """
-        msg = (
-            f"Failed to open connection to host {self.host}. Do you need to disable "
-            "`auth_strict_key`?"
-        )
+        msg = ""
         if b"host key verification failed" in output.lower():
             msg = f"Host key verification failed for host {self.host}"
         elif b"operation timed out" in output.lower() or b"connection timed out" in output.lower():
@@ -512,7 +448,74 @@ class SystemSSHTransport(Transport):
                 msg = (
                     f"No matching cipher found for host {self.host}, their offer: {offered_ciphers}"
                 )
-        return msg
+        elif b"WARNING: UNPROTECTED PRIVATE KEY FILE!" in output:
+            msg = (
+                f"Permissions for private key `{self.auth_private_key}` are too open, "
+                "authentication failed!"
+            )
+        if msg:
+            LOG.critical(msg)
+            raise ScrapliAuthenticationFailed(msg)
+
+    @operation_timeout("_timeout_ops", "Timed out determining if session is authenticated")
+    def _pipes_isauthenticated(self, pipes_session: "PopenBytes") -> bool:
+        """
+        Private method to check initial authentication when using subprocess.Popen
+
+        Since we always run ssh with `-v` we can simply check the stderr (where verbose output goes)
+        to see if `Authenticated to [our host]` is in the output.
+
+        Args:
+            pipes_session: Popen pipes session object
+
+        Returns:
+            bool: True/False session was authenticated
+
+        Raises:
+            N/A
+
+        """
+        if pipes_session.stderr is None:
+            raise ScrapliTimeout(f"Could not read stderr while connecting to host {self.host}")
+
+        output = b""
+        while True:
+            output += pipes_session.stderr.read(65535)
+            if f"Authenticated to {self.host}".encode() in output:
+                self._isauthenticated = True
+                return True
+            if (
+                b"next authentication method: keyboard-interactive" in output.lower()
+                or b"next authentication method: password" in output.lower()
+            ):
+                return False
+            self._ssh_message_handler(output=output)
+
+    def _open_pty(self, skip_auth: bool = False) -> bool:
+        """
+        Private method to open session with PtyProcess
+
+        Args:
+            skip_auth: skip auth in the case of auth_bypass mode
+
+        Returns:
+            bool: True/False session was opened and authenticated
+
+        Raises:
+            N/A
+
+        """
+        LOG.info(f"Attempting to open session with the following command: {self.open_cmd}")
+        self.session = PtyProcess.spawn(self.open_cmd)
+        LOG.debug(f"Session to host {self.host} spawned")
+        self.session_lock.release()
+        if skip_auth:
+            return True
+        self._pty_authenticate(pty_session=self.session)
+        if not self._pty_isauthenticated(self.session):
+            return False
+        LOG.debug(f"Authenticated to host {self.host} with password")
+        return True
 
     @operation_timeout("_timeout_ops", "Timed out looking for SSH login password prompt")
     def _pty_authenticate(self, pty_session: PtyProcess) -> None:
@@ -526,8 +529,8 @@ class SystemSSHTransport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            ScrapliAuthenticationFailed: if we receive an EOFError -- this usually indicates that
-                host key checking is enabled and failed.
+            ScrapliAuthenticationFailed: if we get EOF and _ssh_message_handler does not raise an
+                explicit exception/message
 
         """
         self.session_lock.acquire()
@@ -538,7 +541,13 @@ class SystemSSHTransport(Transport):
                 output += new_output
                 LOG.debug(f"Attempting to authenticate. Read: {repr(new_output)}")
             except EOFError:
-                msg = self._pty_authentication_eof_handler(output)
+                self._ssh_message_handler(output=output)
+                # if _ssh_message_handler didn't raise any exception, we can raise the standard --
+                # did you disable strict key message/exception
+                msg = (
+                    f"Failed to open connection to host {self.host}. Do you need to disable "
+                    "`auth_strict_key`?"
+                )
                 LOG.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
             if self._comms_ansi:
@@ -627,8 +636,12 @@ class SystemSSHTransport(Transport):
         self.session_lock.acquire()
         if isinstance(self.session, Popen):
             self.session.kill()
-            os.close(self._stdout_fd)
-            os.close(self._stdin_fd)
+            try:
+                os.close(self._stdout_fd)
+                os.close(self._stdin_fd)
+            except OSError:
+                # fds were never opened or were already closed
+                pass
         elif isinstance(self.session, PtyProcess):
             # killing ptyprocess seems to make things hang open?
             self.session.terminated = True

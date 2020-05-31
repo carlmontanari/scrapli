@@ -82,7 +82,7 @@ class PrivilegeAction(Enum):
 class NetworkDriverBase:
     # NetworkDriverBase Mixin default values
     comms_prompt_pattern: str
-    _priv_map: Dict[str, List[str]] = {}
+    _priv_map: Dict[str, List[str]]
     _current_priv_level = DUMMY_PRIV_LEVEL
 
     # NetworkDriverBase Mixin values set in init of sync/async NetworkDriver classes
