@@ -5,8 +5,6 @@ from typing import Optional
 
 from scrapli.exceptions import ScrapliTimeout
 
-LOG = getLogger("transport")
-
 
 class Socket:
     def __init__(self, host: str, port: int, timeout: int):
@@ -25,6 +23,7 @@ class Socket:
             N/A
 
         """
+        self.logger = getLogger(f"scrapli.socket-{host}")
         self.host: str = host
         self.port: int = port
         self.timeout: int = timeout
@@ -76,7 +75,9 @@ class Socket:
             N/A
 
         """
-        return f"Socket {self.__dict__}"
+        class_dict = self.__dict__.copy()
+        class_dict["logger"] = self.logger.name
+        return f"Socket {class_dict}"
 
     def socket_open(self) -> None:
         """
@@ -99,18 +100,20 @@ class Socket:
             try:
                 self.sock.connect((self.host, self.port))
             except ConnectionRefusedError:
-                LOG.critical(
+                self.logger.critical(
                     f"Connection refused trying to open socket to {self.host} on port {self.port}"
                 )
                 raise ConnectionRefusedError(
                     f"Connection refused trying to open socket to {self.host} on port {self.port}"
                 )
             except socket.timeout:
-                LOG.critical(f"Timed out trying to open socket to {self.host} on port {self.port}")
+                self.logger.critical(
+                    f"Timed out trying to open socket to {self.host} on port {self.port}"
+                )
                 raise ScrapliTimeout(
                     f"Timed out trying to open socket to {self.host} on port {self.port}"
                 )
-            LOG.debug(f"Socket to host {self.host} opened")
+            self.logger.debug(f"Socket to host {self.host} opened")
 
     def socket_close(self) -> None:
         """
@@ -128,7 +131,7 @@ class Socket:
         """
         if self.socket_isalive() and isinstance(self.sock, socket.socket):
             self.sock.close()
-            LOG.debug(f"Socket to host {self.host} closed")
+            self.logger.debug(f"Socket to host {self.host} closed")
 
     def socket_isalive(self) -> bool:
         """
@@ -149,6 +152,6 @@ class Socket:
                 self.sock.send(b"")
                 return True
         except OSError:
-            LOG.debug(f"Socket to host {self.host} is not alive")
+            self.logger.debug(f"Socket to host {self.host} is not alive")
             return False
         return False

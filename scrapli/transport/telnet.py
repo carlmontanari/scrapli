@@ -1,6 +1,5 @@
 """scrapli.transport.telnet"""
 import re
-from logging import getLogger
 from select import select
 from telnetlib import Telnet
 from typing import Optional
@@ -9,8 +8,6 @@ from scrapli.decorators import operation_timeout, requires_open_session
 from scrapli.exceptions import ScrapliAuthenticationFailed
 from scrapli.helper import get_prompt_pattern, strip_ansi
 from scrapli.transport.transport import Transport
-
-LOG = getLogger("transport")
 
 TELNET_TRANSPORT_ARGS = (
     "auth_username",
@@ -186,14 +183,14 @@ class TelnetTransport(Transport):
                 msg = f"Failed to open telnet session to host {self.host}, connection refused"
             raise ScrapliAuthenticationFailed(msg)
         telnet_session.timeout = self.timeout_transport
-        LOG.debug(f"Session to host {self.host} spawned")
+        self.logger.debug(f"Session to host {self.host} spawned")
         self.session_lock.release()
         self._authenticate(telnet_session=telnet_session)
         if not self._telnet_isauthenticated(telnet_session=telnet_session):
             raise ScrapliAuthenticationFailed(
                 f"Could not authenticate over telnet to host: {self.host}"
             )
-        LOG.debug(f"Authenticated to host {self.host} with password")
+        self.logger.debug(f"Authenticated to host {self.host} with password")
         self.session = telnet_session
 
     @operation_timeout("_timeout_ops_auth", "Timed out looking for telnet login prompts")
@@ -244,7 +241,7 @@ class TelnetTransport(Transport):
             N/A
 
         """
-        LOG.debug("Attempting to determine if telnet authentication was successful")
+        self.logger.debug("Attempting to determine if telnet authentication was successful")
         if not telnet_session.eof:
             prompt_pattern = get_prompt_pattern(prompt="", class_prompt=self._comms_prompt_pattern)
             telnet_session_fd = telnet_session.fileno()
@@ -257,7 +254,7 @@ class TelnetTransport(Transport):
                 fd_ready, _, _ = select([telnet_session_fd], [], [], 0)
                 if telnet_session_fd in fd_ready:
                     break
-                LOG.debug("PTY fd not ready yet...")
+                self.logger.debug("PTY fd not ready yet...")
             output = b""
             while True:
                 output += telnet_session.read_eager()
@@ -293,7 +290,7 @@ class TelnetTransport(Transport):
         """
         self.session_lock.acquire()
         self.session.close()
-        LOG.debug(f"Channel to host {self.host} closed")
+        self.logger.debug(f"Channel to host {self.host} closed")
         self.session_lock.release()
 
     def isalive(self) -> bool:

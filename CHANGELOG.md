@@ -31,6 +31,8 @@ CHANGELOG
 - Moved from tox to using nox for handling tests/linting; originally this was because of some of the unit testing
  failing when ran via tox (now I believe this was because there was no TERM env var set in tox), but at this point
   nox is quite nice so we'll stick with it!
+- Added exception to be raised when users try to use system transport on Windows
+
 
 # 2020.05.09
 - Add underscores to EOS config prompt matching

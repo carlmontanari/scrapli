@@ -1,11 +1,13 @@
 """scrapli.driver.base_driver"""
 import os
 import re
+import sys
 from logging import getLogger
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Tuple, Union
 
 from scrapli.channel import CHANNEL_ARGS
+from scrapli.exceptions import UnsupportedPlatform
 from scrapli.helper import _find_transport_plugin, resolve_ssh_config, resolve_ssh_known_hosts
 from scrapli.transport import (
     SYSTEM_SSH_TRANSPORT_ARGS,
@@ -143,7 +145,7 @@ class ScrapeBase:
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            UnsupportedPlatform: if using windows with system transport
 
         """
         # create a dict of all "initialization" args for posterity and for passing to Transport
@@ -151,7 +153,7 @@ class ScrapeBase:
         self._initialization_args: Dict[str, Any] = {}
 
         self._setup_host(host=host, port=port)
-        self.logger = getLogger(f"driver-{self._host}")
+        self.logger = getLogger(f"scrapli.driver-{self._host}")
 
         self._setup_auth(
             auth_username=auth_username,
@@ -182,6 +184,10 @@ class ScrapeBase:
         if transport not in ("system", "telnet"):
             self.logger.info(f"Non-core transport `{transport}` selected")
         self._transport = transport
+
+        if transport == "system" and sys.platform.startswith("win"):
+            msg = "`system` transport is not supported on Windows, please use a different transport"
+            raise UnsupportedPlatform(msg)
 
         if transport != "telnet":
             self._setup_ssh_args(

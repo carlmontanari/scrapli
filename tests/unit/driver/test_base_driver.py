@@ -7,6 +7,7 @@ import pytest
 
 import scrapli
 from scrapli import Scrape
+from scrapli.exceptions import UnsupportedPlatform
 
 TEST_DATA_DIR = f"{Path(scrapli.__file__).parents[1]}/tests/test_data"
 
@@ -105,6 +106,18 @@ def test_exceptions_raised(attr_setup):
     with pytest.raises(attr_exc) as exc:
         Scrape(**args)
     assert str(exc.value) == attr_msg
+
+
+def test_unsupported_platform():
+    original_platform = sys.platform
+    sys.platform = "win32"
+    with pytest.raises(UnsupportedPlatform) as exc:
+        Scrape(host="localhost")
+    assert (
+        str(exc.value)
+        == "`system` transport is not supported on Windows, please use a different transport"
+    )
+    sys.platform = original_platform
 
 
 @pytest.mark.parametrize(

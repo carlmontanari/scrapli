@@ -1,6 +1,6 @@
 """scrapli network ssh client library"""
 import logging
-from logging import NullHandler
+from logging import getLogger
 from typing import Optional, Tuple
 
 from scrapli.driver import AsyncScrape, Scrape
@@ -48,8 +48,5 @@ class DuplicateFilter(logging.Filter):
         return False
 
 
-# Setup channel logger
-TRANSPORT_LOG = logging.getLogger("channel")
-# Add duplicate filter to channel log
-TRANSPORT_LOG.addFilter(DuplicateFilter())
-logging.getLogger("channel").addHandler(NullHandler())
+SCRAPLI_LOG = getLogger("scrapli")
+SCRAPLI_LOG.addFilter(DuplicateFilter())

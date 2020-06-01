@@ -1,7 +1,6 @@
 """scrapli.transport.systemssh"""
 import os
 import re
-from logging import getLogger
 from select import select
 from subprocess import PIPE, Popen
 from typing import TYPE_CHECKING, Any, Dict, Optional, Union
@@ -16,7 +15,6 @@ from scrapli.transport.transport import Transport
 if TYPE_CHECKING:
     PopenBytes = Popen[bytes]  # pylint: disable=E1136; # pragma:  no cover
 
-LOG = getLogger("transport")
 
 SYSTEM_SSH_TRANSPORT_ARGS = (
     "auth_username",
@@ -283,11 +281,11 @@ class SystemSSHTransport(Transport):
         """
         self.session_lock.acquire()
 
-        LOG.info(f"Attempting to authenticate to {self.host}")
+        self.logger.info(f"Attempting to authenticate to {self.host}")
 
         # if auth_bypass kick off keepalive thread if necessary and return
         if self.auth_bypass:
-            LOG.info("`auth_bypass` is True, bypassing authentication")
+            self.logger.info("`auth_bypass` is True, bypassing authentication")
             self._open_pty(skip_auth=True)
             self._session_keepalive()
             return
@@ -307,21 +305,21 @@ class SystemSSHTransport(Transport):
                     f"`{self.auth_private_key}`. Unable to continue authentication, "
                     "missing username, password, or both."
                 )
-                LOG.critical(msg)
+                self.logger.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
             msg = (
                 f"Failed to authenticate to host {self.host} with private key "
                 f"`{self.auth_private_key}`. Attempting to continue with password authentication."
             )
-            LOG.critical(msg)
+            self.logger.critical(msg)
 
         # If public key auth fails or is not configured, open a pty session
         if not self._open_pty():
             msg = f"Authentication to host {self.host} failed"
-            LOG.critical(msg)
+            self.logger.critical(msg)
             raise ScrapliAuthenticationFailed(msg)
 
-        LOG.info(f"Successfully authenticated to {self.host}")
+        self.logger.info(f"Successfully authenticated to {self.host}")
 
         if self.keepalive:
             self._session_keepalive()
@@ -351,7 +349,7 @@ class SystemSSHTransport(Transport):
         open_cmd.append("-v")
         open_cmd.extend(["-o", "BatchMode=yes"])
 
-        LOG.info(f"Attempting to open session with the following command: {open_cmd}")
+        self.logger.info(f"Attempting to open session with the following command: {open_cmd}")
 
         stdout_master_pty, stdout_slave_pty = pty.openpty()
         stdin_master_pty, stdin_slave_pty = pty.openpty()
@@ -367,7 +365,7 @@ class SystemSSHTransport(Transport):
         # close the slave fds, don't need them anymore
         os.close(stdin_slave_pty)
         os.close(stdout_slave_pty)
-        LOG.debug(f"Session to host {self.host} spawned")
+        self.logger.debug(f"Session to host {self.host} spawned")
 
         try:
             self._pipes_isauthenticated(self.session)
@@ -388,7 +386,7 @@ class SystemSSHTransport(Transport):
             self.session_lock.acquire()
             return False
 
-        LOG.debug(f"Authenticated to host {self.host} with public key")
+        self.logger.debug(f"Authenticated to host {self.host} with public key")
 
         # set stdin/stdout to the new master pty fds
         self._stdin_fd = stdin_master_pty
@@ -448,7 +446,7 @@ class SystemSSHTransport(Transport):
         elif b"could not resolve hostname" in output.lower():
             msg = f"Could not resolve address for host `{self.host}`"
         if msg:
-            LOG.critical(msg)
+            self.logger.critical(msg)
             raise ScrapliAuthenticationFailed(msg)
 
     @operation_timeout("_timeout_ops", "Timed out determining if session is authenticated")
@@ -499,16 +497,16 @@ class SystemSSHTransport(Transport):
             N/A
 
         """
-        LOG.info(f"Attempting to open session with the following command: {self.open_cmd}")
+        self.logger.info(f"Attempting to open session with the following command: {self.open_cmd}")
         self.session = PtyProcess.spawn(self.open_cmd)
-        LOG.debug(f"Session to host {self.host} spawned")
+        self.logger.debug(f"Session to host {self.host} spawned")
         self.session_lock.release()
         if skip_auth:
             return True
         self._pty_authenticate(pty_session=self.session)
         if not self._pty_isauthenticated(self.session):
             return False
-        LOG.debug(f"Authenticated to host {self.host} with password")
+        self.logger.debug(f"Authenticated to host {self.host} with password")
         return True
 
     @operation_timeout("_timeout_ops", "Timed out looking for SSH login password prompt")
@@ -533,7 +531,7 @@ class SystemSSHTransport(Transport):
             try:
                 new_output = pty_session.read()
                 output += new_output
-                LOG.debug(f"Attempting to authenticate. Read: {repr(new_output)}")
+                self.logger.debug(f"Attempting to authenticate. Read: {repr(new_output)}")
             except EOFError:
                 self._ssh_message_handler(output=output)
                 # if _ssh_message_handler didn't raise any exception, we can raise the standard --
@@ -542,12 +540,12 @@ class SystemSSHTransport(Transport):
                     f"Failed to open connection to host {self.host}. Do you need to disable "
                     "`auth_strict_key`?"
                 )
-                LOG.critical(msg)
+                self.logger.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
             if self._comms_ansi:
                 output = strip_ansi(output)
             if b"password" in output.lower():
-                LOG.info("Found password prompt, sending password")
+                self.logger.info("Found password prompt, sending password")
                 pty_session.write(self.auth_password.encode())
                 pty_session.write(self._comms_return_char.encode())
                 self.session_lock.release()
@@ -571,7 +569,7 @@ class SystemSSHTransport(Transport):
             N/A
 
         """
-        LOG.debug("Attempting to determine if PTY authentication was successful")
+        self.logger.debug("Attempting to determine if PTY authentication was successful")
         if pty_session.isalive() and not pty_session.eof():
             prompt_pattern = get_prompt_pattern(prompt="", class_prompt=self._comms_prompt_pattern)
             self.session_lock.acquire()
@@ -583,12 +581,14 @@ class SystemSSHTransport(Transport):
                 fd_ready, _, _ = select([pty_session.fd], [], [], 0)
                 if pty_session.fd in fd_ready:
                     break
-                LOG.debug("PTY fd not ready yet...")
+                self.logger.debug("PTY fd not ready yet...")
             output = b""
             while True:
                 new_output = pty_session.read()
                 output += new_output
-                LOG.debug(f"Attempting to validate authentication. Read: {repr(new_output)}")
+                self.logger.debug(
+                    f"Attempting to validate authentication. Read: {repr(new_output)}"
+                )
                 # we do not need to deal w/ line replacement for the actual output, only for
                 # parsing if a prompt-like thing is at the end of the output
                 output = output.replace(b"\r", b"")
@@ -604,12 +604,14 @@ class SystemSSHTransport(Transport):
                     return True
                 if b"password:" in output.lower():
                     # if we see "password" we know auth failed (hopefully in all scenarios!)
-                    LOG.critical(
+                    self.logger.critical(
                         "Found `password:` in output, assuming password authentication failed"
                     )
                     return False
                 if output:
-                    LOG.debug(f"Cannot determine if authenticated, \n\tRead: {repr(output)}")
+                    self.logger.debug(
+                        f"Cannot determine if authenticated, \n\tRead: {repr(output)}"
+                    )
         self.session_lock.release()
         return False
 
@@ -639,7 +641,7 @@ class SystemSSHTransport(Transport):
         elif isinstance(self.session, PtyProcess):
             # killing ptyprocess seems to make things hang open?
             self.session.terminated = True
-        LOG.debug(f"Channel to host {self.host} closed")
+        self.logger.debug(f"Channel to host {self.host} closed")
         self.session_lock.release()
 
     def isalive(self) -> bool:

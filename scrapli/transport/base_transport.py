@@ -4,8 +4,6 @@ from logging import getLogger
 from threading import Lock
 from typing import Optional
 
-LOG = getLogger("transport")
-
 
 class TransportBase(ABC):
     def __init__(
@@ -52,7 +50,7 @@ class TransportBase(ABC):
             N/A
 
         """
-        LOG.name = f"transport-{host}"
+        self.logger = getLogger(f"scrapli.transport-{host}")
 
         self.host: str = host
         self.port: int = port
@@ -115,6 +113,7 @@ class TransportBase(ABC):
         class_dict = self.__dict__.copy()
         class_dict["auth_password"] = "********"
         class_dict["session_lock"] = self.session_lock.locked()
+        class_dict["logger"] = self.logger.name
         return f"Transport {class_dict}"
 
     @abstractmethod

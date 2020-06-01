@@ -1483,28 +1483,11 @@ IOSXE is the only platform that is testing SSH key based authentication at the m
   based auth as well, but for now IOSXE is representative enough to provide some faith that key based auth works! 
 
 
-# Todo and Roadmap
+# Roadmap
 
-This section may not get updated much, but will hopefully reflect the priority items for short term (todo) and longer
- term (roadmap) for scrapli.
-
-## Todo
-
-- Investigate setter methods for setting user/pass/and other attrs on base scrape object... they should be able to be
- set at that level and have the transport updated if it can be done reasonably
-- Refresh the keepalive stuff -- how/where keepalives get kicked off needs to be reevaluated, particularly for
- systemssh "standard" keepalives as this should really be happening in the open command (systemssh will probably have
-  to override some Transport methods basically), get all of this under functional testing as well
-- Add tests for timeouts if possible
-- Add more tests for auth failures
-- Add tests for custom on open/close functions
-- Remove as much as possible from the vendor'd `ptyprocess` code. Type hint it, add docstrings everywhere, add tests
- if possible (and remove from ignore for test coverage and darglint).
-- Add darglint back in if it gets faster
-
-## Roadmap
+This section may not get updated much, but should at least provide a bit of an idea about what is to come for scrapli!
 
 - Plugins -- build framework to allow for others to easily build driver plugins if desired
 - Ensure v6 stuff works as expected.
 - Continue to add/support ssh config file things.
-- Maybe make this into a netconf driver as well? ncclient is just built on paramiko so it seems doable...?
+- Get back to work on scrapli_netconf!

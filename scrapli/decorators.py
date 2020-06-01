@@ -1,6 +1,5 @@
 """scrapli.decorators"""
 from concurrent.futures import ThreadPoolExecutor, wait
-from logging import getLogger
 from typing import TYPE_CHECKING, Any, Callable, Dict, Union
 
 from scrapli.exceptions import ConnectionNotOpened
@@ -8,8 +7,6 @@ from scrapli.exceptions import ConnectionNotOpened
 if TYPE_CHECKING:
     from scrapli.channel import Channel  # pragma:  no cover
     from scrapli.transport import Transport  # pragma:  no cover
-
-LOG = getLogger("scrapli")
 
 
 def operation_timeout(attribute: str, message: str = "") -> Callable[..., Any]:
@@ -47,7 +44,7 @@ def operation_timeout(attribute: str, message: str = "") -> Callable[..., Any]:
 
             timeout_duration = getattr(channel_or_transport, attribute, None)
             if not timeout_duration:
-                LOG.info(
+                channel_or_transport.logger.info(
                     f"Could not find {attribute} value of {channel_or_transport}, continuing "
                     "without timeout decorator"
                 )
@@ -70,9 +67,9 @@ def operation_timeout(attribute: str, message: str = "") -> Callable[..., Any]:
             future = pool.submit(wrapped_func, channel_or_transport, *args, **kwargs)
             wait([future], timeout=timeout_duration)
             if not future.done():
-                LOG.info(message)
+                channel_or_transport.logger.info(message)
                 if timeout_exit:
-                    LOG.info("timeout_exit is True, closing transport")
+                    channel_or_transport.logger.info("timeout_exit is True, closing transport")
                     if session_lock.locked():
                         session_lock.release()
                     close()

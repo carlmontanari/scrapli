@@ -4,12 +4,9 @@ import time
 from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-from logging import getLogger
 
 from scrapli.exceptions import ScrapliKeepaliveFailure
 from scrapli.transport.base_transport import TransportBase
-
-LOG = getLogger("transport")
 
 
 class Transport(TransportBase, ABC):
@@ -118,7 +115,7 @@ class Transport(TransportBase, ABC):
             diff = datetime.now() - last_keepalive
             if diff.seconds >= self.keepalive_interval:
                 if not self.session_lock.locked():
-                    LOG.debug(
+                    self.logger.debug(
                         f"Sending 'network' keepalive with pattern {repr(self.keepalive_pattern)}."
                     )
                     lock_counter = 0
@@ -129,13 +126,15 @@ class Transport(TransportBase, ABC):
                 else:
                     lock_counter += 1
                     if lock_counter >= 3:
-                        LOG.info(f"Keepalive thread missed {lock_counter} consecutive keepalives.")
+                        self.logger.info(
+                            f"Keepalive thread missed {lock_counter} consecutive keepalives."
+                        )
             if diff.seconds > self.keepalive_interval * 3:
                 msg = (
                     "Keepalive thread has failed to send a keepalive in greater than three "
                     "times the keepalive interval!"
                 )
-                LOG.critical(msg)
+                self.logger.critical(msg)
                 raise ScrapliKeepaliveFailure(msg)
             time.sleep(self.keepalive_interval / 10)
 

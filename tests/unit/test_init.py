@@ -1,10 +1,9 @@
+import logging
 from logging import LogRecord
-
-from scrapli.__init__ import DuplicateFilter
 
 
 def test_duplicate_filter():
-    logger = DuplicateFilter()
+    logger = logging.getLogger("scrapli")
     log_entry = LogRecord(
         name="scrapli_test",
         level="DEBUG",

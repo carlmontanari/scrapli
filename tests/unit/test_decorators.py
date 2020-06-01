@@ -4,11 +4,14 @@ from threading import Lock
 import pytest
 
 from scrapli.decorators import operation_timeout, requires_open_session
+from scrapli.driver.base_driver import ScrapeBase
 from scrapli.exceptions import ConnectionNotOpened
 
 
-class SlowClass:
+class SlowClass(ScrapeBase):
     def __init__(self):
+        # subclass base scrape to have a logger setup and such
+        super().__init__(host="localhost")
         self.timeout_test = 0.5
         self.timeout_exit = True
         self.session_lock = Lock()

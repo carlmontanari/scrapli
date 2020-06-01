@@ -20,17 +20,15 @@ def test_repr():
     conn = SystemSSHTransport("localhost")
     assert (
         repr(conn)
-        == "Transport {'host': 'localhost', 'port': 22, 'timeout_socket': 5, 'timeout_transport': 5, "
-        "'timeout_exit': True, 'keepalive': False, 'keepalive_interval': 30, 'keepalive_type': '', "
-        "'keepalive_pattern': '\\x05', 'session_lock': False, "
-        "'auth_username': '', 'auth_private_key': '', 'auth_password': '********', "
-        "'auth_strict_key': True, 'auth_bypass': False, '_timeout_ops': 10, '_comms_prompt_pattern': "
-        "'^[a-z0-9.\\\\-@()/:]{1,32}[#>$]$', '_comms_return_char': '\\n', '_comms_ansi': False, "
-        "'ssh_config_file': '', 'ssh_known_hosts_file': '', 'lib_auth_exception': <class "
-        "'scrapli.exceptions.ScrapliAuthenticationFailed'>, '_isauthenticated': False, "
-        "'transport_options': {}, 'open_cmd': ['ssh', 'localhost', '-p', '22', '-o', "
-        "'ConnectTimeout=5', '-o', 'ServerAliveInterval=5', '-o', 'StrictHostKeyChecking=yes', '-F', "
-        "'/dev/null'], '_stdin_fd': -1, '_stdout_fd': -1}"
+        == "Transport {'logger': 'scrapli.transport-localhost', 'host': 'localhost', 'port': 22, 'timeout_socket': 5, "
+        "'timeout_transport': 5, 'timeout_exit': True, 'keepalive': False, 'keepalive_interval': 30, "
+        "'keepalive_type': '', 'keepalive_pattern': '\\x05', 'session_lock': False, 'auth_username': '', "
+        "'auth_private_key': '', 'auth_password': '********', 'auth_strict_key': True, 'auth_bypass': False, "
+        "'_timeout_ops': 10, '_comms_prompt_pattern': '^[a-z0-9.\\\\-@()/:]{1,32}[#>$]$', '_comms_return_char': "
+        "'\\n', '_comms_ansi': False, 'ssh_config_file': '', 'ssh_known_hosts_file': '', 'lib_auth_exception': "
+        "<class 'scrapli.exceptions.ScrapliAuthenticationFailed'>, '_isauthenticated': False, 'transport_options': "
+        "{}, 'open_cmd': ['ssh', 'localhost', '-p', '22', '-o', 'ConnectTimeout=5', '-o', 'ServerAliveInterval=5', "
+        "'-o', 'StrictHostKeyChecking=yes', '-F', '/dev/null'], '_stdin_fd': -1, '_stdout_fd': -1}"
     )
 
 

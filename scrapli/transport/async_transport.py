@@ -1,10 +1,7 @@
 """scrapli.transport.async_transport"""
 from abc import ABC, abstractmethod
-from logging import getLogger
 
 from scrapli.transport.base_transport import TransportBase
-
-LOG = getLogger("transport")
 
 
 class AsyncTransport(TransportBase, ABC):

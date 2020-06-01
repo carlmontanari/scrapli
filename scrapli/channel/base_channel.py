@@ -61,7 +61,7 @@ class ChannelBase(ABC):
             N/A
 
         """
-        self.logger = getLogger(f"channel-{transport.host}")
+        self.logger = getLogger(f"scrapli.channel-{transport.host}")
 
         self.transport = transport
         self.comms_prompt_pattern = comms_prompt_pattern
@@ -102,6 +102,7 @@ class ChannelBase(ABC):
         """
         class_dict = self.__dict__.copy()
         class_dict.pop("transport")
+        class_dict["logger"] = self.logger.name
         return f"scrapli Channel {class_dict}"
 
     def _restructure_output(self, output: bytes, strip_prompt: bool = False) -> bytes:
