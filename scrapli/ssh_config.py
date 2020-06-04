@@ -367,7 +367,9 @@ class SSHKnownHosts:
 
         """
         if not isinstance(ssh_known_hosts_file, str):
-            raise TypeError(f"`ssh_config_file` expected str, got {type(ssh_known_hosts_file)}")
+            raise TypeError(
+                f"`ssh_known_hosts_file` expected str, got {type(ssh_known_hosts_file)}"
+            )
 
         self.ssh_known_hosts_file = os.path.expanduser(ssh_known_hosts_file)
         if self.ssh_known_hosts_file:

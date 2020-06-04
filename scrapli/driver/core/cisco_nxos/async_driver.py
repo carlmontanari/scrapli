@@ -151,7 +151,7 @@ class AsyncNXOSDriver(AsyncNetworkDriver, NXOSDriverBase):
         """
         # nxos pattern for config sessions should *always* have `config-s`
         if "config\\-s" in self._current_priv_level.pattern:
-            self.channel.send_input(channel_input="abort")
+            await self.channel.send_input(channel_input="abort")
             self._current_priv_level = self.privilege_levels["privilege_exec"]
 
     def register_configuration_session(self, session_name: str) -> None:

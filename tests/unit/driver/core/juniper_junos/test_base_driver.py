@@ -7,8 +7,8 @@ from scrapli.driver.core.juniper_junos.driver import PRIVS
 
 @pytest.mark.parametrize(
     "priv_pattern",
-    [("exec", "vrnetlab> "), ("configuration", "vrnetlab# ")],
-    ids=["exec", "configuration"],
+    [("exec", "vrnetlab> "), ("configuration", "vrnetlab# "), ("exec", "vrn_etlab> ")],
+    ids=["exec", "configuration", "exec_underscore"],
 )
 def test_prompt_patterns(priv_pattern):
     priv_level_name = priv_pattern[0]

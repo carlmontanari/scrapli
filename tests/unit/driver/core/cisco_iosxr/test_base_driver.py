@@ -7,8 +7,12 @@ from scrapli.driver.core.cisco_iosxr.driver import PRIVS
 
 @pytest.mark.parametrize(
     "priv_pattern",
-    [("privilege_exec", r"RP/0/RP0/CPU0:ios#"), ("configuration", r"RP/0/RP0/CPU0:ios(config)#")],
-    ids=["privilege_exec", "configuration"],
+    [
+        ("privilege_exec", r"RP/0/RP0/CPU0:ios#"),
+        ("configuration", r"RP/0/RP0/CPU0:ios(config)#"),
+        ("configuration", r"RP/0/RP0/CPU0:i_o_s(config)#"),
+    ],
+    ids=["privilege_exec", "configuration", "privilege_exec_underscore"],
 )
 def test_prompt_patterns(priv_pattern):
     priv_level_name = priv_pattern[0]

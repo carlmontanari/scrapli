@@ -139,6 +139,8 @@ class AsyncChannel(ChannelBase):
         output = b""
         while True:
             output += await self._read_chunk()
+            if self.comms_ansi:
+                output = strip_ansi(output=output)
             channel_match = re.search(pattern=prompt_pattern, string=output)
             if channel_match:
                 self.transport.set_timeout()

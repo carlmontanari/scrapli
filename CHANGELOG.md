@@ -32,7 +32,7 @@ CHANGELOG
  failing when ran via tox (now I believe this was because there was no TERM env var set in tox), but at this point
   nox is quite nice so we'll stick with it!
 - Added exception to be raised when users try to use system transport on Windows
-
+- Added underscores to hostname patterns for IOSXE, IOSXR, NXOS, and Junos (not valid in EOS at least in my testing)
 
 # 2020.05.09
 - Add underscores to EOS config prompt matching
