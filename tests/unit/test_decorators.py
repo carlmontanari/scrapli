@@ -11,7 +11,8 @@ from scrapli.exceptions import ConnectionNotOpened
 class SlowClass(ScrapeBase):
     def __init__(self):
         # subclass base scrape to have a logger setup and such
-        super().__init__(host="localhost")
+        # set transport to telnet as it works on all platforms and is standard library!
+        super().__init__(host="localhost", transport="telnet")
         self.timeout_test = 0.5
         self.timeout_exit = True
         self.session_lock = Lock()
