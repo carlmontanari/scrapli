@@ -9,7 +9,7 @@ exclude = '''
     | \.git
     | \.hg
     | \.mypy_cache
-    | \.tox
+    | \.nox
     | venv
   )/
 )
