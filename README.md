@@ -316,9 +316,10 @@ pip isntall scrapli[full]
 ``` 
 
 As for platforms to *run* scrapli on -- it has and will be tested on MacOS and Ubuntu regularly and should work on any
- POSIX system. Windows is now being tested very minimally via GitHub Actions builds, however it is important to note
-  that if you wish to use Windows you will need to use paramiko or ssh2-python as the transport driver. It is
-   *strongly* recommended/preferred for folks to use WSL/Cygwin and stick with "system" as the transport. 
+ POSIX system. Windows at one point was being tested very minimally via GitHub Actions builds, however this is no
+  longer the case as it is just not worth the effort. While scrapli should work on windows when using the paramiko or
+   ssh2-python transport drivers, it is not "officially" supported. It is *strongly* recommended/preferred for folks
+    to use WSL/Cygwin instead of Windows.
 
 
 # Basic Usage

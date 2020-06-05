@@ -1,5 +1,3 @@
-import sys
-
 import pytest
 
 from scrapli.driver.core.arista_eos.driver import EOSDriver, eos_on_close, eos_on_open
@@ -13,7 +11,6 @@ def custom_open_close_func():
     return
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="no asyncssh on windows")
 @pytest.mark.parametrize(
     "attr_setup",
     [
