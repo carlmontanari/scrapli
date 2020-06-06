@@ -1,16 +1,13 @@
 """scrapli.transport.telnet"""
 import re
-from logging import getLogger
 from select import select
 from telnetlib import Telnet
 from typing import Optional
 
-from scrapli.decorators import operation_timeout
+from scrapli.decorators import operation_timeout, requires_open_session
 from scrapli.exceptions import ScrapliAuthenticationFailed
 from scrapli.helper import get_prompt_pattern, strip_ansi
 from scrapli.transport.transport import Transport
-
-LOG = getLogger("transport")
 
 TELNET_TRANSPORT_ARGS = (
     "auth_username",
@@ -24,6 +21,21 @@ TELNET_TRANSPORT_ARGS = (
 
 class ScrapliTelnet(Telnet):
     def __init__(self, host: str, port: int, timeout: int) -> None:
+        """
+        ScrapliTelnet class for typing purposes
+
+        Args:
+            host: string of host
+            port: integer port to connect to
+            timeout: timeout value in seconds
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
         self.eof: bool
         self.timeout: int
         super().__init__(host, port, timeout)
@@ -48,7 +60,7 @@ class TelnetTransport(Transport):
         comms_return_char: str = "\n",
         comms_ansi: bool = False,
     ) -> None:
-        """
+        r"""
         TelnetTransport Object
 
         Inherit from Transport ABC
@@ -171,14 +183,14 @@ class TelnetTransport(Transport):
                 msg = f"Failed to open telnet session to host {self.host}, connection refused"
             raise ScrapliAuthenticationFailed(msg)
         telnet_session.timeout = self.timeout_transport
-        LOG.debug(f"Session to host {self.host} spawned")
+        self.logger.debug(f"Session to host {self.host} spawned")
         self.session_lock.release()
         self._authenticate(telnet_session=telnet_session)
         if not self._telnet_isauthenticated(telnet_session=telnet_session):
             raise ScrapliAuthenticationFailed(
                 f"Could not authenticate over telnet to host: {self.host}"
             )
-        LOG.debug(f"Authenticated to host {self.host} with password")
+        self.logger.debug(f"Authenticated to host {self.host} with password")
         self.session = telnet_session
 
     @operation_timeout("_timeout_ops_auth", "Timed out looking for telnet login prompts")
@@ -229,7 +241,7 @@ class TelnetTransport(Transport):
             N/A
 
         """
-        LOG.debug("Attempting to determine if telnet authentication was successful")
+        self.logger.debug("Attempting to determine if telnet authentication was successful")
         if not telnet_session.eof:
             prompt_pattern = get_prompt_pattern(prompt="", class_prompt=self._comms_prompt_pattern)
             telnet_session_fd = telnet_session.fileno()
@@ -242,7 +254,7 @@ class TelnetTransport(Transport):
                 fd_ready, _, _ = select([telnet_session_fd], [], [], 0)
                 if telnet_session_fd in fd_ready:
                     break
-                LOG.debug("PTY fd not ready yet...")
+                self.logger.debug("PTY fd not ready yet...")
             output = b""
             while True:
                 output += telnet_session.read_eager()
@@ -256,7 +268,7 @@ class TelnetTransport(Transport):
                     self.session_lock.release()
                     self._isauthenticated = True
                     return True
-                if b"password" in output.lower():
+                if b"password:" in output.lower():
                     # if we see "password" auth failed... hopefully true in all scenarios!
                     return False
         self.session_lock.release()
@@ -278,7 +290,7 @@ class TelnetTransport(Transport):
         """
         self.session_lock.acquire()
         self.session.close()
-        LOG.debug(f"Channel to host {self.host} closed")
+        self.logger.debug(f"Channel to host {self.host} closed")
         self.session_lock.release()
 
     def isalive(self) -> bool:
@@ -289,7 +301,7 @@ class TelnetTransport(Transport):
             N/A
 
         Returns:
-           bool: True if alive, else False
+            bool: True if alive, False otherwise.
 
         Raises:
             N/A
@@ -299,6 +311,7 @@ class TelnetTransport(Transport):
             return True
         return False
 
+    @requires_open_session()
     @operation_timeout("timeout_transport", "Timed out reading from transport")
     def read(self) -> bytes:
         """
@@ -316,6 +329,7 @@ class TelnetTransport(Transport):
         """
         return self.session.read_eager()
 
+    @requires_open_session()
     @operation_timeout("timeout_transport", "Timed out writing to transport")
     def write(self, channel_input: str) -> None:
         """
@@ -333,6 +347,7 @@ class TelnetTransport(Transport):
         """
         self.session.write(channel_input.encode())
 
+    @requires_open_session()
     def set_timeout(self, timeout: Optional[int] = None) -> None:
         """
         Set session timeout

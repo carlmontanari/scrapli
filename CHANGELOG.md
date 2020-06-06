@@ -1,6 +1,44 @@
 CHANGELOG
 =======
 
+# 2020.06.06
+- Converted all priv levels to be kwargs instead of just args for setup -- simple thing but makes it more readable IMO.
+- Added to the Juniper prompt pattern to include matching the RE prompt that is on the line "above" the "normal
+" prompt as this was getting included in command output instead of being seen as part of the prompt by scrapli.
+- Convert driver privilege escalation prompts to use regex to match upper and lower case "P" in password prompt
+- Fix core drivers to actually allow for users to pass `failed_when_contains`, `textfsm_platform`, `genie_platform
+`, and `default_desired_privilege_level`
+- Add better exception/message for attempting to send command/config to a connection object that has not been opened
+- Add testing for on open/close methods of core drivers
+- Add `send_config` method to send a single configuration string -- this will automagically handle sending a full
+ configuration, breaking it into a list of configs, sending that list with `send_configs` and then joining the
+  responses into a single `Response` object... or of course you can just send a single config line with it too!
+- Add better handling/logging for `SystemSSH` transport when key exchange cannot be negotiated
+- Convert the `_failed()` method of `MultiResponse` to be a property so users can check `.failed` on a `MultiResponse`
+ object more intuitively/sanely
+- ASYNC ALL THE THINGS... basically only an internal change, but hugely modified the guts of scrapli to try to be
+ able to best support asyncio while still having the same api for sync and async. Again, if you dont care about
+  aysncio this probably doesnt matter at all as all the "public" stuff has not changed for sync versions of things.
+- Completely overhaul unit tests -- unit tests now spin up an SSH server using asyncssh, this server is a very basic
+ implementation of an IOSXE device. This fake IOSXE device allows for connecting/sending commands/handling log on
+  stuff like disabling paging all in as close to the real thing as possible while being completely self contained and
+   completely in python. Additionally since there was a lot of changes to break things out to be more granular with the
+    async implementation the testing has evolved to support this.
+- Increased all hostname patterns to match up to 63 characters -- this is the hostname length limit for Cisco IOSXE
+ at least and should be a reasonable value that hopefully doesnt really ever need to be changed/expanded now
+- Changing logging to create a logger associated with each object instance and include the name/ip of the host in the
+ log name -- should make things a lot nicer with threads/asyncio/etc.
+- Moved from tox to using nox for handling tests/linting; originally this was because of some of the unit testing
+ failing when ran via tox (now I believe this was because there was no TERM env var set in tox), but at this point
+  nox is quite nice so we'll stick with it!
+- Added exception to be raised when users try to use system transport on Windows
+- BUGFIX: Added underscores to hostname patterns for IOSXE, IOSXR, NXOS, and Junos (not valid in EOS at least in my
+ testing)
+- No more Windows testing, not worth the effort
+- BUGFIX: Added functionality to merge less specific (but matching) host entry data for ssh config file hosts
+ -- meaning that we can now merge attributes from a "*" entry into a more specific host entry (see #21)
+- Add dependabot to see how we like having that friend around...
+
 # 2020.05.09
 - Add underscores to EOS config prompt matching
 - Actually fixed on_close methods that I could have sworn were fixed.... *gremlins*! (was sending prompt pattern

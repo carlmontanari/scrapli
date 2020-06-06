@@ -1,13 +1,12 @@
 """scrapli.decorators"""
-import logging
 from concurrent.futures import ThreadPoolExecutor, wait
 from typing import TYPE_CHECKING, Any, Callable, Dict, Union
+
+from scrapli.exceptions import ConnectionNotOpened
 
 if TYPE_CHECKING:
     from scrapli.channel import Channel  # pragma:  no cover
     from scrapli.transport import Transport  # pragma:  no cover
-
-LOG = logging.getLogger("scrapli")
 
 
 def operation_timeout(attribute: str, message: str = "") -> Callable[..., Any]:
@@ -41,11 +40,11 @@ def operation_timeout(attribute: str, message: str = "") -> Callable[..., Any]:
             **kwargs: Dict[str, Union[str, int]],
         ) -> Any:
             # import here to avoid circular dependency
-            from scrapli.channel import Channel  # pylint: disable=C0415
+            from scrapli.channel import AsyncChannel, Channel  # pylint: disable=C0415
 
             timeout_duration = getattr(channel_or_transport, attribute, None)
             if not timeout_duration:
-                LOG.info(
+                channel_or_transport.logger.info(
                     f"Could not find {attribute} value of {channel_or_transport}, continuing "
                     "without timeout decorator"
                 )
@@ -55,7 +54,7 @@ def operation_timeout(attribute: str, message: str = "") -> Callable[..., Any]:
             # to unlock and close the session. we need to unlock as the close will block
             # forever if the session is locked, and the session very likely is locked while
             # waiting for output from the device
-            if isinstance(channel_or_transport, Channel):
+            if isinstance(channel_or_transport, (AsyncChannel, Channel)):
                 timeout_exit = channel_or_transport.transport.timeout_exit
                 session_lock = channel_or_transport.transport.session_lock
                 close = channel_or_transport.transport.close
@@ -68,9 +67,9 @@ def operation_timeout(attribute: str, message: str = "") -> Callable[..., Any]:
             future = pool.submit(wrapped_func, channel_or_transport, *args, **kwargs)
             wait([future], timeout=timeout_duration)
             if not future.done():
-                LOG.info(message)
+                channel_or_transport.logger.info(message)
                 if timeout_exit:
-                    LOG.info("timeout_exit is True, closing transport")
+                    channel_or_transport.logger.info("timeout_exit is True, closing transport")
                     if session_lock.locked():
                         session_lock.release()
                     close()
@@ -78,5 +77,38 @@ def operation_timeout(attribute: str, message: str = "") -> Callable[..., Any]:
             return future.result()
 
         return timeout_wrapper
+
+    return decorate
+
+
+def requires_open_session() -> Callable[..., Any]:
+    """
+    Decorate an "operation" to require that the underlying scrapli session has been opened
+
+    Args:
+        N/A
+
+    Returns:
+        decorate: wrapped function
+
+    Raises:
+        ConnectionNotOpened: if scrapli connection has not been opened yet
+
+    """
+
+    def decorate(wrapped_func: Callable[..., Any]) -> Callable[..., Any]:
+        def requires_open_session_wrapper(
+            *args: Union[str, int], **kwargs: Dict[str, Union[str, int]],
+        ) -> Any:
+            try:
+                return wrapped_func(*args, **kwargs)
+            except AttributeError:
+                raise ConnectionNotOpened(
+                    "Attempting to call method that requires an open connection, but connection is "
+                    "not open. Call the `.open()` method of your connection object, or use a "
+                    "context manager to ensue your connection has been opened."
+                )
+
+        return requires_open_session_wrapper
 
     return decorate

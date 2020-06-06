@@ -26,14 +26,26 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.driver.core.arista_eos&#34;&#34;&#34;
+from scrapli.driver.core.arista_eos.async_driver import AsyncEOSDriver
 from scrapli.driver.core.arista_eos.driver import EOSDriver
 
-__all__ = (&#34;EOSDriver&#34;,)</code></pre>
+__all__ = (
+    &#34;AsyncEOSDriver&#34;,
+    &#34;EOSDriver&#34;,
+)</code></pre>
 </details>
 </section>
 <section>
 <h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
+<dt><code class="name"><a title="scrapli.driver.core.arista_eos.async_driver" href="async_driver.html">scrapli.driver.core.arista_eos.async_driver</a></code></dt>
+<dd>
+<div class="desc"><p>scrapli.driver.core.arista_eos.async_driver</p></div>
+</dd>
+<dt><code class="name"><a title="scrapli.driver.core.arista_eos.base_driver" href="base_driver.html">scrapli.driver.core.arista_eos.base_driver</a></code></dt>
+<dd>
+<div class="desc"><p>scrapli.driver.core.arista_eos.base_driver</p></div>
+</dd>
 <dt><code class="name"><a title="scrapli.driver.core.arista_eos.driver" href="driver.html">scrapli.driver.core.arista_eos.driver</a></code></dt>
 <dd>
 <div class="desc"><p>scrapli.driver.core.arista_eos.driver</p></div>
@@ -47,19 +59,32 @@ __all__ = (&#34;EOSDriver&#34;,)</code></pre>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="scrapli.driver.core.arista_eos.EOSDriver"><code class="flex name class">
-<span>class <span class="ident">EOSDriver</span></span>
-<span>(</span><span>privilege_levels: Union[Dict[str, scrapli.driver.network_driver.PrivilegeLevel], NoneType] = None, on_open: Union[Callable[..., Any], NoneType] = None, on_close: Union[Callable[..., Any], NoneType] = None, auth_secondary: str = '', **kwargs: Dict[str, Any])</span>
+<dt id="scrapli.driver.core.arista_eos.AsyncEOSDriver"><code class="flex name class">
+<span>class <span class="ident">AsyncEOSDriver</span></span>
+<span>(</span><span>privilege_levels: Union[Dict[str, scrapli.driver.base_network_driver.PrivilegeLevel], NoneType] = None, default_desired_privilege_level: str = 'privilege_exec', auth_secondary: str = '', on_open: Union[Callable[..., Any], NoneType] = None, on_close: Union[Callable[..., Any], NoneType] = None, textfsm_platform: str = 'arista_eos', genie_platform: str = '', failed_when_contains: Union[List[str], NoneType] = None, **kwargs: Dict[str, Any])</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Helper class that provides a standard way to create an ABC using
-inheritance.</p>
-<p>EOSDriver Object</p>
+<div class="desc"><p>GenericDriverBase Object</p>
+<p>A generic network driver that will <em>hopefully</em> work for a broad variety of devices with
+minimal to no modifications and provide a normal NetworkDriver type experience with
+<code>send_command(s)</code>, <code>get_prompt</code> and <code>send_interactive</code> methods instead of forcing users to
+call Channel methods directly.</p>
+<p>This driver doesn't know anything about privilege levels (or any type of "config modes",
+disabling paging, gracefully exiting, or anything like that, and as such should be treated
+similar to the base <code>Scrape</code> object from that perspective.</p>
+<p>AsyncEOSDriver Object</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>privilege_levels</code></strong></dt>
 <dd>optional user provided privilege levels, if left None will default to
 scrapli standard privilege levels</dd>
+<dt><strong><code>default_desired_privilege_level</code></strong></dt>
+<dd>string of name of default desired priv, this is the
+priv level that is generally used to disable paging/set terminal width and things
+like that upon first login, and is also the priv level scrapli will try to acquire
+for normal "command" operations (<code>send_command</code>, <code>send_commands</code>)</dd>
+<dt><strong><code>auth_secondary</code></strong></dt>
+<dd>password to use for secondary authentication (enable)</dd>
 <dt><strong><code>on_open</code></strong></dt>
 <dd>callable that accepts the class instance as its only argument. this callable,
 if provided, is executed immediately after authentication is completed. Common use
@@ -70,8 +95,12 @@ message that prompts a user upon connection</dd>
 if provided, is executed immediately prior to closing the underlying transport.
 Common use cases for this callable would be to save configurations prior to exiting,
 or to logout properly to free up vtys or similar.</dd>
-<dt><strong><code>auth_secondary</code></strong></dt>
-<dd>password to use for secondary authentication (enable)</dd>
+<dt><strong><code>textfsm_platform</code></strong></dt>
+<dd>string name of textfsm parser platform</dd>
+<dt><strong><code>genie_platform</code></strong></dt>
+<dd>string name of cisco genie parser platform</dd>
+<dt><strong><code>failed_when_contains</code></strong></dt>
+<dd>List of strings that indicate a command/config has failed</dd>
 <dt><strong><code>**kwargs</code></strong></dt>
 <dd>keyword args to pass to inherited class(es)</dd>
 </dl>
@@ -90,21 +119,30 @@ or to logout properly to free up vtys or similar.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class EOSDriver(NetworkDriver):
+<pre><code class="python">class AsyncEOSDriver(AsyncNetworkDriver, EOSDriverBase):
     def __init__(
         self,
         privilege_levels: Optional[Dict[str, PrivilegeLevel]] = None,
+        default_desired_privilege_level: str = &#34;privilege_exec&#34;,
+        auth_secondary: str = &#34;&#34;,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
-        auth_secondary: str = &#34;&#34;,
+        textfsm_platform: str = &#34;arista_eos&#34;,
+        genie_platform: str = &#34;&#34;,
+        failed_when_contains: Optional[List[str]] = None,
         **kwargs: Dict[str, Any],
     ):
         &#34;&#34;&#34;
-        EOSDriver Object
+        AsyncEOSDriver Object
 
         Args:
             privilege_levels: optional user provided privilege levels, if left None will default to
                 scrapli standard privilege levels
+            default_desired_privilege_level: string of name of default desired priv, this is the
+                priv level that is generally used to disable paging/set terminal width and things
+                like that upon first login, and is also the priv level scrapli will try to acquire
+                for normal &#34;command&#34; operations (`send_command`, `send_commands`)
+            auth_secondary: password to use for secondary authentication (enable)
             on_open: callable that accepts the class instance as its only argument. this callable,
                 if provided, is executed immediately after authentication is completed. Common use
                 cases for this callable would be to disable paging or accept any kind of banner
@@ -113,7 +151,9 @@ or to logout properly to free up vtys or similar.</dd>
                 if provided, is executed immediately prior to closing the underlying transport.
                 Common use cases for this callable would be to save configurations prior to exiting,
                 or to logout properly to free up vtys or similar.
-            auth_secondary: password to use for secondary authentication (enable)
+            textfsm_platform: string name of textfsm parser platform
+            genie_platform: string name of cisco genie parser platform
+            failed_when_contains: List of strings that indicate a command/config has failed
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
@@ -124,27 +164,215 @@ or to logout properly to free up vtys or similar.</dd>
 
         &#34;&#34;&#34;
         if privilege_levels is None:
-            privilege_levels = PRIVS
+            privilege_levels = deepcopy(PRIVS)
 
         if on_open is None:
             on_open = eos_on_open
         if on_close is None:
             on_close = eos_on_close
 
-        failed_when_contains = [
-            &#34;% Ambiguous command&#34;,
-            &#34;% Incomplete command&#34;,
-            &#34;% Invalid input&#34;,
-            &#34;% Cannot commit&#34;,
-        ]
+        if failed_when_contains is None:
+            failed_when_contains = [
+                &#34;% Ambiguous command&#34;,
+                &#34;% Incomplete command&#34;,
+                &#34;% Invalid input&#34;,
+                &#34;% Cannot commit&#34;,
+            ]
 
         super().__init__(
             privilege_levels=privilege_levels,
-            default_desired_privilege_level=&#34;privilege_exec&#34;,
+            default_desired_privilege_level=default_desired_privilege_level,
             auth_secondary=auth_secondary,
             failed_when_contains=failed_when_contains,
-            textfsm_platform=&#34;arista_eos&#34;,
-            genie_platform=&#34;&#34;,
+            textfsm_platform=textfsm_platform,
+            genie_platform=genie_platform,
+            on_open=on_open,
+            on_close=on_close,
+            **kwargs,
+        )
+
+    async def _abort_config(self) -&gt; None:
+        &#34;&#34;&#34;
+        Abort EOS configuration session (if using a config session!)
+
+        Args:
+            N/A
+
+        Returns:
+            N/A:  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        # eos pattern for config sessions should *always* have `config-s`
+        if &#34;config\\-s&#34; in self._current_priv_level.pattern:
+            await self.channel.send_input(channel_input=&#34;abort&#34;)
+            self._current_priv_level = self.privilege_levels[&#34;privilege_exec&#34;]
+
+    def register_configuration_session(self, session_name: str) -&gt; None:
+        self._create_configuration_session(session_name=session_name)
+        self.update_privilege_levels(update_channel=True)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scrapli.driver.async_network_driver.AsyncNetworkDriver" href="../../async_network_driver.html#scrapli.driver.async_network_driver.AsyncNetworkDriver">AsyncNetworkDriver</a></li>
+<li><a title="scrapli.driver.async_generic_driver.AsyncGenericDriver" href="../../async_generic_driver.html#scrapli.driver.async_generic_driver.AsyncGenericDriver">AsyncGenericDriver</a></li>
+<li><a title="scrapli.driver.async_driver.AsyncScrape" href="../../async_driver.html#scrapli.driver.async_driver.AsyncScrape">AsyncScrape</a></li>
+<li><a title="scrapli.driver.base_driver.ScrapeBase" href="../../base_driver.html#scrapli.driver.base_driver.ScrapeBase">ScrapeBase</a></li>
+<li><a title="scrapli.driver.base_generic_driver.GenericDriverBase" href="../../base_generic_driver.html#scrapli.driver.base_generic_driver.GenericDriverBase">GenericDriverBase</a></li>
+<li><a title="scrapli.driver.base_network_driver.NetworkDriverBase" href="../../base_network_driver.html#scrapli.driver.base_network_driver.NetworkDriverBase">NetworkDriverBase</a></li>
+<li><a title="scrapli.driver.core.arista_eos.base_driver.EOSDriverBase" href="base_driver.html#scrapli.driver.core.arista_eos.base_driver.EOSDriverBase">EOSDriverBase</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scrapli.driver.async_network_driver.AsyncNetworkDriver" href="../../async_network_driver.html#scrapli.driver.async_network_driver.AsyncNetworkDriver">AsyncNetworkDriver</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scrapli.driver.async_network_driver.AsyncNetworkDriver.acquire_priv" href="../../async_network_driver.html#scrapli.driver.async_network_driver.AsyncNetworkDriver.acquire_priv">acquire_priv</a></code></li>
+<li><code><a title="scrapli.driver.async_network_driver.AsyncNetworkDriver.close" href="../../async_driver.html#scrapli.driver.async_driver.AsyncScrape.close">close</a></code></li>
+<li><code><a title="scrapli.driver.async_network_driver.AsyncNetworkDriver.get_prompt" href="../../async_generic_driver.html#scrapli.driver.async_generic_driver.AsyncGenericDriver.get_prompt">get_prompt</a></code></li>
+<li><code><a title="scrapli.driver.async_network_driver.AsyncNetworkDriver.isalive" href="../../base_driver.html#scrapli.driver.base_driver.ScrapeBase.isalive">isalive</a></code></li>
+<li><code><a title="scrapli.driver.async_network_driver.AsyncNetworkDriver.open" href="../../async_driver.html#scrapli.driver.async_driver.AsyncScrape.open">open</a></code></li>
+<li><code><a title="scrapli.driver.async_network_driver.AsyncNetworkDriver.register_configuration_session" href="../../base_network_driver.html#scrapli.driver.base_network_driver.NetworkDriverBase.register_configuration_session">register_configuration_session</a></code></li>
+<li><code><a title="scrapli.driver.async_network_driver.AsyncNetworkDriver.send_command" href="../../async_network_driver.html#scrapli.driver.async_network_driver.AsyncNetworkDriver.send_command">send_command</a></code></li>
+<li><code><a title="scrapli.driver.async_network_driver.AsyncNetworkDriver.send_commands" href="../../async_network_driver.html#scrapli.driver.async_network_driver.AsyncNetworkDriver.send_commands">send_commands</a></code></li>
+<li><code><a title="scrapli.driver.async_network_driver.AsyncNetworkDriver.send_commands_from_file" href="../../async_generic_driver.html#scrapli.driver.async_generic_driver.AsyncGenericDriver.send_commands_from_file">send_commands_from_file</a></code></li>
+<li><code><a title="scrapli.driver.async_network_driver.AsyncNetworkDriver.send_config" href="../../async_network_driver.html#scrapli.driver.async_network_driver.AsyncNetworkDriver.send_config">send_config</a></code></li>
+<li><code><a title="scrapli.driver.async_network_driver.AsyncNetworkDriver.send_configs" href="../../async_network_driver.html#scrapli.driver.async_network_driver.AsyncNetworkDriver.send_configs">send_configs</a></code></li>
+<li><code><a title="scrapli.driver.async_network_driver.AsyncNetworkDriver.send_configs_from_file" href="../../async_network_driver.html#scrapli.driver.async_network_driver.AsyncNetworkDriver.send_configs_from_file">send_configs_from_file</a></code></li>
+<li><code><a title="scrapli.driver.async_network_driver.AsyncNetworkDriver.send_interactive" href="../../async_network_driver.html#scrapli.driver.async_network_driver.AsyncNetworkDriver.send_interactive">send_interactive</a></code></li>
+<li><code><a title="scrapli.driver.async_network_driver.AsyncNetworkDriver.update_privilege_levels" href="../../base_network_driver.html#scrapli.driver.base_network_driver.NetworkDriverBase.update_privilege_levels">update_privilege_levels</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="scrapli.driver.core.arista_eos.EOSDriver"><code class="flex name class">
+<span>class <span class="ident">EOSDriver</span></span>
+<span>(</span><span>privilege_levels: Union[Dict[str, scrapli.driver.base_network_driver.PrivilegeLevel], NoneType] = None, default_desired_privilege_level: str = 'privilege_exec', auth_secondary: str = '', on_open: Union[Callable[..., Any], NoneType] = None, on_close: Union[Callable[..., Any], NoneType] = None, textfsm_platform: str = 'arista_eos', genie_platform: str = '', failed_when_contains: Union[List[str], NoneType] = None, **kwargs: Dict[str, Any])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>GenericDriverBase Object</p>
+<p>A generic network driver that will <em>hopefully</em> work for a broad variety of devices with
+minimal to no modifications and provide a normal NetworkDriver type experience with
+<code>send_command(s)</code>, <code>get_prompt</code> and <code>send_interactive</code> methods instead of forcing users to
+call Channel methods directly.</p>
+<p>This driver doesn't know anything about privilege levels (or any type of "config modes",
+disabling paging, gracefully exiting, or anything like that, and as such should be treated
+similar to the base <code>Scrape</code> object from that perspective.</p>
+<p>EOSDriver Object</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>privilege_levels</code></strong></dt>
+<dd>optional user provided privilege levels, if left None will default to
+scrapli standard privilege levels</dd>
+<dt><strong><code>default_desired_privilege_level</code></strong></dt>
+<dd>string of name of default desired priv, this is the
+priv level that is generally used to disable paging/set terminal width and things
+like that upon first login, and is also the priv level scrapli will try to acquire
+for normal "command" operations (<code>send_command</code>, <code>send_commands</code>)</dd>
+<dt><strong><code>auth_secondary</code></strong></dt>
+<dd>password to use for secondary authentication (enable)</dd>
+<dt><strong><code>on_open</code></strong></dt>
+<dd>callable that accepts the class instance as its only argument. this callable,
+if provided, is executed immediately after authentication is completed. Common use
+cases for this callable would be to disable paging or accept any kind of banner
+message that prompts a user upon connection</dd>
+<dt><strong><code>on_close</code></strong></dt>
+<dd>callable that accepts the class instance as its only argument. this callable,
+if provided, is executed immediately prior to closing the underlying transport.
+Common use cases for this callable would be to save configurations prior to exiting,
+or to logout properly to free up vtys or similar.</dd>
+<dt><strong><code>textfsm_platform</code></strong></dt>
+<dd>string name of textfsm parser platform</dd>
+<dt><strong><code>genie_platform</code></strong></dt>
+<dd>string name of cisco genie parser platform</dd>
+<dt><strong><code>failed_when_contains</code></strong></dt>
+<dd>List of strings that indicate a command/config has failed</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>keyword args to pass to inherited class(es)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N/A
+# noqa: DAR202</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class EOSDriver(NetworkDriver, EOSDriverBase):
+    def __init__(
+        self,
+        privilege_levels: Optional[Dict[str, PrivilegeLevel]] = None,
+        default_desired_privilege_level: str = &#34;privilege_exec&#34;,
+        auth_secondary: str = &#34;&#34;,
+        on_open: Optional[Callable[..., Any]] = None,
+        on_close: Optional[Callable[..., Any]] = None,
+        textfsm_platform: str = &#34;arista_eos&#34;,
+        genie_platform: str = &#34;&#34;,
+        failed_when_contains: Optional[List[str]] = None,
+        **kwargs: Dict[str, Any],
+    ):
+        &#34;&#34;&#34;
+        EOSDriver Object
+
+        Args:
+            privilege_levels: optional user provided privilege levels, if left None will default to
+                scrapli standard privilege levels
+            default_desired_privilege_level: string of name of default desired priv, this is the
+                priv level that is generally used to disable paging/set terminal width and things
+                like that upon first login, and is also the priv level scrapli will try to acquire
+                for normal &#34;command&#34; operations (`send_command`, `send_commands`)
+            auth_secondary: password to use for secondary authentication (enable)
+            on_open: callable that accepts the class instance as its only argument. this callable,
+                if provided, is executed immediately after authentication is completed. Common use
+                cases for this callable would be to disable paging or accept any kind of banner
+                message that prompts a user upon connection
+            on_close: callable that accepts the class instance as its only argument. this callable,
+                if provided, is executed immediately prior to closing the underlying transport.
+                Common use cases for this callable would be to save configurations prior to exiting,
+                or to logout properly to free up vtys or similar.
+            textfsm_platform: string name of textfsm parser platform
+            genie_platform: string name of cisco genie parser platform
+            failed_when_contains: List of strings that indicate a command/config has failed
+            **kwargs: keyword args to pass to inherited class(es)
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        if privilege_levels is None:
+            privilege_levels = deepcopy(PRIVS)
+
+        if on_open is None:
+            on_open = eos_on_open
+        if on_close is None:
+            on_close = eos_on_close
+
+        if failed_when_contains is None:
+            failed_when_contains = [
+                &#34;% Ambiguous command&#34;,
+                &#34;% Incomplete command&#34;,
+                &#34;% Invalid input&#34;,
+                &#34;% Cannot commit&#34;,
+            ]
+
+        super().__init__(
+            privilege_levels=privilege_levels,
+            default_desired_privilege_level=default_desired_privilege_level,
+            auth_secondary=auth_secondary,
+            failed_when_contains=failed_when_contains,
+            textfsm_platform=textfsm_platform,
+            genie_platform=genie_platform,
             on_open=on_open,
             on_close=on_close,
             **kwargs,
@@ -170,27 +398,20 @@ or to logout properly to free up vtys or similar.</dd>
             self._current_priv_level = self.privilege_levels[&#34;privilege_exec&#34;]
 
     def register_configuration_session(self, session_name: str) -&gt; None:
-        if session_name in self.privilege_levels.keys():
-            msg = (
-                f&#34;session name `{session_name}` already registered as a privilege level, chose a &#34;
-                &#34;unique session name&#34;
-            )
-            raise ValueError(msg)
-        session_prompt = re.escape(session_name[:6])
-        pattern = (
-            rf&#34;^[a-z0-9.\-@/:]{{1,32}}\(config\-s\-{session_prompt}[a-z0-9_.\-@/:]{{0,32}}\)#\s?$&#34;
-        )
-        name = session_name
-        config_session = PrivilegeLevel(
-            pattern=pattern,
-            name=name,
-            previous_priv=&#34;privilege_exec&#34;,
-            deescalate=&#34;end&#34;,
-            escalate=f&#34;configure session {session_name}&#34;,
-            escalate_auth=False,
-            escalate_prompt=&#34;&#34;,
-        )
-        self.privilege_levels[name] = config_session
+        &#34;&#34;&#34;
+        EOS specific implementation of register_configuration_session
+
+        Args:
+            session_name: name of session to register
+
+        Returns:
+            N/A:  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self._create_configuration_session(session_name=session_name)
         self.update_privilege_levels(update_channel=True)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -198,8 +419,57 @@ or to logout properly to free up vtys or similar.</dd>
 <li><a title="scrapli.driver.network_driver.NetworkDriver" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver">NetworkDriver</a></li>
 <li><a title="scrapli.driver.generic_driver.GenericDriver" href="../../generic_driver.html#scrapli.driver.generic_driver.GenericDriver">GenericDriver</a></li>
 <li><a title="scrapli.driver.driver.Scrape" href="../../driver.html#scrapli.driver.driver.Scrape">Scrape</a></li>
-<li>abc.ABC</li>
+<li><a title="scrapli.driver.base_driver.ScrapeBase" href="../../base_driver.html#scrapli.driver.base_driver.ScrapeBase">ScrapeBase</a></li>
+<li><a title="scrapli.driver.base_generic_driver.GenericDriverBase" href="../../base_generic_driver.html#scrapli.driver.base_generic_driver.GenericDriverBase">GenericDriverBase</a></li>
+<li><a title="scrapli.driver.base_network_driver.NetworkDriverBase" href="../../base_network_driver.html#scrapli.driver.base_network_driver.NetworkDriverBase">NetworkDriverBase</a></li>
+<li><a title="scrapli.driver.core.arista_eos.base_driver.EOSDriverBase" href="base_driver.html#scrapli.driver.core.arista_eos.base_driver.EOSDriverBase">EOSDriverBase</a></li>
 </ul>
+<h3>Methods</h3>
+<dl>
+<dt id="scrapli.driver.core.arista_eos.EOSDriver.register_configuration_session"><code class="name flex">
+<span>def <span class="ident">register_configuration_session</span></span>(<span>self, session_name: str) -> NoneType</span>
+</code></dt>
+<dd>
+<div class="desc"><p>EOS specific implementation of register_configuration_session</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>session_name</code></strong></dt>
+<dd>name of session to register</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N/A:
+# noqa: DAR202</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def register_configuration_session(self, session_name: str) -&gt; None:
+    &#34;&#34;&#34;
+    EOS specific implementation of register_configuration_session
+
+    Args:
+        session_name: name of session to register
+
+    Returns:
+        N/A:  # noqa: DAR202
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    self._create_configuration_session(session_name=session_name)
+    self.update_privilege_levels(update_channel=True)</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="scrapli.driver.network_driver.NetworkDriver" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver">NetworkDriver</a></b></code>:
@@ -207,16 +477,16 @@ or to logout properly to free up vtys or similar.</dd>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.acquire_priv" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.acquire_priv">acquire_priv</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.close" href="../../driver.html#scrapli.driver.driver.Scrape.close">close</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.get_prompt" href="../../generic_driver.html#scrapli.driver.generic_driver.GenericDriver.get_prompt">get_prompt</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.isalive" href="../../driver.html#scrapli.driver.driver.Scrape.isalive">isalive</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.isalive" href="../../base_driver.html#scrapli.driver.base_driver.ScrapeBase.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.open" href="../../driver.html#scrapli.driver.driver.Scrape.open">open</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.register_configuration_session" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.register_configuration_session">register_configuration_session</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_command" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_command">send_command</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_commands" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_commands">send_commands</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_commands_from_file" href="../../generic_driver.html#scrapli.driver.generic_driver.GenericDriver.send_commands_from_file">send_commands_from_file</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_config" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_config">send_config</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_configs" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_configs">send_configs</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_configs_from_file" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_configs_from_file">send_configs_from_file</a></code></li>
 <li><code><a title="scrapli.driver.network_driver.NetworkDriver.send_interactive" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.send_interactive">send_interactive</a></code></li>
-<li><code><a title="scrapli.driver.network_driver.NetworkDriver.update_privilege_levels" href="../../network_driver.html#scrapli.driver.network_driver.NetworkDriver.update_privilege_levels">update_privilege_levels</a></code></li>
+<li><code><a title="scrapli.driver.network_driver.NetworkDriver.update_privilege_levels" href="../../base_network_driver.html#scrapli.driver.base_network_driver.NetworkDriverBase.update_privilege_levels">update_privilege_levels</a></code></li>
 </ul>
 </li>
 </ul>
@@ -237,13 +507,21 @@ or to logout properly to free up vtys or similar.</dd>
 </li>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
+<li><code><a title="scrapli.driver.core.arista_eos.async_driver" href="async_driver.html">scrapli.driver.core.arista_eos.async_driver</a></code></li>
+<li><code><a title="scrapli.driver.core.arista_eos.base_driver" href="base_driver.html">scrapli.driver.core.arista_eos.base_driver</a></code></li>
 <li><code><a title="scrapli.driver.core.arista_eos.driver" href="driver.html">scrapli.driver.core.arista_eos.driver</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
+<h4><code><a title="scrapli.driver.core.arista_eos.AsyncEOSDriver" href="#scrapli.driver.core.arista_eos.AsyncEOSDriver">AsyncEOSDriver</a></code></h4>
+</li>
+<li>
 <h4><code><a title="scrapli.driver.core.arista_eos.EOSDriver" href="#scrapli.driver.core.arista_eos.EOSDriver">EOSDriver</a></code></h4>
+<ul class="">
+<li><code><a title="scrapli.driver.core.arista_eos.EOSDriver.register_configuration_session" href="#scrapli.driver.core.arista_eos.EOSDriver.register_configuration_session">register_configuration_session</a></code></li>
+</ul>
 </li>
 </ul>
 </li>

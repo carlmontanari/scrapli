@@ -1,8 +1,19 @@
 from pathlib import Path
 
 import scrapli
-from scrapli import Scrape
-from scrapli.driver.core import EOSDriver, IOSXEDriver, IOSXRDriver, JunosDriver, NXOSDriver
+from scrapli import AsyncScrape, Scrape
+from scrapli.driver.core import (
+    AsyncEOSDriver,
+    AsyncIOSXEDriver,
+    AsyncIOSXRDriver,
+    AsyncJunosDriver,
+    AsyncNXOSDriver,
+    EOSDriver,
+    IOSXEDriver,
+    IOSXRDriver,
+    JunosDriver,
+    NXOSDriver,
+)
 
 TEST_DATA_PATH = f"{Path(scrapli.__file__).parents[1]}/tests/functional/test_data"
 
@@ -14,6 +25,7 @@ INVALID_PRIVATE_KEY = f"{TEST_DATA_PATH}/__init__.py"
 DEVICES = {
     "cisco_iosxe": {
         "driver": IOSXEDriver,
+        "async_driver": AsyncIOSXEDriver,
         "auth_username": USERNAME,
         "auth_password": PASSWORD,
         "auth_secondary": PASSWORD,
@@ -23,6 +35,7 @@ DEVICES = {
     },
     "cisco_nxos": {
         "driver": NXOSDriver,
+        "async_driver": AsyncNXOSDriver,
         "auth_username": USERNAME,
         "auth_password": PASSWORD,
         "auth_secondary": PASSWORD,
@@ -32,6 +45,7 @@ DEVICES = {
     },
     "cisco_iosxr": {
         "driver": IOSXRDriver,
+        "async_driver": AsyncIOSXRDriver,
         "auth_username": USERNAME,
         "auth_password": PASSWORD,
         "auth_secondary": PASSWORD,
@@ -41,6 +55,7 @@ DEVICES = {
     },
     "arista_eos": {
         "driver": EOSDriver,
+        "async_driver": AsyncEOSDriver,
         "auth_username": USERNAME,
         "auth_password": PASSWORD,
         "auth_secondary": PASSWORD,
@@ -51,6 +66,7 @@ DEVICES = {
     },
     "juniper_junos": {
         "driver": JunosDriver,
+        "async_driver": AsyncJunosDriver,
         "auth_username": USERNAME,
         "auth_password": PASSWORD,
         "auth_secondary": PASSWORD,
@@ -60,6 +76,7 @@ DEVICES = {
     },
     "linux": {
         "driver": Scrape,
+        "async_driver": AsyncScrape,
         "auth_username": "root",
         "auth_password": "docker",
         "auth_strict_key": False,

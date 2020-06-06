@@ -2,13 +2,18 @@ import re
 
 import pytest
 
-from scrapli.driver.core.cisco_iosxe.driver import PRIVS
+from scrapli.driver.core.cisco_nxos.driver import PRIVS
 
 
 @pytest.mark.parametrize(
     "priv_pattern",
-    [("configuration", "csr1000v(config)#"), ("configuration", "csr1000v(conf-ssh-pubkey-data)#")],
-    ids=["base_prompt", "ssh_key_prompt"],
+    [
+        ("exec", "switch>"),
+        ("privilege_exec", "switch# "),
+        ("configuration", "switch(config)# "),
+        ("privilege_exec", "swi_tch# "),
+    ],
+    ids=["exec", "privilege_exec", "configuration", "underscore_privilege_exec",],
 )
 def test_prompt_patterns(priv_pattern):
     priv_level_name = priv_pattern[0]

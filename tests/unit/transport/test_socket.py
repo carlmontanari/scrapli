@@ -50,7 +50,11 @@ def test__str():
 
 def test__repr():
     sock = Socket("localhost", 22, 1)
-    assert repr(sock) == "Socket {'host': 'localhost', 'port': 22, 'timeout': 1, 'sock': None}"
+    assert (
+        repr(sock)
+        == "Socket {'logger': 'scrapli.socket-localhost', 'host': 'localhost', 'port': 22, 'timeout': "
+        "1, 'sock': None}"
+    )
 
 
 def test__bool():

@@ -12,7 +12,7 @@ scrapli
 scrapli -- scrap(e c)li --  is a python library focused on connecting to devices, specifically network devices
  (routers/switches/firewalls/etc.) via SSH or Telnet. The name scrapli -- is just "scrape cli" (as in screen scrape)
  squished together! scrapli's goal is to be as fast and flexible as possible, while providing a thoroughly tested, well
-  typed, well documented, simple API.
+  typed, well documented, simple API that supports both synchronous and asynchronous usage.
 
 Feel free to join the very awesome networktocode slack workspace [here](https://networktocode.slack.com/), where you
  will find a `scrapli` channel where you can discuss anything about scrapli, as well as tons of other channels covering
@@ -25,8 +25,9 @@ Feel free to join the very awesome networktocode slack workspace [here](https://
   - [Installation](#installation)
   - [A Simple Example](#a-simple-example)
   - [More Examples](#more-examples)
+  - [Documentation](#documentation)
+  - [Wiki](#wiki)
 - [scrapli: What is it](#scrapli-what-is-it)
-- [Documentation](#documentation)
 - [Supported Platforms](#supported-platforms)
 - [Advanced Installation](#advanced-installation)
 - [Basic Usage](#basic-usage)
@@ -124,6 +125,7 @@ end
 - [Basic "native" Scrape operations](/examples/basic_usage/scrapli_driver.py)
 - [Basic "GenericDriver" operations](/examples/basic_usage/generic_driver.py)
 - [Basic "core" Driver operations](/examples/basic_usage/iosxe_driver.py)
+- [Basic async operations](/examples/async_usage/async_iosxe_driver.py)
 - [Setting up basic logging](/examples/logging/basic_logging.py)
 - [Using SSH Key for authentication](/examples/ssh_keys/ssh_keys.py)
 - [Using SSH config file](/examples/ssh_config_files/ssh_config_file.py)
@@ -132,6 +134,32 @@ end
 - [Transport Options](examples/transport_options/system_ssh_args.py)
 - [Configuration Modes - IOSXR Configure Exclusive](examples/configuration_modes/iosxr_configure_exclusive.py)
 - [Configuration Modes - EOS Configure Session](examples/configuration_modes/eos_configure_session.py)
+
+
+## Documentation
+
+- API Docs
+  - [Root](https://carlmontanari.github.io/scrapli/docs/scrapli/index.html)
+  - [Channel](https://carlmontanari.github.io/scrapli/docs/scrapli/channel/index.html)
+  - [Transport](https://carlmontanari.github.io/scrapli/docs/scrapli/transport/index.html)
+  - [Drivers](https://carlmontanari.github.io/scrapli/docs/scrapli/driver/index.html)
+- [This README as a web page](https://carlmontanari.github.io/scrapli/)
+- [Public API Status](https://carlmontanari.github.io/scrapli/docs/PUBLIC_API_STATUS)
+
+Documentation is auto-generated [using pdoc3](https://github.com/pdoc3/pdoc), and hosted in GitHub Pages. Docs are
+ linted (see Linting and Testing section) via [pydocstyle](https://github.com/PyCQA/pydocstyle/) and
+ [darglint](https://github.com/terrencepreilly/darglint).
+
+To regenerate documentation locally, use the following make command:
+
+```
+make docs
+```
+
+## Wiki
+
+Extra, generally platform/transport-specific, examples/documentation/information will be stored in the Wiki associated
+ with this repository. You can find it [here](https://github.com/carlmontanari/scrapli/wiki).
 
 
 # scrapli: What is it
@@ -143,13 +171,14 @@ scrapli is built primarily in three parts: transport, channel, and driver. The t
   to the provided file-like interface. Finally, the driver provides the user facing API/interface to scrapli.
 
 There are two available "transports" in scrapli "core" -- both of which inherit from a base transport class
- and provide the same file-like interface to the upstream channel. There are also (currently!) two transport plugins
-  available -- both of which are installable as optional extras. The transport options are:
+ and provide the same file-like interface to the upstream channel. There are also (currently!) three transport plugins
+  available -- all of which are installable as optional extras. The transport options are:
 
 - [paramiko](https://github.com/paramiko/paramiko) (optional extra)
 - [ssh2-python](https://github.com/ParallelSSH/ssh2-python) (optional extra)
-- OpenSSH/System available SSH
-- telnetlib
+- OpenSSH/System available SSH (scrapli core)
+- telnetlib (scrapli core)
+- [asyncssh](https://github.com/ronf/asyncssh) (optional extra)
 
 A good question to ask at this point is probably "why?". Why multiple transport options? Why not just use paramiko
  like most folks do? Historically the reason for moving away from paramiko was simply speed. ssh2-python is a wrapper
@@ -171,8 +200,13 @@ With the goal of supporting all of the OpenSSH configuration options the primary
      focus of most development for this project, though I will try to keep the other transport drivers -- in
       particular ssh2-python -- as close to parity as is possible/practical.
 
-The last transport is telnet via telnetlib. This was trivial to add in as the interface is basically the same as
- SystemSSH, and it turns out telnet is still actually useful for things like terminal servers and the like!
+Adding telnet support via telnetlib was trivial, as the interface is basically the same as SystemSSH, and it turns out
+ telnet is still actually useful for things like terminal servers and the like!
+
+Finally, the most recent scrapli transport plugin is the `asyncssh` transport. This transport option represents a
+ very big change for scrapli as the entire "backend" was basically re-worked in order to provide the exact same API
+  for both synchronous and asynchronous applications. Currently asyncssh is the only asynchronous transport supported
+  , but of course there could be additional transports (telnetlib3 perhaps?) in the future!
 
 The final piece of scrapli is the actual "driver" -- or the component that binds the transport and channel together and
  deals with instantiation of a scrapli object. There is a "base" driver object -- `Scrape` -- which provides essentially
@@ -187,29 +221,21 @@ The final piece of scrapli is the actual "driver" -- or the component that binds
          scrapli driver (built on the `NetworkDriver`) would be the `IOSXEDriver` -- to, as you may have guessed
          , interact with devices running Cisco's IOS-XE operating system.
 
-
-# Documentation
-
-Documentation is auto-generated [using pdoc3](https://github.com/pdoc3/pdoc). Documentation is linted (see Linting and
- Testing section) via [pydocstyle](https://github.com/PyCQA/pydocstyle/) and
- [darglint](https://github.com/terrencepreilly/darglint).
-
-Documentation is hosted via GitHub Pages and can be found
-[here](https://carlmontanari.github.io/scrapli/docs/scrapli/index.html). You can also view this readme as a web page
- [here](https://carlmontanari.github.io/scrapli/).
-
-To regenerate documentation locally, use the following make command:
-
-```
-make docs
-```
+It should be noted that this is a bit of an oversimplification of the architecture of scrapli, but it is accurate
+. Scrapli has "base", "sync", and "async" versions of the core components. The "base" portion is made up fo mixin
+ classes that get "mixed in" to the sync or async versions of the component. For example there is a
+  `NetworkDriverBase` class that is "mixed in" to the `NetworkDriver` and `AsyncNetworkDriver` classes. The mixin
+   provides consistent helper like functions (sync functions) that can be used by the two driver classes -- this
+    allows the sync/async components to have as little code as possible helping to keep the API consistent for both
+     synchronous and asynchronous users.
 
 
 # Supported Platforms
 
 scrapli "core" drivers cover basically the [NAPALM](https://github.com/napalm-automation/napalm) platforms -- Cisco
  IOS-XE, IOS-XR, NX-OS, Arista EOS, and Juniper JunOS. These drivers provide an interface tailored to network device
-  "screen-scraping" rather than just a generic SSH connection/channel. Below are the core driver platforms and
+  "screen-scraping" rather than just a generic SSH connection/channel. It is important to note that there is a
+   synchronous and an asynchronous version of each of these drivers. Below are the core driver platforms and
    currently tested version.
 
 - Cisco IOS-XE (tested on: 16.04.01)
@@ -280,11 +306,20 @@ The available optional installation extras options are:
 - ssh2 (ssh2-python and the scrapli_ssh2 transport)
 - textfsm (textfsm and ntc-templates)
 - genie (genie/pyats)
+- asynchssh (asyncssh and the scrapli_asyncssh transport)
+
+
+If you would like to install all of the optional extras, you can do so with the `full` option:
+
+```
+pip isntall scrapli[full]
+``` 
 
 As for platforms to *run* scrapli on -- it has and will be tested on MacOS and Ubuntu regularly and should work on any
- POSIX system. Windows is now being tested very minimally via GitHub Actions builds, however it is important to note
-  that if you wish to use Windows you will need to use paramiko or ssh2-python as the transport driver. It is
-   *strongly* recommended/preferred for folks to use WSL/Cygwin and stick with "system" as the transport. 
+ POSIX system. Windows at one point was being tested very minimally via GitHub Actions builds, however this is no
+  longer the case as it is just not worth the effort. While scrapli should work on windows when using the paramiko or
+   ssh2-python transport drivers, it is not "officially" supported. It is *strongly* recommended/preferred for folks
+    to use WSL/Cygwin instead of Windows.
 
 
 # Basic Usage
@@ -299,15 +334,22 @@ Assuming you are using scrapli to connect to one of the five "core" platforms, y
 from scrapli.driver.core import EOSDriver
 ```
 
+If you are using asyncio, you can use the async variant of the driver:
+
+```python
+from scrapli.driver.core import AsyncEOSDriver
+```
+
+
 The core drivers and associated platforms are outlined below:
 
-| Platform/OS   | Scrapli Driver  |
-|---------------|-----------------|
-| Cisco IOS-XE  | IOSXEDriver     |
-| Cisco NX-OS   | NXOSDriver      |
-| Cisco IOS-XR  | IOSXRDriver     |
-| Arista EOS    | EOSDriver       |
-| Juniper JunOS | JunosDriver     |
+| Platform/OS   | Scrapli Driver  | Scrapli Async Driver |
+|---------------|-----------------|----------------------|
+| Cisco IOS-XE  | IOSXEDriver     | AsyncIOSXEDriver     | 
+| Cisco NX-OS   | NXOSDriver      | AsyncNXOSDriver      |
+| Cisco IOS-XR  | IOSXRDriver     | AsyncIOSXRDriver     |
+| Arista EOS    | EOSDriver       | AsyncEOSDriver       |
+| Juniper JunOS | JunosDriver     | AsyncJunosDriver     |
 
 All drivers can be imported from `scrapli.driver.core`.
 
@@ -315,6 +357,9 @@ If you are working with a platform not listed above, you have two options: you c
 , which you can read about [here](#using-scrape-directly) or you can use the `GenericDriver` which which you can read
  about [here](#using-the-genericdriver). In general you should probably use the `GenericDriver` and not mess about
   using `Scrape` directly.
+
+Note: if you are using async you *must* set the transport to `asyncssh` -- this is the only async transport supported
+ at this time!
 
 
 ## Basic Driver Arguments
@@ -468,9 +513,16 @@ In addition to containing the input and output of the command(s) that you sent, 
 
 ## Sending Configurations
 
-When using any of the core drivers, you can send configurations via the `send_configs` method which will handle
- privilege escalation and de-escalation for you. `send_configs` accepts a single string or a list of strings to
-  send in "config mode".
+When using any of the core drivers, you can send configurations via the `send_config`, `send_configs` or
+ `send_configs_from_file` methods which will handle privilege escalation for you. `send_config` accepts a single
+  string, `send_configs` accepts a list of strings, and of course `send_configs_from_file` accepts a string path to a
+   file containing configurations to send. Note that `send_configs_from_file` -- just like with it's commands sibling
+    -- will treat each line in the file as a configuration element, in this way it behaves much like `send_configs`.
+
+Lastly, it is good to know that `send_config` (singular!) will parse the configuration string provided and split it
+ into lines -- this means that the underlying behavior is the same as `send_configs`, however this method returns a
+  single `Response` object. This `send_config` method can be used to send entire configurations to devices in a
+   reliable fashion.
 
 ```python
 from scrapli.driver.core import IOSXEDriver
@@ -486,12 +538,14 @@ with IOSXEDriver(**my_device) as conn:
     conn.send_configs(["interface loopback123", "description configured by scrapli"])
 ```
 
-There is also a `send_configs_from_file` method that behaves exactly like the commands version, but sends the
- commands in configuration mode as you would expect.
-
 If you need to get into any kind of "special" configuration mode, such as "configure exclusive", "configure private
 ", or "configure session XYZ", you can pass the name of the corresponding privilege level via the `privilege_level
 ` argument. Please see the [Driver Privilege Levels](#driver-privilege-levels) section for more details!
+
+Lastly, note that scrapli does *not* exit configuration mode at completion of a "configuration" event -- this is
+ because scrapli (with the Network drivers) will automatically acquire `default_desired_privilege_level` before
+  sending a "command" -- so there is no need, from a scrapli perspective, to explicitly exit config mode at end of
+   the configuration session.
 
 ## Textfsm/NTC-Templates Integration
 
@@ -696,6 +750,9 @@ The basic usage section outlined the most commonly used driver arguments, this o
 | transport                       | system (default), paramiko, ssh2, or telnet                 | Scrape            |  
 | transport_options               | dictionary of transport-specific arguments                  | Scrape            |                
 | default_desired_privilege_level | privilege level for "show" commands to be executed at       | NetworkDriver     |
+| failed_when_contains            | list of strings indicating command/config failure           | NetworkDriver     |
+| textfsm_platform                | platform name for textfsm parser                            | NetworkDriver     |
+| genie_platform                  | platform name for genie parse                               | NetworkDriver     |
 
 Most of these attributes actually get passed from the `Scrape` (or sub-class such as `NXOSDriver`) into the
  `Transport` and `Channel` classes, so if you need to modify any of these values after instantiation you should do so
@@ -764,7 +821,7 @@ my_device = {
     "auth_username": "vrnetlab",
     "auth_password": "VR-netlab9",
     "auth_strict_key": False,
-    "on_connect": iosxe_disable_paging
+    "on_open": iosxe_disable_paging
 }
 
 with IOSXEDriver(**my_device) as conn:
@@ -1015,8 +1072,9 @@ In the spirit of being highly flexible, scrapli allows users to swap out this "s
  transport mechanism. The other supported transport mechanisms are `paramiko`, `ssh2-python` and `telnetlib
  `. `paramiko` and `ssh2-python` were originally part of the core of scrapli, but have since been moved to their own
   repositories to be used as plugins to keep the codebase as simple as possible. The transport selection can be made
-   when instantiating the scrapli connection object by passing in `paramiko`, `ssh2`, or `telnet` to force scrapli to
-    use the corresponding transport mechanism.
+   when instantiating the scrapli connection object by passing in `paramiko`, `ssh2`, `telnet`, or `asyncssh` to force
+    scrapli to use the corresponding transport mechanism. If you are using the `asyncssh` transport you must use an
+     async driver!
   
 While it will be a goal to ensure that these other transport mechanisms are supported and useful, the focus of
  scrapli development will be on the "system" SSH transport.
@@ -1039,7 +1097,7 @@ with IOSXEDriver(**my_device) as conn:
 ```
 
 Currently the only reason I can think of to use anything other than "system" as the transport would be to test
- scrapli on a Windows host or to use telnet. If there are other good reasons please do let me know!
+ scrapli on a Windows host, to use telnet, or to use asyncio. If there are other good reasons please do let me know!
 
 
 ## Auth Bypass
@@ -1152,7 +1210,7 @@ scrapli.exceptions.ScrapliCommandFailure
       using your system ssh.... which is almost certainly libssh2/openssh which is also C. There is a thin layer of
        abstraction between scrapli and your system ssh but really its just reading/writing to a file which Python
         should be doing in C anyway I would think. In summary... while `ssh2` is probably the fastest you can go with
-         scrapli, the difference between `ssh2` and `system` transports in limited testing is microscopic, and the
+         scrapli, the difference between `ssh2` and `system` transports in limited testing is very small, and the
           benefits of using system transport (native ssh config file support!!) probably should outweigh the speed of
            ssh2 -- especially if you have control persist and can take advantage of that with system transport!
 - Other questions? Ask away!
@@ -1207,6 +1265,12 @@ scrapli.exceptions.ScrapliCommandFailure
 - There is zero Windows support for system ssh transport - I would strongly encourage the use of WSL or cygwin and
  sticking with systemssh instead of using paramiko/ssh2 natively in Windows -- system ssh is very much the focus of
   development for scrapli!
+- SystemSSH needs to have a terminal set -- without this it fails. My understanding is that without a terminal being
+ set there is no tty which causes the popen/ptyprocess portions of scrapli to not be able to read from the session
+ . The fix for this is simply to ensure that there is a `TERM` set -- for example in the GitHub Actions setup for
+  systemssh tests we simply set `TERM=xterm` as an environment variable. Setting this within scrapli did not seem to
+   have any affect, but is something worth revisiting later -- meaning it would be nice to have scrapli be able to set
+    this for itself so users don't have to care about it.
 
 ### SSH Config Supported Arguments
 
@@ -1214,7 +1278,15 @@ scrapli.exceptions.ScrapliCommandFailure
 
 ### Known Issues
 
-- None yet!
+- When connecting to Juniper devices, if a user has setup control persist in their ssh_config file to the actual end
+ Juniper device (instead of or in addition to a jump/proxy host), the Junos device will force a pty which is not
+  readable by the "pipes" style session/setup, ultimately this will cause auth to fail. If no username/password is
+   setup, scrapli will raise a `ScrapliAuthenticationFailed` exception. If there is a username/password (that works
+   ), scrapli will continue authentication using that, however it will take forever because scrapli tries, and fails
+   , to connect/auth via private key first. The "fix" here is to *not* have control persist setup to the end network
+    device. Control persist does not seem to work with Juniper devices anyway, so not a big deal, but it is a bit
+     tricky to identify this problem as it just appears as an auth failure (and there isn't a terribly great way to
+      handle this).
 
 ## telnet
 
@@ -1228,17 +1300,29 @@ scrapli.exceptions.ScrapliCommandFailure
 
 - None yet!
 
+## asyncssh
+
+- scrapli asyncssh is not production ready yet! 
+
+### SSH Config Supported Arguments
+
+- None yet
+
+### Known Issues
+
+- scrapli asyncssh is not production ready yet! 
+
 
 # Linting and Testing
 
 ## Linting
 
-This project uses [black](https://github.com/psf/black) for auto-formatting. In addition to black, tox will execute
+This project uses [black](https://github.com/psf/black) for auto-formatting. In addition to black, nox will execute
  [pylama](https://github.com/klen/pylama), and [pydocstyle](https://github.com/PyCQA/pydocstyle) for linting purposes
- . Tox will also run  [mypy](https://github.com/python/mypy), with strict type checking. Docstring linting is
+ . Nox will also run  [mypy](https://github.com/python/mypy), with strict type checking. Docstring linting is
   handled by [darglint](https://github.com/terrencepreilly/darglint) which has been quite handy!
 
-All commits to this repository will trigger a GitHub action which runs tox, but of course its nicer to just run that
+All commits to this repository will trigger a GitHub action which runs nox, but of course its nicer to just run that
  before making a commit to ensure that it will pass all tests!
 
 ### Typing
@@ -1400,30 +1484,11 @@ IOSXE is the only platform that is testing SSH key based authentication at the m
   based auth as well, but for now IOSXE is representative enough to provide some faith that key based auth works! 
 
 
-# Todo and Roadmap
+# Roadmap
 
-This section may not get updated much, but will hopefully reflect the priority items for short term (todo) and longer
- term (roadmap) for scrapli.
+This section may not get updated much, but should at least provide a bit of an idea about what is to come for scrapli!
 
-## Todo
-
-- Investigate setter methods for setting user/pass/and other attrs on base scrape object... they should be able to be
- set at that level and have the transport updated if it can be done reasonably
-- Refresh the keepalive stuff -- how/where keepalives get kicked off needs to be reevaluated, particularly for
- systemssh "standard" keepalives as this should really be happening in the open command (systemssh will probably have
-  to override some Transport methods basically), get all of this under functional testing as well
-- Add tests for timeouts if possible
-- Add more tests for auth failures
-- Add tests for custom on open/close functions
-- Remove as much as possible from the vendor'd `ptyprocess` code. Type hint it, add docstrings everywhere, add tests
- if possible (and remove from ignore for test coverage and darglint).
-- Add darglint back in if it gets faster
-
-## Roadmap
-
-- Async support. This is a bit of a question mark as I personally don't know even where to start to implement this
-, and have no real current use case... that said I think it would be cool if for no other reason than to learn!
 - Plugins -- build framework to allow for others to easily build driver plugins if desired
 - Ensure v6 stuff works as expected.
 - Continue to add/support ssh config file things.
-- Maybe make this into a netconf driver as well? ncclient is just built on paramiko so it seems doable...?
+- Get back to work on scrapli_netconf!

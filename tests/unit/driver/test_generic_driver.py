@@ -3,175 +3,88 @@ from pathlib import Path
 import pytest
 
 import scrapli
+from scrapli.channel import Channel
+from scrapli.transport import Transport
 
-try:
-    import ntc_templates
-    import textfsm
+from ...test_data.unit_test_cases import TEST_CASES
 
-    textfsm_avail = True
-except ImportError:
-    textfsm_avail = False
+TEST_DATA_DIR = f"{Path(scrapli.__file__).parents[1]}/tests/test_data"
 
 
-TEST_DATA_PATH = f"{Path(scrapli.__file__).parents[1]}/tests/unit/test_data"
+def test_init(sync_generic_driver_conn):
+    """Test that all arguments get properly passed from driver/transport to channel on init"""
+    assert isinstance(sync_generic_driver_conn.channel.transport, Transport)
+    assert isinstance(sync_generic_driver_conn.channel, Channel)
 
 
 @pytest.mark.parametrize(
-    "attr_setup",
-    [
-        (
-            "send_command",
-            [],
-            TypeError,
-            "`send_command` expects a single string, got <class 'list'>. to send a list of commands use the `send_commands` method instead.",
-        ),
-        (
-            "send_commands",
-            "racecar",
-            TypeError,
-            "`send_commands` expects a list of strings, got <class 'str'>. to send a single command use the `send_command` method instead.",
-        ),
-    ],
-    ids=["send_command", "send_commands",],
+    "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
 )
-def test_send_commands_exceptions(attr_setup, mocked_generic_driver):
-    method = attr_setup[0]
-    method_input = attr_setup[1]
-    method_exc = attr_setup[2]
-    method_msg = attr_setup[3]
-    conn = mocked_generic_driver([])
-    method_to_call = getattr(conn, method)
-    with pytest.raises(method_exc) as exc:
-        method_to_call(method_input)
-    assert str(exc.value) == method_msg
-
-
-def test_send_command(mocked_generic_driver):
-    channel_input_1 = "show ip access-lists"
-    channel_output_1 = """Extended IP access list ext_acl_fw
-        10 deny ip 0.0.0.0 0.255.255.255 any
-        20 deny ip 10.0.0.0 0.255.255.255 any
-        30 deny ip 100.64.0.0 0.63.255.255 any (2 matches)
-        40 deny ip 127.0.0.0 0.255.255.255 any
-        50 deny ip 169.254.0.0 0.0.255.255 any
-        60 deny ip 172.16.0.0 0.15.255.255 any
-        70 deny ip 192.0.0.0 0.0.0.255 any
-        80 deny ip 192.0.2.0 0.0.0.255 any
-        90 deny ip 192.168.0.0 0.0.255.255 any
-        100 deny ip 198.18.0.0 0.1.255.255 any
-        110 deny ip 198.51.100.0 0.0.0.255 any
-        120 deny ip 203.0.113.0 0.0.0.255 any
-        130 deny ip 224.0.0.0 15.255.255.255 any
-        140 deny ip 240.0.0.0 15.255.255.255 any
-3560CX#"""
-    test_operations = [(channel_input_1, channel_output_1)]
-    conn = mocked_generic_driver(test_operations)
-    output = conn.send_command(channel_input_1, strip_prompt=False)
-    assert output.result == channel_output_1
-
-
-def test_send_commands(mocked_generic_driver):
-    channel_input_1 = "show ip access-lists"
-    channel_output_1 = """Extended IP access list ext_acl_fw
-        10 deny ip 0.0.0.0 0.255.255.255 any
-        20 deny ip 10.0.0.0 0.255.255.255 any
-        30 deny ip 100.64.0.0 0.63.255.255 any (2 matches)
-        40 deny ip 127.0.0.0 0.255.255.255 any
-        50 deny ip 169.254.0.0 0.0.255.255 any
-        60 deny ip 172.16.0.0 0.15.255.255 any
-        70 deny ip 192.0.0.0 0.0.0.255 any
-        80 deny ip 192.0.2.0 0.0.0.255 any
-        90 deny ip 192.168.0.0 0.0.255.255 any
-        100 deny ip 198.18.0.0 0.1.255.255 any
-        110 deny ip 198.51.100.0 0.0.0.255 any
-        120 deny ip 203.0.113.0 0.0.0.255 any
-        130 deny ip 224.0.0.0 15.255.255.255 any
-        140 deny ip 240.0.0.0 15.255.255.255 any
-3560CX#"""
-    channel_input_2 = "show ip access-lists"
-    channel_output_2 = """Extended IP access list ext_acl_fw
-            10 deny ip 0.0.0.0 0.255.255.255 any
-            20 deny ip 10.0.0.0 0.255.255.255 any
-            30 deny ip 100.64.0.0 0.63.255.255 any (2 matches)
-            40 deny ip 127.0.0.0 0.255.255.255 any
-            50 deny ip 169.254.0.0 0.0.255.255 any
-            60 deny ip 172.16.0.0 0.15.255.255 any
-            70 deny ip 192.0.0.0 0.0.0.255 any
-            80 deny ip 192.0.2.0 0.0.0.255 any
-            90 deny ip 192.168.0.0 0.0.255.255 any
-            100 deny ip 198.18.0.0 0.1.255.255 any
-            110 deny ip 198.51.100.0 0.0.0.255 any
-            120 deny ip 203.0.113.0 0.0.0.255 any
-            130 deny ip 224.0.0.0 15.255.255.255 any
-            140 deny ip 240.0.0.0 15.255.255.255 any
-3560CX#"""
-    test_operations = [
-        (channel_input_1, channel_output_1),
-        (channel_input_2, channel_output_2),
-    ]
-    conn = mocked_generic_driver(test_operations)
-    outputs = conn.send_commands([channel_input_1, channel_input_2], strip_prompt=False)
-    assert outputs[0].result == channel_output_1
-    assert outputs[1].result == channel_output_2
-
-
-def test_send_commands_from_file(mocked_generic_driver):
-    channel_input_1 = "show ip access-lists"
-    channel_output_1 = """Extended IP access list ext_acl_fw
-        10 deny ip 0.0.0.0 0.255.255.255 any
-        20 deny ip 10.0.0.0 0.255.255.255 any
-        30 deny ip 100.64.0.0 0.63.255.255 any (2 matches)
-        40 deny ip 127.0.0.0 0.255.255.255 any
-        50 deny ip 169.254.0.0 0.0.255.255 any
-        60 deny ip 172.16.0.0 0.15.255.255 any
-        70 deny ip 192.0.0.0 0.0.0.255 any
-        80 deny ip 192.0.2.0 0.0.0.255 any
-        90 deny ip 192.168.0.0 0.0.255.255 any
-        100 deny ip 198.18.0.0 0.1.255.255 any
-        110 deny ip 198.51.100.0 0.0.0.255 any
-        120 deny ip 203.0.113.0 0.0.0.255 any
-        130 deny ip 224.0.0.0 15.255.255.255 any
-        140 deny ip 240.0.0.0 15.255.255.255 any
-3560CX#"""
-    channel_input_2 = "show ip access-lists"
-    channel_output_2 = """Extended IP access list ext_acl_fw
-            10 deny ip 0.0.0.0 0.255.255.255 any
-            20 deny ip 10.0.0.0 0.255.255.255 any
-            30 deny ip 100.64.0.0 0.63.255.255 any (2 matches)
-            40 deny ip 127.0.0.0 0.255.255.255 any
-            50 deny ip 169.254.0.0 0.0.255.255 any
-            60 deny ip 172.16.0.0 0.15.255.255 any
-            70 deny ip 192.0.0.0 0.0.0.255 any
-            80 deny ip 192.0.2.0 0.0.0.255 any
-            90 deny ip 192.168.0.0 0.0.255.255 any
-            100 deny ip 198.18.0.0 0.1.255.255 any
-            110 deny ip 198.51.100.0 0.0.0.255 any
-            120 deny ip 203.0.113.0 0.0.0.255 any
-            130 deny ip 224.0.0.0 15.255.255.255 any
-            140 deny ip 240.0.0.0 15.255.255.255 any
-3560CX#"""
-    test_operations = [
-        (channel_input_1, channel_output_1),
-        (channel_input_2, channel_output_2),
-    ]
-    conn = mocked_generic_driver(test_operations)
-    outputs = conn.send_commands_from_file(
-        file=f"{TEST_DATA_PATH}/send_commands", strip_prompt=False
+def test_send_command(sync_generic_driver_conn, strip_prompt):
+    expected_raw = TEST_CASES["cisco_iosxe"]["test_send_input"]["raw_result"]
+    expected_processed = (
+        TEST_CASES["cisco_iosxe"]["test_send_input"]["processed_result"]["strip"]
+        if strip_prompt
+        else TEST_CASES["cisco_iosxe"]["test_send_input"]["processed_result"]["no_strip"]
     )
-    assert outputs[0].result == channel_output_1
-    assert outputs[1].result == channel_output_2
+    sync_generic_driver_conn.open()
+    sync_generic_driver_conn.send_command(command="terminal length 0")
+    response = sync_generic_driver_conn.send_command(
+        command="show version", strip_prompt=strip_prompt
+    )
+    assert response.raw_result == expected_raw
+    assert response.result == expected_processed
 
 
-def test_send_inputs_interact(mocked_generic_driver):
-    channel_input_1 = "clear logg"
-    channel_output_1 = "Clear logging buffer [confirm]"
-    channel_input_2 = "\n"
-    channel_output_2 = "3560CX#"
-    interact = [(channel_input_1, channel_output_1), ("", channel_output_2)]
-    test_operations = [
-        (channel_input_1, channel_output_1),
-        (channel_input_2, channel_output_2),
-    ]
-    conn = mocked_generic_driver(test_operations)
-    output = conn.send_interactive(interact)
-    assert output.result == "clear logg\nClear logging buffer [confirm]\n3560CX#"
+@pytest.mark.parametrize(
+    "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
+)
+def test_send_commands(sync_generic_driver_conn, strip_prompt):
+    expected_raw = TEST_CASES["cisco_iosxe"]["test_send_input"]["raw_result"]
+    expected_processed = (
+        TEST_CASES["cisco_iosxe"]["test_send_input"]["processed_result"]["strip"]
+        if strip_prompt
+        else TEST_CASES["cisco_iosxe"]["test_send_input"]["processed_result"]["no_strip"]
+    )
+    sync_generic_driver_conn.open()
+    multi_response = sync_generic_driver_conn.send_commands(
+        commands=["terminal length 0", "show version"], strip_prompt=strip_prompt
+    )
+    assert multi_response[1].raw_result == expected_raw
+    assert multi_response[1].result == expected_processed
+
+
+@pytest.mark.parametrize(
+    "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
+)
+def test_send_commands_from_file(sync_generic_driver_conn, strip_prompt):
+    expected_raw = TEST_CASES["cisco_iosxe"]["test_send_input"]["raw_result"]
+    expected_processed = (
+        TEST_CASES["cisco_iosxe"]["test_send_input"]["processed_result"]["strip"]
+        if strip_prompt
+        else TEST_CASES["cisco_iosxe"]["test_send_input"]["processed_result"]["no_strip"]
+    )
+    sync_generic_driver_conn.open()
+    sync_generic_driver_conn.send_command(command="terminal length 0")
+    multi_response = sync_generic_driver_conn.send_commands_from_file(
+        file=f"{TEST_DATA_DIR}/files/cisco_iosxe_commands", strip_prompt=strip_prompt
+    )
+    assert multi_response[0].raw_result == expected_raw
+    assert multi_response[0].result == expected_processed
+
+
+def test_send_interactive(sync_generic_driver_conn):
+    expected_raw = TEST_CASES["cisco_iosxe"]["test_send_inputs_interact"]["raw_result"]
+    expected_processed = TEST_CASES["cisco_iosxe"]["test_send_inputs_interact"]["processed_result"]
+    interact_events = TEST_CASES["cisco_iosxe"]["test_send_inputs_interact"]["interact_events"]
+    sync_generic_driver_conn.open()
+    response = sync_generic_driver_conn.send_interactive(interact_events=interact_events)
+    assert expected_raw in response.raw_result
+    assert expected_processed in response.result
+
+
+def test_get_prompt(sync_generic_driver_conn):
+    expected_prompt = TEST_CASES["cisco_iosxe"]["test_get_prompt"]["privilege_exec"]
+    sync_generic_driver_conn.open()
+    found_prompt = sync_generic_driver_conn.get_prompt()
+    assert found_prompt == expected_prompt

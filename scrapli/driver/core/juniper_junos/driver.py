@@ -1,8 +1,10 @@
 """scrapli.driver.core.juniper_junos.driver"""
-from typing import Any, Callable, Dict, Optional
+from copy import deepcopy
+from typing import Any, Callable, Dict, List, Optional
 
 from scrapli.driver import NetworkDriver
-from scrapli.driver.network_driver import PrivilegeLevel
+from scrapli.driver.base_network_driver import PrivilegeLevel
+from scrapli.driver.core.juniper_junos.base_driver import PRIVS
 
 
 def junos_on_open(conn: NetworkDriver) -> None:
@@ -19,9 +21,9 @@ def junos_on_open(conn: NetworkDriver) -> None:
         N/A
     """
     conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
-    conn.channel.send_input(channel_input="set cli complete-on-space off")
-    conn.channel.send_input(channel_input="set cli screen-length 0")
-    conn.channel.send_input(channel_input="set cli screen-width 511")
+    conn.send_command(command="set cli complete-on-space off")
+    conn.send_command(command="set cli screen-length 0")
+    conn.send_command(command="set cli screen-width 511")
 
 
 def junos_on_close(conn: NetworkDriver) -> None:
@@ -39,55 +41,22 @@ def junos_on_close(conn: NetworkDriver) -> None:
     """
     # write exit directly to the transport as channel would fail to find the prompt after sending
     # the exit command!
+    conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
     conn.transport.write(channel_input="exit")
     conn.transport.write(channel_input=conn.channel.comms_return_char)
-
-
-PRIVS = {
-    "exec": (PrivilegeLevel(r"^[a-z0-9.\-@()/:]{1,32}>\s?$", "exec", "", "", "", False, "",)),
-    "configuration": (
-        PrivilegeLevel(
-            r"^[a-z0-9.\-@()/:]{1,32}#\s?$",
-            "configuration",
-            "exec",
-            "exit configuration-mode",
-            "configure",
-            False,
-            "",
-        )
-    ),
-    "configuration_exclusive": (
-        PrivilegeLevel(
-            r"^[a-z0-9.\-@()/:]{1,32}#\s?$",
-            "configuration_exclusive",
-            "exec",
-            "exit configuration-mode",
-            "configure exclusive",
-            False,
-            "",
-        )
-    ),
-    "configuration_private": (
-        PrivilegeLevel(
-            r"^[a-z0-9.\-@()/:]{1,32}#\s?$",
-            "configuration_private",
-            "exec",
-            "exit configuration-mode",
-            "configure private",
-            False,
-            "",
-        )
-    ),
-}
 
 
 class JunosDriver(NetworkDriver):
     def __init__(
         self,
         privilege_levels: Optional[Dict[str, PrivilegeLevel]] = None,
+        default_desired_privilege_level: str = "exec",
+        auth_secondary: str = "",
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
-        auth_secondary: str = "",
+        textfsm_platform: str = "juniper_junos",
+        genie_platform: str = "",
+        failed_when_contains: Optional[List[str]] = None,
         transport: str = "system",
         **kwargs: Dict[str, Any],
     ):
@@ -97,6 +66,11 @@ class JunosDriver(NetworkDriver):
         Args:
             privilege_levels: optional user provided privilege levels, if left None will default to
                 scrapli standard privilege levels
+            default_desired_privilege_level: string of name of default desired priv, this is the
+                priv level that is generally used to disable paging/set terminal width and things
+                like that upon first login, and is also the priv level scrapli will try to acquire
+                for normal "command" operations (`send_command`, `send_commands`)
+            auth_secondary: password to use for secondary authentication (enable)
             on_open: callable that accepts the class instance as its only argument. this callable,
                 if provided, is executed immediately after authentication is completed. Common use
                 cases for this callable would be to disable paging or accept any kind of banner
@@ -105,7 +79,9 @@ class JunosDriver(NetworkDriver):
                 if provided, is executed immediately prior to closing the underlying transport.
                 Common use cases for this callable would be to save configurations prior to exiting,
                 or to logout properly to free up vtys or similar.
-            auth_secondary: password to use for secondary authentication (enable)
+            textfsm_platform: string name of textfsm parser platform
+            genie_platform: string name of cisco genie parser platform
+            failed_when_contains: List of strings that indicate a command/config has failed
             transport: system|telnet or a plugin -- type of transport to use for connection
                 system uses system available ssh (/usr/bin/ssh)
                 ssh2 uses ssh2-python *has been migrated to a plugin
@@ -127,7 +103,7 @@ class JunosDriver(NetworkDriver):
 
         """
         if privilege_levels is None:
-            privilege_levels = PRIVS
+            privilege_levels = deepcopy(PRIVS)
 
         if on_open is None:
             on_open = junos_on_open
@@ -138,20 +114,21 @@ class JunosDriver(NetworkDriver):
         if transport == "telnet":
             _telnet = True
 
-        failed_when_contains = [
-            "is ambiguous",
-            "No valid completions",
-            "unknown command",
-            "syntax error",
-        ]
+        if failed_when_contains is None:
+            failed_when_contains = [
+                "is ambiguous",
+                "No valid completions",
+                "unknown command",
+                "syntax error",
+            ]
 
         super().__init__(
             privilege_levels=privilege_levels,
-            default_desired_privilege_level="exec",
+            default_desired_privilege_level=default_desired_privilege_level,
             auth_secondary=auth_secondary,
             failed_when_contains=failed_when_contains,
-            textfsm_platform="juniper_junos",
-            genie_platform="",
+            textfsm_platform=textfsm_platform,
+            genie_platform=genie_platform,
             on_open=on_open,
             on_close=on_close,
             transport=transport,

@@ -1,3 +1,4 @@
+import os
 import re
 import sys
 from io import TextIOWrapper
@@ -11,11 +12,12 @@ from scrapli.helper import (
     _textfsm_get_template,
     genie_parse,
     get_prompt_pattern,
+    resolve_file,
     strip_ansi,
     textfsm_parse,
 )
 
-UNIT_TEST_DIR = f"{Path(scrapli.__file__).parents[1]}/tests/unit/"
+TEST_DATA_DIR = f"{Path(scrapli.__file__).parents[1]}/tests/test_data"
 
 IOS_ARP = """Protocol  Address          Age (min)  Hardware Addr   Type   Interface
 Internet  172.31.254.1            -   0000.0c07.acfe  ARPA   Vlan254
@@ -146,3 +148,32 @@ def test_genie_parse_failure():
     # genie loads about nine million modules... for whatever reason these two upset pyfakefs
     del sys.modules["ats.configuration"]
     del sys.modules["pyats.configuration"]
+
+
+@pytest.mark.skipif(
+    sys.platform.startswith("win"), reason="not dealing with windows path things in tests"
+)
+def test_resolve_file():
+    resolved_file = resolve_file(file=f"{TEST_DATA_DIR}/files/_ssh_config")
+    assert resolved_file == f"{TEST_DATA_DIR}/files/_ssh_config"
+
+
+@pytest.mark.skipif(
+    sys.platform.startswith("win"), reason="not dealing with windows path things in tests"
+)
+def test_resolve_file_expanduser(fs):
+    fs.add_real_file(
+        source_path=f"{TEST_DATA_DIR}/files/_ssh_config",
+        target_path=f"{os.path.expanduser('~')}/myneatfile",
+    )
+    resolved_file = resolve_file(file=f"~/myneatfile")
+    assert resolved_file == f"{os.path.expanduser('~')}/myneatfile"
+
+
+@pytest.mark.skipif(
+    sys.platform.startswith("win"), reason="not dealing with windows path things in tests"
+)
+def test_resolve_file_failure():
+    with pytest.raises(ValueError) as exc:
+        resolve_file(file=f"~/myneatfile")
+    assert str(exc.value) == "File path `~/myneatfile` could not be resolved"

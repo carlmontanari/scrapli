@@ -27,14 +27,14 @@ def test_multi_response():
     response2 = Response("localhost", "ls -al")
     multi_response = MultiResponse([response1, response2])
     assert len(multi_response) == 2
-    assert multi_response._failed() is True
+    assert multi_response.failed is True
     assert repr(multi_response) == "MultiResponse <Success: False; Response Elements: 2>"
     assert str(multi_response) == "MultiResponse <Success: False; Response Elements: 2>"
     with pytest.raises(ScrapliCommandFailure):
         multi_response.raise_for_status()
     multi_response[0].failed = False
     multi_response[1].failed = False
-    assert multi_response._failed() is False
+    assert multi_response.failed is False
     assert multi_response.raise_for_status() is None
     assert repr(multi_response) == "MultiResponse <Success: True; Response Elements: 2>"
     assert str(multi_response) == "MultiResponse <Success: True; Response Elements: 2>"
