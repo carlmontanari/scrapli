@@ -1,6 +1,9 @@
 CHANGELOG
 =======
 
+# 2020.XX.XX
+-
+
 # 2020.06.06
 - Converted all priv levels to be kwargs instead of just args for setup -- simple thing but makes it more readable IMO.
 - Added to the Juniper prompt pattern to include matching the RE prompt that is on the line "above" the "normal

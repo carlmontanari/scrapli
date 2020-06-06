@@ -312,7 +312,7 @@ The available optional installation extras options are:
 If you would like to install all of the optional extras, you can do so with the `full` option:
 
 ```
-pip isntall scrapli[full]
+pip install scrapli[full]
 ``` 
 
 As for platforms to *run* scrapli on -- it has and will be tested on MacOS and Ubuntu regularly and should work on any
@@ -1302,7 +1302,7 @@ scrapli.exceptions.ScrapliCommandFailure
 
 ## asyncssh
 
-- scrapli asyncssh is not production ready yet! 
+- None yet
 
 ### SSH Config Supported Arguments
 

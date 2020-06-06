@@ -50,12 +50,16 @@ def unit_tests(session):
         N/A
 
     """
+    # ensure test ssh key permissions are appropriate
+    session.run("chmod", "0600", "tests/test_data/files/vrnetlab_key", external=True)
+
     # install this repo in editable mode so that other scrapli libs can depend on a yet to be
     # released version. for example, scrapli_asyncssh is new and released and requires the *next*
     # release of scrapli; if we set the version to the next release in __init__ and install locally
     # we can avoid a kind of circular dependency thing where pypi version of scrapli is not yet
     # updated to match the new pins in other scrapli libs
     session.install("-e", ".")
+
     session.install("-r", "requirements-dev.txt")
     session.run(
         "pytest",
