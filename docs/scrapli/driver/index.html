@@ -872,6 +872,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 
         self.auth_secondary = auth_secondary
         self.privilege_levels = privilege_levels
+        self._priv_map = {}
         self.default_desired_privilege_level = default_desired_privilege_level
         self.update_privilege_levels(update_channel=False)
 
@@ -935,7 +936,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
             N/A  # noqa: DAR202
 
         Raises:
-           CouldNotAcquirePrivLevel: if scrapli cannot get to the requested privilege level
+            CouldNotAcquirePrivLevel: if scrapli cannot get to the requested privilege level
 
         &#34;&#34;&#34;
         resolved_priv, map_to_desired_priv = self._pre_acquire_priv(desired_priv=desired_priv)
@@ -950,6 +951,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
             )
 
             if privilege_action == PrivilegeAction.NO_ACTION:
+                self._current_priv_level = target_priv
                 return
             if privilege_action == PrivilegeAction.DEESCALATE:
                 await self._deescalate(current_priv=target_priv)
@@ -1376,7 +1378,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         N/A  # noqa: DAR202
 
     Raises:
-       CouldNotAcquirePrivLevel: if scrapli cannot get to the requested privilege level
+        CouldNotAcquirePrivLevel: if scrapli cannot get to the requested privilege level
 
     &#34;&#34;&#34;
     resolved_priv, map_to_desired_priv = self._pre_acquire_priv(desired_priv=desired_priv)
@@ -1391,6 +1393,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         )
 
         if privilege_action == PrivilegeAction.NO_ACTION:
+            self._current_priv_level = target_priv
             return
         if privilege_action == PrivilegeAction.DEESCALATE:
             await self._deescalate(current_priv=target_priv)
@@ -2101,11 +2104,11 @@ relies on, see Transport and Channel docs for details.</p>
             N/A
 
         &#34;&#34;&#34;
-        LOG.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+        self.logger.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
         await self.transport.open()
         if self.on_open:
             await self.on_open(self)
-        LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)
+        self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)
 
     async def close(self) -&gt; None:
         &#34;&#34;&#34;
@@ -2121,11 +2124,11 @@ relies on, see Transport and Channel docs for details.</p>
             N/A
 
         &#34;&#34;&#34;
-        LOG.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+        self.logger.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
         if self.on_close:
             await self.on_close(self)
         self.transport.close()
-        LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
+        self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2173,11 +2176,11 @@ relies on, see Transport and Channel docs for details.</p>
         N/A
 
     &#34;&#34;&#34;
-    LOG.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+    self.logger.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
     if self.on_close:
         await self.on_close(self)
     self.transport.close()
-    LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
+    self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
 </details>
 </dd>
 <dt id="scrapli.driver.AsyncScrape.open"><code class="name flex">
@@ -2219,11 +2222,11 @@ relies on, see Transport and Channel docs for details.</p>
         N/A
 
     &#34;&#34;&#34;
-    LOG.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+    self.logger.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
     await self.transport.open()
     if self.on_open:
         await self.on_open(self)
-    LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)</code></pre>
+    self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -3013,6 +3016,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 
         self.auth_secondary = auth_secondary
         self.privilege_levels = privilege_levels
+        self._priv_map = {}
         self.default_desired_privilege_level = default_desired_privilege_level
         self.update_privilege_levels(update_channel=False)
 
@@ -3069,14 +3073,14 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         Acquire desired priv level
 
         Args:
-            desired_priv: string name of desired privilege level
-                (see scrapli.driver.&lt;driver_category.device_type&gt;.driver for levels)
+            desired_priv: string name of desired privilege level see
+                `scrapli.driver.&lt;driver_category.device_type&gt;.driver` for levels
 
         Returns:
             N/A  # noqa: DAR202
 
         Raises:
-           CouldNotAcquirePrivLevel: if scrapli cannot get to the requested privilege level
+            CouldNotAcquirePrivLevel: if desired_priv cannot be attained
 
         &#34;&#34;&#34;
         resolved_priv, map_to_desired_priv = self._pre_acquire_priv(desired_priv=desired_priv)
@@ -3091,6 +3095,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
             )
 
             if privilege_action == PrivilegeAction.NO_ACTION:
+                self._current_priv_level = target_priv
                 return
             if privilege_action == PrivilegeAction.DEESCALATE:
                 self._deescalate(current_priv=target_priv)
@@ -3487,8 +3492,8 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>desired_priv</code></strong></dt>
-<dd>string name of desired privilege level
-(see scrapli.driver.<driver_category.device_type>.driver for levels)</dd>
+<dd>string name of desired privilege level see
+<code>scrapli.driver.&lt;driver_category.device_type&gt;.driver</code> for levels</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -3499,7 +3504,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 <h2 id="raises">Raises</h2>
 <dl>
 <dt><code>CouldNotAcquirePrivLevel</code></dt>
-<dd>if scrapli cannot get to the requested privilege level</dd>
+<dd>if desired_priv cannot be attained</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -3510,14 +3515,14 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
     Acquire desired priv level
 
     Args:
-        desired_priv: string name of desired privilege level
-            (see scrapli.driver.&lt;driver_category.device_type&gt;.driver for levels)
+        desired_priv: string name of desired privilege level see
+            `scrapli.driver.&lt;driver_category.device_type&gt;.driver` for levels
 
     Returns:
         N/A  # noqa: DAR202
 
     Raises:
-       CouldNotAcquirePrivLevel: if scrapli cannot get to the requested privilege level
+        CouldNotAcquirePrivLevel: if desired_priv cannot be attained
 
     &#34;&#34;&#34;
     resolved_priv, map_to_desired_priv = self._pre_acquire_priv(desired_priv=desired_priv)
@@ -3532,6 +3537,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         )
 
         if privilege_action == PrivilegeAction.NO_ACTION:
+            self._current_priv_level = target_priv
             return
         if privilege_action == PrivilegeAction.DEESCALATE:
             self._deescalate(current_priv=target_priv)
@@ -4240,11 +4246,11 @@ relies on, see Transport and Channel docs for details.</p>
             N/A
 
         &#34;&#34;&#34;
-        LOG.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+        self.logger.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
         self.transport.open()
         if self.on_open:
             self.on_open(self)
-        LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)
+        self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)
 
     def close(self) -&gt; None:
         &#34;&#34;&#34;
@@ -4260,11 +4266,11 @@ relies on, see Transport and Channel docs for details.</p>
             N/A
 
         &#34;&#34;&#34;
-        LOG.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+        self.logger.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
         if self.on_close:
             self.on_close(self)
         self.transport.close()
-        LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
+        self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -4312,11 +4318,11 @@ relies on, see Transport and Channel docs for details.</p>
         N/A
 
     &#34;&#34;&#34;
-    LOG.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+    self.logger.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
     if self.on_close:
         self.on_close(self)
     self.transport.close()
-    LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
+    self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
 </details>
 </dd>
 <dt id="scrapli.driver.Scrape.open"><code class="name flex">
@@ -4358,11 +4364,11 @@ relies on, see Transport and Channel docs for details.</p>
         N/A
 
     &#34;&#34;&#34;
-    LOG.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+    self.logger.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
     self.transport.open()
     if self.on_open:
         self.on_open(self)
-    LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)</code></pre>
+    self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)</code></pre>
 </details>
 </dd>
 </dl>

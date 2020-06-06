@@ -26,13 +26,13 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.driver.base_network_driver&#34;&#34;&#34;
-import logging
 import re
 import warnings
 from collections import UserList
 from datetime import datetime
 from enum import Enum
 from functools import lru_cache
+from logging import Logger
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 from scrapli.exceptions import UnknownPrivLevel
@@ -43,8 +43,6 @@ if TYPE_CHECKING:
     ScrapliMultiResponse = UserList[Response]  # pylint:  disable=E1136; # pragma:  no cover
 else:
     ScrapliMultiResponse = UserList
-
-LOG = logging.getLogger(&#34;driver&#34;)
 
 
 class PrivilegeLevel:
@@ -107,12 +105,11 @@ class PrivilegeAction(Enum):
 
 
 class NetworkDriverBase:
-    # NetworkDriverBase Mixin default values
+    # NetworkDriverBase Mixin vars for typing/linting purposes
+    logger: Logger
     comms_prompt_pattern: str
-    _priv_map: Dict[str, List[str]] = {}
     _current_priv_level = DUMMY_PRIV_LEVEL
-
-    # NetworkDriverBase Mixin values set in init of sync/async NetworkDriver classes
+    _priv_map: Dict[str, List[str]]
     failed_when_contains: Optional[List[str]]
     privilege_levels: Dict[str, PrivilegeLevel]
     auth_secondary: str
@@ -236,12 +233,12 @@ class NetworkDriverBase:
             if not search_result:
                 continue
             matching_priv_levels.append(priv_level.name)
-            LOG.debug(f&#34;Current privilege level could be `{priv_level.name}`&#34;)
+            self.logger.debug(f&#34;Current privilege level could be `{priv_level.name}`&#34;)
         if not matching_priv_levels:
             raise UnknownPrivLevel(
                 f&#34;Could not determine privilege level from provided prompt: `{current_prompt}`&#34;
             )
-        LOG.debug(f&#34;Determined current privilege level is one of `{matching_priv_levels}`&#34;)
+        self.logger.debug(f&#34;Determined current privilege level is one of `{matching_priv_levels}`&#34;)
         return matching_priv_levels
 
     def _get_privilege_level_name(self, requested_priv: str) -&gt; str:
@@ -255,7 +252,7 @@ class NetworkDriverBase:
             str: name of the privilege level requested
 
         Raises:
-           UnknownPrivLevel: if attempting to acquire an unknown priv
+            UnknownPrivLevel: if attempting to acquire an unknown priv
 
         &#34;&#34;&#34;
         desired_privilege_level = self.privilege_levels.get(requested_priv, None)
@@ -350,7 +347,7 @@ class NetworkDriverBase:
             N/A
 
         &#34;&#34;&#34;
-        LOG.info(f&#34;Attempting to acquire `{desired_priv}` privilege level&#34;)
+        self.logger.info(f&#34;Attempting to acquire `{desired_priv}` privilege level&#34;)
         resolved_priv = self._get_privilege_level_name(requested_priv=desired_priv)
         map_to_desired_priv = self._priv_map[resolved_priv]
         return resolved_priv, map_to_desired_priv
@@ -384,7 +381,7 @@ class NetworkDriverBase:
         current_priv = self.privilege_levels[current_priv_patterns[0]]
 
         if resolved_priv in current_priv_patterns:
-            LOG.info(f&#34;Acquired requested privilege level `{resolved_priv}`&#34;)
+            self.logger.info(f&#34;Acquired requested privilege level `{resolved_priv}`&#34;)
             self._current_priv_level = self.privilege_levels[resolved_priv]
             return PrivilegeAction.NO_ACTION, current_priv
 
@@ -405,11 +402,13 @@ class NetworkDriverBase:
 
         if current_priv_index &gt; desired_priv_index:
             deescalate_priv = priv_map[current_priv_index - 1]
-            LOG.info(f&#34;Attempting to deescalate from {current_priv.name} to {deescalate_priv}&#34;)
+            self.logger.info(
+                f&#34;Attempting to deescalate from {current_priv.name} to {deescalate_priv}&#34;
+            )
             return PrivilegeAction.DEESCALATE, current_priv
 
         escalate_priv = self.privilege_levels[priv_map[current_priv_index + 1]]
-        LOG.info(f&#34;Attempting to escalate from {current_priv.name} to {escalate_priv.name}&#34;)
+        self.logger.info(f&#34;Attempting to escalate from {current_priv.name} to {escalate_priv.name}&#34;)
         return PrivilegeAction.ESCALATE, escalate_priv
 
     @staticmethod
@@ -429,7 +428,7 @@ class NetworkDriverBase:
         &#34;&#34;&#34;
         if not isinstance(config, str):
             raise TypeError(
-                f&#34;`send_config` expects a single string, got {type(config)}. &#34;
+                f&#34;`send_config` expects a single string, got {type(config)}, &#34;
                 &#34;to send a list of configs use the `send_configs` method instead.&#34;
             )
 
@@ -471,6 +470,7 @@ class NetworkDriverBase:
         # join all the results together into a single final result
         response.result = &#34;\n&#34;.join(response.result for response in multi_response)
         response.failed = False
+
         if any(response.failed for response in multi_response):
             response.failed = True
         self._update_response(response=response)
@@ -505,7 +505,7 @@ class NetworkDriverBase:
         &#34;&#34;&#34;
         if not isinstance(configs, list):
             raise TypeError(
-                f&#34;`send_configs` expects a list of strings, got {type(configs)}. &#34;
+                f&#34;`send_configs` expects a list of strings, got {type(configs)}, &#34;
                 &#34;to send a single configuration line/string use the `send_config` method instead.&#34;
             )
 
@@ -586,12 +586,11 @@ class NetworkDriverBase:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class NetworkDriverBase:
-    # NetworkDriverBase Mixin default values
+    # NetworkDriverBase Mixin vars for typing/linting purposes
+    logger: Logger
     comms_prompt_pattern: str
-    _priv_map: Dict[str, List[str]] = {}
     _current_priv_level = DUMMY_PRIV_LEVEL
-
-    # NetworkDriverBase Mixin values set in init of sync/async NetworkDriver classes
+    _priv_map: Dict[str, List[str]]
     failed_when_contains: Optional[List[str]]
     privilege_levels: Dict[str, PrivilegeLevel]
     auth_secondary: str
@@ -715,12 +714,12 @@ class NetworkDriverBase:
             if not search_result:
                 continue
             matching_priv_levels.append(priv_level.name)
-            LOG.debug(f&#34;Current privilege level could be `{priv_level.name}`&#34;)
+            self.logger.debug(f&#34;Current privilege level could be `{priv_level.name}`&#34;)
         if not matching_priv_levels:
             raise UnknownPrivLevel(
                 f&#34;Could not determine privilege level from provided prompt: `{current_prompt}`&#34;
             )
-        LOG.debug(f&#34;Determined current privilege level is one of `{matching_priv_levels}`&#34;)
+        self.logger.debug(f&#34;Determined current privilege level is one of `{matching_priv_levels}`&#34;)
         return matching_priv_levels
 
     def _get_privilege_level_name(self, requested_priv: str) -&gt; str:
@@ -734,7 +733,7 @@ class NetworkDriverBase:
             str: name of the privilege level requested
 
         Raises:
-           UnknownPrivLevel: if attempting to acquire an unknown priv
+            UnknownPrivLevel: if attempting to acquire an unknown priv
 
         &#34;&#34;&#34;
         desired_privilege_level = self.privilege_levels.get(requested_priv, None)
@@ -829,7 +828,7 @@ class NetworkDriverBase:
             N/A
 
         &#34;&#34;&#34;
-        LOG.info(f&#34;Attempting to acquire `{desired_priv}` privilege level&#34;)
+        self.logger.info(f&#34;Attempting to acquire `{desired_priv}` privilege level&#34;)
         resolved_priv = self._get_privilege_level_name(requested_priv=desired_priv)
         map_to_desired_priv = self._priv_map[resolved_priv]
         return resolved_priv, map_to_desired_priv
@@ -863,7 +862,7 @@ class NetworkDriverBase:
         current_priv = self.privilege_levels[current_priv_patterns[0]]
 
         if resolved_priv in current_priv_patterns:
-            LOG.info(f&#34;Acquired requested privilege level `{resolved_priv}`&#34;)
+            self.logger.info(f&#34;Acquired requested privilege level `{resolved_priv}`&#34;)
             self._current_priv_level = self.privilege_levels[resolved_priv]
             return PrivilegeAction.NO_ACTION, current_priv
 
@@ -884,11 +883,13 @@ class NetworkDriverBase:
 
         if current_priv_index &gt; desired_priv_index:
             deescalate_priv = priv_map[current_priv_index - 1]
-            LOG.info(f&#34;Attempting to deescalate from {current_priv.name} to {deescalate_priv}&#34;)
+            self.logger.info(
+                f&#34;Attempting to deescalate from {current_priv.name} to {deescalate_priv}&#34;
+            )
             return PrivilegeAction.DEESCALATE, current_priv
 
         escalate_priv = self.privilege_levels[priv_map[current_priv_index + 1]]
-        LOG.info(f&#34;Attempting to escalate from {current_priv.name} to {escalate_priv.name}&#34;)
+        self.logger.info(f&#34;Attempting to escalate from {current_priv.name} to {escalate_priv.name}&#34;)
         return PrivilegeAction.ESCALATE, escalate_priv
 
     @staticmethod
@@ -908,7 +909,7 @@ class NetworkDriverBase:
         &#34;&#34;&#34;
         if not isinstance(config, str):
             raise TypeError(
-                f&#34;`send_config` expects a single string, got {type(config)}. &#34;
+                f&#34;`send_config` expects a single string, got {type(config)}, &#34;
                 &#34;to send a list of configs use the `send_configs` method instead.&#34;
             )
 
@@ -950,6 +951,7 @@ class NetworkDriverBase:
         # join all the results together into a single final result
         response.result = &#34;\n&#34;.join(response.result for response in multi_response)
         response.failed = False
+
         if any(response.failed for response in multi_response):
             response.failed = True
         self._update_response(response=response)
@@ -984,7 +986,7 @@ class NetworkDriverBase:
         &#34;&#34;&#34;
         if not isinstance(configs, list):
             raise TypeError(
-                f&#34;`send_configs` expects a list of strings, got {type(configs)}. &#34;
+                f&#34;`send_configs` expects a list of strings, got {type(configs)}, &#34;
                 &#34;to send a single configuration line/string use the `send_config` method instead.&#34;
             )
 

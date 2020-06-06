@@ -26,7 +26,6 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.driver.async_generic_driver&#34;&#34;&#34;
-import logging
 from collections import UserList
 from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union
 
@@ -39,8 +38,6 @@ if TYPE_CHECKING:
     ScrapliMultiResponse = UserList[Response]  # pylint:  disable=E1136; # pragma:  no cover
 else:
     ScrapliMultiResponse = UserList
-
-LOG = logging.getLogger(&#34;driver&#34;)
 
 
 class AsyncGenericDriver(AsyncScrape, GenericDriverBase):

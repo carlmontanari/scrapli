@@ -26,57 +26,12 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.driver.core.juniper_junos.driver&#34;&#34;&#34;
+from copy import deepcopy
 from typing import Any, Callable, Dict, List, Optional
 
 from scrapli.driver import NetworkDriver
 from scrapli.driver.base_network_driver import PrivilegeLevel
-
-PRIVS = {
-    &#34;exec&#34;: (
-        PrivilegeLevel(
-            pattern=r&#34;^({\w+:\d}\n){0,1}[a-z0-9.\-@()/:]{1,32}&gt;\s?$&#34;,
-            name=&#34;exec&#34;,
-            previous_priv=&#34;&#34;,
-            deescalate=&#34;&#34;,
-            escalate=&#34;&#34;,
-            escalate_auth=False,
-            escalate_prompt=&#34;&#34;,
-        )
-    ),
-    &#34;configuration&#34;: (
-        PrivilegeLevel(
-            pattern=r&#34;^({\w+:\d}\[edit\]\n){0,1}[a-z0-9.\-@()/:]{1,32}#\s?$&#34;,
-            name=&#34;configuration&#34;,
-            previous_priv=&#34;exec&#34;,
-            deescalate=&#34;exit configuration-mode&#34;,
-            escalate=&#34;configure&#34;,
-            escalate_auth=False,
-            escalate_prompt=&#34;&#34;,
-        )
-    ),
-    &#34;configuration_exclusive&#34;: (
-        PrivilegeLevel(
-            pattern=r&#34;^({\w+:\d}\[edit\]\n){0,1}[a-z0-9.\-@()/:]{1,32}#\s?$&#34;,
-            name=&#34;configuration_exclusive&#34;,
-            previous_priv=&#34;exec&#34;,
-            deescalate=&#34;exit configuration-mode&#34;,
-            escalate=&#34;configure exclusive&#34;,
-            escalate_auth=False,
-            escalate_prompt=&#34;&#34;,
-        )
-    ),
-    &#34;configuration_private&#34;: (
-        PrivilegeLevel(
-            pattern=r&#34;^({\w+:\d}\[edit\]\n){0,1}[a-z0-9.\-@()/:]{1,32}#\s?$&#34;,
-            name=&#34;configuration_private&#34;,
-            previous_priv=&#34;exec&#34;,
-            deescalate=&#34;exit configuration-mode&#34;,
-            escalate=&#34;configure private&#34;,
-            escalate_auth=False,
-            escalate_prompt=&#34;&#34;,
-        )
-    ),
-}
+from scrapli.driver.core.juniper_junos.base_driver import PRIVS
 
 
 def junos_on_open(conn: NetworkDriver) -&gt; None:
@@ -175,7 +130,7 @@ class JunosDriver(NetworkDriver):
 
         &#34;&#34;&#34;
         if privilege_levels is None:
-            privilege_levels = PRIVS
+            privilege_levels = deepcopy(PRIVS)
 
         if on_open is None:
             on_open = junos_on_open
@@ -458,7 +413,7 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
 
         &#34;&#34;&#34;
         if privilege_levels is None:
-            privilege_levels = PRIVS
+            privilege_levels = deepcopy(PRIVS)
 
         if on_open is None:
             on_open = junos_on_open

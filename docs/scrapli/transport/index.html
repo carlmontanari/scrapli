@@ -48,6 +48,10 @@ __all__ = (
 <dd>
 <div class="desc"><p>scrapli.transport.async_transport</p></div>
 </dd>
+<dt><code class="name"><a title="scrapli.transport.base_transport" href="base_transport.html">scrapli.transport.base_transport</a></code></dt>
+<dd>
+<div class="desc"><p>scrapli.transport.base_transport</p></div>
+</dd>
 <dt><code class="name"><a title="scrapli.transport.ptyprocess" href="ptyprocess.html">scrapli.transport.ptyprocess</a></code></dt>
 <dd>
 <div class="desc"><p>Ptyprocess is under the ISC license, as code derived from Pexpect.
@@ -184,7 +188,7 @@ type is 'network'</dd>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="scrapli.transport.transport.TransportBase" href="transport.html#scrapli.transport.transport.TransportBase">TransportBase</a></li>
+<li><a title="scrapli.transport.base_transport.TransportBase" href="base_transport.html#scrapli.transport.base_transport.TransportBase">TransportBase</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Methods</h3>
@@ -312,11 +316,11 @@ def write(self, channel_input: str) -&gt; None:
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="scrapli.transport.transport.TransportBase" href="transport.html#scrapli.transport.transport.TransportBase">TransportBase</a></b></code>:
+<li><code><b><a title="scrapli.transport.base_transport.TransportBase" href="base_transport.html#scrapli.transport.base_transport.TransportBase">TransportBase</a></b></code>:
 <ul class="hlist">
-<li><code><a title="scrapli.transport.transport.TransportBase.close" href="transport.html#scrapli.transport.transport.TransportBase.close">close</a></code></li>
-<li><code><a title="scrapli.transport.transport.TransportBase.isalive" href="transport.html#scrapli.transport.transport.TransportBase.isalive">isalive</a></code></li>
-<li><code><a title="scrapli.transport.transport.TransportBase.set_timeout" href="transport.html#scrapli.transport.transport.TransportBase.set_timeout">set_timeout</a></code></li>
+<li><code><a title="scrapli.transport.base_transport.TransportBase.close" href="base_transport.html#scrapli.transport.base_transport.TransportBase.close">close</a></code></li>
+<li><code><a title="scrapli.transport.base_transport.TransportBase.isalive" href="base_transport.html#scrapli.transport.base_transport.TransportBase.isalive">isalive</a></code></li>
+<li><code><a title="scrapli.transport.base_transport.TransportBase.set_timeout" href="base_transport.html#scrapli.transport.base_transport.TransportBase.set_timeout">set_timeout</a></code></li>
 </ul>
 </li>
 </ul>
@@ -698,11 +702,11 @@ terminal "normally", passing some bad arguments can break things!</dd>
         &#34;&#34;&#34;
         self.session_lock.acquire()
 
-        LOG.info(f&#34;Attempting to authenticate to {self.host}&#34;)
+        self.logger.info(f&#34;Attempting to authenticate to {self.host}&#34;)
 
         # if auth_bypass kick off keepalive thread if necessary and return
         if self.auth_bypass:
-            LOG.info(&#34;`auth_bypass` is True, bypassing authentication&#34;)
+            self.logger.info(&#34;`auth_bypass` is True, bypassing authentication&#34;)
             self._open_pty(skip_auth=True)
             self._session_keepalive()
             return
@@ -722,21 +726,21 @@ terminal "normally", passing some bad arguments can break things!</dd>
                     f&#34;`{self.auth_private_key}`. Unable to continue authentication, &#34;
                     &#34;missing username, password, or both.&#34;
                 )
-                LOG.critical(msg)
+                self.logger.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
             msg = (
                 f&#34;Failed to authenticate to host {self.host} with private key &#34;
                 f&#34;`{self.auth_private_key}`. Attempting to continue with password authentication.&#34;
             )
-            LOG.critical(msg)
+            self.logger.critical(msg)
 
         # If public key auth fails or is not configured, open a pty session
         if not self._open_pty():
             msg = f&#34;Authentication to host {self.host} failed&#34;
-            LOG.critical(msg)
+            self.logger.critical(msg)
             raise ScrapliAuthenticationFailed(msg)
 
-        LOG.info(f&#34;Successfully authenticated to {self.host}&#34;)
+        self.logger.info(f&#34;Successfully authenticated to {self.host}&#34;)
 
         if self.keepalive:
             self._session_keepalive()
@@ -766,7 +770,7 @@ terminal "normally", passing some bad arguments can break things!</dd>
         open_cmd.append(&#34;-v&#34;)
         open_cmd.extend([&#34;-o&#34;, &#34;BatchMode=yes&#34;])
 
-        LOG.info(f&#34;Attempting to open session with the following command: {open_cmd}&#34;)
+        self.logger.info(f&#34;Attempting to open session with the following command: {open_cmd}&#34;)
 
         stdout_master_pty, stdout_slave_pty = pty.openpty()
         stdin_master_pty, stdin_slave_pty = pty.openpty()
@@ -782,7 +786,7 @@ terminal "normally", passing some bad arguments can break things!</dd>
         # close the slave fds, don&#39;t need them anymore
         os.close(stdin_slave_pty)
         os.close(stdout_slave_pty)
-        LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
+        self.logger.debug(f&#34;Session to host {self.host} spawned&#34;)
 
         try:
             self._pipes_isauthenticated(self.session)
@@ -803,7 +807,7 @@ terminal "normally", passing some bad arguments can break things!</dd>
             self.session_lock.acquire()
             return False
 
-        LOG.debug(f&#34;Authenticated to host {self.host} with public key&#34;)
+        self.logger.debug(f&#34;Authenticated to host {self.host} with public key&#34;)
 
         # set stdin/stdout to the new master pty fds
         self._stdin_fd = stdin_master_pty
@@ -813,76 +817,7 @@ terminal "normally", passing some bad arguments can break things!</dd>
         self.session_lock.release()
         return True
 
-    @operation_timeout(&#34;_timeout_ops&#34;, &#34;Timed out determining if session is authenticated&#34;)
-    def _pipes_isauthenticated(self, pipes_session: &#34;PopenBytes&#34;) -&gt; bool:
-        &#34;&#34;&#34;
-        Private method to check initial authentication when using subprocess.Popen
-
-        Since we always run ssh with `-v` we can simply check the stderr (where verbose output goes)
-        to see if `Authenticated to [our host]` is in the output.
-
-        Args:
-            pipes_session: Popen pipes session object
-
-        Returns:
-            bool: True/False session was authenticated
-
-        Raises:
-            ScrapliTimeout: if `Operation timed out` in stderr output
-            ScrapliAuthenticationFailed: if private key permissions are too open
-
-        &#34;&#34;&#34;
-        if pipes_session.stderr is None:
-            raise ScrapliTimeout(f&#34;Could not read stderr while connecting to host {self.host}&#34;)
-
-        output = b&#34;&#34;
-        while True:
-            output += pipes_session.stderr.read(65535)
-            if f&#34;Authenticated to {self.host}&#34;.encode() in output:
-                self._isauthenticated = True
-                return True
-            if (
-                b&#34;Next authentication method: keyboard-interactive&#34; in output
-                or b&#34;Next authentication method: password&#34; in output
-            ):
-                return False
-            if b&#34;Operation timed out&#34; in output:
-                msg = f&#34;Timed opening connection to host {self.host}&#34;
-                raise ScrapliTimeout(msg)
-            if b&#34;WARNING: UNPROTECTED PRIVATE KEY FILE!&#34; in output:
-                msg = (
-                    f&#34;Permissions for private key `{self.auth_private_key}` are too open, &#34;
-                    &#34;authentication failed!&#34;
-                )
-                raise ScrapliAuthenticationFailed(msg)
-
-    def _open_pty(self, skip_auth: bool = False) -&gt; bool:
-        &#34;&#34;&#34;
-        Private method to open session with PtyProcess
-
-        Args:
-            skip_auth: skip auth in the case of auth_bypass mode
-
-        Returns:
-            bool: True/False session was opened and authenticated
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        LOG.info(f&#34;Attempting to open session with the following command: {self.open_cmd}&#34;)
-        self.session = PtyProcess.spawn(self.open_cmd)
-        LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
-        self.session_lock.release()
-        if skip_auth:
-            return True
-        self._pty_authenticate(pty_session=self.session)
-        if not self._pty_isauthenticated(self.session):
-            return False
-        LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
-        return True
-
-    def _pty_authentication_eof_handler(self, output: bytes) -&gt; str:
+    def _ssh_message_handler(self, output: bytes) -&gt; None:  # noqa: C901
         &#34;&#34;&#34;
         Parse EOF messages from _pty_authenticate and create log/stack exception message
 
@@ -890,16 +825,13 @@ terminal "normally", passing some bad arguments can break things!</dd>
             output: bytes output from _pty_authenticate
 
         Returns:
-            str: message for logging/stack trace
+            N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            ScrapliAuthenticationFailed: if any errors are read in the output
 
         &#34;&#34;&#34;
-        msg = (
-            f&#34;Failed to open connection to host {self.host}. Do you need to disable &#34;
-            &#34;`auth_strict_key`?&#34;
-        )
+        msg = &#34;&#34;
         if b&#34;host key verification failed&#34; in output.lower():
             msg = f&#34;Host key verification failed for host {self.host}&#34;
         elif b&#34;operation timed out&#34; in output.lower() or b&#34;connection timed out&#34; in output.lower():
@@ -927,7 +859,76 @@ terminal "normally", passing some bad arguments can break things!</dd>
                 msg = (
                     f&#34;No matching cipher found for host {self.host}, their offer: {offered_ciphers}&#34;
                 )
-        return msg
+        elif b&#34;WARNING: UNPROTECTED PRIVATE KEY FILE!&#34; in output:
+            msg = (
+                f&#34;Permissions for private key `{self.auth_private_key}` are too open, &#34;
+                &#34;authentication failed!&#34;
+            )
+        elif b&#34;could not resolve hostname&#34; in output.lower():
+            msg = f&#34;Could not resolve address for host `{self.host}`&#34;
+        if msg:
+            self.logger.critical(msg)
+            raise ScrapliAuthenticationFailed(msg)
+
+    @operation_timeout(&#34;_timeout_ops&#34;, &#34;Timed out determining if session is authenticated&#34;)
+    def _pipes_isauthenticated(self, pipes_session: &#34;PopenBytes&#34;) -&gt; bool:
+        &#34;&#34;&#34;
+        Private method to check initial authentication when using subprocess.Popen
+
+        Since we always run ssh with `-v` we can simply check the stderr (where verbose output goes)
+        to see if `Authenticated to [our host]` is in the output.
+
+        Args:
+            pipes_session: Popen pipes session object
+
+        Returns:
+            bool: True/False session was authenticated
+
+        Raises:
+            ScrapliTimeout: if we cant read from stderr of the session
+
+        &#34;&#34;&#34;
+        if pipes_session.stderr is None:
+            raise ScrapliTimeout(f&#34;Could not read stderr while connecting to host {self.host}&#34;)
+
+        output = b&#34;&#34;
+        while True:
+            output += pipes_session.stderr.read(65535)
+            if f&#34;authenticated to {self.host}&#34;.encode() in output.lower():
+                self._isauthenticated = True
+                return True
+            if (
+                b&#34;next authentication method: keyboard-interactive&#34; in output.lower()
+                or b&#34;next authentication method: password&#34; in output.lower()
+            ):
+                return False
+            self._ssh_message_handler(output=output)
+
+    def _open_pty(self, skip_auth: bool = False) -&gt; bool:
+        &#34;&#34;&#34;
+        Private method to open session with PtyProcess
+
+        Args:
+            skip_auth: skip auth in the case of auth_bypass mode
+
+        Returns:
+            bool: True/False session was opened and authenticated
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.logger.info(f&#34;Attempting to open session with the following command: {self.open_cmd}&#34;)
+        self.session = PtyProcess.spawn(self.open_cmd)
+        self.logger.debug(f&#34;Session to host {self.host} spawned&#34;)
+        self.session_lock.release()
+        if skip_auth:
+            return True
+        self._pty_authenticate(pty_session=self.session)
+        if not self._pty_isauthenticated(self.session):
+            return False
+        self.logger.debug(f&#34;Authenticated to host {self.host} with password&#34;)
+        return True
 
     @operation_timeout(&#34;_timeout_ops&#34;, &#34;Timed out looking for SSH login password prompt&#34;)
     def _pty_authenticate(self, pty_session: PtyProcess) -&gt; None:
@@ -941,8 +942,8 @@ terminal "normally", passing some bad arguments can break things!</dd>
             N/A  # noqa: DAR202
 
         Raises:
-            ScrapliAuthenticationFailed: if we receive an EOFError -- this usually indicates that
-                host key checking is enabled and failed.
+            ScrapliAuthenticationFailed: if we get EOF and _ssh_message_handler does not raise an
+                explicit exception/message
 
         &#34;&#34;&#34;
         self.session_lock.acquire()
@@ -951,15 +952,21 @@ terminal "normally", passing some bad arguments can break things!</dd>
             try:
                 new_output = pty_session.read()
                 output += new_output
-                LOG.debug(f&#34;Attempting to authenticate. Read: {repr(new_output)}&#34;)
+                self.logger.debug(f&#34;Attempting to authenticate. Read: {repr(new_output)}&#34;)
             except EOFError:
-                msg = self._pty_authentication_eof_handler(output)
-                LOG.critical(msg)
+                self._ssh_message_handler(output=output)
+                # if _ssh_message_handler didn&#39;t raise any exception, we can raise the standard --
+                # did you disable strict key message/exception
+                msg = (
+                    f&#34;Failed to open connection to host {self.host}. Do you need to disable &#34;
+                    &#34;`auth_strict_key`?&#34;
+                )
+                self.logger.critical(msg)
                 raise ScrapliAuthenticationFailed(msg)
             if self._comms_ansi:
                 output = strip_ansi(output)
             if b&#34;password&#34; in output.lower():
-                LOG.info(&#34;Found password prompt, sending password&#34;)
+                self.logger.info(&#34;Found password prompt, sending password&#34;)
                 pty_session.write(self.auth_password.encode())
                 pty_session.write(self._comms_return_char.encode())
                 self.session_lock.release()
@@ -983,7 +990,7 @@ terminal "normally", passing some bad arguments can break things!</dd>
             N/A
 
         &#34;&#34;&#34;
-        LOG.debug(&#34;Attempting to determine if PTY authentication was successful&#34;)
+        self.logger.debug(&#34;Attempting to determine if PTY authentication was successful&#34;)
         if pty_session.isalive() and not pty_session.eof():
             prompt_pattern = get_prompt_pattern(prompt=&#34;&#34;, class_prompt=self._comms_prompt_pattern)
             self.session_lock.acquire()
@@ -995,12 +1002,14 @@ terminal "normally", passing some bad arguments can break things!</dd>
                 fd_ready, _, _ = select([pty_session.fd], [], [], 0)
                 if pty_session.fd in fd_ready:
                     break
-                LOG.debug(&#34;PTY fd not ready yet...&#34;)
+                self.logger.debug(&#34;PTY fd not ready yet...&#34;)
             output = b&#34;&#34;
             while True:
                 new_output = pty_session.read()
                 output += new_output
-                LOG.debug(f&#34;Attempting validate authentication. Read: {repr(new_output)}&#34;)
+                self.logger.debug(
+                    f&#34;Attempting to validate authentication. Read: {repr(new_output)}&#34;
+                )
                 # we do not need to deal w/ line replacement for the actual output, only for
                 # parsing if a prompt-like thing is at the end of the output
                 output = output.replace(b&#34;\r&#34;, b&#34;&#34;)
@@ -1016,12 +1025,14 @@ terminal "normally", passing some bad arguments can break things!</dd>
                     return True
                 if b&#34;password:&#34; in output.lower():
                     # if we see &#34;password&#34; we know auth failed (hopefully in all scenarios!)
-                    LOG.critical(
+                    self.logger.critical(
                         &#34;Found `password:` in output, assuming password authentication failed&#34;
                     )
                     return False
                 if output:
-                    LOG.debug(f&#34;Cannot determine if authenticated, \n\tRead: {repr(output)}&#34;)
+                    self.logger.debug(
+                        f&#34;Cannot determine if authenticated, \n\tRead: {repr(output)}&#34;
+                    )
         self.session_lock.release()
         return False
 
@@ -1042,9 +1053,16 @@ terminal "normally", passing some bad arguments can break things!</dd>
         self.session_lock.acquire()
         if isinstance(self.session, Popen):
             self.session.kill()
+            try:
+                os.close(self._stdout_fd)
+                os.close(self._stdin_fd)
+            except OSError:
+                # fds were never opened or were already closed
+                pass
         elif isinstance(self.session, PtyProcess):
-            self.session.kill(1)
-        LOG.debug(f&#34;Channel to host {self.host} closed&#34;)
+            # killing ptyprocess seems to make things hang open?
+            self.session.terminated = True
+        self.logger.debug(f&#34;Channel to host {self.host} closed&#34;)
         self.session_lock.release()
 
     def isalive(self) -&gt; bool:
@@ -1062,8 +1080,12 @@ terminal "normally", passing some bad arguments can break things!</dd>
 
         &#34;&#34;&#34;
         if isinstance(self.session, Popen):
-            if self.session.poll() is None and self._isauthenticated:
+            try:
+                os.stat(self._stdout_fd)
+                os.stat(self._stdin_fd)
                 return True
+            except OSError:
+                return False
         elif isinstance(self.session, PtyProcess):
             if self.session.isalive() and self._isauthenticated and not self.session.eof():
                 return True
@@ -1157,7 +1179,7 @@ terminal "normally", passing some bad arguments can break things!</dd>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="scrapli.transport.transport.Transport" href="transport.html#scrapli.transport.transport.Transport">Transport</a></li>
-<li><a title="scrapli.transport.transport.TransportBase" href="transport.html#scrapli.transport.transport.TransportBase">TransportBase</a></li>
+<li><a title="scrapli.transport.base_transport.TransportBase" href="base_transport.html#scrapli.transport.base_transport.TransportBase">TransportBase</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Methods</h3>
@@ -1198,8 +1220,12 @@ terminal "normally", passing some bad arguments can break things!</dd>
 
     &#34;&#34;&#34;
     if isinstance(self.session, Popen):
-        if self.session.poll() is None and self._isauthenticated:
+        try:
+            os.stat(self._stdout_fd)
+            os.stat(self._stdin_fd)
             return True
+        except OSError:
+            return False
     elif isinstance(self.session, PtyProcess):
         if self.session.isalive() and self._isauthenticated and not self.session.eof():
             return True
@@ -1263,11 +1289,11 @@ case of telnet&hellip; so it works, but its just a bit less desirable.</p>
     &#34;&#34;&#34;
     self.session_lock.acquire()
 
-    LOG.info(f&#34;Attempting to authenticate to {self.host}&#34;)
+    self.logger.info(f&#34;Attempting to authenticate to {self.host}&#34;)
 
     # if auth_bypass kick off keepalive thread if necessary and return
     if self.auth_bypass:
-        LOG.info(&#34;`auth_bypass` is True, bypassing authentication&#34;)
+        self.logger.info(&#34;`auth_bypass` is True, bypassing authentication&#34;)
         self._open_pty(skip_auth=True)
         self._session_keepalive()
         return
@@ -1287,21 +1313,21 @@ case of telnet&hellip; so it works, but its just a bit less desirable.</p>
                 f&#34;`{self.auth_private_key}`. Unable to continue authentication, &#34;
                 &#34;missing username, password, or both.&#34;
             )
-            LOG.critical(msg)
+            self.logger.critical(msg)
             raise ScrapliAuthenticationFailed(msg)
         msg = (
             f&#34;Failed to authenticate to host {self.host} with private key &#34;
             f&#34;`{self.auth_private_key}`. Attempting to continue with password authentication.&#34;
         )
-        LOG.critical(msg)
+        self.logger.critical(msg)
 
     # If public key auth fails or is not configured, open a pty session
     if not self._open_pty():
         msg = f&#34;Authentication to host {self.host} failed&#34;
-        LOG.critical(msg)
+        self.logger.critical(msg)
         raise ScrapliAuthenticationFailed(msg)
 
-    LOG.info(f&#34;Successfully authenticated to {self.host}&#34;)
+    self.logger.info(f&#34;Successfully authenticated to {self.host}&#34;)
 
     if self.keepalive:
         self._session_keepalive()</code></pre>
@@ -1367,7 +1393,7 @@ leave the objects <code>timeout_transport</code> alone.</p>
 <ul class="hlist">
 <li><code><b><a title="scrapli.transport.transport.Transport" href="transport.html#scrapli.transport.transport.Transport">Transport</a></b></code>:
 <ul class="hlist">
-<li><code><a title="scrapli.transport.transport.Transport.close" href="transport.html#scrapli.transport.transport.TransportBase.close">close</a></code></li>
+<li><code><a title="scrapli.transport.transport.Transport.close" href="base_transport.html#scrapli.transport.base_transport.TransportBase.close">close</a></code></li>
 <li><code><a title="scrapli.transport.transport.Transport.read" href="transport.html#scrapli.transport.transport.Transport.read">read</a></code></li>
 <li><code><a title="scrapli.transport.transport.Transport.write" href="transport.html#scrapli.transport.transport.Transport.write">write</a></code></li>
 </ul>
@@ -1610,14 +1636,14 @@ and is ignored after authentication is completed.</dd>
                 msg = f&#34;Failed to open telnet session to host {self.host}, connection refused&#34;
             raise ScrapliAuthenticationFailed(msg)
         telnet_session.timeout = self.timeout_transport
-        LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
+        self.logger.debug(f&#34;Session to host {self.host} spawned&#34;)
         self.session_lock.release()
         self._authenticate(telnet_session=telnet_session)
         if not self._telnet_isauthenticated(telnet_session=telnet_session):
             raise ScrapliAuthenticationFailed(
                 f&#34;Could not authenticate over telnet to host: {self.host}&#34;
             )
-        LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
+        self.logger.debug(f&#34;Authenticated to host {self.host} with password&#34;)
         self.session = telnet_session
 
     @operation_timeout(&#34;_timeout_ops_auth&#34;, &#34;Timed out looking for telnet login prompts&#34;)
@@ -1668,7 +1694,7 @@ and is ignored after authentication is completed.</dd>
             N/A
 
         &#34;&#34;&#34;
-        LOG.debug(&#34;Attempting to determine if telnet authentication was successful&#34;)
+        self.logger.debug(&#34;Attempting to determine if telnet authentication was successful&#34;)
         if not telnet_session.eof:
             prompt_pattern = get_prompt_pattern(prompt=&#34;&#34;, class_prompt=self._comms_prompt_pattern)
             telnet_session_fd = telnet_session.fileno()
@@ -1681,7 +1707,7 @@ and is ignored after authentication is completed.</dd>
                 fd_ready, _, _ = select([telnet_session_fd], [], [], 0)
                 if telnet_session_fd in fd_ready:
                     break
-                LOG.debug(&#34;PTY fd not ready yet...&#34;)
+                self.logger.debug(&#34;PTY fd not ready yet...&#34;)
             output = b&#34;&#34;
             while True:
                 output += telnet_session.read_eager()
@@ -1717,7 +1743,7 @@ and is ignored after authentication is completed.</dd>
         &#34;&#34;&#34;
         self.session_lock.acquire()
         self.session.close()
-        LOG.debug(f&#34;Channel to host {self.host} closed&#34;)
+        self.logger.debug(f&#34;Channel to host {self.host} closed&#34;)
         self.session_lock.release()
 
     def isalive(self) -&gt; bool:
@@ -1728,7 +1754,7 @@ and is ignored after authentication is completed.</dd>
             N/A
 
         Returns:
-           bool: True if alive, False otherwise.
+            bool: True if alive, False otherwise.
 
         Raises:
             N/A
@@ -1814,7 +1840,7 @@ and is ignored after authentication is completed.</dd>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="scrapli.transport.transport.Transport" href="transport.html#scrapli.transport.transport.Transport">Transport</a></li>
-<li><a title="scrapli.transport.transport.TransportBase" href="transport.html#scrapli.transport.transport.TransportBase">TransportBase</a></li>
+<li><a title="scrapli.transport.base_transport.TransportBase" href="base_transport.html#scrapli.transport.base_transport.TransportBase">TransportBase</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Methods</h3>
@@ -1848,7 +1874,7 @@ and is ignored after authentication is completed.</dd>
         N/A
 
     Returns:
-       bool: True if alive, False otherwise.
+        bool: True if alive, False otherwise.
 
     Raises:
         N/A
@@ -1907,14 +1933,14 @@ and is ignored after authentication is completed.</dd>
             msg = f&#34;Failed to open telnet session to host {self.host}, connection refused&#34;
         raise ScrapliAuthenticationFailed(msg)
     telnet_session.timeout = self.timeout_transport
-    LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
+    self.logger.debug(f&#34;Session to host {self.host} spawned&#34;)
     self.session_lock.release()
     self._authenticate(telnet_session=telnet_session)
     if not self._telnet_isauthenticated(telnet_session=telnet_session):
         raise ScrapliAuthenticationFailed(
             f&#34;Could not authenticate over telnet to host: {self.host}&#34;
         )
-    LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
+    self.logger.debug(f&#34;Authenticated to host {self.host} with password&#34;)
     self.session = telnet_session</code></pre>
 </details>
 </dd>
@@ -1923,9 +1949,9 @@ and is ignored after authentication is completed.</dd>
 <ul class="hlist">
 <li><code><b><a title="scrapli.transport.transport.Transport" href="transport.html#scrapli.transport.transport.Transport">Transport</a></b></code>:
 <ul class="hlist">
-<li><code><a title="scrapli.transport.transport.Transport.close" href="transport.html#scrapli.transport.transport.TransportBase.close">close</a></code></li>
+<li><code><a title="scrapli.transport.transport.Transport.close" href="base_transport.html#scrapli.transport.base_transport.TransportBase.close">close</a></code></li>
 <li><code><a title="scrapli.transport.transport.Transport.read" href="transport.html#scrapli.transport.transport.Transport.read">read</a></code></li>
-<li><code><a title="scrapli.transport.transport.Transport.set_timeout" href="transport.html#scrapli.transport.transport.TransportBase.set_timeout">set_timeout</a></code></li>
+<li><code><a title="scrapli.transport.transport.Transport.set_timeout" href="base_transport.html#scrapli.transport.base_transport.TransportBase.set_timeout">set_timeout</a></code></li>
 <li><code><a title="scrapli.transport.transport.Transport.write" href="transport.html#scrapli.transport.transport.Transport.write">write</a></code></li>
 </ul>
 </li>
@@ -2092,7 +2118,7 @@ type is 'network'</dd>
             diff = datetime.now() - last_keepalive
             if diff.seconds &gt;= self.keepalive_interval:
                 if not self.session_lock.locked():
-                    LOG.debug(
+                    self.logger.debug(
                         f&#34;Sending &#39;network&#39; keepalive with pattern {repr(self.keepalive_pattern)}.&#34;
                     )
                     lock_counter = 0
@@ -2103,13 +2129,15 @@ type is 'network'</dd>
                 else:
                     lock_counter += 1
                     if lock_counter &gt;= 3:
-                        LOG.info(f&#34;Keepalive thread missed {lock_counter} consecutive keepalives.&#34;)
+                        self.logger.info(
+                            f&#34;Keepalive thread missed {lock_counter} consecutive keepalives.&#34;
+                        )
             if diff.seconds &gt; self.keepalive_interval * 3:
                 msg = (
                     &#34;Keepalive thread has failed to send a keepalive in greater than three &#34;
                     &#34;times the keepalive interval!&#34;
                 )
-                LOG.critical(msg)
+                self.logger.critical(msg)
                 raise ScrapliKeepaliveFailure(msg)
             time.sleep(self.keepalive_interval / 10)
 
@@ -2131,7 +2159,7 @@ type is 'network'</dd>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="scrapli.transport.transport.TransportBase" href="transport.html#scrapli.transport.transport.TransportBase">TransportBase</a></li>
+<li><a title="scrapli.transport.base_transport.TransportBase" href="base_transport.html#scrapli.transport.base_transport.TransportBase">TransportBase</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Subclasses</h3>
@@ -2264,11 +2292,11 @@ def write(self, channel_input: str) -&gt; None:
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="scrapli.transport.transport.TransportBase" href="transport.html#scrapli.transport.transport.TransportBase">TransportBase</a></b></code>:
+<li><code><b><a title="scrapli.transport.base_transport.TransportBase" href="base_transport.html#scrapli.transport.base_transport.TransportBase">TransportBase</a></b></code>:
 <ul class="hlist">
-<li><code><a title="scrapli.transport.transport.TransportBase.close" href="transport.html#scrapli.transport.transport.TransportBase.close">close</a></code></li>
-<li><code><a title="scrapli.transport.transport.TransportBase.isalive" href="transport.html#scrapli.transport.transport.TransportBase.isalive">isalive</a></code></li>
-<li><code><a title="scrapli.transport.transport.TransportBase.set_timeout" href="transport.html#scrapli.transport.transport.TransportBase.set_timeout">set_timeout</a></code></li>
+<li><code><a title="scrapli.transport.base_transport.TransportBase.close" href="base_transport.html#scrapli.transport.base_transport.TransportBase.close">close</a></code></li>
+<li><code><a title="scrapli.transport.base_transport.TransportBase.isalive" href="base_transport.html#scrapli.transport.base_transport.TransportBase.isalive">isalive</a></code></li>
+<li><code><a title="scrapli.transport.base_transport.TransportBase.set_timeout" href="base_transport.html#scrapli.transport.base_transport.TransportBase.set_timeout">set_timeout</a></code></li>
 </ul>
 </li>
 </ul>
@@ -2290,6 +2318,7 @@ def write(self, channel_input: str) -&gt; None:
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
 <li><code><a title="scrapli.transport.async_transport" href="async_transport.html">scrapli.transport.async_transport</a></code></li>
+<li><code><a title="scrapli.transport.base_transport" href="base_transport.html">scrapli.transport.base_transport</a></code></li>
 <li><code><a title="scrapli.transport.ptyprocess" href="ptyprocess.html">scrapli.transport.ptyprocess</a></code></li>
 <li><code><a title="scrapli.transport.socket" href="socket.html">scrapli.transport.socket</a></code></li>
 <li><code><a title="scrapli.transport.systemssh" href="systemssh.html">scrapli.transport.systemssh</a></code></li>

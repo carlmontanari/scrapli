@@ -26,11 +26,12 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.driver.core.cisco_iosxe.async_driver&#34;&#34;&#34;
+from copy import deepcopy
 from typing import Any, Callable, Dict, List, Optional
 
 from scrapli.driver import AsyncNetworkDriver
 from scrapli.driver.base_network_driver import PrivilegeLevel
-from scrapli.driver.core.cisco_iosxe.driver import PRIVS
+from scrapli.driver.core.cisco_iosxe.base_driver import PRIVS
 
 
 async def iosxe_on_open(conn: AsyncNetworkDriver) -&gt; None:
@@ -46,6 +47,7 @@ async def iosxe_on_open(conn: AsyncNetworkDriver) -&gt; None:
     Raises:
         N/A
     &#34;&#34;&#34;
+    await conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
     await conn.send_command(command=&#34;terminal length 0&#34;)
     await conn.send_command(command=&#34;terminal width 512&#34;)
 
@@ -114,7 +116,7 @@ class AsyncIOSXEDriver(AsyncNetworkDriver):
             N/A
         &#34;&#34;&#34;
         if privilege_levels is None:
-            privilege_levels = PRIVS
+            privilege_levels = deepcopy(PRIVS)
 
         if on_open is None:
             on_open = iosxe_on_open
@@ -232,6 +234,7 @@ class AsyncIOSXEDriver(AsyncNetworkDriver):
     Raises:
         N/A
     &#34;&#34;&#34;
+    await conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
     await conn.send_command(command=&#34;terminal length 0&#34;)
     await conn.send_command(command=&#34;terminal width 512&#34;)</code></pre>
 </details>
@@ -345,7 +348,7 @@ or to logout properly to free up vtys or similar.</dd>
             N/A
         &#34;&#34;&#34;
         if privilege_levels is None:
-            privilege_levels = PRIVS
+            privilege_levels = deepcopy(PRIVS)
 
         if on_open is None:
             on_open = iosxe_on_open

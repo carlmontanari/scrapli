@@ -26,7 +26,6 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.driver.network_driver&#34;&#34;&#34;
-import logging
 from collections import UserList
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
@@ -39,8 +38,6 @@ if TYPE_CHECKING:
     ScrapliMultiResponse = UserList[Response]  # pylint:  disable=E1136; # pragma:  no cover
 else:
     ScrapliMultiResponse = UserList
-
-LOG = logging.getLogger(&#34;driver&#34;)
 
 
 class NetworkDriver(GenericDriver, NetworkDriverBase):
@@ -80,6 +77,7 @@ class NetworkDriver(GenericDriver, NetworkDriverBase):
 
         self.auth_secondary = auth_secondary
         self.privilege_levels = privilege_levels
+        self._priv_map = {}
         self.default_desired_privilege_level = default_desired_privilege_level
         self.update_privilege_levels(update_channel=False)
 
@@ -136,14 +134,14 @@ class NetworkDriver(GenericDriver, NetworkDriverBase):
         Acquire desired priv level
 
         Args:
-            desired_priv: string name of desired privilege level
-                (see scrapli.driver.&lt;driver_category.device_type&gt;.driver for levels)
+            desired_priv: string name of desired privilege level see
+                `scrapli.driver.&lt;driver_category.device_type&gt;.driver` for levels
 
         Returns:
             N/A  # noqa: DAR202
 
         Raises:
-           CouldNotAcquirePrivLevel: if scrapli cannot get to the requested privilege level
+            CouldNotAcquirePrivLevel: if desired_priv cannot be attained
 
         &#34;&#34;&#34;
         resolved_priv, map_to_desired_priv = self._pre_acquire_priv(desired_priv=desired_priv)
@@ -158,6 +156,7 @@ class NetworkDriver(GenericDriver, NetworkDriverBase):
             )
 
             if privilege_action == PrivilegeAction.NO_ACTION:
+                self._current_priv_level = target_priv
                 return
             if privilege_action == PrivilegeAction.DEESCALATE:
                 self._deescalate(current_priv=target_priv)
@@ -624,6 +623,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 
         self.auth_secondary = auth_secondary
         self.privilege_levels = privilege_levels
+        self._priv_map = {}
         self.default_desired_privilege_level = default_desired_privilege_level
         self.update_privilege_levels(update_channel=False)
 
@@ -680,14 +680,14 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         Acquire desired priv level
 
         Args:
-            desired_priv: string name of desired privilege level
-                (see scrapli.driver.&lt;driver_category.device_type&gt;.driver for levels)
+            desired_priv: string name of desired privilege level see
+                `scrapli.driver.&lt;driver_category.device_type&gt;.driver` for levels
 
         Returns:
             N/A  # noqa: DAR202
 
         Raises:
-           CouldNotAcquirePrivLevel: if scrapli cannot get to the requested privilege level
+            CouldNotAcquirePrivLevel: if desired_priv cannot be attained
 
         &#34;&#34;&#34;
         resolved_priv, map_to_desired_priv = self._pre_acquire_priv(desired_priv=desired_priv)
@@ -702,6 +702,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
             )
 
             if privilege_action == PrivilegeAction.NO_ACTION:
+                self._current_priv_level = target_priv
                 return
             if privilege_action == PrivilegeAction.DEESCALATE:
                 self._deescalate(current_priv=target_priv)
@@ -1098,8 +1099,8 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>desired_priv</code></strong></dt>
-<dd>string name of desired privilege level
-(see scrapli.driver.<driver_category.device_type>.driver for levels)</dd>
+<dd>string name of desired privilege level see
+<code>scrapli.driver.&lt;driver_category.device_type&gt;.driver</code> for levels</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -1110,7 +1111,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 <h2 id="raises">Raises</h2>
 <dl>
 <dt><code>CouldNotAcquirePrivLevel</code></dt>
-<dd>if scrapli cannot get to the requested privilege level</dd>
+<dd>if desired_priv cannot be attained</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -1121,14 +1122,14 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
     Acquire desired priv level
 
     Args:
-        desired_priv: string name of desired privilege level
-            (see scrapli.driver.&lt;driver_category.device_type&gt;.driver for levels)
+        desired_priv: string name of desired privilege level see
+            `scrapli.driver.&lt;driver_category.device_type&gt;.driver` for levels
 
     Returns:
         N/A  # noqa: DAR202
 
     Raises:
-       CouldNotAcquirePrivLevel: if scrapli cannot get to the requested privilege level
+        CouldNotAcquirePrivLevel: if desired_priv cannot be attained
 
     &#34;&#34;&#34;
     resolved_priv, map_to_desired_priv = self._pre_acquire_priv(desired_priv=desired_priv)
@@ -1143,6 +1144,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         )
 
         if privilege_action == PrivilegeAction.NO_ACTION:
+            self._current_priv_level = target_priv
             return
         if privilege_action == PrivilegeAction.DEESCALATE:
             self._deescalate(current_priv=target_priv)

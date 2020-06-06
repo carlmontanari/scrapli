@@ -26,11 +26,12 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.driver.core.arista_eos.async_driver&#34;&#34;&#34;
+from copy import deepcopy
 from typing import Any, Callable, Dict, List, Optional
 
 from scrapli.driver import AsyncNetworkDriver
 from scrapli.driver.base_network_driver import PrivilegeLevel
-from scrapli.driver.core.arista_eos.driver import PRIVS, EOSDriverBase
+from scrapli.driver.core.arista_eos.base_driver import PRIVS, EOSDriverBase
 
 
 async def eos_on_open(conn: AsyncNetworkDriver) -&gt; None:
@@ -115,7 +116,7 @@ class AsyncEOSDriver(AsyncNetworkDriver, EOSDriverBase):
 
         &#34;&#34;&#34;
         if privilege_levels is None:
-            privilege_levels = PRIVS
+            privilege_levels = deepcopy(PRIVS)
 
         if on_open is None:
             on_open = eos_on_open
@@ -370,7 +371,7 @@ or to logout properly to free up vtys or similar.</dd>
 
         &#34;&#34;&#34;
         if privilege_levels is None:
-            privilege_levels = PRIVS
+            privilege_levels = deepcopy(PRIVS)
 
         if on_open is None:
             on_open = eos_on_open
@@ -428,7 +429,7 @@ or to logout properly to free up vtys or similar.</dd>
 <li><a title="scrapli.driver.base_driver.ScrapeBase" href="../../base_driver.html#scrapli.driver.base_driver.ScrapeBase">ScrapeBase</a></li>
 <li><a title="scrapli.driver.base_generic_driver.GenericDriverBase" href="../../base_generic_driver.html#scrapli.driver.base_generic_driver.GenericDriverBase">GenericDriverBase</a></li>
 <li><a title="scrapli.driver.base_network_driver.NetworkDriverBase" href="../../base_network_driver.html#scrapli.driver.base_network_driver.NetworkDriverBase">NetworkDriverBase</a></li>
-<li><a title="scrapli.driver.core.arista_eos.driver.EOSDriverBase" href="driver.html#scrapli.driver.core.arista_eos.driver.EOSDriverBase">EOSDriverBase</a></li>
+<li><a title="scrapli.driver.core.arista_eos.base_driver.EOSDriverBase" href="base_driver.html#scrapli.driver.core.arista_eos.base_driver.EOSDriverBase">EOSDriverBase</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">

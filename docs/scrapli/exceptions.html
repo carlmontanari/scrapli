@@ -69,7 +69,11 @@ class TransportPluginError(ScrapliException):
 
 
 class ConnectionNotOpened(ScrapliException):
-    &#34;&#34;&#34;Exception for failures due to connection not being open&#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;Exception for failures due to connection not being open&#34;&#34;&#34;
+
+
+class UnsupportedPlatform(ScrapliException):
+    &#34;&#34;&#34;Exception for unsupported platform; i.e. using system transport on windows&#34;&#34;&#34;</code></pre>
 </details>
 </section>
 <section>
@@ -231,6 +235,7 @@ class ConnectionNotOpened(ScrapliException):
 <li><a title="scrapli.exceptions.ScrapliTimeout" href="#scrapli.exceptions.ScrapliTimeout">ScrapliTimeout</a></li>
 <li><a title="scrapli.exceptions.TransportPluginError" href="#scrapli.exceptions.TransportPluginError">TransportPluginError</a></li>
 <li><a title="scrapli.exceptions.UnknownPrivLevel" href="#scrapli.exceptions.UnknownPrivLevel">UnknownPrivLevel</a></li>
+<li><a title="scrapli.exceptions.UnsupportedPlatform" href="#scrapli.exceptions.UnsupportedPlatform">UnsupportedPlatform</a></li>
 </ul>
 </dd>
 <dt id="scrapli.exceptions.ScrapliKeepaliveFailure"><code class="flex name class">
@@ -313,6 +318,26 @@ class ConnectionNotOpened(ScrapliException):
 <li>builtins.BaseException</li>
 </ul>
 </dd>
+<dt id="scrapli.exceptions.UnsupportedPlatform"><code class="flex name class">
+<span>class <span class="ident">UnsupportedPlatform</span></span>
+<span>(</span><span>...)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Exception for unsupported platform; i.e. using system transport on windows</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class UnsupportedPlatform(ScrapliException):
+    &#34;&#34;&#34;Exception for unsupported platform; i.e. using system transport on windows&#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scrapli.exceptions.ScrapliException" href="#scrapli.exceptions.ScrapliException">ScrapliException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
 </dl>
 </section>
 </article>
@@ -361,6 +386,9 @@ class ConnectionNotOpened(ScrapliException):
 </li>
 <li>
 <h4><code><a title="scrapli.exceptions.UnknownPrivLevel" href="#scrapli.exceptions.UnknownPrivLevel">UnknownPrivLevel</a></code></h4>
+</li>
+<li>
+<h4><code><a title="scrapli.exceptions.UnsupportedPlatform" href="#scrapli.exceptions.UnsupportedPlatform">UnsupportedPlatform</a></code></h4>
 </li>
 </ul>
 </li>

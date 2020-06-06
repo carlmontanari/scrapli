@@ -1,7 +1,7 @@
 CHANGELOG
 =======
 
-# 2020.XX.XX
+# 2020.06.06
 - Converted all priv levels to be kwargs instead of just args for setup -- simple thing but makes it more readable IMO.
 - Added to the Juniper prompt pattern to include matching the RE prompt that is on the line "above" the "normal
 " prompt as this was getting included in command output instead of being seen as part of the prompt by scrapli.
@@ -32,8 +32,12 @@ CHANGELOG
  failing when ran via tox (now I believe this was because there was no TERM env var set in tox), but at this point
   nox is quite nice so we'll stick with it!
 - Added exception to be raised when users try to use system transport on Windows
-- Added underscores to hostname patterns for IOSXE, IOSXR, NXOS, and Junos (not valid in EOS at least in my testing)
-- No more Windows testing, not worth the effort.
+- BUGFIX: Added underscores to hostname patterns for IOSXE, IOSXR, NXOS, and Junos (not valid in EOS at least in my
+ testing)
+- No more Windows testing, not worth the effort
+- BUGFIX: Added functionality to merge less specific (but matching) host entry data for ssh config file hosts
+ -- meaning that we can now merge attributes from a "*" entry into a more specific host entry (see #21)
+- Add dependabot to see how we like having that friend around...
 
 # 2020.05.09
 - Add underscores to EOS config prompt matching

@@ -27,7 +27,8 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.channel&#34;&#34;&#34;
 from scrapli.channel.async_channel import AsyncChannel
-from scrapli.channel.channel import CHANNEL_ARGS, Channel
+from scrapli.channel.base_channel import CHANNEL_ARGS
+from scrapli.channel.channel import Channel
 
 __all__ = (&#34;AsyncChannel&#34;, &#34;Channel&#34;, &#34;CHANNEL_ARGS&#34;)</code></pre>
 </details>
@@ -38,6 +39,10 @@ __all__ = (&#34;AsyncChannel&#34;, &#34;Channel&#34;, &#34;CHANNEL_ARGS&#34;)</c
 <dt><code class="name"><a title="scrapli.channel.async_channel" href="async_channel.html">scrapli.channel.async_channel</a></code></dt>
 <dd>
 <div class="desc"><p>scrapli.channel.async_channel</p></div>
+</dd>
+<dt><code class="name"><a title="scrapli.channel.base_channel" href="base_channel.html">scrapli.channel.base_channel</a></code></dt>
+<dd>
+<div class="desc"><p>scrapli.channel.base_channel</p></div>
 </dd>
 <dt><code class="name"><a title="scrapli.channel.channel" href="channel.html">scrapli.channel.channel</a></code></dt>
 <dd>
@@ -104,9 +109,9 @@ inheritance.</p>
         # AsyncChannel, transport will always be async
         self.transport: AsyncTransport
 
-    async def _async_read_chunk(self) -&gt; bytes:
+    async def _read_chunk(self) -&gt; bytes:
         &#34;&#34;&#34;
-        Private method to async read chunk and strip comms_ansi if needed
+        Private method to async read chunk
 
         Args:
             N/A
@@ -120,12 +125,10 @@ inheritance.</p>
         &#34;&#34;&#34;
         new_output = await self.transport.read()
         new_output = new_output.replace(b&#34;\r&#34;, b&#34;&#34;)
-        if self.comms_ansi:
-            new_output = strip_ansi(output=new_output)
-        LOG.debug(f&#34;Read: {repr(new_output)}&#34;)
+        self.logger.debug(f&#34;Read: {repr(new_output)}&#34;)
         return new_output
 
-    async def _async_read_until_input(
+    async def _read_until_input(
         self, channel_input: bytes, auto_expand: Optional[bool] = None
     ) -&gt; bytes:
         &#34;&#34;&#34;
@@ -150,27 +153,25 @@ inheritance.</p>
         output = b&#34;&#34;
 
         if not channel_input:
-            LOG.info(f&#34;Read: {repr(output)}&#34;)
+            self.logger.info(f&#34;Read: {repr(output)}&#34;)
             return output
 
         if auto_expand is None:
             auto_expand = self.comms_auto_expand
 
-        channel_input_split = channel_input.split()
         while True:
-            output += await self._async_read_chunk()
+            output += await self._read_chunk()
             if not auto_expand and channel_input in output:
                 break
-            if auto_expand and all(
-                _channel_output.startswith(_channel_input)
-                for _channel_input, _channel_output in zip(channel_input_split, output.split())
+            if auto_expand and self._process_auto_expand(
+                output=output, channel_input=channel_input
             ):
                 break
 
-        LOG.info(f&#34;Read: {repr(output)}&#34;)
+        self.logger.info(f&#34;Read: {repr(output)}&#34;)
         return output
 
-    async def _async_read_until_prompt(self, output: bytes = b&#34;&#34;, prompt: str = &#34;&#34;) -&gt; bytes:
+    async def _read_until_prompt(self, output: bytes = b&#34;&#34;, prompt: str = &#34;&#34;) -&gt; bytes:
         &#34;&#34;&#34;
         Async read until expected prompt is seen.
 
@@ -188,10 +189,12 @@ inheritance.</p>
         prompt_pattern = get_prompt_pattern(prompt=prompt, class_prompt=self.comms_prompt_pattern)
 
         while True:
-            output += await self._async_read_chunk()
+            output += await self._read_chunk()
+            if self.comms_ansi:
+                output = strip_ansi(output=output)
             channel_match = re.search(pattern=prompt_pattern, string=output)
             if channel_match:
-                LOG.info(f&#34;Read: {repr(output)}&#34;)
+                self.logger.info(f&#34;Read: {repr(output)}&#34;)
                 return output
 
     @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out determining prompt on device.&#34;)
@@ -214,14 +217,16 @@ inheritance.</p>
         self._send_return()
         output = b&#34;&#34;
         while True:
-            output += await self._async_read_chunk()
+            output += await self._read_chunk()
+            if self.comms_ansi:
+                output = strip_ansi(output=output)
             channel_match = re.search(pattern=prompt_pattern, string=output)
             if channel_match:
                 self.transport.set_timeout()
                 current_prompt = channel_match.group(0)
                 return current_prompt.decode().strip()
 
-    async def send_input(self, channel_input: str, strip_prompt: bool = True,) -&gt; Tuple[str, str]:
+    async def send_input(self, channel_input: str, strip_prompt: bool = True) -&gt; Tuple[str, str]:
         &#34;&#34;&#34;
         Primary entry point to send data to devices in async shell mode; accept input, return result
 
@@ -234,14 +239,10 @@ inheritance.</p>
             processed_result: output read from the channel that has been cleaned up
 
         Raises:
-            TypeError: if input is anything but a string
+            N/A
 
         &#34;&#34;&#34;
-        if not isinstance(channel_input, str):
-            raise TypeError(
-                f&#34;`send_input` expects a single string, got {type(channel_input)}. &#34;
-                &#34;to send a list of inputs use the `send_inputs` method instead&#34;
-            )
+        self._pre_send_input(channel_input=channel_input)
         raw_result, processed_result = await self._async_send_input(
             channel_input=channel_input, strip_prompt=strip_prompt
         )
@@ -271,12 +272,12 @@ inheritance.</p>
         &#34;&#34;&#34;
         bytes_channel_input = channel_input.encode()
         self.transport.session_lock.acquire()
-        LOG.info(f&#34;Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}&#34;)
+        self.logger.info(f&#34;Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}&#34;)
         self.transport.write(channel_input=channel_input)
-        LOG.debug(f&#34;Write: {repr(channel_input)}&#34;)
-        await self._async_read_until_input(channel_input=bytes_channel_input)
+        self.logger.debug(f&#34;Write: {repr(channel_input)}&#34;)
+        await self._read_until_input(channel_input=bytes_channel_input)
         self._send_return()
-        output = await self._async_read_until_prompt()
+        output = await self._read_until_prompt()
         self.transport.session_lock.release()
         processed_output = self._restructure_output(output=output, strip_prompt=strip_prompt)
         # lstrip the return character out of the final result before storing, also remove any extra
@@ -345,10 +346,10 @@ inheritance.</p>
             processed_result: output read from the channel that has been cleaned up
 
         Raises:
-            TypeError: if inputs is not tuple or list
+            N/A
+
         &#34;&#34;&#34;
-        if not isinstance(interact_events, list):
-            raise TypeError(f&#34;`interact_events` expects a List, got {type(interact_events)}&#34;)
+        self._pre_send_inputs_interact(interact_events=interact_events)
 
         self.transport.session_lock.acquire()
         output = b&#34;&#34;
@@ -360,29 +361,26 @@ inheritance.</p>
                 hidden_input = interact_event[2]
             except IndexError:
                 hidden_input = False
-            LOG.info(
+            self.logger.info(
                 f&#34;Attempting to send input interact: {channel_input}; &#34;
                 f&#34;\texpecting: {channel_response};&#34;
                 f&#34;\thidden_input: {hidden_input}&#34;
             )
             self.transport.write(channel_input=channel_input)
-            LOG.debug(f&#34;Write: {repr(channel_input)}&#34;)
+            self.logger.debug(f&#34;Write: {repr(channel_input)}&#34;)
             if not channel_response or hidden_input is True:
                 self._send_return()
             else:
-                output += await self._async_read_until_input(channel_input=bytes_channel_input)
+                output += await self._read_until_input(channel_input=bytes_channel_input)
                 self._send_return()
-            output += await self._async_read_until_prompt(prompt=channel_response)
+            output += await self._read_until_prompt(prompt=channel_response)
         # wait to release lock until after &#34;interact&#34; session is complete
         self.transport.session_lock.release()
-        processed_output = self._restructure_output(output=output, strip_prompt=False)
-        raw_result = output.decode()
-        processed_result = processed_output.decode()
-        return raw_result, processed_result</code></pre>
+        return self._post_send_inputs_interact(output=output)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="scrapli.channel.channel.ChannelBase" href="channel.html#scrapli.channel.channel.ChannelBase">ChannelBase</a></li>
+<li><a title="scrapli.channel.base_channel.ChannelBase" href="base_channel.html#scrapli.channel.base_channel.ChannelBase">ChannelBase</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Methods</h3>
@@ -406,7 +404,7 @@ inheritance.</p>
 
     timeout_duration = getattr(channel_or_transport, attribute, None)
     if not timeout_duration:
-        LOG.info(
+        channel_or_transport.logger.info(
             f&#34;Could not find {attribute} value of {channel_or_transport}, continuing &#34;
             &#34;without timeout decorator&#34;
         )
@@ -429,9 +427,9 @@ inheritance.</p>
     future = pool.submit(wrapped_func, channel_or_transport, *args, **kwargs)
     wait([future], timeout=timeout_duration)
     if not future.done():
-        LOG.info(message)
+        channel_or_transport.logger.info(message)
         if timeout_exit:
-            LOG.info(&#34;timeout_exit is True, closing transport&#34;)
+            channel_or_transport.logger.info(&#34;timeout_exit is True, closing transport&#34;)
             if session_lock.locked():
                 session_lock.release()
             close()
@@ -460,14 +458,14 @@ inheritance.</p>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><code>TypeError</code></dt>
-<dd>if input is anything but a string</dd>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def send_input(self, channel_input: str, strip_prompt: bool = True,) -&gt; Tuple[str, str]:
+<pre><code class="python">async def send_input(self, channel_input: str, strip_prompt: bool = True) -&gt; Tuple[str, str]:
     &#34;&#34;&#34;
     Primary entry point to send data to devices in async shell mode; accept input, return result
 
@@ -480,14 +478,10 @@ inheritance.</p>
         processed_result: output read from the channel that has been cleaned up
 
     Raises:
-        TypeError: if input is anything but a string
+        N/A
 
     &#34;&#34;&#34;
-    if not isinstance(channel_input, str):
-        raise TypeError(
-            f&#34;`send_input` expects a single string, got {type(channel_input)}. &#34;
-            &#34;to send a list of inputs use the `send_inputs` method instead&#34;
-        )
+    self._pre_send_input(channel_input=channel_input)
     raw_result, processed_result = await self._async_send_input(
         channel_input=channel_input, strip_prompt=strip_prompt
     )
@@ -513,7 +507,7 @@ inheritance.</p>
 
     timeout_duration = getattr(channel_or_transport, attribute, None)
     if not timeout_duration:
-        LOG.info(
+        channel_or_transport.logger.info(
             f&#34;Could not find {attribute} value of {channel_or_transport}, continuing &#34;
             &#34;without timeout decorator&#34;
         )
@@ -536,9 +530,9 @@ inheritance.</p>
     future = pool.submit(wrapped_func, channel_or_transport, *args, **kwargs)
     wait([future], timeout=timeout_duration)
     if not future.done():
-        LOG.info(message)
+        channel_or_transport.logger.info(message)
         if timeout_exit:
-            LOG.info(&#34;timeout_exit is True, closing transport&#34;)
+            channel_or_transport.logger.info(&#34;timeout_exit is True, closing transport&#34;)
             if session_lock.locked():
                 session_lock.release()
             close()
@@ -602,7 +596,7 @@ inheritance.</p>
 
     def _read_chunk(self) -&gt; bytes:
         &#34;&#34;&#34;
-        Private method to read chunk and strip comms_ansi if needed
+        Private method to read chunk from channel
 
         Args:
             N/A
@@ -616,9 +610,7 @@ inheritance.</p>
         &#34;&#34;&#34;
         new_output = self.transport.read()
         new_output = new_output.replace(b&#34;\r&#34;, b&#34;&#34;)
-        if self.comms_ansi:
-            new_output = strip_ansi(output=new_output)
-        LOG.debug(f&#34;Read: {repr(new_output)}&#34;)
+        self.logger.debug(f&#34;Read: {repr(new_output)}&#34;)
         return new_output
 
     def _read_until_input(self, channel_input: bytes, auto_expand: Optional[bool] = None) -&gt; bytes:
@@ -644,24 +636,22 @@ inheritance.</p>
         output = b&#34;&#34;
 
         if not channel_input:
-            LOG.info(f&#34;Read: {repr(output)}&#34;)
+            self.logger.info(f&#34;Read: {repr(output)}&#34;)
             return output
 
         if auto_expand is None:
             auto_expand = self.comms_auto_expand
 
-        channel_input_split = channel_input.split()
         while True:
             output += self._read_chunk()
             if not auto_expand and channel_input in output:
                 break
-            if auto_expand and all(
-                _channel_output.startswith(_channel_input)
-                for _channel_input, _channel_output in zip(channel_input_split, output.split())
+            if auto_expand and self._process_auto_expand(
+                output=output, channel_input=channel_input
             ):
                 break
 
-        LOG.info(f&#34;Read: {repr(output)}&#34;)
+        self.logger.info(f&#34;Read: {repr(output)}&#34;)
         return output
 
     def _read_until_prompt(self, output: bytes = b&#34;&#34;, prompt: str = &#34;&#34;) -&gt; bytes:
@@ -683,9 +673,11 @@ inheritance.</p>
 
         while True:
             output += self._read_chunk()
+            if self.comms_ansi:
+                output = strip_ansi(output=output)
             channel_match = re.search(pattern=prompt_pattern, string=output)
             if channel_match:
-                LOG.info(f&#34;Read: {repr(output)}&#34;)
+                self.logger.info(f&#34;Read: {repr(output)}&#34;)
                 return output
 
     @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out determining prompt on device.&#34;)
@@ -709,6 +701,8 @@ inheritance.</p>
         output = b&#34;&#34;
         while True:
             output += self._read_chunk()
+            if self.comms_ansi:
+                output = strip_ansi(output=output)
             channel_match = re.search(pattern=prompt_pattern, string=output)
             if channel_match:
                 self.transport.set_timeout()
@@ -728,14 +722,10 @@ inheritance.</p>
             processed_result: output read from the channel that has been cleaned up
 
         Raises:
-            TypeError: if input is anything but a string
+            N/A
 
         &#34;&#34;&#34;
-        if not isinstance(channel_input, str):
-            raise TypeError(
-                f&#34;`send_input` expects a single string, got {type(channel_input)}. &#34;
-                &#34;to send a list of inputs use the `send_inputs` method instead&#34;
-            )
+        self._pre_send_input(channel_input=channel_input)
         raw_result, processed_result = self._send_input(
             channel_input=channel_input, strip_prompt=strip_prompt
         )
@@ -760,9 +750,9 @@ inheritance.</p>
         &#34;&#34;&#34;
         bytes_channel_input = channel_input.encode()
         self.transport.session_lock.acquire()
-        LOG.info(f&#34;Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}&#34;)
+        self.logger.info(f&#34;Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}&#34;)
         self.transport.write(channel_input=channel_input)
-        LOG.debug(f&#34;Write: {repr(channel_input)}&#34;)
+        self.logger.debug(f&#34;Write: {repr(channel_input)}&#34;)
         self._read_until_input(channel_input=bytes_channel_input)
         self._send_return()
         output = self._read_until_prompt()
@@ -834,10 +824,10 @@ inheritance.</p>
             processed_result: output read from the channel that has been cleaned up
 
         Raises:
-            TypeError: if inputs is not tuple or list
+            N/A
+
         &#34;&#34;&#34;
-        if not isinstance(interact_events, list):
-            raise TypeError(f&#34;`interact_events` expects a List, got {type(interact_events)}&#34;)
+        self._pre_send_inputs_interact(interact_events=interact_events)
 
         self.transport.session_lock.acquire()
         output = b&#34;&#34;
@@ -849,13 +839,13 @@ inheritance.</p>
                 hidden_input = interact_event[2]
             except IndexError:
                 hidden_input = False
-            LOG.info(
+            self.logger.info(
                 f&#34;Attempting to send input interact: {channel_input}; &#34;
                 f&#34;\texpecting: {channel_response};&#34;
                 f&#34;\thidden_input: {hidden_input}&#34;
             )
             self.transport.write(channel_input=channel_input)
-            LOG.debug(f&#34;Write: {repr(channel_input)}&#34;)
+            self.logger.debug(f&#34;Write: {repr(channel_input)}&#34;)
             if not channel_response or hidden_input is True:
                 self._send_return()
             else:
@@ -864,14 +854,11 @@ inheritance.</p>
             output += self._read_until_prompt(prompt=channel_response)
         # wait to release lock until after &#34;interact&#34; session is complete
         self.transport.session_lock.release()
-        processed_output = self._restructure_output(output=output, strip_prompt=False)
-        raw_result = output.decode()
-        processed_result = processed_output.decode()
-        return raw_result, processed_result</code></pre>
+        return self._post_send_inputs_interact(output=output)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="scrapli.channel.channel.ChannelBase" href="channel.html#scrapli.channel.channel.ChannelBase">ChannelBase</a></li>
+<li><a title="scrapli.channel.base_channel.ChannelBase" href="base_channel.html#scrapli.channel.base_channel.ChannelBase">ChannelBase</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Methods</h3>
@@ -895,7 +882,7 @@ inheritance.</p>
 
     timeout_duration = getattr(channel_or_transport, attribute, None)
     if not timeout_duration:
-        LOG.info(
+        channel_or_transport.logger.info(
             f&#34;Could not find {attribute} value of {channel_or_transport}, continuing &#34;
             &#34;without timeout decorator&#34;
         )
@@ -918,9 +905,9 @@ inheritance.</p>
     future = pool.submit(wrapped_func, channel_or_transport, *args, **kwargs)
     wait([future], timeout=timeout_duration)
     if not future.done():
-        LOG.info(message)
+        channel_or_transport.logger.info(message)
         if timeout_exit:
-            LOG.info(&#34;timeout_exit is True, closing transport&#34;)
+            channel_or_transport.logger.info(&#34;timeout_exit is True, closing transport&#34;)
             if session_lock.locked():
                 session_lock.release()
             close()
@@ -949,8 +936,8 @@ inheritance.</p>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><code>TypeError</code></dt>
-<dd>if input is anything but a string</dd>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -969,14 +956,10 @@ inheritance.</p>
         processed_result: output read from the channel that has been cleaned up
 
     Raises:
-        TypeError: if input is anything but a string
+        N/A
 
     &#34;&#34;&#34;
-    if not isinstance(channel_input, str):
-        raise TypeError(
-            f&#34;`send_input` expects a single string, got {type(channel_input)}. &#34;
-            &#34;to send a list of inputs use the `send_inputs` method instead&#34;
-        )
+    self._pre_send_input(channel_input=channel_input)
     raw_result, processed_result = self._send_input(
         channel_input=channel_input, strip_prompt=strip_prompt
     )
@@ -1002,7 +985,7 @@ inheritance.</p>
 
     timeout_duration = getattr(channel_or_transport, attribute, None)
     if not timeout_duration:
-        LOG.info(
+        channel_or_transport.logger.info(
             f&#34;Could not find {attribute} value of {channel_or_transport}, continuing &#34;
             &#34;without timeout decorator&#34;
         )
@@ -1025,9 +1008,9 @@ inheritance.</p>
     future = pool.submit(wrapped_func, channel_or_transport, *args, **kwargs)
     wait([future], timeout=timeout_duration)
     if not future.done():
-        LOG.info(message)
+        channel_or_transport.logger.info(message)
         if timeout_exit:
-            LOG.info(&#34;timeout_exit is True, closing transport&#34;)
+            channel_or_transport.logger.info(&#34;timeout_exit is True, closing transport&#34;)
             if session_lock.locked():
                 session_lock.release()
             close()
@@ -1054,6 +1037,7 @@ inheritance.</p>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
 <li><code><a title="scrapli.channel.async_channel" href="async_channel.html">scrapli.channel.async_channel</a></code></li>
+<li><code><a title="scrapli.channel.base_channel" href="base_channel.html">scrapli.channel.base_channel</a></code></li>
 <li><code><a title="scrapli.channel.channel" href="channel.html">scrapli.channel.channel</a></code></li>
 </ul>
 </li>

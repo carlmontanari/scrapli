@@ -26,47 +26,12 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.driver.core.arista_eos.driver&#34;&#34;&#34;
-import re
+from copy import deepcopy
 from typing import Any, Callable, Dict, List, Optional
 
 from scrapli.driver import NetworkDriver
 from scrapli.driver.base_network_driver import PrivilegeLevel
-
-PRIVS = {
-    &#34;exec&#34;: (
-        PrivilegeLevel(
-            pattern=r&#34;^[a-z0-9.\-@()/: ]{1,32}&gt;\s?$&#34;,
-            name=&#34;exec&#34;,
-            previous_priv=&#34;&#34;,
-            deescalate=&#34;&#34;,
-            escalate=&#34;&#34;,
-            escalate_auth=False,
-            escalate_prompt=&#34;&#34;,
-        )
-    ),
-    &#34;privilege_exec&#34;: (
-        PrivilegeLevel(
-            pattern=r&#34;^[a-z0-9.\-@/: ]{1,32}#\s?$&#34;,
-            name=&#34;privilege_exec&#34;,
-            previous_priv=&#34;exec&#34;,
-            deescalate=&#34;disable&#34;,
-            escalate=&#34;enable&#34;,
-            escalate_auth=True,
-            escalate_prompt=r&#34;^[pP]assword:\s?$&#34;,
-        )
-    ),
-    &#34;configuration&#34;: (
-        PrivilegeLevel(
-            pattern=r&#34;^[a-z0-9.\-@/: ]{1,32}\(config(?!\-s\-)[a-z0-9_.\-@/:]{0,32}\)#\s?$&#34;,
-            name=&#34;configuration&#34;,
-            previous_priv=&#34;privilege_exec&#34;,
-            deescalate=&#34;end&#34;,
-            escalate=&#34;configure terminal&#34;,
-            escalate_auth=False,
-            escalate_prompt=&#34;&#34;,
-        )
-    ),
-}
+from scrapli.driver.core.arista_eos.base_driver import PRIVS, EOSDriverBase
 
 
 def eos_on_open(conn: NetworkDriver) -&gt; None:
@@ -105,47 +70,6 @@ def eos_on_close(conn: NetworkDriver) -&gt; None:
     conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
     conn.transport.write(channel_input=&#34;exit&#34;)
     conn.transport.write(channel_input=conn.channel.comms_return_char)
-
-
-class EOSDriverBase:
-    # EOSDriverBase Mixin values set in init of sync/async NetworkDriver classes
-    privilege_levels: Dict[str, PrivilegeLevel]
-
-    def _create_configuration_session(self, session_name: str) -&gt; None:
-        &#34;&#34;&#34;
-        Handle configuration session creation tasks for consistency between sync/async versions
-
-        Args:
-            session_name: name of session to register
-
-        Returns:
-            N/A:  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        if session_name in self.privilege_levels.keys():
-            msg = (
-                f&#34;session name `{session_name}` already registered as a privilege level, chose a &#34;
-                &#34;unique session name&#34;
-            )
-            raise ValueError(msg)
-        session_prompt = re.escape(session_name[:6])
-        pattern = (
-            rf&#34;^[a-z0-9.\-@/:]{{1,32}}\(config\-s\-{session_prompt}[a-z0-9_.\-@/:]{{0,32}}\)#\s?$&#34;
-        )
-        name = session_name
-        config_session = PrivilegeLevel(
-            pattern=pattern,
-            name=name,
-            previous_priv=&#34;privilege_exec&#34;,
-            deescalate=&#34;end&#34;,
-            escalate=f&#34;configure session {session_name}&#34;,
-            escalate_auth=False,
-            escalate_prompt=&#34;&#34;,
-        )
-        self.privilege_levels[name] = config_session
 
 
 class EOSDriver(NetworkDriver, EOSDriverBase):
@@ -193,7 +117,7 @@ class EOSDriver(NetworkDriver, EOSDriverBase):
 
         &#34;&#34;&#34;
         if privilege_levels is None:
-            privilege_levels = PRIVS
+            privilege_levels = deepcopy(PRIVS)
 
         if on_open is None:
             on_open = eos_on_open
@@ -462,7 +386,7 @@ or to logout properly to free up vtys or similar.</dd>
 
         &#34;&#34;&#34;
         if privilege_levels is None:
-            privilege_levels = PRIVS
+            privilege_levels = deepcopy(PRIVS)
 
         if on_open is None:
             on_open = eos_on_open
@@ -533,7 +457,7 @@ or to logout properly to free up vtys or similar.</dd>
 <li><a title="scrapli.driver.base_driver.ScrapeBase" href="../../base_driver.html#scrapli.driver.base_driver.ScrapeBase">ScrapeBase</a></li>
 <li><a title="scrapli.driver.base_generic_driver.GenericDriverBase" href="../../base_generic_driver.html#scrapli.driver.base_generic_driver.GenericDriverBase">GenericDriverBase</a></li>
 <li><a title="scrapli.driver.base_network_driver.NetworkDriverBase" href="../../base_network_driver.html#scrapli.driver.base_network_driver.NetworkDriverBase">NetworkDriverBase</a></li>
-<li><a title="scrapli.driver.core.arista_eos.driver.EOSDriverBase" href="#scrapli.driver.core.arista_eos.driver.EOSDriverBase">EOSDriverBase</a></li>
+<li><a title="scrapli.driver.core.arista_eos.base_driver.EOSDriverBase" href="base_driver.html#scrapli.driver.core.arista_eos.base_driver.EOSDriverBase">EOSDriverBase</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -602,61 +526,6 @@ or to logout properly to free up vtys or similar.</dd>
 </li>
 </ul>
 </dd>
-<dt id="scrapli.driver.core.arista_eos.driver.EOSDriverBase"><code class="flex name class">
-<span>class <span class="ident">EOSDriverBase</span></span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class EOSDriverBase:
-    # EOSDriverBase Mixin values set in init of sync/async NetworkDriver classes
-    privilege_levels: Dict[str, PrivilegeLevel]
-
-    def _create_configuration_session(self, session_name: str) -&gt; None:
-        &#34;&#34;&#34;
-        Handle configuration session creation tasks for consistency between sync/async versions
-
-        Args:
-            session_name: name of session to register
-
-        Returns:
-            N/A:  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        if session_name in self.privilege_levels.keys():
-            msg = (
-                f&#34;session name `{session_name}` already registered as a privilege level, chose a &#34;
-                &#34;unique session name&#34;
-            )
-            raise ValueError(msg)
-        session_prompt = re.escape(session_name[:6])
-        pattern = (
-            rf&#34;^[a-z0-9.\-@/:]{{1,32}}\(config\-s\-{session_prompt}[a-z0-9_.\-@/:]{{0,32}}\)#\s?$&#34;
-        )
-        name = session_name
-        config_session = PrivilegeLevel(
-            pattern=pattern,
-            name=name,
-            previous_priv=&#34;privilege_exec&#34;,
-            deescalate=&#34;end&#34;,
-            escalate=f&#34;configure session {session_name}&#34;,
-            escalate_auth=False,
-            escalate_prompt=&#34;&#34;,
-        )
-        self.privilege_levels[name] = config_session</code></pre>
-</details>
-<h3>Subclasses</h3>
-<ul class="hlist">
-<li><a title="scrapli.driver.core.arista_eos.async_driver.AsyncEOSDriver" href="async_driver.html#scrapli.driver.core.arista_eos.async_driver.AsyncEOSDriver">AsyncEOSDriver</a></li>
-<li><a title="scrapli.driver.core.arista_eos.driver.EOSDriver" href="#scrapli.driver.core.arista_eos.driver.EOSDriver">EOSDriver</a></li>
-</ul>
-</dd>
 </dl>
 </section>
 </article>
@@ -684,9 +553,6 @@ or to logout properly to free up vtys or similar.</dd>
 <ul class="">
 <li><code><a title="scrapli.driver.core.arista_eos.driver.EOSDriver.register_configuration_session" href="#scrapli.driver.core.arista_eos.driver.EOSDriver.register_configuration_session">register_configuration_session</a></code></li>
 </ul>
-</li>
-<li>
-<h4><code><a title="scrapli.driver.core.arista_eos.driver.EOSDriverBase" href="#scrapli.driver.core.arista_eos.driver.EOSDriverBase">EOSDriverBase</a></code></h4>
 </li>
 </ul>
 </li>

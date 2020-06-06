@@ -27,11 +27,8 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.transport.async_transport&#34;&#34;&#34;
 from abc import ABC, abstractmethod
-from logging import getLogger
 
-from scrapli.transport.transport import TransportBase
-
-LOG = getLogger(&#34;transport&#34;)
+from scrapli.transport.base_transport import TransportBase
 
 
 class AsyncTransport(TransportBase, ABC):
@@ -199,7 +196,7 @@ type is 'network'</dd>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="scrapli.transport.transport.TransportBase" href="transport.html#scrapli.transport.transport.TransportBase">TransportBase</a></li>
+<li><a title="scrapli.transport.base_transport.TransportBase" href="base_transport.html#scrapli.transport.base_transport.TransportBase">TransportBase</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Methods</h3>
@@ -327,11 +324,11 @@ def write(self, channel_input: str) -&gt; None:
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="scrapli.transport.transport.TransportBase" href="transport.html#scrapli.transport.transport.TransportBase">TransportBase</a></b></code>:
+<li><code><b><a title="scrapli.transport.base_transport.TransportBase" href="base_transport.html#scrapli.transport.base_transport.TransportBase">TransportBase</a></b></code>:
 <ul class="hlist">
-<li><code><a title="scrapli.transport.transport.TransportBase.close" href="transport.html#scrapli.transport.transport.TransportBase.close">close</a></code></li>
-<li><code><a title="scrapli.transport.transport.TransportBase.isalive" href="transport.html#scrapli.transport.transport.TransportBase.isalive">isalive</a></code></li>
-<li><code><a title="scrapli.transport.transport.TransportBase.set_timeout" href="transport.html#scrapli.transport.transport.TransportBase.set_timeout">set_timeout</a></code></li>
+<li><code><a title="scrapli.transport.base_transport.TransportBase.close" href="base_transport.html#scrapli.transport.base_transport.TransportBase.close">close</a></code></li>
+<li><code><a title="scrapli.transport.base_transport.TransportBase.isalive" href="base_transport.html#scrapli.transport.base_transport.TransportBase.isalive">isalive</a></code></li>
+<li><code><a title="scrapli.transport.base_transport.TransportBase.set_timeout" href="base_transport.html#scrapli.transport.base_transport.TransportBase.set_timeout">set_timeout</a></code></li>
 </ul>
 </li>
 </ul>

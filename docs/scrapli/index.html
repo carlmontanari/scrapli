@@ -27,12 +27,12 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli network ssh client library&#34;&#34;&#34;
 import logging
-from logging import NullHandler
+from logging import getLogger
 from typing import Optional, Tuple
 
 from scrapli.driver import AsyncScrape, Scrape
 
-__version__ = &#34;2020.05.09&#34;
+__version__ = &#34;2020.06.06&#34;
 __all__ = (
     &#34;AsyncScrape&#34;,
     &#34;Scrape&#34;,
@@ -75,11 +75,8 @@ class DuplicateFilter(logging.Filter):
         return False
 
 
-# Setup channel logger
-TRANSPORT_LOG = logging.getLogger(&#34;channel&#34;)
-# Add duplicate filter to channel log
-TRANSPORT_LOG.addFilter(DuplicateFilter())
-logging.getLogger(&#34;channel&#34;).addHandler(NullHandler())</code></pre>
+SCRAPLI_LOG = getLogger(&#34;scrapli&#34;)
+SCRAPLI_LOG.addFilter(DuplicateFilter())</code></pre>
 </details>
 </section>
 <section>
@@ -242,11 +239,11 @@ relies on, see Transport and Channel docs for details.</p>
             N/A
 
         &#34;&#34;&#34;
-        LOG.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+        self.logger.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
         await self.transport.open()
         if self.on_open:
             await self.on_open(self)
-        LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)
+        self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)
 
     async def close(self) -&gt; None:
         &#34;&#34;&#34;
@@ -262,11 +259,11 @@ relies on, see Transport and Channel docs for details.</p>
             N/A
 
         &#34;&#34;&#34;
-        LOG.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+        self.logger.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
         if self.on_close:
             await self.on_close(self)
         self.transport.close()
-        LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
+        self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -314,11 +311,11 @@ relies on, see Transport and Channel docs for details.</p>
         N/A
 
     &#34;&#34;&#34;
-    LOG.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+    self.logger.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
     if self.on_close:
         await self.on_close(self)
     self.transport.close()
-    LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
+    self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
 </details>
 </dd>
 <dt id="scrapli.AsyncScrape.open"><code class="name flex">
@@ -360,11 +357,11 @@ relies on, see Transport and Channel docs for details.</p>
         N/A
 
     &#34;&#34;&#34;
-    LOG.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+    self.logger.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
     await self.transport.open()
     if self.on_open:
         await self.on_open(self)
-    LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)</code></pre>
+    self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -491,11 +488,11 @@ relies on, see Transport and Channel docs for details.</p>
             N/A
 
         &#34;&#34;&#34;
-        LOG.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+        self.logger.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
         self.transport.open()
         if self.on_open:
             self.on_open(self)
-        LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)
+        self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)
 
     def close(self) -&gt; None:
         &#34;&#34;&#34;
@@ -511,11 +508,11 @@ relies on, see Transport and Channel docs for details.</p>
             N/A
 
         &#34;&#34;&#34;
-        LOG.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+        self.logger.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
         if self.on_close:
             self.on_close(self)
         self.transport.close()
-        LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
+        self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -563,11 +560,11 @@ relies on, see Transport and Channel docs for details.</p>
         N/A
 
     &#34;&#34;&#34;
-    LOG.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+    self.logger.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
     if self.on_close:
         self.on_close(self)
     self.transport.close()
-    LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
+    self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
 </details>
 </dd>
 <dt id="scrapli.Scrape.open"><code class="name flex">
@@ -609,11 +606,11 @@ relies on, see Transport and Channel docs for details.</p>
         N/A
 
     &#34;&#34;&#34;
-    LOG.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+    self.logger.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
     self.transport.open()
     if self.on_open:
         self.on_open(self)
-    LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)</code></pre>
+    self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)</code></pre>
 </details>
 </dd>
 </dl>

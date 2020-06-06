@@ -42,6 +42,10 @@ __all__ = (
 <dd>
 <div class="desc"><p>scrapli.driver.core.cisco_nxos.async_driver</p></div>
 </dd>
+<dt><code class="name"><a title="scrapli.driver.core.cisco_nxos.base_driver" href="base_driver.html">scrapli.driver.core.cisco_nxos.base_driver</a></code></dt>
+<dd>
+<div class="desc"><p>scrapli.driver.core.cisco_nxos.base_driver</p></div>
+</dd>
 <dt><code class="name"><a title="scrapli.driver.core.cisco_nxos.driver" href="driver.html">scrapli.driver.core.cisco_nxos.driver</a></code></dt>
 <dd>
 <div class="desc"><p>scrapli.driver.core.cisco_nxos.driver</p></div>
@@ -183,7 +187,7 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
             N/A
         &#34;&#34;&#34;
         if privilege_levels is None:
-            privilege_levels = PRIVS
+            privilege_levels = deepcopy(PRIVS)
 
         if on_open is None:
             on_open = nxos_on_open
@@ -234,7 +238,7 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
         &#34;&#34;&#34;
         # nxos pattern for config sessions should *always* have `config-s`
         if &#34;config\\-s&#34; in self._current_priv_level.pattern:
-            self.channel.send_input(channel_input=&#34;abort&#34;)
+            await self.channel.send_input(channel_input=&#34;abort&#34;)
             self._current_priv_level = self.privilege_levels[&#34;privilege_exec&#34;]
 
     def register_configuration_session(self, session_name: str) -&gt; None:
@@ -262,7 +266,7 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
 <li><a title="scrapli.driver.base_driver.ScrapeBase" href="../../base_driver.html#scrapli.driver.base_driver.ScrapeBase">ScrapeBase</a></li>
 <li><a title="scrapli.driver.base_generic_driver.GenericDriverBase" href="../../base_generic_driver.html#scrapli.driver.base_generic_driver.GenericDriverBase">GenericDriverBase</a></li>
 <li><a title="scrapli.driver.base_network_driver.NetworkDriverBase" href="../../base_network_driver.html#scrapli.driver.base_network_driver.NetworkDriverBase">NetworkDriverBase</a></li>
-<li><a title="scrapli.driver.core.cisco_nxos.driver.NXOSDriverBase" href="driver.html#scrapli.driver.core.cisco_nxos.driver.NXOSDriverBase">NXOSDriverBase</a></li>
+<li><a title="scrapli.driver.core.cisco_nxos.base_driver.NXOSDriverBase" href="base_driver.html#scrapli.driver.core.cisco_nxos.base_driver.NXOSDriverBase">NXOSDriverBase</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -459,7 +463,7 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
             N/A
         &#34;&#34;&#34;
         if privilege_levels is None:
-            privilege_levels = PRIVS
+            privilege_levels = deepcopy(PRIVS)
 
         if on_open is None:
             on_open = nxos_on_open
@@ -538,7 +542,7 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
 <li><a title="scrapli.driver.base_driver.ScrapeBase" href="../../base_driver.html#scrapli.driver.base_driver.ScrapeBase">ScrapeBase</a></li>
 <li><a title="scrapli.driver.base_generic_driver.GenericDriverBase" href="../../base_generic_driver.html#scrapli.driver.base_generic_driver.GenericDriverBase">GenericDriverBase</a></li>
 <li><a title="scrapli.driver.base_network_driver.NetworkDriverBase" href="../../base_network_driver.html#scrapli.driver.base_network_driver.NetworkDriverBase">NetworkDriverBase</a></li>
-<li><a title="scrapli.driver.core.cisco_nxos.driver.NXOSDriverBase" href="driver.html#scrapli.driver.core.cisco_nxos.driver.NXOSDriverBase">NXOSDriverBase</a></li>
+<li><a title="scrapli.driver.core.cisco_nxos.base_driver.NXOSDriverBase" href="base_driver.html#scrapli.driver.core.cisco_nxos.base_driver.NXOSDriverBase">NXOSDriverBase</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -624,6 +628,7 @@ explicitly added here to allow for nicely checking if transport is telnet.</dd>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
 <li><code><a title="scrapli.driver.core.cisco_nxos.async_driver" href="async_driver.html">scrapli.driver.core.cisco_nxos.async_driver</a></code></li>
+<li><code><a title="scrapli.driver.core.cisco_nxos.base_driver" href="base_driver.html">scrapli.driver.core.cisco_nxos.base_driver</a></code></li>
 <li><code><a title="scrapli.driver.core.cisco_nxos.driver" href="driver.html">scrapli.driver.core.cisco_nxos.driver</a></code></li>
 </ul>
 </li>

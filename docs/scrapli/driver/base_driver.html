@@ -26,13 +26,15 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.driver.base_driver&#34;&#34;&#34;
-import logging
 import os
 import re
+import sys
+from logging import getLogger
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Tuple, Union
 
 from scrapli.channel import CHANNEL_ARGS
+from scrapli.exceptions import UnsupportedPlatform
 from scrapli.helper import _find_transport_plugin, resolve_ssh_config, resolve_ssh_known_hosts
 from scrapli.transport import (
     SYSTEM_SSH_TRANSPORT_ARGS,
@@ -61,7 +63,6 @@ TRANSPORT_BASE_ARGS = (
     &#34;timeout_transport&#34;,
     &#34;timeout_exit&#34;,
 )
-LOG = logging.getLogger(&#34;driver&#34;)
 
 
 class ScrapeBase:
@@ -171,7 +172,7 @@ class ScrapeBase:
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            UnsupportedPlatform: if using windows with system transport
 
         &#34;&#34;&#34;
         # create a dict of all &#34;initialization&#34; args for posterity and for passing to Transport
@@ -179,6 +180,8 @@ class ScrapeBase:
         self._initialization_args: Dict[str, Any] = {}
 
         self._setup_host(host=host, port=port)
+        self.logger = getLogger(f&#34;scrapli.driver-{self._host}&#34;)
+
         self._setup_auth(
             auth_username=auth_username,
             auth_password=auth_password,
@@ -206,8 +209,12 @@ class ScrapeBase:
         self._setup_callables(on_open=on_open, on_close=on_close)
 
         if transport not in (&#34;system&#34;, &#34;telnet&#34;):
-            LOG.info(f&#34;Non-core transport `{transport}` selected&#34;)
+            self.logger.info(f&#34;Non-core transport `{transport}` selected&#34;)
         self._transport = transport
+
+        if transport == &#34;system&#34; and sys.platform.startswith(&#34;win&#34;):
+            msg = &#34;`system` transport is not supported on Windows, please use a different transport&#34;
+            raise UnsupportedPlatform(msg)
 
         if transport != &#34;telnet&#34;:
             self._setup_ssh_args(
@@ -310,9 +317,6 @@ class ScrapeBase:
         self._host = host.strip()
         self._initialization_args[&#34;host&#34;] = host.strip()
         self._initialization_args[&#34;port&#34;] = port
-
-        # set driver log name to include target host
-        LOG.name = f&#34;driver-{host}&#34;
 
     def _setup_auth(
         self,
@@ -685,8 +689,8 @@ docs for given transport class for details of what to pass here</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><code>N/A</code></dt>
-<dd>&nbsp;</dd>
+<dt><code>UnsupportedPlatform</code></dt>
+<dd>if using windows with system transport</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -799,7 +803,7 @@ docs for given transport class for details of what to pass here</dd>
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            UnsupportedPlatform: if using windows with system transport
 
         &#34;&#34;&#34;
         # create a dict of all &#34;initialization&#34; args for posterity and for passing to Transport
@@ -807,6 +811,8 @@ docs for given transport class for details of what to pass here</dd>
         self._initialization_args: Dict[str, Any] = {}
 
         self._setup_host(host=host, port=port)
+        self.logger = getLogger(f&#34;scrapli.driver-{self._host}&#34;)
+
         self._setup_auth(
             auth_username=auth_username,
             auth_password=auth_password,
@@ -834,8 +840,12 @@ docs for given transport class for details of what to pass here</dd>
         self._setup_callables(on_open=on_open, on_close=on_close)
 
         if transport not in (&#34;system&#34;, &#34;telnet&#34;):
-            LOG.info(f&#34;Non-core transport `{transport}` selected&#34;)
+            self.logger.info(f&#34;Non-core transport `{transport}` selected&#34;)
         self._transport = transport
+
+        if transport == &#34;system&#34; and sys.platform.startswith(&#34;win&#34;):
+            msg = &#34;`system` transport is not supported on Windows, please use a different transport&#34;
+            raise UnsupportedPlatform(msg)
 
         if transport != &#34;telnet&#34;:
             self._setup_ssh_args(
@@ -938,9 +948,6 @@ docs for given transport class for details of what to pass here</dd>
         self._host = host.strip()
         self._initialization_args[&#34;host&#34;] = host.strip()
         self._initialization_args[&#34;port&#34;] = port
-
-        # set driver log name to include target host
-        LOG.name = f&#34;driver-{host}&#34;
 
     def _setup_auth(
         self,

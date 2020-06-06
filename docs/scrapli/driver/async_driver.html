@@ -26,14 +26,11 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.driver.async_driver&#34;&#34;&#34;
-import logging
 from types import TracebackType
 from typing import Any, Optional, Type
 
 from scrapli.channel import AsyncChannel
 from scrapli.driver.base_driver import ScrapeBase
-
-LOG = logging.getLogger(&#34;driver&#34;)
 
 
 class AsyncScrape(ScrapeBase):
@@ -119,11 +116,11 @@ class AsyncScrape(ScrapeBase):
             N/A
 
         &#34;&#34;&#34;
-        LOG.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+        self.logger.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
         await self.transport.open()
         if self.on_open:
             await self.on_open(self)
-        LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)
+        self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)
 
     async def close(self) -&gt; None:
         &#34;&#34;&#34;
@@ -139,11 +136,11 @@ class AsyncScrape(ScrapeBase):
             N/A
 
         &#34;&#34;&#34;
-        LOG.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+        self.logger.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
         if self.on_close:
             await self.on_close(self)
         self.transport.close()
-        LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
+        self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
 </details>
 </section>
 <section>
@@ -271,11 +268,11 @@ relies on, see Transport and Channel docs for details.</p>
             N/A
 
         &#34;&#34;&#34;
-        LOG.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+        self.logger.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
         await self.transport.open()
         if self.on_open:
             await self.on_open(self)
-        LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)
+        self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)
 
     async def close(self) -&gt; None:
         &#34;&#34;&#34;
@@ -291,11 +288,11 @@ relies on, see Transport and Channel docs for details.</p>
             N/A
 
         &#34;&#34;&#34;
-        LOG.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+        self.logger.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
         if self.on_close:
             await self.on_close(self)
         self.transport.close()
-        LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
+        self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -343,11 +340,11 @@ relies on, see Transport and Channel docs for details.</p>
         N/A
 
     &#34;&#34;&#34;
-    LOG.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+    self.logger.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
     if self.on_close:
         await self.on_close(self)
     self.transport.close()
-    LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
+    self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
 </details>
 </dd>
 <dt id="scrapli.driver.async_driver.AsyncScrape.open"><code class="name flex">
@@ -389,11 +386,11 @@ relies on, see Transport and Channel docs for details.</p>
         N/A
 
     &#34;&#34;&#34;
-    LOG.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+    self.logger.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
     await self.transport.open()
     if self.on_open:
         await self.on_open(self)
-    LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)</code></pre>
+    self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)</code></pre>
 </details>
 </dd>
 </dl>

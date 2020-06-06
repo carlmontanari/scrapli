@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.8.1" />
-<title>scrapli.transport.transport API documentation</title>
-<meta name="description" content="scrapli.transport.transport" />
+<title>scrapli.transport.base_transport API documentation</title>
+<meta name="description" content="scrapli.transport.base_transport" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -17,30 +17,99 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>scrapli.transport.transport</code></h1>
+<h1 class="title">Module <code>scrapli.transport.base_transport</code></h1>
 </header>
 <section id="section-intro">
-<p>scrapli.transport.transport</p>
+<p>scrapli.transport.base_transport</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;scrapli.transport.transport&#34;&#34;&#34;
-import atexit
-import time
+<pre><code class="python">&#34;&#34;&#34;scrapli.transport.base_transport&#34;&#34;&#34;
 from abc import ABC, abstractmethod
-from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
-
-from scrapli.exceptions import ScrapliKeepaliveFailure
-from scrapli.transport.base_transport import TransportBase
+from logging import getLogger
+from threading import Lock
+from typing import Optional
 
 
-class Transport(TransportBase, ABC):
-    @abstractmethod
-    def open(self) -&gt; None:
+class TransportBase(ABC):
+    def __init__(
+        self,
+        host: str = &#34;&#34;,
+        port: int = 22,
+        timeout_socket: int = 5,
+        timeout_transport: int = 5,
+        timeout_exit: bool = True,
+        keepalive: bool = False,
+        keepalive_interval: int = 30,
+        keepalive_type: str = &#34;network&#34;,
+        keepalive_pattern: str = &#34;\005&#34;,
+    ) -&gt; None:
+        r&#34;&#34;&#34;
+        Transport Base Object
+
+        Args:
+            host: host ip/name to connect to
+            port: port to connect to
+            timeout_socket: timeout for establishing socket in seconds
+            timeout_transport: timeout for ssh|telnet transport in seconds
+            timeout_exit: True/False close transport if timeout encountered. If False and keepalives
+                are in use, keepalives will prevent program from exiting so you should be sure to
+                catch Timeout exceptions and handle them appropriately
+            keepalive: whether or not to try to keep session alive
+            keepalive_interval: interval to use for session keepalives
+            keepalive_type: network|standard -- &#39;network&#39; sends actual characters over the
+                transport channel. This is useful for network-y type devices that may not support
+                &#39;standard&#39; keepalive mechanisms. &#39;standard&#39; attempts to use whatever &#39;standard&#39;
+                keepalive mechanisms are available in the selected transport mechanism. Check the
+                transport documentation for details on what is supported and/or how it is
+                implemented for any given transport driver
+            keepalive_pattern: pattern to send to keep network channel alive. Default is
+                u&#39;\005&#39; which is equivalent to &#39;ctrl+e&#39;. This pattern moves cursor to end of the
+                line which should be an innocuous pattern. This will only be entered *if* a lock
+                can be acquired. This is only applicable if using keepalives and if the keepalive
+                type is &#39;network&#39;
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
         &#34;&#34;&#34;
-        Open channel, acquire pty, request interactive shell
+        self.logger = getLogger(f&#34;scrapli.transport-{host}&#34;)
+
+        self.host: str = host
+        self.port: int = port
+        self.timeout_socket: int = timeout_socket
+        self.timeout_transport: int = timeout_transport
+        self.timeout_exit: bool = timeout_exit
+        self.keepalive: bool = keepalive
+        self.keepalive_interval: int = keepalive_interval
+        self.keepalive_type: str = keepalive_type
+        self.keepalive_pattern: str = keepalive_pattern
+
+        self.session_lock: Lock = Lock()
+
+    def __bool__(self) -&gt; bool:
+        &#34;&#34;&#34;
+        Magic bool method for Socket
+
+        Args:
+            N/A
+
+        Returns:
+            bool: True/False if socket is alive or not
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        return self.isalive()
+
+    def __str__(self) -&gt; str:
+        &#34;&#34;&#34;
+        Magic str method for Transport
 
         Args:
             N/A
@@ -52,126 +121,67 @@ class Transport(TransportBase, ABC):
             N/A
 
         &#34;&#34;&#34;
+        return f&#34;Transport Object for host {self.host}&#34;
 
-    @abstractmethod
-    def read(self) -&gt; bytes:
+    def __repr__(self) -&gt; str:
         &#34;&#34;&#34;
-        Read data from the channel
+        Magic repr method for Transport
 
         Args:
             N/A
 
         Returns:
-            N/A  # noqa: DAR202
+            str: repr for class object
 
         Raises:
             N/A
 
         &#34;&#34;&#34;
-
-    @abstractmethod
-    def write(self, channel_input: str) -&gt; None:
-        &#34;&#34;&#34;
-        Write data to the channel
-
-        Args:
-            channel_input: string to send to channel
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-
-    def _session_keepalive(self) -&gt; None:
-        &#34;&#34;&#34;
-        Spawn keepalive thread for transport session
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        if not self.keepalive:
-            return
-        pool = ThreadPoolExecutor()
-        if self.keepalive_type == &#34;network&#34;:
-            pool.submit(self._keepalive_network)
-        else:
-            pool.submit(self._keepalive_standard)
-
-    def _keepalive_network(self) -&gt; None:
-        &#34;&#34;&#34;
-        Send &#34;in band&#34; keepalives to devices.
-
-        Generally used with &#34;network&#34; devices which do not have native keepalive support. This will
-        try to acquire a session lock and send an innocuous character -- such as CTRL+E -- to keep
-        the device &#34;exec-timeout&#34; (in network-y words) from expiring.
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            ScrapliKeepaliveFailure: if scrapli cant unlock and send keepalive in less than 3 *
-                the keepalive_interval
-
-        &#34;&#34;&#34;
-
-        def kill_transport() -&gt; None:
-            if self.isalive():
-                self.close()
-
-        # ensure the transport is closed so keepalive can terminate if main thread tries to exit
-        atexit.register(kill_transport)
-
-        lock_counter = 0
-        last_keepalive = datetime.now()
-        while True:
-            if not self.isalive():
-                return
-            diff = datetime.now() - last_keepalive
-            if diff.seconds &gt;= self.keepalive_interval:
-                if not self.session_lock.locked():
-                    self.logger.debug(
-                        f&#34;Sending &#39;network&#39; keepalive with pattern {repr(self.keepalive_pattern)}.&#34;
-                    )
-                    lock_counter = 0
-                    self.session_lock.acquire()
-                    self.write(channel_input=self.keepalive_pattern)
-                    self.session_lock.release()
-                    last_keepalive = datetime.now()
-                else:
-                    lock_counter += 1
-                    if lock_counter &gt;= 3:
-                        self.logger.info(
-                            f&#34;Keepalive thread missed {lock_counter} consecutive keepalives.&#34;
-                        )
-            if diff.seconds &gt; self.keepalive_interval * 3:
-                msg = (
-                    &#34;Keepalive thread has failed to send a keepalive in greater than three &#34;
-                    &#34;times the keepalive interval!&#34;
-                )
-                self.logger.critical(msg)
-                raise ScrapliKeepaliveFailure(msg)
-            time.sleep(self.keepalive_interval / 10)
+        class_dict = self.__dict__.copy()
+        class_dict[&#34;auth_password&#34;] = &#34;********&#34;
+        class_dict[&#34;session_lock&#34;] = self.session_lock.locked()
+        class_dict[&#34;logger&#34;] = self.logger.name
+        return f&#34;Transport {class_dict}&#34;
 
     @abstractmethod
-    def _keepalive_standard(self) -&gt; None:
+    def close(self) -&gt; None:
         &#34;&#34;&#34;
-        Send &#34;out of band&#34; (protocol level) keepalives to devices.
+        Close session and socket
 
         Args:
             N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+
+    @abstractmethod
+    def isalive(self) -&gt; bool:
+        &#34;&#34;&#34;
+        Check if socket is alive and session is authenticated
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+
+    @abstractmethod
+    def set_timeout(self, timeout: Optional[int] = None) -&gt; None:
+        &#34;&#34;&#34;
+        Set session timeout
+
+        Args:
+            timeout: timeout in seconds
 
         Returns:
             N/A  # noqa: DAR202
@@ -191,8 +201,8 @@ class Transport(TransportBase, ABC):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="scrapli.transport.transport.Transport"><code class="flex name class">
-<span>class <span class="ident">Transport</span></span>
+<dt id="scrapli.transport.base_transport.TransportBase"><code class="flex name class">
+<span>class <span class="ident">TransportBase</span></span>
 <span>(</span><span>host: str = '', port: int = 22, timeout_socket: int = 5, timeout_transport: int = 5, timeout_exit: bool = True, keepalive: bool = False, keepalive_interval: int = 30, keepalive_type: str = 'network', keepalive_pattern: str = '\x05')</span>
 </code></dt>
 <dd>
@@ -246,11 +256,84 @@ type is 'network'</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Transport(TransportBase, ABC):
-    @abstractmethod
-    def open(self) -&gt; None:
+<pre><code class="python">class TransportBase(ABC):
+    def __init__(
+        self,
+        host: str = &#34;&#34;,
+        port: int = 22,
+        timeout_socket: int = 5,
+        timeout_transport: int = 5,
+        timeout_exit: bool = True,
+        keepalive: bool = False,
+        keepalive_interval: int = 30,
+        keepalive_type: str = &#34;network&#34;,
+        keepalive_pattern: str = &#34;\005&#34;,
+    ) -&gt; None:
+        r&#34;&#34;&#34;
+        Transport Base Object
+
+        Args:
+            host: host ip/name to connect to
+            port: port to connect to
+            timeout_socket: timeout for establishing socket in seconds
+            timeout_transport: timeout for ssh|telnet transport in seconds
+            timeout_exit: True/False close transport if timeout encountered. If False and keepalives
+                are in use, keepalives will prevent program from exiting so you should be sure to
+                catch Timeout exceptions and handle them appropriately
+            keepalive: whether or not to try to keep session alive
+            keepalive_interval: interval to use for session keepalives
+            keepalive_type: network|standard -- &#39;network&#39; sends actual characters over the
+                transport channel. This is useful for network-y type devices that may not support
+                &#39;standard&#39; keepalive mechanisms. &#39;standard&#39; attempts to use whatever &#39;standard&#39;
+                keepalive mechanisms are available in the selected transport mechanism. Check the
+                transport documentation for details on what is supported and/or how it is
+                implemented for any given transport driver
+            keepalive_pattern: pattern to send to keep network channel alive. Default is
+                u&#39;\005&#39; which is equivalent to &#39;ctrl+e&#39;. This pattern moves cursor to end of the
+                line which should be an innocuous pattern. This will only be entered *if* a lock
+                can be acquired. This is only applicable if using keepalives and if the keepalive
+                type is &#39;network&#39;
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
         &#34;&#34;&#34;
-        Open channel, acquire pty, request interactive shell
+        self.logger = getLogger(f&#34;scrapli.transport-{host}&#34;)
+
+        self.host: str = host
+        self.port: int = port
+        self.timeout_socket: int = timeout_socket
+        self.timeout_transport: int = timeout_transport
+        self.timeout_exit: bool = timeout_exit
+        self.keepalive: bool = keepalive
+        self.keepalive_interval: int = keepalive_interval
+        self.keepalive_type: str = keepalive_type
+        self.keepalive_pattern: str = keepalive_pattern
+
+        self.session_lock: Lock = Lock()
+
+    def __bool__(self) -&gt; bool:
+        &#34;&#34;&#34;
+        Magic bool method for Socket
+
+        Args:
+            N/A
+
+        Returns:
+            bool: True/False if socket is alive or not
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        return self.isalive()
+
+    def __str__(self) -&gt; str:
+        &#34;&#34;&#34;
+        Magic str method for Transport
 
         Args:
             N/A
@@ -262,126 +345,67 @@ type is 'network'</dd>
             N/A
 
         &#34;&#34;&#34;
+        return f&#34;Transport Object for host {self.host}&#34;
 
-    @abstractmethod
-    def read(self) -&gt; bytes:
+    def __repr__(self) -&gt; str:
         &#34;&#34;&#34;
-        Read data from the channel
+        Magic repr method for Transport
 
         Args:
             N/A
 
         Returns:
-            N/A  # noqa: DAR202
+            str: repr for class object
 
         Raises:
             N/A
 
         &#34;&#34;&#34;
-
-    @abstractmethod
-    def write(self, channel_input: str) -&gt; None:
-        &#34;&#34;&#34;
-        Write data to the channel
-
-        Args:
-            channel_input: string to send to channel
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-
-    def _session_keepalive(self) -&gt; None:
-        &#34;&#34;&#34;
-        Spawn keepalive thread for transport session
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        if not self.keepalive:
-            return
-        pool = ThreadPoolExecutor()
-        if self.keepalive_type == &#34;network&#34;:
-            pool.submit(self._keepalive_network)
-        else:
-            pool.submit(self._keepalive_standard)
-
-    def _keepalive_network(self) -&gt; None:
-        &#34;&#34;&#34;
-        Send &#34;in band&#34; keepalives to devices.
-
-        Generally used with &#34;network&#34; devices which do not have native keepalive support. This will
-        try to acquire a session lock and send an innocuous character -- such as CTRL+E -- to keep
-        the device &#34;exec-timeout&#34; (in network-y words) from expiring.
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            ScrapliKeepaliveFailure: if scrapli cant unlock and send keepalive in less than 3 *
-                the keepalive_interval
-
-        &#34;&#34;&#34;
-
-        def kill_transport() -&gt; None:
-            if self.isalive():
-                self.close()
-
-        # ensure the transport is closed so keepalive can terminate if main thread tries to exit
-        atexit.register(kill_transport)
-
-        lock_counter = 0
-        last_keepalive = datetime.now()
-        while True:
-            if not self.isalive():
-                return
-            diff = datetime.now() - last_keepalive
-            if diff.seconds &gt;= self.keepalive_interval:
-                if not self.session_lock.locked():
-                    self.logger.debug(
-                        f&#34;Sending &#39;network&#39; keepalive with pattern {repr(self.keepalive_pattern)}.&#34;
-                    )
-                    lock_counter = 0
-                    self.session_lock.acquire()
-                    self.write(channel_input=self.keepalive_pattern)
-                    self.session_lock.release()
-                    last_keepalive = datetime.now()
-                else:
-                    lock_counter += 1
-                    if lock_counter &gt;= 3:
-                        self.logger.info(
-                            f&#34;Keepalive thread missed {lock_counter} consecutive keepalives.&#34;
-                        )
-            if diff.seconds &gt; self.keepalive_interval * 3:
-                msg = (
-                    &#34;Keepalive thread has failed to send a keepalive in greater than three &#34;
-                    &#34;times the keepalive interval!&#34;
-                )
-                self.logger.critical(msg)
-                raise ScrapliKeepaliveFailure(msg)
-            time.sleep(self.keepalive_interval / 10)
+        class_dict = self.__dict__.copy()
+        class_dict[&#34;auth_password&#34;] = &#34;********&#34;
+        class_dict[&#34;session_lock&#34;] = self.session_lock.locked()
+        class_dict[&#34;logger&#34;] = self.logger.name
+        return f&#34;Transport {class_dict}&#34;
 
     @abstractmethod
-    def _keepalive_standard(self) -&gt; None:
+    def close(self) -&gt; None:
         &#34;&#34;&#34;
-        Send &#34;out of band&#34; (protocol level) keepalives to devices.
+        Close session and socket
 
         Args:
             N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+
+    @abstractmethod
+    def isalive(self) -&gt; bool:
+        &#34;&#34;&#34;
+        Check if socket is alive and session is authenticated
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+
+    @abstractmethod
+    def set_timeout(self, timeout: Optional[int] = None) -&gt; None:
+        &#34;&#34;&#34;
+        Set session timeout
+
+        Args:
+            timeout: timeout in seconds
 
         Returns:
             N/A  # noqa: DAR202
@@ -393,21 +417,20 @@ type is 'network'</dd>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="scrapli.transport.base_transport.TransportBase" href="base_transport.html#scrapli.transport.base_transport.TransportBase">TransportBase</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="scrapli.transport.systemssh.SystemSSHTransport" href="systemssh.html#scrapli.transport.systemssh.SystemSSHTransport">SystemSSHTransport</a></li>
-<li><a title="scrapli.transport.telnet.TelnetTransport" href="telnet.html#scrapli.transport.telnet.TelnetTransport">TelnetTransport</a></li>
+<li><a title="scrapli.transport.async_transport.AsyncTransport" href="async_transport.html#scrapli.transport.async_transport.AsyncTransport">AsyncTransport</a></li>
+<li><a title="scrapli.transport.transport.Transport" href="transport.html#scrapli.transport.transport.Transport">Transport</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="scrapli.transport.transport.Transport.open"><code class="name flex">
-<span>def <span class="ident">open</span></span>(<span>self) -> NoneType</span>
+<dt id="scrapli.transport.base_transport.TransportBase.close"><code class="name flex">
+<span>def <span class="ident">close</span></span>(<span>self) -> NoneType</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Open channel, acquire pty, request interactive shell</p>
+<div class="desc"><p>Close session and socket</p>
 <h2 id="args">Args</h2>
 <p>N/A</p>
 <h2 id="returns">Returns</h2>
@@ -426,9 +449,9 @@ type is 'network'</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@abstractmethod
-def open(self) -&gt; None:
+def close(self) -&gt; None:
     &#34;&#34;&#34;
-    Open channel, acquire pty, request interactive shell
+    Close session and socket
 
     Args:
         N/A
@@ -442,11 +465,11 @@ def open(self) -&gt; None:
     &#34;&#34;&#34;</code></pre>
 </details>
 </dd>
-<dt id="scrapli.transport.transport.Transport.read"><code class="name flex">
-<span>def <span class="ident">read</span></span>(<span>self) -> bytes</span>
+<dt id="scrapli.transport.base_transport.TransportBase.isalive"><code class="name flex">
+<span>def <span class="ident">isalive</span></span>(<span>self) -> bool</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Read data from the channel</p>
+<div class="desc"><p>Check if socket is alive and session is authenticated</p>
 <h2 id="args">Args</h2>
 <p>N/A</p>
 <h2 id="returns">Returns</h2>
@@ -465,9 +488,9 @@ def open(self) -&gt; None:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@abstractmethod
-def read(self) -&gt; bytes:
+def isalive(self) -&gt; bool:
     &#34;&#34;&#34;
-    Read data from the channel
+    Check if socket is alive and session is authenticated
 
     Args:
         N/A
@@ -481,15 +504,15 @@ def read(self) -&gt; bytes:
     &#34;&#34;&#34;</code></pre>
 </details>
 </dd>
-<dt id="scrapli.transport.transport.Transport.write"><code class="name flex">
-<span>def <span class="ident">write</span></span>(<span>self, channel_input: str) -> NoneType</span>
+<dt id="scrapli.transport.base_transport.TransportBase.set_timeout"><code class="name flex">
+<span>def <span class="ident">set_timeout</span></span>(<span>self, timeout: Union[int, NoneType] = None) -> NoneType</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Write data to the channel</p>
+<div class="desc"><p>Set session timeout</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>channel_input</code></strong></dt>
-<dd>string to send to channel</dd>
+<dt><strong><code>timeout</code></strong></dt>
+<dd>timeout in seconds</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -507,12 +530,12 @@ def read(self) -&gt; bytes:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@abstractmethod
-def write(self, channel_input: str) -&gt; None:
+def set_timeout(self, timeout: Optional[int] = None) -&gt; None:
     &#34;&#34;&#34;
-    Write data to the channel
+    Set session timeout
 
     Args:
-        channel_input: string to send to channel
+        timeout: timeout in seconds
 
     Returns:
         N/A  # noqa: DAR202
@@ -524,16 +547,6 @@ def write(self, channel_input: str) -&gt; None:
 </details>
 </dd>
 </dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="scrapli.transport.base_transport.TransportBase" href="base_transport.html#scrapli.transport.base_transport.TransportBase">TransportBase</a></b></code>:
-<ul class="hlist">
-<li><code><a title="scrapli.transport.base_transport.TransportBase.close" href="base_transport.html#scrapli.transport.base_transport.TransportBase.close">close</a></code></li>
-<li><code><a title="scrapli.transport.base_transport.TransportBase.isalive" href="base_transport.html#scrapli.transport.base_transport.TransportBase.isalive">isalive</a></code></li>
-<li><code><a title="scrapli.transport.base_transport.TransportBase.set_timeout" href="base_transport.html#scrapli.transport.base_transport.TransportBase.set_timeout">set_timeout</a></code></li>
-</ul>
-</li>
-</ul>
 </dd>
 </dl>
 </section>
@@ -552,11 +565,11 @@ def write(self, channel_input: str) -&gt; None:
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="scrapli.transport.transport.Transport" href="#scrapli.transport.transport.Transport">Transport</a></code></h4>
+<h4><code><a title="scrapli.transport.base_transport.TransportBase" href="#scrapli.transport.base_transport.TransportBase">TransportBase</a></code></h4>
 <ul class="">
-<li><code><a title="scrapli.transport.transport.Transport.open" href="#scrapli.transport.transport.Transport.open">open</a></code></li>
-<li><code><a title="scrapli.transport.transport.Transport.read" href="#scrapli.transport.transport.Transport.read">read</a></code></li>
-<li><code><a title="scrapli.transport.transport.Transport.write" href="#scrapli.transport.transport.Transport.write">write</a></code></li>
+<li><code><a title="scrapli.transport.base_transport.TransportBase.close" href="#scrapli.transport.base_transport.TransportBase.close">close</a></code></li>
+<li><code><a title="scrapli.transport.base_transport.TransportBase.isalive" href="#scrapli.transport.base_transport.TransportBase.isalive">isalive</a></code></li>
+<li><code><a title="scrapli.transport.base_transport.TransportBase.set_timeout" href="#scrapli.transport.base_transport.TransportBase.set_timeout">set_timeout</a></code></li>
 </ul>
 </li>
 </ul>

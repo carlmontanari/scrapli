@@ -68,7 +68,7 @@ class GenericDriverBase:
         &#34;&#34;&#34;
         if not isinstance(command, str):
             raise TypeError(
-                f&#34;`send_command` expects a single string, got {type(command)}. &#34;
+                f&#34;`send_command` expects a single string, got {type(command)}, &#34;
                 &#34;to send a list of commands use the `send_commands` method instead.&#34;
             )
 
@@ -118,7 +118,7 @@ class GenericDriverBase:
         &#34;&#34;&#34;
         if not isinstance(commands, list):
             raise TypeError(
-                f&#34;`send_commands` expects a list of strings, got {type(commands)}. &#34;
+                f&#34;`send_commands` expects a list of strings, got {type(commands)}, &#34;
                 &#34;to send a single command use the `send_command` method instead.&#34;
             )
 
@@ -245,7 +245,7 @@ similar to the base <code>Scrape</code> object from that perspective.</p></div>
         &#34;&#34;&#34;
         if not isinstance(command, str):
             raise TypeError(
-                f&#34;`send_command` expects a single string, got {type(command)}. &#34;
+                f&#34;`send_command` expects a single string, got {type(command)}, &#34;
                 &#34;to send a list of commands use the `send_commands` method instead.&#34;
             )
 
@@ -295,7 +295,7 @@ similar to the base <code>Scrape</code> object from that perspective.</p></div>
         &#34;&#34;&#34;
         if not isinstance(commands, list):
             raise TypeError(
-                f&#34;`send_commands` expects a list of strings, got {type(commands)}. &#34;
+                f&#34;`send_commands` expects a list of strings, got {type(commands)}, &#34;
                 &#34;to send a single command use the `send_command` method instead.&#34;
             )
 

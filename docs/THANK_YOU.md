@@ -21,3 +21,7 @@ The following people have helped identify and report bugs in scrapli, thank you 
 
 - [Kirill Pletnev](https://github.com/horseinthesky)
   - [IOSXEDriver configuration mode prompt pattern missed pub key config mode](https://github.com/carlmontanari/scrapli/issues/18)
+- [dorko20](https://github.com/dorko20)
+  - [SSH Config not Merging Attributes](https://github.com/carlmontanari/scrapli/issues/21)
+- [artyomovs](https://github.com/artyomovs)
+  - [Prompt patterns not matching "tacacs+"](https://github.com/carlmontanari/scrapli/issues/23)

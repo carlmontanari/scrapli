@@ -27,7 +27,6 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.transport.telnet&#34;&#34;&#34;
 import re
-from logging import getLogger
 from select import select
 from telnetlib import Telnet
 from typing import Optional
@@ -36,8 +35,6 @@ from scrapli.decorators import operation_timeout, requires_open_session
 from scrapli.exceptions import ScrapliAuthenticationFailed
 from scrapli.helper import get_prompt_pattern, strip_ansi
 from scrapli.transport.transport import Transport
-
-LOG = getLogger(&#34;transport&#34;)
 
 TELNET_TRANSPORT_ARGS = (
     &#34;auth_username&#34;,
@@ -213,14 +210,14 @@ class TelnetTransport(Transport):
                 msg = f&#34;Failed to open telnet session to host {self.host}, connection refused&#34;
             raise ScrapliAuthenticationFailed(msg)
         telnet_session.timeout = self.timeout_transport
-        LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
+        self.logger.debug(f&#34;Session to host {self.host} spawned&#34;)
         self.session_lock.release()
         self._authenticate(telnet_session=telnet_session)
         if not self._telnet_isauthenticated(telnet_session=telnet_session):
             raise ScrapliAuthenticationFailed(
                 f&#34;Could not authenticate over telnet to host: {self.host}&#34;
             )
-        LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
+        self.logger.debug(f&#34;Authenticated to host {self.host} with password&#34;)
         self.session = telnet_session
 
     @operation_timeout(&#34;_timeout_ops_auth&#34;, &#34;Timed out looking for telnet login prompts&#34;)
@@ -271,7 +268,7 @@ class TelnetTransport(Transport):
             N/A
 
         &#34;&#34;&#34;
-        LOG.debug(&#34;Attempting to determine if telnet authentication was successful&#34;)
+        self.logger.debug(&#34;Attempting to determine if telnet authentication was successful&#34;)
         if not telnet_session.eof:
             prompt_pattern = get_prompt_pattern(prompt=&#34;&#34;, class_prompt=self._comms_prompt_pattern)
             telnet_session_fd = telnet_session.fileno()
@@ -284,7 +281,7 @@ class TelnetTransport(Transport):
                 fd_ready, _, _ = select([telnet_session_fd], [], [], 0)
                 if telnet_session_fd in fd_ready:
                     break
-                LOG.debug(&#34;PTY fd not ready yet...&#34;)
+                self.logger.debug(&#34;PTY fd not ready yet...&#34;)
             output = b&#34;&#34;
             while True:
                 output += telnet_session.read_eager()
@@ -320,7 +317,7 @@ class TelnetTransport(Transport):
         &#34;&#34;&#34;
         self.session_lock.acquire()
         self.session.close()
-        LOG.debug(f&#34;Channel to host {self.host} closed&#34;)
+        self.logger.debug(f&#34;Channel to host {self.host} closed&#34;)
         self.session_lock.release()
 
     def isalive(self) -&gt; bool:
@@ -331,7 +328,7 @@ class TelnetTransport(Transport):
             N/A
 
         Returns:
-           bool: True if alive, False otherwise.
+            bool: True if alive, False otherwise.
 
         Raises:
             N/A
@@ -758,14 +755,14 @@ and is ignored after authentication is completed.</dd>
                 msg = f&#34;Failed to open telnet session to host {self.host}, connection refused&#34;
             raise ScrapliAuthenticationFailed(msg)
         telnet_session.timeout = self.timeout_transport
-        LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
+        self.logger.debug(f&#34;Session to host {self.host} spawned&#34;)
         self.session_lock.release()
         self._authenticate(telnet_session=telnet_session)
         if not self._telnet_isauthenticated(telnet_session=telnet_session):
             raise ScrapliAuthenticationFailed(
                 f&#34;Could not authenticate over telnet to host: {self.host}&#34;
             )
-        LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
+        self.logger.debug(f&#34;Authenticated to host {self.host} with password&#34;)
         self.session = telnet_session
 
     @operation_timeout(&#34;_timeout_ops_auth&#34;, &#34;Timed out looking for telnet login prompts&#34;)
@@ -816,7 +813,7 @@ and is ignored after authentication is completed.</dd>
             N/A
 
         &#34;&#34;&#34;
-        LOG.debug(&#34;Attempting to determine if telnet authentication was successful&#34;)
+        self.logger.debug(&#34;Attempting to determine if telnet authentication was successful&#34;)
         if not telnet_session.eof:
             prompt_pattern = get_prompt_pattern(prompt=&#34;&#34;, class_prompt=self._comms_prompt_pattern)
             telnet_session_fd = telnet_session.fileno()
@@ -829,7 +826,7 @@ and is ignored after authentication is completed.</dd>
                 fd_ready, _, _ = select([telnet_session_fd], [], [], 0)
                 if telnet_session_fd in fd_ready:
                     break
-                LOG.debug(&#34;PTY fd not ready yet...&#34;)
+                self.logger.debug(&#34;PTY fd not ready yet...&#34;)
             output = b&#34;&#34;
             while True:
                 output += telnet_session.read_eager()
@@ -865,7 +862,7 @@ and is ignored after authentication is completed.</dd>
         &#34;&#34;&#34;
         self.session_lock.acquire()
         self.session.close()
-        LOG.debug(f&#34;Channel to host {self.host} closed&#34;)
+        self.logger.debug(f&#34;Channel to host {self.host} closed&#34;)
         self.session_lock.release()
 
     def isalive(self) -&gt; bool:
@@ -876,7 +873,7 @@ and is ignored after authentication is completed.</dd>
             N/A
 
         Returns:
-           bool: True if alive, False otherwise.
+            bool: True if alive, False otherwise.
 
         Raises:
             N/A
@@ -962,7 +959,7 @@ and is ignored after authentication is completed.</dd>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="scrapli.transport.transport.Transport" href="transport.html#scrapli.transport.transport.Transport">Transport</a></li>
-<li><a title="scrapli.transport.transport.TransportBase" href="transport.html#scrapli.transport.transport.TransportBase">TransportBase</a></li>
+<li><a title="scrapli.transport.base_transport.TransportBase" href="base_transport.html#scrapli.transport.base_transport.TransportBase">TransportBase</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Methods</h3>
@@ -996,7 +993,7 @@ and is ignored after authentication is completed.</dd>
         N/A
 
     Returns:
-       bool: True if alive, False otherwise.
+        bool: True if alive, False otherwise.
 
     Raises:
         N/A
@@ -1055,14 +1052,14 @@ and is ignored after authentication is completed.</dd>
             msg = f&#34;Failed to open telnet session to host {self.host}, connection refused&#34;
         raise ScrapliAuthenticationFailed(msg)
     telnet_session.timeout = self.timeout_transport
-    LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
+    self.logger.debug(f&#34;Session to host {self.host} spawned&#34;)
     self.session_lock.release()
     self._authenticate(telnet_session=telnet_session)
     if not self._telnet_isauthenticated(telnet_session=telnet_session):
         raise ScrapliAuthenticationFailed(
             f&#34;Could not authenticate over telnet to host: {self.host}&#34;
         )
-    LOG.debug(f&#34;Authenticated to host {self.host} with password&#34;)
+    self.logger.debug(f&#34;Authenticated to host {self.host} with password&#34;)
     self.session = telnet_session</code></pre>
 </details>
 </dd>
@@ -1071,9 +1068,9 @@ and is ignored after authentication is completed.</dd>
 <ul class="hlist">
 <li><code><b><a title="scrapli.transport.transport.Transport" href="transport.html#scrapli.transport.transport.Transport">Transport</a></b></code>:
 <ul class="hlist">
-<li><code><a title="scrapli.transport.transport.Transport.close" href="transport.html#scrapli.transport.transport.TransportBase.close">close</a></code></li>
+<li><code><a title="scrapli.transport.transport.Transport.close" href="base_transport.html#scrapli.transport.base_transport.TransportBase.close">close</a></code></li>
 <li><code><a title="scrapli.transport.transport.Transport.read" href="transport.html#scrapli.transport.transport.Transport.read">read</a></code></li>
-<li><code><a title="scrapli.transport.transport.Transport.set_timeout" href="transport.html#scrapli.transport.transport.TransportBase.set_timeout">set_timeout</a></code></li>
+<li><code><a title="scrapli.transport.transport.Transport.set_timeout" href="base_transport.html#scrapli.transport.base_transport.TransportBase.set_timeout">set_timeout</a></code></li>
 <li><code><a title="scrapli.transport.transport.Transport.write" href="transport.html#scrapli.transport.transport.Transport.write">write</a></code></li>
 </ul>
 </li>

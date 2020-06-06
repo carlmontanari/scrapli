@@ -42,6 +42,10 @@ __all__ = (
 <dd>
 <div class="desc"><p>scrapli.driver.core.cisco_iosxr.async_driver</p></div>
 </dd>
+<dt><code class="name"><a title="scrapli.driver.core.cisco_iosxr.base_driver" href="base_driver.html">scrapli.driver.core.cisco_iosxr.base_driver</a></code></dt>
+<dd>
+<div class="desc"><p>scrapli.driver.core.cisco_iosxr.base_driver</p></div>
+</dd>
 <dt><code class="name"><a title="scrapli.driver.core.cisco_iosxr.driver" href="driver.html">scrapli.driver.core.cisco_iosxr.driver</a></code></dt>
 <dd>
 <div class="desc"><p>scrapli.driver.core.cisco_iosxr.driver</p></div>
@@ -159,7 +163,7 @@ or to logout properly to free up vtys or similar.</dd>
             N/A
         &#34;&#34;&#34;
         if privilege_levels is None:
-            privilege_levels = PRIVS
+            privilege_levels = deepcopy(PRIVS)
 
         if on_open is None:
             on_open = iosxr_on_open
@@ -337,7 +341,7 @@ or to logout properly to free up vtys or similar.</dd>
             N/A
         &#34;&#34;&#34;
         if privilege_levels is None:
-            privilege_levels = PRIVS
+            privilege_levels = deepcopy(PRIVS)
 
         if on_open is None:
             on_open = iosxr_on_open
@@ -428,6 +432,7 @@ or to logout properly to free up vtys or similar.</dd>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
 <li><code><a title="scrapli.driver.core.cisco_iosxr.async_driver" href="async_driver.html">scrapli.driver.core.cisco_iosxr.async_driver</a></code></li>
+<li><code><a title="scrapli.driver.core.cisco_iosxr.base_driver" href="base_driver.html">scrapli.driver.core.cisco_iosxr.base_driver</a></code></li>
 <li><code><a title="scrapli.driver.core.cisco_iosxr.driver" href="driver.html">scrapli.driver.core.cisco_iosxr.driver</a></code></li>
 </ul>
 </li>
