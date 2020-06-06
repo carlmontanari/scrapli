@@ -56,6 +56,7 @@ def unit_tests(session):
     # we can avoid a kind of circular dependency thing where pypi version of scrapli is not yet
     # updated to match the new pins in other scrapli libs
     session.install("-e", ".")
+    session.install("-r", "requirements-dev.txt")
     session.run(
         "pytest",
         "--cov=scrapli",
