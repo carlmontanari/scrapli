@@ -21,20 +21,7 @@ def test_str():
 def test_repr():
     ssh_conf = SSHConfig(f"{TEST_DATA_DIR}/files/_ssh_config")
     assert repr(ssh_conf) == (
-        f"SSHConfig {{'ssh_config_file': '{TEST_DATA_DIR}/files/_ssh_config', "
-        "'hosts': {'1.2.3.4 someswitch1': Host {'hosts': '1.2.3.4 someswitch1', "
-        "'hostname': 'someswitch1.bogus.com', 'port': 1234, 'user': 'carl', 'address_family': None,"
-        " 'bind_address': None, 'connect_timeout': None, 'identities_only': 'yes', 'identity_file':"
-        f" '{os.path.expanduser('~')}/.ssh/mysshkey', 'keyboard_interactive': None, 'password_authentication': None, "
-        "'preferred_authentication': None}, 'someswitch?': Host {'hosts': 'someswitch?', "
-        "'hostname': 'someswitch1.bogus.com', 'port': 1234, 'user': 'carl', 'address_family': "
-        "None, 'bind_address': None, 'connect_timeout': None, 'identities_only': 'yes', "
-        f"'identity_file': '{os.path.expanduser('~')}/.ssh/mysshkey', 'keyboard_interactive': None, "
-        "'password_authentication': None, 'preferred_authentication': None}, '*': Host "
-        "{'hosts': '*', 'hostname': None, 'port': None, 'user': 'carl', 'address_family': None, "
-        "'bind_address': None, 'connect_timeout': None, 'identities_only': None, 'identity_file': "
-        "None, 'keyboard_interactive': None, 'password_authentication': None, "
-        "'preferred_authentication': None}}}"
+        f"SSHConfig {{'ssh_config_file': '{TEST_DATA_DIR}/files/_ssh_config', 'hosts': {{'1.2.3.4 someswitch1': Host {{'hosts': '1.2.3.4 someswitch1', 'hostname': 'someswitch1.bogus.com', 'port': 1234, 'user': 'carl', 'address_family': None, 'bind_address': None, 'connect_timeout': None, 'identities_only': 'yes', 'identity_file': '{os.path.expanduser('~')}/.ssh/mysshkey', 'keyboard_interactive': None, 'password_authentication': None, 'preferred_authentication': None}}, 'someswitch?': Host {{'hosts': 'someswitch?', 'hostname': 'someswitch1.bogus.com', 'port': 1234, 'user': 'notcarl', 'address_family': None, 'bind_address': None, 'connect_timeout': None, 'identities_only': 'yes', 'identity_file': '{os.path.expanduser('~')}/.ssh/mysshkey', 'keyboard_interactive': None, 'password_authentication': None, 'preferred_authentication': None}}, 'scrapli': Host {{'hosts': 'scrapli', 'hostname': None, 'port': None, 'user': 'scrapli', 'address_family': None, 'bind_address': None, 'connect_timeout': None, 'identities_only': None, 'identity_file': '{os.path.expanduser('~')}/.ssh/lastresortkey', 'keyboard_interactive': None, 'password_authentication': None, 'preferred_authentication': None}}, '*': Host {{'hosts': '*', 'hostname': None, 'port': None, 'user': 'somebodyelse', 'address_family': None, 'bind_address': None, 'connect_timeout': None, 'identities_only': None, 'identity_file': '{os.path.expanduser('~')}/.ssh/lastresortkey', 'keyboard_interactive': None, 'password_authentication': None, 'preferred_authentication': None}}}}}}"
     )
 
 
@@ -147,7 +134,7 @@ def test_host_lookup_host_fuzzy():
     host = ssh_conf.lookup("someswitch2")
     assert repr(host) == (
         "Host {'hosts': 'someswitch?', 'hostname': 'someswitch1.bogus.com', 'port': "
-        "1234, 'user': 'carl', 'address_family': None, 'bind_address': None, 'connect_timeout': "
+        "1234, 'user': 'notcarl', 'address_family': None, 'bind_address': None, 'connect_timeout': "
         f"None, 'identities_only': 'yes', 'identity_file': '{os.path.expanduser('~')}/.ssh/mysshkey', "
         "'keyboard_interactive': None, 'password_authentication': None, 'preferred_authentication': "
         "None}"
@@ -162,10 +149,24 @@ def test_host_lookup_host_fuzzy_multi_match():
     host = ssh_conf.lookup("someswitch9999")
     assert repr(host) == (
         "Host {'hosts': 'someswitch?', 'hostname': 'someswitch1.bogus.com', 'port': "
-        "1234, 'user': 'carl', 'address_family': None, 'bind_address': None, 'connect_timeout': "
+        "1234, 'user': 'notcarl', 'address_family': None, 'bind_address': None, 'connect_timeout': "
         f"None, 'identities_only': 'yes', 'identity_file': '{os.path.expanduser('~')}/.ssh/mysshkey', "
         "'keyboard_interactive': None, 'password_authentication': None, 'preferred_authentication': "
         "None}"
+    )
+
+
+@pytest.mark.skipif(
+    sys.platform.startswith("win"), reason="not currently testing ssh file resolution on windows"
+)
+def test_host_lookup_merged_data():
+    ssh_conf = SSHConfig(f"{TEST_DATA_DIR}/files/_ssh_config")
+    host = ssh_conf.lookup("scrapli")
+    assert repr(host) == (
+        "Host {'hosts': 'scrapli', 'hostname': None, 'port': None, 'user': 'scrapli', 'address_family': None, "
+        "'bind_address': None, 'connect_timeout': None, 'identities_only': None, 'identity_file': "
+        f"'{os.path.expanduser('~')}/.ssh/lastresortkey', 'keyboard_interactive': None, 'password_authentication': None, "
+        "'preferred_authentication': None}"
     )
 
 

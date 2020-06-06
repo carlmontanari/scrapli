@@ -12,8 +12,14 @@ DEV_REQUIREMENTS: Dict[str, str] = {}
 
 # this wouldn't work for other projects probably as its kinda hacky, but works just fine for scrapli
 with open("requirements-dev.txt") as f:
+    req_lines = f.readlines()
     dev_requirements_lines: List[str] = [
-        line for line in f.readlines() if not line.startswith("-r") or line.startswith("#")
+        line
+        for line in req_lines
+        if not line.startswith("-r") and not line.startswith("#") and not line.startswith("-e")
+    ]
+    dev_editable_requirements_lines: List[str] = [
+        line for line in req_lines if line.startswith("-e")
     ]
 
 for requirement in dev_requirements_lines:
@@ -21,6 +27,12 @@ for requirement in dev_requirements_lines:
         pattern=r"^([a-z0-9\-]+)([><=]{1,2}\S*)(?:.*)$", string=requirement, flags=re.I | re.M
     )
     DEV_REQUIREMENTS[parsed_requirement.groups()[0]] = parsed_requirement.groups()[1]
+
+for requirement in dev_editable_requirements_lines:
+    parsed_requirement = re.match(
+        pattern=r"^-e\s.*(?:#egg=)(\w+)$", string=requirement, flags=re.I | re.M
+    )
+    DEV_REQUIREMENTS[parsed_requirement.groups()[0]] = requirement
 
 
 @nox.session(python=["3.6", "3.7", "3.8"])

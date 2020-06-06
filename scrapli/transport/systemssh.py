@@ -473,7 +473,7 @@ class SystemSSHTransport(Transport):
         output = b""
         while True:
             output += pipes_session.stderr.read(65535)
-            if f"Authenticated to {self.host}".encode() in output:
+            if f"authenticated to {self.host}".encode() in output.lower():
                 self._isauthenticated = True
                 return True
             if (

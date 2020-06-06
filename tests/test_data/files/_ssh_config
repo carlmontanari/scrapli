@@ -6,11 +6,15 @@ Host 1.2.3.4 someswitch1
    Port 1234
 
 Host someswitch?
-   User carl
+   User notcarl
    IdentityFile ~/.ssh/mysshkey
    IdentitiesOnly yes
    Hostname someswitch1.bogus.com
    Port 1234
 
+Host scrapli
+   User scrapli
+
 Host *
-   User carl
+   User somebodyelse
+   IdentityFile ~/.ssh/lastresortkey
