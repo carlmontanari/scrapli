@@ -26,17 +26,31 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.transport.socket&#34;&#34;&#34;
-import logging
 import socket
+from logging import getLogger
 from typing import Optional
 
 from scrapli.exceptions import ScrapliTimeout
 
-LOG = logging.getLogger(&#34;transport&#34;)
-
 
 class Socket:
     def __init__(self, host: str, port: int, timeout: int):
+        &#34;&#34;&#34;
+        Socket object
+
+        Args:
+            host: host to connect to
+            port: port to connect to
+            timeout: timeout in seconds
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.logger = getLogger(f&#34;scrapli.socket-{host}&#34;)
         self.host: str = host
         self.port: int = port
         self.timeout: int = timeout
@@ -88,7 +102,9 @@ class Socket:
             N/A
 
         &#34;&#34;&#34;
-        return f&#34;Socket {self.__dict__}&#34;
+        class_dict = self.__dict__.copy()
+        class_dict[&#34;logger&#34;] = self.logger.name
+        return f&#34;Socket {class_dict}&#34;
 
     def socket_open(self) -&gt; None:
         &#34;&#34;&#34;
@@ -111,18 +127,20 @@ class Socket:
             try:
                 self.sock.connect((self.host, self.port))
             except ConnectionRefusedError:
-                LOG.critical(
+                self.logger.critical(
                     f&#34;Connection refused trying to open socket to {self.host} on port {self.port}&#34;
                 )
                 raise ConnectionRefusedError(
                     f&#34;Connection refused trying to open socket to {self.host} on port {self.port}&#34;
                 )
             except socket.timeout:
-                LOG.critical(f&#34;Timed out trying to open socket to {self.host} on port {self.port}&#34;)
+                self.logger.critical(
+                    f&#34;Timed out trying to open socket to {self.host} on port {self.port}&#34;
+                )
                 raise ScrapliTimeout(
                     f&#34;Timed out trying to open socket to {self.host} on port {self.port}&#34;
                 )
-            LOG.debug(f&#34;Socket to host {self.host} opened&#34;)
+            self.logger.debug(f&#34;Socket to host {self.host} opened&#34;)
 
     def socket_close(self) -&gt; None:
         &#34;&#34;&#34;
@@ -140,7 +158,7 @@ class Socket:
         &#34;&#34;&#34;
         if self.socket_isalive() and isinstance(self.sock, socket.socket):
             self.sock.close()
-            LOG.debug(f&#34;Socket to host {self.host} closed&#34;)
+            self.logger.debug(f&#34;Socket to host {self.host} closed&#34;)
 
     def socket_isalive(self) -&gt; bool:
         &#34;&#34;&#34;
@@ -161,7 +179,7 @@ class Socket:
                 self.sock.send(b&#34;&#34;)
                 return True
         except OSError:
-            LOG.debug(f&#34;Socket to host {self.host} is not alive&#34;)
+            self.logger.debug(f&#34;Socket to host {self.host} is not alive&#34;)
             return False
         return False</code></pre>
 </details>
@@ -180,13 +198,49 @@ class Socket:
 <span>(</span><span>host: str, port: int, timeout: int)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Socket object</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>host</code></strong></dt>
+<dd>host to connect to</dd>
+<dt><strong><code>port</code></strong></dt>
+<dd>port to connect to</dd>
+<dt><strong><code>timeout</code></strong></dt>
+<dd>timeout in seconds</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N/A
+# noqa: DAR202</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Socket:
     def __init__(self, host: str, port: int, timeout: int):
+        &#34;&#34;&#34;
+        Socket object
+
+        Args:
+            host: host to connect to
+            port: port to connect to
+            timeout: timeout in seconds
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.logger = getLogger(f&#34;scrapli.socket-{host}&#34;)
         self.host: str = host
         self.port: int = port
         self.timeout: int = timeout
@@ -238,7 +292,9 @@ class Socket:
             N/A
 
         &#34;&#34;&#34;
-        return f&#34;Socket {self.__dict__}&#34;
+        class_dict = self.__dict__.copy()
+        class_dict[&#34;logger&#34;] = self.logger.name
+        return f&#34;Socket {class_dict}&#34;
 
     def socket_open(self) -&gt; None:
         &#34;&#34;&#34;
@@ -261,18 +317,20 @@ class Socket:
             try:
                 self.sock.connect((self.host, self.port))
             except ConnectionRefusedError:
-                LOG.critical(
+                self.logger.critical(
                     f&#34;Connection refused trying to open socket to {self.host} on port {self.port}&#34;
                 )
                 raise ConnectionRefusedError(
                     f&#34;Connection refused trying to open socket to {self.host} on port {self.port}&#34;
                 )
             except socket.timeout:
-                LOG.critical(f&#34;Timed out trying to open socket to {self.host} on port {self.port}&#34;)
+                self.logger.critical(
+                    f&#34;Timed out trying to open socket to {self.host} on port {self.port}&#34;
+                )
                 raise ScrapliTimeout(
                     f&#34;Timed out trying to open socket to {self.host} on port {self.port}&#34;
                 )
-            LOG.debug(f&#34;Socket to host {self.host} opened&#34;)
+            self.logger.debug(f&#34;Socket to host {self.host} opened&#34;)
 
     def socket_close(self) -&gt; None:
         &#34;&#34;&#34;
@@ -290,7 +348,7 @@ class Socket:
         &#34;&#34;&#34;
         if self.socket_isalive() and isinstance(self.sock, socket.socket):
             self.sock.close()
-            LOG.debug(f&#34;Socket to host {self.host} closed&#34;)
+            self.logger.debug(f&#34;Socket to host {self.host} closed&#34;)
 
     def socket_isalive(self) -&gt; bool:
         &#34;&#34;&#34;
@@ -311,7 +369,7 @@ class Socket:
                 self.sock.send(b&#34;&#34;)
                 return True
         except OSError:
-            LOG.debug(f&#34;Socket to host {self.host} is not alive&#34;)
+            self.logger.debug(f&#34;Socket to host {self.host} is not alive&#34;)
             return False
         return False</code></pre>
 </details>
@@ -355,7 +413,7 @@ class Socket:
     &#34;&#34;&#34;
     if self.socket_isalive() and isinstance(self.sock, socket.socket):
         self.sock.close()
-        LOG.debug(f&#34;Socket to host {self.host} closed&#34;)</code></pre>
+        self.logger.debug(f&#34;Socket to host {self.host} closed&#34;)</code></pre>
 </details>
 </dd>
 <dt id="scrapli.transport.socket.Socket.socket_isalive"><code class="name flex">
@@ -398,7 +456,7 @@ class Socket:
             self.sock.send(b&#34;&#34;)
             return True
     except OSError:
-        LOG.debug(f&#34;Socket to host {self.host} is not alive&#34;)
+        self.logger.debug(f&#34;Socket to host {self.host} is not alive&#34;)
         return False
     return False</code></pre>
 </details>
@@ -448,18 +506,20 @@ class Socket:
         try:
             self.sock.connect((self.host, self.port))
         except ConnectionRefusedError:
-            LOG.critical(
+            self.logger.critical(
                 f&#34;Connection refused trying to open socket to {self.host} on port {self.port}&#34;
             )
             raise ConnectionRefusedError(
                 f&#34;Connection refused trying to open socket to {self.host} on port {self.port}&#34;
             )
         except socket.timeout:
-            LOG.critical(f&#34;Timed out trying to open socket to {self.host} on port {self.port}&#34;)
+            self.logger.critical(
+                f&#34;Timed out trying to open socket to {self.host} on port {self.port}&#34;
+            )
             raise ScrapliTimeout(
                 f&#34;Timed out trying to open socket to {self.host} on port {self.port}&#34;
             )
-        LOG.debug(f&#34;Socket to host {self.host} opened&#34;)</code></pre>
+        self.logger.debug(f&#34;Socket to host {self.host} opened&#34;)</code></pre>
 </details>
 </dd>
 </dl>

@@ -3,12 +3,26 @@ import os
 import re
 import shlex
 import sys
+from copy import deepcopy
 from typing import Dict, Optional
 
 if sys.version_info >= (3, 8):
     Match = re.Match
 else:
     from typing import Match  # pragma:  no cover
+
+HOST_ATTRS = (
+    "port",
+    "user",
+    "address_family",
+    "bind_address",
+    "connect_timeout",
+    "identities_only",
+    "identity_file",
+    "keyboard_interactive",
+    "password_authentication",
+    "preferred_authentication",
+)
 
 
 class SSHConfig:
@@ -23,14 +37,23 @@ class SSHConfig:
             HostName
             Port
             User
-            AddressFamily
-            BindAddress
-            ConnectTimeout
+            *AddressFamily
+            *BindAddress
+            *ConnectTimeout
             IdentitiesOnly
             IdentityFile
-            KbdInteractiveAuthentication
-            PasswordAuthentication
-            PreferredAuthentications
+            *KbdInteractiveAuthentication
+            *PasswordAuthentication
+            *PreferredAuthentications
+
+        * items are mostly ready to load but are unused in scrapli right now so are not being set
+        at this point.
+
+        NOTE: this does *not* accept duplicate "*" entries -- the final "*" entry will overwrite any
+        previous "*" entries. In general for system transport this shouldn't matter much because
+        scrapli only cares about parsing the config file to see if a key (any key) exists for a
+        given host (we care about that because ideally we use "pipes" auth, but this is only an
+        option if we have a key to auth with).
 
         Args:
             ssh_config_file: string path to ssh configuration file
@@ -59,6 +82,10 @@ class SSHConfig:
             self.hosts = {}
             self.hosts["*"] = Host()
             self.hosts["*"].hosts = "*"
+
+        # finally merge all args from less specific hosts into the more specific hosts, preserving
+        # the options from the more specific hosts of course
+        self._merge_hosts()
 
     def __str__(self) -> str:
         """
@@ -144,7 +171,6 @@ class SSHConfig:
             N/A
 
         """
-
         # uncomment next line and handle global patterns (stuff before hosts) at some point
         # global_config_pattern = re.compile(r"^.*?\b(?=host)", flags=re.I | re.S)
         # use word boundaries with a positive lookahead to get everything between the word host
@@ -208,7 +234,34 @@ class SSHConfig:
             discovered_hosts[host.hosts] = host
         return discovered_hosts
 
-    def _lookup_fuzzy_match(self, host: str) -> str:
+    def _merge_hosts(self) -> None:
+        """
+        Merge less specific host pattern data into a given host
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+        for host in self.hosts:
+            _current_hosts = deepcopy(self.hosts)
+            while True:
+                fuzzy_match = self._lookup_fuzzy_match(host=host, hosts=_current_hosts)
+                for attr in HOST_ATTRS:
+                    if not getattr(self.hosts[host], attr):
+                        setattr(self.hosts[host], attr, getattr(self.hosts[fuzzy_match], attr))
+                try:
+                    _current_hosts.pop(fuzzy_match)
+                except KeyError:
+                    # this means we hit the "*" entry twice and we can bail out
+                    break
+
+    def _lookup_fuzzy_match(self, host: str, hosts: Optional[Dict[str, "Host"]] = None) -> str:
         """
         Look up fuzzy matched hosts
 
@@ -217,6 +270,8 @@ class SSHConfig:
 
         Args:
             host: host to lookup in discovered_hosts dict
+            hosts: hosts dict to operate on; used for passing in partial dict of hosts while
+                performing merge operations
 
         Returns:
             str: Nearest match (if applicable) host or `*` if none found
@@ -225,8 +280,10 @@ class SSHConfig:
             N/A
 
         """
+        hosts = hosts or self.hosts
+
         possible_matches = []
-        for host_entry in self.hosts.keys():
+        for host_entry in hosts.keys():
             host_list = host_entry.split()
             for host_pattern in host_list:
                 # replace periods with literal period
@@ -272,7 +329,7 @@ class SSHConfig:
             host: host to lookup in discovered_hosts dict
 
         Returns:
-            N/A
+            Host: best matched host from parsed ssh config file hosts, "*" if no better match found
 
         Raises:
             N/A
@@ -319,7 +376,7 @@ class Host:
             N/A
 
         Returns:
-            N/A
+            str: string for class object
 
         Raises:
             N/A
@@ -368,7 +425,9 @@ class SSHKnownHosts:
 
         """
         if not isinstance(ssh_known_hosts_file, str):
-            raise TypeError(f"`ssh_config_file` expected str, got {type(ssh_known_hosts_file)}")
+            raise TypeError(
+                f"`ssh_known_hosts_file` expected str, got {type(ssh_known_hosts_file)}"
+            )
 
         self.ssh_known_hosts_file = os.path.expanduser(ssh_known_hosts_file)
         if self.ssh_known_hosts_file:

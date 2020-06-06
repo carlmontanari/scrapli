@@ -129,15 +129,13 @@ def normalize_lines(output: bytes) -&gt; bytes:
 
 def strip_ansi(output: bytes) -&gt; bytes:
     &#34;&#34;&#34;
-    Strip comms_ansi
-
-    Strip comms_ansi characters from output
+    Strip ansi characters from output
 
     Args:
         output: bytes from previous reads if needed
 
     Returns:
-        bytes: bytes output read from channel with comms_ansi characters removed
+        bytes: bytes output read from channel with ansi characters removed
 
     Raises:
         N/A
@@ -705,8 +703,7 @@ def get_prompt_pattern(prompt: str, class_prompt: str) -&gt; Pattern[bytes]:
 <span>def <span class="ident">strip_ansi</span></span>(<span>output: bytes) -> bytes</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Strip comms_ansi</p>
-<p>Strip comms_ansi characters from output</p>
+<div class="desc"><p>Strip ansi characters from output</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>output</code></strong></dt>
@@ -715,7 +712,7 @@ def get_prompt_pattern(prompt: str, class_prompt: str) -&gt; Pattern[bytes]:
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>bytes</code></dt>
-<dd>bytes output read from channel with comms_ansi characters removed</dd>
+<dd>bytes output read from channel with ansi characters removed</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
@@ -728,15 +725,13 @@ def get_prompt_pattern(prompt: str, class_prompt: str) -&gt; Pattern[bytes]:
 </summary>
 <pre><code class="python">def strip_ansi(output: bytes) -&gt; bytes:
     &#34;&#34;&#34;
-    Strip comms_ansi
-
-    Strip comms_ansi characters from output
+    Strip ansi characters from output
 
     Args:
         output: bytes from previous reads if needed
 
     Returns:
-        bytes: bytes output read from channel with comms_ansi characters removed
+        bytes: bytes output read from channel with ansi characters removed
 
     Raises:
         N/A

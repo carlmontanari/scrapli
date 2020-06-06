@@ -26,15 +26,14 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.decorators&#34;&#34;&#34;
-import logging
 from concurrent.futures import ThreadPoolExecutor, wait
 from typing import TYPE_CHECKING, Any, Callable, Dict, Union
+
+from scrapli.exceptions import ConnectionNotOpened
 
 if TYPE_CHECKING:
     from scrapli.channel import Channel  # pragma:  no cover
     from scrapli.transport import Transport  # pragma:  no cover
-
-LOG = logging.getLogger(&#34;scrapli&#34;)
 
 
 def operation_timeout(attribute: str, message: str = &#34;&#34;) -&gt; Callable[..., Any]:
@@ -68,11 +67,11 @@ def operation_timeout(attribute: str, message: str = &#34;&#34;) -&gt; Callable[
             **kwargs: Dict[str, Union[str, int]],
         ) -&gt; Any:
             # import here to avoid circular dependency
-            from scrapli.channel import Channel  # pylint: disable=C0415
+            from scrapli.channel import AsyncChannel, Channel  # pylint: disable=C0415
 
             timeout_duration = getattr(channel_or_transport, attribute, None)
             if not timeout_duration:
-                LOG.info(
+                channel_or_transport.logger.info(
                     f&#34;Could not find {attribute} value of {channel_or_transport}, continuing &#34;
                     &#34;without timeout decorator&#34;
                 )
@@ -82,7 +81,7 @@ def operation_timeout(attribute: str, message: str = &#34;&#34;) -&gt; Callable[
             # to unlock and close the session. we need to unlock as the close will block
             # forever if the session is locked, and the session very likely is locked while
             # waiting for output from the device
-            if isinstance(channel_or_transport, Channel):
+            if isinstance(channel_or_transport, (AsyncChannel, Channel)):
                 timeout_exit = channel_or_transport.transport.timeout_exit
                 session_lock = channel_or_transport.transport.session_lock
                 close = channel_or_transport.transport.close
@@ -95,9 +94,9 @@ def operation_timeout(attribute: str, message: str = &#34;&#34;) -&gt; Callable[
             future = pool.submit(wrapped_func, channel_or_transport, *args, **kwargs)
             wait([future], timeout=timeout_duration)
             if not future.done():
-                LOG.info(message)
+                channel_or_transport.logger.info(message)
                 if timeout_exit:
-                    LOG.info(&#34;timeout_exit is True, closing transport&#34;)
+                    channel_or_transport.logger.info(&#34;timeout_exit is True, closing transport&#34;)
                     if session_lock.locked():
                         session_lock.release()
                     close()
@@ -105,6 +104,39 @@ def operation_timeout(attribute: str, message: str = &#34;&#34;) -&gt; Callable[
             return future.result()
 
         return timeout_wrapper
+
+    return decorate
+
+
+def requires_open_session() -&gt; Callable[..., Any]:
+    &#34;&#34;&#34;
+    Decorate an &#34;operation&#34; to require that the underlying scrapli session has been opened
+
+    Args:
+        N/A
+
+    Returns:
+        decorate: wrapped function
+
+    Raises:
+        ConnectionNotOpened: if scrapli connection has not been opened yet
+
+    &#34;&#34;&#34;
+
+    def decorate(wrapped_func: Callable[..., Any]) -&gt; Callable[..., Any]:
+        def requires_open_session_wrapper(
+            *args: Union[str, int], **kwargs: Dict[str, Union[str, int]],
+        ) -&gt; Any:
+            try:
+                return wrapped_func(*args, **kwargs)
+            except AttributeError:
+                raise ConnectionNotOpened(
+                    &#34;Attempting to call method that requires an open connection, but connection is &#34;
+                    &#34;not open. Call the `.open()` method of your connection object, or use a &#34;
+                    &#34;context manager to ensue your connection has been opened.&#34;
+                )
+
+        return requires_open_session_wrapper
 
     return decorate</code></pre>
 </details>
@@ -179,11 +211,11 @@ login (as opposed to "normal" channel operations)</dd>
             **kwargs: Dict[str, Union[str, int]],
         ) -&gt; Any:
             # import here to avoid circular dependency
-            from scrapli.channel import Channel  # pylint: disable=C0415
+            from scrapli.channel import AsyncChannel, Channel  # pylint: disable=C0415
 
             timeout_duration = getattr(channel_or_transport, attribute, None)
             if not timeout_duration:
-                LOG.info(
+                channel_or_transport.logger.info(
                     f&#34;Could not find {attribute} value of {channel_or_transport}, continuing &#34;
                     &#34;without timeout decorator&#34;
                 )
@@ -193,7 +225,7 @@ login (as opposed to "normal" channel operations)</dd>
             # to unlock and close the session. we need to unlock as the close will block
             # forever if the session is locked, and the session very likely is locked while
             # waiting for output from the device
-            if isinstance(channel_or_transport, Channel):
+            if isinstance(channel_or_transport, (AsyncChannel, Channel)):
                 timeout_exit = channel_or_transport.transport.timeout_exit
                 session_lock = channel_or_transport.transport.session_lock
                 close = channel_or_transport.transport.close
@@ -206,9 +238,9 @@ login (as opposed to "normal" channel operations)</dd>
             future = pool.submit(wrapped_func, channel_or_transport, *args, **kwargs)
             wait([future], timeout=timeout_duration)
             if not future.done():
-                LOG.info(message)
+                channel_or_transport.logger.info(message)
                 if timeout_exit:
-                    LOG.info(&#34;timeout_exit is True, closing transport&#34;)
+                    channel_or_transport.logger.info(&#34;timeout_exit is True, closing transport&#34;)
                     if session_lock.locked():
                         session_lock.release()
                     close()
@@ -216,6 +248,60 @@ login (as opposed to "normal" channel operations)</dd>
             return future.result()
 
         return timeout_wrapper
+
+    return decorate</code></pre>
+</details>
+</dd>
+<dt id="scrapli.decorators.requires_open_session"><code class="name flex">
+<span>def <span class="ident">requires_open_session</span></span>(<span>) -> Callable[..., Any]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Decorate an "operation" to require that the underlying scrapli session has been opened</p>
+<h2 id="args">Args</h2>
+<p>N/A</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>decorate</code></dt>
+<dd>wrapped function</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ConnectionNotOpened</code></dt>
+<dd>if scrapli connection has not been opened yet</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def requires_open_session() -&gt; Callable[..., Any]:
+    &#34;&#34;&#34;
+    Decorate an &#34;operation&#34; to require that the underlying scrapli session has been opened
+
+    Args:
+        N/A
+
+    Returns:
+        decorate: wrapped function
+
+    Raises:
+        ConnectionNotOpened: if scrapli connection has not been opened yet
+
+    &#34;&#34;&#34;
+
+    def decorate(wrapped_func: Callable[..., Any]) -&gt; Callable[..., Any]:
+        def requires_open_session_wrapper(
+            *args: Union[str, int], **kwargs: Dict[str, Union[str, int]],
+        ) -&gt; Any:
+            try:
+                return wrapped_func(*args, **kwargs)
+            except AttributeError:
+                raise ConnectionNotOpened(
+                    &#34;Attempting to call method that requires an open connection, but connection is &#34;
+                    &#34;not open. Call the `.open()` method of your connection object, or use a &#34;
+                    &#34;context manager to ensue your connection has been opened.&#34;
+                )
+
+        return requires_open_session_wrapper
 
     return decorate</code></pre>
 </details>
@@ -239,6 +325,7 @@ login (as opposed to "normal" channel operations)</dd>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="scrapli.decorators.operation_timeout" href="#scrapli.decorators.operation_timeout">operation_timeout</a></code></li>
+<li><code><a title="scrapli.decorators.requires_open_session" href="#scrapli.decorators.requires_open_session">requires_open_session</a></code></li>
 </ul>
 </li>
 </ul>

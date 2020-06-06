@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.1" />
+<title>scrapli.channel.base_channel API documentation</title>
+<meta name="description" content="scrapli.channel.base_channel" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>scrapli.channel.base_channel</code></h1>
+</header>
+<section id="section-intro">
+<p>scrapli.channel.base_channel</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;scrapli.channel.base_channel&#34;&#34;&#34;
+import re
+from abc import ABC
+from logging import getLogger
+from typing import List, Optional, Tuple, Union
+
+from scrapli.helper import get_prompt_pattern, normalize_lines
+from scrapli.transport.async_transport import AsyncTransport
+from scrapli.transport.transport import Transport
+
+CHANNEL_ARGS = (
+    &#34;transport&#34;,
+    &#34;comms_prompt_pattern&#34;,
+    &#34;comms_return_char&#34;,
+    &#34;comms_ansi&#34;,
+    &#34;timeout_ops&#34;,
+)
+
+
+class ChannelBase(ABC):
+    def __init__(
+        self,
+        transport: Union[Transport, AsyncTransport],
+        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]$&#34;,
+        comms_return_char: str = &#34;\n&#34;,
+        comms_ansi: bool = False,
+        comms_auto_expand: bool = False,
+        timeout_ops: int = 10,
+    ):
+        &#34;&#34;&#34;
+        Channel Object
+
+        Args:
+            transport: Transport object of any transport provider (system|telnet or a plugin)
+                transport could in theory be any transport as long as it provides a read and a write
+                method... obviously its probably always going to be scrapli transport though
+            comms_prompt_pattern: raw string regex pattern -- use `^` and `$` for multi-line!
+            comms_return_char: character to use to send returns to host
+            comms_ansi: True/False strip comms_ansi characters from output
+            comms_auto_expand: bool to indicate if a device auto-expands commands, for example
+                juniper devices without `cli complete-on-space` disabled will convert `config` to
+                `configuration` after entering a space character after `config`; because scrapli
+                reads the channel until each command is entered, the command changing from `config`
+                to `configuration` will cause scrapli (by default) to never think the command has
+                been entered. Setting this value to `True` will force scrapli to zip the split lists
+                of inputs and outputs together to determine if each read output starts with the
+                corresponding input. For example, if the inputs are &#34;sho ver&#34; and the read output is
+                &#34;show version&#34;, scrapli will zip the split strings together and confirm that in fact
+                &#34;show&#34; starts with &#34;sho&#34; and &#34;version&#34; starts with &#34;ver&#34;, confirming that the
+                commands that were input were input properly. This is disabled by default, as it is
+                preferable to disable this type of behavior via the device itself if possible.
+            timeout_ops: timeout in seconds for channel operations (reads/writes)
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.logger = getLogger(f&#34;scrapli.channel-{transport.host}&#34;)
+
+        self.transport = transport
+        self.comms_prompt_pattern = comms_prompt_pattern
+        self.comms_return_char = comms_return_char
+        self.comms_ansi = comms_ansi
+        self.comms_auto_expand = comms_auto_expand
+        self.timeout_ops = timeout_ops
+
+    def __str__(self) -&gt; str:
+        &#34;&#34;&#34;
+        Magic str method for Channel
+
+        Args:
+            N/A
+
+        Returns:
+            str: str for class object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        return &#34;scrapli Channel Object&#34;
+
+    def __repr__(self) -&gt; str:
+        &#34;&#34;&#34;
+        Magic repr method for Channel
+
+        Args:
+            N/A
+
+        Returns:
+            str: repr for class object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        class_dict = self.__dict__.copy()
+        class_dict.pop(&#34;transport&#34;)
+        class_dict[&#34;logger&#34;] = self.logger.name
+        return f&#34;scrapli Channel {class_dict}&#34;
+
+    def _restructure_output(self, output: bytes, strip_prompt: bool = False) -&gt; bytes:
+        &#34;&#34;&#34;
+        Clean up preceding empty lines, and strip prompt if desired
+
+        Args:
+            output: bytes from channel
+            strip_prompt: bool True/False whether to strip prompt or not
+
+        Returns:
+            bytes: output of joined output lines optionally with prompt removed
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        output = normalize_lines(output=output)
+
+        if not strip_prompt:
+            return output
+
+        # could be compiled elsewhere, but allow for users to modify the prompt whenever they want
+        prompt_pattern = get_prompt_pattern(prompt=&#34;&#34;, class_prompt=self.comms_prompt_pattern)
+        output = re.sub(pattern=prompt_pattern, repl=b&#34;&#34;, string=output)
+        return output
+
+    @staticmethod
+    def _process_auto_expand(output: bytes, channel_input: bytes) -&gt; bool:
+        &#34;&#34;&#34;
+        Determine if output has been auto expanded to canonical syntax
+
+        Args:
+            output: output from the device
+            channel_input: command input to the device
+
+        Returns:
+            bool: True if it appears the output was auto-expanded, otherwise False
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        channel_input_split = channel_input.split()
+        return all(
+            _channel_output.startswith(_channel_input)
+            for _channel_input, _channel_output in zip(channel_input_split, output.split())
+        )
+
+    def _send_return(self) -&gt; None:
+        &#34;&#34;&#34;
+        Send return char to device
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.transport.write(channel_input=self.comms_return_char)
+        self.logger.debug(f&#34;Write (sending return character): {repr(self.comms_return_char)}&#34;)
+
+    @staticmethod
+    def _pre_send_input(channel_input: str) -&gt; None:
+        &#34;&#34;&#34;
+        Handle pre &#34;send_input&#34; tasks for consistency between sync/async versions
+
+        Args:
+            channel_input: string input to send to channel
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            TypeError: if input is anything but a string
+
+        &#34;&#34;&#34;
+        if not isinstance(channel_input, str):
+            raise TypeError(f&#34;`send_input` expects a single string, got {type(channel_input)}.&#34;)
+
+    @staticmethod
+    def _pre_send_inputs_interact(interact_events: List[Tuple[str, str, Optional[bool]]]) -&gt; None:
+        &#34;&#34;&#34;
+        Handle pre &#34;send_inputs_interact&#34; tasks for consistency between sync/async versions
+
+        Args:
+            interact_events: interact events passed to `send_inputs_interact`
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            TypeError: if input is anything but a string
+
+        &#34;&#34;&#34;
+        if not isinstance(interact_events, list):
+            raise TypeError(f&#34;`interact_events` expects a List, got {type(interact_events)}&#34;)
+
+    def _post_send_inputs_interact(self, output: bytes) -&gt; Tuple[str, str]:
+        &#34;&#34;&#34;
+        Handle pre &#34;send_inputs_interact&#34; tasks for consistency between sync/async versions
+
+        Args:
+            output: output from `send_inputs_interact` method
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        processed_output = self._restructure_output(output=output, strip_prompt=False)
+        raw_result = output.decode()
+        processed_result = processed_output.decode()
+        return raw_result, processed_result</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="scrapli.channel.base_channel.ChannelBase"><code class="flex name class">
+<span>class <span class="ident">ChannelBase</span></span>
+<span>(</span><span>transport: Union[scrapli.transport.transport.Transport, scrapli.transport.async_transport.AsyncTransport], comms_prompt_pattern: str = &#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char: str = '\n', comms_ansi: bool = False, comms_auto_expand: bool = False, timeout_ops: int = 10)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<p>Channel Object</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>transport</code></strong></dt>
+<dd>Transport object of any transport provider (system|telnet or a plugin)
+transport could in theory be any transport as long as it provides a read and a write
+method&hellip; obviously its probably always going to be scrapli transport though</dd>
+<dt><strong><code>comms_prompt_pattern</code></strong></dt>
+<dd>raw string regex pattern &ndash; use <code>^</code> and <code>$</code> for multi-line!</dd>
+<dt><strong><code>comms_return_char</code></strong></dt>
+<dd>character to use to send returns to host</dd>
+<dt><strong><code>comms_ansi</code></strong></dt>
+<dd>True/False strip comms_ansi characters from output</dd>
+<dt><strong><code>comms_auto_expand</code></strong></dt>
+<dd>bool to indicate if a device auto-expands commands, for example
+juniper devices without <code>cli complete-on-space</code> disabled will convert <code>config</code> to
+<code>configuration</code> after entering a space character after <code>config</code>; because scrapli
+reads the channel until each command is entered, the command changing from <code>config</code>
+to <code>configuration</code> will cause scrapli (by default) to never think the command has
+been entered. Setting this value to <code>True</code> will force scrapli to zip the split lists
+of inputs and outputs together to determine if each read output starts with the
+corresponding input. For example, if the inputs are "sho ver" and the read output is
+"show version", scrapli will zip the split strings together and confirm that in fact
+"show" starts with "sho" and "version" starts with "ver", confirming that the
+commands that were input were input properly. This is disabled by default, as it is
+preferable to disable this type of behavior via the device itself if possible.</dd>
+<dt><strong><code>timeout_ops</code></strong></dt>
+<dd>timeout in seconds for channel operations (reads/writes)</dd>
+</dl>
+<h2 id="args_1">Args</h2>
+<p>N/A</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>N/A
+# noqa: DAR202</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ChannelBase(ABC):
+    def __init__(
+        self,
+        transport: Union[Transport, AsyncTransport],
+        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]$&#34;,
+        comms_return_char: str = &#34;\n&#34;,
+        comms_ansi: bool = False,
+        comms_auto_expand: bool = False,
+        timeout_ops: int = 10,
+    ):
+        &#34;&#34;&#34;
+        Channel Object
+
+        Args:
+            transport: Transport object of any transport provider (system|telnet or a plugin)
+                transport could in theory be any transport as long as it provides a read and a write
+                method... obviously its probably always going to be scrapli transport though
+            comms_prompt_pattern: raw string regex pattern -- use `^` and `$` for multi-line!
+            comms_return_char: character to use to send returns to host
+            comms_ansi: True/False strip comms_ansi characters from output
+            comms_auto_expand: bool to indicate if a device auto-expands commands, for example
+                juniper devices without `cli complete-on-space` disabled will convert `config` to
+                `configuration` after entering a space character after `config`; because scrapli
+                reads the channel until each command is entered, the command changing from `config`
+                to `configuration` will cause scrapli (by default) to never think the command has
+                been entered. Setting this value to `True` will force scrapli to zip the split lists
+                of inputs and outputs together to determine if each read output starts with the
+                corresponding input. For example, if the inputs are &#34;sho ver&#34; and the read output is
+                &#34;show version&#34;, scrapli will zip the split strings together and confirm that in fact
+                &#34;show&#34; starts with &#34;sho&#34; and &#34;version&#34; starts with &#34;ver&#34;, confirming that the
+                commands that were input were input properly. This is disabled by default, as it is
+                preferable to disable this type of behavior via the device itself if possible.
+            timeout_ops: timeout in seconds for channel operations (reads/writes)
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.logger = getLogger(f&#34;scrapli.channel-{transport.host}&#34;)
+
+        self.transport = transport
+        self.comms_prompt_pattern = comms_prompt_pattern
+        self.comms_return_char = comms_return_char
+        self.comms_ansi = comms_ansi
+        self.comms_auto_expand = comms_auto_expand
+        self.timeout_ops = timeout_ops
+
+    def __str__(self) -&gt; str:
+        &#34;&#34;&#34;
+        Magic str method for Channel
+
+        Args:
+            N/A
+
+        Returns:
+            str: str for class object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        return &#34;scrapli Channel Object&#34;
+
+    def __repr__(self) -&gt; str:
+        &#34;&#34;&#34;
+        Magic repr method for Channel
+
+        Args:
+            N/A
+
+        Returns:
+            str: repr for class object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        class_dict = self.__dict__.copy()
+        class_dict.pop(&#34;transport&#34;)
+        class_dict[&#34;logger&#34;] = self.logger.name
+        return f&#34;scrapli Channel {class_dict}&#34;
+
+    def _restructure_output(self, output: bytes, strip_prompt: bool = False) -&gt; bytes:
+        &#34;&#34;&#34;
+        Clean up preceding empty lines, and strip prompt if desired
+
+        Args:
+            output: bytes from channel
+            strip_prompt: bool True/False whether to strip prompt or not
+
+        Returns:
+            bytes: output of joined output lines optionally with prompt removed
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        output = normalize_lines(output=output)
+
+        if not strip_prompt:
+            return output
+
+        # could be compiled elsewhere, but allow for users to modify the prompt whenever they want
+        prompt_pattern = get_prompt_pattern(prompt=&#34;&#34;, class_prompt=self.comms_prompt_pattern)
+        output = re.sub(pattern=prompt_pattern, repl=b&#34;&#34;, string=output)
+        return output
+
+    @staticmethod
+    def _process_auto_expand(output: bytes, channel_input: bytes) -&gt; bool:
+        &#34;&#34;&#34;
+        Determine if output has been auto expanded to canonical syntax
+
+        Args:
+            output: output from the device
+            channel_input: command input to the device
+
+        Returns:
+            bool: True if it appears the output was auto-expanded, otherwise False
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        channel_input_split = channel_input.split()
+        return all(
+            _channel_output.startswith(_channel_input)
+            for _channel_input, _channel_output in zip(channel_input_split, output.split())
+        )
+
+    def _send_return(self) -&gt; None:
+        &#34;&#34;&#34;
+        Send return char to device
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.transport.write(channel_input=self.comms_return_char)
+        self.logger.debug(f&#34;Write (sending return character): {repr(self.comms_return_char)}&#34;)
+
+    @staticmethod
+    def _pre_send_input(channel_input: str) -&gt; None:
+        &#34;&#34;&#34;
+        Handle pre &#34;send_input&#34; tasks for consistency between sync/async versions
+
+        Args:
+            channel_input: string input to send to channel
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            TypeError: if input is anything but a string
+
+        &#34;&#34;&#34;
+        if not isinstance(channel_input, str):
+            raise TypeError(f&#34;`send_input` expects a single string, got {type(channel_input)}.&#34;)
+
+    @staticmethod
+    def _pre_send_inputs_interact(interact_events: List[Tuple[str, str, Optional[bool]]]) -&gt; None:
+        &#34;&#34;&#34;
+        Handle pre &#34;send_inputs_interact&#34; tasks for consistency between sync/async versions
+
+        Args:
+            interact_events: interact events passed to `send_inputs_interact`
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            TypeError: if input is anything but a string
+
+        &#34;&#34;&#34;
+        if not isinstance(interact_events, list):
+            raise TypeError(f&#34;`interact_events` expects a List, got {type(interact_events)}&#34;)
+
+    def _post_send_inputs_interact(self, output: bytes) -&gt; Tuple[str, str]:
+        &#34;&#34;&#34;
+        Handle pre &#34;send_inputs_interact&#34; tasks for consistency between sync/async versions
+
+        Args:
+            output: output from `send_inputs_interact` method
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        processed_output = self._restructure_output(output=output, strip_prompt=False)
+        raw_result = output.decode()
+        processed_result = processed_output.decode()
+        return raw_result, processed_result</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="scrapli.channel.async_channel.AsyncChannel" href="async_channel.html#scrapli.channel.async_channel.AsyncChannel">AsyncChannel</a></li>
+<li><a title="scrapli.channel.channel.Channel" href="channel.html#scrapli.channel.channel.Channel">Channel</a></li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="scrapli.channel" href="index.html">scrapli.channel</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="scrapli.channel.base_channel.ChannelBase" href="#scrapli.channel.base_channel.ChannelBase">ChannelBase</a></code></h4>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.1</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

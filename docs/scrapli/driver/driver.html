@@ -26,73 +26,15 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.driver.driver&#34;&#34;&#34;
-import logging
-import os
-import re
-from pathlib import Path
 from types import TracebackType
-from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
+from typing import Any, Optional, Type
 
-from scrapli.channel import CHANNEL_ARGS, Channel
-from scrapli.helper import _find_transport_plugin, resolve_ssh_config, resolve_ssh_known_hosts
-from scrapli.transport import (
-    SYSTEM_SSH_TRANSPORT_ARGS,
-    TELNET_TRANSPORT_ARGS,
-    SystemSSHTransport,
-    TelnetTransport,
-    Transport,
-)
-
-TRANSPORT_CLASS: Dict[str, Callable[..., Transport]] = {
-    &#34;system&#34;: SystemSSHTransport,
-    &#34;telnet&#34;: TelnetTransport,
-}
-TRANSPORT_ARGS: Dict[str, Tuple[str, ...]] = {
-    &#34;system&#34;: SYSTEM_SSH_TRANSPORT_ARGS,
-    &#34;telnet&#34;: TELNET_TRANSPORT_ARGS,
-}
-TRANSPORT_BASE_ARGS = (
-    &#34;host&#34;,
-    &#34;port&#34;,
-    &#34;keepalive&#34;,
-    &#34;keepalive_interval&#34;,
-    &#34;keepalive_type&#34;,
-    &#34;keepalive_pattern&#34;,
-    &#34;timeout_socket&#34;,
-    &#34;timeout_transport&#34;,
-    &#34;timeout_exit&#34;,
-)
-LOG = logging.getLogger(&#34;driver&#34;)
+from scrapli.channel import Channel
+from scrapli.driver.base_driver import ScrapeBase
 
 
-class Scrape:
-    def __init__(
-        self,
-        host: str = &#34;&#34;,
-        port: int = 22,
-        auth_username: str = &#34;&#34;,
-        auth_password: str = &#34;&#34;,
-        auth_private_key: str = &#34;&#34;,
-        auth_strict_key: bool = True,
-        auth_bypass: bool = False,
-        timeout_socket: int = 5,
-        timeout_transport: int = 10,
-        timeout_ops: int = 30,
-        timeout_exit: bool = True,
-        keepalive: bool = False,
-        keepalive_interval: int = 30,
-        keepalive_type: str = &#34;network&#34;,
-        keepalive_pattern: str = &#34;\005&#34;,
-        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,48}[#&gt;$]\s*$&#34;,
-        comms_return_char: str = &#34;\n&#34;,
-        comms_ansi: bool = False,
-        ssh_config_file: Union[str, bool] = False,
-        ssh_known_hosts_file: Union[str, bool] = False,
-        on_open: Optional[Callable[..., Any]] = None,
-        on_close: Optional[Callable[..., Any]] = None,
-        transport: str = &#34;system&#34;,
-        transport_options: Optional[Dict[str, Any]] = None,
-    ):
+class Scrape(ScrapeBase):
+    def __init__(self, **kwargs: Any) -&gt; None:
         &#34;&#34;&#34;
         Scrape Object
 
@@ -105,68 +47,7 @@ class Scrape:
         relies on, see Transport and Channel docs for details.
 
         Args:
-            host: host ip/name to connect to
-            port: port to connect to
-            auth_username: username for authentication
-            auth_private_key: path to private key for authentication
-            auth_password: password for authentication
-            auth_strict_key: strict host checking or not -- applicable for system ssh driver only
-            auth_bypass: bypass ssh key or password auth for devices without authentication, or that
-                have auth prompts after ssh session establishment. Currently only supported on
-                system transport; ignored on other transports
-            timeout_socket: timeout for establishing socket in seconds
-            timeout_transport: timeout for ssh|telnet transport in seconds
-            timeout_ops: timeout for ssh channel operations
-            timeout_exit: True/False close transport if timeout encountered. If False and keepalives
-                are in use, keepalives will prevent program from exiting so you should be sure to
-                catch Timeout exceptions and handle them appropriately
-            keepalive: whether or not to try to keep session alive
-            keepalive_interval: interval to use for session keepalives
-            keepalive_type: network|standard -- &#39;network&#39; sends actual characters over the
-                transport channel. This is useful for network-y type devices that may not support
-                &#39;standard&#39; keepalive mechanisms. &#39;standard&#39; attempts to use whatever &#39;standard&#39;
-                keepalive mechanisms are available in the selected transport mechanism. Check the
-                transport documentation for details on what is supported and/or how it is
-                implemented for any given transport driver
-            keepalive_pattern: pattern to send to keep network channel alive. Default is
-                u&#39;\005&#39; which is equivalent to &#39;ctrl+e&#39;. This pattern moves cursor to end of the
-                line which should be an innocuous pattern. This will only be entered *if* a lock
-                can be acquired. This is only applicable if using keepalives and if the keepalive
-                type is &#39;network&#39;
-            comms_prompt_pattern: raw string regex pattern -- preferably use `^` and `$` anchors!
-                this is the single most important attribute here! if this does not match a prompt,
-                scrapli will not work!
-                IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
-                for highly reliably matching for prompts however we do NOT strip trailing whitespace
-                for each line, so be sure to add &#39;\\s?&#39; or similar if your device needs that. This
-                should be mostly sorted for you if using network drivers (i.e. `IOSXEDriver`).
-                Lastly, the case insensitive is just a convenience factor so i can be lazy.
-            comms_return_char: character to use to send returns to host
-            comms_ansi: True/False strip comms_ansi characters from output
-            ssh_config_file: string to path for ssh config file, True to use default ssh config file
-                or False to ignore default ssh config file
-            ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
-                file locations. Only applicable/needed if `auth_strict_key` is set to True
-            on_open: callable that accepts the class instance as its only argument. this callable,
-                if provided, is executed immediately after authentication is completed. Common use
-                cases for this callable would be to disable paging or accept any kind of banner
-                message that prompts a user upon connection
-            on_close: callable that accepts the class instance as its only argument. this callable,
-                if provided, is executed immediately prior to closing the underlying transport.
-                Common use cases for this callable would be to save configurations prior to exiting,
-                or to logout properly to free up vtys or similar.
-            transport: system|telnet or a plugin -- type of transport to use for connection
-                system uses system available ssh (/usr/bin/ssh)
-                ssh2 uses ssh2-python *has been migrated to a plugin
-                paramiko uses... paramiko *has been migrated to a plugin
-                telnet uses telnetlib
-                choice of driver depends on the features you need. in general system is easiest as
-                it will just &#39;auto-magically&#39; use your ssh config file (&#39;~/.ssh/config&#39; or
-                &#39;/etc/ssh/config_file&#39;). ssh2 is very very fast as it is a thin wrapper around
-                libssh2 however it is slightly feature limited. paramiko is slower than ssh2, but
-                has more features built in (though scrapli does not expose/support them all).
-            transport_options: dictionary of options to pass to selected transport class; see
-                docs for given transport class for details of what to pass here
+            kwargs: Keyword arguments to pass to `ScrapeBase` -- see `ScrapeBase` for available args
 
         Returns:
             N/A  # noqa: DAR202
@@ -175,60 +56,7 @@ class Scrape:
             N/A
 
         &#34;&#34;&#34;
-        # create a dict of all &#34;initialization&#34; args for posterity and for passing to Transport
-        # and Channel objects
-        self._initialization_args: Dict[str, Any] = {}
-
-        self._setup_host(host=host, port=port)
-        self._setup_auth(
-            auth_username=auth_username,
-            auth_password=auth_password,
-            auth_private_key=auth_private_key,
-            auth_strict_key=auth_strict_key,
-            auth_bypass=auth_bypass,
-        )
-        self._setup_timeouts(
-            timeout_socket=timeout_socket,
-            timeout_transport=timeout_transport,
-            timeout_ops=timeout_ops,
-            timeout_exit=timeout_exit,
-        )
-        self._setup_keepalive(
-            keepalive=keepalive,
-            keepalive_type=keepalive_type,
-            keepalive_interval=keepalive_interval,
-            keepalive_pattern=keepalive_pattern,
-        )
-        self._setup_comms(
-            comms_prompt_pattern=comms_prompt_pattern,
-            comms_return_char=comms_return_char,
-            comms_ansi=comms_ansi,
-        )
-        self._setup_callables(on_open=on_open, on_close=on_close)
-
-        if transport not in (&#34;system&#34;, &#34;telnet&#34;):
-            LOG.info(f&#34;Non-core transport `{transport}` selected&#34;)
-        self._transport = transport
-
-        if transport != &#34;telnet&#34;:
-            self._setup_ssh_args(
-                ssh_config_file=ssh_config_file, ssh_known_hosts_file=ssh_known_hosts_file
-            )
-
-        self._initialization_args[&#34;transport_options&#34;] = transport_options
-        self.transport_class, self.transport_args = self._transport_factory(transport=transport)
-        # so transport drivers don&#39;t need to support `transport_options` as an argument, if no
-        # transport options provided, do nothing, otherwise add this to the args we ship to the
-        # transport class
-        if transport_options is not None:
-            self.transport_args[&#34;transport_options&#34;] = transport_options
-        self.transport = self.transport_class(**self.transport_args)
-
-        self.channel_args: Dict[str, Any] = {}
-        for arg in CHANNEL_ARGS:
-            if arg == &#34;transport&#34;:
-                continue
-            self.channel_args[arg] = self._initialization_args.get(arg)
+        super().__init__(**kwargs)
         self.channel = Channel(transport=self.transport, **self.channel_args)
 
     def __enter__(self) -&gt; &#34;Scrape&#34;:
@@ -271,319 +99,6 @@ class Scrape:
         &#34;&#34;&#34;
         self.close()
 
-    def __str__(self) -&gt; str:
-        &#34;&#34;&#34;
-        Magic str method for Scrape
-
-        Args:
-            N/A
-
-        Returns:
-            str: str representation of object
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        return f&#34;Scrape Object for host {self._host}&#34;
-
-    def __repr__(self) -&gt; str:
-        &#34;&#34;&#34;
-        Magic repr method for Scrape
-
-        Args:
-            N/A
-
-        Returns:
-            str: repr for class object
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        return (
-            f&#34;{self.__class__.__name__}(&#34;
-            f&#34;host={self._initialization_args[&#39;host&#39;]!r}, &#34;
-            f&#34;port={self._initialization_args[&#39;port&#39;]!r}, &#34;
-            f&#34;auth_username={self._initialization_args[&#39;auth_username&#39;]!r}, &#34;
-            f&#34;auth_password={self._initialization_args[&#39;auth_password&#39;]!r}, &#34;
-            f&#34;auth_private_key={self._initialization_args[&#39;auth_private_key&#39;]!r}, &#34;
-            f&#34;auth_strict_key={self._initialization_args[&#39;auth_strict_key&#39;]!r}, &#34;
-            f&#34;auth_bypass={self._initialization_args[&#39;auth_bypass&#39;]!r}, &#34;
-            f&#34;timeout_socket={self._initialization_args[&#39;timeout_socket&#39;]!r}, &#34;
-            f&#34;timeout_transport={self._initialization_args[&#39;timeout_transport&#39;]!r}, &#34;
-            f&#34;timeout_ops={self._initialization_args[&#39;timeout_ops&#39;]!r}, &#34;
-            f&#34;timeout_exit={self._initialization_args[&#39;timeout_exit&#39;]!r}, &#34;
-            f&#34;keepalive={self._initialization_args[&#39;keepalive&#39;]!r}, &#34;
-            f&#34;keepalive_interval={self._initialization_args[&#39;keepalive_interval&#39;]!r}, &#34;
-            f&#34;keepalive_type={self._initialization_args[&#39;keepalive_type&#39;]!r}, &#34;
-            f&#34;keepalive_pattern={self._initialization_args[&#39;keepalive_pattern&#39;]!r}, &#34;
-            f&#34;comms_prompt_pattern={self._initialization_args[&#39;comms_prompt_pattern&#39;]!r}, &#34;
-            f&#34;comms_return_char={self._initialization_args[&#39;comms_return_char&#39;]!r}, &#34;
-            f&#34;comms_ansi={self._initialization_args[&#39;comms_ansi&#39;]!r}, &#34;
-            f&#34;ssh_config_file={self._initialization_args.get(&#39;ssh_config_file&#39;)!r}, &#34;
-            f&#34;ssh_known_hosts_file={self._initialization_args.get(&#39;ssh_known_hosts_file&#39;)!r}, &#34;
-            f&#34;on_open={self.on_open!r}, &#34;
-            f&#34;on_close={self.on_close!r}, &#34;
-            f&#34;transport={self._transport!r}, &#34;
-            f&#34;transport_options={self._initialization_args.get(&#39;transport_options&#39;)!r})&#34;
-        )
-
-    def _setup_host(self, host: str, port: int) -&gt; None:
-        &#34;&#34;&#34;
-        Parse and setup host attributes
-
-        Args:
-            host: host to parse/set
-            port: port to parse/set
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            ValueError: if host is not provided
-            TypeError: if port is not an integer
-
-        &#34;&#34;&#34;
-        if not host:
-            raise ValueError(&#34;`host` should be a hostname/ip address, got nothing!&#34;)
-        if not isinstance(port, int):
-            raise TypeError(f&#34;`port` should be int, got {type(port)}&#34;)
-        self._host = host.strip()
-        self._initialization_args[&#34;host&#34;] = host.strip()
-        self._initialization_args[&#34;port&#34;] = port
-
-    def _setup_auth(
-        self,
-        auth_username: str,
-        auth_password: str,
-        auth_private_key: str,
-        auth_strict_key: bool,
-        auth_bypass: bool,
-    ) -&gt; None:
-        &#34;&#34;&#34;
-        Parse and setup auth attributes
-
-        Args:
-            auth_username: username to parse/set
-            auth_password: password to parse/set
-            auth_private_key: public key to parse/set
-            auth_strict_key: strict key to parse/set
-            auth_bypass: bypass to parse/set
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            TypeError: if auth_strict_key is not a bool
-            ValueError: if auth_private_key is not a valid file
-
-        &#34;&#34;&#34;
-        if not isinstance(auth_strict_key, bool):
-            raise TypeError(f&#34;`auth_strict_key` should be bool, got {type(auth_strict_key)}&#34;)
-        if not isinstance(auth_bypass, bool):
-            raise TypeError(f&#34;`auth_bypass` should be bool, got {type(auth_bypass)}&#34;)
-
-        self._initialization_args[&#34;auth_strict_key&#34;] = auth_strict_key
-        self._initialization_args[&#34;auth_bypass&#34;] = auth_bypass
-        self._initialization_args[&#34;auth_username&#34;] = auth_username.strip()
-        self._initialization_args[&#34;auth_password&#34;] = auth_password.strip()
-
-        if auth_private_key:
-            private_key_path = Path.expanduser(Path(auth_private_key.strip()))
-            if not private_key_path.is_file():
-                raise ValueError(f&#34;Provided public key `{auth_private_key}` is not a file&#34;)
-            self._initialization_args[&#34;auth_private_key&#34;] = os.path.expanduser(
-                auth_private_key.strip()
-            )
-        else:
-            self._initialization_args[&#34;auth_private_key&#34;] = auth_private_key
-
-    def _setup_timeouts(
-        self, timeout_socket: int, timeout_transport: int, timeout_ops: int, timeout_exit: bool
-    ) -&gt; None:
-        &#34;&#34;&#34;
-        Parse and setup timeout attributes
-
-        Args:
-            timeout_socket: socket timeout to parse/set
-            timeout_transport: transport timeout to parse/set
-            timeout_ops: ops timeout to parse/set
-            timeout_exit: timeout exit bool to parse/set
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            TypeError: if invalid type args provided
-
-        &#34;&#34;&#34;
-        if not isinstance(timeout_exit, bool):
-            raise TypeError(f&#34;`timeout_exit` should be bool, got {type(timeout_exit)}&#34;)
-
-        self._initialization_args[&#34;timeout_socket&#34;] = int(timeout_socket)
-        self._initialization_args[&#34;timeout_transport&#34;] = int(timeout_transport)
-        self._initialization_args[&#34;timeout_ops&#34;] = int(timeout_ops)
-        self._initialization_args[&#34;timeout_exit&#34;] = timeout_exit
-
-    def _setup_keepalive(
-        self, keepalive: bool, keepalive_type: str, keepalive_interval: int, keepalive_pattern: str
-    ) -&gt; None:
-        &#34;&#34;&#34;
-        Parse and setup keepalive attributes
-
-        Args:
-            keepalive: keepalive to parse/set
-            keepalive_type: keepalive_type to parse/set
-            keepalive_interval: keepalive_interval to parse/set
-            keepalive_pattern: keepalive_pattern to parse/set
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            TypeError: if keepalive is not a bool
-            ValueError: if keepalive_type is not valid
-
-        &#34;&#34;&#34;
-        if not isinstance(keepalive, bool):
-            raise TypeError(f&#34;`keepalive` should be bool, got {type(keepalive)}&#34;)
-        if keepalive_type not in [&#34;network&#34;, &#34;standard&#34;]:
-            raise ValueError(
-                f&#34;`{keepalive_type}` is an invalid keepalive_type; must be &#39;network&#39; or &#39;standard&#39;&#34;
-            )
-        self._initialization_args[&#34;keepalive&#34;] = keepalive
-        self._initialization_args[&#34;keepalive_interval&#34;] = int(keepalive_interval)
-        self._initialization_args[&#34;keepalive_type&#34;] = keepalive_type
-        self._initialization_args[&#34;keepalive_pattern&#34;] = keepalive_pattern
-
-    def _setup_comms(
-        self, comms_prompt_pattern: str, comms_return_char: str, comms_ansi: bool
-    ) -&gt; None:
-        &#34;&#34;&#34;
-        Parse and setup auth attributes
-
-        Args:
-            comms_prompt_pattern: prompt pattern to parse/set
-            comms_return_char: return char to parse/set
-            comms_ansi: ansi val to parse/set
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            TypeError: if invalid type args provided
-
-        &#34;&#34;&#34;
-        # try to compile prompt to raise TypeError before opening any connections
-        re.compile(comms_prompt_pattern, flags=re.M | re.I)
-
-        if not isinstance(comms_return_char, str):
-            raise TypeError(f&#34;`comms_return_char` should be str, got {type(comms_return_char)}&#34;)
-        if not isinstance(comms_ansi, bool):
-            raise TypeError(f&#34;`comms_ansi` should be bool, got {type(comms_ansi)}&#34;)
-
-        self._initialization_args[&#34;comms_prompt_pattern&#34;] = comms_prompt_pattern
-        self._initialization_args[&#34;comms_return_char&#34;] = comms_return_char
-        self._initialization_args[&#34;comms_ansi&#34;] = comms_ansi
-
-    def _setup_callables(
-        self, on_open: Optional[Callable[..., Any]], on_close: Optional[Callable[..., Any]]
-    ) -&gt; None:
-        &#34;&#34;&#34;
-        Parse and setup callables (on_open/on_close)
-
-        Args:
-            on_open: on_open to parse/set
-            on_close: on_close to parse/set
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            TypeError: if port is not an integer
-
-        &#34;&#34;&#34;
-        if on_open is not None and not callable(on_open):
-            raise TypeError(f&#34;`on_open` must be a callable, got {type(on_open)}&#34;)
-        if on_close is not None and not callable(on_close):
-            raise TypeError(f&#34;`on_close` must be a callable, got {type(on_close)}&#34;)
-        self.on_open = on_open
-        self.on_close = on_close
-        self._initialization_args[&#34;on_open&#34;] = on_open
-        self._initialization_args[&#34;on_close&#34;] = on_close
-
-    def _setup_ssh_args(
-        self, ssh_config_file: Union[str, bool], ssh_known_hosts_file: Union[str, bool]
-    ) -&gt; None:
-        &#34;&#34;&#34;
-        Parse and setup ssh related arguments
-
-        Args:
-            ssh_config_file: string to path for ssh config file, True to use default ssh config file
-                or False to ignore default ssh config file
-            ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
-                file locations. Only applicable/needed if `auth_strict_key` is set to True
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            TypeError: if invalid config file or known hosts file value provided
-
-        &#34;&#34;&#34;
-        if not isinstance(ssh_config_file, (str, bool)):
-            raise TypeError(f&#34;`ssh_config_file` must be str or bool, got {type(ssh_config_file)}&#34;)
-        if not isinstance(ssh_known_hosts_file, (str, bool)):
-            raise TypeError(
-                &#34;`ssh_known_hosts_file` must be str or bool, got &#34; f&#34;{type(ssh_known_hosts_file)}&#34;
-            )
-
-        if ssh_config_file is not False:
-            if isinstance(ssh_config_file, bool):
-                cfg = &#34;&#34;
-            else:
-                cfg = ssh_config_file
-            self._initialization_args[&#34;ssh_config_file&#34;] = resolve_ssh_config(cfg)
-        else:
-            self._initialization_args[&#34;ssh_config_file&#34;] = &#34;&#34;
-
-        if ssh_known_hosts_file is not False:
-            if isinstance(ssh_known_hosts_file, bool):
-                known_hosts = &#34;&#34;
-            else:
-                known_hosts = ssh_known_hosts_file
-            self._initialization_args[&#34;ssh_known_hosts_file&#34;] = resolve_ssh_known_hosts(known_hosts)
-        else:
-            self._initialization_args[&#34;ssh_known_hosts_file&#34;] = &#34;&#34;
-
-    def _transport_factory(self, transport: str) -&gt; Tuple[Callable[..., Any], Dict[str, Any]]:
-        &#34;&#34;&#34;
-        Private factory method to produce transport class
-
-        Args:
-            transport: string name of transport class to use
-
-        Returns:
-            Transport: initialized Transport class
-
-        Raises:
-            N/A  # noqa
-
-        &#34;&#34;&#34;
-        transport_class = TRANSPORT_CLASS.get(transport, None)
-        required_transport_args = TRANSPORT_ARGS.get(transport, ())
-
-        if transport_class is None:
-            transport_class, required_transport_args = _find_transport_plugin(transport=transport)
-
-        transport_args = {}
-        for arg in TRANSPORT_BASE_ARGS:
-            transport_args[arg] = self._initialization_args.get(arg)
-        for arg in required_transport_args:
-            transport_args[arg] = self._initialization_args.get(arg)
-        return transport_class, transport_args
-
     def open(self) -&gt; None:
         &#34;&#34;&#34;
         Open Transport (socket/session) and establish channel
@@ -600,11 +115,11 @@ class Scrape:
             N/A
 
         &#34;&#34;&#34;
-        LOG.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+        self.logger.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
         self.transport.open()
         if self.on_open:
             self.on_open(self)
-        LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)
+        self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)
 
     def close(self) -&gt; None:
         &#34;&#34;&#34;
@@ -620,32 +135,11 @@ class Scrape:
             N/A
 
         &#34;&#34;&#34;
-        LOG.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+        self.logger.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
         if self.on_close:
             self.on_close(self)
         self.transport.close()
-        LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)
-
-    def isalive(self) -&gt; bool:
-        &#34;&#34;&#34;
-        Check if underlying socket/channel is alive
-
-        Args:
-            N/A
-
-        Returns:
-            bool: True/False if socket/channel is alive
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        alive = False
-        try:
-            alive = self.transport.isalive()
-        except AttributeError:
-            pass
-        return alive</code></pre>
+        self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
 </details>
 </section>
 <section>
@@ -659,7 +153,7 @@ class Scrape:
 <dl>
 <dt id="scrapli.driver.driver.Scrape"><code class="flex name class">
 <span>class <span class="ident">Scrape</span></span>
-<span>(</span><span>host: str = '', port: int = 22, auth_username: str = '', auth_password: str = '', auth_private_key: str = '', auth_strict_key: bool = True, auth_bypass: bool = False, timeout_socket: int = 5, timeout_transport: int = 10, timeout_ops: int = 30, timeout_exit: bool = True, keepalive: bool = False, keepalive_interval: int = 30, keepalive_type: str = 'network', keepalive_pattern: str = '\x05', comms_prompt_pattern: str = &#x27;^[a-z0-9.\\-@()/:]{1,48}[#&gt;$]\\s*$&#x27;, comms_return_char: str = '\n', comms_ansi: bool = False, ssh_config_file: Union[str, bool] = False, ssh_known_hosts_file: Union[str, bool] = False, on_open: Union[Callable[..., Any], NoneType] = None, on_close: Union[Callable[..., Any], NoneType] = None, transport: str = 'system', transport_options: Union[Dict[str, Any], NoneType] = None)</span>
+<span>(</span><span>**kwargs: Any)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Scrape Object</p>
@@ -671,92 +165,8 @@ itself, but instead are used to construct the Transport and Channel classes that
 relies on, see Transport and Channel docs for details.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>host</code></strong></dt>
-<dd>host ip/name to connect to</dd>
-<dt><strong><code>port</code></strong></dt>
-<dd>port to connect to</dd>
-<dt><strong><code>auth_username</code></strong></dt>
-<dd>username for authentication</dd>
-<dt><strong><code>auth_private_key</code></strong></dt>
-<dd>path to private key for authentication</dd>
-<dt><strong><code>auth_password</code></strong></dt>
-<dd>password for authentication</dd>
-<dt><strong><code>auth_strict_key</code></strong></dt>
-<dd>strict host checking or not &ndash; applicable for system ssh driver only</dd>
-<dt><strong><code>auth_bypass</code></strong></dt>
-<dd>bypass ssh key or password auth for devices without authentication, or that
-have auth prompts after ssh session establishment. Currently only supported on
-system transport; ignored on other transports</dd>
-<dt><strong><code>timeout_socket</code></strong></dt>
-<dd>timeout for establishing socket in seconds</dd>
-<dt><strong><code>timeout_transport</code></strong></dt>
-<dd>timeout for ssh|telnet transport in seconds</dd>
-<dt><strong><code>timeout_ops</code></strong></dt>
-<dd>timeout for ssh channel operations</dd>
-<dt><strong><code>timeout_exit</code></strong></dt>
-<dd>True/False close transport if timeout encountered. If False and keepalives
-are in use, keepalives will prevent program from exiting so you should be sure to
-catch Timeout exceptions and handle them appropriately</dd>
-<dt><strong><code>keepalive</code></strong></dt>
-<dd>whether or not to try to keep session alive</dd>
-<dt><strong><code>keepalive_interval</code></strong></dt>
-<dd>interval to use for session keepalives</dd>
-<dt><strong><code>keepalive_type</code></strong></dt>
-<dd>network|standard &ndash; 'network' sends actual characters over the
-transport channel. This is useful for network-y type devices that may not support
-'standard' keepalive mechanisms. 'standard' attempts to use whatever 'standard'
-keepalive mechanisms are available in the selected transport mechanism. Check the
-transport documentation for details on what is supported and/or how it is
-implemented for any given transport driver</dd>
-<dt><strong><code>keepalive_pattern</code></strong></dt>
-<dd>pattern to send to keep network channel alive. Default is
-u'' which is equivalent to 'ctrl+e'. This pattern moves cursor to end of the
-line which should be an innocuous pattern. This will only be entered <em>if</em> a lock
-can be acquired. This is only applicable if using keepalives and if the keepalive
-type is 'network'</dd>
-<dt><strong><code>comms_prompt_pattern</code></strong></dt>
-<dd>raw string regex pattern &ndash; preferably use <code>^</code> and <code>$</code> anchors!
-this is the single most important attribute here! if this does not match a prompt,
-scrapli will not work!
-IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
-for highly reliably matching for prompts however we do NOT strip trailing whitespace
-for each line, so be sure to add '\s?' or similar if your device needs that. This
-should be mostly sorted for you if using network drivers (i.e. <code>IOSXEDriver</code>).
-Lastly, the case insensitive is just a convenience factor so i can be lazy.</dd>
-<dt><strong><code>comms_return_char</code></strong></dt>
-<dd>character to use to send returns to host</dd>
-<dt><strong><code>comms_ansi</code></strong></dt>
-<dd>True/False strip comms_ansi characters from output</dd>
-<dt><strong><code>ssh_config_file</code></strong></dt>
-<dd>string to path for ssh config file, True to use default ssh config file
-or False to ignore default ssh config file</dd>
-<dt><strong><code>ssh_known_hosts_file</code></strong></dt>
-<dd>string to path for ssh known hosts file, True to use default known
-file locations. Only applicable/needed if <code>auth_strict_key</code> is set to True</dd>
-<dt><strong><code>on_open</code></strong></dt>
-<dd>callable that accepts the class instance as its only argument. this callable,
-if provided, is executed immediately after authentication is completed. Common use
-cases for this callable would be to disable paging or accept any kind of banner
-message that prompts a user upon connection</dd>
-<dt><strong><code>on_close</code></strong></dt>
-<dd>callable that accepts the class instance as its only argument. this callable,
-if provided, is executed immediately prior to closing the underlying transport.
-Common use cases for this callable would be to save configurations prior to exiting,
-or to logout properly to free up vtys or similar.</dd>
-<dt><strong><code>transport</code></strong></dt>
-<dd>system|telnet or a plugin &ndash; type of transport to use for connection
-system uses system available ssh (/usr/bin/ssh)
-ssh2 uses ssh2-python <em>has been migrated to a plugin
-paramiko uses&hellip; paramiko </em>has been migrated to a plugin
-telnet uses telnetlib
-choice of driver depends on the features you need. in general system is easiest as
-it will just 'auto-magically' use your ssh config file ('~/.ssh/config' or
-'/etc/ssh/config_file'). ssh2 is very very fast as it is a thin wrapper around
-libssh2 however it is slightly feature limited. paramiko is slower than ssh2, but
-has more features built in (though scrapli does not expose/support them all).</dd>
-<dt><strong><code>transport_options</code></strong></dt>
-<dd>dictionary of options to pass to selected transport class; see
-docs for given transport class for details of what to pass here</dd>
+<dt><strong><code>kwargs</code></strong></dt>
+<dd>Keyword arguments to pass to <code>ScrapeBase</code> &ndash; see <code>ScrapeBase</code> for available args</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -773,34 +183,8 @@ docs for given transport class for details of what to pass here</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Scrape:
-    def __init__(
-        self,
-        host: str = &#34;&#34;,
-        port: int = 22,
-        auth_username: str = &#34;&#34;,
-        auth_password: str = &#34;&#34;,
-        auth_private_key: str = &#34;&#34;,
-        auth_strict_key: bool = True,
-        auth_bypass: bool = False,
-        timeout_socket: int = 5,
-        timeout_transport: int = 10,
-        timeout_ops: int = 30,
-        timeout_exit: bool = True,
-        keepalive: bool = False,
-        keepalive_interval: int = 30,
-        keepalive_type: str = &#34;network&#34;,
-        keepalive_pattern: str = &#34;\005&#34;,
-        comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,48}[#&gt;$]\s*$&#34;,
-        comms_return_char: str = &#34;\n&#34;,
-        comms_ansi: bool = False,
-        ssh_config_file: Union[str, bool] = False,
-        ssh_known_hosts_file: Union[str, bool] = False,
-        on_open: Optional[Callable[..., Any]] = None,
-        on_close: Optional[Callable[..., Any]] = None,
-        transport: str = &#34;system&#34;,
-        transport_options: Optional[Dict[str, Any]] = None,
-    ):
+<pre><code class="python">class Scrape(ScrapeBase):
+    def __init__(self, **kwargs: Any) -&gt; None:
         &#34;&#34;&#34;
         Scrape Object
 
@@ -813,68 +197,7 @@ docs for given transport class for details of what to pass here</dd>
         relies on, see Transport and Channel docs for details.
 
         Args:
-            host: host ip/name to connect to
-            port: port to connect to
-            auth_username: username for authentication
-            auth_private_key: path to private key for authentication
-            auth_password: password for authentication
-            auth_strict_key: strict host checking or not -- applicable for system ssh driver only
-            auth_bypass: bypass ssh key or password auth for devices without authentication, or that
-                have auth prompts after ssh session establishment. Currently only supported on
-                system transport; ignored on other transports
-            timeout_socket: timeout for establishing socket in seconds
-            timeout_transport: timeout for ssh|telnet transport in seconds
-            timeout_ops: timeout for ssh channel operations
-            timeout_exit: True/False close transport if timeout encountered. If False and keepalives
-                are in use, keepalives will prevent program from exiting so you should be sure to
-                catch Timeout exceptions and handle them appropriately
-            keepalive: whether or not to try to keep session alive
-            keepalive_interval: interval to use for session keepalives
-            keepalive_type: network|standard -- &#39;network&#39; sends actual characters over the
-                transport channel. This is useful for network-y type devices that may not support
-                &#39;standard&#39; keepalive mechanisms. &#39;standard&#39; attempts to use whatever &#39;standard&#39;
-                keepalive mechanisms are available in the selected transport mechanism. Check the
-                transport documentation for details on what is supported and/or how it is
-                implemented for any given transport driver
-            keepalive_pattern: pattern to send to keep network channel alive. Default is
-                u&#39;\005&#39; which is equivalent to &#39;ctrl+e&#39;. This pattern moves cursor to end of the
-                line which should be an innocuous pattern. This will only be entered *if* a lock
-                can be acquired. This is only applicable if using keepalives and if the keepalive
-                type is &#39;network&#39;
-            comms_prompt_pattern: raw string regex pattern -- preferably use `^` and `$` anchors!
-                this is the single most important attribute here! if this does not match a prompt,
-                scrapli will not work!
-                IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
-                for highly reliably matching for prompts however we do NOT strip trailing whitespace
-                for each line, so be sure to add &#39;\\s?&#39; or similar if your device needs that. This
-                should be mostly sorted for you if using network drivers (i.e. `IOSXEDriver`).
-                Lastly, the case insensitive is just a convenience factor so i can be lazy.
-            comms_return_char: character to use to send returns to host
-            comms_ansi: True/False strip comms_ansi characters from output
-            ssh_config_file: string to path for ssh config file, True to use default ssh config file
-                or False to ignore default ssh config file
-            ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
-                file locations. Only applicable/needed if `auth_strict_key` is set to True
-            on_open: callable that accepts the class instance as its only argument. this callable,
-                if provided, is executed immediately after authentication is completed. Common use
-                cases for this callable would be to disable paging or accept any kind of banner
-                message that prompts a user upon connection
-            on_close: callable that accepts the class instance as its only argument. this callable,
-                if provided, is executed immediately prior to closing the underlying transport.
-                Common use cases for this callable would be to save configurations prior to exiting,
-                or to logout properly to free up vtys or similar.
-            transport: system|telnet or a plugin -- type of transport to use for connection
-                system uses system available ssh (/usr/bin/ssh)
-                ssh2 uses ssh2-python *has been migrated to a plugin
-                paramiko uses... paramiko *has been migrated to a plugin
-                telnet uses telnetlib
-                choice of driver depends on the features you need. in general system is easiest as
-                it will just &#39;auto-magically&#39; use your ssh config file (&#39;~/.ssh/config&#39; or
-                &#39;/etc/ssh/config_file&#39;). ssh2 is very very fast as it is a thin wrapper around
-                libssh2 however it is slightly feature limited. paramiko is slower than ssh2, but
-                has more features built in (though scrapli does not expose/support them all).
-            transport_options: dictionary of options to pass to selected transport class; see
-                docs for given transport class for details of what to pass here
+            kwargs: Keyword arguments to pass to `ScrapeBase` -- see `ScrapeBase` for available args
 
         Returns:
             N/A  # noqa: DAR202
@@ -883,60 +206,7 @@ docs for given transport class for details of what to pass here</dd>
             N/A
 
         &#34;&#34;&#34;
-        # create a dict of all &#34;initialization&#34; args for posterity and for passing to Transport
-        # and Channel objects
-        self._initialization_args: Dict[str, Any] = {}
-
-        self._setup_host(host=host, port=port)
-        self._setup_auth(
-            auth_username=auth_username,
-            auth_password=auth_password,
-            auth_private_key=auth_private_key,
-            auth_strict_key=auth_strict_key,
-            auth_bypass=auth_bypass,
-        )
-        self._setup_timeouts(
-            timeout_socket=timeout_socket,
-            timeout_transport=timeout_transport,
-            timeout_ops=timeout_ops,
-            timeout_exit=timeout_exit,
-        )
-        self._setup_keepalive(
-            keepalive=keepalive,
-            keepalive_type=keepalive_type,
-            keepalive_interval=keepalive_interval,
-            keepalive_pattern=keepalive_pattern,
-        )
-        self._setup_comms(
-            comms_prompt_pattern=comms_prompt_pattern,
-            comms_return_char=comms_return_char,
-            comms_ansi=comms_ansi,
-        )
-        self._setup_callables(on_open=on_open, on_close=on_close)
-
-        if transport not in (&#34;system&#34;, &#34;telnet&#34;):
-            LOG.info(f&#34;Non-core transport `{transport}` selected&#34;)
-        self._transport = transport
-
-        if transport != &#34;telnet&#34;:
-            self._setup_ssh_args(
-                ssh_config_file=ssh_config_file, ssh_known_hosts_file=ssh_known_hosts_file
-            )
-
-        self._initialization_args[&#34;transport_options&#34;] = transport_options
-        self.transport_class, self.transport_args = self._transport_factory(transport=transport)
-        # so transport drivers don&#39;t need to support `transport_options` as an argument, if no
-        # transport options provided, do nothing, otherwise add this to the args we ship to the
-        # transport class
-        if transport_options is not None:
-            self.transport_args[&#34;transport_options&#34;] = transport_options
-        self.transport = self.transport_class(**self.transport_args)
-
-        self.channel_args: Dict[str, Any] = {}
-        for arg in CHANNEL_ARGS:
-            if arg == &#34;transport&#34;:
-                continue
-            self.channel_args[arg] = self._initialization_args.get(arg)
+        super().__init__(**kwargs)
         self.channel = Channel(transport=self.transport, **self.channel_args)
 
     def __enter__(self) -&gt; &#34;Scrape&#34;:
@@ -979,319 +249,6 @@ docs for given transport class for details of what to pass here</dd>
         &#34;&#34;&#34;
         self.close()
 
-    def __str__(self) -&gt; str:
-        &#34;&#34;&#34;
-        Magic str method for Scrape
-
-        Args:
-            N/A
-
-        Returns:
-            str: str representation of object
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        return f&#34;Scrape Object for host {self._host}&#34;
-
-    def __repr__(self) -&gt; str:
-        &#34;&#34;&#34;
-        Magic repr method for Scrape
-
-        Args:
-            N/A
-
-        Returns:
-            str: repr for class object
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        return (
-            f&#34;{self.__class__.__name__}(&#34;
-            f&#34;host={self._initialization_args[&#39;host&#39;]!r}, &#34;
-            f&#34;port={self._initialization_args[&#39;port&#39;]!r}, &#34;
-            f&#34;auth_username={self._initialization_args[&#39;auth_username&#39;]!r}, &#34;
-            f&#34;auth_password={self._initialization_args[&#39;auth_password&#39;]!r}, &#34;
-            f&#34;auth_private_key={self._initialization_args[&#39;auth_private_key&#39;]!r}, &#34;
-            f&#34;auth_strict_key={self._initialization_args[&#39;auth_strict_key&#39;]!r}, &#34;
-            f&#34;auth_bypass={self._initialization_args[&#39;auth_bypass&#39;]!r}, &#34;
-            f&#34;timeout_socket={self._initialization_args[&#39;timeout_socket&#39;]!r}, &#34;
-            f&#34;timeout_transport={self._initialization_args[&#39;timeout_transport&#39;]!r}, &#34;
-            f&#34;timeout_ops={self._initialization_args[&#39;timeout_ops&#39;]!r}, &#34;
-            f&#34;timeout_exit={self._initialization_args[&#39;timeout_exit&#39;]!r}, &#34;
-            f&#34;keepalive={self._initialization_args[&#39;keepalive&#39;]!r}, &#34;
-            f&#34;keepalive_interval={self._initialization_args[&#39;keepalive_interval&#39;]!r}, &#34;
-            f&#34;keepalive_type={self._initialization_args[&#39;keepalive_type&#39;]!r}, &#34;
-            f&#34;keepalive_pattern={self._initialization_args[&#39;keepalive_pattern&#39;]!r}, &#34;
-            f&#34;comms_prompt_pattern={self._initialization_args[&#39;comms_prompt_pattern&#39;]!r}, &#34;
-            f&#34;comms_return_char={self._initialization_args[&#39;comms_return_char&#39;]!r}, &#34;
-            f&#34;comms_ansi={self._initialization_args[&#39;comms_ansi&#39;]!r}, &#34;
-            f&#34;ssh_config_file={self._initialization_args.get(&#39;ssh_config_file&#39;)!r}, &#34;
-            f&#34;ssh_known_hosts_file={self._initialization_args.get(&#39;ssh_known_hosts_file&#39;)!r}, &#34;
-            f&#34;on_open={self.on_open!r}, &#34;
-            f&#34;on_close={self.on_close!r}, &#34;
-            f&#34;transport={self._transport!r}, &#34;
-            f&#34;transport_options={self._initialization_args.get(&#39;transport_options&#39;)!r})&#34;
-        )
-
-    def _setup_host(self, host: str, port: int) -&gt; None:
-        &#34;&#34;&#34;
-        Parse and setup host attributes
-
-        Args:
-            host: host to parse/set
-            port: port to parse/set
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            ValueError: if host is not provided
-            TypeError: if port is not an integer
-
-        &#34;&#34;&#34;
-        if not host:
-            raise ValueError(&#34;`host` should be a hostname/ip address, got nothing!&#34;)
-        if not isinstance(port, int):
-            raise TypeError(f&#34;`port` should be int, got {type(port)}&#34;)
-        self._host = host.strip()
-        self._initialization_args[&#34;host&#34;] = host.strip()
-        self._initialization_args[&#34;port&#34;] = port
-
-    def _setup_auth(
-        self,
-        auth_username: str,
-        auth_password: str,
-        auth_private_key: str,
-        auth_strict_key: bool,
-        auth_bypass: bool,
-    ) -&gt; None:
-        &#34;&#34;&#34;
-        Parse and setup auth attributes
-
-        Args:
-            auth_username: username to parse/set
-            auth_password: password to parse/set
-            auth_private_key: public key to parse/set
-            auth_strict_key: strict key to parse/set
-            auth_bypass: bypass to parse/set
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            TypeError: if auth_strict_key is not a bool
-            ValueError: if auth_private_key is not a valid file
-
-        &#34;&#34;&#34;
-        if not isinstance(auth_strict_key, bool):
-            raise TypeError(f&#34;`auth_strict_key` should be bool, got {type(auth_strict_key)}&#34;)
-        if not isinstance(auth_bypass, bool):
-            raise TypeError(f&#34;`auth_bypass` should be bool, got {type(auth_bypass)}&#34;)
-
-        self._initialization_args[&#34;auth_strict_key&#34;] = auth_strict_key
-        self._initialization_args[&#34;auth_bypass&#34;] = auth_bypass
-        self._initialization_args[&#34;auth_username&#34;] = auth_username.strip()
-        self._initialization_args[&#34;auth_password&#34;] = auth_password.strip()
-
-        if auth_private_key:
-            private_key_path = Path.expanduser(Path(auth_private_key.strip()))
-            if not private_key_path.is_file():
-                raise ValueError(f&#34;Provided public key `{auth_private_key}` is not a file&#34;)
-            self._initialization_args[&#34;auth_private_key&#34;] = os.path.expanduser(
-                auth_private_key.strip()
-            )
-        else:
-            self._initialization_args[&#34;auth_private_key&#34;] = auth_private_key
-
-    def _setup_timeouts(
-        self, timeout_socket: int, timeout_transport: int, timeout_ops: int, timeout_exit: bool
-    ) -&gt; None:
-        &#34;&#34;&#34;
-        Parse and setup timeout attributes
-
-        Args:
-            timeout_socket: socket timeout to parse/set
-            timeout_transport: transport timeout to parse/set
-            timeout_ops: ops timeout to parse/set
-            timeout_exit: timeout exit bool to parse/set
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            TypeError: if invalid type args provided
-
-        &#34;&#34;&#34;
-        if not isinstance(timeout_exit, bool):
-            raise TypeError(f&#34;`timeout_exit` should be bool, got {type(timeout_exit)}&#34;)
-
-        self._initialization_args[&#34;timeout_socket&#34;] = int(timeout_socket)
-        self._initialization_args[&#34;timeout_transport&#34;] = int(timeout_transport)
-        self._initialization_args[&#34;timeout_ops&#34;] = int(timeout_ops)
-        self._initialization_args[&#34;timeout_exit&#34;] = timeout_exit
-
-    def _setup_keepalive(
-        self, keepalive: bool, keepalive_type: str, keepalive_interval: int, keepalive_pattern: str
-    ) -&gt; None:
-        &#34;&#34;&#34;
-        Parse and setup keepalive attributes
-
-        Args:
-            keepalive: keepalive to parse/set
-            keepalive_type: keepalive_type to parse/set
-            keepalive_interval: keepalive_interval to parse/set
-            keepalive_pattern: keepalive_pattern to parse/set
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            TypeError: if keepalive is not a bool
-            ValueError: if keepalive_type is not valid
-
-        &#34;&#34;&#34;
-        if not isinstance(keepalive, bool):
-            raise TypeError(f&#34;`keepalive` should be bool, got {type(keepalive)}&#34;)
-        if keepalive_type not in [&#34;network&#34;, &#34;standard&#34;]:
-            raise ValueError(
-                f&#34;`{keepalive_type}` is an invalid keepalive_type; must be &#39;network&#39; or &#39;standard&#39;&#34;
-            )
-        self._initialization_args[&#34;keepalive&#34;] = keepalive
-        self._initialization_args[&#34;keepalive_interval&#34;] = int(keepalive_interval)
-        self._initialization_args[&#34;keepalive_type&#34;] = keepalive_type
-        self._initialization_args[&#34;keepalive_pattern&#34;] = keepalive_pattern
-
-    def _setup_comms(
-        self, comms_prompt_pattern: str, comms_return_char: str, comms_ansi: bool
-    ) -&gt; None:
-        &#34;&#34;&#34;
-        Parse and setup auth attributes
-
-        Args:
-            comms_prompt_pattern: prompt pattern to parse/set
-            comms_return_char: return char to parse/set
-            comms_ansi: ansi val to parse/set
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            TypeError: if invalid type args provided
-
-        &#34;&#34;&#34;
-        # try to compile prompt to raise TypeError before opening any connections
-        re.compile(comms_prompt_pattern, flags=re.M | re.I)
-
-        if not isinstance(comms_return_char, str):
-            raise TypeError(f&#34;`comms_return_char` should be str, got {type(comms_return_char)}&#34;)
-        if not isinstance(comms_ansi, bool):
-            raise TypeError(f&#34;`comms_ansi` should be bool, got {type(comms_ansi)}&#34;)
-
-        self._initialization_args[&#34;comms_prompt_pattern&#34;] = comms_prompt_pattern
-        self._initialization_args[&#34;comms_return_char&#34;] = comms_return_char
-        self._initialization_args[&#34;comms_ansi&#34;] = comms_ansi
-
-    def _setup_callables(
-        self, on_open: Optional[Callable[..., Any]], on_close: Optional[Callable[..., Any]]
-    ) -&gt; None:
-        &#34;&#34;&#34;
-        Parse and setup callables (on_open/on_close)
-
-        Args:
-            on_open: on_open to parse/set
-            on_close: on_close to parse/set
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            TypeError: if port is not an integer
-
-        &#34;&#34;&#34;
-        if on_open is not None and not callable(on_open):
-            raise TypeError(f&#34;`on_open` must be a callable, got {type(on_open)}&#34;)
-        if on_close is not None and not callable(on_close):
-            raise TypeError(f&#34;`on_close` must be a callable, got {type(on_close)}&#34;)
-        self.on_open = on_open
-        self.on_close = on_close
-        self._initialization_args[&#34;on_open&#34;] = on_open
-        self._initialization_args[&#34;on_close&#34;] = on_close
-
-    def _setup_ssh_args(
-        self, ssh_config_file: Union[str, bool], ssh_known_hosts_file: Union[str, bool]
-    ) -&gt; None:
-        &#34;&#34;&#34;
-        Parse and setup ssh related arguments
-
-        Args:
-            ssh_config_file: string to path for ssh config file, True to use default ssh config file
-                or False to ignore default ssh config file
-            ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
-                file locations. Only applicable/needed if `auth_strict_key` is set to True
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            TypeError: if invalid config file or known hosts file value provided
-
-        &#34;&#34;&#34;
-        if not isinstance(ssh_config_file, (str, bool)):
-            raise TypeError(f&#34;`ssh_config_file` must be str or bool, got {type(ssh_config_file)}&#34;)
-        if not isinstance(ssh_known_hosts_file, (str, bool)):
-            raise TypeError(
-                &#34;`ssh_known_hosts_file` must be str or bool, got &#34; f&#34;{type(ssh_known_hosts_file)}&#34;
-            )
-
-        if ssh_config_file is not False:
-            if isinstance(ssh_config_file, bool):
-                cfg = &#34;&#34;
-            else:
-                cfg = ssh_config_file
-            self._initialization_args[&#34;ssh_config_file&#34;] = resolve_ssh_config(cfg)
-        else:
-            self._initialization_args[&#34;ssh_config_file&#34;] = &#34;&#34;
-
-        if ssh_known_hosts_file is not False:
-            if isinstance(ssh_known_hosts_file, bool):
-                known_hosts = &#34;&#34;
-            else:
-                known_hosts = ssh_known_hosts_file
-            self._initialization_args[&#34;ssh_known_hosts_file&#34;] = resolve_ssh_known_hosts(known_hosts)
-        else:
-            self._initialization_args[&#34;ssh_known_hosts_file&#34;] = &#34;&#34;
-
-    def _transport_factory(self, transport: str) -&gt; Tuple[Callable[..., Any], Dict[str, Any]]:
-        &#34;&#34;&#34;
-        Private factory method to produce transport class
-
-        Args:
-            transport: string name of transport class to use
-
-        Returns:
-            Transport: initialized Transport class
-
-        Raises:
-            N/A  # noqa
-
-        &#34;&#34;&#34;
-        transport_class = TRANSPORT_CLASS.get(transport, None)
-        required_transport_args = TRANSPORT_ARGS.get(transport, ())
-
-        if transport_class is None:
-            transport_class, required_transport_args = _find_transport_plugin(transport=transport)
-
-        transport_args = {}
-        for arg in TRANSPORT_BASE_ARGS:
-            transport_args[arg] = self._initialization_args.get(arg)
-        for arg in required_transport_args:
-            transport_args[arg] = self._initialization_args.get(arg)
-        return transport_class, transport_args
-
     def open(self) -&gt; None:
         &#34;&#34;&#34;
         Open Transport (socket/session) and establish channel
@@ -1308,11 +265,11 @@ docs for given transport class for details of what to pass here</dd>
             N/A
 
         &#34;&#34;&#34;
-        LOG.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+        self.logger.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
         self.transport.open()
         if self.on_open:
             self.on_open(self)
-        LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)
+        self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)
 
     def close(self) -&gt; None:
         &#34;&#34;&#34;
@@ -1328,33 +285,16 @@ docs for given transport class for details of what to pass here</dd>
             N/A
 
         &#34;&#34;&#34;
-        LOG.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+        self.logger.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
         if self.on_close:
             self.on_close(self)
         self.transport.close()
-        LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)
-
-    def isalive(self) -&gt; bool:
-        &#34;&#34;&#34;
-        Check if underlying socket/channel is alive
-
-        Args:
-            N/A
-
-        Returns:
-            bool: True/False if socket/channel is alive
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        alive = False
-        try:
-            alive = self.transport.isalive()
-        except AttributeError:
-            pass
-        return alive</code></pre>
+        self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scrapli.driver.base_driver.ScrapeBase" href="base_driver.html#scrapli.driver.base_driver.ScrapeBase">ScrapeBase</a></li>
+</ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="scrapli.driver.generic_driver.GenericDriver" href="generic_driver.html#scrapli.driver.generic_driver.GenericDriver">GenericDriver</a></li>
@@ -1397,54 +337,11 @@ docs for given transport class for details of what to pass here</dd>
         N/A
 
     &#34;&#34;&#34;
-    LOG.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+    self.logger.info(f&#34;Closing connection to {self._initialization_args[&#39;host&#39;]}&#34;)
     if self.on_close:
         self.on_close(self)
     self.transport.close()
-    LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
-</details>
-</dd>
-<dt id="scrapli.driver.driver.Scrape.isalive"><code class="name flex">
-<span>def <span class="ident">isalive</span></span>(<span>self) -> bool</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Check if underlying socket/channel is alive</p>
-<h2 id="args">Args</h2>
-<p>N/A</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>bool</code></dt>
-<dd>True/False if socket/channel is alive</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N/A</code></dt>
-<dd>&nbsp;</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def isalive(self) -&gt; bool:
-    &#34;&#34;&#34;
-    Check if underlying socket/channel is alive
-
-    Args:
-        N/A
-
-    Returns:
-        bool: True/False if socket/channel is alive
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    alive = False
-    try:
-        alive = self.transport.isalive()
-    except AttributeError:
-        pass
-    return alive</code></pre>
+    self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
 </details>
 </dd>
 <dt id="scrapli.driver.driver.Scrape.open"><code class="name flex">
@@ -1486,14 +383,22 @@ docs for given transport class for details of what to pass here</dd>
         N/A
 
     &#34;&#34;&#34;
-    LOG.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+    self.logger.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
     self.transport.open()
     if self.on_open:
         self.on_open(self)
-    LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)</code></pre>
+    self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)</code></pre>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="scrapli.driver.base_driver.ScrapeBase" href="base_driver.html#scrapli.driver.base_driver.ScrapeBase">ScrapeBase</a></b></code>:
+<ul class="hlist">
+<li><code><a title="scrapli.driver.base_driver.ScrapeBase.isalive" href="base_driver.html#scrapli.driver.base_driver.ScrapeBase.isalive">isalive</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 </dl>
 </section>
@@ -1515,7 +420,6 @@ docs for given transport class for details of what to pass here</dd>
 <h4><code><a title="scrapli.driver.driver.Scrape" href="#scrapli.driver.driver.Scrape">Scrape</a></code></h4>
 <ul class="">
 <li><code><a title="scrapli.driver.driver.Scrape.close" href="#scrapli.driver.driver.Scrape.close">close</a></code></li>
-<li><code><a title="scrapli.driver.driver.Scrape.isalive" href="#scrapli.driver.driver.Scrape.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.driver.driver.Scrape.open" href="#scrapli.driver.driver.Scrape.open">open</a></code></li>
 </ul>
 </li>

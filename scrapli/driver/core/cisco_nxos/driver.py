@@ -1,8 +1,10 @@
 """scrapli.driver.core.cisco_nxos.driver"""
-from typing import Any, Callable, Dict, Optional
+from copy import deepcopy
+from typing import Any, Callable, Dict, List, Optional
 
 from scrapli.driver import NetworkDriver
-from scrapli.driver.network_driver import PrivilegeLevel
+from scrapli.driver.base_network_driver import PrivilegeLevel
+from scrapli.driver.core.cisco_nxos.base_driver import PRIVS, NXOSDriverBase
 
 
 def nxos_on_open(conn: NetworkDriver) -> None:
@@ -18,9 +20,8 @@ def nxos_on_open(conn: NetworkDriver) -> None:
     Raises:
         N/A
     """
-    conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
-    conn.channel.send_input(channel_input="terminal length 0")
-    conn.channel.send_input(channel_input="terminal width 511")
+    conn.send_command(command="terminal length 0")
+    conn.send_command(command="terminal width 511")
 
 
 def nxos_on_close(conn: NetworkDriver) -> None:
@@ -43,40 +44,17 @@ def nxos_on_close(conn: NetworkDriver) -> None:
     conn.transport.write(channel_input=conn.channel.comms_return_char)
 
 
-PRIVS = {
-    "exec": (PrivilegeLevel(r"^[a-z0-9.\-@()/:]{1,32}>\s?$", "exec", "", "", "", False, "",)),
-    "privilege_exec": (
-        PrivilegeLevel(
-            r"^[a-z0-9.\-@/:]{1,32}#\s?$",
-            "privilege_exec",
-            "exec",
-            "disable",
-            "enable",
-            True,
-            "Password:",
-        )
-    ),
-    "configuration": (
-        PrivilegeLevel(
-            r"^[a-z0-9.\-@/:]{1,32}\(config(?!\-s)[a-z0-9.\-@/:]{0,32}\)#\s?$",
-            "configuration",
-            "privilege_exec",
-            "end",
-            "configure terminal",
-            False,
-            "",
-        )
-    ),
-}
-
-
-class NXOSDriver(NetworkDriver):
+class NXOSDriver(NetworkDriver, NXOSDriverBase):
     def __init__(
         self,
         privilege_levels: Optional[Dict[str, PrivilegeLevel]] = None,
+        default_desired_privilege_level: str = "privilege_exec",
+        auth_secondary: str = "",
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
-        auth_secondary: str = "",
+        textfsm_platform: str = "cisco_nxos",
+        genie_platform: str = "nxos",
+        failed_when_contains: Optional[List[str]] = None,
         transport: str = "system",
         **kwargs: Dict[str, Any],
     ):
@@ -86,6 +64,11 @@ class NXOSDriver(NetworkDriver):
         Args:
             privilege_levels: optional user provided privilege levels, if left None will default to
                 scrapli standard privilege levels
+            default_desired_privilege_level: string of name of default desired priv, this is the
+                priv level that is generally used to disable paging/set terminal width and things
+                like that upon first login, and is also the priv level scrapli will try to acquire
+                for normal "command" operations (`send_command`, `send_commands`)
+            auth_secondary: password to use for secondary authentication (enable)
             on_open: callable that accepts the class instance as its only argument. this callable,
                 if provided, is executed immediately after authentication is completed. Common use
                 cases for this callable would be to disable paging or accept any kind of banner
@@ -94,7 +77,9 @@ class NXOSDriver(NetworkDriver):
                 if provided, is executed immediately prior to closing the underlying transport.
                 Common use cases for this callable would be to save configurations prior to exiting,
                 or to logout properly to free up vtys or similar.
-            auth_secondary: password to use for secondary authentication (enable)
+            textfsm_platform: string name of textfsm parser platform
+            genie_platform: string name of cisco genie parser platform
+            failed_when_contains: List of strings that indicate a command/config has failed
             transport: system|telnet or a plugin -- type of transport to use for connection
                 system uses system available ssh (/usr/bin/ssh)
                 ssh2 uses ssh2-python *has been migrated to a plugin
@@ -115,7 +100,7 @@ class NXOSDriver(NetworkDriver):
             N/A
         """
         if privilege_levels is None:
-            privilege_levels = PRIVS
+            privilege_levels = deepcopy(PRIVS)
 
         if on_open is None:
             on_open = nxos_on_open
@@ -126,20 +111,21 @@ class NXOSDriver(NetworkDriver):
         if transport == "telnet":
             _telnet = True
 
-        failed_when_contains = [
-            "% Ambiguous command",
-            "% Incomplete command",
-            "% Invalid input detected",
-            "% Invalid command at",
-        ]
+        if failed_when_contains is None:
+            failed_when_contains = [
+                "% Ambiguous command",
+                "% Incomplete command",
+                "% Invalid input detected",
+                "% Invalid command at",
+            ]
 
         super().__init__(
             privilege_levels=privilege_levels,
-            default_desired_privilege_level="privilege_exec",
+            default_desired_privilege_level=default_desired_privilege_level,
             auth_secondary=auth_secondary,
             failed_when_contains=failed_when_contains,
-            textfsm_platform="cisco_nxos",
-            genie_platform="nxos",
+            textfsm_platform=textfsm_platform,
+            genie_platform=genie_platform,
             on_open=on_open,
             on_close=on_close,
             transport=transport,
@@ -151,7 +137,7 @@ class NXOSDriver(NetworkDriver):
 
     def _abort_config(self) -> None:
         """
-        Abort EOS configuration session (if using a config session!)
+        Abort NXOS configuration session (if using a config session!)
 
         Args:
             N/A
@@ -169,22 +155,18 @@ class NXOSDriver(NetworkDriver):
             self._current_priv_level = self.privilege_levels["privilege_exec"]
 
     def register_configuration_session(self, session_name: str) -> None:
-        if session_name in self.privilege_levels.keys():
-            msg = (
-                f"session name `{session_name}` already registered as a privilege level, chose a "
-                "unique session name"
-            )
-            raise ValueError(msg)
-        pattern = r"^[a-z0-9.\-@/:]{1,32}\(config\-s[a-z0-9.\-@/:]{0,32}\)#\s?$"
-        name = session_name
-        config_session = PrivilegeLevel(
-            pattern=pattern,
-            name=name,
-            previous_priv="privilege_exec",
-            deescalate="end",
-            escalate=f"configure session {session_name}",
-            escalate_auth=False,
-            escalate_prompt="",
-        )
-        self.privilege_levels[name] = config_session
+        """
+        NXOS specific implementation of register_configuration_session
+
+        Args:
+            session_name: name of session to register
+
+        Returns:
+            N/A:  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+        self._create_configuration_session(session_name=session_name)
         self.update_privilege_levels(update_channel=True)
