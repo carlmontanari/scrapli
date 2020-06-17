@@ -324,6 +324,59 @@ class SystemSSHTransport(Transport):
         if self.keepalive:
             self._session_keepalive()
 
+    def _ssh_message_handler(self, output: bytes) -> None:  # noqa: C901
+        """
+        Parse EOF messages from _pty_authenticate and create log/stack exception message
+
+        Args:
+            output: bytes output from _pty_authenticate
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            ScrapliAuthenticationFailed: if any errors are read in the output
+
+        """
+        msg = ""
+        if b"host key verification failed" in output.lower():
+            msg = f"Host key verification failed for host {self.host}"
+        elif b"operation timed out" in output.lower() or b"connection timed out" in output.lower():
+            msg = f"Timed out connecting to host {self.host}"
+        elif b"no route to host" in output.lower():
+            msg = f"No route to host {self.host}"
+        elif b"no matching key exchange found" in output.lower():
+            msg = f"No matching key exchange found for host {self.host}"
+            key_exchange_pattern = re.compile(
+                pattern=rb"their offer: ([a-z0-9\-,]*)", flags=re.M | re.I
+            )
+            offered_key_exchanges_match = re.search(pattern=key_exchange_pattern, string=output)
+            if offered_key_exchanges_match:
+                offered_key_exchanges = offered_key_exchanges_match.group(1).decode()
+                msg = (
+                    f"No matching key exchange found for host {self.host}, their offer: "
+                    f"{offered_key_exchanges}"
+                )
+        elif b"no matching cipher found" in output.lower():
+            msg = f"No matching cipher found for host {self.host}"
+            ciphers_pattern = re.compile(pattern=rb"their offer: ([a-z0-9\-,]*)", flags=re.M | re.I)
+            offered_ciphers_match = re.search(pattern=ciphers_pattern, string=output)
+            if offered_ciphers_match:
+                offered_ciphers = offered_ciphers_match.group(1).decode()
+                msg = (
+                    f"No matching cipher found for host {self.host}, their offer: {offered_ciphers}"
+                )
+        elif b"WARNING: UNPROTECTED PRIVATE KEY FILE!" in output:
+            msg = (
+                f"Permissions for private key `{self.auth_private_key}` are too open, "
+                "authentication failed!"
+            )
+        elif b"could not resolve hostname" in output.lower():
+            msg = f"Could not resolve address for host `{self.host}`"
+        if msg:
+            self.logger.critical(msg)
+            raise ScrapliAuthenticationFailed(msg)
+
     def _open_pipes(self) -> bool:
         """
         Private method to open session with subprocess.Popen
@@ -395,59 +448,6 @@ class SystemSSHTransport(Transport):
         self.open_cmd = open_cmd
         self.session_lock.release()
         return True
-
-    def _ssh_message_handler(self, output: bytes) -> None:  # noqa: C901
-        """
-        Parse EOF messages from _pty_authenticate and create log/stack exception message
-
-        Args:
-            output: bytes output from _pty_authenticate
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            ScrapliAuthenticationFailed: if any errors are read in the output
-
-        """
-        msg = ""
-        if b"host key verification failed" in output.lower():
-            msg = f"Host key verification failed for host {self.host}"
-        elif b"operation timed out" in output.lower() or b"connection timed out" in output.lower():
-            msg = f"Timed out connecting to host {self.host}"
-        elif b"no route to host" in output.lower():
-            msg = f"No route to host {self.host}"
-        elif b"no matching key exchange found" in output.lower():
-            msg = f"No matching key exchange found for host {self.host}"
-            key_exchange_pattern = re.compile(
-                pattern=rb"their offer: ([a-z0-9\-,]*)", flags=re.M | re.I
-            )
-            offered_key_exchanges_match = re.search(pattern=key_exchange_pattern, string=output)
-            if offered_key_exchanges_match:
-                offered_key_exchanges = offered_key_exchanges_match.group(1).decode()
-                msg = (
-                    f"No matching key exchange found for host {self.host}, their offer: "
-                    f"{offered_key_exchanges}"
-                )
-        elif b"no matching cipher found" in output.lower():
-            msg = f"No matching cipher found for host {self.host}"
-            ciphers_pattern = re.compile(pattern=rb"their offer: ([a-z0-9\-,]*)", flags=re.M | re.I)
-            offered_ciphers_match = re.search(pattern=ciphers_pattern, string=output)
-            if offered_ciphers_match:
-                offered_ciphers = offered_ciphers_match.group(1).decode()
-                msg = (
-                    f"No matching cipher found for host {self.host}, their offer: {offered_ciphers}"
-                )
-        elif b"WARNING: UNPROTECTED PRIVATE KEY FILE!" in output:
-            msg = (
-                f"Permissions for private key `{self.auth_private_key}` are too open, "
-                "authentication failed!"
-            )
-        elif b"could not resolve hostname" in output.lower():
-            msg = f"Could not resolve address for host `{self.host}`"
-        if msg:
-            self.logger.critical(msg)
-            raise ScrapliAuthenticationFailed(msg)
 
     @operation_timeout("_timeout_ops", "Timed out determining if session is authenticated")
     def _pipes_isauthenticated(self, pipes_session: "PopenBytes") -> bool:
@@ -541,6 +541,7 @@ class SystemSSHTransport(Transport):
                     "`auth_strict_key`?"
                 )
                 self.logger.critical(msg)
+                self.session_lock.release()
                 raise ScrapliAuthenticationFailed(msg)
             if self._comms_ansi:
                 output = strip_ansi(output)

@@ -9,3 +9,11 @@ def test_transport_bool(sync_cisco_iosxe_conn):
     assert bool(sync_cisco_iosxe_conn.transport) is True
     sync_cisco_iosxe_conn.close()
     assert bool(sync_cisco_iosxe_conn.transport) is False
+
+
+def test_transport_encrypted_private_key(sync_cisco_iosxe_conn):
+    assert 0
+    sync_cisco_iosxe_conn.open()
+    assert bool(sync_cisco_iosxe_conn.transport) is True
+    sync_cisco_iosxe_conn.close()
+    assert bool(sync_cisco_iosxe_conn.transport) is False

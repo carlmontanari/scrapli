@@ -2,7 +2,7 @@ import sys
 
 from napalm import get_network_driver
 
-from test_data.devices import DEVICES
+from .test_data.devices import DEVICES
 
 NAPALM_DEVICE_TYPE_MAP = {
     "cisco_iosxe": "ios",

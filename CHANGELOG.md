@@ -2,7 +2,7 @@ CHANGELOG
 =======
 
 # 2020.XX.XX
--
+- Updated IOSXE base config to include netconf setup for consistency w/ scrapli_netconf
 
 # 2020.06.06
 - Converted all priv levels to be kwargs instead of just args for setup -- simple thing but makes it more readable IMO.

@@ -27,6 +27,7 @@ Feel free to join the very awesome networktocode slack workspace [here](https://
   - [More Examples](#more-examples)
   - [Documentation](#documentation)
   - [Wiki](#wiki)
+  - [Other Stuff](#other-stuff)
 - [scrapli: What is it](#scrapli-what-is-it)
 - [Supported Platforms](#supported-platforms)
 - [Advanced Installation](#advanced-installation)
@@ -160,6 +161,14 @@ make docs
 
 Extra, generally platform/transport-specific, examples/documentation/information will be stored in the Wiki associated
  with this repository. You can find it [here](https://github.com/carlmontanari/scrapli/wiki).
+
+
+## Other Stuff
+
+Other scrapli related docs/blogs/videos/info:
+
+- [Scrapli on Dmitry Figol's Network Automation Channel](https://www.youtube.com/watch?v=OJa2typq7yI)
+- [Scrapli Intro on Wim Wauter's blog](https://blog.wimwauters.com/networkprogrammability/2020-04-09_scrapli_introduction/)
 
 
 # scrapli: What is it
@@ -1038,7 +1047,7 @@ Without the `send_command` and similar methods, you must directly access the `Ch
 Using the `Scrape` driver directly is nice enough, however you may not want to have to change the prompt pattern, or
  deal with accessing the channel to send commands to the device. In this case there is a `GenericDriver` available to
   you. This driver has a *very* broad pattern that it matches for base prompts, has no concept of disabling paging or
-   privilege levels (like `Scrape`), but does provide `send_command`, `send_commands`, `send_interact`, and
+   privilege levels (like `Scrape`), but does provide `send_command`, `send_commands`, `send_interactive`, and
     `get_prompt` methods for a more NetworkDriver-like experience. 
 
 Hopefully this `GenericDriver` can be used as a starting point for devices that don't fall under the core supported

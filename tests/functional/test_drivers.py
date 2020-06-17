@@ -481,9 +481,9 @@ def test_context_manager(device_type, transport):
 
     device["port"] = port
     device["transport"] = transport
-    device["timeout_socket"] = 2
-    device["timeout_transport"] = 2
-    device["timeout_ops"] = 2
+    device["timeout_socket"] = 5
+    device["timeout_transport"] = 5
+    device["timeout_ops"] = 5
 
     with driver(**device) as conn:
         assert conn.isalive() is True
@@ -503,9 +503,9 @@ def test_public_key_auth(device_type, transport):
     device.pop("async_driver")
 
     device["transport"] = transport
-    device["timeout_socket"] = 2
-    device["timeout_transport"] = 2
-    device["timeout_ops"] = 2
+    device["timeout_socket"] = 5
+    device["timeout_transport"] = 5
+    device["timeout_ops"] = 5
     device["auth_private_key"] = PRIVATE_KEY
 
     with driver(**device) as conn:
