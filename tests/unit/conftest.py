@@ -10,7 +10,7 @@ import scrapli
 from scrapli.driver import AsyncGenericDriver, GenericDriver
 from scrapli.driver.core import AsyncIOSXEDriver, IOSXEDriver
 
-from ..test_data.devices import DEVICES, PRIVATE_KEY
+from ..test_data.devices import DEVICES, ENCRYPTED_PRIVATE_KEY, PRIVATE_KEY
 from .mock_cisco_iosxe_server import IOSXEServer
 
 TEST_DATA_DIR = f"{Path(scrapli.__file__).parents[1]}/tests/test_data"
@@ -83,6 +83,18 @@ def sync_cisco_iosxe_conn(sync_conn_auth_type):
     if sync_conn_auth_type == "key":
         device.pop("auth_password")
         device["auth_private_key"] = PRIVATE_KEY
+    driver = SYNC_DRIVERS["cisco_iosxe"]
+    conn = driver(**device)
+    yield conn
+    if conn.isalive():
+        conn.close()
+
+
+@pytest.fixture(scope="function")
+def sync_cisco_iosxe_conn_encrypted_key():
+    device = DEVICES["mock_cisco_iosxe"].copy()
+    device.pop("auth_password")
+    device["auth_private_key"] = ENCRYPTED_PRIVATE_KEY
     driver = SYNC_DRIVERS["cisco_iosxe"]
     conn = driver(**device)
     yield conn

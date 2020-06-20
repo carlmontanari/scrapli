@@ -5,7 +5,7 @@ import pytest
 
 from scrapli.decorators import operation_timeout, requires_open_session
 from scrapli.driver.base_driver import ScrapeBase
-from scrapli.exceptions import ConnectionNotOpened
+from scrapli.exceptions import ConnectionNotOpened, ScrapliTimeout
 
 
 class SlowClass(ScrapeBase):
@@ -40,7 +40,7 @@ class SlowClass(ScrapeBase):
 
 def test_operation_timeout_timeout():
     slow = SlowClass()
-    with pytest.raises(TimeoutError):
+    with pytest.raises(ScrapliTimeout):
         slow.slow_function()
 
 

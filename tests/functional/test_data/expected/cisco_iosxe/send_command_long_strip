@@ -230,6 +230,7 @@ line vty 5 15
  login local
  transport input all
 !
+netconf ssh
 !
 !
 !

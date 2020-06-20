@@ -1,24 +1,19 @@
 """scrapli.transport.systemssh"""
-import os
 import re
 from select import select
-from subprocess import PIPE, Popen
-from typing import TYPE_CHECKING, Any, Dict, Optional, Union
+from typing import Any, Dict, Optional
 
 from scrapli.decorators import operation_timeout, requires_open_session
-from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliTimeout
+from scrapli.exceptions import ScrapliAuthenticationFailed
 from scrapli.helper import get_prompt_pattern, strip_ansi
 from scrapli.ssh_config import SSHConfig
 from scrapli.transport.ptyprocess import PtyProcess
 from scrapli.transport.transport import Transport
 
-if TYPE_CHECKING:
-    PopenBytes = Popen[bytes]  # pylint: disable=E1136; # pragma:  no cover
-
-
 SYSTEM_SSH_TRANSPORT_ARGS = (
     "auth_username",
     "auth_private_key",
+    "auth_private_key_passphrase",
     "auth_password",
     "auth_strict_key",
     "auth_bypass",
@@ -38,6 +33,7 @@ class SystemSSHTransport(Transport):
         port: int = 22,
         auth_username: str = "",
         auth_private_key: str = "",
+        auth_private_key_passphrase: str = "",
         auth_password: str = "",
         auth_strict_key: bool = True,
         auth_bypass: bool = False,
@@ -65,12 +61,6 @@ class SystemSSHTransport(Transport):
         If using this driver, and passing a ssh_config_file (or setting this argument to `True`),
         all settings in the ssh config file will be superseded by any arguments passed here!
 
-        SystemSSHTransport *always* prefers public key auth if given the option! If auth_private_key
-        is set in the provided arguments OR if ssh_config_file is passed/True and there is a key for
-        ANY match (i.e. `*` has a key in ssh config file!!), we will use that key! If public key
-        auth fails and a username and password is set (manually or by ssh config file), password
-        auth will be attempted.
-
         Note that comms_prompt_pattern, comms_return_char and comms_ansi are only passed here to
         handle "in channel" authentication required by SystemSSH -- these are assigned to private
         attributes in this class and ignored after authentication. If you wish to modify these
@@ -84,6 +74,7 @@ class SystemSSHTransport(Transport):
             port: port to connect to
             auth_username: username for authentication
             auth_private_key: path to private key for authentication
+            auth_private_key_passphrase: passphrase for decrypting ssh key if necessary
             auth_password: password for authentication
             auth_strict_key: True/False to enforce strict key checking (default is True)
             auth_bypass: bypass ssh key or password auth for devices without authentication, or that
@@ -166,6 +157,7 @@ class SystemSSHTransport(Transport):
 
         self.auth_username: str = auth_username
         self.auth_private_key: str = auth_private_key
+        self.auth_private_key_passphrase: str = auth_private_key_passphrase
         self.auth_password: str = auth_password
         self.auth_strict_key: bool = auth_strict_key
         self.auth_bypass: bool = auth_bypass
@@ -177,7 +169,7 @@ class SystemSSHTransport(Transport):
         self._process_ssh_config(ssh_config_file)
         self.ssh_known_hosts_file: str = ssh_known_hosts_file
 
-        self.session: Union[Popen[bytes], PtyProcess]  # pylint: disable=E1136
+        self.session: PtyProcess
         self.lib_auth_exception = ScrapliAuthenticationFailed
         self._isauthenticated = False
 
@@ -187,18 +179,12 @@ class SystemSSHTransport(Transport):
         self.open_cmd = ["ssh", self.host]
         self._build_open_cmd()
 
-        # create stdin/stdout fd in case we can use pipes for session
-        self._stdin_fd = -1
-        self._stdout_fd = -1
-
     def _process_ssh_config(self, ssh_config_file: str) -> None:
         """
         Method to parse ssh config file
 
         Ensure ssh_config_file is valid (if providing a string path to config file), or resolve
-        config file if passed True. Search config file for any private key, if ANY matching key is
-        found and user has not provided a private key, set `auth_private_key` to the value of the
-        found key. This is because we prefer to use `open_pipes` over `open_pty`!
+        config file if passed True.
 
         Args:
             ssh_config_file: string path to ssh config file; passed down from `Scrape`, or the
@@ -213,9 +199,6 @@ class SystemSSHTransport(Transport):
         """
         ssh = SSHConfig(ssh_config_file=ssh_config_file)
         self.ssh_config_file = ssh.ssh_config_file
-        host_config = ssh.lookup(host=self.host)
-        if not self.auth_private_key and host_config.identity_file:
-            self.auth_private_key = os.path.expanduser(host_config.identity_file.strip())
 
     def _build_open_cmd(self) -> None:
         """
@@ -259,16 +242,6 @@ class SystemSSHTransport(Transport):
         """
         Parent method to open session, authenticate and acquire shell
 
-        If possible it is preferable to use the `_open_pipes` method, but we can only do this IF we
-        can authenticate with public key authorization (because we don't have to spawn a PTY; if no
-        public key we have to spawn PTY to deal w/ authentication prompts). IF we get a private key
-        provided, use pipes method, otherwise we will just deal with `_open_pty`. `_open_pty` is
-        less preferable because we have to spawn a PTY and cannot as easily tell if SSH
-        authentication is successful. With `_open_pipes` we can read stderr which contains the
-        output from the verbose flag for SSH -- this contains a message that indicates success of
-        SSH auth. In the case of `_open_pty` we have to read from the channel directly like in the
-        case of telnet... so it works, but its just a bit less desirable.
-
         Args:
             N/A
 
@@ -276,125 +249,20 @@ class SystemSSHTransport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            ScrapliAuthenticationFailed: if all authentication means fail
+            N/A
 
         """
-        self.session_lock.acquire()
-
         self.logger.info(f"Attempting to authenticate to {self.host}")
 
-        # if auth_bypass kick off keepalive thread if necessary and return
         if self.auth_bypass:
             self.logger.info("`auth_bypass` is True, bypassing authentication")
-            self._open_pty(skip_auth=True)
-            self._session_keepalive()
-            return
 
-        # if authenticating with private key prefer to use open pipes
-        # _open_pipes uses subprocess Popen which is preferable to opening a pty
-        # if _open_pipes fails and no password available, raise failure, otherwise try password auth
-        if self.auth_private_key:
-            open_pipes_result = self._open_pipes()
-            if open_pipes_result:
-                if self.keepalive:
-                    self._session_keepalive()
-                return
-            if not self.auth_password or not self.auth_username:
-                msg = (
-                    f"Failed to authenticate to host {self.host} with private key "
-                    f"`{self.auth_private_key}`. Unable to continue authentication, "
-                    "missing username, password, or both."
-                )
-                self.logger.critical(msg)
-                raise ScrapliAuthenticationFailed(msg)
-            msg = (
-                f"Failed to authenticate to host {self.host} with private key "
-                f"`{self.auth_private_key}`. Attempting to continue with password authentication."
-            )
-            self.logger.critical(msg)
-
-        # If public key auth fails or is not configured, open a pty session
-        if not self._open_pty():
-            msg = f"Authentication to host {self.host} failed"
-            self.logger.critical(msg)
-            raise ScrapliAuthenticationFailed(msg)
+        self._open_pty()
 
         self.logger.info(f"Successfully authenticated to {self.host}")
 
         if self.keepalive:
             self._session_keepalive()
-
-    def _open_pipes(self) -> bool:
-        """
-        Private method to open session with subprocess.Popen
-
-        Args:
-            N/A
-
-        Returns:
-            bool: True/False session was opened and authenticated
-
-        Raises:
-            N/A
-
-        """
-        # import here so that we dont blow up when running on windows (windows users need to use
-        #  ssh2 or paramiko transport)
-        import pty  # pylint: disable=C0415
-
-        # copy the open_cmd as we don't want to update the objects open_cmd until we know we can
-        # authenticate. add verbose output and disable batch mode (disables passphrase/password
-        # queries). If auth is successful update the object open_cmd to represent what was used
-        open_cmd = self.open_cmd.copy()
-        open_cmd.append("-v")
-        open_cmd.extend(["-o", "BatchMode=yes"])
-
-        self.logger.info(f"Attempting to open session with the following command: {open_cmd}")
-
-        stdout_master_pty, stdout_slave_pty = pty.openpty()
-        stdin_master_pty, stdin_slave_pty = pty.openpty()
-
-        self.session = Popen(
-            open_cmd,
-            bufsize=0,
-            shell=False,
-            stdin=stdin_slave_pty,
-            stdout=stdout_slave_pty,
-            stderr=PIPE,
-        )
-        # close the slave fds, don't need them anymore
-        os.close(stdin_slave_pty)
-        os.close(stdout_slave_pty)
-        self.logger.debug(f"Session to host {self.host} spawned")
-
-        try:
-            self._pipes_isauthenticated(self.session)
-            if self._isauthenticated is False:
-                return False
-        except TimeoutError:
-            # If auth fails, kill the popen session, also need to manually close the stderr pipe
-            # for some reason... unclear why, but w/out this it will hang open
-            if self.session.stderr is not None:
-                stderr_fd = self.session.stderr.fileno()
-                os.close(stderr_fd)
-            self.session.kill()
-
-            # close the ptys we forked
-            os.close(stdin_master_pty)
-            os.close(stdout_master_pty)
-            # it seems that killing the process/fds somehow unlocks the thread? very unsure how/why
-            self.session_lock.acquire()
-            return False
-
-        self.logger.debug(f"Authenticated to host {self.host} with public key")
-
-        # set stdin/stdout to the new master pty fds
-        self._stdin_fd = stdin_master_pty
-        self._stdout_fd = stdout_master_pty
-
-        self.open_cmd = open_cmd
-        self.session_lock.release()
-        return True
 
     def _ssh_message_handler(self, output: bytes) -> None:  # noqa: C901
         """
@@ -449,73 +317,45 @@ class SystemSSHTransport(Transport):
             self.logger.critical(msg)
             raise ScrapliAuthenticationFailed(msg)
 
-    @operation_timeout("_timeout_ops", "Timed out determining if session is authenticated")
-    def _pipes_isauthenticated(self, pipes_session: "PopenBytes") -> bool:
-        """
-        Private method to check initial authentication when using subprocess.Popen
-
-        Since we always run ssh with `-v` we can simply check the stderr (where verbose output goes)
-        to see if `Authenticated to [our host]` is in the output.
-
-        Args:
-            pipes_session: Popen pipes session object
-
-        Returns:
-            bool: True/False session was authenticated
-
-        Raises:
-            ScrapliTimeout: if we cant read from stderr of the session
-
-        """
-        if pipes_session.stderr is None:
-            raise ScrapliTimeout(f"Could not read stderr while connecting to host {self.host}")
-
-        output = b""
-        while True:
-            output += pipes_session.stderr.read(65535)
-            if f"authenticated to {self.host}".encode() in output.lower():
-                self._isauthenticated = True
-                return True
-            if (
-                b"next authentication method: keyboard-interactive" in output.lower()
-                or b"next authentication method: password" in output.lower()
-            ):
-                return False
-            self._ssh_message_handler(output=output)
-
-    def _open_pty(self, skip_auth: bool = False) -> bool:
+    def _open_pty(self) -> bool:
         """
         Private method to open session with PtyProcess
 
         Args:
-            skip_auth: skip auth in the case of auth_bypass mode
+            N/A
 
         Returns:
             bool: True/False session was opened and authenticated
 
         Raises:
-            N/A
+            ScrapliAuthenticationFailed: if all authentication means fail
 
         """
         self.logger.info(f"Attempting to open session with the following command: {self.open_cmd}")
         self.session = PtyProcess.spawn(self.open_cmd)
         self.logger.debug(f"Session to host {self.host} spawned")
-        self.session_lock.release()
-        if skip_auth:
-            return True
-        self._pty_authenticate(pty_session=self.session)
-        if not self._pty_isauthenticated(self.session):
-            return False
+
+        if not self.auth_bypass:
+            self._authenticate()
+        else:
+            # if we skip auth, we'll manually set _isauthenticated to True
+            self._isauthenticated = True
+
+        if not self._isauthenticated and not self._system_isauthenticated():
+            msg = f"Authentication to host {self.host} failed"
+            self.logger.critical(msg)
+            raise ScrapliAuthenticationFailed(msg)
+
         self.logger.debug(f"Authenticated to host {self.host} with password")
         return True
 
-    @operation_timeout("_timeout_ops", "Timed out looking for SSH login password prompt")
-    def _pty_authenticate(self, pty_session: PtyProcess) -> None:
+    @operation_timeout("_timeout_ops", "Timed out attempting to authenticate")
+    def _authenticate(self) -> None:
         """
         Private method to check initial authentication when using pty_session
 
         Args:
-            pty_session: PtyProcess session object
+            N/A
 
         Returns:
             N/A  # noqa: DAR202
@@ -527,9 +367,10 @@ class SystemSSHTransport(Transport):
         """
         self.session_lock.acquire()
         output = b""
+        prompt_pattern = get_prompt_pattern(prompt="", class_prompt=self._comms_prompt_pattern)
         while True:
             try:
-                new_output = pty_session.read()
+                new_output = self.session.read()
                 output += new_output
                 self.logger.debug(f"Attempting to authenticate. Read: {repr(new_output)}")
             except EOFError:
@@ -541,18 +382,34 @@ class SystemSSHTransport(Transport):
                     "`auth_strict_key`?"
                 )
                 self.logger.critical(msg)
+                self.session_lock.release()
                 raise ScrapliAuthenticationFailed(msg)
-            if self._comms_ansi:
-                output = strip_ansi(output)
+            if self._comms_ansi or b"\x1B" in output:
+                output = strip_ansi(output=output)
             if b"password" in output.lower():
                 self.logger.info("Found password prompt, sending password")
-                pty_session.write(self.auth_password.encode())
-                pty_session.write(self._comms_return_char.encode())
+                self.session.write(self.auth_password.encode())
+                self.session.write(self._comms_return_char.encode())
+                self.session_lock.release()
+                break
+            if b"enter passphrase for key" in output.lower():
+                self.logger.info("Found key passphrase prompt, sending passphrase")
+                self.session.write(self.auth_private_key_passphrase.encode())
+                self.session.write(self._comms_return_char.encode())
+                self.session_lock.release()
+                break
+            channel_match = re.search(pattern=prompt_pattern, string=output)
+            if channel_match:
+                self.logger.info(
+                    "Found channel prompt, assuming that key based authentication has succeeded"
+                )
+                # set _isauthenticated to true, we've already authenticated, don't need to re-check
+                self._isauthenticated = True
                 self.session_lock.release()
                 break
 
     @operation_timeout("_timeout_ops", "Timed out determining if session is authenticated")
-    def _pty_isauthenticated(self, pty_session: PtyProcess) -> bool:
+    def _system_isauthenticated(self) -> bool:
         """
         Check if session is authenticated
 
@@ -560,7 +417,7 @@ class SystemSSHTransport(Transport):
         Beyond that we lock the session and send the return character and re-read the channel.
 
         Args:
-            pty_session: PtyProcess session object
+            N/A
 
         Returns:
             bool: True if authenticated, else False
@@ -569,22 +426,22 @@ class SystemSSHTransport(Transport):
             N/A
 
         """
-        self.logger.debug("Attempting to determine if PTY authentication was successful")
-        if pty_session.isalive() and not pty_session.eof():
+        self.logger.debug("Attempting to determine if authentication was successful")
+        self.session_lock.acquire()
+        if self.session.isalive() and not self.session.eof():
             prompt_pattern = get_prompt_pattern(prompt="", class_prompt=self._comms_prompt_pattern)
-            self.session_lock.acquire()
-            pty_session.write(self._comms_return_char.encode())
+            self.session.write(self._comms_return_char.encode())
             while True:
                 # almost all of the time we don't need a while loop here, but every once in a while
                 # fd won't be ready which causes a failure without an obvious root cause,
                 # loop/logging to hopefully help with that
-                fd_ready, _, _ = select([pty_session.fd], [], [], 0)
-                if pty_session.fd in fd_ready:
+                fd_ready, _, _ = select([self.session.fd], [], [], 0)
+                if self.session.fd in fd_ready:
                     break
                 self.logger.debug("PTY fd not ready yet...")
             output = b""
             while True:
-                new_output = pty_session.read()
+                new_output = self.session.read()
                 output += new_output
                 self.logger.debug(
                     f"Attempting to validate authentication. Read: {repr(new_output)}"
@@ -595,24 +452,27 @@ class SystemSSHTransport(Transport):
                 # always check to see if we should strip ansi here; if we don't handle this we
                 # may raise auth failures for the wrong reason which would be confusing for
                 # users
-                if b"\x1B" in output:
+                if self._comms_ansi or b"\x1B" in output:
                     output = strip_ansi(output=output)
                 channel_match = re.search(pattern=prompt_pattern, string=output)
                 if channel_match:
-                    self.session_lock.release()
                     self._isauthenticated = True
-                    return True
+                    break
                 if b"password:" in output.lower():
                     # if we see "password" we know auth failed (hopefully in all scenarios!)
                     self.logger.critical(
                         "Found `password:` in output, assuming password authentication failed"
                     )
-                    return False
+                    break
                 if output:
                     self.logger.debug(
                         f"Cannot determine if authenticated, \n\tRead: {repr(output)}"
                     )
         self.session_lock.release()
+
+        if self._isauthenticated:
+            return True
+
         return False
 
     def close(self) -> None:
@@ -630,17 +490,8 @@ class SystemSSHTransport(Transport):
 
         """
         self.session_lock.acquire()
-        if isinstance(self.session, Popen):
-            self.session.kill()
-            try:
-                os.close(self._stdout_fd)
-                os.close(self._stdin_fd)
-            except OSError:
-                # fds were never opened or were already closed
-                pass
-        elif isinstance(self.session, PtyProcess):
-            # killing ptyprocess seems to make things hang open?
-            self.session.terminated = True
+        self.session.kill(0)
+        self.session.terminated = True
         self.logger.debug(f"Channel to host {self.host} closed")
         self.session_lock.release()
 
@@ -658,16 +509,8 @@ class SystemSSHTransport(Transport):
             N/A
 
         """
-        if isinstance(self.session, Popen):
-            try:
-                os.stat(self._stdout_fd)
-                os.stat(self._stdin_fd)
-                return True
-            except OSError:
-                return False
-        elif isinstance(self.session, PtyProcess):
-            if self.session.isalive() and self._isauthenticated and not self.session.eof():
-                return True
+        if self.session.isalive() and self._isauthenticated and not self.session.eof():
+            return True
         return False
 
     @requires_open_session()
@@ -687,11 +530,7 @@ class SystemSSHTransport(Transport):
 
         """
         read_bytes = 65535
-        if isinstance(self.session, Popen):
-            return os.read(self._stdout_fd, read_bytes)
-        if isinstance(self.session, PtyProcess):
-            return self.session.read(read_bytes)
-        return b""
+        return self.session.read(read_bytes)
 
     @requires_open_session()
     @operation_timeout("timeout_transport", "Timed out writing to transport")
@@ -709,10 +548,7 @@ class SystemSSHTransport(Transport):
             N/A
 
         """
-        if isinstance(self.session, Popen):
-            os.write(self._stdin_fd, channel_input.encode())
-        elif isinstance(self.session, PtyProcess):
-            self.session.write(channel_input.encode())
+        self.session.write(channel_input.encode())
 
     def set_timeout(self, timeout: Optional[int] = None) -> None:
         """
