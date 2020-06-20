@@ -67,8 +67,11 @@ def operation_timeout(attribute: str, message: str = "") -> Callable[..., Any]:
             func_args = [channel_or_transport, *args]
             future = pool.apply_async(wrapped_func, func_args, kwargs)
             try:
-                return future.get(timeout=timeout_duration)
+                result = future.get(timeout=timeout_duration)
+                pool.terminate()
+                return result
             except multiprocessing.context.TimeoutError:
+                pool.terminate()
                 channel_or_transport.logger.info(message)
                 if timeout_exit:
                     channel_or_transport.logger.info("timeout_exit is True, closing transport")

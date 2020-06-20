@@ -2,7 +2,7 @@ import time
 
 import pytest
 
-from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliTimeout
+from scrapli.exceptions import ScrapliAuthenticationFailed
 
 from .test_data.devices import DEVICES, INVALID_PRIVATE_KEY, PRIVATE_KEY
 from .test_data.test_cases import TEST_CASES
@@ -560,11 +560,11 @@ def test_public_key_auth_failure_systemssh(device_type, transport):
     device["transport"] = transport
     device["timeout_socket"] = 2
     device["timeout_transport"] = 2
-    device["timeout_ops"] = 2
+    device["timeout_ops"] = 5
     device["auth_private_key"] = INVALID_PRIVATE_KEY
     device.pop("auth_password")
     conn = driver(**device)
 
-    with pytest.raises(ScrapliTimeout) as exc:
+    with pytest.raises(ScrapliAuthenticationFailed) as exc:
         conn.open()
-    assert str(exc.value) == "Timed out determining if session is authenticated"
+    assert str(exc.value) == "Authentication to host 172.18.0.11 failed"
