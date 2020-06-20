@@ -6,16 +6,20 @@ TEST_DATA_PATH = f"{Path(scrapli.__file__).parents[1]}/tests/test_data"
 
 FUNCTIONAL_USERNAME = "vrnetlab"
 FUNCTIONAL_PASSWORD = "VR-netlab9"
+FUNCTIONAL_PASSPHRASE = "scrapli"
 PRIVATE_KEY = f"{TEST_DATA_PATH}/files/vrnetlab_key"
+ENCRYPTED_PRIVATE_KEY = f"{TEST_DATA_PATH}/files/vrnetlab_key_encrypted"
 INVALID_PRIVATE_KEY = f"{TEST_DATA_PATH}/files/invalid_key"
 MOCK_USERNAME = "scrapli"
 MOCK_PASSWORD = "scrapli"
+MOCK_PASSPHRASE = FUNCTIONAL_PASSPHRASE
 
 DEVICES = {
     "cisco_iosxe": {
         "auth_username": FUNCTIONAL_USERNAME,
         "auth_password": FUNCTIONAL_PASSWORD,
         "auth_secondary": FUNCTIONAL_PASSWORD,
+        "auth_private_key_passphrase": FUNCTIONAL_PASSPHRASE,
         "auth_strict_key": False,
         "host": "172.18.0.11",
         "base_config": f"{TEST_DATA_PATH}/base_configs/cisco_iosxe",
@@ -24,6 +28,7 @@ DEVICES = {
         "auth_username": MOCK_USERNAME,
         "auth_password": MOCK_PASSWORD,
         "auth_secondary": MOCK_PASSWORD,
+        "auth_private_key_passphrase": MOCK_PASSPHRASE,
         "auth_strict_key": False,
         "host": "localhost",
         "port": 2211,
