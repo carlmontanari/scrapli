@@ -52,6 +52,7 @@ def unit_tests(session):
     """
     # ensure test ssh key permissions are appropriate
     session.run("chmod", "0600", "tests/test_data/files/vrnetlab_key", external=True)
+    session.run("chmod", "0600", "tests/test_data/files/vrnetlab_key_encrypted", external=True)
 
     # install this repo in editable mode so that other scrapli libs can depend on a yet to be
     # released version. for example, scrapli_asyncssh is new and released and requires the *next*

@@ -135,6 +135,7 @@ end
 - [Transport Options](examples/transport_options/system_ssh_args.py)
 - [Configuration Modes - IOSXR Configure Exclusive](examples/configuration_modes/iosxr_configure_exclusive.py)
 - [Configuration Modes - EOS Configure Session](examples/configuration_modes/eos_configure_session.py)
+- [Banners, Macros, and other "weird" Things](examples/banners_macros_etc/iosxe_banners_macros_etc.py)
 
 
 ## Documentation
@@ -1268,14 +1269,15 @@ scrapli.exceptions.ScrapliCommandFailure
 
 - Any arguments passed to the `SystemSSHTransport` class will override arguments in your ssh config file. This is
  because the arguments get crafted into an "open_cmd" (the command that actually fires off the ssh session), and
-  these cli arguments take precedence over the config file arguments.
+  these cli arguments take precedence over the config file arguments. The most important implication of this is the
+   `auth_strict_key` setting, so keep that in mind!
 - If you set `ssh_config_file` to `False` the `SystemSSHTransport` class will set the config file used to `/dev/null
 ` so that no ssh config file configs are accidentally used.
 - There is zero Windows support for system ssh transport - I would strongly encourage the use of WSL or cygwin and
  sticking with systemssh instead of using paramiko/ssh2 natively in Windows -- system ssh is very much the focus of
   development for scrapli!
 - SystemSSH needs to have a terminal set -- without this it fails. My understanding is that without a terminal being
- set there is no tty which causes the popen/ptyprocess portions of scrapli to not be able to read from the session
+ set there is no tty which causes the ptyprocess portions of scrapli to not be able to read from the session
  . The fix for this is simply to ensure that there is a `TERM` set -- for example in the GitHub Actions setup for
   systemssh tests we simply set `TERM=xterm` as an environment variable. Setting this within scrapli did not seem to
    have any affect, but is something worth revisiting later -- meaning it would be nice to have scrapli be able to set

@@ -520,6 +520,11 @@ def test_public_key_auth_failure(device_type, transport):
     if device_type != "cisco_iosxe" or transport == "telnet":
         pytest.skip("public key auth only tested against iosxe at the moment, and never on telnet!")
 
+    if device_type != "cisco_iosxe" or transport == "system":
+        pytest.skip(
+            "systemssh raises a different exception as it cant distinguish between auth types as well as the other transports!"
+        )
+
     device = DEVICES[device_type].copy()
     driver = device.pop("driver")
     device.pop("base_config")
@@ -539,3 +544,27 @@ def test_public_key_auth_failure(device_type, transport):
         f"Failed to authenticate to host 172.18.0.11 with private key `{INVALID_PRIVATE_KEY}`. "
         "Unable to continue authentication, missing username, password, or both."
     )
+
+
+def test_public_key_auth_failure_systemssh(device_type, transport):
+    if device_type != "cisco_iosxe" or transport != "system":
+        pytest.skip(
+            "systemssh raises a different exception as it cant distinguish between auth types as well as the other transports!"
+        )
+
+    device = DEVICES[device_type].copy()
+    driver = device.pop("driver")
+    device.pop("base_config")
+    device.pop("async_driver")
+
+    device["transport"] = transport
+    device["timeout_socket"] = 2
+    device["timeout_transport"] = 2
+    device["timeout_ops"] = 5
+    device["auth_private_key"] = INVALID_PRIVATE_KEY
+    device.pop("auth_password")
+    conn = driver(**device)
+
+    with pytest.raises(ScrapliAuthenticationFailed) as exc:
+        conn.open()
+    assert str(exc.value) == "Authentication to host 172.18.0.11 failed"

@@ -3,6 +3,17 @@ CHANGELOG
 
 # 2020.XX.XX
 - Updated IOSXE base config to include netconf setup for consistency w/ scrapli_netconf
+- Removed "pipes" authentication for system ssh -- this is mostly an internal change that simplifies the way that
+ system transport authenticates. We lose the ability to very easily read out of stderr what is going on so even if we
+  auth with a key now we have to "confirm" that we are authenticated, but this removes a fair bit of code and unifies
+   things as well as allows for the next line item...
+- Added support for `auth_private_key_passphrase` to system transport -- allows for entering ssh key passphrase to
+ decrypt ssh keys
+- Added an example on how to deal with "weird" things like banners and macros -- these types of things change how the
+ ssh channel works in that they are psuedo "interactive" -- meaning the prompt is modified/removed so scrapli can't
+  ever "know" when a command is done inserting. It would be possible to support these types of config items more
+   "natively" but doing so would lose some of the smarts about how scrapli enters/confirms inputs sent, so for now
+    (and probably for forever) these will need to be configured in a "special" fashion
 
 # 2020.06.06
 - Converted all priv levels to be kwargs instead of just args for setup -- simple thing but makes it more readable IMO.
