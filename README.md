@@ -739,7 +739,8 @@ The basic usage section outlined the most commonly used driver arguments, this o
 | auth_username                   | username for authentication                                 | Scrape            |                             
 | auth_password                   | password for authentication                                 | Scrape            |                             
 | auth_secondary                  | password for secondary authentication (enable password)     | NetworkDriver     |                  
-| auth_private_key                | private key for authentication                              | Scrape            |                   
+| auth_private_key                | private key for authentication                              | Scrape            |
+| auth_private_key_passphrase     | passphrase for ssh key                                      | Scrape            |                   
 | auth_strict_key                 | strict key checking -- TRUE by default!                     | Scrape            |    
 | auth_bypass                     | bypass ssh auth prompts after ssh establishment             | Scrape            |                           
 | timeout_socket                  | timeout value for initial socket connection                 | Scrape            |                   

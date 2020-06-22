@@ -253,6 +253,26 @@ class MultiResponse(ScrapliMultiResponse):
             return True
         return False
 
+    @property
+    def result(self) -> str:
+        """
+        Build a unified result from all elements of MultiResponse
+
+        Args:
+            N/A
+
+        Returns:
+            str: Unified result by combining results of all elements of MultiResponse
+
+        Raises:
+            N/A
+
+        """
+        result = ""
+        for response in self.data:
+            result += "\n".join([response.channel_input, response.result])
+        return result
+
     def raise_for_status(self) -> None:
         """
         Raise a `ScrapliCommandFailure` if any elements are failed

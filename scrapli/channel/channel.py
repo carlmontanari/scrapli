@@ -145,7 +145,7 @@ class Channel(ChannelBase):
                 current_prompt = channel_match.group(0)
                 return current_prompt.decode().strip()
 
-    def send_input(self, channel_input: str, strip_prompt: bool = True,) -> Tuple[str, str]:
+    def send_input(self, channel_input: str, strip_prompt: bool = True) -> Tuple[str, str]:
         """
         Primary entry point to send data to devices in shell mode; accept input and returns result
 

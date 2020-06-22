@@ -38,6 +38,7 @@ def test_multi_response():
     assert multi_response.raise_for_status() is None
     assert repr(multi_response) == "MultiResponse <Success: True; Response Elements: 2>"
     assert str(multi_response) == "MultiResponse <Success: True; Response Elements: 2>"
+    assert multi_response.result == "ls -al\nls -al\n"
 
 
 def test_response_record_result():
