@@ -10,10 +10,12 @@ CHANGELOG
 - Added support for `auth_private_key_passphrase` to system transport -- allows for entering ssh key passphrase to
  decrypt ssh keys
 - Added an example on how to deal with "weird" things like banners and macros -- these types of things change how the
- ssh channel works in that they are psuedo "interactive" -- meaning the prompt is modified/removed so scrapli can't
+ ssh channel works in that they are pseudo "interactive" -- meaning the prompt is modified/removed so scrapli can't
   ever "know" when a command is done inserting. It would be possible to support these types of config items more
    "natively" but doing so would lose some of the smarts about how scrapli enters/confirms inputs sent, so for now
     (and probably for forever) these will need to be configured in a "special" fashion
+- Updated IOSXE for functional tests to use 16.12.03 -- this includes updates to the base config/expected configs
+... AFAIK there is some better netconf/restconf support in this version which may be handy for tests for scrapli-netconf
 
 # 2020.06.06
 - Converted all priv levels to be kwargs instead of just args for setup -- simple thing but makes it more readable IMO.

@@ -248,7 +248,7 @@ scrapli "core" drivers cover basically the [NAPALM](https://github.com/napalm-au
    synchronous and an asynchronous version of each of these drivers. Below are the core driver platforms and
    currently tested version.
 
-- Cisco IOS-XE (tested on: 16.04.01)
+- Cisco IOS-XE (tested on: 16.12.03)
 - Cisco NX-OS (tested on: 9.2.4)
 - Juniper JunOS (tested on: 17.3R2.10)
 - Cisco IOS-XR (tested on: 6.5.3)

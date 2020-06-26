@@ -384,6 +384,11 @@ class SystemSSHTransport(Transport):
                 self.logger.critical(msg)
                 self.session_lock.release()
                 raise ScrapliAuthenticationFailed(msg)
+
+            # even if we dont hit EOF, we may still have hit a message we need to process such as
+            # insecure key permissions
+            self._ssh_message_handler(output=output)
+
             if self._comms_ansi or b"\x1B" in output:
                 output = strip_ansi(output=output)
             if b"password" in output.lower():
