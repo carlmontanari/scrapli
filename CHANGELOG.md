@@ -16,6 +16,8 @@ CHANGELOG
     (and probably for forever) these will need to be configured in a "special" fashion
 - Updated IOSXE for functional tests to use 16.12.03 -- this includes updates to the base config/expected configs
 ... AFAIK there is some better netconf/restconf support in this version which may be handy for tests for scrapli-netconf
+- Update channel/drivers to never decode bytes -- this now only happens in the response object; primary motivation
+ for this is to not have to decode/re-encode in general, and in scrapli-netconf in particular
 
 # 2020.06.06
 - Converted all priv levels to be kwargs instead of just args for setup -- simple thing but makes it more readable IMO.

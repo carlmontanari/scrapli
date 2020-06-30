@@ -53,7 +53,7 @@ class GenericDriverBase:
 
     @staticmethod
     def _post_send_command(
-        raw_response: str, processed_response: str, response: Response
+        raw_response: bytes, processed_response: bytes, response: Response
     ) -> Response:
         """
         Handle post "send_command" tasks for consistency between sync/async versions
@@ -71,7 +71,7 @@ class GenericDriverBase:
 
         """
         response._record_response(result=processed_response)  # pylint: disable=W0212
-        response.raw_result = raw_response
+        response.raw_result = raw_response.decode()
         return response
 
     @staticmethod
