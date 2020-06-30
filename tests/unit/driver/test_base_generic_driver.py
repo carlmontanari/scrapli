@@ -38,7 +38,7 @@ def test_post_send_command(sync_cisco_iosxe_conn):
         failed_when_contains=["something"],
     )
     final_response = sync_cisco_iosxe_conn._post_send_command(
-        raw_response="blah", processed_response="blahx2", response=response
+        raw_response=b"blah", processed_response=b"blahx2", response=response
     )
     # generic driver doesnt know/care about textfsm_platform
     assert final_response.textfsm_platform == ""

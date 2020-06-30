@@ -205,7 +205,7 @@ class ChannelBase(ABC):
         if not isinstance(interact_events, list):
             raise TypeError(f"`interact_events` expects a List, got {type(interact_events)}")
 
-    def _post_send_inputs_interact(self, output: bytes) -> Tuple[str, str]:
+    def _post_send_inputs_interact(self, output: bytes) -> Tuple[bytes, bytes]:
         """
         Handle pre "send_inputs_interact" tasks for consistency between sync/async versions
 
@@ -220,6 +220,6 @@ class ChannelBase(ABC):
 
         """
         processed_output = self._restructure_output(output=output, strip_prompt=False)
-        raw_result = output.decode()
-        processed_result = processed_output.decode()
+        raw_result = output
+        processed_result = processed_output
         return raw_result, processed_result
