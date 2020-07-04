@@ -27,6 +27,7 @@ Feel free to join the very awesome networktocode slack workspace [here](https://
   - [More Examples](#more-examples)
   - [Documentation](#documentation)
   - [Wiki](#wiki)
+  - [Other Stuff](#other-stuff)
 - [scrapli: What is it](#scrapli-what-is-it)
 - [Supported Platforms](#supported-platforms)
 - [Advanced Installation](#advanced-installation)
@@ -134,6 +135,7 @@ end
 - [Transport Options](examples/transport_options/system_ssh_args.py)
 - [Configuration Modes - IOSXR Configure Exclusive](examples/configuration_modes/iosxr_configure_exclusive.py)
 - [Configuration Modes - EOS Configure Session](examples/configuration_modes/eos_configure_session.py)
+- [Banners, Macros, and other "weird" Things](examples/banners_macros_etc/iosxe_banners_macros_etc.py)
 
 
 ## Documentation
@@ -160,6 +162,14 @@ make docs
 
 Extra, generally platform/transport-specific, examples/documentation/information will be stored in the Wiki associated
  with this repository. You can find it [here](https://github.com/carlmontanari/scrapli/wiki).
+
+
+## Other Stuff
+
+Other scrapli related docs/blogs/videos/info:
+
+- [Scrapli on Dmitry Figol's Network Automation Channel](https://www.youtube.com/watch?v=OJa2typq7yI)
+- [Scrapli Intro on Wim Wauter's blog](https://blog.wimwauters.com/networkprogrammability/2020-04-09_scrapli_introduction/)
 
 
 # scrapli: What is it
@@ -238,7 +248,7 @@ scrapli "core" drivers cover basically the [NAPALM](https://github.com/napalm-au
    synchronous and an asynchronous version of each of these drivers. Below are the core driver platforms and
    currently tested version.
 
-- Cisco IOS-XE (tested on: 16.04.01)
+- Cisco IOS-XE (tested on: 16.12.03)
 - Cisco NX-OS (tested on: 9.2.4)
 - Juniper JunOS (tested on: 17.3R2.10)
 - Cisco IOS-XR (tested on: 6.5.3)
@@ -312,7 +322,7 @@ The available optional installation extras options are:
 If you would like to install all of the optional extras, you can do so with the `full` option:
 
 ```
-pip isntall scrapli[full]
+pip install scrapli[full]
 ``` 
 
 As for platforms to *run* scrapli on -- it has and will be tested on MacOS and Ubuntu regularly and should work on any
@@ -729,7 +739,8 @@ The basic usage section outlined the most commonly used driver arguments, this o
 | auth_username                   | username for authentication                                 | Scrape            |                             
 | auth_password                   | password for authentication                                 | Scrape            |                             
 | auth_secondary                  | password for secondary authentication (enable password)     | NetworkDriver     |                  
-| auth_private_key                | private key for authentication                              | Scrape            |                   
+| auth_private_key                | private key for authentication                              | Scrape            |
+| auth_private_key_passphrase     | passphrase for ssh key                                      | Scrape            |                   
 | auth_strict_key                 | strict key checking -- TRUE by default!                     | Scrape            |    
 | auth_bypass                     | bypass ssh auth prompts after ssh establishment             | Scrape            |                           
 | timeout_socket                  | timeout value for initial socket connection                 | Scrape            |                   
@@ -1038,7 +1049,7 @@ Without the `send_command` and similar methods, you must directly access the `Ch
 Using the `Scrape` driver directly is nice enough, however you may not want to have to change the prompt pattern, or
  deal with accessing the channel to send commands to the device. In this case there is a `GenericDriver` available to
   you. This driver has a *very* broad pattern that it matches for base prompts, has no concept of disabling paging or
-   privilege levels (like `Scrape`), but does provide `send_command`, `send_commands`, `send_interact`, and
+   privilege levels (like `Scrape`), but does provide `send_command`, `send_commands`, `send_interactive`, and
     `get_prompt` methods for a more NetworkDriver-like experience. 
 
 Hopefully this `GenericDriver` can be used as a starting point for devices that don't fall under the core supported
@@ -1259,14 +1270,15 @@ scrapli.exceptions.ScrapliCommandFailure
 
 - Any arguments passed to the `SystemSSHTransport` class will override arguments in your ssh config file. This is
  because the arguments get crafted into an "open_cmd" (the command that actually fires off the ssh session), and
-  these cli arguments take precedence over the config file arguments.
+  these cli arguments take precedence over the config file arguments. The most important implication of this is the
+   `auth_strict_key` setting, so keep that in mind!
 - If you set `ssh_config_file` to `False` the `SystemSSHTransport` class will set the config file used to `/dev/null
 ` so that no ssh config file configs are accidentally used.
 - There is zero Windows support for system ssh transport - I would strongly encourage the use of WSL or cygwin and
  sticking with systemssh instead of using paramiko/ssh2 natively in Windows -- system ssh is very much the focus of
   development for scrapli!
 - SystemSSH needs to have a terminal set -- without this it fails. My understanding is that without a terminal being
- set there is no tty which causes the popen/ptyprocess portions of scrapli to not be able to read from the session
+ set there is no tty which causes the ptyprocess portions of scrapli to not be able to read from the session
  . The fix for this is simply to ensure that there is a `TERM` set -- for example in the GitHub Actions setup for
   systemssh tests we simply set `TERM=xterm` as an environment variable. Setting this within scrapli did not seem to
    have any affect, but is something worth revisiting later -- meaning it would be nice to have scrapli be able to set
@@ -1302,7 +1314,7 @@ scrapli.exceptions.ScrapliCommandFailure
 
 ## asyncssh
 
-- scrapli asyncssh is not production ready yet! 
+- None yet
 
 ### SSH Config Supported Arguments
 

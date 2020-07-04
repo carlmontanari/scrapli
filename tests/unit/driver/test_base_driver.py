@@ -22,11 +22,11 @@ def test__repr():
     assert (
         repr(conn)
         == "Scrape(host='myhost', port=22, auth_username='', auth_password='', auth_private_key='', "
-        "auth_strict_key=True, auth_bypass=False, timeout_socket=5, timeout_transport=10, timeout_ops=30, "
-        "timeout_exit=True, keepalive=False, keepalive_interval=30, keepalive_type='network', "
-        "keepalive_pattern='\\x05', comms_prompt_pattern='^[a-z0-9.\\\\-@()/:]{1,48}[#>$]\\\\s*$', "
-        "comms_return_char='\\n', comms_ansi=False, ssh_config_file='', ssh_known_hosts_file='', on_open=None, "
-        "on_close=None, transport='system', transport_options=None)"
+        "auth_private_key_passphrase='', auth_strict_key=True, auth_bypass=False, timeout_socket=5, "
+        "timeout_transport=10, timeout_ops=30, timeout_exit=True, keepalive=False, keepalive_interval=30, "
+        "keepalive_type='network', keepalive_pattern='\\x05', comms_prompt_pattern='^[a-z0-9.\\\\-@()/:]{1,"
+        "48}[#>$]\\\\s*$', comms_return_char='\\n', comms_ansi=False, ssh_config_file='', ssh_known_hosts_file='', "
+        "on_open=None, on_close=None, transport='system', transport_options=None)"
     )
 
 
@@ -135,6 +135,8 @@ def test_unsupported_platform():
             f"{TEST_DATA_DIR}/files/_ssh_config",
             f"{TEST_DATA_DIR}/files/_ssh_config",
         ),
+        ("auth_private_key_passphrase", "tacocat", "tacocat"),
+        ("auth_private_key_passphrase", "tacocat ", "tacocat"),
         ("auth_strict_key", False, False),
         ("timeout_socket", 100, 100),
         ("timeout_transport", 100, 100),
@@ -160,6 +162,8 @@ def test_unsupported_platform():
         "auth_password",
         "auth_password_strip",
         "auth_private_key",
+        "auth_private_key_passphrase",
+        "auth_private_key_passphrase_strip",
         "auth_strict_key",
         "timeout_socket",
         "timeout_transport",

@@ -147,7 +147,9 @@ class AsyncChannel(ChannelBase):
                 current_prompt = channel_match.group(0)
                 return current_prompt.decode().strip()
 
-    async def send_input(self, channel_input: str, strip_prompt: bool = True) -> Tuple[str, str]:
+    async def send_input(
+        self, channel_input: str, strip_prompt: bool = True
+    ) -> Tuple[bytes, bytes]:
         """
         Primary entry point to send data to devices in async shell mode; accept input, return result
 
@@ -167,7 +169,7 @@ class AsyncChannel(ChannelBase):
         raw_result, processed_result = await self._async_send_input(
             channel_input=channel_input, strip_prompt=strip_prompt
         )
-        return raw_result.decode(), processed_result.decode()
+        return raw_result, processed_result
 
     @operation_timeout("timeout_ops", "Timed out sending input to device.")
     async def _async_send_input(
@@ -209,7 +211,7 @@ class AsyncChannel(ChannelBase):
     @operation_timeout("timeout_ops", "Timed out sending interactive input to device.")
     async def send_inputs_interact(
         self, interact_events: List[Tuple[str, str, Optional[bool]]]
-    ) -> Tuple[str, str]:
+    ) -> Tuple[bytes, bytes]:
         """
         Async interact with a device with changing prompts per input.
 

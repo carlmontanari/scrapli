@@ -46,6 +46,7 @@ class ScrapeBase:
         auth_username: str = "",
         auth_password: str = "",
         auth_private_key: str = "",
+        auth_private_key_passphrase: str = "",
         auth_strict_key: bool = True,
         auth_bypass: bool = False,
         timeout_socket: int = 5,
@@ -82,6 +83,7 @@ class ScrapeBase:
             port: port to connect to
             auth_username: username for authentication
             auth_private_key: path to private key for authentication
+            auth_private_key_passphrase: passphrase for decrypting ssh key if necessary
             auth_password: password for authentication
             auth_strict_key: strict host checking or not -- applicable for system ssh driver only
             auth_bypass: bypass ssh key or password auth for devices without authentication, or that
@@ -159,6 +161,7 @@ class ScrapeBase:
             auth_username=auth_username,
             auth_password=auth_password,
             auth_private_key=auth_private_key,
+            auth_private_key_passphrase=auth_private_key_passphrase,
             auth_strict_key=auth_strict_key,
             auth_bypass=auth_bypass,
         )
@@ -246,6 +249,8 @@ class ScrapeBase:
             f"auth_username={self._initialization_args['auth_username']!r}, "
             f"auth_password={self._initialization_args['auth_password']!r}, "
             f"auth_private_key={self._initialization_args['auth_private_key']!r}, "
+            "auth_private_key_passphrase="
+            f"{self._initialization_args['auth_private_key_passphrase']!r}, "
             f"auth_strict_key={self._initialization_args['auth_strict_key']!r}, "
             f"auth_bypass={self._initialization_args['auth_bypass']!r}, "
             f"timeout_socket={self._initialization_args['timeout_socket']!r}, "
@@ -296,6 +301,7 @@ class ScrapeBase:
         auth_username: str,
         auth_password: str,
         auth_private_key: str,
+        auth_private_key_passphrase: str,
         auth_strict_key: bool,
         auth_bypass: bool,
     ) -> None:
@@ -305,7 +311,8 @@ class ScrapeBase:
         Args:
             auth_username: username to parse/set
             auth_password: password to parse/set
-            auth_private_key: public key to parse/set
+            auth_private_key: ssh key to parse/set
+            auth_private_key_passphrase: ssh key passphrase to parse/set
             auth_strict_key: strict key to parse/set
             auth_bypass: bypass to parse/set
 
@@ -326,6 +333,9 @@ class ScrapeBase:
         self._initialization_args["auth_bypass"] = auth_bypass
         self._initialization_args["auth_username"] = auth_username.strip()
         self._initialization_args["auth_password"] = auth_password.strip()
+        self._initialization_args[
+            "auth_private_key_passphrase"
+        ] = auth_private_key_passphrase.strip()
 
         if auth_private_key:
             private_key_path = Path.expanduser(Path(auth_private_key.strip()))

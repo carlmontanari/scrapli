@@ -21,7 +21,7 @@ class TestDevice:
         expected_type = "expected_no_strip" if not strip_prompt else "expected_strip"
         expected_response = TEST_CASES["linux"]["send_command_short"][expected_type]
         _, response = nix_conn.channel.send_input(channel_input=command, strip_prompt=strip_prompt)
-        assert response == expected_response
+        assert response.decode() == expected_response
 
     @pytest.mark.parametrize(
         "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
@@ -31,7 +31,7 @@ class TestDevice:
         expected_type = "expected_no_strip" if not strip_prompt else "expected_strip"
         expected_response = TEST_CASES["linux"]["send_command_long"][expected_type]
         _, response = nix_conn.channel.send_input(channel_input=command, strip_prompt=strip_prompt)
-        assert response == expected_response
+        assert response.decode() == expected_response
 
     def test_isalive_and_close(self, nix_conn, transport):
         assert nix_conn.isalive() is True
@@ -481,9 +481,9 @@ def test_context_manager(device_type, transport):
 
     device["port"] = port
     device["transport"] = transport
-    device["timeout_socket"] = 2
-    device["timeout_transport"] = 2
-    device["timeout_ops"] = 2
+    device["timeout_socket"] = 5
+    device["timeout_transport"] = 5
+    device["timeout_ops"] = 5
 
     with driver(**device) as conn:
         assert conn.isalive() is True
@@ -503,9 +503,9 @@ def test_public_key_auth(device_type, transport):
     device.pop("async_driver")
 
     device["transport"] = transport
-    device["timeout_socket"] = 2
-    device["timeout_transport"] = 2
-    device["timeout_ops"] = 2
+    device["timeout_socket"] = 5
+    device["timeout_transport"] = 5
+    device["timeout_ops"] = 5
     device["auth_private_key"] = PRIVATE_KEY
 
     with driver(**device) as conn:
@@ -519,6 +519,11 @@ def test_public_key_auth(device_type, transport):
 def test_public_key_auth_failure(device_type, transport):
     if device_type != "cisco_iosxe" or transport == "telnet":
         pytest.skip("public key auth only tested against iosxe at the moment, and never on telnet!")
+
+    if device_type != "cisco_iosxe" or transport == "system":
+        pytest.skip(
+            "systemssh raises a different exception as it cant distinguish between auth types as well as the other transports!"
+        )
 
     device = DEVICES[device_type].copy()
     driver = device.pop("driver")
@@ -539,3 +544,27 @@ def test_public_key_auth_failure(device_type, transport):
         f"Failed to authenticate to host 172.18.0.11 with private key `{INVALID_PRIVATE_KEY}`. "
         "Unable to continue authentication, missing username, password, or both."
     )
+
+
+def test_public_key_auth_failure_systemssh(device_type, transport):
+    if device_type != "cisco_iosxe" or transport != "system":
+        pytest.skip(
+            "systemssh raises a different exception as it cant distinguish between auth types as well as the other transports!"
+        )
+
+    device = DEVICES[device_type].copy()
+    driver = device.pop("driver")
+    device.pop("base_config")
+    device.pop("async_driver")
+
+    device["transport"] = transport
+    device["timeout_socket"] = 2
+    device["timeout_transport"] = 2
+    device["timeout_ops"] = 5
+    device["auth_private_key"] = INVALID_PRIVATE_KEY
+    device.pop("auth_password")
+    conn = driver(**device)
+
+    with pytest.raises(ScrapliAuthenticationFailed) as exc:
+        conn.open()
+    assert str(exc.value) == "Authentication to host 172.18.0.11 failed"

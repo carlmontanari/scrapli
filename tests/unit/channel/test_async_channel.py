@@ -94,8 +94,8 @@ async def test_send_input(async_cisco_iosxe_conn, strip_prompt):
     raw_result, processed_result = await async_cisco_iosxe_conn.channel.send_input(
         channel_input="show version", strip_prompt=strip_prompt
     )
-    assert raw_result == expected_raw
-    assert processed_result == expected_processed
+    assert raw_result == expected_raw.encode()
+    assert processed_result == expected_processed.encode()
 
 
 @pytest.mark.asyncio
@@ -107,5 +107,5 @@ async def test_send_inputs_interact(async_cisco_iosxe_conn):
     raw_result, processed_result = await async_cisco_iosxe_conn.channel.send_inputs_interact(
         interact_events=interact_events
     )
-    assert raw_result == expected_raw
-    assert processed_result == expected_processed
+    assert raw_result == expected_raw.encode()
+    assert processed_result == expected_processed.encode()
