@@ -253,12 +253,7 @@ class SystemSSHTransport(Transport):
 
         """
         self.logger.info(f"Attempting to authenticate to {self.host}")
-
-        if self.auth_bypass:
-            self.logger.info("`auth_bypass` is True, bypassing authentication")
-
         self._open_pty()
-
         self.logger.info(f"Successfully authenticated to {self.host}")
 
         if self.keepalive:
@@ -338,6 +333,7 @@ class SystemSSHTransport(Transport):
         if not self.auth_bypass:
             self._authenticate()
         else:
+            self.logger.info("`auth_bypass` is True, bypassing authentication")
             # if we skip auth, we'll manually set _isauthenticated to True
             self._isauthenticated = True
 

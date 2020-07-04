@@ -21,7 +21,7 @@ class TestDevice:
         expected_type = "expected_no_strip" if not strip_prompt else "expected_strip"
         expected_response = TEST_CASES["linux"]["send_command_short"][expected_type]
         _, response = nix_conn.channel.send_input(channel_input=command, strip_prompt=strip_prompt)
-        assert response == expected_response
+        assert response.decode() == expected_response
 
     @pytest.mark.parametrize(
         "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
@@ -31,7 +31,7 @@ class TestDevice:
         expected_type = "expected_no_strip" if not strip_prompt else "expected_strip"
         expected_response = TEST_CASES["linux"]["send_command_long"][expected_type]
         _, response = nix_conn.channel.send_input(channel_input=command, strip_prompt=strip_prompt)
-        assert response == expected_response
+        assert response.decode() == expected_response
 
     def test_isalive_and_close(self, nix_conn, transport):
         assert nix_conn.isalive() is True

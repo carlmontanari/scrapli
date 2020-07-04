@@ -46,7 +46,7 @@ class Response:
         self.channel_input = channel_input
         self.textfsm_platform = textfsm_platform
         self.genie_platform = genie_platform
-        self.raw_result: str = ""
+        self.raw_result: bytes = b""
         self.result: str = ""
 
         if isinstance(failed_when_contains, str):
@@ -118,6 +118,7 @@ class Response:
         """
         self.finish_time = datetime.now()
         self.elapsed_time = (self.finish_time - self.start_time).total_seconds()
+        self.raw_result = result
         self.result = result.decode()
         if not self.failed_when_contains:
             self.failed = False

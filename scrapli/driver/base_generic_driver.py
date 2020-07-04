@@ -71,7 +71,7 @@ class GenericDriverBase:
 
         """
         response._record_response(result=processed_response)  # pylint: disable=W0212
-        response.raw_result = raw_response.decode()
+        response.raw_result = raw_response
         return response
 
     @staticmethod
