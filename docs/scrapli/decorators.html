@@ -26,10 +26,10 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.decorators&#34;&#34;&#34;
-from concurrent.futures import ThreadPoolExecutor, wait
+import multiprocessing.pool
 from typing import TYPE_CHECKING, Any, Callable, Dict, Union
 
-from scrapli.exceptions import ConnectionNotOpened
+from scrapli.exceptions import ConnectionNotOpened, ScrapliTimeout
 
 if TYPE_CHECKING:
     from scrapli.channel import Channel  # pragma:  no cover
@@ -42,7 +42,7 @@ def operation_timeout(attribute: str, message: str = &#34;&#34;) -&gt; Callable[
 
     Wrap an operation, check class for given attribute and use that for the timeout duration.
 
-    Historically this operation timeout decorator used signals instead of the concurrent_futures
+    Historically this operation timeout decorator used signals instead of the multiprocessing
     seen here. The signals method was probably a bit more elegant, however there were issues with
     supporting the system transport as system transport subprocess/ptyprocess components spawn
     threads of their own, and signals must operate in the main thread.
@@ -56,14 +56,14 @@ def operation_timeout(attribute: str, message: str = &#34;&#34;) -&gt; Callable[
         decorate: wrapped function
 
     Raises:
-        TimeoutError: if timeout exceeded
+        ScrapliTimeout: if timeout exceeded
 
     &#34;&#34;&#34;
 
     def decorate(wrapped_func: Callable[..., Any]) -&gt; Callable[..., Any]:
         def timeout_wrapper(
             channel_or_transport: Union[&#34;Channel&#34;, &#34;Transport&#34;],
-            *args: Union[str, int],
+            *args: Any,
             **kwargs: Dict[str, Union[str, int]],
         ) -&gt; Any:
             # import here to avoid circular dependency
@@ -90,18 +90,22 @@ def operation_timeout(attribute: str, message: str = &#34;&#34;) -&gt; Callable[
                 session_lock = channel_or_transport.session_lock
                 close = channel_or_transport.close
 
-            pool = ThreadPoolExecutor(max_workers=1)
-            future = pool.submit(wrapped_func, channel_or_transport, *args, **kwargs)
-            wait([future], timeout=timeout_duration)
-            if not future.done():
+            pool = multiprocessing.pool.ThreadPool(processes=1)
+            func_args = [channel_or_transport, *args]
+            future = pool.apply_async(wrapped_func, func_args, kwargs)
+            try:
+                result = future.get(timeout=timeout_duration)
+                pool.terminate()
+                return result
+            except multiprocessing.context.TimeoutError:
+                pool.terminate()
                 channel_or_transport.logger.info(message)
                 if timeout_exit:
                     channel_or_transport.logger.info(&#34;timeout_exit is True, closing transport&#34;)
                     if session_lock.locked():
                         session_lock.release()
                     close()
-                raise TimeoutError(message)
-            return future.result()
+                raise ScrapliTimeout(message)
 
         return timeout_wrapper
 
@@ -154,7 +158,7 @@ def requires_open_session() -&gt; Callable[..., Any]:
 <dd>
 <div class="desc"><p>Decorate an "operation" &ndash; raises exception if the operation timeout is exceeded</p>
 <p>Wrap an operation, check class for given attribute and use that for the timeout duration.</p>
-<p>Historically this operation timeout decorator used signals instead of the concurrent_futures
+<p>Historically this operation timeout decorator used signals instead of the multiprocessing
 seen here. The signals method was probably a bit more elegant, however there were issues with
 supporting the system transport as system transport subprocess/ptyprocess components spawn
 threads of their own, and signals must operate in the main thread.</p>
@@ -173,7 +177,7 @@ login (as opposed to "normal" channel operations)</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><code>TimeoutError</code></dt>
+<dt><code>ScrapliTimeout</code></dt>
 <dd>if timeout exceeded</dd>
 </dl></div>
 <details class="source">
@@ -186,7 +190,7 @@ login (as opposed to "normal" channel operations)</dd>
 
     Wrap an operation, check class for given attribute and use that for the timeout duration.
 
-    Historically this operation timeout decorator used signals instead of the concurrent_futures
+    Historically this operation timeout decorator used signals instead of the multiprocessing
     seen here. The signals method was probably a bit more elegant, however there were issues with
     supporting the system transport as system transport subprocess/ptyprocess components spawn
     threads of their own, and signals must operate in the main thread.
@@ -200,14 +204,14 @@ login (as opposed to "normal" channel operations)</dd>
         decorate: wrapped function
 
     Raises:
-        TimeoutError: if timeout exceeded
+        ScrapliTimeout: if timeout exceeded
 
     &#34;&#34;&#34;
 
     def decorate(wrapped_func: Callable[..., Any]) -&gt; Callable[..., Any]:
         def timeout_wrapper(
             channel_or_transport: Union[&#34;Channel&#34;, &#34;Transport&#34;],
-            *args: Union[str, int],
+            *args: Any,
             **kwargs: Dict[str, Union[str, int]],
         ) -&gt; Any:
             # import here to avoid circular dependency
@@ -234,18 +238,22 @@ login (as opposed to "normal" channel operations)</dd>
                 session_lock = channel_or_transport.session_lock
                 close = channel_or_transport.close
 
-            pool = ThreadPoolExecutor(max_workers=1)
-            future = pool.submit(wrapped_func, channel_or_transport, *args, **kwargs)
-            wait([future], timeout=timeout_duration)
-            if not future.done():
+            pool = multiprocessing.pool.ThreadPool(processes=1)
+            func_args = [channel_or_transport, *args]
+            future = pool.apply_async(wrapped_func, func_args, kwargs)
+            try:
+                result = future.get(timeout=timeout_duration)
+                pool.terminate()
+                return result
+            except multiprocessing.context.TimeoutError:
+                pool.terminate()
                 channel_or_transport.logger.info(message)
                 if timeout_exit:
                     channel_or_transport.logger.info(&#34;timeout_exit is True, closing transport&#34;)
                     if session_lock.locked():
                         session_lock.release()
                     close()
-                raise TimeoutError(message)
-            return future.result()
+                raise ScrapliTimeout(message)
 
         return timeout_wrapper
 

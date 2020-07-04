@@ -65,7 +65,8 @@ def _find_transport_plugin(transport: str) -&gt; Tuple[Any, Tuple[str, ...]]:
         fix = (
             &#34;To resolve this issue, ensure you are referencing a valid transport plugin. Transport&#34;
             &#34; plugins should be named similar to `scrapli_paramiko` or `scrapli_ssh2`, and can be &#34;
-            &#34;selected by passing simply `paramiko` or `ssh2` into the scrapli driver.&#34;
+            &#34;selected by passing simply `paramiko` or `ssh2` into the scrapli driver. You can &#34;
+            &#34;install most plugins with pip: `pip install scrapli-ssh2` for example.&#34;
         )
         warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
         raise ModuleNotFoundError(warning)

@@ -80,7 +80,7 @@ class GenericDriverBase:
 
     @staticmethod
     def _post_send_command(
-        raw_response: str, processed_response: str, response: Response
+        raw_response: bytes, processed_response: bytes, response: Response
     ) -&gt; Response:
         &#34;&#34;&#34;
         Handle post &#34;send_command&#34; tasks for consistency between sync/async versions
@@ -257,7 +257,7 @@ similar to the base <code>Scrape</code> object from that perspective.</p></div>
 
     @staticmethod
     def _post_send_command(
-        raw_response: str, processed_response: str, response: Response
+        raw_response: bytes, processed_response: bytes, response: Response
     ) -&gt; Response:
         &#34;&#34;&#34;
         Handle post &#34;send_command&#34; tasks for consistency between sync/async versions

@@ -73,6 +73,7 @@ class ScrapeBase:
         auth_username: str = &#34;&#34;,
         auth_password: str = &#34;&#34;,
         auth_private_key: str = &#34;&#34;,
+        auth_private_key_passphrase: str = &#34;&#34;,
         auth_strict_key: bool = True,
         auth_bypass: bool = False,
         timeout_socket: int = 5,
@@ -109,6 +110,7 @@ class ScrapeBase:
             port: port to connect to
             auth_username: username for authentication
             auth_private_key: path to private key for authentication
+            auth_private_key_passphrase: passphrase for decrypting ssh key if necessary
             auth_password: password for authentication
             auth_strict_key: strict host checking or not -- applicable for system ssh driver only
             auth_bypass: bypass ssh key or password auth for devices without authentication, or that
@@ -186,6 +188,7 @@ class ScrapeBase:
             auth_username=auth_username,
             auth_password=auth_password,
             auth_private_key=auth_private_key,
+            auth_private_key_passphrase=auth_private_key_passphrase,
             auth_strict_key=auth_strict_key,
             auth_bypass=auth_bypass,
         )
@@ -273,6 +276,8 @@ class ScrapeBase:
             f&#34;auth_username={self._initialization_args[&#39;auth_username&#39;]!r}, &#34;
             f&#34;auth_password={self._initialization_args[&#39;auth_password&#39;]!r}, &#34;
             f&#34;auth_private_key={self._initialization_args[&#39;auth_private_key&#39;]!r}, &#34;
+            &#34;auth_private_key_passphrase=&#34;
+            f&#34;{self._initialization_args[&#39;auth_private_key_passphrase&#39;]!r}, &#34;
             f&#34;auth_strict_key={self._initialization_args[&#39;auth_strict_key&#39;]!r}, &#34;
             f&#34;auth_bypass={self._initialization_args[&#39;auth_bypass&#39;]!r}, &#34;
             f&#34;timeout_socket={self._initialization_args[&#39;timeout_socket&#39;]!r}, &#34;
@@ -323,6 +328,7 @@ class ScrapeBase:
         auth_username: str,
         auth_password: str,
         auth_private_key: str,
+        auth_private_key_passphrase: str,
         auth_strict_key: bool,
         auth_bypass: bool,
     ) -&gt; None:
@@ -332,7 +338,8 @@ class ScrapeBase:
         Args:
             auth_username: username to parse/set
             auth_password: password to parse/set
-            auth_private_key: public key to parse/set
+            auth_private_key: ssh key to parse/set
+            auth_private_key_passphrase: ssh key passphrase to parse/set
             auth_strict_key: strict key to parse/set
             auth_bypass: bypass to parse/set
 
@@ -353,6 +360,9 @@ class ScrapeBase:
         self._initialization_args[&#34;auth_bypass&#34;] = auth_bypass
         self._initialization_args[&#34;auth_username&#34;] = auth_username.strip()
         self._initialization_args[&#34;auth_password&#34;] = auth_password.strip()
+        self._initialization_args[
+            &#34;auth_private_key_passphrase&#34;
+        ] = auth_private_key_passphrase.strip()
 
         if auth_private_key:
             private_key_path = Path.expanduser(Path(auth_private_key.strip()))
@@ -582,7 +592,7 @@ class ScrapeBase:
 <dl>
 <dt id="scrapli.driver.base_driver.ScrapeBase"><code class="flex name class">
 <span>class <span class="ident">ScrapeBase</span></span>
-<span>(</span><span>host: str = '', port: int = 22, auth_username: str = '', auth_password: str = '', auth_private_key: str = '', auth_strict_key: bool = True, auth_bypass: bool = False, timeout_socket: int = 5, timeout_transport: int = 10, timeout_ops: int = 30, timeout_exit: bool = True, keepalive: bool = False, keepalive_interval: int = 30, keepalive_type: str = 'network', keepalive_pattern: str = '\x05', comms_prompt_pattern: str = &#x27;^[a-z0-9.\\-@()/:]{1,48}[#&gt;$]\\s*$&#x27;, comms_return_char: str = '\n', comms_ansi: bool = False, ssh_config_file: Union[str, bool] = False, ssh_known_hosts_file: Union[str, bool] = False, on_open: Union[Callable[..., Any], NoneType] = None, on_close: Union[Callable[..., Any], NoneType] = None, transport: str = 'system', transport_options: Union[Dict[str, Any], NoneType] = None)</span>
+<span>(</span><span>host: str = '', port: int = 22, auth_username: str = '', auth_password: str = '', auth_private_key: str = '', auth_private_key_passphrase: str = '', auth_strict_key: bool = True, auth_bypass: bool = False, timeout_socket: int = 5, timeout_transport: int = 10, timeout_ops: int = 30, timeout_exit: bool = True, keepalive: bool = False, keepalive_interval: int = 30, keepalive_type: str = 'network', keepalive_pattern: str = '\x05', comms_prompt_pattern: str = &#x27;^[a-z0-9.\\-@()/:]{1,48}[#&gt;$]\\s*$&#x27;, comms_return_char: str = '\n', comms_ansi: bool = False, ssh_config_file: Union[str, bool] = False, ssh_known_hosts_file: Union[str, bool] = False, on_open: Union[Callable[..., Any], NoneType] = None, on_close: Union[Callable[..., Any], NoneType] = None, transport: str = 'system', transport_options: Union[Dict[str, Any], NoneType] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Scrape Object</p>
@@ -602,6 +612,8 @@ relies on, see Transport and Channel docs for details.</p>
 <dd>username for authentication</dd>
 <dt><strong><code>auth_private_key</code></strong></dt>
 <dd>path to private key for authentication</dd>
+<dt><strong><code>auth_private_key_passphrase</code></strong></dt>
+<dd>passphrase for decrypting ssh key if necessary</dd>
 <dt><strong><code>auth_password</code></strong></dt>
 <dd>password for authentication</dd>
 <dt><strong><code>auth_strict_key</code></strong></dt>
@@ -704,6 +716,7 @@ docs for given transport class for details of what to pass here</dd>
         auth_username: str = &#34;&#34;,
         auth_password: str = &#34;&#34;,
         auth_private_key: str = &#34;&#34;,
+        auth_private_key_passphrase: str = &#34;&#34;,
         auth_strict_key: bool = True,
         auth_bypass: bool = False,
         timeout_socket: int = 5,
@@ -740,6 +753,7 @@ docs for given transport class for details of what to pass here</dd>
             port: port to connect to
             auth_username: username for authentication
             auth_private_key: path to private key for authentication
+            auth_private_key_passphrase: passphrase for decrypting ssh key if necessary
             auth_password: password for authentication
             auth_strict_key: strict host checking or not -- applicable for system ssh driver only
             auth_bypass: bypass ssh key or password auth for devices without authentication, or that
@@ -817,6 +831,7 @@ docs for given transport class for details of what to pass here</dd>
             auth_username=auth_username,
             auth_password=auth_password,
             auth_private_key=auth_private_key,
+            auth_private_key_passphrase=auth_private_key_passphrase,
             auth_strict_key=auth_strict_key,
             auth_bypass=auth_bypass,
         )
@@ -904,6 +919,8 @@ docs for given transport class for details of what to pass here</dd>
             f&#34;auth_username={self._initialization_args[&#39;auth_username&#39;]!r}, &#34;
             f&#34;auth_password={self._initialization_args[&#39;auth_password&#39;]!r}, &#34;
             f&#34;auth_private_key={self._initialization_args[&#39;auth_private_key&#39;]!r}, &#34;
+            &#34;auth_private_key_passphrase=&#34;
+            f&#34;{self._initialization_args[&#39;auth_private_key_passphrase&#39;]!r}, &#34;
             f&#34;auth_strict_key={self._initialization_args[&#39;auth_strict_key&#39;]!r}, &#34;
             f&#34;auth_bypass={self._initialization_args[&#39;auth_bypass&#39;]!r}, &#34;
             f&#34;timeout_socket={self._initialization_args[&#39;timeout_socket&#39;]!r}, &#34;
@@ -954,6 +971,7 @@ docs for given transport class for details of what to pass here</dd>
         auth_username: str,
         auth_password: str,
         auth_private_key: str,
+        auth_private_key_passphrase: str,
         auth_strict_key: bool,
         auth_bypass: bool,
     ) -&gt; None:
@@ -963,7 +981,8 @@ docs for given transport class for details of what to pass here</dd>
         Args:
             auth_username: username to parse/set
             auth_password: password to parse/set
-            auth_private_key: public key to parse/set
+            auth_private_key: ssh key to parse/set
+            auth_private_key_passphrase: ssh key passphrase to parse/set
             auth_strict_key: strict key to parse/set
             auth_bypass: bypass to parse/set
 
@@ -984,6 +1003,9 @@ docs for given transport class for details of what to pass here</dd>
         self._initialization_args[&#34;auth_bypass&#34;] = auth_bypass
         self._initialization_args[&#34;auth_username&#34;] = auth_username.strip()
         self._initialization_args[&#34;auth_password&#34;] = auth_password.strip()
+        self._initialization_args[
+            &#34;auth_private_key_passphrase&#34;
+        ] = auth_private_key_passphrase.strip()
 
         if auth_private_key:
             private_key_path = Path.expanduser(Path(auth_private_key.strip()))

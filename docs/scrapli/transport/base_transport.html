@@ -138,7 +138,10 @@ class TransportBase(ABC):
 
         &#34;&#34;&#34;
         class_dict = self.__dict__.copy()
-        class_dict[&#34;auth_password&#34;] = &#34;********&#34;
+        if &#34;auth_password&#34; in class_dict.keys():
+            class_dict[&#34;auth_password&#34;] = &#34;********&#34;
+        if &#34;auth_private_key_passphrase&#34; in class_dict.keys():
+            class_dict[&#34;auth_private_key_passphrase&#34;] = &#34;********&#34;
         class_dict[&#34;session_lock&#34;] = self.session_lock.locked()
         class_dict[&#34;logger&#34;] = self.logger.name
         return f&#34;Transport {class_dict}&#34;
@@ -362,7 +365,10 @@ type is 'network'</dd>
 
         &#34;&#34;&#34;
         class_dict = self.__dict__.copy()
-        class_dict[&#34;auth_password&#34;] = &#34;********&#34;
+        if &#34;auth_password&#34; in class_dict.keys():
+            class_dict[&#34;auth_password&#34;] = &#34;********&#34;
+        if &#34;auth_private_key_passphrase&#34; in class_dict.keys():
+            class_dict[&#34;auth_private_key_passphrase&#34;] = &#34;********&#34;
         class_dict[&#34;session_lock&#34;] = self.session_lock.locked()
         class_dict[&#34;logger&#34;] = self.logger.name
         return f&#34;Transport {class_dict}&#34;

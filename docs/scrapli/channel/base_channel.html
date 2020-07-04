@@ -232,7 +232,7 @@ class ChannelBase(ABC):
         if not isinstance(interact_events, list):
             raise TypeError(f&#34;`interact_events` expects a List, got {type(interact_events)}&#34;)
 
-    def _post_send_inputs_interact(self, output: bytes) -&gt; Tuple[str, str]:
+    def _post_send_inputs_interact(self, output: bytes) -&gt; Tuple[bytes, bytes]:
         &#34;&#34;&#34;
         Handle pre &#34;send_inputs_interact&#34; tasks for consistency between sync/async versions
 
@@ -247,8 +247,8 @@ class ChannelBase(ABC):
 
         &#34;&#34;&#34;
         processed_output = self._restructure_output(output=output, strip_prompt=False)
-        raw_result = output.decode()
-        processed_result = processed_output.decode()
+        raw_result = output
+        processed_result = processed_output
         return raw_result, processed_result</code></pre>
 </details>
 </section>
@@ -502,7 +502,7 @@ preferable to disable this type of behavior via the device itself if possible.</
         if not isinstance(interact_events, list):
             raise TypeError(f&#34;`interact_events` expects a List, got {type(interact_events)}&#34;)
 
-    def _post_send_inputs_interact(self, output: bytes) -&gt; Tuple[str, str]:
+    def _post_send_inputs_interact(self, output: bytes) -&gt; Tuple[bytes, bytes]:
         &#34;&#34;&#34;
         Handle pre &#34;send_inputs_interact&#34; tasks for consistency between sync/async versions
 
@@ -517,8 +517,8 @@ preferable to disable this type of behavior via the device itself if possible.</
 
         &#34;&#34;&#34;
         processed_output = self._restructure_output(output=output, strip_prompt=False)
-        raw_result = output.decode()
-        processed_result = processed_output.decode()
+        raw_result = output
+        processed_result = processed_output
         return raw_result, processed_result</code></pre>
 </details>
 <h3>Ancestors</h3>

@@ -33,7 +33,7 @@ setuptools.setup(
             "pyats>=20.2",
             "scrapli_paramiko>=2020.06.06",
             "scrapli_ssh2>=2020.06.06",
-            "scrapli_asyncssh>=2020.06.06",
+            "scrapli_asyncssh>=2020.07.04",
         ],
     },
     classifiers=[
