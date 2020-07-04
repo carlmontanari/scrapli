@@ -53,7 +53,7 @@ class GenericDriverBase:
 
     @staticmethod
     def _post_send_command(
-        raw_response: str, processed_response: str, response: Response
+        raw_response: bytes, processed_response: bytes, response: Response
     ) -> Response:
         """
         Handle post "send_command" tasks for consistency between sync/async versions

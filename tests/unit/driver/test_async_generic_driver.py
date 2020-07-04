@@ -33,7 +33,7 @@ async def test_send_command(async_generic_driver_conn, strip_prompt):
     response = await async_generic_driver_conn.send_command(
         command="show version", strip_prompt=strip_prompt
     )
-    assert response.raw_result == expected_raw
+    assert response.raw_result == expected_raw.encode()
     assert response.result == expected_processed
 
 
@@ -52,7 +52,7 @@ async def test_send_commands(async_generic_driver_conn, strip_prompt):
     multi_response = await async_generic_driver_conn.send_commands(
         commands=["terminal length 0", "show version"], strip_prompt=strip_prompt
     )
-    assert multi_response[1].raw_result == expected_raw
+    assert multi_response[1].raw_result == expected_raw.encode()
     assert multi_response[1].result == expected_processed
 
 
@@ -72,7 +72,7 @@ async def test_send_commands_from_file(async_generic_driver_conn, strip_prompt):
     multi_response = await async_generic_driver_conn.send_commands_from_file(
         file=f"{TEST_DATA_DIR}/files/cisco_iosxe_commands", strip_prompt=strip_prompt
     )
-    assert multi_response[0].raw_result == expected_raw
+    assert multi_response[0].raw_result == expected_raw.encode()
     assert multi_response[0].result == expected_processed
 
 
@@ -83,7 +83,7 @@ async def test_send_interactive(async_generic_driver_conn):
     interact_events = TEST_CASES["cisco_iosxe"]["test_send_inputs_interact"]["interact_events"]
     await async_generic_driver_conn.open()
     response = await async_generic_driver_conn.send_interactive(interact_events=interact_events)
-    assert expected_raw in response.raw_result
+    assert expected_raw.encode() in response.raw_result
     assert expected_processed in response.result
 
 

@@ -111,7 +111,10 @@ class TransportBase(ABC):
 
         """
         class_dict = self.__dict__.copy()
-        class_dict["auth_password"] = "********"
+        if "auth_password" in class_dict.keys():
+            class_dict["auth_password"] = "********"
+        if "auth_private_key_passphrase" in class_dict.keys():
+            class_dict["auth_private_key_passphrase"] = "********"
         class_dict["session_lock"] = self.session_lock.locked()
         class_dict["logger"] = self.logger.name
         return f"Transport {class_dict}"

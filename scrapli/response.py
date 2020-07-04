@@ -46,7 +46,7 @@ class Response:
         self.channel_input = channel_input
         self.textfsm_platform = textfsm_platform
         self.genie_platform = genie_platform
-        self.raw_result: str = ""
+        self.raw_result: bytes = b""
         self.result: str = ""
 
         if isinstance(failed_when_contains, str):
@@ -102,7 +102,7 @@ class Response:
         """
         return f"Response <Success: {str(not self.failed)}>"
 
-    def _record_response(self, result: str) -> None:
+    def _record_response(self, result: bytes) -> None:
         """
         Record channel_input results and elapsed time of channel input/reading output
 
@@ -118,10 +118,11 @@ class Response:
         """
         self.finish_time = datetime.now()
         self.elapsed_time = (self.finish_time - self.start_time).total_seconds()
-        self.result = result
+        self.raw_result = result
+        self.result = result.decode()
         if not self.failed_when_contains:
             self.failed = False
-        elif not any(err in result for err in self.failed_when_contains):
+        elif not any(err in self.result for err in self.failed_when_contains):
             self.failed = False
 
     def textfsm_parse_output(self, to_dict: bool = True) -> Union[Dict[str, Any], List[Any]]:
@@ -252,6 +253,26 @@ class MultiResponse(ScrapliMultiResponse):
         if any(response.failed for response in self.data):
             return True
         return False
+
+    @property
+    def result(self) -> str:
+        """
+        Build a unified result from all elements of MultiResponse
+
+        Args:
+            N/A
+
+        Returns:
+            str: Unified result by combining results of all elements of MultiResponse
+
+        Raises:
+            N/A
+
+        """
+        result = ""
+        for response in self.data:
+            result += "\n".join([response.channel_input, response.result])
+        return result
 
     def raise_for_status(self) -> None:
         """

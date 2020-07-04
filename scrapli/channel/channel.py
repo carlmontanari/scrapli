@@ -145,7 +145,7 @@ class Channel(ChannelBase):
                 current_prompt = channel_match.group(0)
                 return current_prompt.decode().strip()
 
-    def send_input(self, channel_input: str, strip_prompt: bool = True,) -> Tuple[str, str]:
+    def send_input(self, channel_input: str, strip_prompt: bool = True) -> Tuple[bytes, bytes]:
         """
         Primary entry point to send data to devices in shell mode; accept input and returns result
 
@@ -165,7 +165,7 @@ class Channel(ChannelBase):
         raw_result, processed_result = self._send_input(
             channel_input=channel_input, strip_prompt=strip_prompt
         )
-        return raw_result.decode(), processed_result.decode()
+        return raw_result, processed_result
 
     @operation_timeout("timeout_ops", "Timed out sending input to device.")
     def _send_input(self, channel_input: str, strip_prompt: bool) -> Tuple[bytes, bytes]:
@@ -202,7 +202,7 @@ class Channel(ChannelBase):
     @operation_timeout("timeout_ops", "Timed out sending interactive input to device.")
     def send_inputs_interact(
         self, interact_events: List[Tuple[str, str, Optional[bool]]]
-    ) -> Tuple[str, str]:
+    ) -> Tuple[bytes, bytes]:
         """
         Interact with a device with changing prompts per input.
 

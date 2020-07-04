@@ -52,8 +52,8 @@ def test_post_send_inputs_interact(sync_cisco_iosxe_conn):
     raw_result, processed_result = sync_cisco_iosxe_conn.channel._post_send_inputs_interact(
         output=expected_raw.encode()
     )
-    assert raw_result == expected_raw
-    assert processed_result[1:] == expected_processed
+    assert raw_result == expected_raw.encode()
+    assert processed_result[1:] == expected_processed.encode()
 
 
 @pytest.mark.parametrize(

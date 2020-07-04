@@ -173,9 +173,9 @@ def test_pre_send_config(sync_cisco_iosxe_conn):
 
 def test_post_send_config(sync_cisco_iosxe_conn):
     response_one = Response("localhost", "some input", failed_when_contains=["something"])
-    response_one._record_response(result="greatsucccess")
+    response_one._record_response(result=b"greatsucccess")
     response_two = Response("localhost", "some input")
-    response_two._record_response(result="alsosucess")
+    response_two._record_response(result=b"alsosucess")
     multi_response = MultiResponse()
     multi_response.append(response_one)
     multi_response.append(response_two)
@@ -218,7 +218,7 @@ def test_pre_send_configs_user_defined(sync_cisco_iosxe_conn):
 
 def test_post_send_configs(sync_cisco_iosxe_conn):
     response_one = Response("localhost", "some input", failed_when_contains=["something"])
-    response_one._record_response(result="greatsucccess")
+    response_one._record_response(result=b"greatsucccess")
     multi_response = MultiResponse()
     multi_response.append(response_one)
     updated_responses = sync_cisco_iosxe_conn._post_send_configs(responses=multi_response)
