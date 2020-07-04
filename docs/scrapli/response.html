@@ -73,7 +73,7 @@ class Response:
         self.channel_input = channel_input
         self.textfsm_platform = textfsm_platform
         self.genie_platform = genie_platform
-        self.raw_result: str = &#34;&#34;
+        self.raw_result: bytes = b&#34;&#34;
         self.result: str = &#34;&#34;
 
         if isinstance(failed_when_contains, str):
@@ -129,7 +129,7 @@ class Response:
         &#34;&#34;&#34;
         return f&#34;Response &lt;Success: {str(not self.failed)}&gt;&#34;
 
-    def _record_response(self, result: str) -&gt; None:
+    def _record_response(self, result: bytes) -&gt; None:
         &#34;&#34;&#34;
         Record channel_input results and elapsed time of channel input/reading output
 
@@ -145,10 +145,11 @@ class Response:
         &#34;&#34;&#34;
         self.finish_time = datetime.now()
         self.elapsed_time = (self.finish_time - self.start_time).total_seconds()
-        self.result = result
+        self.raw_result = result
+        self.result = result.decode()
         if not self.failed_when_contains:
             self.failed = False
-        elif not any(err in result for err in self.failed_when_contains):
+        elif not any(err in self.result for err in self.failed_when_contains):
             self.failed = False
 
     def textfsm_parse_output(self, to_dict: bool = True) -&gt; Union[Dict[str, Any], List[Any]]:
@@ -280,6 +281,26 @@ class MultiResponse(ScrapliMultiResponse):
             return True
         return False
 
+    @property
+    def result(self) -&gt; str:
+        &#34;&#34;&#34;
+        Build a unified result from all elements of MultiResponse
+
+        Args:
+            N/A
+
+        Returns:
+            str: Unified result by combining results of all elements of MultiResponse
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        result = &#34;&#34;
+        for response in self.data:
+            result += &#34;\n&#34;.join([response.channel_input, response.result])
+        return result
+
     def raise_for_status(self) -&gt; None:
         &#34;&#34;&#34;
         Raise a `ScrapliCommandFailure` if any elements are failed
@@ -375,6 +396,26 @@ class MultiResponse(ScrapliMultiResponse):
             return True
         return False
 
+    @property
+    def result(self) -&gt; str:
+        &#34;&#34;&#34;
+        Build a unified result from all elements of MultiResponse
+
+        Args:
+            N/A
+
+        Returns:
+            str: Unified result by combining results of all elements of MultiResponse
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        result = &#34;&#34;
+        for response in self.data:
+            result += &#34;\n&#34;.join([response.channel_input, response.result])
+        return result
+
     def raise_for_status(self) -&gt; None:
         &#34;&#34;&#34;
         Raise a `ScrapliCommandFailure` if any elements are failed
@@ -442,6 +483,46 @@ def failed(self) -&gt; bool:
     if any(response.failed for response in self.data):
         return True
     return False</code></pre>
+</details>
+</dd>
+<dt id="scrapli.response.MultiResponse.result"><code class="name">var <span class="ident">result</span> : str</code></dt>
+<dd>
+<div class="desc"><p>Build a unified result from all elements of MultiResponse</p>
+<h2 id="args">Args</h2>
+<p>N/A</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>Unified result by combining results of all elements of MultiResponse</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N/A</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def result(self) -&gt; str:
+    &#34;&#34;&#34;
+    Build a unified result from all elements of MultiResponse
+
+    Args:
+        N/A
+
+    Returns:
+        str: Unified result by combining results of all elements of MultiResponse
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    result = &#34;&#34;
+    for response in self.data:
+        result += &#34;\n&#34;.join([response.channel_input, response.result])
+    return result</code></pre>
 </details>
 </dd>
 </dl>
@@ -565,7 +646,7 @@ failed command/interaction</dd>
         self.channel_input = channel_input
         self.textfsm_platform = textfsm_platform
         self.genie_platform = genie_platform
-        self.raw_result: str = &#34;&#34;
+        self.raw_result: bytes = b&#34;&#34;
         self.result: str = &#34;&#34;
 
         if isinstance(failed_when_contains, str):
@@ -621,7 +702,7 @@ failed command/interaction</dd>
         &#34;&#34;&#34;
         return f&#34;Response &lt;Success: {str(not self.failed)}&gt;&#34;
 
-    def _record_response(self, result: str) -&gt; None:
+    def _record_response(self, result: bytes) -&gt; None:
         &#34;&#34;&#34;
         Record channel_input results and elapsed time of channel input/reading output
 
@@ -637,10 +718,11 @@ failed command/interaction</dd>
         &#34;&#34;&#34;
         self.finish_time = datetime.now()
         self.elapsed_time = (self.finish_time - self.start_time).total_seconds()
-        self.result = result
+        self.raw_result = result
+        self.result = result.decode()
         if not self.failed_when_contains:
             self.failed = False
-        elif not any(err in result for err in self.failed_when_contains):
+        elif not any(err in self.result for err in self.failed_when_contains):
             self.failed = False
 
     def textfsm_parse_output(self, to_dict: bool = True) -&gt; Union[Dict[str, Any], List[Any]]:
@@ -869,6 +951,7 @@ dict from header and row data so it is easier to read/parse the output</dd>
 <ul class="">
 <li><code><a title="scrapli.response.MultiResponse.failed" href="#scrapli.response.MultiResponse.failed">failed</a></code></li>
 <li><code><a title="scrapli.response.MultiResponse.raise_for_status" href="#scrapli.response.MultiResponse.raise_for_status">raise_for_status</a></code></li>
+<li><code><a title="scrapli.response.MultiResponse.result" href="#scrapli.response.MultiResponse.result">result</a></code></li>
 </ul>
 </li>
 <li>

@@ -174,7 +174,9 @@ class AsyncChannel(ChannelBase):
                 current_prompt = channel_match.group(0)
                 return current_prompt.decode().strip()
 
-    async def send_input(self, channel_input: str, strip_prompt: bool = True) -&gt; Tuple[str, str]:
+    async def send_input(
+        self, channel_input: str, strip_prompt: bool = True
+    ) -&gt; Tuple[bytes, bytes]:
         &#34;&#34;&#34;
         Primary entry point to send data to devices in async shell mode; accept input, return result
 
@@ -194,7 +196,7 @@ class AsyncChannel(ChannelBase):
         raw_result, processed_result = await self._async_send_input(
             channel_input=channel_input, strip_prompt=strip_prompt
         )
-        return raw_result.decode(), processed_result.decode()
+        return raw_result, processed_result
 
     @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out sending input to device.&#34;)
     async def _async_send_input(
@@ -236,7 +238,7 @@ class AsyncChannel(ChannelBase):
     @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out sending interactive input to device.&#34;)
     async def send_inputs_interact(
         self, interact_events: List[Tuple[str, str, Optional[bool]]]
-    ) -&gt; Tuple[str, str]:
+    ) -&gt; Tuple[bytes, bytes]:
         &#34;&#34;&#34;
         Async interact with a device with changing prompts per input.
 
@@ -505,7 +507,9 @@ inheritance.</p>
                 current_prompt = channel_match.group(0)
                 return current_prompt.decode().strip()
 
-    async def send_input(self, channel_input: str, strip_prompt: bool = True) -&gt; Tuple[str, str]:
+    async def send_input(
+        self, channel_input: str, strip_prompt: bool = True
+    ) -&gt; Tuple[bytes, bytes]:
         &#34;&#34;&#34;
         Primary entry point to send data to devices in async shell mode; accept input, return result
 
@@ -525,7 +529,7 @@ inheritance.</p>
         raw_result, processed_result = await self._async_send_input(
             channel_input=channel_input, strip_prompt=strip_prompt
         )
-        return raw_result.decode(), processed_result.decode()
+        return raw_result, processed_result
 
     @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out sending input to device.&#34;)
     async def _async_send_input(
@@ -567,7 +571,7 @@ inheritance.</p>
     @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out sending interactive input to device.&#34;)
     async def send_inputs_interact(
         self, interact_events: List[Tuple[str, str, Optional[bool]]]
-    ) -&gt; Tuple[str, str]:
+    ) -&gt; Tuple[bytes, bytes]:
         &#34;&#34;&#34;
         Async interact with a device with changing prompts per input.
 
@@ -665,7 +669,7 @@ inheritance.</p>
 <h3>Methods</h3>
 <dl>
 <dt id="scrapli.channel.async_channel.AsyncChannel.get_prompt"><code class="name flex">
-<span>def <span class="ident">get_prompt</span></span>(<span>channel_or_transport: Union[ForwardRef('Channel'), ForwardRef('Transport')], *args: Union[str, int], **kwargs: Dict[str, Union[str, int]]) -> Any</span>
+<span>def <span class="ident">get_prompt</span></span>(<span>channel_or_transport: Union[ForwardRef('Channel'), ForwardRef('Transport')], *args: Any, **kwargs: Dict[str, Union[str, int]]) -> Any</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -675,7 +679,7 @@ inheritance.</p>
 </summary>
 <pre><code class="python">def timeout_wrapper(
     channel_or_transport: Union[&#34;Channel&#34;, &#34;Transport&#34;],
-    *args: Union[str, int],
+    *args: Any,
     **kwargs: Dict[str, Union[str, int]],
 ) -&gt; Any:
     # import here to avoid circular dependency
@@ -702,22 +706,26 @@ inheritance.</p>
         session_lock = channel_or_transport.session_lock
         close = channel_or_transport.close
 
-    pool = ThreadPoolExecutor(max_workers=1)
-    future = pool.submit(wrapped_func, channel_or_transport, *args, **kwargs)
-    wait([future], timeout=timeout_duration)
-    if not future.done():
+    pool = multiprocessing.pool.ThreadPool(processes=1)
+    func_args = [channel_or_transport, *args]
+    future = pool.apply_async(wrapped_func, func_args, kwargs)
+    try:
+        result = future.get(timeout=timeout_duration)
+        pool.terminate()
+        return result
+    except multiprocessing.context.TimeoutError:
+        pool.terminate()
         channel_or_transport.logger.info(message)
         if timeout_exit:
             channel_or_transport.logger.info(&#34;timeout_exit is True, closing transport&#34;)
             if session_lock.locked():
                 session_lock.release()
             close()
-        raise TimeoutError(message)
-    return future.result()</code></pre>
+        raise ScrapliTimeout(message)</code></pre>
 </details>
 </dd>
 <dt id="scrapli.channel.async_channel.AsyncChannel.send_input"><code class="name flex">
-<span>async def <span class="ident">send_input</span></span>(<span>self, channel_input: str, strip_prompt: bool = True) -> Tuple[str, str]</span>
+<span>async def <span class="ident">send_input</span></span>(<span>self, channel_input: str, strip_prompt: bool = True) -> Tuple[bytes, bytes]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Primary entry point to send data to devices in async shell mode; accept input, return result</p>
@@ -744,7 +752,9 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def send_input(self, channel_input: str, strip_prompt: bool = True) -&gt; Tuple[str, str]:
+<pre><code class="python">async def send_input(
+    self, channel_input: str, strip_prompt: bool = True
+) -&gt; Tuple[bytes, bytes]:
     &#34;&#34;&#34;
     Primary entry point to send data to devices in async shell mode; accept input, return result
 
@@ -764,11 +774,11 @@ inheritance.</p>
     raw_result, processed_result = await self._async_send_input(
         channel_input=channel_input, strip_prompt=strip_prompt
     )
-    return raw_result.decode(), processed_result.decode()</code></pre>
+    return raw_result, processed_result</code></pre>
 </details>
 </dd>
 <dt id="scrapli.channel.async_channel.AsyncChannel.send_inputs_interact"><code class="name flex">
-<span>def <span class="ident">send_inputs_interact</span></span>(<span>channel_or_transport: Union[ForwardRef('Channel'), ForwardRef('Transport')], *args: Union[str, int], **kwargs: Dict[str, Union[str, int]]) -> Any</span>
+<span>def <span class="ident">send_inputs_interact</span></span>(<span>channel_or_transport: Union[ForwardRef('Channel'), ForwardRef('Transport')], *args: Any, **kwargs: Dict[str, Union[str, int]]) -> Any</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -778,7 +788,7 @@ inheritance.</p>
 </summary>
 <pre><code class="python">def timeout_wrapper(
     channel_or_transport: Union[&#34;Channel&#34;, &#34;Transport&#34;],
-    *args: Union[str, int],
+    *args: Any,
     **kwargs: Dict[str, Union[str, int]],
 ) -&gt; Any:
     # import here to avoid circular dependency
@@ -805,18 +815,22 @@ inheritance.</p>
         session_lock = channel_or_transport.session_lock
         close = channel_or_transport.close
 
-    pool = ThreadPoolExecutor(max_workers=1)
-    future = pool.submit(wrapped_func, channel_or_transport, *args, **kwargs)
-    wait([future], timeout=timeout_duration)
-    if not future.done():
+    pool = multiprocessing.pool.ThreadPool(processes=1)
+    func_args = [channel_or_transport, *args]
+    future = pool.apply_async(wrapped_func, func_args, kwargs)
+    try:
+        result = future.get(timeout=timeout_duration)
+        pool.terminate()
+        return result
+    except multiprocessing.context.TimeoutError:
+        pool.terminate()
         channel_or_transport.logger.info(message)
         if timeout_exit:
             channel_or_transport.logger.info(&#34;timeout_exit is True, closing transport&#34;)
             if session_lock.locked():
                 session_lock.release()
             close()
-        raise TimeoutError(message)
-    return future.result()</code></pre>
+        raise ScrapliTimeout(message)</code></pre>
 </details>
 </dd>
 </dl>
