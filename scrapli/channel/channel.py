@@ -132,7 +132,6 @@ class Channel(ChannelBase):
 
         """
         prompt_pattern = get_prompt_pattern(prompt="", class_prompt=self.comms_prompt_pattern)
-        self.transport.set_timeout(timeout=10)
         self._send_return()
         output = b""
         while True:
@@ -141,7 +140,6 @@ class Channel(ChannelBase):
                 output = strip_ansi(output=output)
             channel_match = re.search(pattern=prompt_pattern, string=output)
             if channel_match:
-                self.transport.set_timeout()
                 current_prompt = channel_match.group(0)
                 return current_prompt.decode().strip()
 

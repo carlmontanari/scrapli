@@ -25,7 +25,7 @@ setuptools.setup(
         "genie": ["genie>=20.2", "pyats>=20.2"],
         "paramiko": ["scrapli_paramiko>=2020.06.06"],
         "ssh2": ["scrapli_ssh2>=2020.06.06"],
-        "asyncssh": ["scrapli_asyncssh>=2020.06.06"],
+        "asyncssh": ["scrapli_asyncssh>=2020.07.04"],
         "full": [
             "textfsm>=1.1.0",
             "ntc-templates>=1.1.0",

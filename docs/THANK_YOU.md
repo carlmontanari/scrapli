@@ -25,3 +25,4 @@ The following people have helped identify and report bugs in scrapli, thank you 
   - [SSH Config not Merging Attributes](https://github.com/carlmontanari/scrapli/issues/21)
 - [artyomovs](https://github.com/artyomovs)
   - [Prompt patterns not matching "tacacs+"](https://github.com/carlmontanari/scrapli/issues/23)
+  - [get_prompt Resetting timeout_ops inadvertently](https://github.com/carlmontanari/scrapli/issues/29)

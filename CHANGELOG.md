@@ -2,6 +2,10 @@ CHANGELOG
 =======
 
 # 2020.XX.XX
+- Fixed a silly issue where `get_prompt` was setting the transport timeout to 10s causing user defined timeouts to be
+ effectively ignored.
+
+# 2020.07.04
 - Updated IOSXE base config to include netconf setup for consistency w/ scrapli_netconf
 - Removed "pipes" authentication for system ssh -- this is mostly an internal change that simplifies the way that
  system transport authenticates. We lose the ability to very easily read out of stderr what is going on so even if we
