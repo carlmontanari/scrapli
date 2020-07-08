@@ -4,6 +4,9 @@ CHANGELOG
 # 2020.XX.XX
 - Fixed a silly issue where `get_prompt` was setting the transport timeout to 10s causing user defined timeouts to be
  effectively ignored.
+- Improved telnet authentication handling -- previously if a return character was needed to get the auth prompts to
+ kick into gear this could break auth.
+- Added "auth_bypass" to telnet transport.
 
 # 2020.07.04
 - Updated IOSXE base config to include netconf setup for consistency w/ scrapli_netconf

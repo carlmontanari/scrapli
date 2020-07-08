@@ -127,6 +127,7 @@ end
 - [Basic "GenericDriver" operations](/examples/basic_usage/generic_driver.py)
 - [Basic "core" Driver operations](/examples/basic_usage/iosxe_driver.py)
 - [Basic async operations](/examples/async_usage/async_iosxe_driver.py)
+- [Async multiple connections](/examples/async_usage/async_multiple_connections.py)
 - [Setting up basic logging](/examples/logging/basic_logging.py)
 - [Using SSH Key for authentication](/examples/ssh_keys/ssh_keys.py)
 - [Using SSH config file](/examples/ssh_config_files/ssh_config_file.py)
@@ -742,7 +743,7 @@ The basic usage section outlined the most commonly used driver arguments, this o
 | auth_private_key                | private key for authentication                              | Scrape            |
 | auth_private_key_passphrase     | passphrase for ssh key                                      | Scrape            |                   
 | auth_strict_key                 | strict key checking -- TRUE by default!                     | Scrape            |    
-| auth_bypass                     | bypass ssh auth prompts after ssh establishment             | Scrape            |                           
+| auth_bypass                     | bypass auth prompts after establishment                     | Scrape            |                           
 | timeout_socket                  | timeout value for initial socket connection                 | Scrape            |                   
 | timeout_transport               | timeout value for transport (i.e. paramiko)                 | Scrape            |                   
 | timeout_ops                     | timeout value for individual operations                     | Scrape            |                   
@@ -1113,15 +1114,12 @@ Currently the only reason I can think of to use anything other than "system" as 
 
 ## Auth Bypass
 
-*NOTE* Currently only supported with system transport!
+*NOTE* Currently only supported with system and telnet transports!
 
 Some devices, such as Cisco WLC, have no "true" SSH authentication, and instead prompt for credentials (or perhaps
  not even that) after session establishment. In order to cope with this corner case, the `auth_bypass` flag can be
   set to `True` which will cause scrapli to skip all authentication steps. Typically this flag would be set and a
    custom `on_open` function set to handle whatever prompts the device has upon SSH session establishment.
-   
-In the future this functionality will likely be extended to the telnet transport, and may be extended to paramiko and
- ssh2 transports.
 
 See the [non core device example](/examples/non_core_device/wlc.py) to see this in action.
 
