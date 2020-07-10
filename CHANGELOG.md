@@ -7,6 +7,12 @@ CHANGELOG
 - Improved telnet authentication handling -- previously if a return character was needed to get the auth prompts to
  kick into gear this could break auth.
 - Added "auth_bypass" to telnet transport.
+- Probably BUGFIX -- async functions were being decorated by the "normal" `operation_timeout` decorator -- created a
+ mostly duplicated async version of the timeout decorator to wrap the `AsyncChannel` methods. 
+- Fixed a maybe regression that caused drivers to try to authenticate (via interactive methods) even if a
+ `auth_secondary` is not set. Added tests to make sure that we raise a warning if there is no secondary password set
+ , but try to increase privilege without authentication, and of course if there is an auth secondary set, we
+  obviously try to auth in the normal fashion.
 
 # 2020.07.04
 - Updated IOSXE base config to include netconf setup for consistency w/ scrapli_netconf

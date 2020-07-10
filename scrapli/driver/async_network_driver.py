@@ -76,7 +76,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
         """
         self._pre_escalate(escalate_priv=escalate_priv)
 
-        if escalate_priv.escalate_auth is True:
+        if escalate_priv.escalate_auth is True and self.auth_secondary:
             await super().send_interactive(
                 interact_events=[
                     (escalate_priv.escalate, escalate_priv.escalate_prompt, False),

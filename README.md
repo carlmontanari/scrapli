@@ -695,6 +695,9 @@ scrapli supports telnet as a transport driver via the standard library module `t
    following attributes of the `Scrape` object:
   - `username_prompt`
   - `password_prompt`
+- When using telnet you may need to set the `comms_return_char` to `\r\n` the tests against the core platforms pass
+ without this, however it seems that some console server type devices are looking for this `\r\n` pattern instead of
+  the default `\n` pattern.
 
 If telnet for some reason becomes an important use case, the telnet Transport layer can be improved/augmented.
 
@@ -815,7 +818,7 @@ If you were so inclined to create some of your own "on connect" actions, you can
 ` argument of `Scrape` or any of its sub-classes (`NetworkDriver`, `IOSXEDriver`, etc.). The value of this argument
  must be a callable that accepts the reference to the connection object. This allows for the user to send commands or
   do really anything that needs to happen prior to "normal" operations. The core network drivers disable paging
-   functions all call directly into the channel object `send_inputs` method -- this is a good practice to follow as
+   functions all call directly into the channel object `send_input` method -- this is a good practice to follow as
     this will avoid any of the `NetworkDriver` overhead such as trying to attain privilege levels -- things like this
      may not be "ready" until *after* your `on_open` function is executed.
   
@@ -826,7 +829,7 @@ Below is an example of creating an "on connect" function and passing it to scrap
 from scrapli.driver.core import IOSXEDriver
 
 def iosxe_disable_paging(conn):
-    conn.channel.send_inputs("term length 0")
+    conn.channel.send_input("term length 0")
 
 my_device = {
     "host": "172.18.0.11",
@@ -1038,7 +1041,6 @@ my_device = {
 with Scrape(**my_device) as conn:
     conn.channel.send_input("terminal length 0")
     response = conn.channel.send_input("show version")
-    responses = conn.channel.send_inputs(["show version", "show run"])
 ```
 
 Without the `send_command` and similar methods, you must directly access the `Channel` object when sending inputs
