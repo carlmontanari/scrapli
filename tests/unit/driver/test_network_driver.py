@@ -177,7 +177,7 @@ def test_get_prompt(sync_cisco_iosxe_conn):
     [("scrapli", True), ("", False)],
     ids=["auth_secondary_provided", "auth_secondary_missed"],
 )
-def test_auth_required_no_auth_secondary(sync_cisco_iosxe_conn, auth_secondary, monkeypatch):
+def test_auth_required_no_auth_secondary(sync_cisco_iosxe_conn, auth_secondary):
     sync_cisco_iosxe_conn.auth_secondary = auth_secondary[0]
     sync_cisco_iosxe_conn.channel.timeout_ops = 1
     sync_cisco_iosxe_conn.open()
