@@ -192,11 +192,11 @@ async def test_get_prompt(async_cisco_iosxe_conn):
 )
 async def test_auth_required_no_auth_secondary(async_cisco_iosxe_conn, auth_secondary):
     async_cisco_iosxe_conn.auth_secondary = auth_secondary[0]
-    async_cisco_iosxe_conn.channel.timeout_ops = 1
     await async_cisco_iosxe_conn.open()
     await async_cisco_iosxe_conn.acquire_priv(desired_priv="exec")
 
     if auth_secondary[1] is False:
+        async_cisco_iosxe_conn.channel.timeout_ops = 1
         with pytest.warns(UserWarning), pytest.raises(ScrapliTimeout):
             # makes sure we raise a user warning if auth is required for priv escalation
             # this will also fail because the mock ssh server requires a password
