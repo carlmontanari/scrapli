@@ -1,7 +1,7 @@
 CHANGELOG
 =======
 
-# 2020.XX.XX
+# 2020.07.12
 - Fixed a silly issue where `get_prompt` was setting the transport timeout to 10s causing user defined timeouts to be
  effectively ignored.
 - Improved telnet authentication handling -- previously if a return character was needed to get the auth prompts to
@@ -15,6 +15,11 @@ CHANGELOG
   obviously try to auth in the normal fashion.
 - Started thinning down the PtyProcess stuff to simplify and and remove all unnecessary parts, as well as add typing
  and docstrings... not done yet, but some progress!
+- Added additional asyncio example
+- Added blurb about versioning in README
+- Fixed a few README issues (incorrect methods/typos)
+- Updated notes about auth_bypass to include telnet support
+- Added `SSHNotFound` exception for system SSH/PtyProcess if ssh binary can't be found
 
 # 2020.07.04
 - Updated IOSXE base config to include netconf setup for consistency w/ scrapli_netconf
