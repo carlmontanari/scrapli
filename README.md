@@ -31,6 +31,7 @@ Feel free to join the very awesome networktocode slack workspace [here](https://
 - [scrapli: What is it](#scrapli-what-is-it)
 - [Supported Platforms](#supported-platforms)
 - [Advanced Installation](#advanced-installation)
+- [Versioning](#versioning)
 - [Basic Usage](#basic-usage)
   - [Picking the right Driver](#picking-the-right-driver)
   - [Basic Driver Arguments](#basic-driver-arguments)
@@ -331,6 +332,20 @@ As for platforms to *run* scrapli on -- it has and will be tested on MacOS and U
   longer the case as it is just not worth the effort. While scrapli should work on windows when using the paramiko or
    ssh2-python transport drivers, it is not "officially" supported. It is *strongly* recommended/preferred for folks
     to use WSL/Cygwin instead of Windows.
+
+
+# Versioning
+
+scrapli, and all scrapli related projects use [CalVer](https://calver.org) versioning standard. All release versions
+ follow the format `YYYY.MM.DD`, however PyPi will shorten/standardize this to remove leading zeros.
+
+The reason for choosing CalVer is simply to make it very clear how old a given release of scrapli is. While there are
+ clearly some potential challenges around indicating when a "breaking" change occurs due to there not being the
+  concept of a "major" version, this is hopefully not too big a deal for scrapli.
+ 
+Please also note that the [CHANGELOG](CHANGELOG.md) contains notes about each version (and is updated in develop branch while
+ updates are happening), and the "public" API is documented [here](docs/PUBLIC_API_STATUS.md), and includes the date
+ /version of each public method's creation as well as the latest updated/modified date and any relevant notes.
 
 
 # Basic Usage

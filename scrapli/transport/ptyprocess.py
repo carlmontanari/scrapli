@@ -28,7 +28,9 @@ import struct
 import sys
 import time
 from shutil import which
-from typing import Type, TypeVar
+from typing import List, Optional, Type, TypeVar
+
+from scrapli.exceptions import SSHNotFound
 
 
 class PtyProcessError(Exception):
@@ -38,17 +40,24 @@ class PtyProcessError(Exception):
 PtyProcessType = TypeVar("PtyProcessType", bound="PtyProcess")
 
 
-def _byte(i):
-    return bytes([i])
-
-
 _EOF, _INTR = None, None
 
 
-def _make_eof_intr():
-    """Set constants _EOF and _INTR.
+def _make_eof_intr() -> None:
+    """
+    Set constants _EOF and _INTR.
 
     This avoids doing potentially costly operations on module load.
+
+    Args:
+        N/A
+
+    Returns:
+        N/A  # noqa: DAR202
+
+    Raises:
+        N/A
+
     """
     import termios
 
@@ -85,42 +94,30 @@ def _make_eof_intr():
         except ImportError:
             (intr, eof) = (3, 4)
 
-    _INTR = _byte(intr)
-    _EOF = _byte(eof)
+    _INTR = bytes([intr])
+    _EOF = bytes([eof])
 
 
-def _setecho(fd, state):
-    import termios
+def _setwinsize(fd: int, rows: int, cols: int) -> None:
+    """
+    Set window size.
 
-    errmsg = "setecho() may not be called on this platform (it may still be possible to enable/disable echo when spawning the child process)"
+    Some very old platforms have a bug that causes the value for termios.TIOCSWINSZ to be truncated.
+    There was a hack here to work around this, but it caused problems with newer platforms so has
+    been removed. For details see https://github.com/pexpect/pexpect/issues/39
 
-    try:
-        attr = termios.tcgetattr(fd)
-    except termios.error as err:
-        if err.args[0] == errno.EINVAL:
-            raise IOError(err.args[0], "%s: %s." % (err.args[1], errmsg))
-        raise
+    Args:
+        fd: file descriptor
+        rows: int number of rows for terminal
+        cols: int number of cols for terminal
 
-    if state:
-        attr[3] = attr[3] | termios.ECHO
-    else:
-        attr[3] = attr[3] & ~termios.ECHO
+    Returns:
+        N/A  # noqa: DAR202
 
-    try:
-        # I tried TCSADRAIN and TCSAFLUSH, but these were inconsistent and
-        # blocked on some platforms. TCSADRAIN would probably be ideal.
-        termios.tcsetattr(fd, termios.TCSANOW, attr)
-    except IOError as err:
-        if err.args[0] == errno.EINVAL:
-            raise IOError(err.args[0], "%s: %s." % (err.args[1], errmsg))
-        raise
+    Raises:
+        N/A
 
-
-def _setwinsize(fd, rows, cols):
-    # Some very old platforms have a bug that causes the value for
-    # termios.TIOCSWINSZ to be truncated. There was a hack here to work
-    # around this, but it caused problems with newer platforms so has been
-    # removed. For details see https://github.com/pexpect/pexpect/issues/39
+    """
     import termios
     import fcntl
 
@@ -130,43 +127,37 @@ def _setwinsize(fd, rows, cols):
     fcntl.ioctl(fd, TIOCSWINSZ, s)
 
 
-class PtyProcess(object):
-    """This class represents a process running in a pseudoterminal.
+class PtyProcess:
+    def __init__(self, pid: int, fd: int) -> None:
+        """
+        This class represents a process running in a pseudoterminal.
 
-    The main constructor is the :meth:`spawn` classmethod.
-    """
+        The main constructor is the `spawn` method.
 
-    string_type = bytes
-    linesep = os.linesep.encode("ascii")
-    crlf = "\r\n".encode("ascii")
+        Args:
+            pid: integer value of pid
+            fd: integer value of fd
 
-    @staticmethod
-    def write_to_stdout(b):
-        try:
-            return sys.stdout.buffer.write(b)
-        except AttributeError:
-            # If stdout has been replaced, it may not have .buffer
-            return sys.stdout.write(b.decode("ascii", "replace"))
+        Returns:
+            N/A  # noqa: DAR202
 
-    encoding = None
-    argv = None
-    env = None
-    launch_dir = None
+        Raises:
+            N/A
 
-    def __init__(self, pid, fd):
+        """
         _make_eof_intr()  # Ensure _EOF and _INTR are calculated
         self.pid = pid
         self.fd = fd
         readf = io.open(fd, "rb", buffering=0)
         writef = io.open(fd, "wb", buffering=0, closefd=False)
-        self.fileobj = io.BufferedRWPair(readf, writef)
+        self.fileobj = io.BufferedRWPair(readf, writef)  # type: ignore
 
         self.terminated = False
         self.closed = False
-        self.exitstatus = None
-        self.signalstatus = None
+        self.exitstatus: Optional[int] = None
+        self.signalstatus: Optional[int] = None
         # status returned by os.waitpid
-        self.status = None
+        self.status: Optional[int] = None
         self.flag_eof = False
         # Used by close() to give kernel time to update process status.
         # Time in seconds.
@@ -176,31 +167,11 @@ class PtyProcess(object):
         self.delayafterterminate = 0.1
 
     @classmethod
-    def spawn(
-        cls: Type[PtyProcessType],
-        argv,
-        cwd=None,
-        env=None,
-        echo=True,
-        preexec_fn=None,
-        dimensions=(24, 80),
-        pass_fds=(),
-    ) -> PtyProcessType:
+    def spawn(cls: Type[PtyProcessType], spawn_command: List[str]) -> PtyProcessType:
         """Start the given command in a child process in a pseudo terminal.
 
         This does all the fork/exec type of stuff for a pty, and returns an
         instance of PtyProcess.
-
-        If preexec_fn is supplied, it will be called with no arguments in the
-        child process before exec-ing the specified command.
-        It may, for instance, set signal handlers to SIG_DFL or SIG_IGN.
-
-        Dimensions of the psuedoterminal used for the subprocess can be
-        specified as a tuple (rows, cols), or the default (24, 80) will be used.
-
-        By default, all file descriptors except 0, 1 and 2 are closed. This
-        behavior can be overridden with pass_fds, a list of file descriptors to
-        keep open between the parent and the child.
         """
         # Note that it is difficult for this method to fail.
         # You cannot detect if the child process cannot start.
@@ -212,31 +183,19 @@ class PtyProcess(object):
 
         import fcntl
         import pty
-        import termios
         import resource
         from pty import CHILD, STDIN_FILENO
 
-        if not isinstance(argv, (list, tuple)):
-            raise TypeError("Expected a list or tuple for argv, got %r" % argv)
-
-        # Shallow copy of argv so we can modify it
-        argv = argv[:]
-        command = argv[0]
-
-        command_with_path = which(command)
-        if command_with_path is None:
-            raise FileNotFoundError(
-                "The command was not found or was not " + "executable: %s." % command
-            )
-        command = command_with_path
-        argv[0] = command
+        spawn_executable = which(spawn_command[0])
+        if spawn_executable is None:
+            raise SSHNotFound("ssh executable not found!")
+        spawn_command[0] = spawn_executable
 
         # [issue #119] To prevent the case where exec fails and the user is
         # stuck interacting with a python child process instead of whatever
         # was expected, we implement the solution from
         # http://stackoverflow.com/a/3703179 to pass the exception to the
         # parent process
-
         # [issue #119] 1. Before forking, open a pipe in the parent process.
         exec_err_pipe_read, exec_err_pipe_write = os.pipe()
 
@@ -245,22 +204,12 @@ class PtyProcess(object):
         # Some platforms must call setwinsize() and setecho() from the
         # child process, and others from the master process. We do both,
         # allowing IOError for either.
-
         if pid == CHILD:
-            # set window size
             try:
-                _setwinsize(STDIN_FILENO, *dimensions)
+                _setwinsize(fd=STDIN_FILENO, rows=24, cols=80)
             except IOError as err:
                 if err.args[0] not in (errno.EINVAL, errno.ENOTTY):
                     raise
-
-            # disable echo if spawn argument echo was unset
-            if not echo:
-                try:
-                    _setecho(STDIN_FILENO, False)
-                except (IOError, termios.error) as err:
-                    if err.args[0] not in (errno.EINVAL, errno.ENOTTY):
-                        raise
 
             # [issue #119] 3. The child closes the reading end and sets the
             # close-on-exec flag for the writing end.
@@ -268,54 +217,27 @@ class PtyProcess(object):
             fcntl.fcntl(exec_err_pipe_write, fcntl.F_SETFD, fcntl.FD_CLOEXEC)
 
             # Do not allow child to inherit open file descriptors from parent,
-            # with the exception of the exec_err_pipe_write of the pipe
-            # and pass_fds.
+            # with the exception of the exec_err_pipe_write of the pipe.
             # Impose ceiling on max_fd: AIX bugfix for users with unlimited
             # nofiles where resource.RLIMIT_NOFILE is 2^63-1 and os.closerange()
             # occasionally raises out of range error
             max_fd = min(1048576, resource.getrlimit(resource.RLIMIT_NOFILE)[0])
-            spass_fds = sorted(set(pass_fds) | {exec_err_pipe_write})
-            for pair in zip([2] + spass_fds, spass_fds + [max_fd]):
+            pass_fds = sorted({exec_err_pipe_write})
+            for pair in zip([2] + pass_fds, pass_fds + [max_fd]):
                 os.closerange(pair[0] + 1, pair[1])
 
-            if cwd is not None:
-                os.chdir(cwd)
-
-            if preexec_fn is not None:
-                try:
-                    preexec_fn()
-                except Exception as e:
-                    ename = type(e).__name__
-                    tosend = "{}:0:{}".format(ename, str(e))
-                    tosend = tosend.encode("utf-8")
-
-                    os.write(exec_err_pipe_write, tosend)
-                    os.close(exec_err_pipe_write)
-                    os._exit(1)
-
             try:
-                if env is None:
-                    os.execv(command, argv)
-                else:
-                    os.execvpe(command, argv, env)
+                os.execv(spawn_executable, spawn_command)
             except OSError as err:
                 # [issue #119] 5. If exec fails, the child writes the error
                 # code back to the parent using the pipe, then exits.
-                tosend = "OSError:{}:{}".format(err.errno, str(err))
-                tosend = tosend.encode("utf-8")
+                tosend = f"OSError:{err.errno}:{str(err)}".encode()
                 os.write(exec_err_pipe_write, tosend)
                 os.close(exec_err_pipe_write)
                 os._exit(os.EX_OSERR)
 
         # Parent
         inst = cls(pid, fd)
-
-        # Set some informational attributes
-        inst.argv = argv
-        if env is not None:
-            inst.env = env
-        if cwd is not None:
-            inst.launch_dir = cwd
 
         # [issue #119] 2. After forking, the parent closes the writing end
         # of the pipe and reads from the reading end.
@@ -337,50 +259,55 @@ class PtyProcess(object):
                 exception = exctype(errmsg.decode("utf-8", "replace"))
                 if exctype is OSError:
                     exception.errno = int(errno_s)
-            except:
+            except Exception:
                 raise Exception("Subprocess failed, got bad error data: %r" % exec_err_data)
             else:
                 raise exception
 
         try:
-            inst.setwinsize(*dimensions)
+            inst.setwinsize(rows=24, cols=80)
         except IOError as err:
             if err.args[0] not in (errno.EINVAL, errno.ENOTTY, errno.ENXIO):
                 raise
 
         return inst
 
-    def __repr__(self):
-        clsname = type(self).__name__
-        if self.argv is not None:
-            args = [repr(self.argv)]
-            if self.env is not None:
-                args.append("env=%r" % self.env)
-            if self.launch_dir is not None:
-                args.append("cwd=%r" % self.launch_dir)
+    def __repr__(self) -> str:
+        """
+        Magic repr method for PtyProcess
 
-            return "{}.spawn({})".format(clsname, ", ".join(args))
+        Args:
+            N/A
 
-        else:
-            return "{}(pid={}, fd={})".format(clsname, self.pid, self.fd)
+        Returns:
+            str: str repr of object
 
-    @staticmethod
-    def _coerce_send_string(s):
-        if not isinstance(s, bytes):
-            return s.encode("utf-8")
-        return s
+        Raises:
+            N/A
 
-    @staticmethod
-    def _coerce_read_string(s):
-        return s
+        """
+        return f"{type(self).__name__}(pid={self.pid}, fd={self.fd})"
 
-    def __del__(self):
-        """This makes sure that no system resources are left open. Python only
+    def __del__(self) -> None:
+        """
+        Magic delete method for PtyProcess
+
+        This makes sure that no system resources are left open. Python only
         garbage collects Python objects. OS file descriptors are not Python
         objects, so they must be handled explicitly. If the child file
         descriptor was opened outside of this class (passed to the constructor)
-        then this does not close it. """
+        then this does not close it.
 
+        Args:
+            N/A
+
+        Returns:
+            N/A
+
+        Raises:
+            N/A
+
+        """
         if not self.closed:
             # It is possible for __del__ methods to execute during the
             # teardown of the Python VM itself. Thus self.close() may
@@ -388,15 +315,10 @@ class PtyProcess(object):
             try:
                 self.close()
             # which exception, shouldn't we catch explicitly .. ?
-            except:
+            except Exception:
                 pass
 
-    def fileno(self):
-        """This returns the file descriptor of the pty for the child.
-        """
-        return self.fd
-
-    def close(self, force=True):
+    def close(self, force: bool = True) -> None:
         """This closes the connection with the child application. Note that
         calling close() more than once is valid. This emulates standard Python
         behavior with files. Set force to True if you want to make sure that
@@ -415,104 +337,23 @@ class PtyProcess(object):
             # self.pid = None
 
     def flush(self) -> None:
-        """This does nothing. It is here to support the interface for a
-        File-like object. """
+        """
+        This does nothing.
 
-        pass
+        It is here to support the interface for a File-like object.
 
-    def isatty(self):
-        """This returns True if the file descriptor is open and connected to a
-        tty(-like) device, else False.
+        Args:
+            N/A
 
-        On SVR4-style platforms implementing streams, such as SunOS and HP-UX,
-        the child pty may not appear as a terminal device.  This means
-        methods such as setecho(), setwinsize(), getwinsize() may raise an
-        IOError. """
+        Returns:
+            N/A  # noqa: DAR202
 
-        return os.isatty(self.fd)
+        Raises:
+            N/A
 
-    def waitnoecho(self, timeout=None):
-        """This waits until the terminal ECHO flag is set False. This returns
-        True if the echo mode is off. This returns False if the ECHO flag was
-        not set False before the timeout. This can be used to detect when the
-        child is waiting for a password. Usually a child application will turn
-        off echo mode when it is waiting for the user to enter a password. For
-        example, instead of expecting the "password:" prompt you can wait for
-        the child to set ECHO off::
-
-            p = pexpect.spawn('ssh user@example.com')
-            p.waitnoecho()
-            p.sendline(mypassword)
-
-        If timeout==None then this method to block until ECHO flag is False.
         """
 
-        if timeout is not None:
-            end_time = time.time() + timeout
-        while True:
-            if not self.getecho():
-                return True
-            if timeout < 0 and timeout is not None:
-                return False
-            if timeout is not None:
-                timeout = end_time - time.time()
-            time.sleep(0.1)
-
-    def getecho(self):
-        """This returns the terminal echo mode. This returns True if echo is
-        on or False if echo is off. Child applications that are expecting you
-        to enter a password often set ECHO False. See waitnoecho().
-
-        Not supported on platforms where ``isatty()`` returns False.  """
-
-        try:
-            attr = termios.tcgetattr(self.fd)
-        except termios.error as err:
-            errmsg = "getecho() may not be called on this platform"
-            if err.args[0] == errno.EINVAL:
-                raise IOError(err.args[0], "%s: %s." % (err.args[1], errmsg))
-            raise
-
-        self.echo = bool(attr[3] & termios.ECHO)
-        return self.echo
-
-    def setecho(self, state):
-        """This sets the terminal echo mode on or off. Note that anything the
-        child sent before the echo will be lost, so you should be sure that
-        your input buffer is empty before you call setecho(). For example, the
-        following will work as expected::
-
-            p = pexpect.spawn('cat') # Echo is on by default.
-            p.sendline('1234') # We expect see this twice from the child...
-            p.expect(['1234']) # ... once from the tty echo...
-            p.expect(['1234']) # ... and again from cat itself.
-            p.setecho(False) # Turn off tty echo
-            p.sendline('abcd') # We will set this only once (echoed by cat).
-            p.sendline('wxyz') # We will set this only once (echoed by cat)
-            p.expect(['abcd'])
-            p.expect(['wxyz'])
-
-        The following WILL NOT WORK because the lines sent before the setecho
-        will be lost::
-
-            p = pexpect.spawn('cat')
-            p.sendline('1234')
-            p.setecho(False) # Turn off tty echo
-            p.sendline('abcd') # We will set this only once (echoed by cat).
-            p.sendline('wxyz') # We will set this only once (echoed by cat)
-            p.expect(['1234'])
-            p.expect(['1234'])
-            p.expect(['abcd'])
-            p.expect(['wxyz'])
-
-
-        Not supported on platforms where ``isatty()`` returns False.
-        """
-        _setecho(self.fd, state)
-
-        self.echo = state
-
-    def read(self, size=1024) -> bytes:
+    def read(self, size: int = 1024) -> bytes:
         """Read and return at most ``size`` bytes from the pty.
 
         Can block if there is nothing to read. Raises :exc:`EOFError` if the
@@ -539,92 +380,15 @@ class PtyProcess(object):
 
         return s
 
-    def readline(self):
-        """Read one line from the pseudoterminal, and return it as unicode.
-
-        Can block if there is nothing to read. Raises :exc:`EOFError` if the
-        terminal was closed.
-        """
-        try:
-            s = self.fileobj.readline()
-        except (OSError, IOError) as err:
-            if err.args[0] == errno.EIO:
-                # Linux-style EOF
-                self.flag_eof = True
-                raise EOFError("End Of File (EOF). Exception style platform.")
-            raise
-        if s == b"":
-            # BSD-style EOF (also appears to work on recent Solaris (OpenIndiana))
-            self.flag_eof = True
-            raise EOFError("End Of File (EOF). Empty string style platform.")
-
-        return s
-
-    def _writeb(self, b, flush=True):
-        n = self.fileobj.write(b)
-        if flush:
-            self.fileobj.flush()
-        return n
-
-    def write(self, s, flush=True) -> int:
+    def write(self, bytes_to_write: bytes, flush: bool = True) -> int:
         """Write bytes to the pseudoterminal.
 
         Returns the number of bytes written.
         """
-        return self._writeb(s, flush=flush)
-
-    def sendcontrol(self, char):
-        """Helper method that wraps send() with mnemonic access for sending control
-        character to the child (such as Ctrl-C or Ctrl-D).  For example, to send
-        Ctrl-G (ASCII 7, bell, '\a')::
-
-            child.sendcontrol('g')
-
-        See also, sendintr() and sendeof().
-        """
-        char = char.lower()
-        a = ord(char)
-        if 97 <= a <= 122:
-            a = a - ord("a") + 1
-            byte = _byte(a)
-            return self._writeb(byte), byte
-        d = {
-            "@": 0,
-            "`": 0,
-            "[": 27,
-            "{": 27,
-            "\\": 28,
-            "|": 28,
-            "]": 29,
-            "}": 29,
-            "^": 30,
-            "~": 30,
-            "_": 31,
-            "?": 127,
-        }
-        if char not in d:
-            return 0, b""
-
-        byte = _byte(d[char])
-        return self._writeb(byte), byte
-
-    def sendeof(self):
-        """This sends an EOF to the child. This sends a character which causes
-        the pending parent output buffer to be sent to the waiting child
-        program without waiting for end-of-line. If it is the first character
-        of the line, the read() in the user program returns 0, which signifies
-        end-of-file. This means to work as expected a sendeof() has to be
-        called at the beginning of a line. This method does not send a newline.
-        It is the responsibility of the caller to ensure the eof is sent at the
-        beginning of a line. """
-
-        return self._writeb(_EOF), _EOF
-
-    def sendintr(self):
-        """This sends a SIGINT to the child. It does not require
-        the SIGINT to be the first character on a line. """
-
-        return self._writeb(_INTR), _INTR
+        n = self.fileobj.write(bytes_to_write)
+        if flush:
+            self.fileobj.flush()
+        return n
 
     def eof(self) -> bool:
         """This returns True if the EOF exception was ever raised.
@@ -632,12 +396,24 @@ class PtyProcess(object):
 
         return self.flag_eof
 
-    def terminate(self, force=False):
-        """This forces a child process to terminate. It starts nicely with
-        SIGHUP and SIGINT. If "force" is True then moves onto SIGKILL. This
-        returns True if the child was terminated. This returns False if the
-        child could not be terminated. """
+    def terminate(self, force: bool = False) -> bool:
+        """
+        This forces a child process to terminate.
 
+        It starts nicely with SIGHUP and SIGINT. If "force" is True then moves onto SIGKILL. This
+        returns True if the child was terminated. This returns False if the child could not be
+        terminated.
+
+        Args:
+            force: bool; force termination
+
+        Returns:
+            bool: terminate succeeded or failed
+
+        Raises:
+            N/A
+
+        """
         if not self.isalive():
             return True
         try:
@@ -658,9 +434,6 @@ class PtyProcess(object):
                 time.sleep(self.delayafterterminate)
                 if not self.isalive():
                     return True
-                else:
-                    return False
-            return False
         except OSError:
             # I think there are kernel timing issues that sometimes cause
             # this to happen. I think isalive() reports True, but the
@@ -669,39 +442,7 @@ class PtyProcess(object):
             time.sleep(self.delayafterterminate)
             if not self.isalive():
                 return True
-            else:
-                return False
-
-    def wait(self):
-        """This waits until the child exits. This is a blocking call. This will
-        not read any data from the child, so this will block forever if the
-        child has unread output and has terminated. In other words, the child
-        may have printed output then called exit(), but, the child is
-        technically still alive until its output is read by the parent. """
-
-        if self.isalive():
-            pid, status = os.waitpid(self.pid, 0)
-        else:
-            return self.exitstatus
-        self.exitstatus = os.WEXITSTATUS(status)
-        if os.WIFEXITED(status):
-            self.status = status
-            self.exitstatus = os.WEXITSTATUS(status)
-            self.signalstatus = None
-            self.terminated = True
-        elif os.WIFSIGNALED(status):
-            self.status = status
-            self.exitstatus = None
-            self.signalstatus = os.WTERMSIG(status)
-            self.terminated = True
-        elif os.WIFSTOPPED(status):  # pragma: no cover
-            # You can't call wait() on a child process in the stopped state.
-            raise PtyProcessError(
-                "Called wait() on a stopped child "
-                + "process. This is not supported. Is some other "
-                + "process attempting job control with our child pid?"
-            )
-        return self.exitstatus
+        return False
 
     def isalive(self) -> bool:
         """This tests if the child process is running or not. This is
@@ -733,8 +474,7 @@ class PtyProcess(object):
                     + "process. Did someone else call waitpid() "
                     + "on our process?"
                 )
-            else:
-                raise
+            raise
 
         # I have to do this twice for Solaris.
         # I can't even believe that I figured this out...
@@ -753,8 +493,7 @@ class PtyProcess(object):
                         + "process. Did someone else call waitpid() "
                         + "on our process?"
                     )
-                else:
-                    raise
+                raise
 
             # If pid is still 0 after two calls to waitpid() then the process
             # really is alive. This seems to work on all platforms, except for
@@ -786,7 +525,7 @@ class PtyProcess(object):
             )
         return False
 
-    def kill(self, sig) -> None:
+    def kill(self, sig: int) -> None:
         """Send the given signal to the child application.
 
         In keeping with UNIX tradition it has a misleading name. It does not
@@ -798,12 +537,23 @@ class PtyProcess(object):
         if self.isalive():
             os.kill(self.pid, sig)
 
-    def setwinsize(self, rows, cols):
-        """Set the terminal window size of the child tty.
+    def setwinsize(self, rows: int = 24, cols: int = 80) -> None:
+        """
+        Set window size.
 
-        This will cause a SIGWINCH signal to be sent to the child. This does not
-        change the physical window size. It changes the size reported to
-        TTY-aware applications like vi or curses -- applications that respond to
-        the SIGWINCH signal.
+        This will cause a SIGWINCH signal to be sent to the child. This does not change the physical
+        window size. It changes the size reported to TTY-aware applications like vi or curses --
+        applications that respond to the SIGWINCH signal.
+
+        Args:
+            rows: int number of rows for terminal
+            cols: int number of cols for terminal
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
         """
         return _setwinsize(self.fd, rows, cols)

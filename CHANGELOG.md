@@ -13,6 +13,8 @@ CHANGELOG
  `auth_secondary` is not set. Added tests to make sure that we raise a warning if there is no secondary password set
  , but try to increase privilege without authentication, and of course if there is an auth secondary set, we
   obviously try to auth in the normal fashion.
+- Started thinning down the PtyProcess stuff to simplify and and remove all unnecessary parts, as well as add typing
+ and docstrings... not done yet, but some progress!
 
 # 2020.07.04
 - Updated IOSXE base config to include netconf setup for consistency w/ scrapli_netconf
