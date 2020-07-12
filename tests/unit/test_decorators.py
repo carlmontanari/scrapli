@@ -1,9 +1,10 @@
+import asyncio
 import time
 from threading import Lock
 
 import pytest
 
-from scrapli.decorators import operation_timeout, requires_open_session
+from scrapli.decorators import async_operation_timeout, operation_timeout, requires_open_session
 from scrapli.driver.base_driver import ScrapeBase
 from scrapli.exceptions import ConnectionNotOpened, ScrapliTimeout
 
@@ -13,7 +14,7 @@ class SlowClass(ScrapeBase):
         # subclass base scrape to have a logger setup and such
         # set transport to telnet as it works on all platforms and is standard library!
         super().__init__(host="localhost", transport="telnet")
-        self.timeout_test = 0.5
+        self.timeout_test = 0.25
         self.timeout_exit = True
         self.session_lock = Lock()
         self.session_lock.acquire()
@@ -28,6 +29,18 @@ class SlowClass(ScrapeBase):
 
     @operation_timeout("non_existent_class_attr")
     def confused_function(self):
+        return "fast"
+
+    @async_operation_timeout("timeout_test")
+    async def async_slow_function(self):
+        await asyncio.sleep(1)
+
+    @async_operation_timeout("timeout_test")
+    async def async_fast_function(self):
+        return "fast"
+
+    @async_operation_timeout("non_existent_class_attr")
+    async def async_confused_function(self):
         return "fast"
 
     def close(self):
@@ -53,6 +66,27 @@ def test_operation_timeout_success():
 def test_operation_timeout_no_class_attr():
     slow = SlowClass()
     result = slow.confused_function()
+    assert result == "fast"
+
+
+@pytest.mark.asyncio
+async def test_async_operation_timeout_timeout():
+    slow = SlowClass()
+    with pytest.raises(ScrapliTimeout):
+        await slow.async_slow_function()
+
+
+@pytest.mark.asyncio
+async def test_async_operation_timeout_success():
+    slow = SlowClass()
+    result = await slow.async_fast_function()
+    assert result == "fast"
+
+
+@pytest.mark.asyncio
+async def test_async_operation_timeout_no_class_attr():
+    slow = SlowClass()
+    result = await slow.async_confused_function()
     assert result == "fast"
 
 

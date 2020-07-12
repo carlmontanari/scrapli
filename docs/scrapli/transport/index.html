@@ -3,15 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.8.1" />
+<meta name="generator" content="pdoc 0.8.3" />
 <title>scrapli.transport API documentation</title>
 <meta name="description" content="scrapli.transport" />
-<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
-<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
-<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
 </head>
 <body>
 <main>
@@ -123,16 +125,10 @@ can be acquired. This is only applicable if using keepalives and if the keepaliv
 type is 'network'</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N/A
-# noqa: DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
+<p>N/A
+# noqa: DAR202</p>
 <h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N/A</code></dt>
-<dd>&nbsp;</dd>
-</dl></div>
+<p>N/A</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -194,23 +190,17 @@ type is 'network'</dd>
 <h3>Methods</h3>
 <dl>
 <dt id="scrapli.transport.AsyncTransport.open"><code class="name flex">
-<span>async def <span class="ident">open</span></span>(<span>self) -> NoneType</span>
+<span>async def <span class="ident">open</span></span>(<span>self) ‑> NoneType</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Async open channel, acquire pty, request interactive shell</p>
 <h2 id="args">Args</h2>
 <p>N/A</p>
 <h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N/A
-# noqa: DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
+<p>N/A
+# noqa: DAR202</p>
 <h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N/A</code></dt>
-<dd>&nbsp;</dd>
-</dl></div>
+<p>N/A</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -233,23 +223,17 @@ async def open(self) -&gt; None:  # pylint: disable=W0236
 </details>
 </dd>
 <dt id="scrapli.transport.AsyncTransport.read"><code class="name flex">
-<span>async def <span class="ident">read</span></span>(<span>self) -> bytes</span>
+<span>async def <span class="ident">read</span></span>(<span>self) ‑> bytes</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Async read data from the channel</p>
 <h2 id="args">Args</h2>
 <p>N/A</p>
 <h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N/A
-# noqa: DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
+<p>N/A
+# noqa: DAR202</p>
 <h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N/A</code></dt>
-<dd>&nbsp;</dd>
-</dl></div>
+<p>N/A</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -272,7 +256,7 @@ async def read(self) -&gt; bytes:  # pylint: disable=W0236
 </details>
 </dd>
 <dt id="scrapli.transport.AsyncTransport.write"><code class="name flex">
-<span>def <span class="ident">write</span></span>(<span>self, channel_input: str) -> NoneType</span>
+<span>def <span class="ident">write</span></span>(<span>self, channel_input: str) ‑> NoneType</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Write data to the channel</p>
@@ -282,16 +266,10 @@ async def read(self) -&gt; bytes:  # pylint: disable=W0236
 <dd>string to send to channel</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N/A
-# noqa: DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
+<p>N/A
+# noqa: DAR202</p>
 <h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N/A</code></dt>
-<dd>&nbsp;</dd>
-</dl></div>
+<p>N/A</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -435,16 +413,10 @@ You can pass any arguments that would be supported if you were ssh'ing on your
 terminal "normally", passing some bad arguments can break things!</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N/A
-# noqa: DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
+<p>N/A
+# noqa: DAR202</p>
 <h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N/A</code></dt>
-<dd>&nbsp;</dd>
-</dl></div>
+<p>N/A</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1024,7 +996,7 @@ terminal "normally", passing some bad arguments can break things!</dd>
 <h3>Methods</h3>
 <dl>
 <dt id="scrapli.transport.SystemSSHTransport.isalive"><code class="name flex">
-<span>def <span class="ident">isalive</span></span>(<span>self) -> bool</span>
+<span>def <span class="ident">isalive</span></span>(<span>self) ‑> bool</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Check if session is alive and session is authenticated</p>
@@ -1036,10 +1008,7 @@ terminal "normally", passing some bad arguments can break things!</dd>
 <dd>True if session is alive and session authenticated, else False</dd>
 </dl>
 <h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N/A</code></dt>
-<dd>&nbsp;</dd>
-</dl></div>
+<p>N/A</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1064,23 +1033,17 @@ terminal "normally", passing some bad arguments can break things!</dd>
 </details>
 </dd>
 <dt id="scrapli.transport.SystemSSHTransport.open"><code class="name flex">
-<span>def <span class="ident">open</span></span>(<span>self) -> NoneType</span>
+<span>def <span class="ident">open</span></span>(<span>self) ‑> NoneType</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Parent method to open session, authenticate and acquire shell</p>
 <h2 id="args">Args</h2>
 <p>N/A</p>
 <h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N/A
-# noqa: DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
+<p>N/A
+# noqa: DAR202</p>
 <h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N/A</code></dt>
-<dd>&nbsp;</dd>
-</dl></div>
+<p>N/A</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1108,7 +1071,7 @@ terminal "normally", passing some bad arguments can break things!</dd>
 </details>
 </dd>
 <dt id="scrapli.transport.SystemSSHTransport.set_timeout"><code class="name flex">
-<span>def <span class="ident">set_timeout</span></span>(<span>self, timeout: Union[int, NoneType] = None) -> NoneType</span>
+<span>def <span class="ident">set_timeout</span></span>(<span>self, timeout: Union[int, NoneType] = None) ‑> NoneType</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Set session timeout</p>
@@ -1122,16 +1085,10 @@ leave the objects <code>timeout_transport</code> alone.</p>
 <dd>timeout in seconds</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N/A
-# noqa: DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
+<p>N/A
+# noqa: DAR202</p>
 <h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N/A</code></dt>
-<dd>&nbsp;</dd>
-</dl></div>
+<p>N/A</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1176,7 +1133,7 @@ leave the objects <code>timeout_transport</code> alone.</p>
 </dd>
 <dt id="scrapli.transport.TelnetTransport"><code class="flex name class">
 <span>class <span class="ident">TelnetTransport</span></span>
-<span>(</span><span>host: str, port: int = 23, auth_username: str = '', auth_password: str = '', timeout_socket: int = 5, timeout_transport: int = 5, timeout_ops: int = 10, timeout_exit: bool = True, keepalive: bool = False, keepalive_interval: int = 30, keepalive_type: str = '', keepalive_pattern: str = '\x05', comms_prompt_pattern: str = &#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char: str = '\n', comms_ansi: bool = False)</span>
+<span>(</span><span>host: str, port: int = 23, auth_username: str = '', auth_password: str = '', auth_bypass: bool = False, timeout_socket: int = 5, timeout_transport: int = 5, timeout_ops: int = 10, timeout_exit: bool = True, keepalive: bool = False, keepalive_interval: int = 30, keepalive_type: str = '', keepalive_pattern: str = '\x05', comms_prompt_pattern: str = &#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char: str = '\n', comms_ansi: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -1201,6 +1158,8 @@ authentication methods here.</p>
 <dd>username for authentication</dd>
 <dt><strong><code>auth_password</code></strong></dt>
 <dd>password for authentication</dd>
+<dt><strong><code>auth_bypass</code></strong></dt>
+<dd>bypass authentication process</dd>
 <dt><strong><code>timeout_socket</code></strong></dt>
 <dd>timeout for establishing socket in seconds &ndash; since this is not directly
 exposed in telnetlib, this is just the initial timeout for the telnet connection.
@@ -1254,16 +1213,10 @@ a channel attribute and is treated as such. This is assigned to a private attrib
 and is ignored after authentication is completed.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N/A
-# noqa: DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
+<p>N/A
+# noqa: DAR202</p>
 <h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N/A</code></dt>
-<dd>&nbsp;</dd>
-</dl></div>
+<p>N/A</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1275,6 +1228,7 @@ and is ignored after authentication is completed.</dd>
         port: int = 23,
         auth_username: str = &#34;&#34;,
         auth_password: str = &#34;&#34;,
+        auth_bypass: bool = False,
         timeout_socket: int = 5,
         timeout_transport: int = 5,
         timeout_ops: int = 10,
@@ -1306,6 +1260,7 @@ and is ignored after authentication is completed.</dd>
             port: port to connect to
             auth_username: username for authentication
             auth_password: password for authentication
+            auth_bypass: bypass authentication process
             timeout_socket: timeout for establishing socket in seconds -- since this is not directly
                 exposed in telnetlib, this is just the initial timeout for the telnet connection.
                 After the connection is established, the timeout is modified to the value of
@@ -1367,6 +1322,7 @@ and is ignored after authentication is completed.</dd>
         )
         self.auth_username: str = auth_username
         self.auth_password: str = auth_password
+        self.auth_bypass: bool = auth_bypass
 
         self._timeout_ops: int = timeout_ops
         # timeout_ops_auth is only used for authentication; base ops timeout * 2 as we are doing
@@ -1412,11 +1368,21 @@ and is ignored after authentication is completed.</dd>
         telnet_session.timeout = self.timeout_transport
         self.logger.debug(f&#34;Session to host {self.host} spawned&#34;)
         self.session_lock.release()
-        self._authenticate(telnet_session=telnet_session)
-        if not self._telnet_isauthenticated(telnet_session=telnet_session):
+
+        if not self.auth_bypass:
+            self._authenticate(telnet_session=telnet_session)
+        else:
+            self.logger.info(&#34;`auth_bypass` is True, bypassing authentication&#34;)
+            # if we skip auth, we&#39;ll manually set _isauthenticated to True
+            self._isauthenticated = True
+
+        if not self._isauthenticated and not self._telnet_isauthenticated(
+            telnet_session=telnet_session
+        ):
             raise ScrapliAuthenticationFailed(
                 f&#34;Could not authenticate over telnet to host: {self.host}&#34;
             )
+
         self.logger.debug(f&#34;Authenticated to host {self.host} with password&#34;)
         self.session = telnet_session
 
@@ -1437,6 +1403,15 @@ and is ignored after authentication is completed.</dd>
         &#34;&#34;&#34;
         self.session_lock.acquire()
         output = b&#34;&#34;
+
+        # capture the start time of the authentication event; we also set a &#34;return_interval&#34; which
+        # is 1/10 the timout_ops value, we will send a return character at roughly this interval if
+        # there is no output on the channel. we do this because sometimes telnet needs a kick to get
+        # it to prompt for auth -- particularity when connecting to terminal server/console port
+        auth_start_time = datetime.now().timestamp()
+        return_interval = self._timeout_ops / 10
+        return_attempts = 1
+
         while True:
             output += telnet_session.read_eager()
             if self.username_prompt.lower().encode() in output.lower():
@@ -1444,11 +1419,16 @@ and is ignored after authentication is completed.</dd>
                 output = b&#34;&#34;
                 telnet_session.write(self.auth_username.encode())
                 telnet_session.write(self._comms_return_char.encode())
-            if self.password_prompt.lower().encode() in output.lower():
+            elif self.password_prompt.lower().encode() in output.lower():
                 telnet_session.write(self.auth_password.encode())
                 telnet_session.write(self._comms_return_char.encode())
                 self.session_lock.release()
                 break
+            elif not output:
+                current_iteration_time = datetime.now().timestamp()
+                if (current_iteration_time - auth_start_time) &gt; (return_interval * return_attempts):
+                    telnet_session.write(self._comms_return_char.encode())
+                    return_attempts += 1
 
     @operation_timeout(&#34;_timeout_ops_auth&#34;, &#34;Timed determining if telnet session is authenticated&#34;)
     def _telnet_isauthenticated(self, telnet_session: ScrapliTelnet) -&gt; bool:
@@ -1497,6 +1477,7 @@ and is ignored after authentication is completed.</dd>
                     return True
                 if b&#34;password:&#34; in output.lower():
                     # if we see &#34;password&#34; auth failed... hopefully true in all scenarios!
+                    self.session_lock.release()
                     return False
         self.session_lock.release()
         return False
@@ -1620,7 +1601,7 @@ and is ignored after authentication is completed.</dd>
 <h3>Methods</h3>
 <dl>
 <dt id="scrapli.transport.TelnetTransport.isalive"><code class="name flex">
-<span>def <span class="ident">isalive</span></span>(<span>self) -> bool</span>
+<span>def <span class="ident">isalive</span></span>(<span>self) ‑> bool</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Check if alive and session is authenticated</p>
@@ -1632,10 +1613,7 @@ and is ignored after authentication is completed.</dd>
 <dd>True if alive, False otherwise.</dd>
 </dl>
 <h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N/A</code></dt>
-<dd>&nbsp;</dd>
-</dl></div>
+<p>N/A</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1660,18 +1638,15 @@ and is ignored after authentication is completed.</dd>
 </details>
 </dd>
 <dt id="scrapli.transport.TelnetTransport.open"><code class="name flex">
-<span>def <span class="ident">open</span></span>(<span>self) -> NoneType</span>
+<span>def <span class="ident">open</span></span>(<span>self) ‑> NoneType</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Open telnet channel</p>
 <h2 id="args">Args</h2>
 <p>N/A</p>
 <h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N/A
-# noqa: DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
+<p>N/A
+# noqa: DAR202</p>
 <h2 id="raises">Raises</h2>
 <dl>
 <dt><code>ScrapliAuthenticationFailed</code></dt>
@@ -1709,11 +1684,21 @@ and is ignored after authentication is completed.</dd>
     telnet_session.timeout = self.timeout_transport
     self.logger.debug(f&#34;Session to host {self.host} spawned&#34;)
     self.session_lock.release()
-    self._authenticate(telnet_session=telnet_session)
-    if not self._telnet_isauthenticated(telnet_session=telnet_session):
+
+    if not self.auth_bypass:
+        self._authenticate(telnet_session=telnet_session)
+    else:
+        self.logger.info(&#34;`auth_bypass` is True, bypassing authentication&#34;)
+        # if we skip auth, we&#39;ll manually set _isauthenticated to True
+        self._isauthenticated = True
+
+    if not self._isauthenticated and not self._telnet_isauthenticated(
+        telnet_session=telnet_session
+    ):
         raise ScrapliAuthenticationFailed(
             f&#34;Could not authenticate over telnet to host: {self.host}&#34;
         )
+
     self.logger.debug(f&#34;Authenticated to host {self.host} with password&#34;)
     self.session = telnet_session</code></pre>
 </details>
@@ -1772,16 +1757,10 @@ can be acquired. This is only applicable if using keepalives and if the keepaliv
 type is 'network'</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N/A
-# noqa: DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
+<p>N/A
+# noqa: DAR202</p>
 <h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N/A</code></dt>
-<dd>&nbsp;</dd>
-</dl></div>
+<p>N/A</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1944,23 +1923,17 @@ type is 'network'</dd>
 <h3>Methods</h3>
 <dl>
 <dt id="scrapli.transport.Transport.open"><code class="name flex">
-<span>def <span class="ident">open</span></span>(<span>self) -> NoneType</span>
+<span>def <span class="ident">open</span></span>(<span>self) ‑> NoneType</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Open channel, acquire pty, request interactive shell</p>
 <h2 id="args">Args</h2>
 <p>N/A</p>
 <h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N/A
-# noqa: DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
+<p>N/A
+# noqa: DAR202</p>
 <h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N/A</code></dt>
-<dd>&nbsp;</dd>
-</dl></div>
+<p>N/A</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1983,23 +1956,17 @@ def open(self) -&gt; None:
 </details>
 </dd>
 <dt id="scrapli.transport.Transport.read"><code class="name flex">
-<span>def <span class="ident">read</span></span>(<span>self) -> bytes</span>
+<span>def <span class="ident">read</span></span>(<span>self) ‑> bytes</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Read data from the channel</p>
 <h2 id="args">Args</h2>
 <p>N/A</p>
 <h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N/A
-# noqa: DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
+<p>N/A
+# noqa: DAR202</p>
 <h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N/A</code></dt>
-<dd>&nbsp;</dd>
-</dl></div>
+<p>N/A</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -2022,7 +1989,7 @@ def read(self) -&gt; bytes:
 </details>
 </dd>
 <dt id="scrapli.transport.Transport.write"><code class="name flex">
-<span>def <span class="ident">write</span></span>(<span>self, channel_input: str) -> NoneType</span>
+<span>def <span class="ident">write</span></span>(<span>self, channel_input: str) ‑> NoneType</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Write data to the channel</p>
@@ -2032,16 +1999,10 @@ def read(self) -&gt; bytes:
 <dd>string to send to channel</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N/A
-# noqa: DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
+<p>N/A
+# noqa: DAR202</p>
 <h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N/A</code></dt>
-<dd>&nbsp;</dd>
-</dl></div>
+<p>N/A</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -2139,9 +2100,7 @@ def write(self, channel_input: str) -&gt; None:
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.3</a>.</p>
 </footer>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-<script>hljs.initHighlightingOnLoad()</script>
 </body>
 </html>

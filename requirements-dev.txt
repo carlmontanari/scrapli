@@ -10,8 +10,8 @@ pylama>=7.7.1
 pycodestyle>=2.6.0
 pydocstyle>=5.0.2
 pylint>=2.5.3
-darglint>=1.4.1
-pdoc3>=0.8.1 ; sys_platform != "win32"
+darglint>=1.5.1
+pdoc3>=0.8.3 ; sys_platform != "win32"
 asyncssh>=2.2.1
 napalm>=3.0.1
 -r requirements.txt
