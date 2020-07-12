@@ -1,5 +1,6 @@
 """scrapli.transport.telnet"""
 import re
+from datetime import datetime
 from select import select
 from telnetlib import Telnet
 from typing import Optional
@@ -12,6 +13,7 @@ from scrapli.transport.transport import Transport
 TELNET_TRANSPORT_ARGS = (
     "auth_username",
     "auth_password",
+    "auth_bypass",
     "comms_prompt_pattern",
     "comms_return_char",
     "comms_ansi",
@@ -48,6 +50,7 @@ class TelnetTransport(Transport):
         port: int = 23,
         auth_username: str = "",
         auth_password: str = "",
+        auth_bypass: bool = False,
         timeout_socket: int = 5,
         timeout_transport: int = 5,
         timeout_ops: int = 10,
@@ -79,6 +82,7 @@ class TelnetTransport(Transport):
             port: port to connect to
             auth_username: username for authentication
             auth_password: password for authentication
+            auth_bypass: bypass authentication process
             timeout_socket: timeout for establishing socket in seconds -- since this is not directly
                 exposed in telnetlib, this is just the initial timeout for the telnet connection.
                 After the connection is established, the timeout is modified to the value of
@@ -140,6 +144,7 @@ class TelnetTransport(Transport):
         )
         self.auth_username: str = auth_username
         self.auth_password: str = auth_password
+        self.auth_bypass: bool = auth_bypass
 
         self._timeout_ops: int = timeout_ops
         # timeout_ops_auth is only used for authentication; base ops timeout * 2 as we are doing
@@ -185,11 +190,21 @@ class TelnetTransport(Transport):
         telnet_session.timeout = self.timeout_transport
         self.logger.debug(f"Session to host {self.host} spawned")
         self.session_lock.release()
-        self._authenticate(telnet_session=telnet_session)
-        if not self._telnet_isauthenticated(telnet_session=telnet_session):
+
+        if not self.auth_bypass:
+            self._authenticate(telnet_session=telnet_session)
+        else:
+            self.logger.info("`auth_bypass` is True, bypassing authentication")
+            # if we skip auth, we'll manually set _isauthenticated to True
+            self._isauthenticated = True
+
+        if not self._isauthenticated and not self._telnet_isauthenticated(
+            telnet_session=telnet_session
+        ):
             raise ScrapliAuthenticationFailed(
                 f"Could not authenticate over telnet to host: {self.host}"
             )
+
         self.logger.debug(f"Authenticated to host {self.host} with password")
         self.session = telnet_session
 
@@ -210,6 +225,15 @@ class TelnetTransport(Transport):
         """
         self.session_lock.acquire()
         output = b""
+
+        # capture the start time of the authentication event; we also set a "return_interval" which
+        # is 1/10 the timout_ops value, we will send a return character at roughly this interval if
+        # there is no output on the channel. we do this because sometimes telnet needs a kick to get
+        # it to prompt for auth -- particularity when connecting to terminal server/console port
+        auth_start_time = datetime.now().timestamp()
+        return_interval = self._timeout_ops / 10
+        return_attempts = 1
+
         while True:
             output += telnet_session.read_eager()
             if self.username_prompt.lower().encode() in output.lower():
@@ -217,11 +241,16 @@ class TelnetTransport(Transport):
                 output = b""
                 telnet_session.write(self.auth_username.encode())
                 telnet_session.write(self._comms_return_char.encode())
-            if self.password_prompt.lower().encode() in output.lower():
+            elif self.password_prompt.lower().encode() in output.lower():
                 telnet_session.write(self.auth_password.encode())
                 telnet_session.write(self._comms_return_char.encode())
                 self.session_lock.release()
                 break
+            elif not output:
+                current_iteration_time = datetime.now().timestamp()
+                if (current_iteration_time - auth_start_time) > (return_interval * return_attempts):
+                    telnet_session.write(self._comms_return_char.encode())
+                    return_attempts += 1
 
     @operation_timeout("_timeout_ops_auth", "Timed determining if telnet session is authenticated")
     def _telnet_isauthenticated(self, telnet_session: ScrapliTelnet) -> bool:
@@ -270,6 +299,7 @@ class TelnetTransport(Transport):
                     return True
                 if b"password:" in output.lower():
                     # if we see "password" auth failed... hopefully true in all scenarios!
+                    self.session_lock.release()
                     return False
         self.session_lock.release()
         return False

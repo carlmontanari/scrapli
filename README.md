@@ -31,6 +31,7 @@ Feel free to join the very awesome networktocode slack workspace [here](https://
 - [scrapli: What is it](#scrapli-what-is-it)
 - [Supported Platforms](#supported-platforms)
 - [Advanced Installation](#advanced-installation)
+- [Versioning](#versioning)
 - [Basic Usage](#basic-usage)
   - [Picking the right Driver](#picking-the-right-driver)
   - [Basic Driver Arguments](#basic-driver-arguments)
@@ -127,6 +128,7 @@ end
 - [Basic "GenericDriver" operations](/examples/basic_usage/generic_driver.py)
 - [Basic "core" Driver operations](/examples/basic_usage/iosxe_driver.py)
 - [Basic async operations](/examples/async_usage/async_iosxe_driver.py)
+- [Async multiple connections](/examples/async_usage/async_multiple_connections.py)
 - [Setting up basic logging](/examples/logging/basic_logging.py)
 - [Using SSH Key for authentication](/examples/ssh_keys/ssh_keys.py)
 - [Using SSH config file](/examples/ssh_config_files/ssh_config_file.py)
@@ -330,6 +332,20 @@ As for platforms to *run* scrapli on -- it has and will be tested on MacOS and U
   longer the case as it is just not worth the effort. While scrapli should work on windows when using the paramiko or
    ssh2-python transport drivers, it is not "officially" supported. It is *strongly* recommended/preferred for folks
     to use WSL/Cygwin instead of Windows.
+
+
+# Versioning
+
+scrapli, and all scrapli related projects use [CalVer](https://calver.org) versioning standard. All release versions
+ follow the format `YYYY.MM.DD`, however PyPi will shorten/standardize this to remove leading zeros.
+
+The reason for choosing CalVer is simply to make it very clear how old a given release of scrapli is. While there are
+ clearly some potential challenges around indicating when a "breaking" change occurs due to there not being the
+  concept of a "major" version, this is hopefully not too big a deal for scrapli.
+ 
+Please also note that the [CHANGELOG](CHANGELOG.md) contains notes about each version (and is updated in develop branch while
+ updates are happening), and the "public" API is documented [here](docs/PUBLIC_API_STATUS.md), and includes the date
+ /version of each public method's creation as well as the latest updated/modified date and any relevant notes.
 
 
 # Basic Usage
@@ -694,6 +710,9 @@ scrapli supports telnet as a transport driver via the standard library module `t
    following attributes of the `Scrape` object:
   - `username_prompt`
   - `password_prompt`
+- When using telnet you may need to set the `comms_return_char` to `\r\n` the tests against the core platforms pass
+ without this, however it seems that some console server type devices are looking for this `\r\n` pattern instead of
+  the default `\n` pattern.
 
 If telnet for some reason becomes an important use case, the telnet Transport layer can be improved/augmented.
 
@@ -742,7 +761,7 @@ The basic usage section outlined the most commonly used driver arguments, this o
 | auth_private_key                | private key for authentication                              | Scrape            |
 | auth_private_key_passphrase     | passphrase for ssh key                                      | Scrape            |                   
 | auth_strict_key                 | strict key checking -- TRUE by default!                     | Scrape            |    
-| auth_bypass                     | bypass ssh auth prompts after ssh establishment             | Scrape            |                           
+| auth_bypass                     | bypass auth prompts after establishment                     | Scrape            |                           
 | timeout_socket                  | timeout value for initial socket connection                 | Scrape            |                   
 | timeout_transport               | timeout value for transport (i.e. paramiko)                 | Scrape            |                   
 | timeout_ops                     | timeout value for individual operations                     | Scrape            |                   
@@ -814,7 +833,7 @@ If you were so inclined to create some of your own "on connect" actions, you can
 ` argument of `Scrape` or any of its sub-classes (`NetworkDriver`, `IOSXEDriver`, etc.). The value of this argument
  must be a callable that accepts the reference to the connection object. This allows for the user to send commands or
   do really anything that needs to happen prior to "normal" operations. The core network drivers disable paging
-   functions all call directly into the channel object `send_inputs` method -- this is a good practice to follow as
+   functions all call directly into the channel object `send_input` method -- this is a good practice to follow as
     this will avoid any of the `NetworkDriver` overhead such as trying to attain privilege levels -- things like this
      may not be "ready" until *after* your `on_open` function is executed.
   
@@ -825,7 +844,7 @@ Below is an example of creating an "on connect" function and passing it to scrap
 from scrapli.driver.core import IOSXEDriver
 
 def iosxe_disable_paging(conn):
-    conn.channel.send_inputs("term length 0")
+    conn.channel.send_input("term length 0")
 
 my_device = {
     "host": "172.18.0.11",
@@ -1037,7 +1056,6 @@ my_device = {
 with Scrape(**my_device) as conn:
     conn.channel.send_input("terminal length 0")
     response = conn.channel.send_input("show version")
-    responses = conn.channel.send_inputs(["show version", "show run"])
 ```
 
 Without the `send_command` and similar methods, you must directly access the `Channel` object when sending inputs
@@ -1113,15 +1131,12 @@ Currently the only reason I can think of to use anything other than "system" as 
 
 ## Auth Bypass
 
-*NOTE* Currently only supported with system transport!
+*NOTE* Currently only supported with system and telnet transports!
 
 Some devices, such as Cisco WLC, have no "true" SSH authentication, and instead prompt for credentials (or perhaps
  not even that) after session establishment. In order to cope with this corner case, the `auth_bypass` flag can be
   set to `True` which will cause scrapli to skip all authentication steps. Typically this flag would be set and a
    custom `on_open` function set to handle whatever prompts the device has upon SSH session establishment.
-   
-In the future this functionality will likely be extended to the telnet transport, and may be extended to paramiko and
- ssh2 transports.
 
 See the [non core device example](/examples/non_core_device/wlc.py) to see this in action.
 

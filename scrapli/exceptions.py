@@ -5,6 +5,10 @@ class ScrapliException(Exception):
     """Base Exception for scrapli"""
 
 
+class SSHNotFound(ScrapliException):
+    """Exception for system transport unable to find ssh executable"""
+
+
 class ScrapliCommandFailure(ScrapliException):
     """Exception for scrapli command/config failures"""
 

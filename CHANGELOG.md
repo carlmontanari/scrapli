@@ -2,6 +2,21 @@ CHANGELOG
 =======
 
 # 2020.XX.XX
+- Fixed a silly issue where `get_prompt` was setting the transport timeout to 10s causing user defined timeouts to be
+ effectively ignored.
+- Improved telnet authentication handling -- previously if a return character was needed to get the auth prompts to
+ kick into gear this could break auth.
+- Added "auth_bypass" to telnet transport.
+- Probably BUGFIX -- async functions were being decorated by the "normal" `operation_timeout` decorator -- created a
+ mostly duplicated async version of the timeout decorator to wrap the `AsyncChannel` methods. 
+- Fixed a maybe regression that caused drivers to try to authenticate (via interactive methods) even if a
+ `auth_secondary` is not set. Added tests to make sure that we raise a warning if there is no secondary password set
+ , but try to increase privilege without authentication, and of course if there is an auth secondary set, we
+  obviously try to auth in the normal fashion.
+- Started thinning down the PtyProcess stuff to simplify and and remove all unnecessary parts, as well as add typing
+ and docstrings... not done yet, but some progress!
+
+# 2020.07.04
 - Updated IOSXE base config to include netconf setup for consistency w/ scrapli_netconf
 - Removed "pipes" authentication for system ssh -- this is mostly an internal change that simplifies the way that
  system transport authenticates. We lose the ability to very easily read out of stderr what is going on so even if we

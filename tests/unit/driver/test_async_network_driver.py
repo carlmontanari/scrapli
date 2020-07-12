@@ -5,6 +5,7 @@ import pytest
 import scrapli
 from scrapli.channel import AsyncChannel
 from scrapli.driver.core import AsyncIOSXEDriver
+from scrapli.exceptions import ScrapliTimeout
 from scrapli.transport import AsyncTransport
 
 from ...test_data.unit_test_cases import TEST_CASES
@@ -181,3 +182,24 @@ async def test_get_prompt(async_cisco_iosxe_conn):
     await async_cisco_iosxe_conn.open()
     found_prompt = await async_cisco_iosxe_conn.get_prompt()
     assert found_prompt == expected_prompt
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "auth_secondary",
+    [("scrapli", True), ("", False)],
+    ids=["auth_secondary_provided", "auth_secondary_missed"],
+)
+async def test_auth_required_no_auth_secondary(async_cisco_iosxe_conn, auth_secondary):
+    async_cisco_iosxe_conn.auth_secondary = auth_secondary[0]
+    await async_cisco_iosxe_conn.open()
+    await async_cisco_iosxe_conn.acquire_priv(desired_priv="exec")
+
+    if auth_secondary[1] is False:
+        async_cisco_iosxe_conn.channel.timeout_ops = 1
+        with pytest.warns(UserWarning), pytest.raises(ScrapliTimeout):
+            # makes sure we raise a user warning if auth is required for priv escalation
+            # this will also fail because the mock ssh server requires a password
+            await async_cisco_iosxe_conn.acquire_priv(desired_priv="privilege_exec")
+    else:
+        await async_cisco_iosxe_conn.acquire_priv(desired_priv="privilege_exec")
