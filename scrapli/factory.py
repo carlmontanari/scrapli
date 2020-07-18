@@ -25,7 +25,7 @@ def _get_core_driver(driver: str) -> NetworkDriver:
         driver: Name of driver to get
 
     Returns:
-        final_driver: final driver class
+        NetworkDriver: final driver class
 
     Raises:
         ScrapliException: if any issue getting core driver
@@ -50,7 +50,7 @@ def _get_driver(driver: str) -> NetworkDriver:
         driver: Name of driver to get
 
     Returns:
-        final_driver: final driver class
+        NetworkDriver: final driver class
 
     Raises:
         ScrapliException: if `platform` not in core drivers - community platforms coming soon!
@@ -74,6 +74,7 @@ class Scrapli(NetworkDriver):
         Scrapli Factory method for synchronous drivers
 
         Args:
+            cls: class object
             **kwargs: keyword arguments to pass to selected driver class plus the additional
                 `driver` keyword argument which should match a core or community driver name!
 
