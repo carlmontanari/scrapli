@@ -4,11 +4,13 @@ from logging import getLogger
 from typing import Optional, Tuple
 
 from scrapli.driver import AsyncScrape, Scrape
+from scrapli.factory import Scrapli
 
 __version__ = "2020.07.12"
 __all__ = (
     "AsyncScrape",
     "Scrape",
+    "Scrapli"
 )
 
 
