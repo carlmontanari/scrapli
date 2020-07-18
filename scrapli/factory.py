@@ -37,7 +37,7 @@ def _get_core_driver(driver: str) -> NetworkDriver:
         )
         return final_driver
     except Exception as exc:
-        msg = f"Error importing core driver `{driver}`; exception: {exc}"
+        msg = f"Error importing core driver `{driver}`; exception: `{exc}`"
         LOG.exception(msg)
         raise ScrapliException(msg)
 
