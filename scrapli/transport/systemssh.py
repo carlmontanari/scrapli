@@ -303,11 +303,16 @@ class SystemSSHTransport(Transport):
                 )
         elif b"bad configuration" in output.lower():
             msg = f"Bad SSH configuration option(s) for host {self.host}"
-            configuration_pattern = re.compile(pattern=rb"bad configuration option: ([a-z0-9\+\=,]*)", flags=re.M | re.I)
+            configuration_pattern = re.compile(
+                pattern=rb"bad configuration option: ([a-z0-9\+\=,]*)", flags=re.M | re.I
+            )
             configuration_issue_match = re.search(pattern=configuration_pattern, string=output)
             if configuration_issue_match:
                 configuration_issues = configuration_issue_match.group(1).decode()
-                msg = f"Bad SSH configuration option(s) for host {self.host}, bad option(s): {configuration_issues}"
+                msg = (
+                    f"Bad SSH configuration option(s) for host {self.host}, bad option(s): "
+                    f"{configuration_issues}"
+                )
         elif b"WARNING: UNPROTECTED PRIVATE KEY FILE!" in output:
             msg = (
                 f"Permissions for private key `{self.auth_private_key}` are too open, "

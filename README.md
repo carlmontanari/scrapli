@@ -30,6 +30,7 @@ Feel free to join the very awesome networktocode slack workspace [here](https://
   - [Other Stuff](#other-stuff)
 - [scrapli: What is it](#scrapli-what-is-it)
 - [Supported Platforms](#supported-platforms)
+- [Related Scrapli Libraries](#related-scrapli-libraries)
 - [Advanced Installation](#advanced-installation)
 - [Versioning](#versioning)
 - [Basic Usage](#basic-usage)
@@ -274,6 +275,20 @@ All of this is focused on network device type Telnet/SSH cli interfaces, but sho
 The goal for all "core" devices will be to include functional tests that can run against
 [vrnetlab](https://github.com/plajjan/vrnetlab) containers to ensure that the "core" devices are as thoroughly tested
  as is practical. 
+
+
+# Related Scrapli Libraries
+
+This repo is the "main" or "core" scrapli project, however there are other libraries/repos in the scrapli family
+ -- here is a list/link to all of the other scrapli things!
+
+- [scrapli_paramiko](https://github.com/scrapli/scrapli_paramiko) -- the paramiko transport driver
+- [scrapli_ssh2](https://github.com/scrapli/scrapli_ssh2) -- the ssh2-python transport driver
+- [scrapli_asyncssh](https://github.com/scrapli/scrapli_asyncssh) -- the asyncssh transport driver
+- [scrapli_netconf](https://github.com/scrapli/scrapli_netconf) -- scrapli netconf -- netconf driver built on top of
+ scrapli
+- [nornir_scrapli](https://github.com/scrapli/nornir_scrapli) -- scrapli's nornir plugin
+- [scrapli_stubs](https://github.com/scrapli/scrapli_stubs) -- scrapli type stubs
 
 
 # Advanced Installation

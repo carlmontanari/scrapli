@@ -7,6 +7,9 @@ CHANGELOG
  compares a normalized whitespace version of the read output to the a normalized whitespace version of the input
  , fixes [#36](https://github.com/carlmontanari/scrapli/issues/36).
 - Improved system transport ssh error handling -- catch cipher/kex errors better, catch bad configuration messages.
+- Now raise an exception if trying to use an invalid transport class for the base driver type -- i.e. if using
+ asyncssh transport plugin with the "normal" sync driver class.
+- Added links to the other projects in the scrapli "family" to the readme.
 
 # 2020.07.12
 - Fixed a silly issue where `get_prompt` was setting the transport timeout to 10s causing user defined timeouts to be
