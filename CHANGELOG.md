@@ -1,6 +1,13 @@
 CHANGELOG
 =======
 
+# 2020.XX.XX
+- Fixed the same `get_prompt` issue from the last release, but this time managed to actually fix it in async version!
+- Better handling of `read_until_input` -- stripping some characters out that may get inserted (backspace char), and
+ compares a normalized whitespace version of the read output to the a normalized whitespace version of the input
+ , fixes [#36](https://github.com/carlmontanari/scrapli/issues/36).
+- Improved system transport ssh error handling -- catch cipher/kex errors better, catch bad configuration messages.
+
 # 2020.07.12
 - Fixed a silly issue where `get_prompt` was setting the transport timeout to 10s causing user defined timeouts to be
  effectively ignored.

@@ -104,6 +104,10 @@ def test_build_open_cmd_user_options(user_options):
             "No matching cipher found for host localhost, their offer: aes128-cbc,aes256-cbc",
         ),
         (
+                b"command-line: line 0: Bad configuration option: ciphers+",
+                "Bad SSH configuration option(s) for host localhost, bad option(s): ciphers+",
+        ),
+        (
             b"WARNING: UNPROTECTED PRIVATE KEY FILE!",
             # note: empty quotes in the middle is where private key filename would be
             "Permissions for private key `` are too open, authentication failed!",
@@ -123,6 +127,7 @@ def test_build_open_cmd_user_options(user_options):
         "no matching key exchange found key exchange",
         "no matching cipher",
         "no matching cipher found ciphers",
+        "bad configuration option",
         "unprotected key",
         "could not resolve host",
     ],

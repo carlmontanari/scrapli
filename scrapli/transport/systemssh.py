@@ -280,7 +280,7 @@ class SystemSSHTransport(Transport):
             msg = f"Timed out connecting to host {self.host}"
         elif b"no route to host" in output.lower():
             msg = f"No route to host {self.host}"
-        elif b"no matching key exchange found" in output.lower():
+        elif b"no matching key exchange" in output.lower():
             msg = f"No matching key exchange found for host {self.host}"
             key_exchange_pattern = re.compile(
                 pattern=rb"their offer: ([a-z0-9\-,]*)", flags=re.M | re.I
@@ -292,7 +292,7 @@ class SystemSSHTransport(Transport):
                     f"No matching key exchange found for host {self.host}, their offer: "
                     f"{offered_key_exchanges}"
                 )
-        elif b"no matching cipher found" in output.lower():
+        elif b"no matching cipher" in output.lower():
             msg = f"No matching cipher found for host {self.host}"
             ciphers_pattern = re.compile(pattern=rb"their offer: ([a-z0-9\-,]*)", flags=re.M | re.I)
             offered_ciphers_match = re.search(pattern=ciphers_pattern, string=output)
@@ -301,6 +301,13 @@ class SystemSSHTransport(Transport):
                 msg = (
                     f"No matching cipher found for host {self.host}, their offer: {offered_ciphers}"
                 )
+        elif b"bad configuration" in output.lower():
+            msg = f"Bad SSH configuration option(s) for host {self.host}"
+            configuration_pattern = re.compile(pattern=rb"bad configuration option: ([a-z0-9\+\=,]*)", flags=re.M | re.I)
+            configuration_issue_match = re.search(pattern=configuration_pattern, string=output)
+            if configuration_issue_match:
+                configuration_issues = configuration_issue_match.group(1).decode()
+                msg = f"Bad SSH configuration option(s) for host {self.host}, bad option(s): {configuration_issues}"
         elif b"WARNING: UNPROTECTED PRIVATE KEY FILE!" in output:
             msg = (
                 f"Permissions for private key `{self.auth_private_key}` are too open, "

@@ -54,7 +54,7 @@ class Channel(ChannelBase):
         Read until all input has been entered.
 
         Args:
-            channel_input: string to write to channel
+            channel_input: bytes to write to channel
             auto_expand: bool to indicate if a device auto-expands commands, for example juniper
                 devices without `cli complete-on-space` disabled will convert `config` to
                 `configuration` after entering a space character after `config`; because scrapli
@@ -80,7 +80,12 @@ class Channel(ChannelBase):
 
         while True:
             output += self._read_chunk()
-            if not auto_expand and channel_input in output:
+
+            # replace any backspace chars (particular problem w/ junos), and remove any added spaces
+            # this is just for comparison of the inputs to what was read from channel
+            if not auto_expand and b" ".join(channel_input.split()) in b" ".join(
+                output.replace(b"\x08", b"").split()
+            ):
                 break
             if auto_expand and self._process_auto_expand(
                 output=output, channel_input=channel_input
