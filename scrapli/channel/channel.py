@@ -173,7 +173,7 @@ class Channel(ChannelBase):
         )
         return raw_result, processed_result
 
-    # @operation_timeout("timeout_ops", "Timed out sending input to device.")
+    @operation_timeout("timeout_ops", "Timed out sending input to device.")
     def _send_input(self, channel_input: str, strip_prompt: bool) -> Tuple[bytes, bytes]:
         """
         Send input to device and return results
