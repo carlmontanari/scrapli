@@ -21,6 +21,12 @@ def test_sync_factory(platform):
     assert isinstance(driver, platform[1])
 
 
+def test_sync_factory_async_transport_exception():
+    with pytest.raises(ScrapliException) as exc:
+        Scrapli(transport="asyncssh")
+    assert str(exc.value) == "Use `AsyncScrapli` if using an async transport!"
+
+
 def test_sync_factory_community_driver_exception():
     with pytest.raises(ScrapliException) as exc:
         Scrapli(platform="tacocat")

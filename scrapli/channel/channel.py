@@ -78,13 +78,16 @@ class Channel(ChannelBase):
         if auto_expand is None:
             auto_expand = self.comms_auto_expand
 
+        # squish all channel input words together and cast to lower to make comparison easier
+        processed_channel_input = b"".join(channel_input.lower().split())
+
         while True:
             output += self._read_chunk()
 
             # replace any backspace chars (particular problem w/ junos), and remove any added spaces
             # this is just for comparison of the inputs to what was read from channel
-            if not auto_expand and b" ".join(channel_input.split()) in b" ".join(
-                output.replace(b"\x08", b"").split()
+            if not auto_expand and processed_channel_input in b"".join(
+                output.lower().replace(b"\x08", b"").split()
             ):
                 break
             if auto_expand and self._process_auto_expand(
@@ -170,7 +173,7 @@ class Channel(ChannelBase):
         )
         return raw_result, processed_result
 
-    @operation_timeout("timeout_ops", "Timed out sending input to device.")
+    # @operation_timeout("timeout_ops", "Timed out sending input to device.")
     def _send_input(self, channel_input: str, strip_prompt: bool) -> Tuple[bytes, bytes]:
         """
         Send input to device and return results

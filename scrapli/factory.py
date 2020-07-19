@@ -4,6 +4,7 @@ from logging import getLogger
 from typing import Any, Dict
 
 from scrapli.driver import NetworkDriver
+from scrapli.driver.base_driver import ASYNCIO_TRANSPORTS
 from scrapli.exceptions import ScrapliException
 
 LOG = getLogger("scrapli.factory")
@@ -86,6 +87,9 @@ class Scrapli(NetworkDriver):
 
         """
         LOG.debug("Scrapli factory initialized")
+
+        if kwargs.get("transport", "system") in ASYNCIO_TRANSPORTS:
+            raise ScrapliException("Use `AsyncScrapli` if using an async transport!")
 
         if "platform" not in kwargs.keys():
             msg = "Argument `platform` must be provided when using `Scrapli` factory!"
