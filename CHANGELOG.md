@@ -10,6 +10,10 @@ CHANGELOG
 - Now raise an exception if trying to use an invalid transport class for the base driver type -- i.e. if using
  asyncssh transport plugin with the "normal" sync driver class.
 - Added links to the other projects in the scrapli "family" to the readme.
+- Created first draft of the scrapli "factory" -- this will allow users to provide the platform name as a string to a
+ single `Scrapli` or `AsyncScrapli` class and it will automagically get the right platform driver selected and such
+ . This is also the first support for `scrapli_community`, which will allow users to contribute non "core" platforms
+  and have them be usable in scrapli just like "normal".
 
 # 2020.07.12
 - Fixed a silly issue where `get_prompt` was setting the transport timeout to 10s causing user defined timeouts to be
