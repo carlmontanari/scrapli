@@ -120,7 +120,7 @@ def test_factory_community_platform_defaults(factory_setup):
     Factory = factory_setup[0]
     transport = factory_setup[1]
     expected_driver = factory_setup[2]
-    driver = Factory(platform="scrapli_example", host="localhost", transport=transport)
+    driver = Factory(platform="scrapli_networkdriver", host="localhost", transport=transport)
     assert isinstance(driver, expected_driver)
     assert driver._transport == transport
     assert driver.failed_when_contains == [
@@ -151,7 +151,10 @@ def test_sync_factory_community_platform_variant(factory_setup):
     transport = factory_setup[1]
     expected_driver = factory_setup[2]
     driver = Factory(
-        platform="scrapli_example", host="localhost", variant="test_variant1", transport=transport
+        platform="scrapli_networkdriver",
+        host="localhost",
+        variant="test_variant1",
+        transport=transport,
     )
     assert isinstance(driver, expected_driver)
     assert driver._transport == transport

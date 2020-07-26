@@ -369,7 +369,10 @@ Please also note that the [CHANGELOG](CHANGELOG.md) contains notes about each ve
 
 Assuming you are using scrapli to connect to one of the five "core" platforms, you should almost always use the
  provided corresponding "core" driver. For example if you are connecting to an Arista EOS device, you should use the
-  `EOSDriver`:
+  `EOSDriver`. You can select this driver "manually" or using the scrapli factory `Scrapli` (or the async scrapli
+   factory `AsyncScrapli`).
+
+Importing your driver manually looks like this:
 
 ```python
 from scrapli.driver.core import EOSDriver
@@ -384,20 +387,43 @@ from scrapli.driver.core import AsyncEOSDriver
 
 The core drivers and associated platforms are outlined below:
 
-| Platform/OS   | Scrapli Driver  | Scrapli Async Driver |
-|---------------|-----------------|----------------------|
-| Cisco IOS-XE  | IOSXEDriver     | AsyncIOSXEDriver     | 
-| Cisco NX-OS   | NXOSDriver      | AsyncNXOSDriver      |
-| Cisco IOS-XR  | IOSXRDriver     | AsyncIOSXRDriver     |
-| Arista EOS    | EOSDriver       | AsyncEOSDriver       |
-| Juniper JunOS | JunosDriver     | AsyncJunosDriver     |
+| Platform/OS   | Scrapli Driver  | Scrapli Async Driver | Platform Name |
+|---------------|-----------------|----------------------|---------------|
+| Cisco IOS-XE  | IOSXEDriver     | AsyncIOSXEDriver     | cisco_iosxe   |
+| Cisco NX-OS   | NXOSDriver      | AsyncNXOSDriver      | cisco_nxos    |
+| Cisco IOS-XR  | IOSXRDriver     | AsyncIOSXRDriver     | cisco_iosxr   |
+| Arista EOS    | EOSDriver       | AsyncEOSDriver       | arista_eos    |
+| Juniper JunOS | JunosDriver     | AsyncJunosDriver     | juniper_junos |
 
 All drivers can be imported from `scrapli.driver.core`.
 
-If you are working with a platform not listed above, you have two options: you can use the `Scrape` driver directly
-, which you can read about [here](#using-scrape-directly) or you can use the `GenericDriver` which which you can read
- about [here](#using-the-genericdriver). In general you should probably use the `GenericDriver` and not mess about
-  using `Scrape` directly.
+If you would rather use the factory class to dynamically select the appropriate driver based on a platform string (as
+ seen in the above table), you can do do so as follows:
+
+```python
+from scrapli import Scrapli
+
+device = {
+   "host": "172.18.0.11",
+   "auth_username": "vrnetlab",
+   "auth_password": "VR-netlab9",
+   "auth_strict_key": False,
+   "platform": "cisco_iosxe"
+}
+
+conn = Scrapli(**device)
+conn.open()
+print(conn.get_prompt())
+```
+
+Note that the `Scrapli` and `AsyncScrapli` classes inherit from the `NetworkDriver` and `AsyncNetworkDriver` classes
+ respectively, so all editor code completion and type indicating behavior should work nicely! For non "core
+ " platforms please see the [scrapli_community project]().
+
+If you are working with a platform not listed above (and/or is not in the scrapli community project), you have two
+ options: you can use the `Scrape` driver directly, which you can read about [here](#using-scrape-directly) or you
+  can use the `GenericDriver` which which you can read about [here](#using-the-genericdriver). In general you should
+   probably use the `GenericDriver` and not mess about using `Scrape` directly.
 
 Note: if you are using async you *must* set the transport to `asyncssh` -- this is the only async transport supported
  at this time!

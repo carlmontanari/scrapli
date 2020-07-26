@@ -3,7 +3,7 @@ import re
 from select import select
 from typing import Any, Dict, Optional
 
-from scrapli.decorators import operation_timeout, requires_open_session
+from scrapli.decorators import OperationTimeout, requires_open_session
 from scrapli.exceptions import ScrapliAuthenticationFailed
 from scrapli.helper import get_prompt_pattern, strip_ansi
 from scrapli.ssh_config import SSHConfig
@@ -357,7 +357,7 @@ class SystemSSHTransport(Transport):
         self.logger.debug(f"Authenticated to host {self.host} with password")
         return True
 
-    @operation_timeout("_timeout_ops", "Timed out attempting to authenticate")
+    @OperationTimeout("_timeout_ops", "Timed out attempting to authenticate")
     def _authenticate(self) -> None:
         """
         Private method to check initial authentication when using pty_session
@@ -421,7 +421,7 @@ class SystemSSHTransport(Transport):
                 self.session_lock.release()
                 break
 
-    @operation_timeout("_timeout_ops", "Timed out determining if session is authenticated")
+    @OperationTimeout("_timeout_ops", "Timed out determining if session is authenticated")
     def _system_isauthenticated(self) -> bool:
         """
         Check if session is authenticated
@@ -527,7 +527,7 @@ class SystemSSHTransport(Transport):
         return False
 
     @requires_open_session()
-    @operation_timeout("timeout_transport", "Timed out reading from transport")
+    @OperationTimeout("timeout_transport", "Timed out reading from transport")
     def read(self) -> bytes:
         """
         Read data from the channel
@@ -546,7 +546,7 @@ class SystemSSHTransport(Transport):
         return self.session.read(read_bytes)
 
     @requires_open_session()
-    @operation_timeout("timeout_transport", "Timed out writing to transport")
+    @OperationTimeout("timeout_transport", "Timed out writing to transport")
     def write(self, channel_input: str) -> None:
         """
         Write data to the channel

@@ -3,7 +3,7 @@ import re
 from typing import Any, List, Optional, Tuple
 
 from scrapli.channel.base_channel import ChannelBase
-from scrapli.decorators import operation_timeout
+from scrapli.decorators import OperationTimeout
 from scrapli.helper import get_prompt_pattern, strip_ansi
 from scrapli.transport.transport import Transport
 
@@ -124,7 +124,7 @@ class Channel(ChannelBase):
                 self.logger.info(f"Read: {repr(output)}")
                 return output
 
-    @operation_timeout("timeout_ops", "Timed out determining prompt on device.")
+    @OperationTimeout("timeout_ops", "Timed out determining prompt on device.")
     def get_prompt(self) -> str:
         """
         Get current channel prompt
@@ -173,7 +173,7 @@ class Channel(ChannelBase):
         )
         return raw_result, processed_result
 
-    @operation_timeout("timeout_ops", "Timed out sending input to device.")
+    @OperationTimeout("timeout_ops", "Timed out sending input to device.")
     def _send_input(self, channel_input: str, strip_prompt: bool) -> Tuple[bytes, bytes]:
         """
         Send input to device and return results
@@ -205,7 +205,7 @@ class Channel(ChannelBase):
         processed_output = processed_output.lstrip(self.comms_return_char.encode()).rstrip()
         return output, processed_output
 
-    @operation_timeout("timeout_ops", "Timed out sending interactive input to device.")
+    @OperationTimeout("timeout_ops", "Timed out sending interactive input to device.")
     def send_inputs_interact(
         self, interact_events: List[Tuple[str, str, Optional[bool]]]
     ) -> Tuple[bytes, bytes]:

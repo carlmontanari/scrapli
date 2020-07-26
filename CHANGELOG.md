@@ -14,6 +14,9 @@ CHANGELOG
  single `Scrapli` or `AsyncScrapli` class and it will automagically get the right platform driver selected and such
  . This is also the first support for `scrapli_community`, which will allow users to contribute non "core" platforms
   and have them be usable in scrapli just like "normal".
+- Overhaul decorators for timeouts into a single class (for sync and async), prefer to use signals timeout method
+ where possible, fall back to multiprocessing timeout where required (multiprocessing is slower/more cpu intensive so
+  dont use it if we dont have to).
 
 # 2020.07.12
 - Fixed a silly issue where `get_prompt` was setting the transport timeout to 10s causing user defined timeouts to be

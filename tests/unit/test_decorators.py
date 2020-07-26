@@ -4,7 +4,7 @@ from threading import Lock
 
 import pytest
 
-from scrapli.decorators import async_operation_timeout, operation_timeout, requires_open_session
+from scrapli.decorators import OperationTimeout, requires_open_session
 from scrapli.driver.base_driver import ScrapeBase
 from scrapli.exceptions import ConnectionNotOpened, ScrapliTimeout
 
@@ -19,27 +19,27 @@ class SlowClass(ScrapeBase):
         self.session_lock = Lock()
         self.session_lock.acquire()
 
-    @operation_timeout("timeout_test")
+    @OperationTimeout("timeout_test")
     def slow_function(self):
         time.sleep(1)
 
-    @operation_timeout("timeout_test")
+    @OperationTimeout("timeout_test")
     def fast_function(self):
         return "fast"
 
-    @operation_timeout("non_existent_class_attr")
+    @OperationTimeout("non_existent_class_attr")
     def confused_function(self):
         return "fast"
 
-    @async_operation_timeout("timeout_test")
+    @OperationTimeout("timeout_test")
     async def async_slow_function(self):
         await asyncio.sleep(1)
 
-    @async_operation_timeout("timeout_test")
+    @OperationTimeout("timeout_test")
     async def async_fast_function(self):
         return "fast"
 
-    @async_operation_timeout("non_existent_class_attr")
+    @OperationTimeout("non_existent_class_attr")
     async def async_confused_function(self):
         return "fast"
 
