@@ -3,7 +3,7 @@ import re
 from select import select
 from typing import Any, Dict, Optional
 
-from scrapli.decorators import operation_timeout, requires_open_session
+from scrapli.decorators import OperationTimeout, requires_open_session
 from scrapli.exceptions import ScrapliAuthenticationFailed
 from scrapli.helper import get_prompt_pattern, strip_ansi
 from scrapli.ssh_config import SSHConfig
@@ -280,7 +280,7 @@ class SystemSSHTransport(Transport):
             msg = f"Timed out connecting to host {self.host}"
         elif b"no route to host" in output.lower():
             msg = f"No route to host {self.host}"
-        elif b"no matching key exchange found" in output.lower():
+        elif b"no matching key exchange" in output.lower():
             msg = f"No matching key exchange found for host {self.host}"
             key_exchange_pattern = re.compile(
                 pattern=rb"their offer: ([a-z0-9\-,]*)", flags=re.M | re.I
@@ -292,7 +292,7 @@ class SystemSSHTransport(Transport):
                     f"No matching key exchange found for host {self.host}, their offer: "
                     f"{offered_key_exchanges}"
                 )
-        elif b"no matching cipher found" in output.lower():
+        elif b"no matching cipher" in output.lower():
             msg = f"No matching cipher found for host {self.host}"
             ciphers_pattern = re.compile(pattern=rb"their offer: ([a-z0-9\-,]*)", flags=re.M | re.I)
             offered_ciphers_match = re.search(pattern=ciphers_pattern, string=output)
@@ -300,6 +300,18 @@ class SystemSSHTransport(Transport):
                 offered_ciphers = offered_ciphers_match.group(1).decode()
                 msg = (
                     f"No matching cipher found for host {self.host}, their offer: {offered_ciphers}"
+                )
+        elif b"bad configuration" in output.lower():
+            msg = f"Bad SSH configuration option(s) for host {self.host}"
+            configuration_pattern = re.compile(
+                pattern=rb"bad configuration option: ([a-z0-9\+\=,]*)", flags=re.M | re.I
+            )
+            configuration_issue_match = re.search(pattern=configuration_pattern, string=output)
+            if configuration_issue_match:
+                configuration_issues = configuration_issue_match.group(1).decode()
+                msg = (
+                    f"Bad SSH configuration option(s) for host {self.host}, bad option(s): "
+                    f"{configuration_issues}"
                 )
         elif b"WARNING: UNPROTECTED PRIVATE KEY FILE!" in output:
             msg = (
@@ -345,7 +357,7 @@ class SystemSSHTransport(Transport):
         self.logger.debug(f"Authenticated to host {self.host} with password")
         return True
 
-    @operation_timeout("_timeout_ops", "Timed out attempting to authenticate")
+    @OperationTimeout("_timeout_ops", "Timed out attempting to authenticate")
     def _authenticate(self) -> None:
         """
         Private method to check initial authentication when using pty_session
@@ -409,7 +421,7 @@ class SystemSSHTransport(Transport):
                 self.session_lock.release()
                 break
 
-    @operation_timeout("_timeout_ops", "Timed out determining if session is authenticated")
+    @OperationTimeout("_timeout_ops", "Timed out determining if session is authenticated")
     def _system_isauthenticated(self) -> bool:
         """
         Check if session is authenticated
@@ -515,7 +527,7 @@ class SystemSSHTransport(Transport):
         return False
 
     @requires_open_session()
-    @operation_timeout("timeout_transport", "Timed out reading from transport")
+    @OperationTimeout("timeout_transport", "Timed out reading from transport")
     def read(self) -> bytes:
         """
         Read data from the channel
@@ -534,7 +546,7 @@ class SystemSSHTransport(Transport):
         return self.session.read(read_bytes)
 
     @requires_open_session()
-    @operation_timeout("timeout_transport", "Timed out writing to transport")
+    @OperationTimeout("timeout_transport", "Timed out writing to transport")
     def write(self, channel_input: str) -> None:
         """
         Write data to the channel

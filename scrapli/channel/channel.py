@@ -3,7 +3,7 @@ import re
 from typing import Any, List, Optional, Tuple
 
 from scrapli.channel.base_channel import ChannelBase
-from scrapli.decorators import operation_timeout
+from scrapli.decorators import OperationTimeout
 from scrapli.helper import get_prompt_pattern, strip_ansi
 from scrapli.transport.transport import Transport
 
@@ -54,7 +54,7 @@ class Channel(ChannelBase):
         Read until all input has been entered.
 
         Args:
-            channel_input: string to write to channel
+            channel_input: bytes to write to channel
             auto_expand: bool to indicate if a device auto-expands commands, for example juniper
                 devices without `cli complete-on-space` disabled will convert `config` to
                 `configuration` after entering a space character after `config`; because scrapli
@@ -78,9 +78,17 @@ class Channel(ChannelBase):
         if auto_expand is None:
             auto_expand = self.comms_auto_expand
 
+        # squish all channel input words together and cast to lower to make comparison easier
+        processed_channel_input = b"".join(channel_input.lower().split())
+
         while True:
             output += self._read_chunk()
-            if not auto_expand and channel_input in output:
+
+            # replace any backspace chars (particular problem w/ junos), and remove any added spaces
+            # this is just for comparison of the inputs to what was read from channel
+            if not auto_expand and processed_channel_input in b"".join(
+                output.lower().replace(b"\x08", b"").split()
+            ):
                 break
             if auto_expand and self._process_auto_expand(
                 output=output, channel_input=channel_input
@@ -116,7 +124,7 @@ class Channel(ChannelBase):
                 self.logger.info(f"Read: {repr(output)}")
                 return output
 
-    @operation_timeout("timeout_ops", "Timed out determining prompt on device.")
+    @OperationTimeout("timeout_ops", "Timed out determining prompt on device.")
     def get_prompt(self) -> str:
         """
         Get current channel prompt
@@ -165,7 +173,7 @@ class Channel(ChannelBase):
         )
         return raw_result, processed_result
 
-    @operation_timeout("timeout_ops", "Timed out sending input to device.")
+    @OperationTimeout("timeout_ops", "Timed out sending input to device.")
     def _send_input(self, channel_input: str, strip_prompt: bool) -> Tuple[bytes, bytes]:
         """
         Send input to device and return results
@@ -197,7 +205,7 @@ class Channel(ChannelBase):
         processed_output = processed_output.lstrip(self.comms_return_char.encode()).rstrip()
         return output, processed_output
 
-    @operation_timeout("timeout_ops", "Timed out sending interactive input to device.")
+    @OperationTimeout("timeout_ops", "Timed out sending interactive input to device.")
     def send_inputs_interact(
         self, interact_events: List[Tuple[str, str, Optional[bool]]]
     ) -> Tuple[bytes, bytes]:

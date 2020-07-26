@@ -15,7 +15,9 @@ TEST_DATA_DIR = f"{Path(scrapli.__file__).parents[1]}/tests/test_data"
 
 def test_check_kwargs_comms_prompt_pattern():
     with pytest.warns(UserWarning) as warn:
-        conn = AsyncIOSXEDriver(host="localhost", comms_prompt_pattern="something")
+        conn = AsyncIOSXEDriver(
+            host="localhost", transport="asyncssh", comms_prompt_pattern="something"
+        )
     assert (
         conn.comms_prompt_pattern
         == "(^[a-z0-9.\\-_@()/:]{1,63}>$)|(^[a-z0-9.\\-_@/:]{1,63}#$)|(^[a-z0-9.\\-_@/:]{1,63}\\(conf[a-z0-9.\\-@/:\\+]{"

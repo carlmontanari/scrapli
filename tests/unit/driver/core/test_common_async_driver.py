@@ -51,7 +51,7 @@ def test_core_driver_init(platform, attr_setup):
     driver = platform[0]
     on_close = driver_args["on_close"] or platform[1]
     on_open = driver_args["on_open"] or platform[2]
-    conn = driver(host="myhost", **driver_args)
+    conn = driver(host="myhost", transport="asyncssh", **driver_args)
     assert conn.auth_secondary == driver_args["auth_secondary"]
     assert conn.on_open == on_open
     assert conn.on_close == on_close

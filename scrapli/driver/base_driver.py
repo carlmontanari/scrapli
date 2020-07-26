@@ -36,6 +36,7 @@ TRANSPORT_BASE_ARGS = (
     "timeout_transport",
     "timeout_exit",
 )
+ASYNCIO_TRANSPORTS = ("asyncssh",)
 
 
 class ScrapeBase:

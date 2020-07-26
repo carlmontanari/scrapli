@@ -45,7 +45,7 @@ def mock_cisco_iosxe_server():
     pool.submit(start_server, "cisco_iosxe")
     # yield to let all the tests run, then we can deal w/ cleaning up the thread/loop
     yield
-    SERVER_LOOP.call_soon_threadsafe(SERVER_LOOP.stop())
+    SERVER_LOOP.call_soon_threadsafe(SERVER_LOOP.stop)
     pool.shutdown()
 
 
