@@ -148,7 +148,7 @@ class OperationTimeout:
         if (
             self.system_transport
             or WIN
-            or not threading.current_thread() is threading.main_thread()
+            or threading.current_thread() is not threading.main_thread()
         ):
             self._use_signals = False
         else:
