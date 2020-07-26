@@ -61,7 +61,7 @@ class OperationTimeout:
         """
         Operation timeout decorator
 
-        This is what is called when the decorator is "triggered"
+        This is what is called when the decorator is triggered
 
         Args:
             wrapped_func: function being decorated
@@ -205,7 +205,7 @@ class OperationTimeout:
             kwargs: function being decorated kwargs
 
         Returns:
-            result: result of decorated function
+            Any: result of decorated function
 
         Raises:
             N/A
@@ -231,7 +231,7 @@ class OperationTimeout:
             kwargs: function being decorated kwargs
 
         Returns:
-            result: result of decorated function
+            Any: result of decorated function
 
         Raises:
             N/A
@@ -258,7 +258,7 @@ class OperationTimeout:
             kwargs: function being decorated kwargs
 
         Returns:
-            result: result of decorated function
+            Any: result of decorated function
 
         Raises:
             N/A
