@@ -152,6 +152,7 @@ def _get_driver(
 
     Args:
         platform: name of target platform; i.e. `cisco_iosxe`, `arista_eos`, etc.
+        variant: name of the target paltform variant
         _async: True/False this is for an asyncio transport driver
 
     Returns:
