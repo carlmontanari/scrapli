@@ -34,7 +34,7 @@ from select import select
 from telnetlib import Telnet
 from typing import Optional
 
-from scrapli.decorators import operation_timeout, requires_open_session
+from scrapli.decorators import OperationTimeout, requires_open_session
 from scrapli.exceptions import ScrapliAuthenticationFailed
 from scrapli.helper import get_prompt_pattern, strip_ansi
 from scrapli.transport.transport import Transport
@@ -237,7 +237,7 @@ class TelnetTransport(Transport):
         self.logger.debug(f&#34;Authenticated to host {self.host} with password&#34;)
         self.session = telnet_session
 
-    @operation_timeout(&#34;_timeout_ops_auth&#34;, &#34;Timed out looking for telnet login prompts&#34;)
+    @OperationTimeout(&#34;_timeout_ops_auth&#34;, &#34;Timed out looking for telnet login prompts&#34;)
     def _authenticate(self, telnet_session: ScrapliTelnet) -&gt; None:
         &#34;&#34;&#34;
         Parent private method to handle telnet authentication
@@ -281,7 +281,7 @@ class TelnetTransport(Transport):
                     telnet_session.write(self._comms_return_char.encode())
                     return_attempts += 1
 
-    @operation_timeout(&#34;_timeout_ops_auth&#34;, &#34;Timed determining if telnet session is authenticated&#34;)
+    @OperationTimeout(&#34;_timeout_ops_auth&#34;, &#34;Timed determining if telnet session is authenticated&#34;)
     def _telnet_isauthenticated(self, telnet_session: ScrapliTelnet) -&gt; bool:
         &#34;&#34;&#34;
         Check if session is authenticated
@@ -371,7 +371,7 @@ class TelnetTransport(Transport):
         return False
 
     @requires_open_session()
-    @operation_timeout(&#34;timeout_transport&#34;, &#34;Timed out reading from transport&#34;)
+    @OperationTimeout(&#34;timeout_transport&#34;, &#34;Timed out reading from transport&#34;)
     def read(self) -&gt; bytes:
         &#34;&#34;&#34;
         Read data from the channel
@@ -389,7 +389,7 @@ class TelnetTransport(Transport):
         return self.session.read_eager()
 
     @requires_open_session()
-    @operation_timeout(&#34;timeout_transport&#34;, &#34;Timed out writing to transport&#34;)
+    @OperationTimeout(&#34;timeout_transport&#34;, &#34;Timed out writing to transport&#34;)
     def write(self, channel_input: str) -&gt; None:
         &#34;&#34;&#34;
         Write data to the channel
@@ -800,7 +800,7 @@ and is ignored after authentication is completed.</dd>
         self.logger.debug(f&#34;Authenticated to host {self.host} with password&#34;)
         self.session = telnet_session
 
-    @operation_timeout(&#34;_timeout_ops_auth&#34;, &#34;Timed out looking for telnet login prompts&#34;)
+    @OperationTimeout(&#34;_timeout_ops_auth&#34;, &#34;Timed out looking for telnet login prompts&#34;)
     def _authenticate(self, telnet_session: ScrapliTelnet) -&gt; None:
         &#34;&#34;&#34;
         Parent private method to handle telnet authentication
@@ -844,7 +844,7 @@ and is ignored after authentication is completed.</dd>
                     telnet_session.write(self._comms_return_char.encode())
                     return_attempts += 1
 
-    @operation_timeout(&#34;_timeout_ops_auth&#34;, &#34;Timed determining if telnet session is authenticated&#34;)
+    @OperationTimeout(&#34;_timeout_ops_auth&#34;, &#34;Timed determining if telnet session is authenticated&#34;)
     def _telnet_isauthenticated(self, telnet_session: ScrapliTelnet) -&gt; bool:
         &#34;&#34;&#34;
         Check if session is authenticated
@@ -934,7 +934,7 @@ and is ignored after authentication is completed.</dd>
         return False
 
     @requires_open_session()
-    @operation_timeout(&#34;timeout_transport&#34;, &#34;Timed out reading from transport&#34;)
+    @OperationTimeout(&#34;timeout_transport&#34;, &#34;Timed out reading from transport&#34;)
     def read(self) -&gt; bytes:
         &#34;&#34;&#34;
         Read data from the channel
@@ -952,7 +952,7 @@ and is ignored after authentication is completed.</dd>
         return self.session.read_eager()
 
     @requires_open_session()
-    @operation_timeout(&#34;timeout_transport&#34;, &#34;Timed out writing to transport&#34;)
+    @OperationTimeout(&#34;timeout_transport&#34;, &#34;Timed out writing to transport&#34;)
     def write(self, channel_input: str) -&gt; None:
         &#34;&#34;&#34;
         Write data to the channel
