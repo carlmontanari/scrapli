@@ -5,7 +5,7 @@ from select import select
 from telnetlib import Telnet
 from typing import Optional
 
-from scrapli.decorators import operation_timeout, requires_open_session
+from scrapli.decorators import OperationTimeout, requires_open_session
 from scrapli.exceptions import ScrapliAuthenticationFailed
 from scrapli.helper import get_prompt_pattern, strip_ansi
 from scrapli.transport.transport import Transport
@@ -208,7 +208,7 @@ class TelnetTransport(Transport):
         self.logger.debug(f"Authenticated to host {self.host} with password")
         self.session = telnet_session
 
-    @operation_timeout("_timeout_ops_auth", "Timed out looking for telnet login prompts")
+    @OperationTimeout("_timeout_ops_auth", "Timed out looking for telnet login prompts")
     def _authenticate(self, telnet_session: ScrapliTelnet) -> None:
         """
         Parent private method to handle telnet authentication
@@ -252,7 +252,7 @@ class TelnetTransport(Transport):
                     telnet_session.write(self._comms_return_char.encode())
                     return_attempts += 1
 
-    @operation_timeout("_timeout_ops_auth", "Timed determining if telnet session is authenticated")
+    @OperationTimeout("_timeout_ops_auth", "Timed determining if telnet session is authenticated")
     def _telnet_isauthenticated(self, telnet_session: ScrapliTelnet) -> bool:
         """
         Check if session is authenticated
@@ -342,7 +342,7 @@ class TelnetTransport(Transport):
         return False
 
     @requires_open_session()
-    @operation_timeout("timeout_transport", "Timed out reading from transport")
+    @OperationTimeout("timeout_transport", "Timed out reading from transport")
     def read(self) -> bytes:
         """
         Read data from the channel
@@ -360,7 +360,7 @@ class TelnetTransport(Transport):
         return self.session.read_eager()
 
     @requires_open_session()
-    @operation_timeout("timeout_transport", "Timed out writing to transport")
+    @OperationTimeout("timeout_transport", "Timed out writing to transport")
     def write(self, channel_input: str) -> None:
         """
         Write data to the channel

@@ -3,7 +3,8 @@ from types import TracebackType
 from typing import Any, Optional, Type
 
 from scrapli.channel import Channel
-from scrapli.driver.base_driver import ScrapeBase
+from scrapli.driver.base_driver import ASYNCIO_TRANSPORTS, ScrapeBase
+from scrapli.exceptions import TransportPluginError
 
 
 class Scrape(ScrapeBase):
@@ -26,10 +27,17 @@ class Scrape(ScrapeBase):
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            TransportPluginError: if attempting to use an asyncio transport plugin
 
         """
         super().__init__(**kwargs)
+
+        if self._transport in ASYNCIO_TRANSPORTS:
+            raise TransportPluginError(
+                f"Attempting to use transport type {self._transport} with a sync driver, "
+                "must use a non-asyncio transport"
+            )
+
         self.channel = Channel(transport=self.transport, **self.channel_args)
 
     def __enter__(self) -> "Scrape":

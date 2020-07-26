@@ -1,6 +1,23 @@
 CHANGELOG
 =======
 
+# 2020.XX.XX
+- Fixed the same `get_prompt` issue from the last release, but this time managed to actually fix it in async version!
+- Better handling of `read_until_input` -- stripping some characters out that may get inserted (backspace char), and
+ compares a normalized whitespace version of the read output to the a normalized whitespace version of the input
+ , fixes [#36](https://github.com/carlmontanari/scrapli/issues/36).
+- Improved system transport ssh error handling -- catch cipher/kex errors better, catch bad configuration messages.
+- Now raise an exception if trying to use an invalid transport class for the base driver type -- i.e. if using
+ asyncssh transport plugin with the "normal" sync driver class.
+- Added links to the other projects in the scrapli "family" to the readme.
+- Created first draft of the scrapli "factory" -- this will allow users to provide the platform name as a string to a
+ single `Scrapli` or `AsyncScrapli` class and it will automagically get the right platform driver selected and such
+ . This is also the first support for `scrapli_community`, which will allow users to contribute non "core" platforms
+  and have them be usable in scrapli just like "normal".
+- Overhaul decorators for timeouts into a single class (for sync and async), prefer to use signals timeout method
+ where possible, fall back to multiprocessing timeout where required (multiprocessing is slower/more cpu intensive so
+  dont use it if we dont have to).
+
 # 2020.07.12
 - Fixed a silly issue where `get_prompt` was setting the transport timeout to 10s causing user defined timeouts to be
  effectively ignored.
