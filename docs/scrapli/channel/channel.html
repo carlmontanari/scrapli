@@ -32,7 +32,7 @@ import re
 from typing import Any, List, Optional, Tuple
 
 from scrapli.channel.base_channel import ChannelBase
-from scrapli.decorators import operation_timeout
+from scrapli.decorators import OperationTimeout
 from scrapli.helper import get_prompt_pattern, strip_ansi
 from scrapli.transport.transport import Transport
 
@@ -83,7 +83,7 @@ class Channel(ChannelBase):
         Read until all input has been entered.
 
         Args:
-            channel_input: string to write to channel
+            channel_input: bytes to write to channel
             auto_expand: bool to indicate if a device auto-expands commands, for example juniper
                 devices without `cli complete-on-space` disabled will convert `config` to
                 `configuration` after entering a space character after `config`; because scrapli
@@ -107,9 +107,17 @@ class Channel(ChannelBase):
         if auto_expand is None:
             auto_expand = self.comms_auto_expand
 
+        # squish all channel input words together and cast to lower to make comparison easier
+        processed_channel_input = b&#34;&#34;.join(channel_input.lower().split())
+
         while True:
             output += self._read_chunk()
-            if not auto_expand and channel_input in output:
+
+            # replace any backspace chars (particular problem w/ junos), and remove any added spaces
+            # this is just for comparison of the inputs to what was read from channel
+            if not auto_expand and processed_channel_input in b&#34;&#34;.join(
+                output.lower().replace(b&#34;\x08&#34;, b&#34;&#34;).split()
+            ):
                 break
             if auto_expand and self._process_auto_expand(
                 output=output, channel_input=channel_input
@@ -145,7 +153,7 @@ class Channel(ChannelBase):
                 self.logger.info(f&#34;Read: {repr(output)}&#34;)
                 return output
 
-    @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out determining prompt on device.&#34;)
+    @OperationTimeout(&#34;timeout_ops&#34;, &#34;Timed out determining prompt on device.&#34;)
     def get_prompt(self) -&gt; str:
         &#34;&#34;&#34;
         Get current channel prompt
@@ -194,7 +202,7 @@ class Channel(ChannelBase):
         )
         return raw_result, processed_result
 
-    @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out sending input to device.&#34;)
+    @OperationTimeout(&#34;timeout_ops&#34;, &#34;Timed out sending input to device.&#34;)
     def _send_input(self, channel_input: str, strip_prompt: bool) -&gt; Tuple[bytes, bytes]:
         &#34;&#34;&#34;
         Send input to device and return results
@@ -226,7 +234,7 @@ class Channel(ChannelBase):
         processed_output = processed_output.lstrip(self.comms_return_char.encode()).rstrip()
         return output, processed_output
 
-    @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out sending interactive input to device.&#34;)
+    @OperationTimeout(&#34;timeout_ops&#34;, &#34;Timed out sending interactive input to device.&#34;)
     def send_inputs_interact(
         self, interact_events: List[Tuple[str, str, Optional[bool]]]
     ) -&gt; Tuple[bytes, bytes]:
@@ -399,7 +407,7 @@ inheritance.</p>
         Read until all input has been entered.
 
         Args:
-            channel_input: string to write to channel
+            channel_input: bytes to write to channel
             auto_expand: bool to indicate if a device auto-expands commands, for example juniper
                 devices without `cli complete-on-space` disabled will convert `config` to
                 `configuration` after entering a space character after `config`; because scrapli
@@ -423,9 +431,17 @@ inheritance.</p>
         if auto_expand is None:
             auto_expand = self.comms_auto_expand
 
+        # squish all channel input words together and cast to lower to make comparison easier
+        processed_channel_input = b&#34;&#34;.join(channel_input.lower().split())
+
         while True:
             output += self._read_chunk()
-            if not auto_expand and channel_input in output:
+
+            # replace any backspace chars (particular problem w/ junos), and remove any added spaces
+            # this is just for comparison of the inputs to what was read from channel
+            if not auto_expand and processed_channel_input in b&#34;&#34;.join(
+                output.lower().replace(b&#34;\x08&#34;, b&#34;&#34;).split()
+            ):
                 break
             if auto_expand and self._process_auto_expand(
                 output=output, channel_input=channel_input
@@ -461,7 +477,7 @@ inheritance.</p>
                 self.logger.info(f&#34;Read: {repr(output)}&#34;)
                 return output
 
-    @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out determining prompt on device.&#34;)
+    @OperationTimeout(&#34;timeout_ops&#34;, &#34;Timed out determining prompt on device.&#34;)
     def get_prompt(self) -&gt; str:
         &#34;&#34;&#34;
         Get current channel prompt
@@ -510,7 +526,7 @@ inheritance.</p>
         )
         return raw_result, processed_result
 
-    @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out sending input to device.&#34;)
+    @OperationTimeout(&#34;timeout_ops&#34;, &#34;Timed out sending input to device.&#34;)
     def _send_input(self, channel_input: str, strip_prompt: bool) -&gt; Tuple[bytes, bytes]:
         &#34;&#34;&#34;
         Send input to device and return results
@@ -542,7 +558,7 @@ inheritance.</p>
         processed_output = processed_output.lstrip(self.comms_return_char.encode()).rstrip()
         return output, processed_output
 
-    @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out sending interactive input to device.&#34;)
+    @OperationTimeout(&#34;timeout_ops&#34;, &#34;Timed out sending interactive input to device.&#34;)
     def send_inputs_interact(
         self, interact_events: List[Tuple[str, str, Optional[bool]]]
     ) -&gt; Tuple[bytes, bytes]:
@@ -643,7 +659,7 @@ inheritance.</p>
 <h3>Methods</h3>
 <dl>
 <dt id="scrapli.channel.channel.Channel.get_prompt"><code class="name flex">
-<span>def <span class="ident">get_prompt</span></span>(<span>channel_or_transport: Union[ForwardRef('<a title="scrapli.channel.channel.Channel" href="#scrapli.channel.channel.Channel">Channel</a>'), ForwardRef('Transport')], *args: Any, **kwargs: Dict[str, Union[str, int]]) ‑> Any</span>
+<span>def <span class="ident">get_prompt</span></span>(<span>*args: Any, **kwargs: Any) ‑> Any</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -651,51 +667,24 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def timeout_wrapper(
-    channel_or_transport: Union[&#34;Channel&#34;, &#34;Transport&#34;],
-    *args: Any,
-    **kwargs: Dict[str, Union[str, int]],
-) -&gt; Any:
-    # import here to avoid circular dependency
-    from scrapli.channel import AsyncChannel, Channel  # pylint: disable=C0415
+<pre><code class="python">def decorate(*args: Any, **kwargs: Any) -&gt; Any:  # type: ignore
+    self.scrapli_obj = args[0]
+    self.timeout_duration = getattr(self.scrapli_obj, self.attribute, None)
 
-    timeout_duration = getattr(channel_or_transport, attribute, None)
-    if not timeout_duration:
-        channel_or_transport.logger.info(
-            f&#34;Could not find {attribute} value of {channel_or_transport}, continuing &#34;
+    if not self.timeout_duration:
+        self.scrapli_obj.logger.info(
+            f&#34;Could not find {self.attribute} value of {self.scrapli_obj}, continuing &#34;
             &#34;without timeout decorator&#34;
         )
-        return wrapped_func(channel_or_transport, *args, **kwargs)
+        return wrapped_func(*args, **kwargs)
 
-    # as this can be called from transport or channel get the appropriate objects
-    # to unlock and close the session. we need to unlock as the close will block
-    # forever if the session is locked, and the session very likely is locked while
-    # waiting for output from the device
-    if isinstance(channel_or_transport, (AsyncChannel, Channel)):
-        timeout_exit = channel_or_transport.transport.timeout_exit
-        session_lock = channel_or_transport.transport.session_lock
-        close = channel_or_transport.transport.close
-    else:
-        timeout_exit = channel_or_transport.timeout_exit
-        session_lock = channel_or_transport.session_lock
-        close = channel_or_transport.close
+    self.set_scrapli_obj_attrs()
 
-    pool = multiprocessing.pool.ThreadPool(processes=1)
-    func_args = [channel_or_transport, *args]
-    future = pool.apply_async(wrapped_func, func_args, kwargs)
-    try:
-        result = future.get(timeout=timeout_duration)
-        pool.terminate()
-        return result
-    except multiprocessing.context.TimeoutError:
-        pool.terminate()
-        channel_or_transport.logger.info(message)
-        if timeout_exit:
-            channel_or_transport.logger.info(&#34;timeout_exit is True, closing transport&#34;)
-            if session_lock.locked():
-                session_lock.release()
-            close()
-        raise ScrapliTimeout(message)</code></pre>
+    if self._use_signals:
+        return self.signal_timeout(wrapped_func=wrapped_func, args=args, kwargs=kwargs)
+    return self.multiprocessing_timeout(
+        wrapped_func=wrapped_func, args=args, kwargs=kwargs
+    )</code></pre>
 </details>
 </dd>
 <dt id="scrapli.channel.channel.Channel.send_input"><code class="name flex">
@@ -747,7 +736,7 @@ inheritance.</p>
 </details>
 </dd>
 <dt id="scrapli.channel.channel.Channel.send_inputs_interact"><code class="name flex">
-<span>def <span class="ident">send_inputs_interact</span></span>(<span>channel_or_transport: Union[ForwardRef('<a title="scrapli.channel.channel.Channel" href="#scrapli.channel.channel.Channel">Channel</a>'), ForwardRef('Transport')], *args: Any, **kwargs: Dict[str, Union[str, int]]) ‑> Any</span>
+<span>def <span class="ident">send_inputs_interact</span></span>(<span>*args: Any, **kwargs: Any) ‑> Any</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -755,51 +744,24 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def timeout_wrapper(
-    channel_or_transport: Union[&#34;Channel&#34;, &#34;Transport&#34;],
-    *args: Any,
-    **kwargs: Dict[str, Union[str, int]],
-) -&gt; Any:
-    # import here to avoid circular dependency
-    from scrapli.channel import AsyncChannel, Channel  # pylint: disable=C0415
+<pre><code class="python">def decorate(*args: Any, **kwargs: Any) -&gt; Any:  # type: ignore
+    self.scrapli_obj = args[0]
+    self.timeout_duration = getattr(self.scrapli_obj, self.attribute, None)
 
-    timeout_duration = getattr(channel_or_transport, attribute, None)
-    if not timeout_duration:
-        channel_or_transport.logger.info(
-            f&#34;Could not find {attribute} value of {channel_or_transport}, continuing &#34;
+    if not self.timeout_duration:
+        self.scrapli_obj.logger.info(
+            f&#34;Could not find {self.attribute} value of {self.scrapli_obj}, continuing &#34;
             &#34;without timeout decorator&#34;
         )
-        return wrapped_func(channel_or_transport, *args, **kwargs)
+        return wrapped_func(*args, **kwargs)
 
-    # as this can be called from transport or channel get the appropriate objects
-    # to unlock and close the session. we need to unlock as the close will block
-    # forever if the session is locked, and the session very likely is locked while
-    # waiting for output from the device
-    if isinstance(channel_or_transport, (AsyncChannel, Channel)):
-        timeout_exit = channel_or_transport.transport.timeout_exit
-        session_lock = channel_or_transport.transport.session_lock
-        close = channel_or_transport.transport.close
-    else:
-        timeout_exit = channel_or_transport.timeout_exit
-        session_lock = channel_or_transport.session_lock
-        close = channel_or_transport.close
+    self.set_scrapli_obj_attrs()
 
-    pool = multiprocessing.pool.ThreadPool(processes=1)
-    func_args = [channel_or_transport, *args]
-    future = pool.apply_async(wrapped_func, func_args, kwargs)
-    try:
-        result = future.get(timeout=timeout_duration)
-        pool.terminate()
-        return result
-    except multiprocessing.context.TimeoutError:
-        pool.terminate()
-        channel_or_transport.logger.info(message)
-        if timeout_exit:
-            channel_or_transport.logger.info(&#34;timeout_exit is True, closing transport&#34;)
-            if session_lock.locked():
-                session_lock.release()
-            close()
-        raise ScrapliTimeout(message)</code></pre>
+    if self._use_signals:
+        return self.signal_timeout(wrapped_func=wrapped_func, args=args, kwargs=kwargs)
+    return self.multiprocessing_timeout(
+        wrapped_func=wrapped_func, args=args, kwargs=kwargs
+    )</code></pre>
 </details>
 </dd>
 </dl>

@@ -334,6 +334,7 @@ The available optional installation extras options are:
 - textfsm (textfsm and ntc-templates)
 - genie (genie/pyats)
 - asynchssh (asyncssh and the scrapli_asyncssh transport)
+- netconf (scrapli_netconf)
 
 
 If you would like to install all of the optional extras, you can do so with the `full` option:

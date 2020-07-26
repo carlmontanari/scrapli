@@ -1,7 +1,7 @@
 CHANGELOG
 =======
 
-# 2020.XX.XX
+# 2020.07.26
 - Fixed the same `get_prompt` issue from the last release, but this time managed to actually fix it in async version!
 - Better handling of `read_until_input` -- stripping some characters out that may get inserted (backspace char), and
  compares a normalized whitespace version of the read output to the a normalized whitespace version of the input

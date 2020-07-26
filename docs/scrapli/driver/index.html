@@ -1312,6 +1312,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 <li><a title="scrapli.driver.core.cisco_iosxr.async_driver.AsyncIOSXRDriver" href="core/cisco_iosxr/async_driver.html#scrapli.driver.core.cisco_iosxr.async_driver.AsyncIOSXRDriver">AsyncIOSXRDriver</a></li>
 <li><a title="scrapli.driver.core.cisco_nxos.async_driver.AsyncNXOSDriver" href="core/cisco_nxos/async_driver.html#scrapli.driver.core.cisco_nxos.async_driver.AsyncNXOSDriver">AsyncNXOSDriver</a></li>
 <li><a title="scrapli.driver.core.juniper_junos.async_driver.AsyncJunosDriver" href="core/juniper_junos/async_driver.html#scrapli.driver.core.juniper_junos.async_driver.AsyncJunosDriver">AsyncJunosDriver</a></li>
+<li><a title="scrapli.factory.AsyncScrapli" href="../factory.html#scrapli.factory.AsyncScrapli">AsyncScrapli</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -1964,7 +1965,10 @@ relies on, see Transport and Channel docs for details.</p>
 <p>N/A
 # noqa: DAR202</p>
 <h2 id="raises">Raises</h2>
-<p>N/A</p></div>
+<dl>
+<dt><code>TransportPluginError</code></dt>
+<dd>if attempting to use a non-asyncio transport plugin</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1990,10 +1994,17 @@ relies on, see Transport and Channel docs for details.</p>
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            TransportPluginError: if attempting to use a non-asyncio transport plugin
 
         &#34;&#34;&#34;
         super().__init__(**kwargs)
+
+        if self._transport not in ASYNCIO_TRANSPORTS:
+            raise TransportPluginError(
+                f&#34;Attempting to use transport type {self._transport} with an asyncio driver, &#34;
+                f&#34;must use one of {list(ASYNCIO_TRANSPORTS)} transports&#34;
+            )
+
         self.channel = AsyncChannel(transport=self.transport, **self.channel_args)
 
     async def __aenter__(self) -&gt; &#34;AsyncScrape&#34;:
@@ -3390,6 +3401,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 <li><a title="scrapli.driver.core.cisco_iosxr.driver.IOSXRDriver" href="core/cisco_iosxr/driver.html#scrapli.driver.core.cisco_iosxr.driver.IOSXRDriver">IOSXRDriver</a></li>
 <li><a title="scrapli.driver.core.cisco_nxos.driver.NXOSDriver" href="core/cisco_nxos/driver.html#scrapli.driver.core.cisco_nxos.driver.NXOSDriver">NXOSDriver</a></li>
 <li><a title="scrapli.driver.core.juniper_junos.driver.JunosDriver" href="core/juniper_junos/driver.html#scrapli.driver.core.juniper_junos.driver.JunosDriver">JunosDriver</a></li>
+<li><a title="scrapli.factory.Scrapli" href="../factory.html#scrapli.factory.Scrapli">Scrapli</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -4041,7 +4053,10 @@ relies on, see Transport and Channel docs for details.</p>
 <p>N/A
 # noqa: DAR202</p>
 <h2 id="raises">Raises</h2>
-<p>N/A</p></div>
+<dl>
+<dt><code>TransportPluginError</code></dt>
+<dd>if attempting to use an asyncio transport plugin</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -4066,10 +4081,17 @@ relies on, see Transport and Channel docs for details.</p>
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            TransportPluginError: if attempting to use an asyncio transport plugin
 
         &#34;&#34;&#34;
         super().__init__(**kwargs)
+
+        if self._transport in ASYNCIO_TRANSPORTS:
+            raise TransportPluginError(
+                f&#34;Attempting to use transport type {self._transport} with a sync driver, &#34;
+                &#34;must use a non-asyncio transport&#34;
+            )
+
         self.channel = Channel(transport=self.transport, **self.channel_args)
 
     def __enter__(self) -&gt; &#34;Scrape&#34;:

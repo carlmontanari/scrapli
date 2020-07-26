@@ -675,7 +675,7 @@ terminal "normally", passing some bad arguments can break things!</dd>
             msg = f&#34;Timed out connecting to host {self.host}&#34;
         elif b&#34;no route to host&#34; in output.lower():
             msg = f&#34;No route to host {self.host}&#34;
-        elif b&#34;no matching key exchange found&#34; in output.lower():
+        elif b&#34;no matching key exchange&#34; in output.lower():
             msg = f&#34;No matching key exchange found for host {self.host}&#34;
             key_exchange_pattern = re.compile(
                 pattern=rb&#34;their offer: ([a-z0-9\-,]*)&#34;, flags=re.M | re.I
@@ -687,7 +687,7 @@ terminal "normally", passing some bad arguments can break things!</dd>
                     f&#34;No matching key exchange found for host {self.host}, their offer: &#34;
                     f&#34;{offered_key_exchanges}&#34;
                 )
-        elif b&#34;no matching cipher found&#34; in output.lower():
+        elif b&#34;no matching cipher&#34; in output.lower():
             msg = f&#34;No matching cipher found for host {self.host}&#34;
             ciphers_pattern = re.compile(pattern=rb&#34;their offer: ([a-z0-9\-,]*)&#34;, flags=re.M | re.I)
             offered_ciphers_match = re.search(pattern=ciphers_pattern, string=output)
@@ -695,6 +695,18 @@ terminal "normally", passing some bad arguments can break things!</dd>
                 offered_ciphers = offered_ciphers_match.group(1).decode()
                 msg = (
                     f&#34;No matching cipher found for host {self.host}, their offer: {offered_ciphers}&#34;
+                )
+        elif b&#34;bad configuration&#34; in output.lower():
+            msg = f&#34;Bad SSH configuration option(s) for host {self.host}&#34;
+            configuration_pattern = re.compile(
+                pattern=rb&#34;bad configuration option: ([a-z0-9\+\=,]*)&#34;, flags=re.M | re.I
+            )
+            configuration_issue_match = re.search(pattern=configuration_pattern, string=output)
+            if configuration_issue_match:
+                configuration_issues = configuration_issue_match.group(1).decode()
+                msg = (
+                    f&#34;Bad SSH configuration option(s) for host {self.host}, bad option(s): &#34;
+                    f&#34;{configuration_issues}&#34;
                 )
         elif b&#34;WARNING: UNPROTECTED PRIVATE KEY FILE!&#34; in output:
             msg = (
@@ -740,7 +752,7 @@ terminal "normally", passing some bad arguments can break things!</dd>
         self.logger.debug(f&#34;Authenticated to host {self.host} with password&#34;)
         return True
 
-    @operation_timeout(&#34;_timeout_ops&#34;, &#34;Timed out attempting to authenticate&#34;)
+    @OperationTimeout(&#34;_timeout_ops&#34;, &#34;Timed out attempting to authenticate&#34;)
     def _authenticate(self) -&gt; None:
         &#34;&#34;&#34;
         Private method to check initial authentication when using pty_session
@@ -804,7 +816,7 @@ terminal "normally", passing some bad arguments can break things!</dd>
                 self.session_lock.release()
                 break
 
-    @operation_timeout(&#34;_timeout_ops&#34;, &#34;Timed out determining if session is authenticated&#34;)
+    @OperationTimeout(&#34;_timeout_ops&#34;, &#34;Timed out determining if session is authenticated&#34;)
     def _system_isauthenticated(self) -&gt; bool:
         &#34;&#34;&#34;
         Check if session is authenticated
@@ -910,7 +922,7 @@ terminal "normally", passing some bad arguments can break things!</dd>
         return False
 
     @requires_open_session()
-    @operation_timeout(&#34;timeout_transport&#34;, &#34;Timed out reading from transport&#34;)
+    @OperationTimeout(&#34;timeout_transport&#34;, &#34;Timed out reading from transport&#34;)
     def read(self) -&gt; bytes:
         &#34;&#34;&#34;
         Read data from the channel
@@ -929,7 +941,7 @@ terminal "normally", passing some bad arguments can break things!</dd>
         return self.session.read(read_bytes)
 
     @requires_open_session()
-    @operation_timeout(&#34;timeout_transport&#34;, &#34;Timed out writing to transport&#34;)
+    @OperationTimeout(&#34;timeout_transport&#34;, &#34;Timed out writing to transport&#34;)
     def write(self, channel_input: str) -&gt; None:
         &#34;&#34;&#34;
         Write data to the channel
@@ -1386,7 +1398,7 @@ and is ignored after authentication is completed.</dd>
         self.logger.debug(f&#34;Authenticated to host {self.host} with password&#34;)
         self.session = telnet_session
 
-    @operation_timeout(&#34;_timeout_ops_auth&#34;, &#34;Timed out looking for telnet login prompts&#34;)
+    @OperationTimeout(&#34;_timeout_ops_auth&#34;, &#34;Timed out looking for telnet login prompts&#34;)
     def _authenticate(self, telnet_session: ScrapliTelnet) -&gt; None:
         &#34;&#34;&#34;
         Parent private method to handle telnet authentication
@@ -1430,7 +1442,7 @@ and is ignored after authentication is completed.</dd>
                     telnet_session.write(self._comms_return_char.encode())
                     return_attempts += 1
 
-    @operation_timeout(&#34;_timeout_ops_auth&#34;, &#34;Timed determining if telnet session is authenticated&#34;)
+    @OperationTimeout(&#34;_timeout_ops_auth&#34;, &#34;Timed determining if telnet session is authenticated&#34;)
     def _telnet_isauthenticated(self, telnet_session: ScrapliTelnet) -&gt; bool:
         &#34;&#34;&#34;
         Check if session is authenticated
@@ -1520,7 +1532,7 @@ and is ignored after authentication is completed.</dd>
         return False
 
     @requires_open_session()
-    @operation_timeout(&#34;timeout_transport&#34;, &#34;Timed out reading from transport&#34;)
+    @OperationTimeout(&#34;timeout_transport&#34;, &#34;Timed out reading from transport&#34;)
     def read(self) -&gt; bytes:
         &#34;&#34;&#34;
         Read data from the channel
@@ -1538,7 +1550,7 @@ and is ignored after authentication is completed.</dd>
         return self.session.read_eager()
 
     @requires_open_session()
-    @operation_timeout(&#34;timeout_transport&#34;, &#34;Timed out writing to transport&#34;)
+    @OperationTimeout(&#34;timeout_transport&#34;, &#34;Timed out writing to transport&#34;)
     def write(self, channel_input: str) -&gt; None:
         &#34;&#34;&#34;
         Write data to the channel
