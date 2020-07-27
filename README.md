@@ -419,7 +419,7 @@ print(conn.get_prompt())
 
 Note that the `Scrapli` and `AsyncScrapli` classes inherit from the `NetworkDriver` and `AsyncNetworkDriver` classes
  respectively, so all editor code completion and type indicating behavior should work nicely! For non "core
- " platforms please see the [scrapli_community project]().
+ " platforms please see the [scrapli_community project](https://github.com/scrapli/scrapli_community).
 
 If you are working with a platform not listed above (and/or is not in the scrapli community project), you have two
  options: you can use the `Scrape` driver directly, which you can read about [here](#using-scrape-directly) or you
