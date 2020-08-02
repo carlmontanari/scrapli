@@ -1,48 +1,49 @@
 import asyncio
-import sys
+import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-import asyncssh
 import pytest
 
 import scrapli
 from scrapli.driver import AsyncGenericDriver, GenericDriver
-from scrapli.driver.core import AsyncIOSXEDriver, IOSXEDriver
+from scrapli.driver.core import (
+    AsyncIOSXEDriver,
+    AsyncJunosDriver,
+    AsyncNXOSDriver,
+    IOSXEDriver,
+    JunosDriver,
+    NXOSDriver,
+)
 
+from ..mock_devices.run import run
 from ..test_data.devices import DEVICES, ENCRYPTED_PRIVATE_KEY, PRIVATE_KEY
-from .mock_cisco_iosxe_server import IOSXEServer
 
 TEST_DATA_DIR = f"{Path(scrapli.__file__).parents[1]}/tests/test_data"
+SERVER_KEY = f"{TEST_DATA_DIR}/files/vrnetlab_key"
 
-SERVERS = {"cisco_iosxe": {"server": IOSXEServer, "port": 2211}}
-SYNC_DRIVERS = {"cisco_iosxe": IOSXEDriver, "generic_driver": GenericDriver}
-ASYNC_DRIVERS = {"cisco_iosxe": AsyncIOSXEDriver, "generic_driver": AsyncGenericDriver}
+SYNC_DRIVERS = {
+    "cisco_iosxe": IOSXEDriver,
+    "cisco_nxos": NXOSDriver,
+    "juniper_junos": JunosDriver,
+    "generic_driver": GenericDriver,
+}
+ASYNC_DRIVERS = {
+    "cisco_iosxe": AsyncIOSXEDriver,
+    "cisco_nxos": AsyncNXOSDriver,
+    "juniper_junos": AsyncJunosDriver,
+    "generic_driver": AsyncGenericDriver,
+}
 
 SERVER_LOOP = asyncio.new_event_loop()
 
 
-async def _start_server(server_name: str):
-    server = SERVERS.get(server_name).get("server")
-    port = SERVERS.get(server_name).get("port")
-    await asyncssh.create_server(
-        server, "localhost", port, server_host_keys=[f"{TEST_DATA_DIR}/files/vrnetlab_key"]
-    )
-
-
-def start_server(server_name: str):
-    try:
-        SERVER_LOOP.run_until_complete(_start_server(server_name=server_name))
-    except (OSError, asyncssh.Error) as exc:
-        sys.exit(f"Error starting server {server_name}; Exception: {str(exc)}")
-
-    SERVER_LOOP.run_forever()
-
-
 @pytest.fixture(scope="session", autouse=True)
-def mock_cisco_iosxe_server():
+def mock_ssh_servers():
     pool = ThreadPoolExecutor(max_workers=1)
-    pool.submit(start_server, "cisco_iosxe")
+    pool.submit(run, SERVER_KEY, SERVER_LOOP)
+    # short sleep -- seems the servers want a quick second to "wake up"
+    time.sleep(0.5)
     # yield to let all the tests run, then we can deal w/ cleaning up the thread/loop
     yield
     SERVER_LOOP.call_soon_threadsafe(SERVER_LOOP.stop)
@@ -106,6 +107,52 @@ def sync_cisco_iosxe_conn_encrypted_key():
 async def async_cisco_iosxe_conn():
     device = DEVICES["mock_cisco_iosxe"]
     driver = ASYNC_DRIVERS["cisco_iosxe"]
+    conn = driver(transport="asyncssh", **device)
+    yield conn
+    if conn.isalive():
+        await conn.close()
+
+
+@pytest.fixture(scope="function")
+def sync_cisco_nxos_conn(sync_conn_auth_type):
+    device = DEVICES["mock_cisco_nxos"].copy()
+    if sync_conn_auth_type == "key":
+        device.pop("auth_password")
+        device["auth_private_key"] = PRIVATE_KEY
+    driver = SYNC_DRIVERS["cisco_nxos"]
+    conn = driver(**device)
+    yield conn
+    if conn.isalive():
+        conn.close()
+
+
+@pytest.fixture(scope="function")
+async def async_cisco_nxos_conn():
+    device = DEVICES["mock_cisco_nxos"]
+    driver = ASYNC_DRIVERS["cisco_nxos"]
+    conn = driver(transport="asyncssh", **device)
+    yield conn
+    if conn.isalive():
+        await conn.close()
+
+
+@pytest.fixture(scope="function")
+def sync_juniper_junos_conn(sync_conn_auth_type):
+    device = DEVICES["mock_juniper_junos"].copy()
+    if sync_conn_auth_type == "key":
+        device.pop("auth_password")
+        device["auth_private_key"] = PRIVATE_KEY
+    driver = SYNC_DRIVERS["juniper_junos"]
+    conn = driver(**device)
+    yield conn
+    if conn.isalive():
+        conn.close()
+
+
+@pytest.fixture(scope="function")
+async def async_juniper_junos_conn():
+    device = DEVICES["mock_juniper_junos"]
+    driver = ASYNC_DRIVERS["juniper_junos"]
     conn = driver(transport="asyncssh", **device)
     yield conn
     if conn.isalive():

@@ -173,6 +173,7 @@ Other scrapli related docs/blogs/videos/info:
 
 - [Scrapli on Dmitry Figol's Network Automation Channel](https://www.youtube.com/watch?v=OJa2typq7yI)
 - [Scrapli Intro on Wim Wauter's blog](https://blog.wimwauters.com/networkprogrammability/2020-04-09_scrapli_introduction/)
+- [Scrapli on the Packet Pushers Heavy Networking Podcast](https://packetpushers.net/podcast/heavy-networking-532-scrapli-is-a-netmiko-alternative/)
 
 
 # scrapli: What is it
@@ -419,7 +420,7 @@ print(conn.get_prompt())
 
 Note that the `Scrapli` and `AsyncScrapli` classes inherit from the `NetworkDriver` and `AsyncNetworkDriver` classes
  respectively, so all editor code completion and type indicating behavior should work nicely! For non "core
- " platforms please see the [scrapli_community project]().
+ " platforms please see the [scrapli_community project](https://github.com/scrapli/scrapli_community).
 
 If you are working with a platform not listed above (and/or is not in the scrapli community project), you have two
  options: you can use the `Scrape` driver directly, which you can read about [here](#using-scrape-directly) or you
