@@ -172,6 +172,7 @@ class ScrapeBase:
             timeout_ops=timeout_ops,
             timeout_exit=timeout_exit,
         )
+        self._timeout_ops: int = self._initialization_args["timeout_ops"]
         self._setup_keepalive(
             keepalive=keepalive,
             keepalive_type=keepalive_type,

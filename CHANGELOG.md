@@ -2,6 +2,12 @@ CHANGELOG
 =======
 
 # 2020.XX.XX
+- Added Packet Pushers scrapli episode to the README!!
+- Added NXOS and Junos mock ssh servers and created tests for open/close methods (silly tests but just ensures we
+ send what we think we should be sending)
+- Created a property `timeout_ops` on the driver class -- this property will also set the `timeout_ops` value of the
+ channel as well, this is just to make it so users don't have to do `conn.channel.timeout_ops` to set the timeout
+  value... that was not super intuitive!
 
 # 2020.07.26
 - Fixed the same `get_prompt` issue from the last release, but this time managed to actually fix it in async version!
