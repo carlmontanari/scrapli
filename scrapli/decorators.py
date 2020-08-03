@@ -264,15 +264,13 @@ class OperationTimeout:
             N/A
 
         """
-        pool = multiprocessing.pool.ThreadPool(processes=1)
-        future = pool.apply_async(wrapped_func, args, kwargs)
-        try:
-            result = future.get(timeout=self.timeout_duration)
-            pool.terminate()
-            return result
-        except multiprocessing.context.TimeoutError:
-            pool.terminate()
-            self._handle_timeout()
+        with multiprocessing.pool.ThreadPool(processes=1) as pool:
+            future = pool.apply_async(wrapped_func, args, kwargs)
+            try:
+                result = future.get(timeout=self.timeout_duration)
+            except multiprocessing.context.TimeoutError:
+                self._handle_timeout()
+        return result
 
 
 def requires_open_session() -> Callable[..., Any]:
