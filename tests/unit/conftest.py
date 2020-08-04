@@ -72,7 +72,7 @@ async def async_generic_driver_conn():
         await conn.close()
 
 
-@pytest.fixture(scope="session", params=["password", "key"])
+@pytest.fixture(scope="function", params=["password", "key"])
 def sync_conn_auth_type(request):
     # fixture to ensue we use password and key based auth with SystemSSHTransport
     yield request.param
