@@ -191,14 +191,13 @@ class Channel(ChannelBase):
 
         """
         bytes_channel_input = channel_input.encode()
-        self.transport.session_lock.acquire()
-        self.logger.info(f"Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}")
-        self.transport.write(channel_input=channel_input)
-        self.logger.debug(f"Write: {repr(channel_input)}")
-        self._read_until_input(channel_input=bytes_channel_input)
-        self._send_return()
-        output = self._read_until_prompt()
-        self.transport.session_lock.release()
+        with self.transport.session_lock:
+            self.logger.info(f"Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}")
+            self.transport.write(channel_input=channel_input)
+            self.logger.debug(f"Write: {repr(channel_input)}")
+            self._read_until_input(channel_input=bytes_channel_input)
+            self._send_return()
+            output = self._read_until_prompt()
         processed_output = self._restructure_output(output=output, strip_prompt=strip_prompt)
         # lstrip the return character out of the final result before storing, also remove any extra
         # whitespace to the right if any
