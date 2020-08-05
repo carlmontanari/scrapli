@@ -192,7 +192,9 @@ class Channel(ChannelBase):
         """
         bytes_channel_input = channel_input.encode()
         with self.transport.session_lock:
-            self.logger.info(f"Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}")
+            self.logger.info(
+                f"Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}"
+            )
             self.transport.write(channel_input=channel_input)
             self.logger.debug(f"Write: {repr(channel_input)}")
             self._read_until_input(channel_input=bytes_channel_input)
