@@ -35,18 +35,43 @@ ASYNC_DRIVERS = {
     "generic_driver": AsyncGenericDriver,
 }
 
-SERVER_LOOP = asyncio.new_event_loop()
+
+@pytest.fixture(scope="session", autouse=True)
+def mock_ssh_server_cisco_iosxe():
+    pool = ThreadPoolExecutor(max_workers=1)
+    loop = asyncio.new_event_loop()
+    pool.submit(run, SERVER_KEY, "cisco_iosxe", loop)
+    # short sleep -- seems the servers want a quick second to "wake up"
+    time.sleep(0.25)
+    # yield to let all the tests run, then we can deal w/ cleaning up the thread/loop
+    yield
+    loop.call_soon_threadsafe(loop.stop)
+    pool.shutdown()
 
 
 @pytest.fixture(scope="session", autouse=True)
-def mock_ssh_servers():
+def mock_ssh_server_cisco_nxos():
     pool = ThreadPoolExecutor(max_workers=1)
-    pool.submit(run, SERVER_KEY, SERVER_LOOP)
+    loop = asyncio.new_event_loop()
+    pool.submit(run, SERVER_KEY, "cisco_nxos", loop)
     # short sleep -- seems the servers want a quick second to "wake up"
-    time.sleep(0.5)
+    time.sleep(0.25)
     # yield to let all the tests run, then we can deal w/ cleaning up the thread/loop
     yield
-    SERVER_LOOP.call_soon_threadsafe(SERVER_LOOP.stop)
+    loop.call_soon_threadsafe(loop.stop)
+    pool.shutdown()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def mock_ssh_server_juniper_junos():
+    pool = ThreadPoolExecutor(max_workers=1)
+    loop = asyncio.new_event_loop()
+    pool.submit(run, SERVER_KEY, "juniper_junos", loop)
+    # short sleep -- seems the servers want a quick second to "wake up"
+    time.sleep(0.25)
+    # yield to let all the tests run, then we can deal w/ cleaning up the thread/loop
+    yield
+    loop.call_soon_threadsafe(loop.stop)
     pool.shutdown()
 
 

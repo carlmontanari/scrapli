@@ -1,6 +1,6 @@
 """mock_devices.run"""
 import asyncio
-from typing import Optional
+from typing import Optional, List
 
 import asyncssh
 
@@ -36,12 +36,13 @@ async def start_server(platform: str, server_key: str) -> None:
     await asyncssh.create_server(server, "localhost", port, server_host_keys=[server_key])
 
 
-async def main(server_key: str) -> None:
+async def main(server_key: str, servers: List[str]) -> None:
     """
     Async main
 
     Args:
         server_key: string path to key to use for ssh server(s)
+        servers: list of servers to start
 
     Returns:
         None
@@ -51,16 +52,17 @@ async def main(server_key: str) -> None:
 
     """
     await asyncio.gather(
-        *[start_server(platform=platform, server_key=server_key) for platform in SERVERS]
+        *[start_server(platform=platform, server_key=server_key) for platform in servers]
     )
 
 
-def run(server_key: str, loop: Optional[asyncio.base_events.BaseEventLoop] = None) -> None:
+def run(server_key: str, server: Optional[str] = None, loop: Optional[asyncio.base_events.BaseEventLoop] = None) -> None:
     """
-    Run all servers
+    Run server(s)
 
     Args:
         server_key: string path to key to use for ssh server(s)
+        server: name of server to run, i.e. "cisco_iosxe", if None, run all servers
         loop: event loop to use, if none provided get current loop
 
     Returns:
@@ -72,5 +74,9 @@ def run(server_key: str, loop: Optional[asyncio.base_events.BaseEventLoop] = Non
     """
     if loop is None:
         loop = asyncio.get_event_loop()
-    loop.run_until_complete(main(server_key=server_key))
+    if server is None:
+        servers = SERVERS
+    else:
+        servers = [server]
+    loop.run_until_complete(main(server_key=server_key, servers=servers))
     loop.run_forever()

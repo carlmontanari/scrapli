@@ -6,7 +6,7 @@ def test_junos_driver_init_telnet():
     assert conn.transport.username_prompt == "login:"
 
 
-def test_nxos_open_close(sync_juniper_junos_conn):
+def test_junos_open_close(sync_juniper_junos_conn):
     sync_juniper_junos_conn.open()
     assert sync_juniper_junos_conn.get_prompt() == "vrnetlab>"
     # "more" will show up if we haven't sent terminal length 0 to the mock nxos server
