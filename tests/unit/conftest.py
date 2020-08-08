@@ -165,7 +165,7 @@ def sync_juniper_junos_conn(sync_conn_auth_type):
         device.pop("auth_password")
         device["auth_private_key"] = PRIVATE_KEY
     driver = SYNC_DRIVERS["juniper_junos"]
-    conn = driver(**device)
+    conn = driver(transport="ssh2", **device)
     yield conn
     if conn.isalive():
         conn.close()
