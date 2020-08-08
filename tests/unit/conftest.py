@@ -142,15 +142,7 @@ def sync_cisco_nxos_conn(sync_conn_auth_type):
         device.pop("auth_password")
         device["auth_private_key"] = PRIVATE_KEY
     driver = SYNC_DRIVERS["cisco_nxos"]
-    # this is set to ssh2 for a few reasons... one to test it and also because w/out this for some
-    # reason this and junos almost always raises a RuntimeError for trying to release an unlocked
-    # lock in channel._send_input. there is literally no way that is possible... but it happens...
-    # so... removing the decorator on the `read` method of system transport also "fixes" this...
-    # which makes no sense as that is not doing anything w/ the lock. moreover this is *never* a
-    # problem for iosxe in the other tests... leading me to believe there is some wild corner case
-    # scenario due to the mock servers being in threads on diff event loops or some crazy thing like
-    # that... so.... ssh2 it is
-    conn = driver(transport="ssh2", **device)
+    conn = driver(**device)
     yield conn
     if conn.isalive():
         conn.close()
@@ -173,15 +165,7 @@ def sync_juniper_junos_conn(sync_conn_auth_type):
         device.pop("auth_password")
         device["auth_private_key"] = PRIVATE_KEY
     driver = SYNC_DRIVERS["juniper_junos"]
-    # this is set to ssh2 for a few reasons... one to test it and also because w/out this for some
-    # reason this and junos almost always raises a RuntimeError for trying to release an unlocked
-    # lock in channel._send_input. there is literally no way that is possible... but it happens...
-    # so... removing the decorator on the `read` method of system transport also "fixes" this...
-    # which makes no sense as that is not doing anything w/ the lock. moreover this is *never* a
-    # problem for iosxe in the other tests... leading me to believe there is some wild corner case
-    # scenario due to the mock servers being in threads on diff event loops or some crazy thing like
-    # that... so.... ssh2 it is
-    conn = driver(transport="ssh2", **device)
+    conn = driver(**device)
     yield conn
     if conn.isalive():
         conn.close()

@@ -54,7 +54,7 @@ class OperationTimeout:
         self.transport: "Transport"
         self.timeout_duration: int
         self.timeout_exit: bool = True
-        self.system_transport: bool = True
+        self.signals_supported_transport: bool = True
         self._use_signals: bool = False
 
     def __call__(self, wrapped_func: Callable[..., Any]) -> Callable[..., Any]:
@@ -105,6 +105,7 @@ class OperationTimeout:
                     return wrapped_func(*args, **kwargs)
 
                 self.set_scrapli_obj_attrs()
+                self.determine_sync_timeout_method()
 
                 if self._use_signals:
                     return self.signal_timeout(wrapped_func=wrapped_func, args=args, kwargs=kwargs)
@@ -129,7 +130,6 @@ class OperationTimeout:
 
         """
         from scrapli.channel import AsyncChannel, Channel  # pylint: disable=C0415
-        from scrapli.transport.systemssh import SystemSSHTransport  # pylint: disable=C0415
 
         if isinstance(self.scrapli_obj, (AsyncChannel, Channel)):
             self.timeout_exit = self.scrapli_obj.transport.timeout_exit
@@ -142,11 +142,30 @@ class OperationTimeout:
             self.close = self.scrapli_obj.close
             self.transport = self.scrapli_obj
 
-        if not isinstance(self.transport, SystemSSHTransport):
-            self.system_transport = False
+    def determine_sync_timeout_method(self) -> None:
+        """
+        Decide what timeout mechanism to use for synchronous usage
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+        from scrapli.transport.systemssh import SystemSSHTransport  # pylint: disable=C0415
+        from scrapli.transport.telnet import TelnetTransport  # pylint: disable=C0415
+
+        if isinstance(self.transport, (SystemSSHTransport, TelnetTransport)):
+            # system transport cant use signals due to pty, unclear why telnetlib doesnt work with
+            # signals, but it does not
+            self.signals_supported_transport = False
 
         if (
-            self.system_transport
+            not self.signals_supported_transport
             or WIN
             or threading.current_thread() is not threading.main_thread()
         ):
@@ -168,11 +187,22 @@ class OperationTimeout:
             ScrapliTimeout: always, if we hit this method we have already timed out!
 
         """
+        from scrapli.channel import AsyncChannel, Channel  # pylint: disable=C0415
+
         if self.timeout_exit:
             self.scrapli_obj.logger.info("timeout_exit is True, closing transport")
             if self.session_lock.locked():
                 self.session_lock.release()
             self.close()
+            if not isinstance(self.scrapli_obj, (AsyncChannel, Channel)):
+                # if system transport is timing out then we can encounter a condition where timeout
+                # happens in system, and we close the transport, however we then still have to deal
+                # with unlocking the lock in `_send_input` (for example) which causes a RuntimeError
+                # if the lock has been unlocked during closing of the session, so re-acquire the
+                # lock if this timeout occurred in NOT a channel object - there needs to be a big
+                # overhaul to all the lock handling but that will be a fairly significant project
+                # that has to touch all the scrapli libraries
+                self.session_lock.acquire()
         raise ScrapliTimeout(self.message)
 
     def _signal_raise_exception(self, signum: Any, frame: Any) -> None:
