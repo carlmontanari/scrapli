@@ -38,41 +38,38 @@ ASYNC_DRIVERS = {
 
 @pytest.fixture(scope="session", autouse=True)
 def mock_ssh_server_cisco_iosxe():
-    pool = ThreadPoolExecutor(max_workers=1)
-    loop = asyncio.new_event_loop()
-    pool.submit(run, SERVER_KEY, "cisco_iosxe", loop)
-    # short sleep -- seems the servers want a quick second to "wake up"
-    time.sleep(0.25)
-    # yield to let all the tests run, then we can deal w/ cleaning up the thread/loop
-    yield
-    loop.call_soon_threadsafe(loop.stop)
-    pool.shutdown()
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        loop = asyncio.new_event_loop()
+        pool.submit(run, SERVER_KEY, "cisco_iosxe", loop)
+        # short sleep -- seems the servers want a quick second to "wake up"
+        time.sleep(0.25)
+        # yield to let all the tests run, then we can deal w/ cleaning up the thread/loop
+        yield
+        loop.call_soon_threadsafe(loop.stop)
 
 
 @pytest.fixture(scope="session", autouse=True)
 def mock_ssh_server_cisco_nxos():
-    pool = ThreadPoolExecutor(max_workers=1)
-    loop = asyncio.new_event_loop()
-    pool.submit(run, SERVER_KEY, "cisco_nxos", loop)
-    # short sleep -- seems the servers want a quick second to "wake up"
-    time.sleep(0.25)
-    # yield to let all the tests run, then we can deal w/ cleaning up the thread/loop
-    yield
-    loop.call_soon_threadsafe(loop.stop)
-    pool.shutdown()
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        loop = asyncio.new_event_loop()
+        pool.submit(run, SERVER_KEY, "cisco_nxos", loop)
+        # short sleep -- seems the servers want a quick second to "wake up"
+        time.sleep(0.25)
+        # yield to let all the tests run, then we can deal w/ cleaning up the thread/loop
+        yield
+        loop.call_soon_threadsafe(loop.stop)
 
 
 @pytest.fixture(scope="session", autouse=True)
 def mock_ssh_server_juniper_junos():
-    pool = ThreadPoolExecutor(max_workers=1)
-    loop = asyncio.new_event_loop()
-    pool.submit(run, SERVER_KEY, "juniper_junos", loop)
-    # short sleep -- seems the servers want a quick second to "wake up"
-    time.sleep(0.25)
-    # yield to let all the tests run, then we can deal w/ cleaning up the thread/loop
-    yield
-    loop.call_soon_threadsafe(loop.stop)
-    pool.shutdown()
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        loop = asyncio.new_event_loop()
+        pool.submit(run, SERVER_KEY, "juniper_junos", loop)
+        # short sleep -- seems the servers want a quick second to "wake up"
+        time.sleep(0.25)
+        # yield to let all the tests run, then we can deal w/ cleaning up the thread/loop
+        yield
+        loop.call_soon_threadsafe(loop.stop)
 
 
 @pytest.fixture(scope="function")
@@ -145,7 +142,15 @@ def sync_cisco_nxos_conn(sync_conn_auth_type):
         device.pop("auth_password")
         device["auth_private_key"] = PRIVATE_KEY
     driver = SYNC_DRIVERS["cisco_nxos"]
-    conn = driver(**device)
+    # this is set to ssh2 for a few reasons... one to test it and also because w/out this for some
+    # reason this and junos almost always raises a RuntimeError for trying to release an unlocked
+    # lock in channel._send_input. there is literally no way that is possible... but it happens...
+    # so... removing the decorator on the `read` method of system transport also "fixes" this...
+    # which makes no sense as that is not doing anything w/ the lock. moreover this is *never* a
+    # problem for iosxe in the other tests... leading me to believe there is some wild corner case
+    # scenario due to the mock servers being in threads on diff event loops or some crazy thing like
+    # that... so.... ssh2 it is
+    conn = driver(transport="ssh2", **device)
     yield conn
     if conn.isalive():
         conn.close()
@@ -168,7 +173,15 @@ def sync_juniper_junos_conn(sync_conn_auth_type):
         device.pop("auth_password")
         device["auth_private_key"] = PRIVATE_KEY
     driver = SYNC_DRIVERS["juniper_junos"]
-    conn = driver(**device)
+    # this is set to ssh2 for a few reasons... one to test it and also because w/out this for some
+    # reason this and junos almost always raises a RuntimeError for trying to release an unlocked
+    # lock in channel._send_input. there is literally no way that is possible... but it happens...
+    # so... removing the decorator on the `read` method of system transport also "fixes" this...
+    # which makes no sense as that is not doing anything w/ the lock. moreover this is *never* a
+    # problem for iosxe in the other tests... leading me to believe there is some wild corner case
+    # scenario due to the mock servers being in threads on diff event loops or some crazy thing like
+    # that... so.... ssh2 it is
+    conn = driver(transport="ssh2", **device)
     yield conn
     if conn.isalive():
         conn.close()

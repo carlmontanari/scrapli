@@ -272,29 +272,28 @@ class Channel(ChannelBase):
         """
         self._pre_send_inputs_interact(interact_events=interact_events)
 
-        self.transport.session_lock.acquire()
         output = b""
-        for interact_event in interact_events:
-            channel_input = interact_event[0]
-            bytes_channel_input = channel_input.encode()
-            channel_response = interact_event[1]
-            try:
-                hidden_input = interact_event[2]
-            except IndexError:
-                hidden_input = False
-            self.logger.info(
-                f"Attempting to send input interact: {channel_input}; "
-                f"\texpecting: {channel_response};"
-                f"\thidden_input: {hidden_input}"
-            )
-            self.transport.write(channel_input=channel_input)
-            self.logger.debug(f"Write: {repr(channel_input)}")
-            if not channel_response or hidden_input is True:
-                self._send_return()
-            else:
-                output += self._read_until_input(channel_input=bytes_channel_input)
-                self._send_return()
-            output += self._read_until_prompt(prompt=channel_response)
-        # wait to release lock until after "interact" session is complete
-        self.transport.session_lock.release()
+        with self.transport.session_lock:
+            for interact_event in interact_events:
+                channel_input = interact_event[0]
+                bytes_channel_input = channel_input.encode()
+                channel_response = interact_event[1]
+                try:
+                    hidden_input = interact_event[2]
+                except IndexError:
+                    hidden_input = False
+                self.logger.info(
+                    f"Attempting to send input interact: {channel_input}; "
+                    f"\texpecting: {channel_response};"
+                    f"\thidden_input: {hidden_input}"
+                )
+                self.transport.write(channel_input=channel_input)
+                self.logger.debug(f"Write: {repr(channel_input)}")
+                if not channel_response or hidden_input is True:
+                    self._send_return()
+                else:
+                    output += self._read_until_input(channel_input=bytes_channel_input)
+                    self._send_return()
+                output += self._read_until_prompt(prompt=channel_response)
+
         return self._post_send_inputs_interact(output=output)

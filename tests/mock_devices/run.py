@@ -1,6 +1,6 @@
 """mock_devices.run"""
 import asyncio
-from typing import Optional, List
+from typing import List, Optional
 
 import asyncssh
 
@@ -56,7 +56,11 @@ async def main(server_key: str, servers: List[str]) -> None:
     )
 
 
-def run(server_key: str, server: Optional[str] = None, loop: Optional[asyncio.base_events.BaseEventLoop] = None) -> None:
+def run(
+    server_key: str,
+    server: Optional[str] = None,
+    loop: Optional[asyncio.base_events.BaseEventLoop] = None,
+) -> None:
     """
     Run server(s)
 
