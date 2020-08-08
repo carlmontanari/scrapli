@@ -14,6 +14,7 @@ def test_junos_open_close(sync_juniper_junos_conn):
     sync_juniper_junos_conn.open()
     time.sleep(1)
     assert sync_juniper_junos_conn.get_prompt() == "vrnetlab>"
+    time.sleep(1)
     # "more" will show up if we haven't sent terminal length 0 to the mock nxos server
     assert "more" not in sync_juniper_junos_conn.send_command(command="show version").result.lower()
     sync_juniper_junos_conn.close()
