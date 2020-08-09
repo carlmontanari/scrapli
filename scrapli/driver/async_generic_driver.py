@@ -3,6 +3,7 @@ from collections import UserList
 from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union
 
 from scrapli.channel import AsyncChannel
+from scrapli.decorators import timeout_modifier
 from scrapli.driver.async_driver import AsyncScrape
 from scrapli.driver.base_generic_driver import GenericDriverBase
 from scrapli.response import Response
@@ -48,11 +49,14 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
         super().__init__(comms_prompt_pattern=comms_prompt_pattern, comms_ansi=comms_ansi, **kwargs)
         self.channel: AsyncChannel
 
+    @timeout_modifier()
     async def send_command(
         self,
         command: str,
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
+        *,
+        timeout_ops: Optional[int] = None,
     ) -> Response:
         """
         Send a command
@@ -61,6 +65,9 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
             command: string to send to device in privilege exec mode
             strip_prompt: True/False strip prompt from returned output
             failed_when_contains: string or list of strings indicating failure if found in response
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed
 
         Returns:
             Response: Scrapli Response object
@@ -69,6 +76,9 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
             N/A
 
         """
+        # decorator cares about timeout_ops, but nothing else does, assign to _ to appease linters
+        _ = timeout_ops
+
         response = self._pre_send_command(
             host=self.transport.host, command=command, failed_when_contains=failed_when_contains
         )
@@ -85,6 +95,8 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
+        *,
+        timeout_ops: Optional[int] = None,
     ) -> ScrapliMultiResponse:
         """
         Send multiple commands
@@ -95,6 +107,10 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
             failed_when_contains: string or list of strings indicating failure if found in response
             stop_on_failed: True/False stop executing commands if a command fails, returns results
                 as of current execution
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed. Note that this is the timeout value PER COMMAND sent, not for the total
+                of the commands being sent!
 
         Returns:
             ScrapliMultiResponse: Scrapli MultiResponse object
@@ -109,6 +125,7 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
                 command=command,
                 strip_prompt=strip_prompt,
                 failed_when_contains=failed_when_contains,
+                timeout_ops=timeout_ops,
             )
             responses.append(response)
             if stop_on_failed is True and response.failed is True:
@@ -122,6 +139,8 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
+        *,
+        timeout_ops: Optional[int] = None,
     ) -> ScrapliMultiResponse:
         """
         Send command(s) from file
@@ -132,6 +151,10 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
             failed_when_contains: string or list of strings indicating failure if found in response
             stop_on_failed: True/False stop executing commands if a command fails, returns results
                 as of current execution
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed. Note that this is the timeout value PER COMMAND sent, not for the total
+                of the commands being sent!
 
         Returns:
             ScrapliMultiResponse: Scrapli MultiResponse object
@@ -147,6 +170,7 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
             strip_prompt=strip_prompt,
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
+            timeout_ops=timeout_ops,
         )
 
     async def send_interactive(

@@ -4,7 +4,8 @@ from threading import Lock
 
 import pytest
 
-from scrapli.decorators import OperationTimeout, requires_open_session
+from scrapli.decorators import OperationTimeout, requires_open_session, timeout_modifier
+from scrapli.driver import Scrape
 from scrapli.driver.base_driver import ScrapeBase
 from scrapli.exceptions import ConnectionNotOpened, ScrapliTimeout
 
@@ -100,3 +101,23 @@ def test_requires_open_session():
         "Call the `.open()` method of your connection object, or use a context manager to ensue "
         "your connection has been opened."
     )
+
+
+@pytest.mark.parametrize(
+    "timeout_ops",
+    [999, 30, None,],
+    ids=["timeout_modified", "timeout_unchanged", "timeout_not_provided"],
+)
+def test_timeout_modifier(monkeypatch, timeout_ops):
+    scrape = Scrape(host="localhost")
+    assert scrape.timeout_ops == 30
+
+    @timeout_modifier()
+    def test_timeout_modifier(cls, timeout_ops):
+        return cls.timeout_ops
+
+    # stupid patch but does confirm the timeout modifier works as execpted!
+    monkeypatch.setattr(Scrape, "open", test_timeout_modifier)
+    modified_timeout = scrape.open(timeout_ops=timeout_ops)
+    assert modified_timeout == timeout_ops if timeout_ops else 30
+    assert scrape.timeout_ops == 30

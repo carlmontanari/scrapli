@@ -1,5 +1,3 @@
-import time
-
 from scrapli.driver.core import JunosDriver
 
 
