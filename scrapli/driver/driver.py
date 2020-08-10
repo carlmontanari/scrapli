@@ -131,7 +131,7 @@ class Scrape(ScrapeBase):
             N/A
 
         Returns:
-            int: value of timeout_ops
+            float: value of timeout_ops
 
         Raises:
             N/A
