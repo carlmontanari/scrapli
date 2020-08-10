@@ -39,7 +39,7 @@ class SystemSSHTransport(Transport):
         auth_bypass: bool = False,
         timeout_socket: int = 5,
         timeout_transport: int = 5,
-        timeout_ops: int = 10,
+        timeout_ops: float = 10,
         timeout_exit: bool = True,
         keepalive: bool = False,
         keepalive_interval: int = 30,
@@ -162,7 +162,7 @@ class SystemSSHTransport(Transport):
         self.auth_strict_key: bool = auth_strict_key
         self.auth_bypass: bool = auth_bypass
 
-        self._timeout_ops: int = timeout_ops
+        self._timeout_ops: float = timeout_ops
         self._comms_prompt_pattern: str = comms_prompt_pattern
         self._comms_return_char: str = comms_return_char
         self._comms_ansi: bool = comms_ansi

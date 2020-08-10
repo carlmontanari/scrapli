@@ -56,7 +56,7 @@ class GenericDriver(Scrape, GenericDriverBase):
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         *,
-        timeout_ops: Optional[int] = None,
+        timeout_ops: Optional[float] = None,
     ) -> Response:
         """
         Send a command
@@ -96,7 +96,7 @@ class GenericDriver(Scrape, GenericDriverBase):
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         *,
-        timeout_ops: Optional[int] = None,
+        timeout_ops: Optional[float] = None,
     ) -> ScrapliMultiResponse:
         """
         Send multiple commands
@@ -140,7 +140,7 @@ class GenericDriver(Scrape, GenericDriverBase):
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         *,
-        timeout_ops: Optional[int] = None,
+        timeout_ops: Optional[float] = None,
     ) -> ScrapliMultiResponse:
         """
         Send command(s) from file

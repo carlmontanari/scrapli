@@ -52,7 +52,7 @@ class ScrapeBase:
         auth_bypass: bool = False,
         timeout_socket: int = 5,
         timeout_transport: int = 10,
-        timeout_ops: int = 30,
+        timeout_ops: float = 30,
         timeout_exit: bool = True,
         keepalive: bool = False,
         keepalive_interval: int = 30,
@@ -172,7 +172,7 @@ class ScrapeBase:
             timeout_ops=timeout_ops,
             timeout_exit=timeout_exit,
         )
-        self._timeout_ops: int = self._initialization_args["timeout_ops"]
+        self._timeout_ops: float = self._initialization_args["timeout_ops"]
         self._setup_keepalive(
             keepalive=keepalive,
             keepalive_type=keepalive_type,
@@ -350,7 +350,7 @@ class ScrapeBase:
             self._initialization_args["auth_private_key"] = auth_private_key
 
     def _setup_timeouts(
-        self, timeout_socket: int, timeout_transport: int, timeout_ops: int, timeout_exit: bool
+        self, timeout_socket: int, timeout_transport: int, timeout_ops: float, timeout_exit: bool,
     ) -> None:
         """
         Parse and setup timeout attributes
@@ -373,7 +373,7 @@ class ScrapeBase:
 
         self._initialization_args["timeout_socket"] = int(timeout_socket)
         self._initialization_args["timeout_transport"] = int(timeout_transport)
-        self._initialization_args["timeout_ops"] = int(timeout_ops)
+        self._initialization_args["timeout_ops"] = float(timeout_ops)
         self._initialization_args["timeout_exit"] = timeout_exit
 
     def _setup_keepalive(

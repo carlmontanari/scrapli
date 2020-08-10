@@ -54,7 +54,7 @@ class OperationTimeout:
         self.session_lock: threading.Lock
         self.close: Callable[..., Any]
         self.transport: "Transport"
-        self.timeout_duration: int
+        self.timeout_duration: float
         self.timeout_exit: bool = True
         self.signals_supported_transport: bool = True
         self._use_signals: bool = False

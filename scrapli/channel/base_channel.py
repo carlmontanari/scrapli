@@ -25,7 +25,7 @@ class ChannelBase(ABC):
         comms_return_char: str = "\n",
         comms_ansi: bool = False,
         comms_auto_expand: bool = False,
-        timeout_ops: int = 10,
+        timeout_ops: float = 10,
     ):
         """
         Channel Object

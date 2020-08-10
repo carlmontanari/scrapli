@@ -123,7 +123,7 @@ class Scrape(ScrapeBase):
         self.logger.info(f"Connection to {self._initialization_args['host']} closed successfully")
 
     @property
-    def timeout_ops(self) -> int:
+    def timeout_ops(self) -> float:
         """
         Property for timeout_ops attribute
 
@@ -140,7 +140,7 @@ class Scrape(ScrapeBase):
         return self._timeout_ops
 
     @timeout_ops.setter
-    def timeout_ops(self, timeout_value: int) -> None:
+    def timeout_ops(self, timeout_value: float) -> None:
         """
         Setter for timeout_ops attribute
 
@@ -148,7 +148,7 @@ class Scrape(ScrapeBase):
         base driver class
 
         Args:
-            timeout_value: integer value to set as timeout_ops
+            timeout_value: float value to set as timeout_ops
 
         Returns:
             N/A  # noqa: DAR202
