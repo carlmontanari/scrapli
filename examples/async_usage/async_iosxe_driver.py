@@ -16,7 +16,7 @@ async def main():
     """Simple example of connecting to an IOSXEDevice with the AsyncIOSXEDriver"""
     async with AsyncIOSXEDriver(**MY_DEVICE) as conn:
         # Platform drivers will auto-magically handle disabling paging for you
-        result = await conn.send_command("show run")
+        result = await conn.send_command("show tech", timeout_ops=0.1)
 
     print(result.result)
 

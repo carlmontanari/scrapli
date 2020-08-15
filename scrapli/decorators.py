@@ -7,7 +7,6 @@ import threading
 from typing import TYPE_CHECKING, Any, Callable, Dict, Union
 
 from scrapli.exceptions import ConnectionNotOpened, ScrapliTimeout
-from scrapli.response import MultiResponse, Response
 
 if TYPE_CHECKING:
     from scrapli.channel import AsyncChannel  # pragma: no cover
@@ -338,41 +337,53 @@ def requires_open_session() -> Callable[..., Any]:
     return decorate
 
 
-def timeout_modifier() -> Callable[..., Any]:
-    """
-    Decorate an "operation" to modify the timeout_ops value for duration of that operation
+class TimeoutModifier:
+    def __call__(self, wrapped_func: Callable[..., Any]) -> Callable[..., Any]:
+        """
+        Decorate an "operation" to modify the timeout_ops value for duration of that operation
 
-    This decorator wraps send command/config ops and is used to allow users to set a `timeout_ops`
-    value for the duration of a single method call -- this makes it so users don't need to manually
-    set/reset the value
+        This decorator wraps send command/config ops and is used to allow users to set a
+        `timeout_ops` value for the duration of a single method call -- this makes it so users don't
+        need to manually set/reset the value
 
-    Args:
-        N/A
+        Args:
+            N/A
 
-    Returns:
-        decorate: wrapped function
+        Returns:
+            decorate: wrapped function
 
-    Raises:
-        N/A
+        Raises:
+            N/A
 
-    """
+        """
+        if asyncio.iscoroutinefunction(wrapped_func):
 
-    def decorate(
-        wrapped_func: Callable[..., Union[Response, MultiResponse]]
-    ) -> Callable[..., Union[Response, MultiResponse]]:
-        def timeout_modifier_wrapper(*args: Any, **kwargs: Any) -> Union[Response, MultiResponse]:
-            scrapli_obj: Union["AsyncGenericDriver", "GenericDriver"] = args[0]
-            if kwargs.get("timeout_ops", None) is None:
-                result = wrapped_func(*args, **kwargs)
-            elif kwargs.get("timeout_ops", scrapli_obj.timeout_ops) == scrapli_obj.timeout_ops:
-                result = wrapped_func(*args, **kwargs)
-            else:
-                base_timeout_ops = scrapli_obj.timeout_ops
-                scrapli_obj.timeout_ops = kwargs["timeout_ops"]
-                result = wrapped_func(*args, **kwargs)
-                scrapli_obj.timeout_ops = base_timeout_ops
-            return result
+            async def decorate(*args: Any, **kwargs: Any) -> Any:
+                scrapli_obj: Union["AsyncGenericDriver", "GenericDriver"] = args[0]
+                if kwargs.get("timeout_ops", None) is None:
+                    result = await wrapped_func(*args, **kwargs)
+                elif kwargs.get("timeout_ops", scrapli_obj.timeout_ops) == scrapli_obj.timeout_ops:
+                    result = await wrapped_func(*args, **kwargs)
+                else:
+                    base_timeout_ops = scrapli_obj.timeout_ops
+                    scrapli_obj.timeout_ops = kwargs["timeout_ops"]
+                    result = await wrapped_func(*args, **kwargs)
+                    scrapli_obj.timeout_ops = base_timeout_ops
+                return result
 
-        return timeout_modifier_wrapper
+        else:
 
-    return decorate
+            def decorate(*args: Any, **kwargs: Any) -> Any:  # type: ignore
+                scrapli_obj: Union["AsyncGenericDriver", "GenericDriver"] = args[0]
+                if kwargs.get("timeout_ops", None) is None:
+                    result = wrapped_func(*args, **kwargs)
+                elif kwargs.get("timeout_ops", scrapli_obj.timeout_ops) == scrapli_obj.timeout_ops:
+                    result = wrapped_func(*args, **kwargs)
+                else:
+                    base_timeout_ops = scrapli_obj.timeout_ops
+                    scrapli_obj.timeout_ops = kwargs["timeout_ops"]
+                    result = wrapped_func(*args, **kwargs)
+                    scrapli_obj.timeout_ops = base_timeout_ops
+                return result
+
+        return decorate

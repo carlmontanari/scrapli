@@ -19,7 +19,7 @@ def test__repr(sync_cisco_iosxe_conn):
 @pytest.mark.parametrize(
     "attr_setup",
     [
-        ({"strip_prompt": True}, b"hostname 3560CX\n"),
+        ({"strip_prompt": True}, b"hostname 3560CX"),
         ({"strip_prompt": False}, b"hostname 3560CX\n3560CX#"),
     ],
     ids=["strip_prompt_true", "strip_prompt_false",],
@@ -53,7 +53,7 @@ def test_post_send_inputs_interact(sync_cisco_iosxe_conn):
         output=expected_raw.encode()
     )
     assert raw_result == expected_raw.encode()
-    assert processed_result[1:] == expected_processed.encode()
+    assert processed_result == expected_processed.encode()
 
 
 @pytest.mark.parametrize(

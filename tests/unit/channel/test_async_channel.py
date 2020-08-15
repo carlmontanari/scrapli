@@ -72,6 +72,18 @@ async def test_read_until_prompt(async_cisco_iosxe_conn):
 
 
 @pytest.mark.asyncio
+async def test_read_until_prompt_or_time(async_cisco_iosxe_conn):
+    await async_cisco_iosxe_conn.open()
+    chunk = "this is some input for read chunk to read"
+    async_cisco_iosxe_conn.transport.write(chunk)
+    async_cisco_iosxe_conn.transport.write(async_cisco_iosxe_conn.channel.comms_return_char)
+    read_chunk = await async_cisco_iosxe_conn.channel._read_until_prompt_or_time(
+        channel_outputs=[b"chunk to read"]
+    )
+    assert chunk.encode() in read_chunk
+
+
+@pytest.mark.asyncio
 async def test_get_prompt(async_cisco_iosxe_conn):
     expected_prompt = TEST_CASES["cisco_iosxe"]["test_get_prompt"]["privilege_exec"]
     await async_cisco_iosxe_conn.open()
@@ -92,6 +104,25 @@ async def test_send_input(async_cisco_iosxe_conn, strip_prompt):
     )
     await async_cisco_iosxe_conn.open()
     raw_result, processed_result = await async_cisco_iosxe_conn.channel.send_input(
+        channel_input="show version", strip_prompt=strip_prompt
+    )
+    assert raw_result == expected_raw.encode()
+    assert processed_result == expected_processed.encode()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
+)
+async def test_send_input_and_read(async_cisco_iosxe_conn, strip_prompt):
+    expected_raw = TEST_CASES["cisco_iosxe"]["test_send_input"]["raw_result"]
+    expected_processed = (
+        TEST_CASES["cisco_iosxe"]["test_send_input"]["processed_result"]["strip"]
+        if strip_prompt
+        else TEST_CASES["cisco_iosxe"]["test_send_input"]["processed_result"]["no_strip"]
+    )
+    await async_cisco_iosxe_conn.open()
+    raw_result, processed_result = await async_cisco_iosxe_conn.channel.send_input_and_read(
         channel_input="show version", strip_prompt=strip_prompt
     )
     assert raw_result == expected_raw.encode()

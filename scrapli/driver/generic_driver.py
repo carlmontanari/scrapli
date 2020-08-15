@@ -3,7 +3,7 @@ from collections import UserList
 from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union
 
 from scrapli.channel import Channel
-from scrapli.decorators import timeout_modifier
+from scrapli.decorators import TimeoutModifier
 from scrapli.driver.base_generic_driver import GenericDriverBase
 from scrapli.driver.driver import Scrape
 from scrapli.response import Response
@@ -49,7 +49,24 @@ class GenericDriver(Scrape, GenericDriverBase):
         super().__init__(comms_prompt_pattern=comms_prompt_pattern, comms_ansi=comms_ansi, **kwargs)
         self.channel: Channel
 
-    @timeout_modifier()
+    def get_prompt(self) -> str:
+        """
+        Convenience method to get device prompt from Channel
+
+        Args:
+            N/A
+
+        Returns:
+            str: prompt received from channel.get_prompt
+
+        Raises:
+            N/A
+
+        """
+        prompt: str = self.channel.get_prompt()
+        return prompt
+
+    @TimeoutModifier()
     def send_command(
         self,
         command: str,
@@ -255,19 +272,57 @@ class GenericDriver(Scrape, GenericDriverBase):
             raw_response=raw_response, processed_response=processed_response, response=response
         )
 
-    def get_prompt(self) -> str:
+    @TimeoutModifier()
+    def send_and_read(
+        self,
+        channel_input: str,
+        expected_outputs: Optional[List[str]] = None,
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+        *,
+        timeout_ops: Optional[float] = None,
+        read_duration: float = 2.5,
+    ) -> Response:
         """
-        Convenience method to get device prompt from Channel
+        Send an input and read outputs.
+
+        Unlike "normal" scrapli behavior this method reads until the prompt(normal) OR until any of
+        a list of expected outputs is seen, OR until the read duration is exceeded. This method does
+        not care about/understand privilege levels.
 
         Args:
-            N/A
+            channel_input: input to send to the channel; intentionally named "channel_input" instead
+                of "command" or "config" due to this method not caring about privilege levels
+            expected_outputs: List of outputs to look for in device response; returns as soon as any
+                of the outputs are seen
+            strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
+            failed_when_contains: string or list of strings indicating failure if found in response
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed
+            read_duration:  float duration to read for
 
         Returns:
-            str: prompt received from channel.get_prompt
+            bytes: output read from channel
 
         Raises:
             N/A
 
         """
-        prompt: str = self.channel.get_prompt()
-        return prompt
+        # decorator cares about timeout_ops, but nothing else does, assign to _ to appease linters
+        _ = timeout_ops
+
+        response = self._pre_send_command(
+            host=self.transport.host,
+            command=channel_input,
+            failed_when_contains=failed_when_contains,
+        )
+        raw_response, processed_response = self.channel.send_input_and_read(
+            channel_input=channel_input,
+            strip_prompt=strip_prompt,
+            expected_outputs=expected_outputs,
+            read_duration=read_duration,
+        )
+        return self._post_send_command(
+            raw_response=raw_response, processed_response=processed_response, response=response
+        )
