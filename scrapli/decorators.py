@@ -347,10 +347,10 @@ class TimeoutModifier:
         need to manually set/reset the value
 
         Args:
-            N/A
+            wrapped_func: function being decorated
 
         Returns:
-            decorate: wrapped function
+            decorate: decorated func
 
         Raises:
             N/A
