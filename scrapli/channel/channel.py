@@ -124,7 +124,7 @@ class Channel(ChannelBase):
                 self.logger.info(f"Read: {repr(output)}")
                 return output
 
-    @OperationTimeout("timeout_ops", "Timed out determining prompt on device.")
+    @OperationTimeout(attribute="timeout_ops", message="Timed out determining prompt on device.")
     def get_prompt(self) -> str:
         """
         Get current channel prompt
@@ -173,7 +173,7 @@ class Channel(ChannelBase):
         )
         return raw_result, processed_result
 
-    @OperationTimeout("timeout_ops", "Timed out sending input to device.")
+    @OperationTimeout(attribute="timeout_ops", message="Timed out sending input to device.")
     def _send_input(self, channel_input: str, strip_prompt: bool) -> Tuple[bytes, bytes]:
         """
         Send input to device and return results
@@ -206,7 +206,7 @@ class Channel(ChannelBase):
         processed_output = processed_output.lstrip(self.comms_return_char.encode()).rstrip()
         return output, processed_output
 
-    @OperationTimeout("timeout_ops", "Timed out sending interactive input to device.")
+    @OperationTimeout(attribute="timeout_ops", message="Timed out sending interactive input to device.")
     def send_inputs_interact(
         self, interact_events: List[Tuple[str, str, Optional[bool]]]
     ) -> Tuple[bytes, bytes]:
