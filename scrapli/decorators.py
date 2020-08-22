@@ -11,8 +11,8 @@ from scrapli.exceptions import ConnectionNotOpened, ScrapliTimeout
 if TYPE_CHECKING:
     from scrapli.channel import AsyncChannel  # pragma: no cover
     from scrapli.channel import Channel  # pragma:  no cover
+    from scrapli.driver import AsyncGenericDriver, GenericDriver  # pragma:  no cover
     from scrapli.transport import Transport  # pragma:  no cover
-    from scrapli.driver import GenericDriver, AsyncGenericDriver  # pragma:  no cover
 
 WIN = sys.platform.startswith("win")
 
@@ -325,12 +325,12 @@ def requires_open_session() -> Callable[..., Any]:
         ) -> Any:
             try:
                 return wrapped_func(*args, **kwargs)
-            except AttributeError:
+            except AttributeError as exc:
                 raise ConnectionNotOpened(
                     "Attempting to call method that requires an open connection, but connection is "
                     "not open. Call the `.open()` method of your connection object, or use a "
                     "context manager to ensue your connection has been opened."
-                )
+                ) from exc
 
         return requires_open_session_wrapper
 

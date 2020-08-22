@@ -67,6 +67,49 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
         return prompt
 
     @TimeoutModifier()
+    async def _send_command_eager(
+        self,
+        command: str,
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+        *,
+        timeout_ops: Optional[float] = None,
+    ) -> Response:
+        """
+        Send a command
+
+        Keeping as a private method rather than adding an argument to the "normal" `send_command`
+        method as this should not be used my users generally.
+
+        Args:
+            command: string to send to device in privilege exec mode
+            strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed
+
+        Returns:
+            Response: Scrapli Response object
+
+        Raises:
+            N/A
+
+        """
+        # decorator cares about timeout_ops, but nothing else does, assign to _ to appease linters
+        _ = timeout_ops
+
+        response = self._pre_send_command(
+            host=self.transport.host, command=command, failed_when_contains=failed_when_contains
+        )
+        raw_response, processed_response = await self.channel.send_input(
+            channel_input=command, strip_prompt=strip_prompt, eager=True
+        )
+        return self._post_send_command(
+            raw_response=raw_response, processed_response=processed_response, response=response
+        )
+
+    @TimeoutModifier()
     async def send_command(
         self,
         command: str,
@@ -288,7 +331,8 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
 
         Unlike "normal" scrapli behavior this method reads until the prompt(normal) OR until any of
         a list of expected outputs is seen, OR until the read duration is exceeded. This method does
-        not care about/understand privilege levels.
+        not care about/understand privilege levels. This *can* cause you some potential issues if
+        not used carefully!
 
         Args:
             channel_input: input to send to the channel; intentionally named "channel_input" instead

@@ -381,7 +381,7 @@ class SystemSSHTransport(Transport):
                     new_output = self.session.read()
                     output += new_output
                     self.logger.debug(f"Attempting to authenticate. Read: {repr(new_output)}")
-                except EOFError:
+                except EOFError as exc:
                     self._ssh_message_handler(output=output)
                     # if _ssh_message_handler didn't raise any exception, we can raise the standard
                     # "did you disable strict key message/exception"
@@ -390,7 +390,7 @@ class SystemSSHTransport(Transport):
                         "`auth_strict_key`?"
                     )
                     self.logger.critical(msg)
-                    raise ScrapliAuthenticationFailed(msg)
+                    raise ScrapliAuthenticationFailed(msg) from exc
 
                 # even if we dont hit EOF, we may still have hit a message we need to process such
                 # as insecure key permissions

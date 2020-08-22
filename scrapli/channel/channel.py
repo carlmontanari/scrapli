@@ -211,13 +211,18 @@ class Channel(ChannelBase):
                 return current_prompt.decode().strip()
 
     @OperationTimeout(attribute="timeout_ops", message="Timed out sending input to device.")
-    def send_input(self, channel_input: str, strip_prompt: bool = True) -> Tuple[bytes, bytes]:
+    def send_input(
+        self, channel_input: str, strip_prompt: bool = True, eager: bool = False
+    ) -> Tuple[bytes, bytes]:
         """
         Primary entry point to send data to devices in shell mode; accept input and returns result
 
         Args:
             channel_input: string input to send to channel
             strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
+            eager: eager mode reads and returns the `_read_until_input` value, but does not attempt
+                to read to the prompt pattern -- this should not be used manually! (only used by
+                `send_configs` with the eager flag set)
 
         Returns:
             raw_result: output read from the channel with no whitespace trimming/cleaning
@@ -237,9 +242,10 @@ class Channel(ChannelBase):
             )
             self.transport.write(channel_input=channel_input)
             self.logger.debug(f"Write: {repr(channel_input)}")
-            self._read_until_input(channel_input=bytes_channel_input)
+            output = self._read_until_input(channel_input=bytes_channel_input)
             self._send_return()
-            output = self._read_until_prompt()
+            if not eager:
+                output = self._read_until_prompt()
         processed_output = self._restructure_output(output=output, strip_prompt=strip_prompt)
 
         return output, processed_output
@@ -253,13 +259,13 @@ class Channel(ChannelBase):
         read_duration: Optional[float] = None,
     ) -> Tuple[bytes, bytes]:
         """
-        Primary entry point to send data to devices in shell mode; accept input and returns result
+        Send a command and read until expected prompt is seen, outputs are seen, or for duration
 
         Args:
             channel_input: string input to send to channel
             strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
-            expected_outputs: list fo bytes to look for in output; if any of these are seen, return
-                output read up till through that read
+            expected_outputs: list of strings to look for in output; if any of these are seen,
+                return output read up till that read
             read_duration: float duration to read for
 
         Returns:

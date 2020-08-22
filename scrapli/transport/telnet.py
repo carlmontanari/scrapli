@@ -186,7 +186,7 @@ class TelnetTransport(Transport):
             msg = f"Failed to open telnet session to host {self.host}"
             if "connection refused" in str(exc).lower():
                 msg = f"Failed to open telnet session to host {self.host}, connection refused"
-            raise ScrapliAuthenticationFailed(msg)
+            raise ScrapliAuthenticationFailed(msg) from exc
         telnet_session.timeout = self.timeout_transport
         self.logger.debug(f"Session to host {self.host} spawned")
         self.session_lock.release()

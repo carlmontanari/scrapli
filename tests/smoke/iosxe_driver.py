@@ -3,6 +3,7 @@ import time
 from pathlib import Path
 
 from device_info import iosxe_device
+
 from scrapli.driver.core import IOSXEDriver
 
 logging.basicConfig(
