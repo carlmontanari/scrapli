@@ -347,7 +347,7 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
             read_duration:  float duration to read for
 
         Returns:
-            bytes: output read from channel
+            Response: Scrapli Response object
 
         Raises:
             N/A
