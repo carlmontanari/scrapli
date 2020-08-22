@@ -21,6 +21,7 @@ CHANGELOG
 - The "requires open" decorator has been updated/fixed to play nice with asyncio
 - `timeout_ops` has been converted from an int to a float to allow for more granular timeout control (the other
  timeouts remain as integers)
+- Few minor docstring fixes from copypasta issues :)
 
 
 # 2020.07.26
