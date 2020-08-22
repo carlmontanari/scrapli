@@ -122,3 +122,41 @@ class AsyncScrape(ScrapeBase):
             await self.on_close(self)
         self.transport.close()
         self.logger.info(f"Connection to {self._initialization_args['host']} closed successfully")
+
+    @property
+    def timeout_ops(self) -> float:
+        """
+        Property for timeout_ops attribute
+
+        Args:
+            N/A
+
+        Returns:
+            float: value of timeout_ops
+
+        Raises:
+            N/A
+
+        """
+        return self._timeout_ops
+
+    @timeout_ops.setter
+    def timeout_ops(self, timeout_value: float) -> None:
+        """
+        Setter for timeout_ops attribute
+
+        Sets timeout value for the channel class as well as the internal `_timeout_ops` value of the
+        base driver class
+
+        Args:
+            timeout_value: float value to set as timeout_ops
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+        self.channel.timeout_ops = timeout_value
+        self._timeout_ops = timeout_value

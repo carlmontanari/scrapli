@@ -41,6 +41,15 @@ DEVICES = {
         "host": "172.18.0.12",
         "base_config": f"{TEST_DATA_PATH}/base_configs/cisco_nxos",
     },
+    "mock_cisco_nxos": {
+        "auth_username": MOCK_USERNAME,
+        "auth_password": MOCK_PASSWORD,
+        "auth_secondary": MOCK_PASSWORD,
+        "auth_private_key_passphrase": MOCK_PASSPHRASE,
+        "auth_strict_key": False,
+        "host": "localhost",
+        "port": 2212,
+    },
     "cisco_iosxr": {
         "auth_username": FUNCTIONAL_USERNAME,
         "auth_password": FUNCTIONAL_PASSWORD,
@@ -65,6 +74,15 @@ DEVICES = {
         "auth_strict_key": False,
         "host": "172.18.0.15",
         "base_config": f"{TEST_DATA_PATH}/base_configs/juniper_junos",
+    },
+    "mock_juniper_junos": {
+        "auth_username": MOCK_USERNAME,
+        "auth_password": MOCK_PASSWORD,
+        "auth_secondary": MOCK_PASSWORD,
+        "auth_private_key_passphrase": MOCK_PASSPHRASE,
+        "auth_strict_key": False,
+        "host": "localhost",
+        "port": 2215,
     },
     "linux": {
         "auth_username": "root",

@@ -42,7 +42,7 @@ def _find_transport_plugin(transport: str) -> Tuple[Any, Tuple[str, ...]]:
             "install most plugins with pip: `pip install scrapli-ssh2` for example."
         )
         warning = "\n" + msg + "\n" + fix + "\n" + msg
-        raise ModuleNotFoundError(warning)
+        raise ModuleNotFoundError(warning) from exc
     transport_class = getattr(transport_plugin_lib, "Transport", None)
     required_transport_args = getattr(transport_plugin_lib, "TRANSPORT_ARGS", None)
     if not all([transport_class, required_transport_args]):
@@ -136,8 +136,8 @@ def _textfsm_get_template(platform: str, command: str) -> Optional[TextIO]:
 
     """
     try:
-        from textfsm.clitable import CliTable  # pylint: disable=C0415
         from ntc_templates import templates  # pylint: disable=C0415,W0611
+        from textfsm.clitable import CliTable  # pylint: disable=C0415
     except ModuleNotFoundError as exc:
         err = f"Module '{exc.name}' not installed!"
         msg = f"***** {err} {'*' * (80 - len(err))}"

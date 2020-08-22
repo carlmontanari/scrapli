@@ -1,9 +1,11 @@
 """scrapli.channel.async_channel"""
 import re
+import time
 from typing import Any, List, Optional, Tuple
 
 from scrapli.channel.base_channel import ChannelBase
 from scrapli.decorators import OperationTimeout
+from scrapli.exceptions import ScrapliTimeout
 from scrapli.helper import get_prompt_pattern, strip_ansi
 from scrapli.transport.async_transport import AsyncTransport
 
@@ -126,7 +128,64 @@ class AsyncChannel(ChannelBase):
                 self.logger.info(f"Read: {repr(output)}")
                 return output
 
-    @OperationTimeout("timeout_ops", "Timed out determining prompt on device.")
+    async def _read_until_prompt_or_time(
+        self,
+        output: bytes = b"",
+        channel_outputs: Optional[List[bytes]] = None,
+        read_duration: Optional[float] = None,
+    ) -> bytes:
+        """
+        Read until expected prompt is seen, outputs are seen, or for duration, whichever comes first
+
+        As transport reading may block, transport timeout is temporarily set to the read_duration
+        and any `ScrapliTimeout` that is raised while reading is ignored.
+
+        Args:
+            output: bytes from previous reads if needed
+            channel_outputs: List of bytes to search for in channel output, if any are seen, return
+                read output
+            read_duration: duration to read from channel for
+
+        Returns:
+            bytes: output read from channel
+
+        Raises:
+            N/A
+
+        """
+        prompt_pattern = get_prompt_pattern(prompt="", class_prompt=self.comms_prompt_pattern)
+
+        if channel_outputs is None:
+            channel_outputs = []
+        if read_duration is None:
+            read_duration = 2.5
+
+        previous_timeout_transport = self.transport.timeout_transport
+        self.transport.timeout_transport = int(read_duration)
+
+        start = time.time()
+        while True:
+            try:
+                output += await self._read_chunk()
+            except ScrapliTimeout:
+                pass
+
+            if self.comms_ansi:
+                output = strip_ansi(output=output)
+
+            if (time.time() - start) > read_duration:
+                break
+            if any([channel_output in output for channel_output in channel_outputs]):
+                break
+            if re.search(pattern=prompt_pattern, string=output):
+                break
+
+        self.transport.timeout_transport = previous_timeout_transport
+
+        self.logger.info(f"Read: {repr(output)}")
+        return output
+
+    @OperationTimeout(attribute="timeout_ops", message="Timed out determining prompt on device.")
     async def get_prompt(self) -> str:
         """
         Async get current channel prompt
@@ -153,8 +212,9 @@ class AsyncChannel(ChannelBase):
                 current_prompt = channel_match.group(0)
                 return current_prompt.decode().strip()
 
+    @OperationTimeout(attribute="timeout_ops", message="Timed out sending input to device.")
     async def send_input(
-        self, channel_input: str, strip_prompt: bool = True
+        self, channel_input: str, strip_prompt: bool = True, eager: bool = False
     ) -> Tuple[bytes, bytes]:
         """
         Primary entry point to send data to devices in async shell mode; accept input, return result
@@ -162,6 +222,9 @@ class AsyncChannel(ChannelBase):
         Args:
             channel_input: string input to send to channel
             strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
+            eager: eager mode reads and returns the `_read_until_input` value, but does not attempt
+                to read to the prompt pattern -- this should not be used manually! (only used by
+                `send_configs` with the eager flag set)
 
         Returns:
             raw_result: output read from the channel with no whitespace trimming/cleaning
@@ -172,24 +235,40 @@ class AsyncChannel(ChannelBase):
 
         """
         self._pre_send_input(channel_input=channel_input)
-        raw_result, processed_result = await self._async_send_input(
-            channel_input=channel_input, strip_prompt=strip_prompt
-        )
-        return raw_result, processed_result
 
-    @OperationTimeout("timeout_ops", "Timed out sending input to device.")
-    async def _async_send_input(
-        self, channel_input: str, strip_prompt: bool
+        bytes_channel_input = channel_input.encode()
+
+        with self.transport.session_lock:
+            self.logger.info(
+                f"Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}"
+            )
+            self.transport.write(channel_input=channel_input)
+            self.logger.debug(f"Write: {repr(channel_input)}")
+            output = await self._read_until_input(channel_input=bytes_channel_input)
+            self._send_return()
+            if not eager:
+                output = await self._read_until_prompt()
+        processed_output = self._restructure_output(output=output, strip_prompt=strip_prompt)
+
+        return output, processed_output
+
+    @OperationTimeout(attribute="timeout_ops", message="Timed out sending and reading to device.")
+    async def send_input_and_read(
+        self,
+        channel_input: str,
+        strip_prompt: bool = True,
+        expected_outputs: Optional[List[str]] = None,
+        read_duration: Optional[float] = None,
     ) -> Tuple[bytes, bytes]:
         """
-        Async send input to device and return results
-
-        Note that write operations are sync, but all read ops are async, so this method must be
-        async
+        Send a command and read until expected prompt is seen, outputs are seen, or for duration
 
         Args:
-            channel_input: string input to write to channel
-            strip_prompt: bool True/False for whether or not to strip prompt
+            channel_input: string input to send to channel
+            strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
+            expected_outputs: list of strings to look for in output; if any of these are seen,
+                return output read up till that read
+            read_duration: float duration to read for
 
         Returns:
             raw_result: output read from the channel with no whitespace trimming/cleaning
@@ -199,22 +278,27 @@ class AsyncChannel(ChannelBase):
             N/A
 
         """
+        self._pre_send_input(channel_input=channel_input)
+
         bytes_channel_input = channel_input.encode()
-        self.transport.session_lock.acquire()
-        self.logger.info(f"Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}")
-        self.transport.write(channel_input=channel_input)
-        self.logger.debug(f"Write: {repr(channel_input)}")
-        await self._read_until_input(channel_input=bytes_channel_input)
-        self._send_return()
-        output = await self._read_until_prompt()
-        self.transport.session_lock.release()
+        bytes_channel_outputs = [
+            channel_output.encode() for channel_output in expected_outputs or []
+        ]
+
+        with self.transport.session_lock:
+            self.transport.write(channel_input=channel_input)
+            self.logger.debug(f"Write: {repr(channel_input)}")
+            await self._read_until_input(channel_input=bytes_channel_input)
+            self._send_return()
+            output = await self._read_until_prompt_or_time(
+                channel_outputs=bytes_channel_outputs, read_duration=read_duration
+            )
         processed_output = self._restructure_output(output=output, strip_prompt=strip_prompt)
-        # lstrip the return character out of the final result before storing, also remove any extra
-        # whitespace to the right if any
-        processed_output = processed_output.lstrip(self.comms_return_char.encode()).rstrip()
         return output, processed_output
 
-    @OperationTimeout("timeout_ops", "Timed out sending interactive input to device.")
+    @OperationTimeout(
+        attribute="timeout_ops", message="Timed out sending interactive input to device."
+    )
     async def send_inputs_interact(
         self, interact_events: List[Tuple[str, str, Optional[bool]]]
     ) -> Tuple[bytes, bytes]:

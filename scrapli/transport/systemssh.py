@@ -39,7 +39,7 @@ class SystemSSHTransport(Transport):
         auth_bypass: bool = False,
         timeout_socket: int = 5,
         timeout_transport: int = 5,
-        timeout_ops: int = 10,
+        timeout_ops: float = 10,
         timeout_exit: bool = True,
         keepalive: bool = False,
         keepalive_interval: int = 30,
@@ -162,7 +162,7 @@ class SystemSSHTransport(Transport):
         self.auth_strict_key: bool = auth_strict_key
         self.auth_bypass: bool = auth_bypass
 
-        self._timeout_ops: int = timeout_ops
+        self._timeout_ops: float = timeout_ops
         self._comms_prompt_pattern: str = comms_prompt_pattern
         self._comms_return_char: str = comms_return_char
         self._comms_ansi: bool = comms_ansi
@@ -373,53 +373,49 @@ class SystemSSHTransport(Transport):
                 explicit exception/message
 
         """
-        self.session_lock.acquire()
         output = b""
         prompt_pattern = get_prompt_pattern(prompt="", class_prompt=self._comms_prompt_pattern)
-        while True:
-            try:
-                new_output = self.session.read()
-                output += new_output
-                self.logger.debug(f"Attempting to authenticate. Read: {repr(new_output)}")
-            except EOFError:
+        with self.session_lock:
+            while True:
+                try:
+                    new_output = self.session.read()
+                    output += new_output
+                    self.logger.debug(f"Attempting to authenticate. Read: {repr(new_output)}")
+                except EOFError as exc:
+                    self._ssh_message_handler(output=output)
+                    # if _ssh_message_handler didn't raise any exception, we can raise the standard
+                    # "did you disable strict key message/exception"
+                    msg = (
+                        f"Failed to open connection to host {self.host}. Do you need to disable "
+                        "`auth_strict_key`?"
+                    )
+                    self.logger.critical(msg)
+                    raise ScrapliAuthenticationFailed(msg) from exc
+
+                # even if we dont hit EOF, we may still have hit a message we need to process such
+                # as insecure key permissions
                 self._ssh_message_handler(output=output)
-                # if _ssh_message_handler didn't raise any exception, we can raise the standard --
-                # did you disable strict key message/exception
-                msg = (
-                    f"Failed to open connection to host {self.host}. Do you need to disable "
-                    "`auth_strict_key`?"
-                )
-                self.logger.critical(msg)
-                self.session_lock.release()
-                raise ScrapliAuthenticationFailed(msg)
 
-            # even if we dont hit EOF, we may still have hit a message we need to process such as
-            # insecure key permissions
-            self._ssh_message_handler(output=output)
-
-            if self._comms_ansi or b"\x1B" in output:
-                output = strip_ansi(output=output)
-            if b"password" in output.lower():
-                self.logger.info("Found password prompt, sending password")
-                self.session.write(self.auth_password.encode())
-                self.session.write(self._comms_return_char.encode())
-                self.session_lock.release()
-                break
-            if b"enter passphrase for key" in output.lower():
-                self.logger.info("Found key passphrase prompt, sending passphrase")
-                self.session.write(self.auth_private_key_passphrase.encode())
-                self.session.write(self._comms_return_char.encode())
-                self.session_lock.release()
-                break
-            channel_match = re.search(pattern=prompt_pattern, string=output)
-            if channel_match:
-                self.logger.info(
-                    "Found channel prompt, assuming that key based authentication has succeeded"
-                )
-                # set _isauthenticated to true, we've already authenticated, don't need to re-check
-                self._isauthenticated = True
-                self.session_lock.release()
-                break
+                if self._comms_ansi or b"\x1B" in output:
+                    output = strip_ansi(output=output)
+                if b"password" in output.lower():
+                    self.logger.info("Found password prompt, sending password")
+                    self.session.write(self.auth_password.encode())
+                    self.session.write(self._comms_return_char.encode())
+                    break
+                if b"enter passphrase for key" in output.lower():
+                    self.logger.info("Found key passphrase prompt, sending passphrase")
+                    self.session.write(self.auth_private_key_passphrase.encode())
+                    self.session.write(self._comms_return_char.encode())
+                    break
+                channel_match = re.search(pattern=prompt_pattern, string=output)
+                if channel_match:
+                    self.logger.info(
+                        "Found channel prompt, assuming that key based authentication has succeeded"
+                    )
+                    # set _isauthenticated to true, we've already authenticated, don't re-check
+                    self._isauthenticated = True
+                    break
 
     @OperationTimeout("_timeout_ops", "Timed out determining if session is authenticated")
     def _system_isauthenticated(self) -> bool:
@@ -440,48 +436,49 @@ class SystemSSHTransport(Transport):
 
         """
         self.logger.debug("Attempting to determine if authentication was successful")
-        self.session_lock.acquire()
-        if self.session.isalive() and not self.session.eof():
-            prompt_pattern = get_prompt_pattern(prompt="", class_prompt=self._comms_prompt_pattern)
-            self.session.write(self._comms_return_char.encode())
-            while True:
-                # almost all of the time we don't need a while loop here, but every once in a while
-                # fd won't be ready which causes a failure without an obvious root cause,
-                # loop/logging to hopefully help with that
-                fd_ready, _, _ = select([self.session.fd], [], [], 0)
-                if self.session.fd in fd_ready:
-                    break
-                self.logger.debug("PTY fd not ready yet...")
-            output = b""
-            while True:
-                new_output = self.session.read()
-                output += new_output
-                self.logger.debug(
-                    f"Attempting to validate authentication. Read: {repr(new_output)}"
+        with self.session_lock:
+            if self.session.isalive() and not self.session.eof():
+                prompt_pattern = get_prompt_pattern(
+                    prompt="", class_prompt=self._comms_prompt_pattern
                 )
-                # we do not need to deal w/ line replacement for the actual output, only for
-                # parsing if a prompt-like thing is at the end of the output
-                output = output.replace(b"\r", b"")
-                # always check to see if we should strip ansi here; if we don't handle this we
-                # may raise auth failures for the wrong reason which would be confusing for
-                # users
-                if self._comms_ansi or b"\x1B" in output:
-                    output = strip_ansi(output=output)
-                channel_match = re.search(pattern=prompt_pattern, string=output)
-                if channel_match:
-                    self._isauthenticated = True
-                    break
-                if b"password:" in output.lower():
-                    # if we see "password" we know auth failed (hopefully in all scenarios!)
-                    self.logger.critical(
-                        "Found `password:` in output, assuming password authentication failed"
-                    )
-                    break
-                if output:
+                self.session.write(self._comms_return_char.encode())
+                while True:
+                    # almost all of the time we don't need a while loop here, but every once in a
+                    # while fd won't be ready which causes a failure without an obvious root cause,
+                    # loop/logging to hopefully help with that
+                    fd_ready, _, _ = select([self.session.fd], [], [], 0)
+                    if self.session.fd in fd_ready:
+                        break
+                    self.logger.debug("PTY fd not ready yet...")
+                output = b""
+                while True:
+                    new_output = self.session.read()
+                    output += new_output
                     self.logger.debug(
-                        f"Cannot determine if authenticated, \n\tRead: {repr(output)}"
+                        f"Attempting to validate authentication. Read: {repr(new_output)}"
                     )
-        self.session_lock.release()
+                    # we do not need to deal w/ line replacement for the actual output, only for
+                    # parsing if a prompt-like thing is at the end of the output
+                    output = output.replace(b"\r", b"")
+                    # always check to see if we should strip ansi here; if we don't handle this we
+                    # may raise auth failures for the wrong reason which would be confusing for
+                    # users
+                    if self._comms_ansi or b"\x1B" in output:
+                        output = strip_ansi(output=output)
+                    channel_match = re.search(pattern=prompt_pattern, string=output)
+                    if channel_match:
+                        self._isauthenticated = True
+                        break
+                    if b"password:" in output.lower():
+                        # if we see "password" we know auth failed (hopefully in all scenarios!)
+                        self.logger.critical(
+                            "Found `password:` in output, assuming password authentication failed"
+                        )
+                        break
+                    if output:
+                        self.logger.debug(
+                            f"Cannot determine if authenticated, \n\tRead: {repr(output)}"
+                        )
 
         if self._isauthenticated:
             return True
@@ -502,11 +499,10 @@ class SystemSSHTransport(Transport):
             N/A
 
         """
-        self.session_lock.acquire()
-        self.session.kill(0)
-        self.session.terminated = True
-        self.logger.debug(f"Channel to host {self.host} closed")
-        self.session_lock.release()
+        with self.session_lock:
+            self.session.kill(0)
+            self.session.terminated = True
+            self.logger.debug(f"Channel to host {self.host} closed")
 
     def isalive(self) -> bool:
         """

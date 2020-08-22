@@ -1,6 +1,29 @@
 CHANGELOG
 =======
 
+# 2020.XX.XX
+- Added Packet Pushers scrapli episode to the README!!
+- Added NXOS and Junos mock ssh servers and created tests for open/close methods (silly tests but just ensures we
+ send what we think we should be sending)
+- Created a property `timeout_ops` on the driver class -- this property will also set the `timeout_ops` value of the
+ channel as well, this is just to make it so users don't have to do `conn.channel.timeout_ops` to set the timeout
+  value... that was not super intuitive!
+- Update dev/test requirements to finally have pylama 2.6! This means that isort can be unpinned and free to update!
+- Add `send_and_read` method to `GenericDriver` -- this method allows you to send an input (at the current priv level
+) and wait for a prompt, an expected output, or a duration.
+- Add `eager` flag to the channel `send_input` method -- this probably should *not* be used by many folks, but can be
+ used to *not* read until the prompt pattern is seen. In other words, this will send an input, read the input off the
+  channel and then return.
+- All exceptions that are raised due to catching an internal exception should now be raising "from" the caught
+ exception -- mostly this is to appease Pylama, but may end up being nicer on the eyes/easier to see whats going on
+  in some scenarios. 
+- IOSXE now catches "Enable password:" for an escalation pattern from exec to privilege exec -- fixes [#45](https://github.com/carlmontanari/scrapli/issues/45)
+- The "requires open" decorator has been updated/fixed to play nice with asyncio
+- `timeout_ops` has been converted from an int to a float to allow for more granular timeout control (the other
+ timeouts remain as integers)
+- Few minor docstring fixes from copypasta issues :)
+
+
 # 2020.07.26
 - Fixed the same `get_prompt` issue from the last release, but this time managed to actually fix it in async version!
 - Better handling of `read_until_input` -- stripping some characters out that may get inserted (backspace char), and

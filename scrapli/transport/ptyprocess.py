@@ -118,8 +118,8 @@ def _setwinsize(fd: int, rows: int, cols: int) -> None:
         N/A
 
     """
-    import termios
     import fcntl
+    import termios
 
     TIOCSWINSZ = getattr(termios, "TIOCSWINSZ", -2146929561)
     # Note, assume ws_xpixel and ws_ypixel are zero.

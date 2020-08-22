@@ -12,14 +12,14 @@ def test__repr(sync_cisco_iosxe_conn):
         repr(sync_cisco_iosxe_conn.channel)
         == "scrapli Channel {'logger': 'scrapli.channel-localhost', 'comms_prompt_pattern': '(^[a-z0-9.\\\\-_@()/:]{1,"
         "63}>$)|(^[a-z0-9.\\\\-_@/:]{1,63}#$)|(^[a-z0-9.\\\\-_@/:]{1,63}\\\\(conf[a-z0-9.\\\\-@/:\\\\+]{0,32}\\\\)#$)', "
-        "'comms_return_char': '\\n', 'comms_ansi': True, 'comms_auto_expand': False, 'timeout_ops': 30}"
+        "'comms_return_char': '\\n', 'comms_ansi': True, 'comms_auto_expand': False, 'timeout_ops': 30.0}"
     )
 
 
 @pytest.mark.parametrize(
     "attr_setup",
     [
-        ({"strip_prompt": True}, b"hostname 3560CX\n"),
+        ({"strip_prompt": True}, b"hostname 3560CX"),
         ({"strip_prompt": False}, b"hostname 3560CX\n3560CX#"),
     ],
     ids=["strip_prompt_true", "strip_prompt_false",],
@@ -53,7 +53,7 @@ def test_post_send_inputs_interact(sync_cisco_iosxe_conn):
         output=expected_raw.encode()
     )
     assert raw_result == expected_raw.encode()
-    assert processed_result[1:] == expected_processed.encode()
+    assert processed_result == expected_processed.encode()
 
 
 @pytest.mark.parametrize(

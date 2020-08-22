@@ -11,6 +11,7 @@ from scrapli.exceptions import ConnectionNotOpened, ScrapliTimeout
 if TYPE_CHECKING:
     from scrapli.channel import AsyncChannel  # pragma: no cover
     from scrapli.channel import Channel  # pragma:  no cover
+    from scrapli.driver import AsyncGenericDriver, GenericDriver  # pragma:  no cover
     from scrapli.transport import Transport  # pragma:  no cover
 
 WIN = sys.platform.startswith("win")
@@ -52,9 +53,9 @@ class OperationTimeout:
         self.session_lock: threading.Lock
         self.close: Callable[..., Any]
         self.transport: "Transport"
-        self.timeout_duration: int
+        self.timeout_duration: float
         self.timeout_exit: bool = True
-        self.system_transport: bool = True
+        self.signals_supported_transport: bool = True
         self._use_signals: bool = False
 
     def __call__(self, wrapped_func: Callable[..., Any]) -> Callable[..., Any]:
@@ -105,6 +106,7 @@ class OperationTimeout:
                     return wrapped_func(*args, **kwargs)
 
                 self.set_scrapli_obj_attrs()
+                self.determine_sync_timeout_method()
 
                 if self._use_signals:
                     return self.signal_timeout(wrapped_func=wrapped_func, args=args, kwargs=kwargs)
@@ -129,7 +131,6 @@ class OperationTimeout:
 
         """
         from scrapli.channel import AsyncChannel, Channel  # pylint: disable=C0415
-        from scrapli.transport.systemssh import SystemSSHTransport  # pylint: disable=C0415
 
         if isinstance(self.scrapli_obj, (AsyncChannel, Channel)):
             self.timeout_exit = self.scrapli_obj.transport.timeout_exit
@@ -142,11 +143,30 @@ class OperationTimeout:
             self.close = self.scrapli_obj.close
             self.transport = self.scrapli_obj
 
-        if not isinstance(self.transport, SystemSSHTransport):
-            self.system_transport = False
+    def determine_sync_timeout_method(self) -> None:
+        """
+        Decide what timeout mechanism to use for synchronous usage
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+        from scrapli.transport.systemssh import SystemSSHTransport  # pylint: disable=C0415
+        from scrapli.transport.telnet import TelnetTransport  # pylint: disable=C0415
+
+        if isinstance(self.transport, (SystemSSHTransport, TelnetTransport)):
+            # system transport cant use signals due to pty, unclear why telnetlib doesnt work with
+            # signals, but it does not
+            self.signals_supported_transport = False
 
         if (
-            self.system_transport
+            not self.signals_supported_transport
             or WIN
             or threading.current_thread() is not threading.main_thread()
         ):
@@ -168,11 +188,22 @@ class OperationTimeout:
             ScrapliTimeout: always, if we hit this method we have already timed out!
 
         """
+        from scrapli.channel import AsyncChannel, Channel  # pylint: disable=C0415
+
         if self.timeout_exit:
             self.scrapli_obj.logger.info("timeout_exit is True, closing transport")
             if self.session_lock.locked():
                 self.session_lock.release()
             self.close()
+            if not isinstance(self.scrapli_obj, (AsyncChannel, Channel)):
+                # if system transport is timing out then we can encounter a condition where timeout
+                # happens in system, and we close the transport, however we then still have to deal
+                # with unlocking the lock in `_send_input` (for example) which causes a RuntimeError
+                # if the lock has been unlocked during closing of the session, so re-acquire the
+                # lock if this timeout occurred in NOT a channel object - there needs to be a big
+                # overhaul to all the lock handling but that will be a fairly significant project
+                # that has to touch all the scrapli libraries
+                self.session_lock.acquire()
         raise ScrapliTimeout(self.message)
 
     def _signal_raise_exception(self, signum: Any, frame: Any) -> None:
@@ -264,15 +295,13 @@ class OperationTimeout:
             N/A
 
         """
-        pool = multiprocessing.pool.ThreadPool(processes=1)
-        future = pool.apply_async(wrapped_func, args, kwargs)
-        try:
-            result = future.get(timeout=self.timeout_duration)
-            pool.terminate()
-            return result
-        except multiprocessing.context.TimeoutError:
-            pool.terminate()
-            self._handle_timeout()
+        with multiprocessing.pool.ThreadPool(processes=1) as pool:
+            future = pool.apply_async(wrapped_func, args, kwargs)
+            try:
+                result = future.get(timeout=self.timeout_duration)
+            except multiprocessing.context.TimeoutError:
+                self._handle_timeout()
+        return result
 
 
 def requires_open_session() -> Callable[..., Any]:
@@ -296,13 +325,65 @@ def requires_open_session() -> Callable[..., Any]:
         ) -> Any:
             try:
                 return wrapped_func(*args, **kwargs)
-            except AttributeError:
+            except AttributeError as exc:
                 raise ConnectionNotOpened(
                     "Attempting to call method that requires an open connection, but connection is "
                     "not open. Call the `.open()` method of your connection object, or use a "
                     "context manager to ensue your connection has been opened."
-                )
+                ) from exc
 
         return requires_open_session_wrapper
 
     return decorate
+
+
+class TimeoutModifier:
+    def __call__(self, wrapped_func: Callable[..., Any]) -> Callable[..., Any]:
+        """
+        Decorate an "operation" to modify the timeout_ops value for duration of that operation
+
+        This decorator wraps send command/config ops and is used to allow users to set a
+        `timeout_ops` value for the duration of a single method call -- this makes it so users don't
+        need to manually set/reset the value
+
+        Args:
+            wrapped_func: function being decorated
+
+        Returns:
+            decorate: decorated func
+
+        Raises:
+            N/A
+
+        """
+        if asyncio.iscoroutinefunction(wrapped_func):
+
+            async def decorate(*args: Any, **kwargs: Any) -> Any:
+                scrapli_obj: Union["AsyncGenericDriver", "GenericDriver"] = args[0]
+                if kwargs.get("timeout_ops", None) is None:
+                    result = await wrapped_func(*args, **kwargs)
+                elif kwargs.get("timeout_ops", scrapli_obj.timeout_ops) == scrapli_obj.timeout_ops:
+                    result = await wrapped_func(*args, **kwargs)
+                else:
+                    base_timeout_ops = scrapli_obj.timeout_ops
+                    scrapli_obj.timeout_ops = kwargs["timeout_ops"]
+                    result = await wrapped_func(*args, **kwargs)
+                    scrapli_obj.timeout_ops = base_timeout_ops
+                return result
+
+        else:
+
+            def decorate(*args: Any, **kwargs: Any) -> Any:  # type: ignore
+                scrapli_obj: Union["AsyncGenericDriver", "GenericDriver"] = args[0]
+                if kwargs.get("timeout_ops", None) is None:
+                    result = wrapped_func(*args, **kwargs)
+                elif kwargs.get("timeout_ops", scrapli_obj.timeout_ops) == scrapli_obj.timeout_ops:
+                    result = wrapped_func(*args, **kwargs)
+                else:
+                    base_timeout_ops = scrapli_obj.timeout_ops
+                    scrapli_obj.timeout_ops = kwargs["timeout_ops"]
+                    result = wrapped_func(*args, **kwargs)
+                    scrapli_obj.timeout_ops = base_timeout_ops
+                return result
+
+        return decorate

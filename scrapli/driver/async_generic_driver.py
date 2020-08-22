@@ -3,6 +3,7 @@ from collections import UserList
 from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union
 
 from scrapli.channel import AsyncChannel
+from scrapli.decorators import TimeoutModifier
 from scrapli.driver.async_driver import AsyncScrape
 from scrapli.driver.base_generic_driver import GenericDriverBase
 from scrapli.response import Response
@@ -48,19 +49,45 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
         super().__init__(comms_prompt_pattern=comms_prompt_pattern, comms_ansi=comms_ansi, **kwargs)
         self.channel: AsyncChannel
 
-    async def send_command(
+    async def get_prompt(self) -> str:
+        """
+        Convenience method to get device prompt from Channel
+
+        Args:
+            N/A
+
+        Returns:
+            str: prompt received from channel.get_prompt
+
+        Raises:
+            N/A
+
+        """
+        prompt: str = await self.channel.get_prompt()
+        return prompt
+
+    @TimeoutModifier()
+    async def _send_command_eager(
         self,
         command: str,
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
+        *,
+        timeout_ops: Optional[float] = None,
     ) -> Response:
         """
         Send a command
+
+        Keeping as a private method rather than adding an argument to the "normal" `send_command`
+        method as this should not be used my users generally.
 
         Args:
             command: string to send to device in privilege exec mode
             strip_prompt: True/False strip prompt from returned output
             failed_when_contains: string or list of strings indicating failure if found in response
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed
 
         Returns:
             Response: Scrapli Response object
@@ -69,6 +96,49 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
             N/A
 
         """
+        # decorator cares about timeout_ops, but nothing else does, assign to _ to appease linters
+        _ = timeout_ops
+
+        response = self._pre_send_command(
+            host=self.transport.host, command=command, failed_when_contains=failed_when_contains
+        )
+        raw_response, processed_response = await self.channel.send_input(
+            channel_input=command, strip_prompt=strip_prompt, eager=True
+        )
+        return self._post_send_command(
+            raw_response=raw_response, processed_response=processed_response, response=response
+        )
+
+    @TimeoutModifier()
+    async def send_command(
+        self,
+        command: str,
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+        *,
+        timeout_ops: Optional[float] = None,
+    ) -> Response:
+        """
+        Send a command
+
+        Args:
+            command: string to send to device in privilege exec mode
+            strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed
+
+        Returns:
+            Response: Scrapli Response object
+
+        Raises:
+            N/A
+
+        """
+        # decorator cares about timeout_ops, but nothing else does, assign to _ to appease linters
+        _ = timeout_ops
+
         response = self._pre_send_command(
             host=self.transport.host, command=command, failed_when_contains=failed_when_contains
         )
@@ -85,6 +155,8 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
+        *,
+        timeout_ops: Optional[float] = None,
     ) -> ScrapliMultiResponse:
         """
         Send multiple commands
@@ -95,6 +167,10 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
             failed_when_contains: string or list of strings indicating failure if found in response
             stop_on_failed: True/False stop executing commands if a command fails, returns results
                 as of current execution
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed. Note that this is the timeout value PER COMMAND sent, not for the total
+                of the commands being sent!
 
         Returns:
             ScrapliMultiResponse: Scrapli MultiResponse object
@@ -109,6 +185,7 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
                 command=command,
                 strip_prompt=strip_prompt,
                 failed_when_contains=failed_when_contains,
+                timeout_ops=timeout_ops,
             )
             responses.append(response)
             if stop_on_failed is True and response.failed is True:
@@ -122,6 +199,8 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
+        *,
+        timeout_ops: Optional[float] = None,
     ) -> ScrapliMultiResponse:
         """
         Send command(s) from file
@@ -132,6 +211,10 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
             failed_when_contains: string or list of strings indicating failure if found in response
             stop_on_failed: True/False stop executing commands if a command fails, returns results
                 as of current execution
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed. Note that this is the timeout value PER COMMAND sent, not for the total
+                of the commands being sent!
 
         Returns:
             ScrapliMultiResponse: Scrapli MultiResponse object
@@ -147,6 +230,7 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
             strip_prompt=strip_prompt,
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
+            timeout_ops=timeout_ops,
         )
 
     async def send_interactive(
@@ -231,19 +315,58 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
             raw_response=raw_response, processed_response=processed_response, response=response
         )
 
-    async def get_prompt(self) -> str:
+    @TimeoutModifier()
+    async def send_and_read(
+        self,
+        channel_input: str,
+        expected_outputs: Optional[List[str]] = None,
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+        *,
+        timeout_ops: Optional[float] = None,
+        read_duration: float = 2.5,
+    ) -> Response:
         """
-        Convenience method to get device prompt from Channel
+        Send an input and read outputs.
+
+        Unlike "normal" scrapli behavior this method reads until the prompt(normal) OR until any of
+        a list of expected outputs is seen, OR until the read duration is exceeded. This method does
+        not care about/understand privilege levels. This *can* cause you some potential issues if
+        not used carefully!
 
         Args:
-            N/A
+            channel_input: input to send to the channel; intentionally named "channel_input" instead
+                of "command" or "config" due to this method not caring about privilege levels
+            expected_outputs: List of outputs to look for in device response; returns as soon as any
+                of the outputs are seen
+            strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
+            failed_when_contains: string or list of strings indicating failure if found in response
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed
+            read_duration:  float duration to read for
 
         Returns:
-            str: prompt received from channel.get_prompt
+            Response: Scrapli Response object
 
         Raises:
             N/A
 
         """
-        prompt: str = await self.channel.get_prompt()
-        return prompt
+        # decorator cares about timeout_ops, but nothing else does, assign to _ to appease linters
+        _ = timeout_ops
+
+        response = self._pre_send_command(
+            host=self.transport.host,
+            command=channel_input,
+            failed_when_contains=failed_when_contains,
+        )
+        raw_response, processed_response = await self.channel.send_input_and_read(
+            channel_input=channel_input,
+            strip_prompt=strip_prompt,
+            expected_outputs=expected_outputs,
+            read_duration=read_duration,
+        )
+        return self._post_send_command(
+            raw_response=raw_response, processed_response=processed_response, response=response
+        )

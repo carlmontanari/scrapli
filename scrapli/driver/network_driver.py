@@ -146,6 +146,8 @@ class NetworkDriver(GenericDriver, NetworkDriverBase):
         command: str,
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
+        *,
+        timeout_ops: Optional[float] = None,
     ) -> Response:
         """
         Send a command
@@ -156,6 +158,9 @@ class NetworkDriver(GenericDriver, NetworkDriverBase):
             command: string to send to device in privilege exec mode
             strip_prompt: True/False strip prompt from returned output
             failed_when_contains: string or list of strings indicating failure if found in response
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed
 
         Returns:
             Response: Scrapli Response object
@@ -170,10 +175,12 @@ class NetworkDriver(GenericDriver, NetworkDriverBase):
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains
 
-        response = super().send_command(
-            command=command, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+        response: Response = super().send_command(
+            command=command,
+            strip_prompt=strip_prompt,
+            failed_when_contains=failed_when_contains,
+            timeout_ops=timeout_ops,
         )
-
         self._update_response(response)
 
         return response
@@ -184,6 +191,8 @@ class NetworkDriver(GenericDriver, NetworkDriverBase):
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
+        *,
+        timeout_ops: Optional[float] = None,
     ) -> ScrapliMultiResponse:
         """
         Send multiple commands
@@ -196,6 +205,10 @@ class NetworkDriver(GenericDriver, NetworkDriverBase):
             failed_when_contains: string or list of strings indicating failure if found in response
             stop_on_failed: True/False stop executing commands if a command fails, returns results
                 as of current execution
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed. Note that this is the timeout value PER COMMAND sent, not for the total
+                of the commands being sent!
 
         Returns:
             ScrapliMultiResponse: Scrapli MultiResponse object
@@ -215,6 +228,7 @@ class NetworkDriver(GenericDriver, NetworkDriverBase):
             strip_prompt=strip_prompt,
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
+            timeout_ops=timeout_ops,
         )
 
         for response in responses:
@@ -228,6 +242,8 @@ class NetworkDriver(GenericDriver, NetworkDriverBase):
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
+        *,
+        timeout_ops: Optional[float] = None,
     ) -> ScrapliMultiResponse:
         """
         Send command(s) from file
@@ -238,6 +254,10 @@ class NetworkDriver(GenericDriver, NetworkDriverBase):
             failed_when_contains: string or list of strings indicating failure if found in response
             stop_on_failed: True/False stop executing commands if a command fails, returns results
                 as of current execution
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed. Note that this is the timeout value PER COMMAND sent, not for the total
+                of the commands being sent!
 
         Returns:
             ScrapliMultiResponse: Scrapli MultiResponse object
@@ -246,13 +266,18 @@ class NetworkDriver(GenericDriver, NetworkDriverBase):
             N/A
 
         """
-        commands = self._pre_send_commands_from_file(file=file)
+        if self._current_priv_level.name != self.default_desired_privilege_level:
+            self.acquire_priv(desired_priv=self.default_desired_privilege_level)
 
-        return self.send_commands(
-            commands=commands,
+        if failed_when_contains is None:
+            failed_when_contains = self.failed_when_contains
+
+        return super().send_commands_from_file(
+            file=file,
             strip_prompt=strip_prompt,
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
+            timeout_ops=timeout_ops,
         )
 
     def send_interactive(
@@ -361,6 +386,8 @@ class NetworkDriver(GenericDriver, NetworkDriverBase):
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         privilege_level: str = "",
+        *,
+        timeout_ops: Optional[float] = None,
     ) -> Response:
         """
         Send configuration(s)
@@ -378,6 +405,10 @@ class NetworkDriver(GenericDriver, NetworkDriverBase):
                 JunosDriver. You can also pass in a name of a configuration session such as
                 "my-config-session" if you have registered a session using the
                 "register_config_session" method of the EOSDriver or NXOSDriver.
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed. Note that this is the timeout value PER CONFIG sent, not for the total
+                of the configs being sent!
 
         Returns:
             Response: Scrapli Response object
@@ -395,6 +426,7 @@ class NetworkDriver(GenericDriver, NetworkDriverBase):
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
             privilege_level=privilege_level,
+            timeout_ops=timeout_ops,
         )
         return self._post_send_config(config=config, multi_response=multi_response)
 
@@ -405,6 +437,8 @@ class NetworkDriver(GenericDriver, NetworkDriverBase):
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         privilege_level: str = "",
+        *,
+        timeout_ops: Optional[float] = None,
     ) -> ScrapliMultiResponse:
         """
         Send configuration(s)
@@ -422,6 +456,10 @@ class NetworkDriver(GenericDriver, NetworkDriverBase):
                 JunosDriver. You can also pass in a name of a configuration session such as
                 "my-config-session" if you have registered a session using the
                 "register_config_session" method of the EOSDriver or NXOSDriver.
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed. Note that this is the timeout value PER CONFIG sent, not for the total
+                of the configs being sent!
 
         Returns:
             ScrapliMultiResponse: Scrapli MultiResponse object
@@ -446,6 +484,7 @@ class NetworkDriver(GenericDriver, NetworkDriverBase):
                 command=config,
                 strip_prompt=strip_prompt,
                 failed_when_contains=failed_when_contains,
+                timeout_ops=timeout_ops,
             )
             responses.append(response)
             if response.failed is True:
@@ -465,6 +504,8 @@ class NetworkDriver(GenericDriver, NetworkDriverBase):
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         privilege_level: str = "",
+        *,
+        timeout_ops: Optional[float] = None,
     ) -> ScrapliMultiResponse:
         """
         Send configuration(s) from a file
@@ -482,6 +523,10 @@ class NetworkDriver(GenericDriver, NetworkDriverBase):
                 in a name of a configuration session such as "session_mysession" if you have
                 registered a session using the "register_config_session" method of the EOSDriver or
                 NXOSDriver.
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed. Note that this is the timeout value PER CONFIG sent, not for the total
+                of the configs being sent!
 
         Returns:
             ScrapliMultiResponse: Scrapli MultiResponse object
@@ -498,4 +543,5 @@ class NetworkDriver(GenericDriver, NetworkDriverBase):
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
             privilege_level=privilege_level,
+            timeout_ops=timeout_ops,
         )

@@ -28,5 +28,16 @@ def test_prompt_patterns(priv_pattern):
     priv_level_name = priv_pattern[0]
     prompt = priv_pattern[1]
     prompt_pattern = PRIVS.get(priv_level_name).pattern
-    match = re.search(pattern=prompt_pattern, string=prompt)
+    match = re.search(pattern=prompt_pattern, string=prompt, flags=re.M | re.I)
+    assert match
+
+
+@pytest.mark.parametrize(
+    "prompt",
+    ["password:", "Password:", "Enable password:",],
+    ids=["password:", "Password:", "Enable password:"],
+)
+def test_privilege_exec_escalation_prompt_patterns(prompt):
+    escalation_pattern = PRIVS.get("privilege_exec").escalate_prompt
+    match = re.search(pattern=escalation_pattern, string=prompt, flags=re.M | re.I)
     assert match
