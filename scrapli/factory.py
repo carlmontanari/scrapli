@@ -70,10 +70,10 @@ def _get_community_platform_details(community_platform_name: str) -> Dict[str, A
             " You can install this with pip: `pip install scrapli_community`."
         )
         warning = "\n" + msg + "\n" + fix + "\n" + msg
-        raise ModuleNotFoundError(warning)
+        raise ModuleNotFoundError(warning) from exc
     except Exception as exc:
-        msg = f"Unknown error occurred, exception: {exc}"
-        raise ScrapliException(msg)
+        msg = "Unknown error occurred"
+        raise ScrapliException(msg) from exc
 
     platform_details_original = getattr(scrapli_community_platform, "SCRAPLI_PLATFORM", {})
     if not platform_details_original:

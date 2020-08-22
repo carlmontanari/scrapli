@@ -27,3 +27,5 @@ The following people have helped identify and report bugs in scrapli, thank you 
   - [Prompt patterns not matching "tacacs+"](https://github.com/carlmontanari/scrapli/issues/23)
   - [get_prompt Resetting timeout_ops inadvertently](https://github.com/carlmontanari/scrapli/issues/29)
   - [telnet authentication when requiring a return char/telnet auth bypass](https://github.com/carlmontanari/scrapli/issues/31)
+- [Dave P](https://github.com/network-dave)
+  - [Additional enable password prompt format IOSXE](https://github.com/carlmontanari/scrapli/issues/45)

@@ -99,20 +99,20 @@ class Socket:
             self.sock.settimeout(self.timeout)
             try:
                 self.sock.connect((self.host, self.port))
-            except ConnectionRefusedError:
+            except ConnectionRefusedError as exc:
                 self.logger.critical(
                     f"Connection refused trying to open socket to {self.host} on port {self.port}"
                 )
                 raise ConnectionRefusedError(
                     f"Connection refused trying to open socket to {self.host} on port {self.port}"
-                )
-            except socket.timeout:
+                ) from exc
+            except socket.timeout as exc:
                 self.logger.critical(
                     f"Timed out trying to open socket to {self.host} on port {self.port}"
                 )
                 raise ScrapliTimeout(
                     f"Timed out trying to open socket to {self.host} on port {self.port}"
-                )
+                ) from exc
             self.logger.debug(f"Socket to host {self.host} opened")
 
     def socket_close(self) -> None:

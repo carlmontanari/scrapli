@@ -25,7 +25,7 @@ class ChannelBase(ABC):
         comms_return_char: str = "\n",
         comms_ansi: bool = False,
         comms_auto_expand: bool = False,
-        timeout_ops: int = 10,
+        timeout_ops: float = 10,
     ):
         """
         Channel Object
@@ -122,12 +122,14 @@ class ChannelBase(ABC):
         """
         output = normalize_lines(output=output)
 
-        if not strip_prompt:
-            return output
+        if strip_prompt:
+            # could be compiled elsewhere, but allow users to modify the prompt whenever they want
+            prompt_pattern = get_prompt_pattern(prompt="", class_prompt=self.comms_prompt_pattern)
+            output = re.sub(pattern=prompt_pattern, repl=b"", string=output)
 
-        # could be compiled elsewhere, but allow for users to modify the prompt whenever they want
-        prompt_pattern = get_prompt_pattern(prompt="", class_prompt=self.comms_prompt_pattern)
-        output = re.sub(pattern=prompt_pattern, repl=b"", string=output)
+        # lstrip the return character out of the final result before storing, also remove any extra
+        # whitespace to the right if any
+        output = output.lstrip(self.comms_return_char.encode()).rstrip()
         return output
 
     @staticmethod

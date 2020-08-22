@@ -2,14 +2,14 @@ DOCKER_COMPOSE_FILE=docker-compose.yaml
 DOCKER_COMPOSE=docker-compose -f ${DOCKER_COMPOSE_FILE}
 
 lint:
-	python -m isort -rc -y .
+	python -m isort .
 	python -m black .
 	python -m pylama .
 	python -m pydocstyle .
 	python -m mypy --strict scrapli/
 
 lint_full:
-	python -m isort -rc -y .
+	python -m isort .
 	python -m black .
 	python -m pylama .
 	python -m pydocstyle .

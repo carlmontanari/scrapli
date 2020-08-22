@@ -67,9 +67,15 @@ def cisco_iosxr_clean_response(response):
         response = re.sub(crypto_pattern, "CRYPTO_REPLACED", response)
         return response
 
+    def _replace_commit_in_progress(response):
+        commit_in_progress_pattern = re.compile(r"System configuration.*", flags=re.M | re.I)
+        response = re.sub(commit_in_progress_pattern, "", response)
+        return response
+
     response = _replace_timestamps(response)
     response = _replace_configured_by(response)
     response = _replace_crypto_strings(response)
+    response = _replace_commit_in_progress(response)
     return response
 
 

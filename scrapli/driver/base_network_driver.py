@@ -516,7 +516,7 @@ class NetworkDriverBase:
     @staticmethod
     def _pre_send_configs_from_file(file: str) -> List[str]:
         """
-        Handle pre "send_commands_from_file" tasks for consistency between sync/async versions
+        Handle pre "send_configs_from_file" tasks for consistency between sync/async versions
 
         Args:
             file: string path to file

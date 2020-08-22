@@ -34,3 +34,15 @@ def test_non_sync_transport():
         str(exc.value)
         == "Attempting to use transport type asyncssh with a sync driver, must use a non-asyncio transport"
     )
+
+
+def test_timeout_ops_property(sync_cisco_iosxe_conn):
+    # note that there is "sync" and "async" version of this test as the property setter/getter lives
+    # in the sync and async drivers -- didnt want to deal w/ having the property in the base driver
+    # and having to deal w/ _get_timeout_ops/_set_timeout_ops methods to get overridden by the sync
+    # and async drivers
+    assert sync_cisco_iosxe_conn.timeout_ops == 30
+    assert sync_cisco_iosxe_conn.channel.timeout_ops == 30
+    sync_cisco_iosxe_conn.timeout_ops = 5
+    assert sync_cisco_iosxe_conn.timeout_ops == 5
+    assert sync_cisco_iosxe_conn.channel.timeout_ops == 5

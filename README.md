@@ -173,6 +173,7 @@ Other scrapli related docs/blogs/videos/info:
 
 - [Scrapli on Dmitry Figol's Network Automation Channel](https://www.youtube.com/watch?v=OJa2typq7yI)
 - [Scrapli Intro on Wim Wauter's blog](https://blog.wimwauters.com/networkprogrammability/2020-04-09_scrapli_introduction/)
+- [Scrapli on the Packet Pushers Heavy Networking Podcast](https://packetpushers.net/podcast/heavy-networking-532-scrapli-is-a-netmiko-alternative/)
 
 
 # scrapli: What is it
