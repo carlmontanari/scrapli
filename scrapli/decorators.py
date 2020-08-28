@@ -321,7 +321,8 @@ def requires_open_session() -> Callable[..., Any]:
 
     def decorate(wrapped_func: Callable[..., Any]) -> Callable[..., Any]:
         def requires_open_session_wrapper(
-            *args: Union[str, int], **kwargs: Dict[str, Union[str, int]],
+            *args: Union[str, int],
+            **kwargs: Dict[str, Union[str, int]],
         ) -> Any:
             try:
                 return wrapped_func(*args, **kwargs)

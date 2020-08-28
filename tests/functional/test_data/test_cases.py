@@ -39,7 +39,9 @@ TEST_CASES = {
             "expected_no_strip": ["hostname csr1000v\ncsr1000v#", "hostname csr1000v\ncsr1000v#"],
             "expected_strip": ["hostname csr1000v", "hostname csr1000v"],
         },
-        "send_commands_error": {"commands": ["show version", "show tacocat", "show version"],},
+        "send_commands_error": {
+            "commands": ["show version", "show tacocat", "show version"],
+        },
         "send_interactive_normal_response": {
             "command": [("clear logg", "Clear logging buffer [confirm]"), ("", "csr1000v#")],
             "expected": "clear logg\nClear logging buffer [confirm]\n\ncsr1000v#",
@@ -108,7 +110,9 @@ TEST_CASES = {
             "expected_no_strip": ["feature scp-server\nswitch#", "feature scp-server\nswitch#"],
             "expected_strip": ["feature scp-server", "feature scp-server"],
         },
-        "send_commands_error": {"commands": ["show version", "show tacocat", "show version"],},
+        "send_commands_error": {
+            "commands": ["show version", "show tacocat", "show version"],
+        },
         "send_interactive_normal_response": {
             "command": [
                 ("delete bootflash:virtual-instance.conf", "(yes/no/abort)   [y]"),
@@ -190,7 +194,9 @@ TEST_CASES = {
                 "TIME_STAMP_REPLACED\nBuilding configuration...\ninterface MgmtEth0/RP0/CPU0/0",
             ],
         },
-        "send_commands_error": {"commands": ["show version", "show tacocat", "show version"],},
+        "send_commands_error": {
+            "commands": ["show version", "show tacocat", "show version"],
+        },
         "send_interactive_normal_response": None,
         "send_interactive_hidden_response": None,
         "send_config": {
@@ -254,7 +260,9 @@ TEST_CASES = {
                 "logging level ZTP informational",
             ],
         },
-        "send_commands_error": {"commands": ["show version", "show tacocat", "show version"],},
+        "send_commands_error": {
+            "commands": ["show version", "show tacocat", "show version"],
+        },
         "send_interactive_normal_response": None,
         "send_interactive_hidden_response": None,
         "send_config": {
@@ -288,7 +296,11 @@ TEST_CASES = {
         "sanitize_response": arista_eos_clean_response,
     },
     "juniper_junos": {
-        "get_prompt": {"exec": "vrnetlab>", "privilege_exec": None, "configuration": "vrnetlab#",},
+        "get_prompt": {
+            "exec": "vrnetlab>",
+            "privilege_exec": None,
+            "configuration": "vrnetlab#",
+        },
         "send_command_short": {
             "command": "show configuration | match 10.0.0.15",
             "expected_no_strip": "                address 10.0.0.15/24;\n\nvrnetlab>",
@@ -314,7 +326,9 @@ TEST_CASES = {
                 "                address 10.0.0.15/24;",
             ],
         },
-        "send_commands_error": {"commands": ["show version", "show tacocat", "show version"],},
+        "send_commands_error": {
+            "commands": ["show version", "show tacocat", "show version"],
+        },
         "send_interactive_normal_response": None,
         "send_interactive_hidden_response": None,
         "send_config": {

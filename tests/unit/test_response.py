@@ -93,7 +93,10 @@ drwxr-xr-x  12 carl  staff    384 Jan 27 19:13 .git/"""
 @pytest.mark.parametrize(
     "parse_type",
     [
-        (False, ["Internet", "172.31.254.1", "-", "0000.0c07.acfe", "ARPA", "Vlan254"],),
+        (
+            False,
+            ["Internet", "172.31.254.1", "-", "0000.0c07.acfe", "ARPA", "Vlan254"],
+        ),
         (
             True,
             {

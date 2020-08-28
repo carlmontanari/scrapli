@@ -14,7 +14,9 @@ class TestDevice:
         assert prompt == TEST_CASES["linux"]["get_prompt"]
 
     @pytest.mark.parametrize(
-        "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
+        "strip_prompt",
+        [True, False],
+        ids=["strip_prompt", "no_strip_prompt"],
     )
     def test_send_command_short(self, nix_conn, transport, strip_prompt):
         command = TEST_CASES["linux"]["send_command_short"]["command"]
@@ -24,7 +26,9 @@ class TestDevice:
         assert response.decode() == expected_response
 
     @pytest.mark.parametrize(
-        "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
+        "strip_prompt",
+        [True, False],
+        ids=["strip_prompt", "no_strip_prompt"],
     )
     def test_send_command_long(self, nix_conn, transport, strip_prompt):
         command = TEST_CASES["linux"]["send_command_long"]["command"]
@@ -48,7 +52,9 @@ class TestGenericDevice:
         assert prompt == TEST_CASES["linux"]["get_prompt"]
 
     @pytest.mark.parametrize(
-        "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
+        "strip_prompt",
+        [True, False],
+        ids=["strip_prompt", "no_strip_prompt"],
     )
     def test_send_command_short(self, nix_conn_generic, transport, strip_prompt):
         command = TEST_CASES["linux"]["send_command_short"]["command"]
@@ -58,7 +64,9 @@ class TestGenericDevice:
         assert response.result == expected_response
 
     @pytest.mark.parametrize(
-        "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
+        "strip_prompt",
+        [True, False],
+        ids=["strip_prompt", "no_strip_prompt"],
     )
     def test_send_command_long(self, nix_conn_generic, transport, strip_prompt):
         command = TEST_CASES["linux"]["send_command_long"]["command"]
@@ -68,7 +76,9 @@ class TestGenericDevice:
         assert response.result == expected_response
 
     @pytest.mark.parametrize(
-        "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
+        "strip_prompt",
+        [True, False],
+        ids=["strip_prompt", "no_strip_prompt"],
     )
     def test_send_commands(self, nix_conn_generic, transport, strip_prompt):
         commands = []
@@ -105,7 +115,9 @@ class TestNetworkDevice:
         assert prompt == TEST_CASES[device_type]["get_prompt"][priv_level]
 
     @pytest.mark.parametrize(
-        "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
+        "strip_prompt",
+        [True, False],
+        ids=["strip_prompt", "no_strip_prompt"],
     )
     def test_send_command_short(self, conn, device_type, transport, strip_prompt):
         command = TEST_CASES[device_type]["send_command_short"]["command"]
@@ -116,7 +128,9 @@ class TestNetworkDevice:
         assert sanitize_response(response.result) == expected_response
 
     @pytest.mark.parametrize(
-        "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
+        "strip_prompt",
+        [True, False],
+        ids=["strip_prompt", "no_strip_prompt"],
     )
     def test_send_command_long(self, conn, device_type, transport, strip_prompt):
         command = TEST_CASES[device_type]["send_command_long"]["command"]
@@ -127,7 +141,9 @@ class TestNetworkDevice:
         assert sanitize_response(response.result) == expected_response
 
     @pytest.mark.parametrize(
-        "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
+        "strip_prompt",
+        [True, False],
+        ids=["strip_prompt", "no_strip_prompt"],
     )
     def test_send_commands(self, conn, device_type, transport, strip_prompt):
         commands = []
@@ -143,7 +159,9 @@ class TestNetworkDevice:
             assert sanitize_response(response.result) == expected_response
 
     @pytest.mark.parametrize(
-        "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
+        "strip_prompt",
+        [True, False],
+        ids=["strip_prompt", "no_strip_prompt"],
     )
     def test_send_commands_from_file(self, conn, device_type, transport, strip_prompt):
         file = TEST_CASES[device_type]["send_commands_from_file"]["file"]
@@ -182,7 +200,9 @@ class TestNetworkDevice:
         assert response.result == expected_response
 
     @pytest.mark.parametrize(
-        "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
+        "strip_prompt",
+        [True, False],
+        ids=["strip_prompt", "no_strip_prompt"],
     )
     def test_send_config(self, conn, device_type, transport, strip_prompt):
         config = TEST_CASES[device_type]["send_config"]["configs"]
@@ -204,7 +224,9 @@ class TestNetworkDevice:
             conn.send_config(config=teardown_configs)
 
     @pytest.mark.parametrize(
-        "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
+        "strip_prompt",
+        [True, False],
+        ids=["strip_prompt", "no_strip_prompt"],
     )
     def test_send_configs(self, conn, device_type, transport, strip_prompt):
         configs = TEST_CASES[device_type]["send_configs"]["configs"]
@@ -227,7 +249,9 @@ class TestNetworkDevice:
             conn.send_config(config=teardown_configs)
 
     @pytest.mark.parametrize(
-        "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
+        "strip_prompt",
+        [True, False],
+        ids=["strip_prompt", "no_strip_prompt"],
     )
     def test_send_configs_from_file(self, conn, device_type, transport, strip_prompt):
         file = TEST_CASES[device_type]["send_configs_from_file"]["file"]
@@ -289,7 +313,9 @@ class TestAsyncNetworkDevice:
         assert prompt == TEST_CASES[device_type]["get_prompt"][priv_level]
 
     @pytest.mark.parametrize(
-        "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
+        "strip_prompt",
+        [True, False],
+        ids=["strip_prompt", "no_strip_prompt"],
     )
     async def test_send_command_short(self, async_conn, device_type, strip_prompt):
         command = TEST_CASES[device_type]["send_command_short"]["command"]
@@ -300,7 +326,9 @@ class TestAsyncNetworkDevice:
         assert sanitize_response(response.result) == expected_response
 
     @pytest.mark.parametrize(
-        "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
+        "strip_prompt",
+        [True, False],
+        ids=["strip_prompt", "no_strip_prompt"],
     )
     async def test_send_command_long(self, async_conn, device_type, strip_prompt):
         command = TEST_CASES[device_type]["send_command_long"]["command"]
@@ -311,7 +339,9 @@ class TestAsyncNetworkDevice:
         assert sanitize_response(response.result) == expected_response
 
     @pytest.mark.parametrize(
-        "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
+        "strip_prompt",
+        [True, False],
+        ids=["strip_prompt", "no_strip_prompt"],
     )
     async def test_send_commands(self, async_conn, device_type, strip_prompt):
         commands = []
@@ -327,7 +357,9 @@ class TestAsyncNetworkDevice:
             assert sanitize_response(response.result) == expected_response
 
     @pytest.mark.parametrize(
-        "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
+        "strip_prompt",
+        [True, False],
+        ids=["strip_prompt", "no_strip_prompt"],
     )
     async def test_send_commands_from_file(self, async_conn, device_type, strip_prompt):
         file = TEST_CASES[device_type]["send_commands_from_file"]["file"]
@@ -366,7 +398,9 @@ class TestAsyncNetworkDevice:
         assert response.result == expected_response
 
     @pytest.mark.parametrize(
-        "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
+        "strip_prompt",
+        [True, False],
+        ids=["strip_prompt", "no_strip_prompt"],
     )
     async def test_send_config(self, async_conn, device_type, strip_prompt):
         config = TEST_CASES[device_type]["send_config"]["configs"]
@@ -390,7 +424,9 @@ class TestAsyncNetworkDevice:
             await async_conn.send_config(config=teardown_configs)
 
     @pytest.mark.parametrize(
-        "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
+        "strip_prompt",
+        [True, False],
+        ids=["strip_prompt", "no_strip_prompt"],
     )
     async def test_send_configs(self, async_conn, device_type, strip_prompt):
         configs = TEST_CASES[device_type]["send_configs"]["configs"]
@@ -415,7 +451,9 @@ class TestAsyncNetworkDevice:
             await async_conn.send_config(config=teardown_configs)
 
     @pytest.mark.parametrize(
-        "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
+        "strip_prompt",
+        [True, False],
+        ids=["strip_prompt", "no_strip_prompt"],
     )
     async def test_send_configs_from_file(self, async_conn, device_type, strip_prompt):
         file = TEST_CASES[device_type]["send_configs_from_file"]["file"]

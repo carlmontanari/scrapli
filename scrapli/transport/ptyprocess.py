@@ -323,7 +323,7 @@ class PtyProcess:
         calling close() more than once is valid. This emulates standard Python
         behavior with files. Set force to True if you want to make sure that
         the child is terminated (SIGKILL is sent if the child ignores SIGHUP
-        and SIGINT). """
+        and SIGINT)."""
         if not self.closed:
             self.flush()
             self.fileobj.close()  # Closes the file descriptor
@@ -391,8 +391,7 @@ class PtyProcess:
         return n
 
     def eof(self) -> bool:
-        """This returns True if the EOF exception was ever raised.
-        """
+        """This returns True if the EOF exception was ever raised."""
 
         return self.flag_eof
 
@@ -449,7 +448,7 @@ class PtyProcess:
         non-blocking. If the child was terminated then this will read the
         exitstatus or signalstatus of the child. This returns True if the child
         process appears to be running or False if not. It can take literally
-        SECONDS for Solaris to return the right status. """
+        SECONDS for Solaris to return the right status."""
 
         if self.terminated:
             return False

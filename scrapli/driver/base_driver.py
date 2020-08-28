@@ -350,7 +350,11 @@ class ScrapeBase:
             self._initialization_args["auth_private_key"] = auth_private_key
 
     def _setup_timeouts(
-        self, timeout_socket: int, timeout_transport: int, timeout_ops: float, timeout_exit: bool,
+        self,
+        timeout_socket: int,
+        timeout_transport: int,
+        timeout_ops: float,
+        timeout_exit: bool,
     ) -> None:
         """
         Parse and setup timeout attributes

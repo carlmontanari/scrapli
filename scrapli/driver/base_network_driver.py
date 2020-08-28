@@ -326,7 +326,10 @@ class NetworkDriverBase:
         return resolved_priv, map_to_desired_priv
 
     def _process_acquire_priv(
-        self, resolved_priv: str, map_to_desired_priv: List[str], current_prompt: str,
+        self,
+        resolved_priv: str,
+        map_to_desired_priv: List[str],
+        current_prompt: str,
     ) -> Tuple[PrivilegeAction, PrivilegeLevel]:
         """
         Handle non channel "acquire_priv" tasks for consistency between sync/async versions
@@ -410,7 +413,11 @@ class NetworkDriverBase:
 
         return split_config
 
-    def _post_send_config(self, config: str, multi_response: ScrapliMultiResponse,) -> Response:
+    def _post_send_config(
+        self,
+        config: str,
+        multi_response: ScrapliMultiResponse,
+    ) -> Response:
         """
         Handle post "send_config" tasks for consistency between sync/async versions
 
@@ -435,7 +442,9 @@ class NetworkDriverBase:
 
         # create a new unified response object
         response = Response(
-            host=host, channel_input=config, failed_when_contains=failed_when_contains,
+            host=host,
+            channel_input=config,
+            failed_when_contains=failed_when_contains,
         )
         response.start_time = multi_response[0].start_time
         response.elapsed_time = (datetime.now() - response.start_time).total_seconds()

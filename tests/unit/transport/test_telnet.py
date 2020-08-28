@@ -39,7 +39,9 @@ def test_keepalive_standard():
 
 
 @pytest.mark.parametrize(
-    "method_name", ["read", "write", "set_timeout"], ids=["read", "write", "set_timeout"],
+    "method_name",
+    ["read", "write", "set_timeout"],
+    ids=["read", "write", "set_timeout"],
 )
 def test_requires_open(method_name):
     conn = TelnetTransport("localhost")

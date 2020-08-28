@@ -32,7 +32,10 @@ def nix_conn(transport):
     driver = device.pop("driver")
     device.pop("async_driver")
 
-    conn = driver(**device, transport=transport,)
+    conn = driver(
+        **device,
+        transport=transport,
+    )
     conn.open()
     return conn
 
@@ -46,7 +49,10 @@ def nix_conn_generic(transport):
     device.pop("driver")
     device.pop("async_driver")
 
-    conn = GenericDriver(**device, transport=transport,)
+    conn = GenericDriver(
+        **device,
+        transport=transport,
+    )
     conn.open()
     return conn
 
@@ -127,7 +133,12 @@ def iosxe_conn(transport):
     if transport == "telnet":
         port = 23
 
-    iosxe_conn = driver(**device, port=port, transport=transport, timeout_socket=5,)
+    iosxe_conn = driver(
+        **device,
+        port=port,
+        transport=transport,
+        timeout_socket=5,
+    )
     iosxe_conn.open()
     return iosxe_conn
 
@@ -199,7 +210,12 @@ def eos_conn(transport):
     if transport == "telnet":
         port = 23
 
-    conn = driver(**device, port=port, transport=transport, timeout_socket=5,)
+    conn = driver(
+        **device,
+        port=port,
+        transport=transport,
+        timeout_socket=5,
+    )
     conn.open()
     return conn
 
@@ -215,6 +231,11 @@ def nxos_conn(transport):
     if transport == "telnet":
         port = 23
 
-    conn = driver(**device, port=port, transport=transport, timeout_socket=5,)
+    conn = driver(
+        **device,
+        port=port,
+        transport=transport,
+        timeout_socket=5,
+    )
     conn.open()
     return conn

@@ -73,7 +73,10 @@ def test__textfsm_get_template_invalid_template():
 @pytest.mark.parametrize(
     "parse_type",
     [
-        (False, ["Internet", "172.31.254.1", "-", "0000.0c07.acfe", "ARPA", "Vlan254"],),
+        (
+            False,
+            ["Internet", "172.31.254.1", "-", "0000.0c07.acfe", "ARPA", "Vlan254"],
+        ),
         (
             True,
             {
@@ -101,7 +104,10 @@ def test_textfsm_parse_success(parse_type):
 @pytest.mark.parametrize(
     "parse_type",
     [
-        (False, ["Internet", "172.31.254.1", "-", "0000.0c07.acfe", "ARPA", "Vlan254"],),
+        (
+            False,
+            ["Internet", "172.31.254.1", "-", "0000.0c07.acfe", "ARPA", "Vlan254"],
+        ),
         (
             True,
             {
