@@ -1,5 +1,5 @@
-nox>=2020.5.24
-black>=19.10b0
+nox>=2020.8.22
+black>=20.8b1
 isort>=5.4.2
 mypy>=0.782
 pytest>=6.0.1
@@ -10,7 +10,7 @@ pylama>=7.7.1
 pycodestyle>=2.6.0
 pydocstyle>=5.1.0
 pylint>=2.6.0
-darglint>=1.5.2
+darglint>=1.5.3
 asyncssh>=2.3.0
 napalm>=3.1.0
 pdoc3>=0.8.3 ; sys_platform != "win32"
