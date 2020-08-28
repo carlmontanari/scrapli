@@ -22,7 +22,10 @@ def test__repr(sync_cisco_iosxe_conn):
         ({"strip_prompt": True}, b"hostname 3560CX"),
         ({"strip_prompt": False}, b"hostname 3560CX\n3560CX#"),
     ],
-    ids=["strip_prompt_true", "strip_prompt_false",],
+    ids=[
+        "strip_prompt_true",
+        "strip_prompt_false",
+    ],
 )
 def test__restructure_output(sync_cisco_iosxe_conn, attr_setup):
     args = attr_setup[0]

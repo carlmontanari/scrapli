@@ -105,7 +105,11 @@ def test_requires_open_session():
 
 @pytest.mark.parametrize(
     "timeout_ops",
-    [999, 30, None,],
+    [
+        999,
+        30,
+        None,
+    ],
     ids=["timeout_modified", "timeout_unchanged", "timeout_not_provided"],
 )
 def test_timeout_modifier(monkeypatch, timeout_ops):
@@ -126,7 +130,11 @@ def test_timeout_modifier(monkeypatch, timeout_ops):
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "timeout_ops",
-    [999, 30, None,],
+    [
+        999,
+        30,
+        None,
+    ],
     ids=["timeout_modified", "timeout_unchanged", "timeout_not_provided"],
 )
 async def test_timeout_modifier_async(monkeypatch, timeout_ops):

@@ -43,7 +43,9 @@ def test_ssh_keys():
 
 
 @pytest.mark.parametrize(
-    "example_script", [structured_data_genie, structured_data_genie], ids=["genie", "textfsm"],
+    "example_script",
+    [structured_data_genie, structured_data_genie],
+    ids=["genie", "textfsm"],
 )
 def test_structured_data(example_script):
     example_script.main()

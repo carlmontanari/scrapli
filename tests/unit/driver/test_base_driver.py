@@ -47,7 +47,12 @@ def test__repr():
             ValueError,
             "Provided public key `notafile` is not a file",
         ),
-        ("auth_bypass", "notabool", TypeError, "`auth_bypass` should be bool, got <class 'str'>",),
+        (
+            "auth_bypass",
+            "notabool",
+            TypeError,
+            "`auth_bypass` should be bool, got <class 'str'>",
+        ),
         ("timeout_exit", "notabool", TypeError, "`timeout_exit` should be bool, got <class 'str'>"),
         ("keepalive", "notabool", TypeError, "`keepalive` should be bool, got <class 'str'>"),
         (
@@ -233,7 +238,12 @@ def test_valid_private_key_file():
             f"{TEST_DATA_DIR}/files/_ssh_known_hosts",
             f"{TEST_DATA_DIR}/files/_ssh_config",
         ),
-        ("ssh_config_file", "", "", "",),
+        (
+            "ssh_config_file",
+            "",
+            "",
+            "",
+        ),
         (
             "ssh_known_hosts_file",
             True,
@@ -252,7 +262,12 @@ def test_valid_private_key_file():
             f"{TEST_DATA_DIR}/files/_ssh_known_hosts",
             f"{TEST_DATA_DIR}/files/_ssh_known_hosts",
         ),
-        ("ssh_known_hosts_file", "", "", "",),
+        (
+            "ssh_known_hosts_file",
+            "",
+            "",
+            "",
+        ),
     ],
     ids=[
         "config_file_etc",

@@ -102,7 +102,9 @@ def test_send_command_not_desired_priv_level(sync_cisco_iosxe_conn):
 
 
 @pytest.mark.parametrize(
-    "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
+    "strip_prompt",
+    [True, False],
+    ids=["strip_prompt", "no_strip_prompt"],
 )
 def test_send_command(sync_cisco_iosxe_conn, strip_prompt):
     expected_raw = TEST_CASES["cisco_iosxe"]["test_send_input"]["raw_result"]
@@ -119,7 +121,9 @@ def test_send_command(sync_cisco_iosxe_conn, strip_prompt):
 
 
 @pytest.mark.parametrize(
-    "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
+    "strip_prompt",
+    [True, False],
+    ids=["strip_prompt", "no_strip_prompt"],
 )
 def test_send_commands(sync_cisco_iosxe_conn, strip_prompt):
     expected_raw = TEST_CASES["cisco_iosxe"]["test_send_input"]["raw_result"]
@@ -137,7 +141,9 @@ def test_send_commands(sync_cisco_iosxe_conn, strip_prompt):
 
 
 @pytest.mark.parametrize(
-    "strip_prompt", [True, False], ids=["strip_prompt", "no_strip_prompt"],
+    "strip_prompt",
+    [True, False],
+    ids=["strip_prompt", "no_strip_prompt"],
 )
 def test_send_commands_from_file(sync_cisco_iosxe_conn, strip_prompt):
     expected_raw = TEST_CASES["cisco_iosxe"]["test_send_input"]["raw_result"]

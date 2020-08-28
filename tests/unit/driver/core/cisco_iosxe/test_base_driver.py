@@ -34,7 +34,11 @@ def test_prompt_patterns(priv_pattern):
 
 @pytest.mark.parametrize(
     "prompt",
-    ["password:", "Password:", "Enable password:",],
+    [
+        "password:",
+        "Password:",
+        "Enable password:",
+    ],
     ids=["password:", "Password:", "Enable password:"],
 )
 def test_privilege_exec_escalation_prompt_patterns(prompt):

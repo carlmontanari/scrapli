@@ -46,7 +46,9 @@ class GenericDriverBase:
             )
 
         response = Response(
-            host=host, channel_input=command, failed_when_contains=failed_when_contains,
+            host=host,
+            channel_input=command,
+            failed_when_contains=failed_when_contains,
         )
 
         return response
