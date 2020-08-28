@@ -33,7 +33,7 @@ Note that all public methods, unless otherwise noted, are available in sync and 
 | send_commands                 | 2020.03.29  | 2020.08.09  | added `timeout_ops` keyword argument to modify timeout       |
 | send_commands_from_file       | 2020.04.30  | 2020.08.09  | added `timeout_ops` keyword argument to modify timeout       |
 | send_interactive              | 2020.03.29  | 2020.04.11  | changed to support list of "events" to interact with         |
-| send_and_read                 | 2020.XX.XX  |             |                                                              |                            
+| send_and_read                 | 2020.08.28  |             |                                                              |                            
 
 
 ### AsyncGenericDriver (and NetworkDriver sub-classes unless overridden)
@@ -45,7 +45,7 @@ Note that all public methods, unless otherwise noted, are available in sync and 
 | send_commands                 | 2020.06.06  | 2020.08.09  | added `timeout_ops` keyword argument to modify timeout       |
 | send_commands_from_file       | 2020.06.06  | 2020.08.09  | added `timeout_ops` keyword argument to modify timeout       |
 | send_interactive              | 2020.06.06  |             |                                                              |
-| send_and_read                 | 2020.XX.XX  |             |                                                              |
+| send_and_read                 | 2020.08.28  |             |                                                              |
 
 
 ### NetworkDriver (and Platform driver sub-classes unless overridden)
@@ -81,7 +81,7 @@ Note that all public methods, unless otherwise noted, are available in sync and 
 | get_prompt                    | 2020.03.29  |             |                                                              |
 | send_input                    | 2020.03.29  |             |                                                              |
 | send_inputs_interact          | 2020.03.29  | 2020.04.11  | changed to support list of "events" to interact with         |
-| send_input_and_read           | 2020.XX.XX  |             |                                                              |
+| send_input_and_read           | 2020.08.28  |             |                                                              |
 
 
 ## AsyncChannel
@@ -91,7 +91,7 @@ Note that all public methods, unless otherwise noted, are available in sync and 
 | get_prompt                    | 2020.06.06  |             |                                                              |
 | send_input                    | 2020.06.06  |             |                                                              |
 | send_inputs_interact          | 2020.06.06  |             |                                                              |
-| send_input_and_read           | 2020.XX.XX  |             |                                                              |
+| send_input_and_read           | 2020.08.28  |             |                                                              |
 
 
 ## Transport

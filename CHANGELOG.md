@@ -1,7 +1,7 @@
 CHANGELOG
 =======
 
-# 2020.XX.XX
+# 2020.08.28
 - Added Packet Pushers scrapli episode to the README!!
 - Added NXOS and Junos mock ssh servers and created tests for open/close methods (silly tests but just ensures we
  send what we think we should be sending)
@@ -22,6 +22,7 @@ CHANGELOG
 - `timeout_ops` has been converted from an int to a float to allow for more granular timeout control (the other
  timeouts remain as integers)
 - Few minor docstring fixes from copypasta issues :)
+- Update black pin/re-run black
 
 
 # 2020.07.26
