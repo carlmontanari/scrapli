@@ -63,6 +63,7 @@ class ScrapeBase:
         comms_ansi: bool = False,
         ssh_config_file: Union[str, bool] = False,
         ssh_known_hosts_file: Union[str, bool] = False,
+        on_init: Optional[Callable[..., Any]] = None,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
         transport: str = "system",
@@ -123,6 +124,12 @@ class ScrapeBase:
                 or False to ignore default ssh config file
             ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
                 file locations. Only applicable/needed if `auth_strict_key` is set to True
+            on_init: callable that accepts the class instance as its only argument. this callable,
+                if provided, is executed as the last step of object instantiation -- its purpose is
+                primarily to provide a mechanism for scrapli community platforms to have an easy way
+                to modify initialization arguments/object attributes without needing to create a
+                class that extends the driver, instead allowing the community platforms to simply
+                build from the GenericDriver or NetworkDriver classes
             on_open: callable that accepts the class instance as its only argument. this callable,
                 if provided, is executed immediately after authentication is completed. Common use
                 cases for this callable would be to disable paging or accept any kind of banner
@@ -184,7 +191,7 @@ class ScrapeBase:
             comms_return_char=comms_return_char,
             comms_ansi=comms_ansi,
         )
-        self._setup_callables(on_open=on_open, on_close=on_close)
+        self._setup_callables(on_init=on_init, on_open=on_open, on_close=on_close)
 
         if transport not in ("system", "telnet"):
             self.logger.info(f"Non-core transport `{transport}` selected")
@@ -213,6 +220,9 @@ class ScrapeBase:
             if arg == "transport":
                 continue
             self.channel_args[arg] = self._initialization_args.get(arg)
+
+        if self.on_init:
+            self.on_init()
 
     def __str__(self) -> str:
         """
@@ -268,6 +278,7 @@ class ScrapeBase:
             f"comms_ansi={self._initialization_args['comms_ansi']!r}, "
             f"ssh_config_file={self._initialization_args.get('ssh_config_file')!r}, "
             f"ssh_known_hosts_file={self._initialization_args.get('ssh_known_hosts_file')!r}, "
+            f"on_init={self.on_init!r}, "
             f"on_open={self.on_open!r}, "
             f"on_close={self.on_close!r}, "
             f"transport={self._transport!r}, "
@@ -442,12 +453,16 @@ class ScrapeBase:
         self._initialization_args["comms_ansi"] = comms_ansi
 
     def _setup_callables(
-        self, on_open: Optional[Callable[..., Any]], on_close: Optional[Callable[..., Any]]
+        self,
+        on_init: Optional[Callable[..., Any]],
+        on_open: Optional[Callable[..., Any]],
+        on_close: Optional[Callable[..., Any]],
     ) -> None:
         """
         Parse and setup callables (on_open/on_close)
 
         Args:
+            on_init: on_init to parse/set
             on_open: on_open to parse/set
             on_close: on_close to parse/set
 
@@ -458,12 +473,16 @@ class ScrapeBase:
             TypeError: if port is not an integer
 
         """
+        if on_init is not None and not callable(on_init):
+            raise TypeError(f"`on_init` must be a callable, got {type(on_init)}")
         if on_open is not None and not callable(on_open):
             raise TypeError(f"`on_open` must be a callable, got {type(on_open)}")
         if on_close is not None and not callable(on_close):
             raise TypeError(f"`on_close` must be a callable, got {type(on_close)}")
+        self.on_init = on_init
         self.on_open = on_open
         self.on_close = on_close
+        self._initialization_args["on_init"] = on_init
         self._initialization_args["on_open"] = on_open
         self._initialization_args["on_close"] = on_close
 
