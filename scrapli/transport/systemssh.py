@@ -499,10 +499,8 @@ class SystemSSHTransport(Transport):
             N/A
 
         """
-        with self.session_lock:
-            self.session.kill(0)
-            self.session.terminated = True
-            self.logger.debug(f"Channel to host {self.host} closed")
+        self.session.close()
+        self.logger.debug(f"Channel to host {self.host} closed")
 
     def isalive(self) -> bool:
         """

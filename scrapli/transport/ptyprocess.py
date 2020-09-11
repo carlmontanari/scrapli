@@ -326,7 +326,14 @@ class PtyProcess:
         and SIGINT)."""
         if not self.closed:
             self.flush()
-            self.fileobj.close()  # Closes the file descriptor
+
+            # in the original ptyprocess vendor'd code the file object is "gracefully" closed,
+            # however in some situations it seemed to hang forever on the close call... given that
+            # as soon as this connection is closed it will need to be re-opened, and that will of
+            # course re-create the fileobject this seems like an ok workaround because for reasons
+            # unknown to me... this does not hang (even though in theory delete method just closes
+            # things...?)
+            del self.fileobj
             # Give kernel time to update process status.
             time.sleep(self.delayafterclose)
             if self.isalive():
