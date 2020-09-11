@@ -46,7 +46,7 @@ jobs:
         run: |
           apt install libxml2
           apt install libxslt
-        if: matrix.os == "ubuntu-latest" and matrix.version == "3.9-dev"
+        if: matrix.os == "ubuntu-latest"
       - name: setup test env
         run: |
           python -m pip install --upgrade pip
