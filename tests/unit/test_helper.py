@@ -139,7 +139,9 @@ def test_textfsm_parse_failure():
 
 
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting genie on windows")
-@pytest.mark.skipif(sys.version_info > (3, 8), reason="genie not currently available for python 3.9")
+@pytest.mark.skipif(
+    sys.version_info > (3, 8), reason="genie not currently available for python 3.9"
+)
 def test_genie_parse_success():
     result = genie_parse("iosxe", "show ip arp", IOS_ARP)
     assert isinstance(result, dict)
@@ -149,7 +151,9 @@ def test_genie_parse_success():
 
 
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting genie on windows")
-@pytest.mark.skipif(sys.version_info > (3, 8), reason="genie not currently available for python 3.9")
+@pytest.mark.skipif(
+    sys.version_info > (3, 8), reason="genie not currently available for python 3.9"
+)
 def test_genie_parse_failure():
     result = genie_parse("iosxe", "show ip arp", "not really arp data")
     assert result == []
