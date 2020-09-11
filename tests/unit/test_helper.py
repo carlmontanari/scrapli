@@ -138,10 +138,10 @@ def test_textfsm_parse_failure():
     assert result == []
 
 
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting genie on windows")
 @pytest.mark.skipif(
-    sys.version_info > (3, 8), reason="genie not currently available for python 3.9"
+    sys.version_info.minor > 8, reason="genie not currently available for python 3.9"
 )
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting genie on windows")
 def test_genie_parse_success():
     result = genie_parse("iosxe", "show ip arp", IOS_ARP)
     assert isinstance(result, dict)
@@ -150,14 +150,13 @@ def test_genie_parse_success():
     )
 
 
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting genie on windows")
 @pytest.mark.skipif(
-    sys.version_info > (3, 8), reason="genie not currently available for python 3.9"
+    sys.version_info.minor > 8, reason="genie not currently available for python 3.9"
 )
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting genie on windows")
 def test_genie_parse_failure():
     result = genie_parse("iosxe", "show ip arp", "not really arp data")
     assert result == []
-    # genie loads about nine million modules... for whatever reason these two upset pyfakefs
     del sys.modules["ats.configuration"]
     del sys.modules["pyats.configuration"]
 
