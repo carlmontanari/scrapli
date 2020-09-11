@@ -30,7 +30,7 @@ jobs:
       max-parallel: 9
       matrix:
         os: [ubuntu-latest, macos-latest]
-        version: [3.6, 3.7, 3.8, 3.9]
+        version: [3.6, 3.7, 3.8, 3.9-dev]
     steps:
       - uses: actions/checkout@v2
       - name: set up python ${{ matrix.version }}
@@ -46,4 +46,4 @@ jobs:
         env:
           # needed to make the terminal a tty (i think? without this system ssh is super broken)
           TERM: xterm
-        run: python -m nox -p ${{ matrix.version }} -k "not darglint"
+        run: python -m nox -k "not darglint"
