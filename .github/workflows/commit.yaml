@@ -46,7 +46,7 @@ jobs:
         # not super friendly looking, but easy way to get major.minor version so we can easily exec only the specific
         # version we are targeting with nox, while still having versions like 3.9.0a4
         run: |
-          printenv | grep PYTHON
+          printenv
       - name: setup test env
         run: |
           python -m pip install --upgrade pip
