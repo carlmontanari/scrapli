@@ -45,8 +45,8 @@ jobs:
       - name: install libxml2 and libxslt seems to only be needed for 3.9 dev image for some reason
         if: matrix.os == 'ubuntu-latest' && matrix.version == '3.9-dev'
         run: |
-          apt install libxml2
-          apt install libxslt
+          sudo apt install libxml2
+          sudo apt install libxslt
       - name: setup test env
         run: |
           python -m pip install --upgrade pip
