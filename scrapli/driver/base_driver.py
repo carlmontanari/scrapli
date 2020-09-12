@@ -129,7 +129,9 @@ class ScrapeBase:
                 primarily to provide a mechanism for scrapli community platforms to have an easy way
                 to modify initialization arguments/object attributes without needing to create a
                 class that extends the driver, instead allowing the community platforms to simply
-                build from the GenericDriver or NetworkDriver classes
+                build from the GenericDriver or NetworkDriver classes, and pass this callable to do
+                things such as appending to a username (looking at you RouterOS!!). Note that this
+                is *always* a synchronous function (even for asyncio drivers)!
             on_open: callable that accepts the class instance as its only argument. this callable,
                 if provided, is executed immediately after authentication is completed. Common use
                 cases for this callable would be to disable paging or accept any kind of banner
