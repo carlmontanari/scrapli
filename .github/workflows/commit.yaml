@@ -41,7 +41,7 @@ jobs:
         # not super friendly looking, but easy way to get major.minor version so we can easily exec only the specific
         # version we are targeting with nox, while still having versions like 3.9.0a4
         run: |
-          echo "::set-env name=FRIENDLY_PYTHON_VERSION::$(python -c "import sys; print('${{ matrix.version }}'.split('-')[0])")"
+          echo "::set-env name=FRIENDLY_PYTHON_VERSION::$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")"
       - name: install libxml2 and libxslt seems to only be needed for 3.9 dev image for some reason
         if: matrix.os == 'ubuntu-latest' && matrix.version == '3.9-dev'
         run: |

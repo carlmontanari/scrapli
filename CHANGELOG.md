@@ -1,6 +1,17 @@
 CHANGELOG
 =======
 
+# 2020.XX.XX
+- Improved error handling/exceptions for scrapli `Factory`
+- Fixed issue where `system` transport did not properly close/kill SSH connections
+- Added 3.9-dev testing to GitHub Actions
+- Added initial testing/support of `on_init` callable to base driver -- the idea for `on_init` is mostly to allow
+ `scrapli_community` platform creators to be able to add an additional callable to be executed after initialization
+  of the scrapli object, but before any `open` method is called
+- Added initial testing/support of `scrapli_community` driver classes -- this would allow `scrapli_community
+` platform creators to create driver classes so that they can implement custom methods for each platform type if
+ desired
+
 # 2020.08.28
 - Added Packet Pushers scrapli episode to the README!!
 - Added NXOS and Junos mock ssh servers and created tests for open/close methods (silly tests but just ensures we
