@@ -130,14 +130,26 @@ def _get_driver_class(
             variant_final_driver = variant_driver_data["async"]
         return variant_final_driver
 
-    driver_type = platform_details["driver_type"]
+    if isinstance(platform_details["driver_type"], str):
+        driver_type = platform_details["driver_type"]
+        if _async is False:
+            standard_final_driver = SYNC_DRIVER_MAP.get(driver_type, None)
+        else:
+            standard_final_driver = ASYNC_DRIVER_MAP.get(driver_type, None)
+        if standard_final_driver:
+            return standard_final_driver
+
+    custom_base_final_driver: Union[
+        Type[AsyncNetworkDriver],
+        Type[AsyncGenericDriver],
+        Type[NetworkDriver],
+        Type[GenericDriver],
+    ]
     if _async is False:
-        standard_final_driver = SYNC_DRIVER_MAP.get(driver_type, None)
+        custom_base_final_driver = platform_details["driver_type"]["sync"]
     else:
-        standard_final_driver = ASYNC_DRIVER_MAP.get(driver_type, None)
-    if not standard_final_driver:
-        raise ScrapliException("Invalid driver type provided in community platform data")
-    return standard_final_driver
+        custom_base_final_driver = platform_details["driver_type"]["async"]
+    return custom_base_final_driver
 
 
 def _get_driver_kwargs(
