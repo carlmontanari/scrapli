@@ -113,7 +113,7 @@ def _get_driver_class(
         NetworkDriver: final driver class
 
     Raises:
-        ScrapliException: if scrapli_community platform has an invalid value for "driver_type"
+        N/A
 
     """
     if variant and platform_details["variants"][variant].get("driver_type"):
