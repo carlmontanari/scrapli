@@ -80,7 +80,7 @@ def _get_community_platform_details(community_platform_name: str) -> Dict[str, A
         msg = f"***** {err} {'*' * (80 - len(err))}"
         fix = (
             "To resolve this issue, ensure you have the correct platform name, and that a scrapli "
-            " communitiy platform of that name exists!"
+            " community platform of that name exists!"
         )
         warning = "\n" + msg + "\n" + fix + "\n" + msg
         raise ModuleNotFoundError(warning) from exc

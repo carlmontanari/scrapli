@@ -1,6 +1,5 @@
 """scrapli.transport.systemssh"""
 import re
-from select import select
 from typing import Any, Dict, Optional
 
 from scrapli.decorators import OperationTimeout, requires_open_session
@@ -442,14 +441,8 @@ class SystemSSHTransport(Transport):
                     prompt="", class_prompt=self._comms_prompt_pattern
                 )
                 self.session.write(self._comms_return_char.encode())
-                while True:
-                    # almost all of the time we don't need a while loop here, but every once in a
-                    # while fd won't be ready which causes a failure without an obvious root cause,
-                    # loop/logging to hopefully help with that
-                    fd_ready, _, _ = select([self.session.fd], [], [], 0)
-                    if self.session.fd in fd_ready:
-                        break
-                    self.logger.debug("PTY fd not ready yet...")
+                self._wait_for_session_fd_ready(fd=self.session.fd)
+
                 output = b""
                 while True:
                     new_output = self.session.read()

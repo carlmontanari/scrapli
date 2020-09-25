@@ -11,6 +11,11 @@ CHANGELOG
 - Added initial testing/support of `scrapli_community` driver classes -- this would allow `scrapli_community
 ` platform creators to create driver classes so that they can implement custom methods for each platform type if
  desired
+- Minor improvements to `telnet` transport to improve logging as well as authentication validation (are we
+ authenticated); this also makes `telnet` look/feel a lot more like `system` which is nice for consistency reasons
+- Fix regression that caused scrapli to spam a bajillion log entries -- now a filter gets applied in both `Channel
+` and `Transport` base classes to snag the filter from the root `scrapli` logger and apply it to the base/channel
+ loggers
 
 # 2020.08.28
 - Added Packet Pushers scrapli episode to the README!!
