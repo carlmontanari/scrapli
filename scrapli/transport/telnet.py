@@ -5,7 +5,7 @@ from telnetlib import Telnet
 from typing import Optional
 
 from scrapli.decorators import OperationTimeout, requires_open_session
-from scrapli.exceptions import ScrapliAuthenticationFailed
+from scrapli.exceptions import ScrapliAuthenticationFailed, ConnectionNotOpened
 from scrapli.helper import get_prompt_pattern, strip_ansi
 from scrapli.transport.transport import Transport
 
@@ -172,6 +172,7 @@ class TelnetTransport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
+            ConnectionNotOpened: if connection cant be opened
             ScrapliAuthenticationFailed: if cant successfully authenticate
 
         """
@@ -185,7 +186,7 @@ class TelnetTransport(Transport):
                 msg = f"Failed to open telnet session to host {self.host}"
                 if "connection refused" in str(exc).lower():
                     msg = f"Failed to open telnet session to host {self.host}, connection refused"
-                raise ScrapliAuthenticationFailed(msg) from exc
+                raise ConnectionNotOpened(msg) from exc
             self.session.timeout = self.timeout_transport
             self.logger.debug(f"Session to host {self.host} spawned")
 
@@ -215,7 +216,8 @@ class TelnetTransport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            ScrapliAuthenticationFailed: if an EOFError is encountered; we in theory *did* open the
+                connection, so we won't raise a ConnectionNotOpened here
 
         """
         output = b""
