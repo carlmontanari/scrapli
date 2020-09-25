@@ -5,7 +5,7 @@ from telnetlib import Telnet
 from typing import Optional
 
 from scrapli.decorators import OperationTimeout, requires_open_session
-from scrapli.exceptions import ScrapliAuthenticationFailed, ConnectionNotOpened
+from scrapli.exceptions import ConnectionNotOpened, ScrapliAuthenticationFailed
 from scrapli.helper import get_prompt_pattern, strip_ansi
 from scrapli.transport.transport import Transport
 
