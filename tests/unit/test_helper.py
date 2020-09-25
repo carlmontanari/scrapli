@@ -2,6 +2,7 @@ import os
 import re
 import sys
 from io import TextIOWrapper
+from logging import getLogger
 from pathlib import Path
 
 import pkg_resources  # pylint: disable=C041
@@ -10,6 +11,7 @@ import pytest
 import scrapli
 from scrapli.helper import (
     _textfsm_get_template,
+    attach_duplicate_log_filter,
     genie_parse,
     get_prompt_pattern,
     resolve_file,
@@ -188,3 +190,11 @@ def test_resolve_file_failure():
     with pytest.raises(ValueError) as exc:
         resolve_file(file=f"~/myneatfile")
     assert str(exc.value) == "File path `~/myneatfile` could not be resolved"
+
+
+def test_attach_duplicate_log_filter():
+    dummy_logger = getLogger("this_is_a_dumb_test_log")
+    assert dummy_logger.filters == []
+    attach_duplicate_log_filter(logger=dummy_logger)
+    # simple assert to confirm that we got the dup filter attached to the new logger
+    assert dummy_logger.filters[0].__class__.__name__ == "DuplicateFilter"
