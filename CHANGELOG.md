@@ -1,6 +1,10 @@
 CHANGELOG
 =======
 
+# 2020.XX.XX
+- ???
+
+
 # 2020.09.26
 - Improved error handling/exceptions for scrapli `Factory`
 - Fixed issue where `system` transport did not properly close/kill SSH connections
@@ -19,6 +23,8 @@ CHANGELOG
 - Fully give into the warm embrace of dependabot and pin all the dev requirements to specific versions... dependabot
  can keep us up to date and this lets us not worry about builds failing because of dev requirements getting changed
   around
+- Fix ptyprocess file object closing issue
+
 
 # 2020.08.28
 - Added Packet Pushers scrapli episode to the README!!
