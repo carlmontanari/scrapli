@@ -146,7 +146,7 @@ def test_factory_community_platform_defaults(factory_setup):
     [(Scrapli, "system", NetworkDriver), (AsyncScrapli, "asyncssh", AsyncNetworkDriver)],
     ids=["sync_factory", "async_factory"],
 )
-def test_sync_factory_community_platform_variant(factory_setup):
+def test_factory_community_platform_variant(factory_setup):
     Factory = factory_setup[0]
     transport = factory_setup[1]
     expected_driver = factory_setup[2]
@@ -167,6 +167,44 @@ def test_sync_factory_community_platform_variant(factory_setup):
     assert driver.textfsm_platform == "cisco_iosxe"
     assert driver.genie_platform == "iosxe"
     assert driver.default_desired_privilege_level == "configuration"
+    assert callable(driver.on_open)
+    assert callable(driver.on_close)
+    for actual_priv_level, expected_priv_level in zip(
+        driver.privilege_levels.values(), TEST_COMMUNITY_PRIV_LEVELS.values()
+    ):
+        actual_priv_level.name == expected_priv_level.name
+        actual_priv_level.pattern == expected_priv_level.pattern
+
+
+@pytest.mark.parametrize(
+    "factory_setup",
+    [
+        (Scrapli, "system", "ScrapliNetworkDriverWithMethods"),
+        (AsyncScrapli, "asyncssh", "AsyncScrapliNetworkDriverWithMethods"),
+    ],
+    ids=["sync_factory", "async_factory"],
+)
+def test_factory_community_platform_variant_driver_type(factory_setup):
+    Factory = factory_setup[0]
+    transport = factory_setup[1]
+    expected_driver_name = factory_setup[2]
+    driver = Factory(
+        platform="scrapli_networkdriver",
+        host="localhost",
+        variant="test_variant2",
+        transport=transport,
+    )
+    assert type(driver).__name__ == expected_driver_name
+    assert driver._transport == transport
+    assert driver.failed_when_contains == [
+        "% Ambiguous command",
+        "% Incomplete command",
+        "% Invalid input detected",
+        "% Unknown command",
+    ]
+    assert driver.textfsm_platform == "cisco_iosxe"
+    assert driver.genie_platform == "iosxe"
+    assert driver.default_desired_privilege_level == "privilege_exec"
     assert callable(driver.on_open)
     assert callable(driver.on_close)
     for actual_priv_level, expected_priv_level in zip(

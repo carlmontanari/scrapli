@@ -1,6 +1,25 @@
 CHANGELOG
 =======
 
+# 2020.09.26
+- Improved error handling/exceptions for scrapli `Factory`
+- Fixed issue where `system` transport did not properly close/kill SSH connections
+- Added 3.9-dev testing to GitHub Actions
+- Added initial testing/support of `on_init` callable to base driver -- the idea for `on_init` is mostly to allow
+ `scrapli_community` platform creators to be able to add an additional callable to be executed after initialization
+  of the scrapli object, but before any `open` method is called
+- Added initial testing/support of `scrapli_community` driver classes -- this would allow `scrapli_community
+` platform creators to create driver classes so that they can implement custom methods for each platform type if
+ desired
+- Minor improvements to `telnet` transport to improve logging as well as authentication validation (are we
+ authenticated); this also makes `telnet` look/feel a lot more like `system` which is nice for consistency reasons
+- Fix regression that caused scrapli to spam a bajillion log entries -- now a filter gets applied in both `Channel
+` and `Transport` base classes to snag the filter from the root `scrapli` logger and apply it to the base/channel
+ loggers
+- Fully give into the warm embrace of dependabot and pin all the dev requirements to specific versions... dependabot
+ can keep us up to date and this lets us not worry about builds failing because of dev requirements getting changed
+  around
+
 # 2020.08.28
 - Added Packet Pushers scrapli episode to the README!!
 - Added NXOS and Junos mock ssh servers and created tests for open/close methods (silly tests but just ensures we

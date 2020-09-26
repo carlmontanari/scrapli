@@ -5,6 +5,7 @@ import re
 import warnings
 from functools import lru_cache
 from io import TextIOWrapper
+from logging import Logger, getLogger
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Pattern, TextIO, Tuple, Union
 
@@ -338,3 +339,31 @@ def resolve_file(file: str) -> str:
     if Path(os.path.expanduser(file)).is_file():
         return str(Path(os.path.expanduser(file)))
     raise ValueError(f"File path `{file}` could not be resolved")
+
+
+def attach_duplicate_log_filter(logger: Logger) -> None:
+    """
+    Attach the base scrapli logger DuplicateFilter filter to a provided logger
+
+    Fails silently for now... forever?
+
+    Args:
+        logger: logger to attach the filter to
+
+    Returns:
+        N/A  # noqa: DAR202
+
+    Raises:
+        N/A
+
+    """
+    base_logger = getLogger("scrapli")
+    try:
+        dup_filter = [
+            logging_filter.__class__
+            for logging_filter in base_logger.filters
+            if logging_filter.__class__.__name__ == "DuplicateFilter"
+        ][0]
+        logger.addFilter(dup_filter())
+    except IndexError:
+        pass

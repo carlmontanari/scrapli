@@ -1,12 +1,11 @@
 """scrapli.transport.telnet"""
 import re
 from datetime import datetime
-from select import select
 from telnetlib import Telnet
 from typing import Optional
 
 from scrapli.decorators import OperationTimeout, requires_open_session
-from scrapli.exceptions import ScrapliAuthenticationFailed
+from scrapli.exceptions import ConnectionNotOpened, ScrapliAuthenticationFailed
 from scrapli.helper import get_prompt_pattern, strip_ansi
 from scrapli.transport.transport import Transport
 
@@ -173,57 +172,54 @@ class TelnetTransport(Transport):
             N/A  # noqa: DAR202
 
         Raises:
+            ConnectionNotOpened: if connection cant be opened
             ScrapliAuthenticationFailed: if cant successfully authenticate
 
         """
-        self.session_lock.acquire()
-        # establish session with "socket" timeout, then reset timeout to "transport" timeout
-        try:
-            telnet_session = ScrapliTelnet(
-                host=self.host, port=self.port, timeout=self.timeout_socket
-            )
-        except ConnectionError as exc:
-            msg = f"Failed to open telnet session to host {self.host}"
-            if "connection refused" in str(exc).lower():
-                msg = f"Failed to open telnet session to host {self.host}, connection refused"
-            raise ScrapliAuthenticationFailed(msg) from exc
-        telnet_session.timeout = self.timeout_transport
-        self.logger.debug(f"Session to host {self.host} spawned")
-        self.session_lock.release()
+        with self.session_lock:
+            # establish session with "socket" timeout, then reset timeout to "transport" timeout
+            try:
+                self.session = ScrapliTelnet(
+                    host=self.host, port=self.port, timeout=self.timeout_socket
+                )
+            except ConnectionError as exc:
+                msg = f"Failed to open telnet session to host {self.host}"
+                if "connection refused" in str(exc).lower():
+                    msg = f"Failed to open telnet session to host {self.host}, connection refused"
+                raise ConnectionNotOpened(msg) from exc
+            self.session.timeout = self.timeout_transport
+            self.logger.debug(f"Session to host {self.host} spawned")
 
         if not self.auth_bypass:
-            self._authenticate(telnet_session=telnet_session)
+            self._authenticate()
         else:
             self.logger.info("`auth_bypass` is True, bypassing authentication")
             # if we skip auth, we'll manually set _isauthenticated to True
             self._isauthenticated = True
 
-        if not self._isauthenticated and not self._telnet_isauthenticated(
-            telnet_session=telnet_session
-        ):
+        if not self._isauthenticated and not self._telnet_isauthenticated():
             raise ScrapliAuthenticationFailed(
                 f"Could not authenticate over telnet to host: {self.host}"
             )
 
         self.logger.debug(f"Authenticated to host {self.host} with password")
-        self.session = telnet_session
 
     @OperationTimeout("_timeout_ops_auth", "Timed out looking for telnet login prompts")
-    def _authenticate(self, telnet_session: ScrapliTelnet) -> None:
+    def _authenticate(self) -> None:
         """
         Parent private method to handle telnet authentication
 
         Args:
-            telnet_session: Telnet session object
+            N/A
 
         Returns:
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            ScrapliAuthenticationFailed: if an EOFError is encountered; we in theory *did* open the
+                connection, so we won't raise a ConnectionNotOpened here
 
         """
-        self.session_lock.acquire()
         output = b""
 
         # capture the start time of the authentication event; we also set a "return_interval" which
@@ -234,34 +230,50 @@ class TelnetTransport(Transport):
         return_interval = self._timeout_ops / 10
         return_attempts = 1
 
-        while True:
-            output += telnet_session.read_eager()
-            if self.username_prompt.lower().encode() in output.lower():
-                # if/when we see username, reset the output to empty byte string
-                output = b""
-                telnet_session.write(self.auth_username.encode())
-                telnet_session.write(self._comms_return_char.encode())
-            elif self.password_prompt.lower().encode() in output.lower():
-                telnet_session.write(self.auth_password.encode())
-                telnet_session.write(self._comms_return_char.encode())
-                self.session_lock.release()
-                break
-            elif not output:
-                current_iteration_time = datetime.now().timestamp()
-                if (current_iteration_time - auth_start_time) > (return_interval * return_attempts):
-                    telnet_session.write(self._comms_return_char.encode())
-                    return_attempts += 1
+        with self.session_lock:
+            while True:
+                try:
+                    new_output = self.session.read_eager()
+                    output += new_output
+                    self.logger.debug(f"Attempting to authenticate. Read: {repr(new_output)}")
+                except EOFError as exc:
+                    # EOF means telnet connection is dead :(
+                    msg = f"Failed to open connection to host {self.host}. Connection lost."
+                    self.logger.critical(msg)
+                    raise ScrapliAuthenticationFailed(msg) from exc
+
+                if self.username_prompt.lower().encode() in output.lower():
+                    self.logger.info("Found username prompt, sending username")
+                    # if/when we see username, reset the output to empty byte string
+                    output = b""
+                    self.session.write(self.auth_username.encode())
+                    self.session.write(self._comms_return_char.encode())
+                elif self.password_prompt.lower().encode() in output.lower():
+                    self.logger.info("Found password prompt, sending password")
+                    self.session.write(self.auth_password.encode())
+                    self.session.write(self._comms_return_char.encode())
+                    break
+                elif not output:
+                    current_iteration_time = datetime.now().timestamp()
+                    if (current_iteration_time - auth_start_time) > (
+                        return_interval * return_attempts
+                    ):
+                        self.logger.debug(
+                            "No username or password prompt found, sending return character..."
+                        )
+                        self.session.write(self._comms_return_char.encode())
+                        return_attempts += 1
 
     @OperationTimeout("_timeout_ops_auth", "Timed determining if telnet session is authenticated")
-    def _telnet_isauthenticated(self, telnet_session: ScrapliTelnet) -> bool:
+    def _telnet_isauthenticated(self) -> bool:
         """
         Check if session is authenticated
 
-        This is very naive -- it only knows if the sub process is alive and has not received an EOF.
+        This is very naive -- it only knows if the telnet session has not received an EOF.
         Beyond that we lock the session and send the return character and re-read the channel.
 
         Args:
-            telnet_session: Telnet session object
+            N/A
 
         Returns:
             bool: True if authenticated, else False
@@ -271,38 +283,55 @@ class TelnetTransport(Transport):
 
         """
         self.logger.debug("Attempting to determine if telnet authentication was successful")
-        if not telnet_session.eof:
-            prompt_pattern = get_prompt_pattern(prompt="", class_prompt=self._comms_prompt_pattern)
-            telnet_session_fd = telnet_session.fileno()
-            self.session_lock.acquire()
-            telnet_session.write(self._comms_return_char.encode())
-            while True:
-                # almost all of the time we don't need a while loop here, but every once in a while
-                # fd won't be ready which causes a failure without an obvious root cause,
-                # loop/logging to hopefully help with that
-                fd_ready, _, _ = select([telnet_session_fd], [], [], 0)
-                if telnet_session_fd in fd_ready:
-                    break
-                self.logger.debug("PTY fd not ready yet...")
-            output = b""
-            while True:
-                output += telnet_session.read_eager()
-                # we do not need to deal w/ line replacement for the actual output, only for
-                # parsing if a prompt-like thing is at the end of the output
-                output = output.replace(b"\r", b"")
-                if self._comms_ansi:
-                    output = strip_ansi(output=output)
-                channel_match = re.search(pattern=prompt_pattern, string=output)
-                if channel_match:
-                    self.session_lock.release()
-                    self._isauthenticated = True
-                    return True
-                if b"password:" in output.lower():
-                    # if we see "password" auth failed... hopefully true in all scenarios!
-                    self.session_lock.release()
-                    return False
-        self.session_lock.release()
-        return False
+        with self.session_lock:
+            if not self.session.eof:
+                prompt_pattern = get_prompt_pattern(
+                    prompt="", class_prompt=self._comms_prompt_pattern
+                )
+                self.session.write(self._comms_return_char.encode())
+                self._wait_for_session_fd_ready(fd=self.session.fileno())
+
+                output = b""
+                while True:
+                    new_output = self.session.read_eager()
+                    output += new_output
+                    self.logger.debug(
+                        f"Attempting to validate authentication. Read: {repr(new_output)}"
+                    )
+                    # we do not need to deal w/ line replacement for the actual output, only for
+                    # parsing if a prompt-like thing is at the end of the output
+                    output = output.replace(b"\r", b"")
+                    # always check to see if we should strip ansi here; if we don't handle this we
+                    # may raise auth failures for the wrong reason which would be confusing for
+                    # users
+                    if self._comms_ansi or b"\x1B" in output:
+                        output = strip_ansi(output=output)
+                    channel_match = re.search(pattern=prompt_pattern, string=output)
+                    if channel_match:
+                        self._isauthenticated = True
+                        break
+                    if b"username:" in output.lower():
+                        # if we see "username" prompt we can assume (because telnet) that we failed
+                        # to authenticate
+                        self.logger.critical(
+                            "Found `username:` in output, assuming password authentication failed"
+                        )
+                        break
+                    if b"password:" in output.lower():
+                        # if we see "password" we know auth failed (hopefully in all scenarios!)
+                        self.logger.critical(
+                            "Found `password:` in output, assuming password authentication failed"
+                        )
+                        break
+                    if output:
+                        self.logger.debug(
+                            f"Cannot determine if authenticated, \n\tRead: {repr(output)}"
+                        )
+
+            if self._isauthenticated:
+                return True
+
+            return False
 
     def close(self) -> None:
         """

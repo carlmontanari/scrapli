@@ -26,7 +26,7 @@ def test__repr():
         "timeout_transport=10, timeout_ops=30.0, timeout_exit=True, keepalive=False, keepalive_interval=30, "
         "keepalive_type='network', keepalive_pattern='\\x05', comms_prompt_pattern='^[a-z0-9.\\\\-@()/:]{1,"
         "48}[#>$]\\\\s*$', comms_return_char='\\n', comms_ansi=False, ssh_config_file='', ssh_known_hosts_file='', "
-        "on_open=None, on_close=None, transport='system', transport_options=None)"
+        "on_init=None, on_open=None, on_close=None, transport='system', transport_options=None)"
     )
 
 
@@ -68,6 +68,7 @@ def test__repr():
             "`comms_return_char` should be str, got <class 'bool'>",
         ),
         ("comms_ansi", "notabool", TypeError, "`comms_ansi` should be bool, got <class 'str'>"),
+        ("on_init", "notacallable", TypeError, "`on_init` must be a callable, got <class 'str'>"),
         ("on_open", "notacallable", TypeError, "`on_open` must be a callable, got <class 'str'>"),
         ("on_close", "notacallable", TypeError, "`on_close` must be a callable, got <class 'str'>"),
         (
@@ -94,6 +95,7 @@ def test__repr():
         "keepalive_type",
         "comms_return_char",
         "comms_ansi",
+        "on_init",
         "on_open",
         "on_close",
         "ssh_config_file",
@@ -154,6 +156,7 @@ def test_unsupported_platform():
         ("comms_prompt_pattern", "tacocat", "tacocat"),
         ("comms_return_char", "tacocat", "tacocat"),
         ("comms_ansi", True, True),
+        ("on_init", print, print),
         ("on_open", print, print),
         ("on_close", print, print),
         ("transport", "telnet", "telnet"),
@@ -181,6 +184,7 @@ def test_unsupported_platform():
         "comms_prompt_pattern",
         "comms_return_char",
         "comms_ansi",
+        "on_init",
         "on_open",
         "on_close",
         "transport",
