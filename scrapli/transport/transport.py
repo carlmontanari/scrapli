@@ -4,6 +4,7 @@ import time
 from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
+from select import select
 
 from scrapli.exceptions import ScrapliKeepaliveFailure
 from scrapli.transport.base_transport import TransportBase
@@ -153,3 +154,25 @@ class Transport(TransportBase, ABC):
             N/A
 
         """
+
+    def _wait_for_session_fd_ready(self, fd: int) -> None:
+        """
+        Wait for a session fd to be ready to read
+
+        Only applicable for "core" transports system/telnet
+
+        Args:
+            fd: fd id to check on
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+        while True:
+            fd_ready, _, _ = select([fd], [], [], 0)
+            if fd in fd_ready:
+                break
+            self.logger.debug("Session fd not ready yet...")

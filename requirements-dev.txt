@@ -1,19 +1,19 @@
-nox>=2020.8.22
-black>=20.8b1
-isort>=5.4.2
-mypy>=0.782
-pytest>=6.0.1
-pytest-cov>=2.10.1
-pytest-asyncio>=0.14.0
-pyfakefs>=4.1.0
-pylama>=7.7.1
-pycodestyle>=2.6.0
-pydocstyle>=5.1.0
-pylint>=2.6.0
-darglint>=1.5.3
-asyncssh>=2.3.0
-napalm>=3.1.0
-pdoc3>=0.8.3 ; sys_platform != "win32"
+nox==2020.8.22
+black==20.8b1
+isort==5.5.3
+mypy==0.782
+pytest==6.0.2
+pytest-cov==2.10.1
+pytest-asyncio==0.14.0
+pyfakefs==4.1.0
+pylama==7.7.1
+pycodestyle==2.6.0
+pydocstyle==5.1.1
+pylint==2.6.0
+darglint==1.5.4
+asyncssh==2.4.2
+napalm==3.2.0
+pdoc3==0.9.1 ; sys_platform != "win32"
 -e git+https://github.com/scrapli/scrapli_community@master#egg=scrapli_community
 -r requirements.txt
 -r requirements-textfsm.txt

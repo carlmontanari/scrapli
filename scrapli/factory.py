@@ -52,10 +52,23 @@ def _get_community_platform_details(community_platform_name: str) -> Dict[str, A
 
     Raises:
         ModuleNotFoundError: if scrapli_community is not importable
+        ModuleNotFoundError: if provided community_platform_name package is not importable
         ScrapliException: if community platform is missing "SCRAPLI_PLATFORM" attribute
         ScrapliException: for any unknown exception during community platform import
 
     """
+    try:
+        importlib.import_module(name="scrapli_community")
+    except ModuleNotFoundError as exc:
+        err = f"Module '{exc.name}' not found!"
+        msg = f"***** {err} {'*' * (80 - len(err))}"
+        fix = (
+            "To resolve this issue, ensure you have the scrapli community package installed."
+            " You can install this with pip: `pip install scrapli_community`."
+        )
+        warning = "\n" + msg + "\n" + fix + "\n" + msg
+        raise ModuleNotFoundError(warning) from exc
+
     try:
         # replace any underscores in platform name with "."; should support any future platforms
         # that dont have "child" os types -- i.e. just "cisco" instead of "cisco_iosxe"
@@ -63,11 +76,11 @@ def _get_community_platform_details(community_platform_name: str) -> Dict[str, A
             name=f"scrapli_community.{community_platform_name.replace('_', '.')}"
         )
     except ModuleNotFoundError as exc:
-        err = f"Module '{exc.name}' not found!"
+        err = f"Platform '{community_platform_name}' not found!"
         msg = f"***** {err} {'*' * (80 - len(err))}"
         fix = (
-            "To resolve this issue, ensure you have the scrapli community package installed."
-            " You can install this with pip: `pip install scrapli_community`."
+            "To resolve this issue, ensure you have the correct platform name, and that a scrapli "
+            " community platform of that name exists!"
         )
         warning = "\n" + msg + "\n" + fix + "\n" + msg
         raise ModuleNotFoundError(warning) from exc
@@ -83,19 +96,16 @@ def _get_community_platform_details(community_platform_name: str) -> Dict[str, A
     return platform_details
 
 
-def _get_community_driver(
-    community_platform_name: str, variant: Optional[str], _async: bool = False
-) -> Tuple[
-    Union[
-        Type[AsyncNetworkDriver], Type[AsyncGenericDriver], Type[NetworkDriver], Type[GenericDriver]
-    ],
-    Dict[str, Any],
+def _get_driver_class(
+    platform_details: Dict[str, Any], variant: Optional[str], _async: bool = False
+) -> Union[
+    Type[AsyncNetworkDriver], Type[AsyncGenericDriver], Type[NetworkDriver], Type[GenericDriver]
 ]:
     """
     Parent get driver method
 
     Args:
-        community_platform_name: name of community
+        platform_details: dict of details about community platform from scrapli_community library
         variant: optional name of variant of community platform
         _async: True/False this is for an asyncio transport driver
 
@@ -103,21 +113,63 @@ def _get_community_driver(
         NetworkDriver: final driver class
 
     Raises:
-        ScrapliException: if scrapli_community platform has an invalid value for "driver_type"
+        N/A
 
     """
-    platform_details = _get_community_platform_details(
-        community_platform_name=community_platform_name
-    )
+    if variant and platform_details["variants"][variant].get("driver_type"):
+        variant_final_driver: Union[
+            Type[AsyncNetworkDriver],
+            Type[AsyncGenericDriver],
+            Type[NetworkDriver],
+            Type[GenericDriver],
+        ]
+        variant_driver_data = platform_details["variants"][variant].pop("driver_type")
+        if _async is False:
+            variant_final_driver = variant_driver_data["sync"]
+        else:
+            variant_final_driver = variant_driver_data["async"]
+        return variant_final_driver
 
-    driver_type = platform_details["driver_type"]
+    if isinstance(platform_details["driver_type"], str):
+        driver_type = platform_details["driver_type"]
+        if _async is False:
+            standard_final_driver = SYNC_DRIVER_MAP.get(driver_type, None)
+        else:
+            standard_final_driver = ASYNC_DRIVER_MAP.get(driver_type, None)
+        if standard_final_driver:
+            return standard_final_driver
+
+    custom_base_final_driver: Union[
+        Type[AsyncNetworkDriver],
+        Type[AsyncGenericDriver],
+        Type[NetworkDriver],
+        Type[GenericDriver],
+    ]
     if _async is False:
-        final_driver = SYNC_DRIVER_MAP.get(driver_type, None)
+        custom_base_final_driver = platform_details["driver_type"]["sync"]
     else:
-        final_driver = ASYNC_DRIVER_MAP.get(driver_type, None)
-    if not final_driver:
-        raise ScrapliException("Invalid driver type provided in community platform data")
+        custom_base_final_driver = platform_details["driver_type"]["async"]
+    return custom_base_final_driver
 
+
+def _get_driver_kwargs(
+    platform_details: Dict[str, Any], variant: Optional[str], _async: bool = False
+) -> Dict[str, Any]:
+    """
+    Parent get driver method
+
+    Args:
+        platform_details: dict of details about community platform from scrapli_community library
+        variant: optional name of variant of community platform
+        _async: True/False this is for an asyncio transport driver
+
+    Returns:
+        final_platform_kwargs: dict of final driver kwargs
+
+    Raises:
+        N/A
+
+    """
     platform_kwargs = platform_details["defaults"]
 
     if variant:
@@ -141,6 +193,43 @@ def _get_community_driver(
         final_platform_kwargs["on_open"] = final_platform_kwargs.pop("async_on_open")
         final_platform_kwargs["on_close"] = final_platform_kwargs.pop("async_on_close")
 
+    return final_platform_kwargs
+
+
+def _get_community_driver(
+    community_platform_name: str, variant: Optional[str], _async: bool = False
+) -> Tuple[
+    Union[
+        Type[AsyncNetworkDriver], Type[AsyncGenericDriver], Type[NetworkDriver], Type[GenericDriver]
+    ],
+    Dict[str, Any],
+]:
+    """
+    Get community driver
+
+    Args:
+        community_platform_name: name of community
+        variant: optional name of variant of community platform
+        _async: True/False this is for an asyncio transport driver
+
+    Returns:
+        NetworkDriver: final driver class
+
+    Raises:
+        N/A
+
+    """
+    platform_details = _get_community_platform_details(
+        community_platform_name=community_platform_name
+    )
+
+    final_driver = _get_driver_class(
+        platform_details=platform_details, variant=variant, _async=_async
+    )
+    final_platform_kwargs = _get_driver_kwargs(
+        platform_details=platform_details, variant=variant, _async=_async
+    )
+
     return final_driver, final_platform_kwargs
 
 
@@ -148,11 +237,11 @@ def _get_driver(
     platform: str, variant: Optional[str], _async: bool = False
 ) -> Tuple[Union[Type[NetworkDriver], Type[GenericDriver]], Dict[str, Any]]:
     """
-    Parent get driver method
+    Parent get driver function
 
     Args:
         platform: name of target platform; i.e. `cisco_iosxe`, `arista_eos`, etc.
-        variant: name of the target paltform variant
+        variant: name of the target platform variant
         _async: True/False this is for an asyncio transport driver
 
     Returns:

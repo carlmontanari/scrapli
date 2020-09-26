@@ -4,6 +4,8 @@ from logging import getLogger
 from threading import Lock
 from typing import Optional
 
+from scrapli.helper import attach_duplicate_log_filter
+
 
 class TransportBase(ABC):
     def __init__(
@@ -51,6 +53,7 @@ class TransportBase(ABC):
 
         """
         self.logger = getLogger(f"scrapli.transport-{host}")
+        attach_duplicate_log_filter(logger=self.logger)
 
         self.host: str = host
         self.port: int = port

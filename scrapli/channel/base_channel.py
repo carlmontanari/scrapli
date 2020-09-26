@@ -4,7 +4,7 @@ from abc import ABC
 from logging import getLogger
 from typing import List, Optional, Tuple, Union
 
-from scrapli.helper import get_prompt_pattern, normalize_lines
+from scrapli.helper import attach_duplicate_log_filter, get_prompt_pattern, normalize_lines
 from scrapli.transport.async_transport import AsyncTransport
 from scrapli.transport.transport import Transport
 
@@ -62,6 +62,7 @@ class ChannelBase(ABC):
 
         """
         self.logger = getLogger(f"scrapli.channel-{transport.host}")
+        attach_duplicate_log_filter(logger=self.logger)
 
         self.transport = transport
         self.comms_prompt_pattern = comms_prompt_pattern

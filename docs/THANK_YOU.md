@@ -15,7 +15,10 @@ Thank you to the following people who have made contributions other than (and ma
 - [Eric Tedor](https://github.com/etedor) for some interesting and challenging use cases that helped to improve some
  of the prompt matching decisions
 - [Ron Frederick](https://github.com/ronf) for building the very awesome asyncssh library!
- 
+- [Brett Canter](https://github.com/wonderbred) for building the very first `scrapli_community` platform! (ruckus_fastiron)
+- [Alex Lardschneider](https://github.com/AlexLardschneider) for great conversation, many contributions to
+ `scrapli_community`, and helping to improve various pieces of `scrapli` with great testing and troubleshooting! 
+
  
 The following people have helped identify and report bugs in scrapli, thank you all!
 

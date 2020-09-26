@@ -26,7 +26,7 @@ def test_creation():
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="skipping on windows")
 def test_open_failure():
     conn = TelnetTransport("localhost", port=23)
-    with pytest.raises(ScrapliAuthenticationFailed) as exc:
+    with pytest.raises(ConnectionNotOpened) as exc:
         conn.open()
     assert str(exc.value) == "Failed to open telnet session to host localhost, connection refused"
 
