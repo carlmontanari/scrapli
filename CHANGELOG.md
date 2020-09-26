@@ -1,7 +1,7 @@
 CHANGELOG
 =======
 
-# 2020.XX.XX
+# 2020.09.26
 - Improved error handling/exceptions for scrapli `Factory`
 - Fixed issue where `system` transport did not properly close/kill SSH connections
 - Added 3.9-dev testing to GitHub Actions
@@ -16,6 +16,9 @@ CHANGELOG
 - Fix regression that caused scrapli to spam a bajillion log entries -- now a filter gets applied in both `Channel
 ` and `Transport` base classes to snag the filter from the root `scrapli` logger and apply it to the base/channel
  loggers
+- Fully give into the warm embrace of dependabot and pin all the dev requirements to specific versions... dependabot
+ can keep us up to date and this lets us not worry about builds failing because of dev requirements getting changed
+  around
 
 # 2020.08.28
 - Added Packet Pushers scrapli episode to the README!!

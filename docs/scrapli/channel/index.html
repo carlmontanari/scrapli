@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.8.3" />
+<meta name="generator" content="pdoc 0.9.1" />
 <title>scrapli.channel API documentation</title>
 <meta name="description" content="scrapli.channel" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
-<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
 <style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
 </head>
 <body>
@@ -201,7 +201,64 @@ inheritance.</p>
                 self.logger.info(f&#34;Read: {repr(output)}&#34;)
                 return output
 
-    @OperationTimeout(&#34;timeout_ops&#34;, &#34;Timed out determining prompt on device.&#34;)
+    async def _read_until_prompt_or_time(
+        self,
+        output: bytes = b&#34;&#34;,
+        channel_outputs: Optional[List[bytes]] = None,
+        read_duration: Optional[float] = None,
+    ) -&gt; bytes:
+        &#34;&#34;&#34;
+        Read until expected prompt is seen, outputs are seen, or for duration, whichever comes first
+
+        As transport reading may block, transport timeout is temporarily set to the read_duration
+        and any `ScrapliTimeout` that is raised while reading is ignored.
+
+        Args:
+            output: bytes from previous reads if needed
+            channel_outputs: List of bytes to search for in channel output, if any are seen, return
+                read output
+            read_duration: duration to read from channel for
+
+        Returns:
+            bytes: output read from channel
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        prompt_pattern = get_prompt_pattern(prompt=&#34;&#34;, class_prompt=self.comms_prompt_pattern)
+
+        if channel_outputs is None:
+            channel_outputs = []
+        if read_duration is None:
+            read_duration = 2.5
+
+        previous_timeout_transport = self.transport.timeout_transport
+        self.transport.timeout_transport = int(read_duration)
+
+        start = time.time()
+        while True:
+            try:
+                output += await self._read_chunk()
+            except ScrapliTimeout:
+                pass
+
+            if self.comms_ansi:
+                output = strip_ansi(output=output)
+
+            if (time.time() - start) &gt; read_duration:
+                break
+            if any([channel_output in output for channel_output in channel_outputs]):
+                break
+            if re.search(pattern=prompt_pattern, string=output):
+                break
+
+        self.transport.timeout_transport = previous_timeout_transport
+
+        self.logger.info(f&#34;Read: {repr(output)}&#34;)
+        return output
+
+    @OperationTimeout(attribute=&#34;timeout_ops&#34;, message=&#34;Timed out determining prompt on device.&#34;)
     async def get_prompt(self) -&gt; str:
         &#34;&#34;&#34;
         Async get current channel prompt
@@ -228,8 +285,9 @@ inheritance.</p>
                 current_prompt = channel_match.group(0)
                 return current_prompt.decode().strip()
 
+    @OperationTimeout(attribute=&#34;timeout_ops&#34;, message=&#34;Timed out sending input to device.&#34;)
     async def send_input(
-        self, channel_input: str, strip_prompt: bool = True
+        self, channel_input: str, strip_prompt: bool = True, eager: bool = False
     ) -&gt; Tuple[bytes, bytes]:
         &#34;&#34;&#34;
         Primary entry point to send data to devices in async shell mode; accept input, return result
@@ -237,6 +295,9 @@ inheritance.</p>
         Args:
             channel_input: string input to send to channel
             strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
+            eager: eager mode reads and returns the `_read_until_input` value, but does not attempt
+                to read to the prompt pattern -- this should not be used manually! (only used by
+                `send_configs` with the eager flag set)
 
         Returns:
             raw_result: output read from the channel with no whitespace trimming/cleaning
@@ -247,24 +308,40 @@ inheritance.</p>
 
         &#34;&#34;&#34;
         self._pre_send_input(channel_input=channel_input)
-        raw_result, processed_result = await self._async_send_input(
-            channel_input=channel_input, strip_prompt=strip_prompt
-        )
-        return raw_result, processed_result
 
-    @OperationTimeout(&#34;timeout_ops&#34;, &#34;Timed out sending input to device.&#34;)
-    async def _async_send_input(
-        self, channel_input: str, strip_prompt: bool
+        bytes_channel_input = channel_input.encode()
+
+        with self.transport.session_lock:
+            self.logger.info(
+                f&#34;Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}&#34;
+            )
+            self.transport.write(channel_input=channel_input)
+            self.logger.debug(f&#34;Write: {repr(channel_input)}&#34;)
+            output = await self._read_until_input(channel_input=bytes_channel_input)
+            self._send_return()
+            if not eager:
+                output = await self._read_until_prompt()
+        processed_output = self._restructure_output(output=output, strip_prompt=strip_prompt)
+
+        return output, processed_output
+
+    @OperationTimeout(attribute=&#34;timeout_ops&#34;, message=&#34;Timed out sending and reading to device.&#34;)
+    async def send_input_and_read(
+        self,
+        channel_input: str,
+        strip_prompt: bool = True,
+        expected_outputs: Optional[List[str]] = None,
+        read_duration: Optional[float] = None,
     ) -&gt; Tuple[bytes, bytes]:
         &#34;&#34;&#34;
-        Async send input to device and return results
-
-        Note that write operations are sync, but all read ops are async, so this method must be
-        async
+        Send a command and read until expected prompt is seen, outputs are seen, or for duration
 
         Args:
-            channel_input: string input to write to channel
-            strip_prompt: bool True/False for whether or not to strip prompt
+            channel_input: string input to send to channel
+            strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
+            expected_outputs: list of strings to look for in output; if any of these are seen,
+                return output read up till that read
+            read_duration: float duration to read for
 
         Returns:
             raw_result: output read from the channel with no whitespace trimming/cleaning
@@ -274,22 +351,27 @@ inheritance.</p>
             N/A
 
         &#34;&#34;&#34;
+        self._pre_send_input(channel_input=channel_input)
+
         bytes_channel_input = channel_input.encode()
-        self.transport.session_lock.acquire()
-        self.logger.info(f&#34;Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}&#34;)
-        self.transport.write(channel_input=channel_input)
-        self.logger.debug(f&#34;Write: {repr(channel_input)}&#34;)
-        await self._read_until_input(channel_input=bytes_channel_input)
-        self._send_return()
-        output = await self._read_until_prompt()
-        self.transport.session_lock.release()
+        bytes_channel_outputs = [
+            channel_output.encode() for channel_output in expected_outputs or []
+        ]
+
+        with self.transport.session_lock:
+            self.transport.write(channel_input=channel_input)
+            self.logger.debug(f&#34;Write: {repr(channel_input)}&#34;)
+            await self._read_until_input(channel_input=bytes_channel_input)
+            self._send_return()
+            output = await self._read_until_prompt_or_time(
+                channel_outputs=bytes_channel_outputs, read_duration=read_duration
+            )
         processed_output = self._restructure_output(output=output, strip_prompt=strip_prompt)
-        # lstrip the return character out of the final result before storing, also remove any extra
-        # whitespace to the right if any
-        processed_output = processed_output.lstrip(self.comms_return_char.encode()).rstrip()
         return output, processed_output
 
-    @OperationTimeout(&#34;timeout_ops&#34;, &#34;Timed out sending interactive input to device.&#34;)
+    @OperationTimeout(
+        attribute=&#34;timeout_ops&#34;, message=&#34;Timed out sending interactive input to device.&#34;
+    )
     async def send_inputs_interact(
         self, interact_events: List[Tuple[str, str, Optional[bool]]]
     ) -&gt; Tuple[bytes, bytes]:
@@ -416,53 +498,55 @@ inheritance.</p>
 </details>
 </dd>
 <dt id="scrapli.channel.AsyncChannel.send_input"><code class="name flex">
-<span>async def <span class="ident">send_input</span></span>(<span>self, channel_input: str, strip_prompt: bool = True) ‑> Tuple[bytes, bytes]</span>
+<span>async def <span class="ident">send_input</span></span>(<span>*args: Any, **kwargs: Any) ‑> Any</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Primary entry point to send data to devices in async shell mode; accept input, return result</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>channel_input</code></strong></dt>
-<dd>string input to send to channel</dd>
-<dt><strong><code>strip_prompt</code></strong></dt>
-<dd>strip prompt or not, defaults to True (yes, strip the prompt)</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>raw_result</code></dt>
-<dd>output read from the channel with no whitespace trimming/cleaning</dd>
-<dt><code>processed_result</code></dt>
-<dd>output read from the channel that has been cleaned up</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<p>N/A</p></div>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def send_input(
-    self, channel_input: str, strip_prompt: bool = True
-) -&gt; Tuple[bytes, bytes]:
-    &#34;&#34;&#34;
-    Primary entry point to send data to devices in async shell mode; accept input, return result
+<pre><code class="python">async def decorate(*args: Any, **kwargs: Any) -&gt; Any:
+    self.scrapli_obj = args[0]
+    self.timeout_duration = getattr(self.scrapli_obj, self.attribute, None)
 
-    Args:
-        channel_input: string input to send to channel
-        strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
+    if not self.timeout_duration:
+        self.scrapli_obj.logger.info(
+            f&#34;Could not find {self.attribute} value of {self.scrapli_obj}, continuing &#34;
+            &#34;without timeout decorator&#34;
+        )
+        return await wrapped_func(*args, **kwargs)
 
-    Returns:
-        raw_result: output read from the channel with no whitespace trimming/cleaning
-        processed_result: output read from the channel that has been cleaned up
+    self.set_scrapli_obj_attrs()
+    return await self.asyncio_timeout(
+        wrapped_func=wrapped_func, args=args, kwargs=kwargs
+    )</code></pre>
+</details>
+</dd>
+<dt id="scrapli.channel.AsyncChannel.send_input_and_read"><code class="name flex">
+<span>async def <span class="ident">send_input_and_read</span></span>(<span>*args: Any, **kwargs: Any) ‑> Any</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def decorate(*args: Any, **kwargs: Any) -&gt; Any:
+    self.scrapli_obj = args[0]
+    self.timeout_duration = getattr(self.scrapli_obj, self.attribute, None)
 
-    Raises:
-        N/A
+    if not self.timeout_duration:
+        self.scrapli_obj.logger.info(
+            f&#34;Could not find {self.attribute} value of {self.scrapli_obj}, continuing &#34;
+            &#34;without timeout decorator&#34;
+        )
+        return await wrapped_func(*args, **kwargs)
 
-    &#34;&#34;&#34;
-    self._pre_send_input(channel_input=channel_input)
-    raw_result, processed_result = await self._async_send_input(
-        channel_input=channel_input, strip_prompt=strip_prompt
-    )
-    return raw_result, processed_result</code></pre>
+    self.set_scrapli_obj_attrs()
+    return await self.asyncio_timeout(
+        wrapped_func=wrapped_func, args=args, kwargs=kwargs
+    )</code></pre>
 </details>
 </dd>
 <dt id="scrapli.channel.AsyncChannel.send_inputs_interact"><code class="name flex">
@@ -633,7 +717,64 @@ inheritance.</p>
                 self.logger.info(f&#34;Read: {repr(output)}&#34;)
                 return output
 
-    @OperationTimeout(&#34;timeout_ops&#34;, &#34;Timed out determining prompt on device.&#34;)
+    def _read_until_prompt_or_time(
+        self,
+        output: bytes = b&#34;&#34;,
+        channel_outputs: Optional[List[bytes]] = None,
+        read_duration: Optional[float] = None,
+    ) -&gt; bytes:
+        &#34;&#34;&#34;
+        Read until expected prompt is seen, outputs are seen, or for duration, whichever comes first
+
+        As transport reading may block, transport timeout is temporarily set to the read_duration
+        and any `ScrapliTimeout` that is raised while reading is ignored.
+
+        Args:
+            output: bytes from previous reads if needed
+            channel_outputs: List of bytes to search for in channel output, if any are seen, return
+                read output
+            read_duration: duration to read from channel for
+
+        Returns:
+            bytes: output read from channel
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        prompt_pattern = get_prompt_pattern(prompt=&#34;&#34;, class_prompt=self.comms_prompt_pattern)
+
+        if channel_outputs is None:
+            channel_outputs = []
+        if read_duration is None:
+            read_duration = 2.5
+
+        previous_timeout_transport = self.transport.timeout_transport
+        self.transport.timeout_transport = int(read_duration)
+
+        start = time.time()
+        while True:
+            try:
+                output += self._read_chunk()
+            except ScrapliTimeout:
+                pass
+
+            if self.comms_ansi:
+                output = strip_ansi(output=output)
+
+            if (time.time() - start) &gt; read_duration:
+                break
+            if any([channel_output in output for channel_output in channel_outputs]):
+                break
+            if re.search(pattern=prompt_pattern, string=output):
+                break
+
+        self.transport.timeout_transport = previous_timeout_transport
+
+        self.logger.info(f&#34;Read: {repr(output)}&#34;)
+        return output
+
+    @OperationTimeout(attribute=&#34;timeout_ops&#34;, message=&#34;Timed out determining prompt on device.&#34;)
     def get_prompt(self) -&gt; str:
         &#34;&#34;&#34;
         Get current channel prompt
@@ -660,13 +801,19 @@ inheritance.</p>
                 current_prompt = channel_match.group(0)
                 return current_prompt.decode().strip()
 
-    def send_input(self, channel_input: str, strip_prompt: bool = True) -&gt; Tuple[bytes, bytes]:
+    @OperationTimeout(attribute=&#34;timeout_ops&#34;, message=&#34;Timed out sending input to device.&#34;)
+    def send_input(
+        self, channel_input: str, strip_prompt: bool = True, eager: bool = False
+    ) -&gt; Tuple[bytes, bytes]:
         &#34;&#34;&#34;
         Primary entry point to send data to devices in shell mode; accept input and returns result
 
         Args:
             channel_input: string input to send to channel
             strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
+            eager: eager mode reads and returns the `_read_until_input` value, but does not attempt
+                to read to the prompt pattern -- this should not be used manually! (only used by
+                `send_configs` with the eager flag set)
 
         Returns:
             raw_result: output read from the channel with no whitespace trimming/cleaning
@@ -677,19 +824,40 @@ inheritance.</p>
 
         &#34;&#34;&#34;
         self._pre_send_input(channel_input=channel_input)
-        raw_result, processed_result = self._send_input(
-            channel_input=channel_input, strip_prompt=strip_prompt
-        )
-        return raw_result, processed_result
 
-    @OperationTimeout(&#34;timeout_ops&#34;, &#34;Timed out sending input to device.&#34;)
-    def _send_input(self, channel_input: str, strip_prompt: bool) -&gt; Tuple[bytes, bytes]:
+        bytes_channel_input = channel_input.encode()
+
+        with self.transport.session_lock:
+            self.logger.info(
+                f&#34;Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}&#34;
+            )
+            self.transport.write(channel_input=channel_input)
+            self.logger.debug(f&#34;Write: {repr(channel_input)}&#34;)
+            output = self._read_until_input(channel_input=bytes_channel_input)
+            self._send_return()
+            if not eager:
+                output = self._read_until_prompt()
+        processed_output = self._restructure_output(output=output, strip_prompt=strip_prompt)
+
+        return output, processed_output
+
+    @OperationTimeout(attribute=&#34;timeout_ops&#34;, message=&#34;Timed out sending and reading to device.&#34;)
+    def send_input_and_read(
+        self,
+        channel_input: str,
+        strip_prompt: bool = True,
+        expected_outputs: Optional[List[str]] = None,
+        read_duration: Optional[float] = None,
+    ) -&gt; Tuple[bytes, bytes]:
         &#34;&#34;&#34;
-        Send input to device and return results
+        Send a command and read until expected prompt is seen, outputs are seen, or for duration
 
         Args:
-            channel_input: string input to write to channel
-            strip_prompt: bool True/False for whether or not to strip prompt
+            channel_input: string input to send to channel
+            strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
+            expected_outputs: list of strings to look for in output; if any of these are seen,
+                return output read up till that read
+            read_duration: float duration to read for
 
         Returns:
             raw_result: output read from the channel with no whitespace trimming/cleaning
@@ -699,22 +867,27 @@ inheritance.</p>
             N/A
 
         &#34;&#34;&#34;
+        self._pre_send_input(channel_input=channel_input)
+
         bytes_channel_input = channel_input.encode()
-        self.transport.session_lock.acquire()
-        self.logger.info(f&#34;Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}&#34;)
-        self.transport.write(channel_input=channel_input)
-        self.logger.debug(f&#34;Write: {repr(channel_input)}&#34;)
-        self._read_until_input(channel_input=bytes_channel_input)
-        self._send_return()
-        output = self._read_until_prompt()
-        self.transport.session_lock.release()
+        bytes_channel_outputs = [
+            channel_output.encode() for channel_output in expected_outputs or []
+        ]
+
+        with self.transport.session_lock:
+            self.transport.write(channel_input=channel_input)
+            self.logger.debug(f&#34;Write: {repr(channel_input)}&#34;)
+            self._read_until_input(channel_input=bytes_channel_input)
+            self._send_return()
+            output = self._read_until_prompt_or_time(
+                channel_outputs=bytes_channel_outputs, read_duration=read_duration
+            )
         processed_output = self._restructure_output(output=output, strip_prompt=strip_prompt)
-        # lstrip the return character out of the final result before storing, also remove any extra
-        # whitespace to the right if any
-        processed_output = processed_output.lstrip(self.comms_return_char.encode()).rstrip()
         return output, processed_output
 
-    @OperationTimeout(&#34;timeout_ops&#34;, &#34;Timed out sending interactive input to device.&#34;)
+    @OperationTimeout(
+        attribute=&#34;timeout_ops&#34;, message=&#34;Timed out sending interactive input to device.&#34;
+    )
     def send_inputs_interact(
         self, interact_events: List[Tuple[str, str, Optional[bool]]]
     ) -&gt; Tuple[bytes, bytes]:
@@ -780,31 +953,30 @@ inheritance.</p>
         &#34;&#34;&#34;
         self._pre_send_inputs_interact(interact_events=interact_events)
 
-        self.transport.session_lock.acquire()
         output = b&#34;&#34;
-        for interact_event in interact_events:
-            channel_input = interact_event[0]
-            bytes_channel_input = channel_input.encode()
-            channel_response = interact_event[1]
-            try:
-                hidden_input = interact_event[2]
-            except IndexError:
-                hidden_input = False
-            self.logger.info(
-                f&#34;Attempting to send input interact: {channel_input}; &#34;
-                f&#34;\texpecting: {channel_response};&#34;
-                f&#34;\thidden_input: {hidden_input}&#34;
-            )
-            self.transport.write(channel_input=channel_input)
-            self.logger.debug(f&#34;Write: {repr(channel_input)}&#34;)
-            if not channel_response or hidden_input is True:
-                self._send_return()
-            else:
-                output += self._read_until_input(channel_input=bytes_channel_input)
-                self._send_return()
-            output += self._read_until_prompt(prompt=channel_response)
-        # wait to release lock until after &#34;interact&#34; session is complete
-        self.transport.session_lock.release()
+        with self.transport.session_lock:
+            for interact_event in interact_events:
+                channel_input = interact_event[0]
+                bytes_channel_input = channel_input.encode()
+                channel_response = interact_event[1]
+                try:
+                    hidden_input = interact_event[2]
+                except IndexError:
+                    hidden_input = False
+                self.logger.info(
+                    f&#34;Attempting to send input interact: {channel_input}; &#34;
+                    f&#34;\texpecting: {channel_response};&#34;
+                    f&#34;\thidden_input: {hidden_input}&#34;
+                )
+                self.transport.write(channel_input=channel_input)
+                self.logger.debug(f&#34;Write: {repr(channel_input)}&#34;)
+                if not channel_response or hidden_input is True:
+                    self._send_return()
+                else:
+                    output += self._read_until_input(channel_input=bytes_channel_input)
+                    self._send_return()
+                output += self._read_until_prompt(prompt=channel_response)
+
         return self._post_send_inputs_interact(output=output)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -835,6 +1007,7 @@ inheritance.</p>
         return wrapped_func(*args, **kwargs)
 
     self.set_scrapli_obj_attrs()
+    self.determine_sync_timeout_method()
 
     if self._use_signals:
         return self.signal_timeout(wrapped_func=wrapped_func, args=args, kwargs=kwargs)
@@ -844,51 +1017,63 @@ inheritance.</p>
 </details>
 </dd>
 <dt id="scrapli.channel.Channel.send_input"><code class="name flex">
-<span>def <span class="ident">send_input</span></span>(<span>self, channel_input: str, strip_prompt: bool = True) ‑> Tuple[bytes, bytes]</span>
+<span>def <span class="ident">send_input</span></span>(<span>*args: Any, **kwargs: Any) ‑> Any</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Primary entry point to send data to devices in shell mode; accept input and returns result</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>channel_input</code></strong></dt>
-<dd>string input to send to channel</dd>
-<dt><strong><code>strip_prompt</code></strong></dt>
-<dd>strip prompt or not, defaults to True (yes, strip the prompt)</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>raw_result</code></dt>
-<dd>output read from the channel with no whitespace trimming/cleaning</dd>
-<dt><code>processed_result</code></dt>
-<dd>output read from the channel that has been cleaned up</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<p>N/A</p></div>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def send_input(self, channel_input: str, strip_prompt: bool = True) -&gt; Tuple[bytes, bytes]:
-    &#34;&#34;&#34;
-    Primary entry point to send data to devices in shell mode; accept input and returns result
+<pre><code class="python">def decorate(*args: Any, **kwargs: Any) -&gt; Any:  # type: ignore
+    self.scrapli_obj = args[0]
+    self.timeout_duration = getattr(self.scrapli_obj, self.attribute, None)
 
-    Args:
-        channel_input: string input to send to channel
-        strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
+    if not self.timeout_duration:
+        self.scrapli_obj.logger.info(
+            f&#34;Could not find {self.attribute} value of {self.scrapli_obj}, continuing &#34;
+            &#34;without timeout decorator&#34;
+        )
+        return wrapped_func(*args, **kwargs)
 
-    Returns:
-        raw_result: output read from the channel with no whitespace trimming/cleaning
-        processed_result: output read from the channel that has been cleaned up
+    self.set_scrapli_obj_attrs()
+    self.determine_sync_timeout_method()
 
-    Raises:
-        N/A
+    if self._use_signals:
+        return self.signal_timeout(wrapped_func=wrapped_func, args=args, kwargs=kwargs)
+    return self.multiprocessing_timeout(
+        wrapped_func=wrapped_func, args=args, kwargs=kwargs
+    )</code></pre>
+</details>
+</dd>
+<dt id="scrapli.channel.Channel.send_input_and_read"><code class="name flex">
+<span>def <span class="ident">send_input_and_read</span></span>(<span>*args: Any, **kwargs: Any) ‑> Any</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def decorate(*args: Any, **kwargs: Any) -&gt; Any:  # type: ignore
+    self.scrapli_obj = args[0]
+    self.timeout_duration = getattr(self.scrapli_obj, self.attribute, None)
 
-    &#34;&#34;&#34;
-    self._pre_send_input(channel_input=channel_input)
-    raw_result, processed_result = self._send_input(
-        channel_input=channel_input, strip_prompt=strip_prompt
-    )
-    return raw_result, processed_result</code></pre>
+    if not self.timeout_duration:
+        self.scrapli_obj.logger.info(
+            f&#34;Could not find {self.attribute} value of {self.scrapli_obj}, continuing &#34;
+            &#34;without timeout decorator&#34;
+        )
+        return wrapped_func(*args, **kwargs)
+
+    self.set_scrapli_obj_attrs()
+    self.determine_sync_timeout_method()
+
+    if self._use_signals:
+        return self.signal_timeout(wrapped_func=wrapped_func, args=args, kwargs=kwargs)
+    return self.multiprocessing_timeout(
+        wrapped_func=wrapped_func, args=args, kwargs=kwargs
+    )</code></pre>
 </details>
 </dd>
 <dt id="scrapli.channel.Channel.send_inputs_interact"><code class="name flex">
@@ -912,6 +1097,7 @@ inheritance.</p>
         return wrapped_func(*args, **kwargs)
 
     self.set_scrapli_obj_attrs()
+    self.determine_sync_timeout_method()
 
     if self._use_signals:
         return self.signal_timeout(wrapped_func=wrapped_func, args=args, kwargs=kwargs)
@@ -950,6 +1136,7 @@ inheritance.</p>
 <ul class="">
 <li><code><a title="scrapli.channel.AsyncChannel.get_prompt" href="#scrapli.channel.AsyncChannel.get_prompt">get_prompt</a></code></li>
 <li><code><a title="scrapli.channel.AsyncChannel.send_input" href="#scrapli.channel.AsyncChannel.send_input">send_input</a></code></li>
+<li><code><a title="scrapli.channel.AsyncChannel.send_input_and_read" href="#scrapli.channel.AsyncChannel.send_input_and_read">send_input_and_read</a></code></li>
 <li><code><a title="scrapli.channel.AsyncChannel.send_inputs_interact" href="#scrapli.channel.AsyncChannel.send_inputs_interact">send_inputs_interact</a></code></li>
 </ul>
 </li>
@@ -958,6 +1145,7 @@ inheritance.</p>
 <ul class="">
 <li><code><a title="scrapli.channel.Channel.get_prompt" href="#scrapli.channel.Channel.get_prompt">get_prompt</a></code></li>
 <li><code><a title="scrapli.channel.Channel.send_input" href="#scrapli.channel.Channel.send_input">send_input</a></code></li>
+<li><code><a title="scrapli.channel.Channel.send_input_and_read" href="#scrapli.channel.Channel.send_input_and_read">send_input_and_read</a></code></li>
 <li><code><a title="scrapli.channel.Channel.send_inputs_interact" href="#scrapli.channel.Channel.send_inputs_interact">send_inputs_interact</a></code></li>
 </ul>
 </li>
@@ -967,7 +1155,7 @@ inheritance.</p>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.3</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
 </footer>
 </body>
 </html>

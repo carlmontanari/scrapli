@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.8.3" />
+<meta name="generator" content="pdoc 0.9.1" />
 <title>scrapli.driver API documentation</title>
 <meta name="description" content="scrapli.driver" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
-<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
 <style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
 </head>
 <body>
@@ -175,19 +175,45 @@ prevent issues! Obviously can be overridden if desired.</dd>
         super().__init__(comms_prompt_pattern=comms_prompt_pattern, comms_ansi=comms_ansi, **kwargs)
         self.channel: AsyncChannel
 
-    async def send_command(
+    async def get_prompt(self) -&gt; str:
+        &#34;&#34;&#34;
+        Convenience method to get device prompt from Channel
+
+        Args:
+            N/A
+
+        Returns:
+            str: prompt received from channel.get_prompt
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        prompt: str = await self.channel.get_prompt()
+        return prompt
+
+    @TimeoutModifier()
+    async def _send_command_eager(
         self,
         command: str,
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
+        *,
+        timeout_ops: Optional[float] = None,
     ) -&gt; Response:
         &#34;&#34;&#34;
         Send a command
+
+        Keeping as a private method rather than adding an argument to the &#34;normal&#34; `send_command`
+        method as this should not be used my users generally.
 
         Args:
             command: string to send to device in privilege exec mode
             strip_prompt: True/False strip prompt from returned output
             failed_when_contains: string or list of strings indicating failure if found in response
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed
 
         Returns:
             Response: Scrapli Response object
@@ -196,6 +222,49 @@ prevent issues! Obviously can be overridden if desired.</dd>
             N/A
 
         &#34;&#34;&#34;
+        # decorator cares about timeout_ops, but nothing else does, assign to _ to appease linters
+        _ = timeout_ops
+
+        response = self._pre_send_command(
+            host=self.transport.host, command=command, failed_when_contains=failed_when_contains
+        )
+        raw_response, processed_response = await self.channel.send_input(
+            channel_input=command, strip_prompt=strip_prompt, eager=True
+        )
+        return self._post_send_command(
+            raw_response=raw_response, processed_response=processed_response, response=response
+        )
+
+    @TimeoutModifier()
+    async def send_command(
+        self,
+        command: str,
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+        *,
+        timeout_ops: Optional[float] = None,
+    ) -&gt; Response:
+        &#34;&#34;&#34;
+        Send a command
+
+        Args:
+            command: string to send to device in privilege exec mode
+            strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed
+
+        Returns:
+            Response: Scrapli Response object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        # decorator cares about timeout_ops, but nothing else does, assign to _ to appease linters
+        _ = timeout_ops
+
         response = self._pre_send_command(
             host=self.transport.host, command=command, failed_when_contains=failed_when_contains
         )
@@ -212,6 +281,8 @@ prevent issues! Obviously can be overridden if desired.</dd>
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
+        *,
+        timeout_ops: Optional[float] = None,
     ) -&gt; ScrapliMultiResponse:
         &#34;&#34;&#34;
         Send multiple commands
@@ -222,6 +293,10 @@ prevent issues! Obviously can be overridden if desired.</dd>
             failed_when_contains: string or list of strings indicating failure if found in response
             stop_on_failed: True/False stop executing commands if a command fails, returns results
                 as of current execution
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed. Note that this is the timeout value PER COMMAND sent, not for the total
+                of the commands being sent!
 
         Returns:
             ScrapliMultiResponse: Scrapli MultiResponse object
@@ -236,6 +311,7 @@ prevent issues! Obviously can be overridden if desired.</dd>
                 command=command,
                 strip_prompt=strip_prompt,
                 failed_when_contains=failed_when_contains,
+                timeout_ops=timeout_ops,
             )
             responses.append(response)
             if stop_on_failed is True and response.failed is True:
@@ -249,6 +325,8 @@ prevent issues! Obviously can be overridden if desired.</dd>
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
+        *,
+        timeout_ops: Optional[float] = None,
     ) -&gt; ScrapliMultiResponse:
         &#34;&#34;&#34;
         Send command(s) from file
@@ -259,6 +337,10 @@ prevent issues! Obviously can be overridden if desired.</dd>
             failed_when_contains: string or list of strings indicating failure if found in response
             stop_on_failed: True/False stop executing commands if a command fails, returns results
                 as of current execution
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed. Note that this is the timeout value PER COMMAND sent, not for the total
+                of the commands being sent!
 
         Returns:
             ScrapliMultiResponse: Scrapli MultiResponse object
@@ -274,6 +356,7 @@ prevent issues! Obviously can be overridden if desired.</dd>
             strip_prompt=strip_prompt,
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
+            timeout_ops=timeout_ops,
         )
 
     async def send_interactive(
@@ -358,22 +441,61 @@ prevent issues! Obviously can be overridden if desired.</dd>
             raw_response=raw_response, processed_response=processed_response, response=response
         )
 
-    async def get_prompt(self) -&gt; str:
+    @TimeoutModifier()
+    async def send_and_read(
+        self,
+        channel_input: str,
+        expected_outputs: Optional[List[str]] = None,
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+        *,
+        timeout_ops: Optional[float] = None,
+        read_duration: float = 2.5,
+    ) -&gt; Response:
         &#34;&#34;&#34;
-        Convenience method to get device prompt from Channel
+        Send an input and read outputs.
+
+        Unlike &#34;normal&#34; scrapli behavior this method reads until the prompt(normal) OR until any of
+        a list of expected outputs is seen, OR until the read duration is exceeded. This method does
+        not care about/understand privilege levels. This *can* cause you some potential issues if
+        not used carefully!
 
         Args:
-            N/A
+            channel_input: input to send to the channel; intentionally named &#34;channel_input&#34; instead
+                of &#34;command&#34; or &#34;config&#34; due to this method not caring about privilege levels
+            expected_outputs: List of outputs to look for in device response; returns as soon as any
+                of the outputs are seen
+            strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
+            failed_when_contains: string or list of strings indicating failure if found in response
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed
+            read_duration:  float duration to read for
 
         Returns:
-            str: prompt received from channel.get_prompt
+            Response: Scrapli Response object
 
         Raises:
             N/A
 
         &#34;&#34;&#34;
-        prompt: str = await self.channel.get_prompt()
-        return prompt</code></pre>
+        # decorator cares about timeout_ops, but nothing else does, assign to _ to appease linters
+        _ = timeout_ops
+
+        response = self._pre_send_command(
+            host=self.transport.host,
+            command=channel_input,
+            failed_when_contains=failed_when_contains,
+        )
+        raw_response, processed_response = await self.channel.send_input_and_read(
+            channel_input=channel_input,
+            strip_prompt=strip_prompt,
+            expected_outputs=expected_outputs,
+            read_duration=read_duration,
+        )
+        return self._post_send_command(
+            raw_response=raw_response, processed_response=processed_response, response=response
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -423,65 +545,54 @@ prevent issues! Obviously can be overridden if desired.</dd>
     return prompt</code></pre>
 </details>
 </dd>
-<dt id="scrapli.driver.AsyncGenericDriver.send_command"><code class="name flex">
-<span>async def <span class="ident">send_command</span></span>(<span>self, command: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None) ‑> <a title="scrapli.response.Response" href="../response.html#scrapli.response.Response">Response</a></span>
+<dt id="scrapli.driver.AsyncGenericDriver.send_and_read"><code class="name flex">
+<span>async def <span class="ident">send_and_read</span></span>(<span>*args: Any, **kwargs: Any) ‑> Any</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Send a command</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>command</code></strong></dt>
-<dd>string to send to device in privilege exec mode</dd>
-<dt><strong><code>strip_prompt</code></strong></dt>
-<dd>True/False strip prompt from returned output</dd>
-<dt><strong><code>failed_when_contains</code></strong></dt>
-<dd>string or list of strings indicating failure if found in response</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>Response</code></dt>
-<dd>Scrapli Response object</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<p>N/A</p></div>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def send_command(
-    self,
-    command: str,
-    strip_prompt: bool = True,
-    failed_when_contains: Optional[Union[str, List[str]]] = None,
-) -&gt; Response:
-    &#34;&#34;&#34;
-    Send a command
-
-    Args:
-        command: string to send to device in privilege exec mode
-        strip_prompt: True/False strip prompt from returned output
-        failed_when_contains: string or list of strings indicating failure if found in response
-
-    Returns:
-        Response: Scrapli Response object
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    response = self._pre_send_command(
-        host=self.transport.host, command=command, failed_when_contains=failed_when_contains
-    )
-    raw_response, processed_response = await self.channel.send_input(
-        channel_input=command, strip_prompt=strip_prompt
-    )
-    return self._post_send_command(
-        raw_response=raw_response, processed_response=processed_response, response=response
-    )</code></pre>
+<pre><code class="python">async def decorate(*args: Any, **kwargs: Any) -&gt; Any:
+    scrapli_obj: Union[&#34;AsyncGenericDriver&#34;, &#34;GenericDriver&#34;] = args[0]
+    if kwargs.get(&#34;timeout_ops&#34;, None) is None:
+        result = await wrapped_func(*args, **kwargs)
+    elif kwargs.get(&#34;timeout_ops&#34;, scrapli_obj.timeout_ops) == scrapli_obj.timeout_ops:
+        result = await wrapped_func(*args, **kwargs)
+    else:
+        base_timeout_ops = scrapli_obj.timeout_ops
+        scrapli_obj.timeout_ops = kwargs[&#34;timeout_ops&#34;]
+        result = await wrapped_func(*args, **kwargs)
+        scrapli_obj.timeout_ops = base_timeout_ops
+    return result</code></pre>
+</details>
+</dd>
+<dt id="scrapli.driver.AsyncGenericDriver.send_command"><code class="name flex">
+<span>async def <span class="ident">send_command</span></span>(<span>*args: Any, **kwargs: Any) ‑> Any</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def decorate(*args: Any, **kwargs: Any) -&gt; Any:
+    scrapli_obj: Union[&#34;AsyncGenericDriver&#34;, &#34;GenericDriver&#34;] = args[0]
+    if kwargs.get(&#34;timeout_ops&#34;, None) is None:
+        result = await wrapped_func(*args, **kwargs)
+    elif kwargs.get(&#34;timeout_ops&#34;, scrapli_obj.timeout_ops) == scrapli_obj.timeout_ops:
+        result = await wrapped_func(*args, **kwargs)
+    else:
+        base_timeout_ops = scrapli_obj.timeout_ops
+        scrapli_obj.timeout_ops = kwargs[&#34;timeout_ops&#34;]
+        result = await wrapped_func(*args, **kwargs)
+        scrapli_obj.timeout_ops = base_timeout_ops
+    return result</code></pre>
 </details>
 </dd>
 <dt id="scrapli.driver.AsyncGenericDriver.send_commands"><code class="name flex">
-<span>async def <span class="ident">send_commands</span></span>(<span>self, commands: List[str], strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False) ‑> collections.UserList</span>
+<span>async def <span class="ident">send_commands</span></span>(<span>self, commands: List[str], strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, *, timeout_ops: Union[float, NoneType] = None) ‑> collections.UserList</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send multiple commands</p>
@@ -496,6 +607,11 @@ prevent issues! Obviously can be overridden if desired.</dd>
 <dt><strong><code>stop_on_failed</code></strong></dt>
 <dd>True/False stop executing commands if a command fails, returns results
 as of current execution</dd>
+<dt><strong><code>timeout_ops</code></strong></dt>
+<dd>timeout ops value for this operation; only sets the timeout_ops value for
+the duration of the operation, value is reset to initial value after operation is
+completed. Note that this is the timeout value PER COMMAND sent, not for the total
+of the commands being sent!</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -514,6 +630,8 @@ as of current execution</dd>
     strip_prompt: bool = True,
     failed_when_contains: Optional[Union[str, List[str]]] = None,
     stop_on_failed: bool = False,
+    *,
+    timeout_ops: Optional[float] = None,
 ) -&gt; ScrapliMultiResponse:
     &#34;&#34;&#34;
     Send multiple commands
@@ -524,6 +642,10 @@ as of current execution</dd>
         failed_when_contains: string or list of strings indicating failure if found in response
         stop_on_failed: True/False stop executing commands if a command fails, returns results
             as of current execution
+        timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+            the duration of the operation, value is reset to initial value after operation is
+            completed. Note that this is the timeout value PER COMMAND sent, not for the total
+            of the commands being sent!
 
     Returns:
         ScrapliMultiResponse: Scrapli MultiResponse object
@@ -538,6 +660,7 @@ as of current execution</dd>
             command=command,
             strip_prompt=strip_prompt,
             failed_when_contains=failed_when_contains,
+            timeout_ops=timeout_ops,
         )
         responses.append(response)
         if stop_on_failed is True and response.failed is True:
@@ -547,7 +670,7 @@ as of current execution</dd>
 </details>
 </dd>
 <dt id="scrapli.driver.AsyncGenericDriver.send_commands_from_file"><code class="name flex">
-<span>async def <span class="ident">send_commands_from_file</span></span>(<span>self, file: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False) ‑> collections.UserList</span>
+<span>async def <span class="ident">send_commands_from_file</span></span>(<span>self, file: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, *, timeout_ops: Union[float, NoneType] = None) ‑> collections.UserList</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send command(s) from file</p>
@@ -562,6 +685,11 @@ as of current execution</dd>
 <dt><strong><code>stop_on_failed</code></strong></dt>
 <dd>True/False stop executing commands if a command fails, returns results
 as of current execution</dd>
+<dt><strong><code>timeout_ops</code></strong></dt>
+<dd>timeout ops value for this operation; only sets the timeout_ops value for
+the duration of the operation, value is reset to initial value after operation is
+completed. Note that this is the timeout value PER COMMAND sent, not for the total
+of the commands being sent!</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -580,6 +708,8 @@ as of current execution</dd>
     strip_prompt: bool = True,
     failed_when_contains: Optional[Union[str, List[str]]] = None,
     stop_on_failed: bool = False,
+    *,
+    timeout_ops: Optional[float] = None,
 ) -&gt; ScrapliMultiResponse:
     &#34;&#34;&#34;
     Send command(s) from file
@@ -590,6 +720,10 @@ as of current execution</dd>
         failed_when_contains: string or list of strings indicating failure if found in response
         stop_on_failed: True/False stop executing commands if a command fails, returns results
             as of current execution
+        timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+            the duration of the operation, value is reset to initial value after operation is
+            completed. Note that this is the timeout value PER COMMAND sent, not for the total
+            of the commands being sent!
 
     Returns:
         ScrapliMultiResponse: Scrapli MultiResponse object
@@ -605,6 +739,7 @@ as of current execution</dd>
         strip_prompt=strip_prompt,
         failed_when_contains=failed_when_contains,
         stop_on_failed=stop_on_failed,
+        timeout_ops=timeout_ops,
     )</code></pre>
 </details>
 </dd>
@@ -763,6 +898,7 @@ failed command/interaction</dd>
 <li><code><a title="scrapli.driver.async_driver.AsyncScrape.close" href="async_driver.html#scrapli.driver.async_driver.AsyncScrape.close">close</a></code></li>
 <li><code><a title="scrapli.driver.async_driver.AsyncScrape.isalive" href="base_driver.html#scrapli.driver.base_driver.ScrapeBase.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.driver.async_driver.AsyncScrape.open" href="async_driver.html#scrapli.driver.async_driver.AsyncScrape.open">open</a></code></li>
+<li><code><a title="scrapli.driver.async_driver.AsyncScrape.timeout_ops" href="async_driver.html#scrapli.driver.async_driver.AsyncScrape.timeout_ops">timeout_ops</a></code></li>
 </ul>
 </li>
 </ul>
@@ -943,6 +1079,8 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         command: str,
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
+        *,
+        timeout_ops: Optional[float] = None,
     ) -&gt; Response:
         &#34;&#34;&#34;
         Send a command
@@ -953,6 +1091,9 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
             command: string to send to device in privilege exec mode
             strip_prompt: True/False strip prompt from returned output
             failed_when_contains: string or list of strings indicating failure if found in response
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed
 
         Returns:
             Response: Scrapli Response object
@@ -967,8 +1108,11 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains
 
-        response = await super().send_command(
-            command=command, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+        response: Response = await super().send_command(
+            command=command,
+            strip_prompt=strip_prompt,
+            failed_when_contains=failed_when_contains,
+            timeout_ops=timeout_ops,
         )
 
         self._update_response(response)
@@ -981,6 +1125,8 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
+        *,
+        timeout_ops: Optional[float] = None,
     ) -&gt; ScrapliMultiResponse:
         &#34;&#34;&#34;
         Send multiple commands
@@ -993,6 +1139,10 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
             failed_when_contains: string or list of strings indicating failure if found in response
             stop_on_failed: True/False stop executing commands if a command fails, returns results
                 as of current execution
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed. Note that this is the timeout value PER COMMAND sent, not for the total
+                of the commands being sent!
 
         Returns:
             ScrapliMultiResponse: Scrapli MultiResponse object
@@ -1012,6 +1162,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
             strip_prompt=strip_prompt,
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
+            timeout_ops=timeout_ops,
         )
 
         for response in responses:
@@ -1025,6 +1176,8 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
+        *,
+        timeout_ops: Optional[float] = None,
     ) -&gt; ScrapliMultiResponse:
         &#34;&#34;&#34;
         Send command(s) from file
@@ -1035,6 +1188,10 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
             failed_when_contains: string or list of strings indicating failure if found in response
             stop_on_failed: True/False stop executing commands if a command fails, returns results
                 as of current execution
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed. Note that this is the timeout value PER COMMAND sent, not for the total
+                of the commands being sent!
 
         Returns:
             ScrapliMultiResponse: Scrapli MultiResponse object
@@ -1043,13 +1200,18 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
             N/A
 
         &#34;&#34;&#34;
-        commands = self._pre_send_commands_from_file(file=file)
+        if self._current_priv_level.name != self.default_desired_privilege_level:
+            await self.acquire_priv(desired_priv=self.default_desired_privilege_level)
 
-        return await self.send_commands(
-            commands=commands,
+        if failed_when_contains is None:
+            failed_when_contains = self.failed_when_contains
+
+        return await super().send_commands_from_file(
+            file=file,
             strip_prompt=strip_prompt,
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
+            timeout_ops=timeout_ops,
         )
 
     async def send_interactive(
@@ -1158,6 +1320,8 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         privilege_level: str = &#34;&#34;,
+        *,
+        timeout_ops: Optional[float] = None,
     ) -&gt; Response:
         &#34;&#34;&#34;
         Send configuration(s)
@@ -1175,6 +1339,10 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
                 JunosDriver. You can also pass in a name of a configuration session such as
                 &#34;my-config-session&#34; if you have registered a session using the
                 &#34;register_config_session&#34; method of the EOSDriver or NXOSDriver.
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed. Note that this is the timeout value PER CONFIG sent, not for the total
+                of the configs being sent!
 
         Returns:
             Response: Scrapli Response object
@@ -1192,6 +1360,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
             privilege_level=privilege_level,
+            timeout_ops=timeout_ops,
         )
         return self._post_send_config(config=config, multi_response=multi_response)
 
@@ -1202,6 +1371,8 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         privilege_level: str = &#34;&#34;,
+        *,
+        timeout_ops: Optional[float] = None,
     ) -&gt; ScrapliMultiResponse:
         &#34;&#34;&#34;
         Send configuration(s)
@@ -1219,6 +1390,10 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
                 JunosDriver. You can also pass in a name of a configuration session such as
                 &#34;my-config-session&#34; if you have registered a session using the
                 &#34;register_config_session&#34; method of the EOSDriver or NXOSDriver.
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed. Note that this is the timeout value PER CONFIG sent, not for the total
+                of the configs being sent!
 
         Returns:
             ScrapliMultiResponse: Scrapli MultiResponse object
@@ -1243,6 +1418,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
                 command=config,
                 strip_prompt=strip_prompt,
                 failed_when_contains=failed_when_contains,
+                timeout_ops=timeout_ops,
             )
             responses.append(response)
             if response.failed is True:
@@ -1262,6 +1438,8 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         privilege_level: str = &#34;&#34;,
+        *,
+        timeout_ops: Optional[float] = None,
     ) -&gt; ScrapliMultiResponse:
         &#34;&#34;&#34;
         Send configuration(s) from a file
@@ -1279,6 +1457,10 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
                 in a name of a configuration session such as &#34;session_mysession&#34; if you have
                 registered a session using the &#34;register_config_session&#34; method of the EOSDriver or
                 NXOSDriver.
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed. Note that this is the timeout value PER CONFIG sent, not for the total
+                of the configs being sent!
 
         Returns:
             ScrapliMultiResponse: Scrapli MultiResponse object
@@ -1295,6 +1477,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
             privilege_level=privilege_level,
+            timeout_ops=timeout_ops,
         )</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1314,6 +1497,37 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 <li><a title="scrapli.driver.core.juniper_junos.async_driver.AsyncJunosDriver" href="core/juniper_junos/async_driver.html#scrapli.driver.core.juniper_junos.async_driver.AsyncJunosDriver">AsyncJunosDriver</a></li>
 <li><a title="scrapli.factory.AsyncScrapli" href="../factory.html#scrapli.factory.AsyncScrapli">AsyncScrapli</a></li>
 </ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="scrapli.driver.AsyncNetworkDriver.auth_secondary"><code class="name">var <span class="ident">auth_secondary</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="scrapli.driver.AsyncNetworkDriver.comms_prompt_pattern"><code class="name">var <span class="ident">comms_prompt_pattern</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="scrapli.driver.AsyncNetworkDriver.failed_when_contains"><code class="name">var <span class="ident">failed_when_contains</span> : Union[List[str], NoneType]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="scrapli.driver.AsyncNetworkDriver.genie_platform"><code class="name">var <span class="ident">genie_platform</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="scrapli.driver.AsyncNetworkDriver.logger"><code class="name">var <span class="ident">logger</span> : logging.Logger</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="scrapli.driver.AsyncNetworkDriver.privilege_levels"><code class="name">var <span class="ident">privilege_levels</span> : Dict[str, <a title="scrapli.driver.base_network_driver.PrivilegeLevel" href="base_network_driver.html#scrapli.driver.base_network_driver.PrivilegeLevel">PrivilegeLevel</a>]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="scrapli.driver.AsyncNetworkDriver.textfsm_platform"><code class="name">var <span class="ident">textfsm_platform</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="scrapli.driver.AsyncNetworkDriver.acquire_priv"><code class="name flex">
@@ -1380,7 +1594,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 </details>
 </dd>
 <dt id="scrapli.driver.AsyncNetworkDriver.send_command"><code class="name flex">
-<span>async def <span class="ident">send_command</span></span>(<span>self, command: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None) ‑> <a title="scrapli.response.Response" href="../response.html#scrapli.response.Response">Response</a></span>
+<span>async def <span class="ident">send_command</span></span>(<span>self, command: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, *, timeout_ops: Union[float, NoneType] = None) ‑> <a title="scrapli.response.Response" href="../response.html#scrapli.response.Response">Response</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send a command</p>
@@ -1393,6 +1607,10 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 <dd>True/False strip prompt from returned output</dd>
 <dt><strong><code>failed_when_contains</code></strong></dt>
 <dd>string or list of strings indicating failure if found in response</dd>
+<dt><strong><code>timeout_ops</code></strong></dt>
+<dd>timeout ops value for this operation; only sets the timeout_ops value for
+the duration of the operation, value is reset to initial value after operation is
+completed</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -1410,6 +1628,8 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
     command: str,
     strip_prompt: bool = True,
     failed_when_contains: Optional[Union[str, List[str]]] = None,
+    *,
+    timeout_ops: Optional[float] = None,
 ) -&gt; Response:
     &#34;&#34;&#34;
     Send a command
@@ -1420,6 +1640,9 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         command: string to send to device in privilege exec mode
         strip_prompt: True/False strip prompt from returned output
         failed_when_contains: string or list of strings indicating failure if found in response
+        timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+            the duration of the operation, value is reset to initial value after operation is
+            completed
 
     Returns:
         Response: Scrapli Response object
@@ -1434,8 +1657,11 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
     if failed_when_contains is None:
         failed_when_contains = self.failed_when_contains
 
-    response = await super().send_command(
-        command=command, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+    response: Response = await super().send_command(
+        command=command,
+        strip_prompt=strip_prompt,
+        failed_when_contains=failed_when_contains,
+        timeout_ops=timeout_ops,
     )
 
     self._update_response(response)
@@ -1444,7 +1670,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 </details>
 </dd>
 <dt id="scrapli.driver.AsyncNetworkDriver.send_commands"><code class="name flex">
-<span>async def <span class="ident">send_commands</span></span>(<span>self, commands: List[str], strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False) ‑> collections.UserList</span>
+<span>async def <span class="ident">send_commands</span></span>(<span>self, commands: List[str], strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, *, timeout_ops: Union[float, NoneType] = None) ‑> collections.UserList</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send multiple commands</p>
@@ -1460,6 +1686,11 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 <dt><strong><code>stop_on_failed</code></strong></dt>
 <dd>True/False stop executing commands if a command fails, returns results
 as of current execution</dd>
+<dt><strong><code>timeout_ops</code></strong></dt>
+<dd>timeout ops value for this operation; only sets the timeout_ops value for
+the duration of the operation, value is reset to initial value after operation is
+completed. Note that this is the timeout value PER COMMAND sent, not for the total
+of the commands being sent!</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -1478,6 +1709,8 @@ as of current execution</dd>
     strip_prompt: bool = True,
     failed_when_contains: Optional[Union[str, List[str]]] = None,
     stop_on_failed: bool = False,
+    *,
+    timeout_ops: Optional[float] = None,
 ) -&gt; ScrapliMultiResponse:
     &#34;&#34;&#34;
     Send multiple commands
@@ -1490,6 +1723,10 @@ as of current execution</dd>
         failed_when_contains: string or list of strings indicating failure if found in response
         stop_on_failed: True/False stop executing commands if a command fails, returns results
             as of current execution
+        timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+            the duration of the operation, value is reset to initial value after operation is
+            completed. Note that this is the timeout value PER COMMAND sent, not for the total
+            of the commands being sent!
 
     Returns:
         ScrapliMultiResponse: Scrapli MultiResponse object
@@ -1509,6 +1746,7 @@ as of current execution</dd>
         strip_prompt=strip_prompt,
         failed_when_contains=failed_when_contains,
         stop_on_failed=stop_on_failed,
+        timeout_ops=timeout_ops,
     )
 
     for response in responses:
@@ -1518,7 +1756,7 @@ as of current execution</dd>
 </details>
 </dd>
 <dt id="scrapli.driver.AsyncNetworkDriver.send_config"><code class="name flex">
-<span>async def <span class="ident">send_config</span></span>(<span>self, config: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '') ‑> <a title="scrapli.response.Response" href="../response.html#scrapli.response.Response">Response</a></span>
+<span>async def <span class="ident">send_config</span></span>(<span>self, config: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '', *, timeout_ops: Union[float, NoneType] = None) ‑> <a title="scrapli.response.Response" href="../response.html#scrapli.response.Response">Response</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send configuration(s)</p>
@@ -1541,6 +1779,11 @@ would be "configuration_exclusive" for IOSXRDriver, or "configuration_private" f
 JunosDriver. You can also pass in a name of a configuration session such as
 "my-config-session" if you have registered a session using the
 "register_config_session" method of the EOSDriver or NXOSDriver.</dd>
+<dt><strong><code>timeout_ops</code></strong></dt>
+<dd>timeout ops value for this operation; only sets the timeout_ops value for
+the duration of the operation, value is reset to initial value after operation is
+completed. Note that this is the timeout value PER CONFIG sent, not for the total
+of the configs being sent!</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -1560,6 +1803,8 @@ JunosDriver. You can also pass in a name of a configuration session such as
     failed_when_contains: Optional[Union[str, List[str]]] = None,
     stop_on_failed: bool = False,
     privilege_level: str = &#34;&#34;,
+    *,
+    timeout_ops: Optional[float] = None,
 ) -&gt; Response:
     &#34;&#34;&#34;
     Send configuration(s)
@@ -1577,6 +1822,10 @@ JunosDriver. You can also pass in a name of a configuration session such as
             JunosDriver. You can also pass in a name of a configuration session such as
             &#34;my-config-session&#34; if you have registered a session using the
             &#34;register_config_session&#34; method of the EOSDriver or NXOSDriver.
+        timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+            the duration of the operation, value is reset to initial value after operation is
+            completed. Note that this is the timeout value PER CONFIG sent, not for the total
+            of the configs being sent!
 
     Returns:
         Response: Scrapli Response object
@@ -1594,12 +1843,13 @@ JunosDriver. You can also pass in a name of a configuration session such as
         failed_when_contains=failed_when_contains,
         stop_on_failed=stop_on_failed,
         privilege_level=privilege_level,
+        timeout_ops=timeout_ops,
     )
     return self._post_send_config(config=config, multi_response=multi_response)</code></pre>
 </details>
 </dd>
 <dt id="scrapli.driver.AsyncNetworkDriver.send_configs"><code class="name flex">
-<span>async def <span class="ident">send_configs</span></span>(<span>self, configs: List[str], strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '') ‑> collections.UserList</span>
+<span>async def <span class="ident">send_configs</span></span>(<span>self, configs: List[str], strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '', *, timeout_ops: Union[float, NoneType] = None) ‑> collections.UserList</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send configuration(s)</p>
@@ -1622,6 +1872,11 @@ would be "configuration_exclusive" for IOSXRDriver, or "configuration_private" f
 JunosDriver. You can also pass in a name of a configuration session such as
 "my-config-session" if you have registered a session using the
 "register_config_session" method of the EOSDriver or NXOSDriver.</dd>
+<dt><strong><code>timeout_ops</code></strong></dt>
+<dd>timeout ops value for this operation; only sets the timeout_ops value for
+the duration of the operation, value is reset to initial value after operation is
+completed. Note that this is the timeout value PER CONFIG sent, not for the total
+of the configs being sent!</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -1641,6 +1896,8 @@ JunosDriver. You can also pass in a name of a configuration session such as
     failed_when_contains: Optional[Union[str, List[str]]] = None,
     stop_on_failed: bool = False,
     privilege_level: str = &#34;&#34;,
+    *,
+    timeout_ops: Optional[float] = None,
 ) -&gt; ScrapliMultiResponse:
     &#34;&#34;&#34;
     Send configuration(s)
@@ -1658,6 +1915,10 @@ JunosDriver. You can also pass in a name of a configuration session such as
             JunosDriver. You can also pass in a name of a configuration session such as
             &#34;my-config-session&#34; if you have registered a session using the
             &#34;register_config_session&#34; method of the EOSDriver or NXOSDriver.
+        timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+            the duration of the operation, value is reset to initial value after operation is
+            completed. Note that this is the timeout value PER CONFIG sent, not for the total
+            of the configs being sent!
 
     Returns:
         ScrapliMultiResponse: Scrapli MultiResponse object
@@ -1682,6 +1943,7 @@ JunosDriver. You can also pass in a name of a configuration session such as
             command=config,
             strip_prompt=strip_prompt,
             failed_when_contains=failed_when_contains,
+            timeout_ops=timeout_ops,
         )
         responses.append(response)
         if response.failed is True:
@@ -1696,7 +1958,7 @@ JunosDriver. You can also pass in a name of a configuration session such as
 </details>
 </dd>
 <dt id="scrapli.driver.AsyncNetworkDriver.send_configs_from_file"><code class="name flex">
-<span>async def <span class="ident">send_configs_from_file</span></span>(<span>self, file: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '') ‑> collections.UserList</span>
+<span>async def <span class="ident">send_configs_from_file</span></span>(<span>self, file: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '', *, timeout_ops: Union[float, NoneType] = None) ‑> collections.UserList</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send configuration(s) from a file</p>
@@ -1719,6 +1981,11 @@ would be "exclusive" for IOSXRDriver, "private" for JunosDriver. You can also pa
 in a name of a configuration session such as "session_mysession" if you have
 registered a session using the "register_config_session" method of the EOSDriver or
 NXOSDriver.</dd>
+<dt><strong><code>timeout_ops</code></strong></dt>
+<dd>timeout ops value for this operation; only sets the timeout_ops value for
+the duration of the operation, value is reset to initial value after operation is
+completed. Note that this is the timeout value PER CONFIG sent, not for the total
+of the configs being sent!</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -1738,6 +2005,8 @@ NXOSDriver.</dd>
     failed_when_contains: Optional[Union[str, List[str]]] = None,
     stop_on_failed: bool = False,
     privilege_level: str = &#34;&#34;,
+    *,
+    timeout_ops: Optional[float] = None,
 ) -&gt; ScrapliMultiResponse:
     &#34;&#34;&#34;
     Send configuration(s) from a file
@@ -1755,6 +2024,10 @@ NXOSDriver.</dd>
             in a name of a configuration session such as &#34;session_mysession&#34; if you have
             registered a session using the &#34;register_config_session&#34; method of the EOSDriver or
             NXOSDriver.
+        timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+            the duration of the operation, value is reset to initial value after operation is
+            completed. Note that this is the timeout value PER CONFIG sent, not for the total
+            of the configs being sent!
 
     Returns:
         ScrapliMultiResponse: Scrapli MultiResponse object
@@ -1771,6 +2044,7 @@ NXOSDriver.</dd>
         failed_when_contains=failed_when_contains,
         stop_on_failed=stop_on_failed,
         privilege_level=privilege_level,
+        timeout_ops=timeout_ops,
     )</code></pre>
 </details>
 </dd>
@@ -1933,6 +2207,7 @@ failed command/interaction</dd>
 <li><code><a title="scrapli.driver.async_generic_driver.AsyncGenericDriver.isalive" href="base_driver.html#scrapli.driver.base_driver.ScrapeBase.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.driver.async_generic_driver.AsyncGenericDriver.open" href="async_driver.html#scrapli.driver.async_driver.AsyncScrape.open">open</a></code></li>
 <li><code><a title="scrapli.driver.async_generic_driver.AsyncGenericDriver.send_commands_from_file" href="async_generic_driver.html#scrapli.driver.async_generic_driver.AsyncGenericDriver.send_commands_from_file">send_commands_from_file</a></code></li>
+<li><code><a title="scrapli.driver.async_generic_driver.AsyncGenericDriver.timeout_ops" href="async_driver.html#scrapli.driver.async_driver.AsyncScrape.timeout_ops">timeout_ops</a></code></li>
 </ul>
 </li>
 <li><code><b><a title="scrapli.driver.base_network_driver.NetworkDriverBase" href="base_network_driver.html#scrapli.driver.base_network_driver.NetworkDriverBase">NetworkDriverBase</a></b></code>:
@@ -2087,7 +2362,45 @@ relies on, see Transport and Channel docs for details.</p>
         if self.on_close:
             await self.on_close(self)
         self.transport.close()
-        self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
+        self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)
+
+    @property
+    def timeout_ops(self) -&gt; float:
+        &#34;&#34;&#34;
+        Property for timeout_ops attribute
+
+        Args:
+            N/A
+
+        Returns:
+            float: value of timeout_ops
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        return self._timeout_ops
+
+    @timeout_ops.setter
+    def timeout_ops(self, timeout_value: float) -&gt; None:
+        &#34;&#34;&#34;
+        Setter for timeout_ops attribute
+
+        Sets timeout value for the channel class as well as the internal `_timeout_ops` value of the
+        base driver class
+
+        Args:
+            timeout_value: float value to set as timeout_ops
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.channel.timeout_ops = timeout_value
+        self._timeout_ops = timeout_value</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2097,6 +2410,43 @@ relies on, see Transport and Channel docs for details.</p>
 <ul class="hlist">
 <li><a title="scrapli.driver.async_generic_driver.AsyncGenericDriver" href="async_generic_driver.html#scrapli.driver.async_generic_driver.AsyncGenericDriver">AsyncGenericDriver</a></li>
 </ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="scrapli.driver.AsyncScrape.timeout_ops"><code class="name">var <span class="ident">timeout_ops</span> : float</code></dt>
+<dd>
+<div class="desc"><p>Property for timeout_ops attribute</p>
+<h2 id="args">Args</h2>
+<p>N/A</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>value of timeout_ops</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<p>N/A</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def timeout_ops(self) -&gt; float:
+    &#34;&#34;&#34;
+    Property for timeout_ops attribute
+
+    Args:
+        N/A
+
+    Returns:
+        float: value of timeout_ops
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    return self._timeout_ops</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="scrapli.driver.AsyncScrape.close"><code class="name flex">
@@ -2264,19 +2614,45 @@ prevent issues! Obviously can be overridden if desired.</dd>
         super().__init__(comms_prompt_pattern=comms_prompt_pattern, comms_ansi=comms_ansi, **kwargs)
         self.channel: Channel
 
-    def send_command(
+    def get_prompt(self) -&gt; str:
+        &#34;&#34;&#34;
+        Convenience method to get device prompt from Channel
+
+        Args:
+            N/A
+
+        Returns:
+            str: prompt received from channel.get_prompt
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        prompt: str = self.channel.get_prompt()
+        return prompt
+
+    @TimeoutModifier()
+    def _send_command_eager(
         self,
         command: str,
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
+        *,
+        timeout_ops: Optional[float] = None,
     ) -&gt; Response:
         &#34;&#34;&#34;
         Send a command
+
+        Keeping as a private method rather than adding an argument to the &#34;normal&#34; `send_command`
+        method as this should not be used by users generally.
 
         Args:
             command: string to send to device in privilege exec mode
             strip_prompt: True/False strip prompt from returned output
             failed_when_contains: string or list of strings indicating failure if found in response
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed
 
         Returns:
             Response: Scrapli Response object
@@ -2285,6 +2661,49 @@ prevent issues! Obviously can be overridden if desired.</dd>
             N/A
 
         &#34;&#34;&#34;
+        # decorator cares about timeout_ops, but nothing else does, assign to _ to appease linters
+        _ = timeout_ops
+
+        response = self._pre_send_command(
+            host=self.transport.host, command=command, failed_when_contains=failed_when_contains
+        )
+        raw_response, processed_response = self.channel.send_input(
+            channel_input=command, strip_prompt=strip_prompt, eager=True
+        )
+        return self._post_send_command(
+            raw_response=raw_response, processed_response=processed_response, response=response
+        )
+
+    @TimeoutModifier()
+    def send_command(
+        self,
+        command: str,
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+        *,
+        timeout_ops: Optional[float] = None,
+    ) -&gt; Response:
+        &#34;&#34;&#34;
+        Send a command
+
+        Args:
+            command: string to send to device in privilege exec mode
+            strip_prompt: True/False strip prompt from returned output
+            failed_when_contains: string or list of strings indicating failure if found in response
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed
+
+        Returns:
+            Response: Scrapli Response object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        # decorator cares about timeout_ops, but nothing else does, assign to _ to appease linters
+        _ = timeout_ops
+
         response = self._pre_send_command(
             host=self.transport.host, command=command, failed_when_contains=failed_when_contains
         )
@@ -2301,6 +2720,8 @@ prevent issues! Obviously can be overridden if desired.</dd>
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
+        *,
+        timeout_ops: Optional[float] = None,
     ) -&gt; ScrapliMultiResponse:
         &#34;&#34;&#34;
         Send multiple commands
@@ -2311,6 +2732,10 @@ prevent issues! Obviously can be overridden if desired.</dd>
             failed_when_contains: string or list of strings indicating failure if found in response
             stop_on_failed: True/False stop executing commands if a command fails, returns results
                 as of current execution
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed. Note that this is the timeout value PER COMMAND sent, not for the total
+                of the commands being sent!
 
         Returns:
             ScrapliMultiResponse: Scrapli MultiResponse object
@@ -2325,6 +2750,7 @@ prevent issues! Obviously can be overridden if desired.</dd>
                 command=command,
                 strip_prompt=strip_prompt,
                 failed_when_contains=failed_when_contains,
+                timeout_ops=timeout_ops,
             )
             responses.append(response)
             if stop_on_failed is True and response.failed is True:
@@ -2338,6 +2764,8 @@ prevent issues! Obviously can be overridden if desired.</dd>
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
+        *,
+        timeout_ops: Optional[float] = None,
     ) -&gt; ScrapliMultiResponse:
         &#34;&#34;&#34;
         Send command(s) from file
@@ -2348,6 +2776,10 @@ prevent issues! Obviously can be overridden if desired.</dd>
             failed_when_contains: string or list of strings indicating failure if found in response
             stop_on_failed: True/False stop executing commands if a command fails, returns results
                 as of current execution
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed. Note that this is the timeout value PER COMMAND sent, not for the total
+                of the commands being sent!
 
         Returns:
             ScrapliMultiResponse: Scrapli MultiResponse object
@@ -2363,6 +2795,7 @@ prevent issues! Obviously can be overridden if desired.</dd>
             strip_prompt=strip_prompt,
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
+            timeout_ops=timeout_ops,
         )
 
     def send_interactive(
@@ -2447,22 +2880,61 @@ prevent issues! Obviously can be overridden if desired.</dd>
             raw_response=raw_response, processed_response=processed_response, response=response
         )
 
-    def get_prompt(self) -&gt; str:
+    @TimeoutModifier()
+    def send_and_read(
+        self,
+        channel_input: str,
+        expected_outputs: Optional[List[str]] = None,
+        strip_prompt: bool = True,
+        failed_when_contains: Optional[Union[str, List[str]]] = None,
+        *,
+        timeout_ops: Optional[float] = None,
+        read_duration: float = 2.5,
+    ) -&gt; Response:
         &#34;&#34;&#34;
-        Convenience method to get device prompt from Channel
+        Send an input and read outputs.
+
+        Unlike &#34;normal&#34; scrapli behavior this method reads until the prompt(normal) OR until any of
+        a list of expected outputs is seen, OR until the read duration is exceeded. This method does
+        not care about/understand privilege levels. This *can* cause you some potential issues if
+        not used carefully!
 
         Args:
-            N/A
+            channel_input: input to send to the channel; intentionally named &#34;channel_input&#34; instead
+                of &#34;command&#34; or &#34;config&#34; due to this method not caring about privilege levels
+            expected_outputs: List of outputs to look for in device response; returns as soon as any
+                of the outputs are seen
+            strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
+            failed_when_contains: string or list of strings indicating failure if found in response
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed
+            read_duration:  float duration to read for
 
         Returns:
-            str: prompt received from channel.get_prompt
+            Response: Scrapli Response object
 
         Raises:
             N/A
 
         &#34;&#34;&#34;
-        prompt: str = self.channel.get_prompt()
-        return prompt</code></pre>
+        # decorator cares about timeout_ops, but nothing else does, assign to _ to appease linters
+        _ = timeout_ops
+
+        response = self._pre_send_command(
+            host=self.transport.host,
+            command=channel_input,
+            failed_when_contains=failed_when_contains,
+        )
+        raw_response, processed_response = self.channel.send_input_and_read(
+            channel_input=channel_input,
+            strip_prompt=strip_prompt,
+            expected_outputs=expected_outputs,
+            read_duration=read_duration,
+        )
+        return self._post_send_command(
+            raw_response=raw_response, processed_response=processed_response, response=response
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2512,65 +2984,54 @@ prevent issues! Obviously can be overridden if desired.</dd>
     return prompt</code></pre>
 </details>
 </dd>
-<dt id="scrapli.driver.GenericDriver.send_command"><code class="name flex">
-<span>def <span class="ident">send_command</span></span>(<span>self, command: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None) ‑> <a title="scrapli.response.Response" href="../response.html#scrapli.response.Response">Response</a></span>
+<dt id="scrapli.driver.GenericDriver.send_and_read"><code class="name flex">
+<span>def <span class="ident">send_and_read</span></span>(<span>*args: Any, **kwargs: Any) ‑> Any</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Send a command</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>command</code></strong></dt>
-<dd>string to send to device in privilege exec mode</dd>
-<dt><strong><code>strip_prompt</code></strong></dt>
-<dd>True/False strip prompt from returned output</dd>
-<dt><strong><code>failed_when_contains</code></strong></dt>
-<dd>string or list of strings indicating failure if found in response</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>Response</code></dt>
-<dd>Scrapli Response object</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<p>N/A</p></div>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def send_command(
-    self,
-    command: str,
-    strip_prompt: bool = True,
-    failed_when_contains: Optional[Union[str, List[str]]] = None,
-) -&gt; Response:
-    &#34;&#34;&#34;
-    Send a command
-
-    Args:
-        command: string to send to device in privilege exec mode
-        strip_prompt: True/False strip prompt from returned output
-        failed_when_contains: string or list of strings indicating failure if found in response
-
-    Returns:
-        Response: Scrapli Response object
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    response = self._pre_send_command(
-        host=self.transport.host, command=command, failed_when_contains=failed_when_contains
-    )
-    raw_response, processed_response = self.channel.send_input(
-        channel_input=command, strip_prompt=strip_prompt
-    )
-    return self._post_send_command(
-        raw_response=raw_response, processed_response=processed_response, response=response
-    )</code></pre>
+<pre><code class="python">def decorate(*args: Any, **kwargs: Any) -&gt; Any:  # type: ignore
+    scrapli_obj: Union[&#34;AsyncGenericDriver&#34;, &#34;GenericDriver&#34;] = args[0]
+    if kwargs.get(&#34;timeout_ops&#34;, None) is None:
+        result = wrapped_func(*args, **kwargs)
+    elif kwargs.get(&#34;timeout_ops&#34;, scrapli_obj.timeout_ops) == scrapli_obj.timeout_ops:
+        result = wrapped_func(*args, **kwargs)
+    else:
+        base_timeout_ops = scrapli_obj.timeout_ops
+        scrapli_obj.timeout_ops = kwargs[&#34;timeout_ops&#34;]
+        result = wrapped_func(*args, **kwargs)
+        scrapli_obj.timeout_ops = base_timeout_ops
+    return result</code></pre>
+</details>
+</dd>
+<dt id="scrapli.driver.GenericDriver.send_command"><code class="name flex">
+<span>def <span class="ident">send_command</span></span>(<span>*args: Any, **kwargs: Any) ‑> Any</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def decorate(*args: Any, **kwargs: Any) -&gt; Any:  # type: ignore
+    scrapli_obj: Union[&#34;AsyncGenericDriver&#34;, &#34;GenericDriver&#34;] = args[0]
+    if kwargs.get(&#34;timeout_ops&#34;, None) is None:
+        result = wrapped_func(*args, **kwargs)
+    elif kwargs.get(&#34;timeout_ops&#34;, scrapli_obj.timeout_ops) == scrapli_obj.timeout_ops:
+        result = wrapped_func(*args, **kwargs)
+    else:
+        base_timeout_ops = scrapli_obj.timeout_ops
+        scrapli_obj.timeout_ops = kwargs[&#34;timeout_ops&#34;]
+        result = wrapped_func(*args, **kwargs)
+        scrapli_obj.timeout_ops = base_timeout_ops
+    return result</code></pre>
 </details>
 </dd>
 <dt id="scrapli.driver.GenericDriver.send_commands"><code class="name flex">
-<span>def <span class="ident">send_commands</span></span>(<span>self, commands: List[str], strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False) ‑> collections.UserList</span>
+<span>def <span class="ident">send_commands</span></span>(<span>self, commands: List[str], strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, *, timeout_ops: Union[float, NoneType] = None) ‑> collections.UserList</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send multiple commands</p>
@@ -2585,6 +3046,11 @@ prevent issues! Obviously can be overridden if desired.</dd>
 <dt><strong><code>stop_on_failed</code></strong></dt>
 <dd>True/False stop executing commands if a command fails, returns results
 as of current execution</dd>
+<dt><strong><code>timeout_ops</code></strong></dt>
+<dd>timeout ops value for this operation; only sets the timeout_ops value for
+the duration of the operation, value is reset to initial value after operation is
+completed. Note that this is the timeout value PER COMMAND sent, not for the total
+of the commands being sent!</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -2603,6 +3069,8 @@ as of current execution</dd>
     strip_prompt: bool = True,
     failed_when_contains: Optional[Union[str, List[str]]] = None,
     stop_on_failed: bool = False,
+    *,
+    timeout_ops: Optional[float] = None,
 ) -&gt; ScrapliMultiResponse:
     &#34;&#34;&#34;
     Send multiple commands
@@ -2613,6 +3081,10 @@ as of current execution</dd>
         failed_when_contains: string or list of strings indicating failure if found in response
         stop_on_failed: True/False stop executing commands if a command fails, returns results
             as of current execution
+        timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+            the duration of the operation, value is reset to initial value after operation is
+            completed. Note that this is the timeout value PER COMMAND sent, not for the total
+            of the commands being sent!
 
     Returns:
         ScrapliMultiResponse: Scrapli MultiResponse object
@@ -2627,6 +3099,7 @@ as of current execution</dd>
             command=command,
             strip_prompt=strip_prompt,
             failed_when_contains=failed_when_contains,
+            timeout_ops=timeout_ops,
         )
         responses.append(response)
         if stop_on_failed is True and response.failed is True:
@@ -2636,7 +3109,7 @@ as of current execution</dd>
 </details>
 </dd>
 <dt id="scrapli.driver.GenericDriver.send_commands_from_file"><code class="name flex">
-<span>def <span class="ident">send_commands_from_file</span></span>(<span>self, file: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False) ‑> collections.UserList</span>
+<span>def <span class="ident">send_commands_from_file</span></span>(<span>self, file: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, *, timeout_ops: Union[float, NoneType] = None) ‑> collections.UserList</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send command(s) from file</p>
@@ -2651,6 +3124,11 @@ as of current execution</dd>
 <dt><strong><code>stop_on_failed</code></strong></dt>
 <dd>True/False stop executing commands if a command fails, returns results
 as of current execution</dd>
+<dt><strong><code>timeout_ops</code></strong></dt>
+<dd>timeout ops value for this operation; only sets the timeout_ops value for
+the duration of the operation, value is reset to initial value after operation is
+completed. Note that this is the timeout value PER COMMAND sent, not for the total
+of the commands being sent!</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -2669,6 +3147,8 @@ as of current execution</dd>
     strip_prompt: bool = True,
     failed_when_contains: Optional[Union[str, List[str]]] = None,
     stop_on_failed: bool = False,
+    *,
+    timeout_ops: Optional[float] = None,
 ) -&gt; ScrapliMultiResponse:
     &#34;&#34;&#34;
     Send command(s) from file
@@ -2679,6 +3159,10 @@ as of current execution</dd>
         failed_when_contains: string or list of strings indicating failure if found in response
         stop_on_failed: True/False stop executing commands if a command fails, returns results
             as of current execution
+        timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+            the duration of the operation, value is reset to initial value after operation is
+            completed. Note that this is the timeout value PER COMMAND sent, not for the total
+            of the commands being sent!
 
     Returns:
         ScrapliMultiResponse: Scrapli MultiResponse object
@@ -2694,6 +3178,7 @@ as of current execution</dd>
         strip_prompt=strip_prompt,
         failed_when_contains=failed_when_contains,
         stop_on_failed=stop_on_failed,
+        timeout_ops=timeout_ops,
     )</code></pre>
 </details>
 </dd>
@@ -2852,6 +3337,7 @@ failed command/interaction</dd>
 <li><code><a title="scrapli.driver.driver.Scrape.close" href="driver.html#scrapli.driver.driver.Scrape.close">close</a></code></li>
 <li><code><a title="scrapli.driver.driver.Scrape.isalive" href="base_driver.html#scrapli.driver.base_driver.ScrapeBase.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.driver.driver.Scrape.open" href="driver.html#scrapli.driver.driver.Scrape.open">open</a></code></li>
+<li><code><a title="scrapli.driver.driver.Scrape.timeout_ops" href="driver.html#scrapli.driver.driver.Scrape.timeout_ops">timeout_ops</a></code></li>
 </ul>
 </li>
 </ul>
@@ -3032,6 +3518,8 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         command: str,
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
+        *,
+        timeout_ops: Optional[float] = None,
     ) -&gt; Response:
         &#34;&#34;&#34;
         Send a command
@@ -3042,6 +3530,9 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
             command: string to send to device in privilege exec mode
             strip_prompt: True/False strip prompt from returned output
             failed_when_contains: string or list of strings indicating failure if found in response
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed
 
         Returns:
             Response: Scrapli Response object
@@ -3056,10 +3547,12 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains
 
-        response = super().send_command(
-            command=command, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+        response: Response = super().send_command(
+            command=command,
+            strip_prompt=strip_prompt,
+            failed_when_contains=failed_when_contains,
+            timeout_ops=timeout_ops,
         )
-
         self._update_response(response)
 
         return response
@@ -3070,6 +3563,8 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
+        *,
+        timeout_ops: Optional[float] = None,
     ) -&gt; ScrapliMultiResponse:
         &#34;&#34;&#34;
         Send multiple commands
@@ -3082,6 +3577,10 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
             failed_when_contains: string or list of strings indicating failure if found in response
             stop_on_failed: True/False stop executing commands if a command fails, returns results
                 as of current execution
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed. Note that this is the timeout value PER COMMAND sent, not for the total
+                of the commands being sent!
 
         Returns:
             ScrapliMultiResponse: Scrapli MultiResponse object
@@ -3101,6 +3600,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
             strip_prompt=strip_prompt,
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
+            timeout_ops=timeout_ops,
         )
 
         for response in responses:
@@ -3114,6 +3614,8 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
+        *,
+        timeout_ops: Optional[float] = None,
     ) -&gt; ScrapliMultiResponse:
         &#34;&#34;&#34;
         Send command(s) from file
@@ -3124,6 +3626,10 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
             failed_when_contains: string or list of strings indicating failure if found in response
             stop_on_failed: True/False stop executing commands if a command fails, returns results
                 as of current execution
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed. Note that this is the timeout value PER COMMAND sent, not for the total
+                of the commands being sent!
 
         Returns:
             ScrapliMultiResponse: Scrapli MultiResponse object
@@ -3132,13 +3638,18 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
             N/A
 
         &#34;&#34;&#34;
-        commands = self._pre_send_commands_from_file(file=file)
+        if self._current_priv_level.name != self.default_desired_privilege_level:
+            self.acquire_priv(desired_priv=self.default_desired_privilege_level)
 
-        return self.send_commands(
-            commands=commands,
+        if failed_when_contains is None:
+            failed_when_contains = self.failed_when_contains
+
+        return super().send_commands_from_file(
+            file=file,
             strip_prompt=strip_prompt,
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
+            timeout_ops=timeout_ops,
         )
 
     def send_interactive(
@@ -3247,6 +3758,8 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         privilege_level: str = &#34;&#34;,
+        *,
+        timeout_ops: Optional[float] = None,
     ) -&gt; Response:
         &#34;&#34;&#34;
         Send configuration(s)
@@ -3264,6 +3777,10 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
                 JunosDriver. You can also pass in a name of a configuration session such as
                 &#34;my-config-session&#34; if you have registered a session using the
                 &#34;register_config_session&#34; method of the EOSDriver or NXOSDriver.
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed. Note that this is the timeout value PER CONFIG sent, not for the total
+                of the configs being sent!
 
         Returns:
             Response: Scrapli Response object
@@ -3281,6 +3798,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
             privilege_level=privilege_level,
+            timeout_ops=timeout_ops,
         )
         return self._post_send_config(config=config, multi_response=multi_response)
 
@@ -3291,6 +3809,8 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         privilege_level: str = &#34;&#34;,
+        *,
+        timeout_ops: Optional[float] = None,
     ) -&gt; ScrapliMultiResponse:
         &#34;&#34;&#34;
         Send configuration(s)
@@ -3308,6 +3828,10 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
                 JunosDriver. You can also pass in a name of a configuration session such as
                 &#34;my-config-session&#34; if you have registered a session using the
                 &#34;register_config_session&#34; method of the EOSDriver or NXOSDriver.
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed. Note that this is the timeout value PER CONFIG sent, not for the total
+                of the configs being sent!
 
         Returns:
             ScrapliMultiResponse: Scrapli MultiResponse object
@@ -3332,6 +3856,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
                 command=config,
                 strip_prompt=strip_prompt,
                 failed_when_contains=failed_when_contains,
+                timeout_ops=timeout_ops,
             )
             responses.append(response)
             if response.failed is True:
@@ -3351,6 +3876,8 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         privilege_level: str = &#34;&#34;,
+        *,
+        timeout_ops: Optional[float] = None,
     ) -&gt; ScrapliMultiResponse:
         &#34;&#34;&#34;
         Send configuration(s) from a file
@@ -3368,6 +3895,10 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
                 in a name of a configuration session such as &#34;session_mysession&#34; if you have
                 registered a session using the &#34;register_config_session&#34; method of the EOSDriver or
                 NXOSDriver.
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed. Note that this is the timeout value PER CONFIG sent, not for the total
+                of the configs being sent!
 
         Returns:
             ScrapliMultiResponse: Scrapli MultiResponse object
@@ -3384,6 +3915,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
             privilege_level=privilege_level,
+            timeout_ops=timeout_ops,
         )</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3403,6 +3935,37 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 <li><a title="scrapli.driver.core.juniper_junos.driver.JunosDriver" href="core/juniper_junos/driver.html#scrapli.driver.core.juniper_junos.driver.JunosDriver">JunosDriver</a></li>
 <li><a title="scrapli.factory.Scrapli" href="../factory.html#scrapli.factory.Scrapli">Scrapli</a></li>
 </ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="scrapli.driver.NetworkDriver.auth_secondary"><code class="name">var <span class="ident">auth_secondary</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="scrapli.driver.NetworkDriver.comms_prompt_pattern"><code class="name">var <span class="ident">comms_prompt_pattern</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="scrapli.driver.NetworkDriver.failed_when_contains"><code class="name">var <span class="ident">failed_when_contains</span> : Union[List[str], NoneType]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="scrapli.driver.NetworkDriver.genie_platform"><code class="name">var <span class="ident">genie_platform</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="scrapli.driver.NetworkDriver.logger"><code class="name">var <span class="ident">logger</span> : logging.Logger</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="scrapli.driver.NetworkDriver.privilege_levels"><code class="name">var <span class="ident">privilege_levels</span> : Dict[str, <a title="scrapli.driver.base_network_driver.PrivilegeLevel" href="base_network_driver.html#scrapli.driver.base_network_driver.PrivilegeLevel">PrivilegeLevel</a>]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="scrapli.driver.NetworkDriver.textfsm_platform"><code class="name">var <span class="ident">textfsm_platform</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="scrapli.driver.NetworkDriver.acquire_priv"><code class="name flex">
@@ -3469,7 +4032,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 </details>
 </dd>
 <dt id="scrapli.driver.NetworkDriver.send_command"><code class="name flex">
-<span>def <span class="ident">send_command</span></span>(<span>self, command: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None) ‑> <a title="scrapli.response.Response" href="../response.html#scrapli.response.Response">Response</a></span>
+<span>def <span class="ident">send_command</span></span>(<span>self, command: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, *, timeout_ops: Union[float, NoneType] = None) ‑> <a title="scrapli.response.Response" href="../response.html#scrapli.response.Response">Response</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send a command</p>
@@ -3482,6 +4045,10 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 <dd>True/False strip prompt from returned output</dd>
 <dt><strong><code>failed_when_contains</code></strong></dt>
 <dd>string or list of strings indicating failure if found in response</dd>
+<dt><strong><code>timeout_ops</code></strong></dt>
+<dd>timeout ops value for this operation; only sets the timeout_ops value for
+the duration of the operation, value is reset to initial value after operation is
+completed</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -3499,6 +4066,8 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
     command: str,
     strip_prompt: bool = True,
     failed_when_contains: Optional[Union[str, List[str]]] = None,
+    *,
+    timeout_ops: Optional[float] = None,
 ) -&gt; Response:
     &#34;&#34;&#34;
     Send a command
@@ -3509,6 +4078,9 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         command: string to send to device in privilege exec mode
         strip_prompt: True/False strip prompt from returned output
         failed_when_contains: string or list of strings indicating failure if found in response
+        timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+            the duration of the operation, value is reset to initial value after operation is
+            completed
 
     Returns:
         Response: Scrapli Response object
@@ -3523,17 +4095,19 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
     if failed_when_contains is None:
         failed_when_contains = self.failed_when_contains
 
-    response = super().send_command(
-        command=command, strip_prompt=strip_prompt, failed_when_contains=failed_when_contains
+    response: Response = super().send_command(
+        command=command,
+        strip_prompt=strip_prompt,
+        failed_when_contains=failed_when_contains,
+        timeout_ops=timeout_ops,
     )
-
     self._update_response(response)
 
     return response</code></pre>
 </details>
 </dd>
 <dt id="scrapli.driver.NetworkDriver.send_commands"><code class="name flex">
-<span>def <span class="ident">send_commands</span></span>(<span>self, commands: List[str], strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False) ‑> collections.UserList</span>
+<span>def <span class="ident">send_commands</span></span>(<span>self, commands: List[str], strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, *, timeout_ops: Union[float, NoneType] = None) ‑> collections.UserList</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send multiple commands</p>
@@ -3549,6 +4123,11 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 <dt><strong><code>stop_on_failed</code></strong></dt>
 <dd>True/False stop executing commands if a command fails, returns results
 as of current execution</dd>
+<dt><strong><code>timeout_ops</code></strong></dt>
+<dd>timeout ops value for this operation; only sets the timeout_ops value for
+the duration of the operation, value is reset to initial value after operation is
+completed. Note that this is the timeout value PER COMMAND sent, not for the total
+of the commands being sent!</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -3567,6 +4146,8 @@ as of current execution</dd>
     strip_prompt: bool = True,
     failed_when_contains: Optional[Union[str, List[str]]] = None,
     stop_on_failed: bool = False,
+    *,
+    timeout_ops: Optional[float] = None,
 ) -&gt; ScrapliMultiResponse:
     &#34;&#34;&#34;
     Send multiple commands
@@ -3579,6 +4160,10 @@ as of current execution</dd>
         failed_when_contains: string or list of strings indicating failure if found in response
         stop_on_failed: True/False stop executing commands if a command fails, returns results
             as of current execution
+        timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+            the duration of the operation, value is reset to initial value after operation is
+            completed. Note that this is the timeout value PER COMMAND sent, not for the total
+            of the commands being sent!
 
     Returns:
         ScrapliMultiResponse: Scrapli MultiResponse object
@@ -3598,6 +4183,7 @@ as of current execution</dd>
         strip_prompt=strip_prompt,
         failed_when_contains=failed_when_contains,
         stop_on_failed=stop_on_failed,
+        timeout_ops=timeout_ops,
     )
 
     for response in responses:
@@ -3607,7 +4193,7 @@ as of current execution</dd>
 </details>
 </dd>
 <dt id="scrapli.driver.NetworkDriver.send_config"><code class="name flex">
-<span>def <span class="ident">send_config</span></span>(<span>self, config: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '') ‑> <a title="scrapli.response.Response" href="../response.html#scrapli.response.Response">Response</a></span>
+<span>def <span class="ident">send_config</span></span>(<span>self, config: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '', *, timeout_ops: Union[float, NoneType] = None) ‑> <a title="scrapli.response.Response" href="../response.html#scrapli.response.Response">Response</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send configuration(s)</p>
@@ -3630,6 +4216,11 @@ would be "configuration_exclusive" for IOSXRDriver, or "configuration_private" f
 JunosDriver. You can also pass in a name of a configuration session such as
 "my-config-session" if you have registered a session using the
 "register_config_session" method of the EOSDriver or NXOSDriver.</dd>
+<dt><strong><code>timeout_ops</code></strong></dt>
+<dd>timeout ops value for this operation; only sets the timeout_ops value for
+the duration of the operation, value is reset to initial value after operation is
+completed. Note that this is the timeout value PER CONFIG sent, not for the total
+of the configs being sent!</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -3649,6 +4240,8 @@ JunosDriver. You can also pass in a name of a configuration session such as
     failed_when_contains: Optional[Union[str, List[str]]] = None,
     stop_on_failed: bool = False,
     privilege_level: str = &#34;&#34;,
+    *,
+    timeout_ops: Optional[float] = None,
 ) -&gt; Response:
     &#34;&#34;&#34;
     Send configuration(s)
@@ -3666,6 +4259,10 @@ JunosDriver. You can also pass in a name of a configuration session such as
             JunosDriver. You can also pass in a name of a configuration session such as
             &#34;my-config-session&#34; if you have registered a session using the
             &#34;register_config_session&#34; method of the EOSDriver or NXOSDriver.
+        timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+            the duration of the operation, value is reset to initial value after operation is
+            completed. Note that this is the timeout value PER CONFIG sent, not for the total
+            of the configs being sent!
 
     Returns:
         Response: Scrapli Response object
@@ -3683,12 +4280,13 @@ JunosDriver. You can also pass in a name of a configuration session such as
         failed_when_contains=failed_when_contains,
         stop_on_failed=stop_on_failed,
         privilege_level=privilege_level,
+        timeout_ops=timeout_ops,
     )
     return self._post_send_config(config=config, multi_response=multi_response)</code></pre>
 </details>
 </dd>
 <dt id="scrapli.driver.NetworkDriver.send_configs"><code class="name flex">
-<span>def <span class="ident">send_configs</span></span>(<span>self, configs: List[str], strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '') ‑> collections.UserList</span>
+<span>def <span class="ident">send_configs</span></span>(<span>self, configs: List[str], strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '', *, timeout_ops: Union[float, NoneType] = None) ‑> collections.UserList</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send configuration(s)</p>
@@ -3711,6 +4309,11 @@ would be "configuration_exclusive" for IOSXRDriver, or "configuration_private" f
 JunosDriver. You can also pass in a name of a configuration session such as
 "my-config-session" if you have registered a session using the
 "register_config_session" method of the EOSDriver or NXOSDriver.</dd>
+<dt><strong><code>timeout_ops</code></strong></dt>
+<dd>timeout ops value for this operation; only sets the timeout_ops value for
+the duration of the operation, value is reset to initial value after operation is
+completed. Note that this is the timeout value PER CONFIG sent, not for the total
+of the configs being sent!</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -3730,6 +4333,8 @@ JunosDriver. You can also pass in a name of a configuration session such as
     failed_when_contains: Optional[Union[str, List[str]]] = None,
     stop_on_failed: bool = False,
     privilege_level: str = &#34;&#34;,
+    *,
+    timeout_ops: Optional[float] = None,
 ) -&gt; ScrapliMultiResponse:
     &#34;&#34;&#34;
     Send configuration(s)
@@ -3747,6 +4352,10 @@ JunosDriver. You can also pass in a name of a configuration session such as
             JunosDriver. You can also pass in a name of a configuration session such as
             &#34;my-config-session&#34; if you have registered a session using the
             &#34;register_config_session&#34; method of the EOSDriver or NXOSDriver.
+        timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+            the duration of the operation, value is reset to initial value after operation is
+            completed. Note that this is the timeout value PER CONFIG sent, not for the total
+            of the configs being sent!
 
     Returns:
         ScrapliMultiResponse: Scrapli MultiResponse object
@@ -3771,6 +4380,7 @@ JunosDriver. You can also pass in a name of a configuration session such as
             command=config,
             strip_prompt=strip_prompt,
             failed_when_contains=failed_when_contains,
+            timeout_ops=timeout_ops,
         )
         responses.append(response)
         if response.failed is True:
@@ -3785,7 +4395,7 @@ JunosDriver. You can also pass in a name of a configuration session such as
 </details>
 </dd>
 <dt id="scrapli.driver.NetworkDriver.send_configs_from_file"><code class="name flex">
-<span>def <span class="ident">send_configs_from_file</span></span>(<span>self, file: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '') ‑> collections.UserList</span>
+<span>def <span class="ident">send_configs_from_file</span></span>(<span>self, file: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '', *, timeout_ops: Union[float, NoneType] = None) ‑> collections.UserList</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send configuration(s) from a file</p>
@@ -3808,6 +4418,11 @@ would be "exclusive" for IOSXRDriver, "private" for JunosDriver. You can also pa
 in a name of a configuration session such as "session_mysession" if you have
 registered a session using the "register_config_session" method of the EOSDriver or
 NXOSDriver.</dd>
+<dt><strong><code>timeout_ops</code></strong></dt>
+<dd>timeout ops value for this operation; only sets the timeout_ops value for
+the duration of the operation, value is reset to initial value after operation is
+completed. Note that this is the timeout value PER CONFIG sent, not for the total
+of the configs being sent!</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -3827,6 +4442,8 @@ NXOSDriver.</dd>
     failed_when_contains: Optional[Union[str, List[str]]] = None,
     stop_on_failed: bool = False,
     privilege_level: str = &#34;&#34;,
+    *,
+    timeout_ops: Optional[float] = None,
 ) -&gt; ScrapliMultiResponse:
     &#34;&#34;&#34;
     Send configuration(s) from a file
@@ -3844,6 +4461,10 @@ NXOSDriver.</dd>
             in a name of a configuration session such as &#34;session_mysession&#34; if you have
             registered a session using the &#34;register_config_session&#34; method of the EOSDriver or
             NXOSDriver.
+        timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+            the duration of the operation, value is reset to initial value after operation is
+            completed. Note that this is the timeout value PER CONFIG sent, not for the total
+            of the configs being sent!
 
     Returns:
         ScrapliMultiResponse: Scrapli MultiResponse object
@@ -3860,6 +4481,7 @@ NXOSDriver.</dd>
         failed_when_contains=failed_when_contains,
         stop_on_failed=stop_on_failed,
         privilege_level=privilege_level,
+        timeout_ops=timeout_ops,
     )</code></pre>
 </details>
 </dd>
@@ -4022,6 +4644,7 @@ failed command/interaction</dd>
 <li><code><a title="scrapli.driver.generic_driver.GenericDriver.isalive" href="base_driver.html#scrapli.driver.base_driver.ScrapeBase.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.driver.generic_driver.GenericDriver.open" href="driver.html#scrapli.driver.driver.Scrape.open">open</a></code></li>
 <li><code><a title="scrapli.driver.generic_driver.GenericDriver.send_commands_from_file" href="generic_driver.html#scrapli.driver.generic_driver.GenericDriver.send_commands_from_file">send_commands_from_file</a></code></li>
+<li><code><a title="scrapli.driver.generic_driver.GenericDriver.timeout_ops" href="driver.html#scrapli.driver.driver.Scrape.timeout_ops">timeout_ops</a></code></li>
 </ul>
 </li>
 <li><code><b><a title="scrapli.driver.base_network_driver.NetworkDriverBase" href="base_network_driver.html#scrapli.driver.base_network_driver.NetworkDriverBase">NetworkDriverBase</a></b></code>:
@@ -4174,7 +4797,45 @@ relies on, see Transport and Channel docs for details.</p>
         if self.on_close:
             self.on_close(self)
         self.transport.close()
-        self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)</code></pre>
+        self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} closed successfully&#34;)
+
+    @property
+    def timeout_ops(self) -&gt; float:
+        &#34;&#34;&#34;
+        Property for timeout_ops attribute
+
+        Args:
+            N/A
+
+        Returns:
+            float: value of timeout_ops
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        return self._timeout_ops
+
+    @timeout_ops.setter
+    def timeout_ops(self, timeout_value: float) -&gt; None:
+        &#34;&#34;&#34;
+        Setter for timeout_ops attribute
+
+        Sets timeout value for the channel class as well as the internal `_timeout_ops` value of the
+        base driver class
+
+        Args:
+            timeout_value: float value to set as timeout_ops
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.channel.timeout_ops = timeout_value
+        self._timeout_ops = timeout_value</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -4184,6 +4845,43 @@ relies on, see Transport and Channel docs for details.</p>
 <ul class="hlist">
 <li><a title="scrapli.driver.generic_driver.GenericDriver" href="generic_driver.html#scrapli.driver.generic_driver.GenericDriver">GenericDriver</a></li>
 </ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="scrapli.driver.Scrape.timeout_ops"><code class="name">var <span class="ident">timeout_ops</span> : float</code></dt>
+<dd>
+<div class="desc"><p>Property for timeout_ops attribute</p>
+<h2 id="args">Args</h2>
+<p>N/A</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>value of timeout_ops</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<p>N/A</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def timeout_ops(self) -&gt; float:
+    &#34;&#34;&#34;
+    Property for timeout_ops attribute
+
+    Args:
+        N/A
+
+    Returns:
+        float: value of timeout_ops
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    return self._timeout_ops</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="scrapli.driver.Scrape.close"><code class="name flex">
@@ -4307,6 +5005,7 @@ relies on, see Transport and Channel docs for details.</p>
 <h4><code><a title="scrapli.driver.AsyncGenericDriver" href="#scrapli.driver.AsyncGenericDriver">AsyncGenericDriver</a></code></h4>
 <ul class="">
 <li><code><a title="scrapli.driver.AsyncGenericDriver.get_prompt" href="#scrapli.driver.AsyncGenericDriver.get_prompt">get_prompt</a></code></li>
+<li><code><a title="scrapli.driver.AsyncGenericDriver.send_and_read" href="#scrapli.driver.AsyncGenericDriver.send_and_read">send_and_read</a></code></li>
 <li><code><a title="scrapli.driver.AsyncGenericDriver.send_command" href="#scrapli.driver.AsyncGenericDriver.send_command">send_command</a></code></li>
 <li><code><a title="scrapli.driver.AsyncGenericDriver.send_commands" href="#scrapli.driver.AsyncGenericDriver.send_commands">send_commands</a></code></li>
 <li><code><a title="scrapli.driver.AsyncGenericDriver.send_commands_from_file" href="#scrapli.driver.AsyncGenericDriver.send_commands_from_file">send_commands_from_file</a></code></li>
@@ -4317,12 +5016,19 @@ relies on, see Transport and Channel docs for details.</p>
 <h4><code><a title="scrapli.driver.AsyncNetworkDriver" href="#scrapli.driver.AsyncNetworkDriver">AsyncNetworkDriver</a></code></h4>
 <ul class="">
 <li><code><a title="scrapli.driver.AsyncNetworkDriver.acquire_priv" href="#scrapli.driver.AsyncNetworkDriver.acquire_priv">acquire_priv</a></code></li>
+<li><code><a title="scrapli.driver.AsyncNetworkDriver.auth_secondary" href="#scrapli.driver.AsyncNetworkDriver.auth_secondary">auth_secondary</a></code></li>
+<li><code><a title="scrapli.driver.AsyncNetworkDriver.comms_prompt_pattern" href="#scrapli.driver.AsyncNetworkDriver.comms_prompt_pattern">comms_prompt_pattern</a></code></li>
+<li><code><a title="scrapli.driver.AsyncNetworkDriver.failed_when_contains" href="#scrapli.driver.AsyncNetworkDriver.failed_when_contains">failed_when_contains</a></code></li>
+<li><code><a title="scrapli.driver.AsyncNetworkDriver.genie_platform" href="#scrapli.driver.AsyncNetworkDriver.genie_platform">genie_platform</a></code></li>
+<li><code><a title="scrapli.driver.AsyncNetworkDriver.logger" href="#scrapli.driver.AsyncNetworkDriver.logger">logger</a></code></li>
+<li><code><a title="scrapli.driver.AsyncNetworkDriver.privilege_levels" href="#scrapli.driver.AsyncNetworkDriver.privilege_levels">privilege_levels</a></code></li>
 <li><code><a title="scrapli.driver.AsyncNetworkDriver.send_command" href="#scrapli.driver.AsyncNetworkDriver.send_command">send_command</a></code></li>
 <li><code><a title="scrapli.driver.AsyncNetworkDriver.send_commands" href="#scrapli.driver.AsyncNetworkDriver.send_commands">send_commands</a></code></li>
 <li><code><a title="scrapli.driver.AsyncNetworkDriver.send_config" href="#scrapli.driver.AsyncNetworkDriver.send_config">send_config</a></code></li>
 <li><code><a title="scrapli.driver.AsyncNetworkDriver.send_configs" href="#scrapli.driver.AsyncNetworkDriver.send_configs">send_configs</a></code></li>
 <li><code><a title="scrapli.driver.AsyncNetworkDriver.send_configs_from_file" href="#scrapli.driver.AsyncNetworkDriver.send_configs_from_file">send_configs_from_file</a></code></li>
 <li><code><a title="scrapli.driver.AsyncNetworkDriver.send_interactive" href="#scrapli.driver.AsyncNetworkDriver.send_interactive">send_interactive</a></code></li>
+<li><code><a title="scrapli.driver.AsyncNetworkDriver.textfsm_platform" href="#scrapli.driver.AsyncNetworkDriver.textfsm_platform">textfsm_platform</a></code></li>
 </ul>
 </li>
 <li>
@@ -4330,12 +5036,14 @@ relies on, see Transport and Channel docs for details.</p>
 <ul class="">
 <li><code><a title="scrapli.driver.AsyncScrape.close" href="#scrapli.driver.AsyncScrape.close">close</a></code></li>
 <li><code><a title="scrapli.driver.AsyncScrape.open" href="#scrapli.driver.AsyncScrape.open">open</a></code></li>
+<li><code><a title="scrapli.driver.AsyncScrape.timeout_ops" href="#scrapli.driver.AsyncScrape.timeout_ops">timeout_ops</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="scrapli.driver.GenericDriver" href="#scrapli.driver.GenericDriver">GenericDriver</a></code></h4>
 <ul class="">
 <li><code><a title="scrapli.driver.GenericDriver.get_prompt" href="#scrapli.driver.GenericDriver.get_prompt">get_prompt</a></code></li>
+<li><code><a title="scrapli.driver.GenericDriver.send_and_read" href="#scrapli.driver.GenericDriver.send_and_read">send_and_read</a></code></li>
 <li><code><a title="scrapli.driver.GenericDriver.send_command" href="#scrapli.driver.GenericDriver.send_command">send_command</a></code></li>
 <li><code><a title="scrapli.driver.GenericDriver.send_commands" href="#scrapli.driver.GenericDriver.send_commands">send_commands</a></code></li>
 <li><code><a title="scrapli.driver.GenericDriver.send_commands_from_file" href="#scrapli.driver.GenericDriver.send_commands_from_file">send_commands_from_file</a></code></li>
@@ -4346,12 +5054,19 @@ relies on, see Transport and Channel docs for details.</p>
 <h4><code><a title="scrapli.driver.NetworkDriver" href="#scrapli.driver.NetworkDriver">NetworkDriver</a></code></h4>
 <ul class="">
 <li><code><a title="scrapli.driver.NetworkDriver.acquire_priv" href="#scrapli.driver.NetworkDriver.acquire_priv">acquire_priv</a></code></li>
+<li><code><a title="scrapli.driver.NetworkDriver.auth_secondary" href="#scrapli.driver.NetworkDriver.auth_secondary">auth_secondary</a></code></li>
+<li><code><a title="scrapli.driver.NetworkDriver.comms_prompt_pattern" href="#scrapli.driver.NetworkDriver.comms_prompt_pattern">comms_prompt_pattern</a></code></li>
+<li><code><a title="scrapli.driver.NetworkDriver.failed_when_contains" href="#scrapli.driver.NetworkDriver.failed_when_contains">failed_when_contains</a></code></li>
+<li><code><a title="scrapli.driver.NetworkDriver.genie_platform" href="#scrapli.driver.NetworkDriver.genie_platform">genie_platform</a></code></li>
+<li><code><a title="scrapli.driver.NetworkDriver.logger" href="#scrapli.driver.NetworkDriver.logger">logger</a></code></li>
+<li><code><a title="scrapli.driver.NetworkDriver.privilege_levels" href="#scrapli.driver.NetworkDriver.privilege_levels">privilege_levels</a></code></li>
 <li><code><a title="scrapli.driver.NetworkDriver.send_command" href="#scrapli.driver.NetworkDriver.send_command">send_command</a></code></li>
 <li><code><a title="scrapli.driver.NetworkDriver.send_commands" href="#scrapli.driver.NetworkDriver.send_commands">send_commands</a></code></li>
 <li><code><a title="scrapli.driver.NetworkDriver.send_config" href="#scrapli.driver.NetworkDriver.send_config">send_config</a></code></li>
 <li><code><a title="scrapli.driver.NetworkDriver.send_configs" href="#scrapli.driver.NetworkDriver.send_configs">send_configs</a></code></li>
 <li><code><a title="scrapli.driver.NetworkDriver.send_configs_from_file" href="#scrapli.driver.NetworkDriver.send_configs_from_file">send_configs_from_file</a></code></li>
 <li><code><a title="scrapli.driver.NetworkDriver.send_interactive" href="#scrapli.driver.NetworkDriver.send_interactive">send_interactive</a></code></li>
+<li><code><a title="scrapli.driver.NetworkDriver.textfsm_platform" href="#scrapli.driver.NetworkDriver.textfsm_platform">textfsm_platform</a></code></li>
 </ul>
 </li>
 <li>
@@ -4359,6 +5074,7 @@ relies on, see Transport and Channel docs for details.</p>
 <ul class="">
 <li><code><a title="scrapli.driver.Scrape.close" href="#scrapli.driver.Scrape.close">close</a></code></li>
 <li><code><a title="scrapli.driver.Scrape.open" href="#scrapli.driver.Scrape.open">open</a></code></li>
+<li><code><a title="scrapli.driver.Scrape.timeout_ops" href="#scrapli.driver.Scrape.timeout_ops">timeout_ops</a></code></li>
 </ul>
 </li>
 </ul>
@@ -4367,7 +5083,7 @@ relies on, see Transport and Channel docs for details.</p>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.3</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
 </footer>
 </body>
 </html>
