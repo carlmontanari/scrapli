@@ -159,7 +159,7 @@ def test_genie_parse_success():
 def test_genie_parse_failure():
     result = genie_parse("iosxe", "show ip arp", "not really arp data")
     assert result == []
-    del sys.modules["ats.configuration"]
+    # w/out killing this module pyfakefs explodes. dont remember why/how i found that out...
     del sys.modules["pyats.configuration"]
 
 
