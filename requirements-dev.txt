@@ -17,7 +17,8 @@ pdoc3==0.9.1 ; sys_platform != "win32"
 -e git+https://github.com/scrapli/scrapli_community@master#egg=scrapli_community
 -r requirements.txt
 -r requirements-textfsm.txt
+-r requirements-genie.txt
+-r requirements-ttp.txt
 -r requirements-paramiko.txt
 -r requirements-ssh2.txt
--r requirements-genie.txt
 -r requirements-asyncssh.txt
