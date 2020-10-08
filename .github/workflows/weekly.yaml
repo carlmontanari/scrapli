@@ -47,6 +47,11 @@ jobs:
         # version we are targeting with nox, while still having versions like 3.9.0a4
         run: |
           echo "FRIENDLY_PYTHON_VERSION=$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")" >> $GITHUB_ENV
+      - name: install libxml2 and libxslt seems to only be needed for 3.9 image for some reason
+        if: matrix.os == 'ubuntu-latest' && matrix.version == '3.9'
+        run: |
+          sudo apt install libxml2-dev
+          sudo apt install libxslt-dev
       - name: setup test env
         run: |
           python -m pip install --upgrade pip
