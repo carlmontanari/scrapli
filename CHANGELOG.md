@@ -2,7 +2,13 @@ CHANGELOG
 =======
 
 # 2020.XX.XX
-- ???
+- Improve logging in helper functions - especially around resolving ssh config/known hosts
+- Add `ttp_parse_output` method to Response object; add `ttp_parse` function in helper
+- Load requirements from requirements files and parse them for setup.py -- stop me from forgetting to update in one
+ place or another!
+- Slacken the IOSXE configuration prompt pattern -- `hostname(ipsec-profile)` was not being caught by the pattern as
+ it was expecting the part in parenthesis to start with "conf" - thank you Talha Javaid for bringing this up on ntc
+  slack, and Alex Lardschneider for confirming the "fix" should be good to go!
 
 
 # 2020.09.26

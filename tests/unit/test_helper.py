@@ -17,6 +17,7 @@ from scrapli.helper import (
     resolve_file,
     strip_ansi,
     textfsm_parse,
+    ttp_parse,
 )
 
 TEST_DATA_DIR = f"{Path(scrapli.__file__).parents[1]}/tests/test_data"
@@ -161,6 +162,58 @@ def test_genie_parse_failure():
     assert result == []
     # w/out killing this module pyfakefs explodes. dont remember why/how i found that out...
     del sys.modules["pyats.configuration"]
+
+
+def test_ttp_parse():
+    # example data lifted straight out of ttp docs
+    data_to_parse = """
+    interface Loopback0
+     description Router-id-loopback
+     ip address 192.168.0.113/24
+    !
+    interface Vlan778
+     description CPE_Acces_Vlan
+     ip address 2002::fd37/124
+     ip vrf CPE1
+    !
+    """
+
+    ttp_template = """
+    interface {{ interface }}
+     ip address {{ ip }}/{{ mask }}
+     description {{ description }}
+     ip vrf {{ vrf }}
+    """
+
+    expected = [
+        [
+            {
+                "ip": "192.168.0.113",
+                "mask": "24",
+                "description": "Router-id-loopback",
+                "interface": "Loopback0",
+            },
+            {
+                "vrf": "CPE1",
+                "ip": "2002::fd37",
+                "mask": "124",
+                "description": "CPE_Acces_Vlan",
+                "interface": "Vlan778",
+            },
+        ]
+    ]
+    result = ttp_parse(template=ttp_template, output=data_to_parse)
+    assert result == expected
+
+
+def test_ttp_parse_invalid_template():
+    result = ttp_parse(template=None, output="blah")
+    assert result == []
+
+
+def test_ttp_parse_failed_to_parse():
+    result = ttp_parse(template="mytemplateisneat", output="blah")
+    assert result == []
 
 
 @pytest.mark.skipif(

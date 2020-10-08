@@ -157,3 +157,53 @@ def test_response_parse_genie_fail():
     response_bytes = b""
     response._record_response(response_bytes)
     assert response.genie_parse_output() == []
+
+
+def test_response_parse_ttp():
+    response = Response("localhost", channel_input="show ip arp", genie_platform="iosxe")
+
+    # example data lifted straight out of ttp docs
+    ttp_template = """
+    interface {{ interface }}
+     ip address {{ ip }}/{{ mask }}
+     description {{ description }}
+     ip vrf {{ vrf }}
+    """
+
+    expected = [
+        [
+            {
+                "ip": "192.168.0.113",
+                "mask": "24",
+                "description": "Router-id-loopback",
+                "interface": "Loopback0",
+            },
+            {
+                "vrf": "CPE1",
+                "ip": "2002::fd37",
+                "mask": "124",
+                "description": "CPE_Acces_Vlan",
+                "interface": "Vlan778",
+            },
+        ]
+    ]
+    response_bytes = b"""    interface Loopback0
+     description Router-id-loopback
+     ip address 192.168.0.113/24
+    !
+    interface Vlan778
+     description CPE_Acces_Vlan
+     ip address 2002::fd37/124
+     ip vrf CPE1
+    !
+"""
+    response._record_response(response_bytes)
+    result = response.ttp_parse_output(template=ttp_template)
+    assert result[0][0]["ip"] == "192.168.0.113"
+
+
+def test_response_parse_ttp_fail():
+    response = Response("localhost", channel_input="show ip arp", genie_platform="iosxe")
+    response_bytes = b""
+    response._record_response(response_bytes)
+    assert response.ttp_parse_output(template="blah") == []
