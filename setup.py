@@ -16,6 +16,7 @@ EXTRAS_REQUIRE = {
     "paramiko": [],
     "ssh2": [],
     "asyncssh": [],
+    "community": [],
 }
 
 for extra in EXTRAS_REQUIRE:

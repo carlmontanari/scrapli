@@ -9,6 +9,8 @@ CHANGELOG
 - Slacken the IOSXE configuration prompt pattern -- `hostname(ipsec-profile)` was not being caught by the pattern as
  it was expecting the part in parenthesis to start with "conf" - thank you Talha Javaid for bringing this up on ntc
   slack, and Alex Lardschneider for confirming the "fix" should be good to go!
+- Add `community` pip extra to install scrapli community
+- Minor README house keeping!
 
 
 # 2020.09.26

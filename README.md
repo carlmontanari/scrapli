@@ -42,6 +42,7 @@ Feel free to join the very awesome networktocode slack workspace [here](https://
   - [Sending Configurations](#sending-configurations)
   - [Textfsm/NTC-Templates Integration](#textfsmntc-templates-integration)
   - [Cisco Genie Integration](#cisco-genie-integration)
+  - [TTP Integration](#ttp-integration)
   - [Handling Prompts](#handling-prompts)
   - [Telnet](#telnet)
   - [SSH Config Support](#ssh-config-support)
@@ -67,9 +68,7 @@ Feel free to join the very awesome networktocode slack workspace [here](https://
 - [Linting and Testing](#linting-and-testing)
   - [Linting](#linting)
   - [Testing](#testing)
-- [Todo and Roadmap](#todo-and-roadmap)
-  - [Todo](#todo)
-  - [Roadmap](#roadmap)
+- [Roadmap](#roadmap)
 
 
 # Quick Start Guide
@@ -198,7 +197,8 @@ A good question to ask at this point is probably "why?". Why multiple transport 
  like most folks do? Historically the reason for moving away from paramiko was simply speed. ssh2-python is a wrapper
   around the libssh2 C library, and as such is very very fast. In a prior project
    ([ssh2net](https://github.com/carlmontanari/ssh2net)), of which scrapli is the successor/evolution, ssh2-python
-    was used with great success, however, it is a bit feature-limited, and development seems to have stalled.
+    was used with great success, however, it is a bit feature-limited, and development had stalled around the same
+     time scrapli was getting going.
 
 This led to moving back to paramiko, which of course is a fantastic project with tons and tons of feature support
 . Paramiko, however, does not provide "direct" OpenSSH support (as in -- auto-magically like when you ssh on your
@@ -212,7 +212,7 @@ With the goal of supporting all of the OpenSSH configuration options the primary
    OpenSSH config files simply "work" -- no passing it to scrapli, no selective support, no need to set username or
     ports or any of the other config items that may reside in your SSH config file. This driver will likely be the
      focus of most development for this project, though I will try to keep the other transport drivers -- in
-      particular ssh2-python -- as close to parity as is possible/practical.
+      particular asyncssh -- as close to parity as is possible/practical.
 
 Adding telnet support via telnetlib was trivial, as the interface is basically the same as SystemSSH, and it turns out
  telnet is still actually useful for things like terminal servers and the like!
@@ -229,11 +229,11 @@ The final piece of scrapli is the actual "driver" -- or the component that binds
    used paramiko in the past. More specific "drivers" can inherit from this class to extend functionality of the
     driver to make it more friendly for network devices. In fact, there is a `GenericDriver` class that inherits from
      `Scrape` and provides a base driver to work with if you need to interact with a device not represented by one of
-      the "core" drivers. Next, the `NetworkDriver` abstract base class inherits from `GenericDriver`. The
-       `NetworkDriver` isn't really meant to be used directly though (hence why it is an ABC), but to be further
-        extended and built upon instead. As this library is focused on interacting with network devices, an example
-         scrapli driver (built on the `NetworkDriver`) would be the `IOSXEDriver` -- to, as you may have guessed
-         , interact with devices running Cisco's IOS-XE operating system.
+      the "core" drivers. Next, the `NetworkDriver` class inherits from `GenericDriver`. The `NetworkDriver` isn't
+       really meant to be used directly though, but to be further extended and built upon instead. As this library is
+        focused on interacting with network devices, an example scrapli driver (built on the `NetworkDriver`) would
+         be the `IOSXEDriver` -- to, as you may have guessed , interact with devices running Cisco's IOS-XE operating
+          system.
 
 It should be noted that this is a bit of an oversimplification of the architecture of scrapli, but it is accurate
 . Scrapli has "base", "sync", and "async" versions of the core components. The "base" portion is made up fo mixin
@@ -250,7 +250,7 @@ scrapli "core" drivers cover basically the [NAPALM](https://github.com/napalm-au
  IOS-XE, IOS-XR, NX-OS, Arista EOS, and Juniper JunOS. These drivers provide an interface tailored to network device
   "screen-scraping" rather than just a generic SSH connection/channel. It is important to note that there is a
    synchronous and an asynchronous version of each of these drivers. Below are the core driver platforms and
-   currently tested version.
+   regularly tested version.
 
 - Cisco IOS-XE (tested on: 16.12.03)
 - Cisco NX-OS (tested on: 9.2.4)
@@ -258,8 +258,9 @@ scrapli "core" drivers cover basically the [NAPALM](https://github.com/napalm-au
 - Cisco IOS-XR (tested on: 6.5.3)
 - Arista EOS (tested on: 4.22.1F)
 
-In the future it would be possible for folks to contribute additional "community" drivers, however, is unlikely that any
- additional "core" platforms would be added.
+It is unlikely that any additional "core" platforms would be added, however the `scrapli_community` project is
+ available for users to contribute any other platforms they would like to see scrapli support! Please see the
+  [scrapli_community project](https://github.com/scrapli/scrapli_community) to check out what community platforms exist!
 
 The "driver" pattern is pretty much exactly like the implementation in NAPALM. The driver extends the base class
  (`Scrape`) and the base networking driver class (`NetworkDriver`) with device specific functionality such as privilege
@@ -290,6 +291,7 @@ This repo is the "main" or "core" scrapli project, however there are other libra
  scrapli
 - [nornir_scrapli](https://github.com/scrapli/nornir_scrapli) -- scrapli's nornir plugin
 - [scrapli_stubs](https://github.com/scrapli/scrapli_stubs) -- scrapli type stubs
+- [scrapli_community](https://github.com/scrapli/scrapli_community) -- scrapli community platforms
 
 
 # Advanced Installation
@@ -336,6 +338,7 @@ The available optional installation extras options are:
 - genie (genie/pyats)
 - asynchssh (asyncssh and the scrapli_asyncssh transport)
 - netconf (scrapli_netconf)
+- community (scrapli_community)
 
 
 If you would like to install all of the optional extras, you can do so with the `full` option:
@@ -358,11 +361,17 @@ scrapli, and all scrapli related projects use [CalVer](https://calver.org) versi
 
 The reason for choosing CalVer is simply to make it very clear how old a given release of scrapli is. While there are
  clearly some potential challenges around indicating when a "breaking" change occurs due to there not being the
-  concept of a "major" version, this is hopefully not too big a deal for scrapli.
+  concept of a "major" version, this is hopefully not too big a deal for scrapli, and thus far the "core" API has
+   been very stable -- there are only so many things you can/need to do over SSH after all!
  
 Please also note that the [CHANGELOG](CHANGELOG.md) contains notes about each version (and is updated in develop branch while
  updates are happening), and the "public" API is documented [here](docs/PUBLIC_API_STATUS.md), and includes the date
  /version of each public method's creation as well as the latest updated/modified date and any relevant notes.
+
+A final note regarding versioning: scrapli updates are released as often as necessary/there are things to update
+. This means you should ALWAYS PIN YOUR REQUIREMENTS when using scrapli!! As stated, the "core" API has been very
+ stable, but things will change over time -- always pin your requirements, and keep an eye on the changelog/api docs
+  -- you can "watch" this repository to ensure you are notified of any releases.
 
 
 # Basic Usage
@@ -422,10 +431,17 @@ Note that the `Scrapli` and `AsyncScrapli` classes inherit from the `NetworkDriv
  respectively, so all editor code completion and type indicating behavior should work nicely! For non "core
  " platforms please see the [scrapli_community project](https://github.com/scrapli/scrapli_community).
 
-If you are working with a platform not listed above (and/or is not in the scrapli community project), you have two
- options: you can use the `Scrape` driver directly, which you can read about [here](#using-scrape-directly) or you
-  can use the `GenericDriver` which which you can read about [here](#using-the-genericdriver). In general you should
-   probably use the `GenericDriver` and not mess about using `Scrape` directly.
+If you are working with a platform not listed above (and/or is not in the scrapli community project), you have three
+ options: 
+
+1. You can use the `Scrape` driver directly, which you can read about [here](#using-scrape-directly)
+2. You can use the `GenericDriver` which which you can read about [here](#using-the-genericdriver)
+3. You can use the `NetworkDriver` which is similar to option 2 but you will need to understand/provide privilege
+/prompt information so scrapli can properly escalate/deescalate to/from configuration (or other) modes.
+
+In general you should probably simply create a scrapli community platform (read about adding a platform
+ [here](https://github.com/scrapli/scrapli_community#adding-a-platform), but failing that the `GenericDriver` is
+  probably the simplest path forward.
 
 Note: if you are using async you *must* set the transport to `asyncssh` -- this is the only async transport supported
  at this time!
@@ -465,6 +481,7 @@ conn.open()
 ```
 
 *NOTE* that scrapli enables strict host key checking by default!
+
 
 ## Opening and Closing a Connection
 
@@ -509,6 +526,7 @@ with IOSXEDriver(**my_device) as conn:
     response = conn.send_command("show version")
 ```
 
+
 ## Sending Commands
 
 When using any of the core network drivers (`JunosDriver`, `EOSDriver`, etc.) or the `GenericDriver`, the `send_command
@@ -540,6 +558,7 @@ responses = conn.send_commands(["show run", "show ip int brief"])
 
 Finally, if you prefer to have a file containing a list of commands to send, there is a `send_commands_from_file` method
 . This method excepts the provided file to have a single command to send per line in the file.
+
 
 ## Response Object
 
@@ -580,6 +599,7 @@ In addition to containing the input and output of the command(s) that you sent, 
 [['16.4.1', 'IOS-XE', 'csr1000v', '2 days, 22 hours, 10 minutes', 'reload', 'packages.conf', ['CSR1000V'], ['9FKLJWM5EB0'], '0x2102', []]]
 ```
 
+
 ## Sending Configurations
 
 When using any of the core drivers, you can send configurations via the `send_config`, `send_configs` or
@@ -615,6 +635,7 @@ Lastly, note that scrapli does *not* exit configuration mode at completion of a 
  because scrapli (with the Network drivers) will automatically acquire `default_desired_privilege_level` before
   sending a "command" -- so there is no need, from a scrapli perspective, to explicitly exit config mode at end of
    the configuration session.
+
 
 ## Textfsm/NTC-Templates Integration
 
@@ -700,6 +721,48 @@ with IOSXEDriver(**my_device) as conn:
 `pip install scrapli[genie]`
 
 
+## TTP Integration
+
+The scrapli response object also contains a `ttp_parse_output` method, that, as you may have guessed, uses the 
+ [ttp](https://github.com/dmulyalin/ttp) library to parse output received from the device. Other than the obvious
+  difference that this is in fact a different type of parser, the only difference from a usage perspective is that
+   the `ttp_parse_output` method requires a template string, string path to a template, or loaded (TextIOWrapper
+   ) template string to be passed. This is because there is no index or mapping of platform:command:template as there
+    is with TextFSM/ntc-templates and genie.
+
+An example ttp file (slightly modified from the great ttp quickstart guide) - in this case we'll pretend this file is
+ called "my_template.ttp":
+
+```text
+interface {{ interface }}
+ ip address {{ ip }} {{ mask }}
+ description {{ description }}
+```
+
+```python
+from scrapli.driver.core import IOSXEDriver
+
+my_device = {
+    "host": "172.18.0.11",
+    "auth_username": "vrnetlab",
+    "auth_password": "VR-netlab9",
+    "auth_strict_key": False,
+}
+
+with IOSXEDriver(**my_device) as conn:
+    response = conn.send_command("show run interface GigabitEthernet1")
+    structured_result = response.ttp_parse_output(template="my_template.ttp")
+    print(structured_result)
+```
+
+*NOTE*: If a parser does parse data, ttp will return an empty list (as with the other parser methods)
+
+*NOTE*: ttp is an optional extra for scrapli; you can install these modules manually or using the optional extras
+ install via pip:
+ 
+`pip install scrapli[ttp]`
+
+
 ## Handling Prompts
 
 In some cases you may need to run an "interactive" command on your device. The `send_interactive` method of the
@@ -758,6 +821,7 @@ scrapli supports telnet as a transport driver via the standard library module `t
   the default `\n` pattern.
 
 If telnet for some reason becomes an important use case, the telnet Transport layer can be improved/augmented.
+
 
 ## SSH Config Support
 
@@ -818,10 +882,12 @@ The basic usage section outlined the most commonly used driver arguments, this o
 | comms_ansi                      | True/False strip ansi from returned output                  | Scrape            |                   
 | ssh_config_file                 | True/False or path to ssh config file to use                | Scrape            |                   
 | ssh_known_hosts_file            | True/False or path to ssh known hosts file to use           | Scrape            |                   
+| on_open                         | callable to execute "on init" (end of object creation)      | Scrape            |
 | on_open                         | callable to execute "on open"                               | Scrape            |                   
 | on_close                        | callable to execute "on exit"                               | Scrape            |                   
 | transport                       | system (default), paramiko, ssh2, or telnet                 | Scrape            |  
 | transport_options               | dictionary of transport-specific arguments                  | Scrape            |                
+| privilege_levels                | dictionary of privilege levels                              | NetworkDriver     |
 | default_desired_privilege_level | privilege level for "show" commands to be executed at       | NetworkDriver     |
 | failed_when_contains            | list of strings indicating command/config failure           | NetworkDriver     |
 | textfsm_platform                | platform name for textfsm parser                            | NetworkDriver     |
@@ -830,6 +896,7 @@ The basic usage section outlined the most commonly used driver arguments, this o
 Most of these attributes actually get passed from the `Scrape` (or sub-class such as `NXOSDriver`) into the
  `Transport` and `Channel` classes, so if you need to modify any of these values after instantiation you should do so
   on the appropriate object -- i.e. `conn.channel.comms_prompt_pattern`.
+
 
 ## Platform Regex
 
@@ -861,6 +928,7 @@ The `comms_prompt_pattern` pattern can be changed at any time at or after instan
  done so by modifying `conn.channel.comms_prompt_pattern` where `conn` is your scrapli connection object. Changing
  this *can* break things though, so be careful! If using any `NetworkDriver` sub-classes you should modify the
   privilege level(s) if necessary, and *not* the `comms_prompt_pattern`.
+
 
 ## On Open
 
@@ -907,12 +975,17 @@ Note that this section has talked almost exclusively about disabling paging, but
    happen for devices -- thus decoupling the challenge of addressing all of the possible options from scrapli itself
     and allowing users to handle things specific for their environment.
 
+Lastly, while the `on_open` method should be synchronous or asyncio depending on the driver -- meaning that if using
+ an async driver, it will await the `on_open` callable, so it must be asynchronous!
+
+
 ## On Close
 
 As you may have guessed, `on_close` is very similar to `on_open` with the obvious difference that it happens just
  prior to disconnecting from the device. Just like `on_open`, `on_close` functions should accept a single argument
   that is a reference to the object itself. As with most things scrapli, there are sane defaults for the `on_close
   ` functions, but you are welcome to override them with your own function if you so chose! 
+
 
 ## Timeouts
 
@@ -941,6 +1014,7 @@ For system transport, `timeout_socket` governs the `ConnectTimeout` ssh argument
 Finally, `timeout_ops` sets a timeout value for individual operations -- or put another way, the timeout for each
  send_input operation.
 
+
 ## Keepalives
 
 In some cases it may be desirable to have a long running connection to a device, however it is generally a bad idea
@@ -952,6 +1026,7 @@ In some cases it may be desirable to have a long running connection to a device,
 "network" keepalives default to sending u"\005" which is equivalent of sending `CTRL-E` (jump to end (right side) of
  line). This is generally an innocuous command, and furthermore is never sent unless the keepalive thread can acquire
   a channel lock. This should allow scrapli to keep sessions alive as long as needed.
+
 
 ## Driver Privilege Levels
 
@@ -994,6 +1069,7 @@ my_device = {
 with IOSXEDriver(**my_device) as conn:
     conn.acquire_priv("configuration")
 ```
+
 
 ### Configure Exclusive and Configure Private (IOSXR/Junos)
  
@@ -1065,6 +1141,7 @@ with EOSDriver(**my_device) as conn:
 my-config-session
 ^[a-z0-9.\-@/:]{1,32}\(config\-s\-my\-con[a-z0-9_.\-@/:]{0,32}\)#\s?$
 ```
+
 
 ### Modifying Privilege Levels
 
@@ -1169,7 +1246,8 @@ with IOSXEDriver(**my_device) as conn:
 ```
 
 Currently the only reason I can think of to use anything other than "system" as the transport would be to test
- scrapli on a Windows host, to use telnet, or to use asyncio. If there are other good reasons please do let me know!
+ scrapli on a Windows host, to use telnet, to use ssh2 for super speed, or to use asyncio. If there are other good
+  reasons please do let me know!
 
 
 ## Auth Bypass
@@ -1264,13 +1342,8 @@ scrapli.exceptions.ScrapliCommandFailure
   - Answer: Yep! The base usage with `Scrape` is pretty straight forward -- the thing to remember is that it doesn't
    do "things" for you like Netmiko does for example, so its a lot more like Paramiko in that regard this just means
     that you need to disable paging yourself (or pass an `on_open` callable to do so), handle privilege modes and
-     things like that. That said you can use one of the available drivers to have a more Netmiko-like experience -OR
-     - write your own driver as this has been built with the thought of being easily extended.
-- Why do I get a "conn (or your object name here) has no attribute channel" exception?
-  - Answer: Connection objects do not "auto open", and the channel attribute is not assigned until opening the
-   connection. Call `conn.open()` (or your object name in place of conn) to open the session and assign the channel
-    attribute. Alternatively you can use any of the drivers with a context manager (see what I did there? WITH... get
-     it?) which will auto-magically open and close the connections for you.
+     things like that. If you want a more "tailored" experience you can use one of the "core" platforms, or check out
+      the scrapli community project to ssee what is available there!
 - I wanna go fast!
   - Hmmm... not a question but I dig it. If you wanna go fast you gotta learn to drive with the fear... ok, enough
    Talladega Nights quoting for now. In theory using the `ssh2` transport is the gateway to speed... being a very
@@ -1287,6 +1360,7 @@ scrapli.exceptions.ScrapliCommandFailure
 
 # Transport Notes, Caveats, and Known Issues
 
+
 ## paramiko
 
 - Currently there seems to be a cosmetic bug where there is an error message about some socket error... but
@@ -1302,6 +1376,7 @@ scrapli.exceptions.ScrapliCommandFailure
 
 - None yet!
 
+
 ## ssh2-python
 
 ### SSH Config Supported Arguments
@@ -1313,16 +1388,10 @@ scrapli.exceptions.ScrapliCommandFailure
 ### Known Issues
 
 - Arista EOS uses keyboard interactive authentication which is currently broken in the pip-installable version
- of ssh2-python (as of January 2020). GitHub user [Red-M](https://github.com/Red-M) has contributed to and fixed this
+ of ssh2-python (as of October 2020). GitHub user [Red-M](https://github.com/Red-M) has contributed to and fixed this
   particular issue but the fix has not been merged. If you would like to use ssh2-python with EOS I suggest cloning
    and installing via Red-M's repository or my fork of Red-M's fork!
-  - Windows users using python3.8 may need to use Red-M's fork, quick testing in GitHub actions for py3.8 on Windows
-   had install failures for ssh2-python.
-- Use the context manager where possible! More testing needs to be done to confirm/troubleshoot, but limited testing
- seems to indicate that without properly closing the connection there appears to be a bug that causes Python to crash
-  on MacOS at least. More to come on this as I have time to poke it more! I believe this is only occurring on the
-   latest branch/update (i.e. not on the pip installable version). (April 2020 -- this may be fixed... need to retest
-   ...)
+
 
 ## system
 
@@ -1348,15 +1417,11 @@ scrapli.exceptions.ScrapliCommandFailure
 
 ### Known Issues
 
-- When connecting to Juniper devices, if a user has setup control persist in their ssh_config file to the actual end
- Juniper device (instead of or in addition to a jump/proxy host), the Junos device will force a pty which is not
-  readable by the "pipes" style session/setup, ultimately this will cause auth to fail. If no username/password is
-   setup, scrapli will raise a `ScrapliAuthenticationFailed` exception. If there is a username/password (that works
-   ), scrapli will continue authentication using that, however it will take forever because scrapli tries, and fails
-   , to connect/auth via private key first. The "fix" here is to *not* have control persist setup to the end network
-    device. Control persist does not seem to work with Juniper devices anyway, so not a big deal, but it is a bit
-     tricky to identify this problem as it just appears as an auth failure (and there isn't a terribly great way to
-      handle this).
+- Not an "issue" necessarily, but many users end up having kex/cipher negotiation issues -- this is easily fixed by
+ setting up your ssh config file to have the appropriate settings OR passing transport options containing the ssh
+  args that allow for the kex/cipher you need, see 
+  [transport options example](examples/transport_options/system_ssh_args.py) for details.
+ 
 
 ## telnet
 
@@ -1370,6 +1435,7 @@ scrapli.exceptions.ScrapliCommandFailure
 
 - None yet!
 
+
 ## asyncssh
 
 - None yet
@@ -1380,7 +1446,7 @@ scrapli.exceptions.ScrapliCommandFailure
 
 ### Known Issues
 
-- scrapli asyncssh is not production ready yet! 
+- ?!?!
 
 
 # Linting and Testing
@@ -1558,7 +1624,6 @@ IOSXE is the only platform that is testing SSH key based authentication at the m
 
 This section may not get updated much, but should at least provide a bit of an idea about what is to come for scrapli!
 
-- Plugins -- build framework to allow for others to easily build driver plugins if desired
-- Ensure v6 stuff works as expected.
-- Continue to add/support ssh config file things.
-- Get back to work on scrapli_netconf!
+- Improve the ssh2 and asyncssh plugins
+- Continue to expand scrapli community (mostly through new contributors help!)
+- Revamp/fix (or remove?) the keepalive components
