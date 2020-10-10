@@ -126,6 +126,7 @@ Note that all public methods, unless otherwise noted, are available in sync and 
 |-------------------------------|-------------|-------------|--------------------------------------------------------------|
 | genie_parse_output            | 2020.03.29  |             |                                                              |
 | textfsm_parse_output          | 2020.03.29  |             |                                                              |
+| ttp_parse_output              | 2020.10.10  |             | Unlike other parse methods, requires a template argument     |
 | raise_for_status              | 2020.05.09  |             |                                                              |
 
 

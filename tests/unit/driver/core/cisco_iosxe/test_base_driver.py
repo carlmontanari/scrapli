@@ -14,6 +14,7 @@ from scrapli.driver.core.cisco_iosxe.driver import PRIVS
         ("configuration", "csr1000v(conf-ssh-pubkey-data)#"),
         ("privilege_exec", "csr_1000v#"),
         ("configuration", "csr1000v(config-sg-tacacs+)#"),
+        ("configuration", "819HGW(ipsec-profile)#"),
     ],
     ids=[
         "base_prompt_exec",
@@ -22,6 +23,7 @@ from scrapli.driver.core.cisco_iosxe.driver import PRIVS
         "ssh_key_prompt",
         "underscore_privilege_exec",
         "tacacs_configuration",
+        "ipsec_profile",
     ],
 )
 def test_prompt_patterns(priv_pattern):

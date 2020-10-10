@@ -134,12 +134,10 @@ class OperationTimeout:
 
         if isinstance(self.scrapli_obj, (AsyncChannel, Channel)):
             self.timeout_exit = self.scrapli_obj.transport.timeout_exit
-            self.session_lock = self.scrapli_obj.transport.session_lock
             self.close = self.scrapli_obj.transport.close
             self.transport = self.scrapli_obj.transport
         else:
             self.timeout_exit = self.scrapli_obj.timeout_exit
-            self.session_lock = self.scrapli_obj.session_lock
             self.close = self.scrapli_obj.close
             self.transport = self.scrapli_obj
 
@@ -188,22 +186,9 @@ class OperationTimeout:
             ScrapliTimeout: always, if we hit this method we have already timed out!
 
         """
-        from scrapli.channel import AsyncChannel, Channel  # pylint: disable=C0415
-
         if self.timeout_exit:
             self.scrapli_obj.logger.info("timeout_exit is True, closing transport")
-            if self.session_lock.locked():
-                self.session_lock.release()
             self.close()
-            if not isinstance(self.scrapli_obj, (AsyncChannel, Channel)):
-                # if system transport is timing out then we can encounter a condition where timeout
-                # happens in system, and we close the transport, however we then still have to deal
-                # with unlocking the lock in `_send_input` (for example) which causes a RuntimeError
-                # if the lock has been unlocked during closing of the session, so re-acquire the
-                # lock if this timeout occurred in NOT a channel object - there needs to be a big
-                # overhaul to all the lock handling but that will be a fairly significant project
-                # that has to touch all the scrapli libraries
-                self.session_lock.acquire()
         raise ScrapliTimeout(self.message)
 
     def _signal_raise_exception(self, signum: Any, frame: Any) -> None:

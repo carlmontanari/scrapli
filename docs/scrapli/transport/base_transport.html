@@ -31,7 +31,6 @@
 from abc import ABC, abstractmethod
 from logging import getLogger
 from threading import Lock
-from typing import Optional
 
 from scrapli.helper import attach_duplicate_log_filter
 
@@ -184,7 +183,7 @@ class TransportBase(ABC):
         &#34;&#34;&#34;
 
     @abstractmethod
-    def set_timeout(self, timeout: Optional[int] = None) -&gt; None:
+    def set_timeout(self, timeout: int) -&gt; None:
         &#34;&#34;&#34;
         Set session timeout
 
@@ -406,7 +405,7 @@ type is 'network'</dd>
         &#34;&#34;&#34;
 
     @abstractmethod
-    def set_timeout(self, timeout: Optional[int] = None) -&gt; None:
+    def set_timeout(self, timeout: int) -&gt; None:
         &#34;&#34;&#34;
         Set session timeout
 
@@ -499,7 +498,7 @@ def isalive(self) -&gt; bool:
 </details>
 </dd>
 <dt id="scrapli.transport.base_transport.TransportBase.set_timeout"><code class="name flex">
-<span>def <span class="ident">set_timeout</span></span>(<span>self, timeout: Union[int, NoneType] = None) ‑> NoneType</span>
+<span>def <span class="ident">set_timeout</span></span>(<span>self, timeout: int) ‑> NoneType</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Set session timeout</p>
@@ -518,7 +517,7 @@ def isalive(self) -&gt; bool:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@abstractmethod
-def set_timeout(self, timeout: Optional[int] = None) -&gt; None:
+def set_timeout(self, timeout: int) -&gt; None:
     &#34;&#34;&#34;
     Set session timeout
 

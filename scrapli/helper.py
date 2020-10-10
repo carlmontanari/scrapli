@@ -13,6 +13,8 @@ import pkg_resources  # pylint: disable=C0411
 
 from scrapli.exceptions import TransportPluginError
 
+LOG = getLogger("scrapli.helper")
+
 
 def _find_transport_plugin(transport: str) -> Tuple[Any, Tuple[str, ...]]:
     """
@@ -43,6 +45,7 @@ def _find_transport_plugin(transport: str) -> Tuple[Any, Tuple[str, ...]]:
             "install most plugins with pip: `pip install scrapli-ssh2` for example."
         )
         warning = "\n" + msg + "\n" + fix + "\n" + msg
+        LOG.warning(warning)
         raise ModuleNotFoundError(warning) from exc
     transport_class = getattr(transport_plugin_lib, "Transport", None)
     required_transport_args = getattr(transport_plugin_lib, "TRANSPORT_ARGS", None)
@@ -137,8 +140,8 @@ def _textfsm_get_template(platform: str, command: str) -> Optional[TextIO]:
 
     """
     try:
-        from ntc_templates import templates  # pylint: disable=C0415,W0611
-        from textfsm.clitable import CliTable  # pylint: disable=C0415
+        importlib.import_module(name=".templates", package="ntc_templates")
+        CliTable = getattr(importlib.import_module(name=".clitable", package="textfsm"), "CliTable")
     except ModuleNotFoundError as exc:
         err = f"Module '{exc.name}' not installed!"
         msg = f"***** {err} {'*' * (80 - len(err))}"
@@ -149,12 +152,16 @@ def _textfsm_get_template(platform: str, command: str) -> Optional[TextIO]:
             "2: 'pip install scrapli[textfsm]'"
         )
         warning = "\n" + msg + "\n" + fix + "\n" + msg
+        LOG.warning(warning)
         warnings.warn(warning)
         return None
     template_dir = pkg_resources.resource_filename("ntc_templates", "templates")
     cli_table = CliTable("index", template_dir)
     template_index = cli_table.index.GetRowMatch({"Platform": platform, "Command": command})
     if not template_index:
+        LOG.warning(
+            f"No match in ntc_templates index for platform `{platform}` and command `{command}`"
+        )
         return None
     template_name = cli_table.index.index[template_index]["Template"]
     template = open(f"{template_dir}/{template_name}")
@@ -178,6 +185,7 @@ def _textfsm_to_dict(
         N/A
 
     """
+    LOG.debug("converting textfsm output to dictionary representation")
     header_lower = [h.lower() for h in header]
     structured_output = [dict(zip(header_lower, row)) for row in structured_output]
     return structured_output
@@ -217,7 +225,7 @@ def textfsm_parse(
             )
         return structured_output
     except textfsm.parser.TextFSMError:
-        pass
+        LOG.info("failed to parse data with textfsm")
     return []
 
 
@@ -238,8 +246,10 @@ def genie_parse(platform: str, command: str, output: str) -> Union[List[Any], Di
 
     """
     try:
-        from genie.conf.base import Device  # pylint: disable=C0415
-        from genie.libs.parser.utils import get_parser  # pylint: disable=C0415
+        Device = getattr(importlib.import_module(name=".conf.base", package="genie"), "Device")
+        get_parser = getattr(
+            importlib.import_module(name=".libs.parser.utils", package="genie"), "get_parser"
+        )
     except ModuleNotFoundError as exc:
         err = f"Module '{exc.name}' not installed!"
         msg = f"***** {err} {'*' * (80 - len(err))}"
@@ -250,6 +260,7 @@ def genie_parse(platform: str, command: str, output: str) -> Union[List[Any], Di
             "2: 'pip install scrapli[genie]'"
         )
         warning = "\n" + msg + "\n" + fix + "\n" + msg
+        LOG.warning(warning)
         warnings.warn(warning)
         return []
 
@@ -258,14 +269,55 @@ def genie_parse(platform: str, command: str, output: str) -> Union[List[Any], Di
     try:
         get_parser(command, genie_device)
         genie_parsed_result = genie_device.parse(command, output=output)
-        if not genie_parsed_result:
-            return []
         if isinstance(genie_parsed_result, (list, dict)):
             return genie_parsed_result
-    # have to catch base exception because that is all genie raises for some reason :(
-    except Exception:  # pylint: disable=E0012,W0703
-        pass
+    except Exception as exc:  # pylint: disable=W0703
+        LOG.error(f"failed to parse data with genie, genie raised exception: `{exc}`")
     return []
+
+
+def ttp_parse(template: Union[str, TextIOWrapper], output: str) -> Union[List[Any], Dict[str, Any]]:
+    """
+    Parse output with TTP, try to return structured output
+
+    Args:
+        template: TextIOWrapper or string path to template to use to parse data
+        output: unstructured output from device to parse
+
+    Returns:
+        output: structured data
+
+    Raises:
+        N/A
+
+    """
+    try:
+        ttp = getattr(importlib.import_module(name="ttp"), "ttp")
+    except ModuleNotFoundError as exc:
+        err = f"Module '{exc.name}' not installed!"
+        msg = f"***** {err} {'*' * (80 - len(err))}"
+        fix = (
+            f"To resolve this issue, install '{exc.name}'. You can do this in one of the following"
+            " ways:\n"
+            "1: 'pip install -r requirements-ttp.txt'\n"
+            "2: 'pip install scrapli[ttp]'"
+        )
+        warning = "\n" + msg + "\n" + fix + "\n" + msg
+        LOG.warning(warning)
+        warnings.warn(warning)
+        return []
+
+    if not isinstance(template, (str, TextIOWrapper)):
+        LOG.info(f"invalid template `{template}`; template should be string or TextIOWrapper")
+        return []
+
+    ttp_parser_template_name = "scrapli_ttp_parse"
+    ttp_parser = ttp()
+    ttp_parser.add_template(template=template, template_name=ttp_parser_template_name)
+    ttp_parser.add_input(data=output, template_name=ttp_parser_template_name)
+    ttp_parser.parse()
+    ttp_result: Dict[str, List[Any]] = ttp_parser.result(structure="dictionary")
+    return ttp_result[ttp_parser_template_name]
 
 
 def resolve_ssh_config(ssh_config_file: str) -> str:
@@ -285,12 +337,20 @@ def resolve_ssh_config(ssh_config_file: str) -> str:
         N/A
 
     """
+    LOG.debug(f"attempting to resolve ssh config file from `{ssh_config_file}`")
     if Path(ssh_config_file).is_file():
-        return str(Path(ssh_config_file))
+        resolved_ssh_config_file = str(Path(ssh_config_file))
+        LOG.info(f"found ssh config file at `{resolved_ssh_config_file}`")
+        return resolved_ssh_config_file
     if Path(os.path.expanduser("~/.ssh/config")).is_file():
-        return str(Path(os.path.expanduser("~/.ssh/config")))
+        resolved_ssh_config_file = str(Path(os.path.expanduser("~/.ssh/config")))
+        LOG.info(f"found ssh config file at `{resolved_ssh_config_file}`")
+        return resolved_ssh_config_file
     if Path("/etc/ssh/ssh_config").is_file():
-        return str(Path("/etc/ssh/ssh_config"))
+        resolved_ssh_config_file = str(Path("/etc/ssh/ssh_config"))
+        LOG.info(f"found ssh config file at `{resolved_ssh_config_file}`")
+        return resolved_ssh_config_file
+    LOG.debug("could not resolve ssh config file")
     return ""
 
 
@@ -311,12 +371,20 @@ def resolve_ssh_known_hosts(ssh_known_hosts: str) -> str:
         N/A
 
     """
+    LOG.debug(f"attempting to resolve ssh known hosts file from `{ssh_known_hosts}`")
     if Path(ssh_known_hosts).is_file():
-        return str(Path(ssh_known_hosts))
+        resolved_ssh_known_hosts = str(Path(ssh_known_hosts))
+        LOG.info(f"found ssh config file at `{resolved_ssh_known_hosts}`")
+        return resolved_ssh_known_hosts
     if Path(os.path.expanduser("~/.ssh/known_hosts")).is_file():
-        return str(Path(os.path.expanduser("~/.ssh/known_hosts")))
+        resolved_ssh_known_hosts = str(Path(os.path.expanduser("~/.ssh/known_hosts")))
+        LOG.info(f"found ssh config file at `{resolved_ssh_known_hosts}`")
+        return resolved_ssh_known_hosts
     if Path("/etc/ssh/ssh_known_hosts").is_file():
-        return str(Path("/etc/ssh/ssh_known_hosts"))
+        resolved_ssh_known_hosts = str(Path("/etc/ssh/ssh_known_hosts"))
+        LOG.info(f"found ssh config file at `{resolved_ssh_known_hosts}`")
+        return resolved_ssh_known_hosts
+    LOG.debug("could not resolve ssh known hosts file")
     return ""
 
 

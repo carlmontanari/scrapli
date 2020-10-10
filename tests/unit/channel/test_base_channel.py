@@ -11,8 +11,8 @@ def test__repr(sync_cisco_iosxe_conn):
     assert (
         repr(sync_cisco_iosxe_conn.channel)
         == "scrapli Channel {'logger': 'scrapli.channel-localhost', 'comms_prompt_pattern': '(^[a-z0-9.\\\\-_@()/:]{1,"
-        "63}>$)|(^[a-z0-9.\\\\-_@/:]{1,63}#$)|(^[a-z0-9.\\\\-_@/:]{1,63}\\\\(conf[a-z0-9.\\\\-@/:\\\\+]{0,32}\\\\)#$)', "
-        "'comms_return_char': '\\n', 'comms_ansi': True, 'comms_auto_expand': False, 'timeout_ops': 30.0}"
+        "63}>$)|(^[a-z0-9.\\\\-_@/:]{1,63}#$)|(^[a-z0-9.\\\\-_@/:]{1,63}\\\\([a-z0-9.\\\\-@/:\\\\+]{0,32}\\\\)#$)', "
+        "'comms_return_char': '\\n', 'comms_ansi': True, 'comms_auto_expand': False, 'timeout_ops': 30.0, 'session_lock': False}"
     )
 
 

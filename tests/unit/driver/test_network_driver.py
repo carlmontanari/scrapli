@@ -18,7 +18,7 @@ def test_check_kwargs_comms_prompt_pattern():
         conn = IOSXEDriver(host="localhost", comms_prompt_pattern="something")
     assert (
         conn.comms_prompt_pattern
-        == "(^[a-z0-9.\\-_@()/:]{1,63}>$)|(^[a-z0-9.\\-_@/:]{1,63}#$)|(^[a-z0-9.\\-_@/:]{1,63}\\(conf[a-z0-9.\\-@/:\\+]{"
+        == "(^[a-z0-9.\\-_@()/:]{1,63}>$)|(^[a-z0-9.\\-_@/:]{1,63}#$)|(^[a-z0-9.\\-_@/:]{1,63}\\([a-z0-9.\\-@/:\\+]{"
         "0,32}\\)#$)"
     )
     assert (

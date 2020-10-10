@@ -23,8 +23,7 @@ def test__repr():
         repr(conn)
         == "Scrape(host='myhost', port=22, auth_username='', auth_password='', auth_private_key='', "
         "auth_private_key_passphrase='', auth_strict_key=True, auth_bypass=False, timeout_socket=5, "
-        "timeout_transport=10, timeout_ops=30.0, timeout_exit=True, keepalive=False, keepalive_interval=30, "
-        "keepalive_type='network', keepalive_pattern='\\x05', comms_prompt_pattern='^[a-z0-9.\\\\-@()/:]{1,"
+        "timeout_transport=10, timeout_ops=30.0, timeout_exit=True, comms_prompt_pattern='^[a-z0-9.\\\\-@()/:]{1,"
         "48}[#>$]\\\\s*$', comms_return_char='\\n', comms_ansi=False, ssh_config_file='', ssh_known_hosts_file='', "
         "on_init=None, on_open=None, on_close=None, transport='system', transport_options=None)"
     )
@@ -54,13 +53,6 @@ def test__repr():
             "`auth_bypass` should be bool, got <class 'str'>",
         ),
         ("timeout_exit", "notabool", TypeError, "`timeout_exit` should be bool, got <class 'str'>"),
-        ("keepalive", "notabool", TypeError, "`keepalive` should be bool, got <class 'str'>"),
-        (
-            "keepalive_type",
-            "notvalid",
-            ValueError,
-            "`notvalid` is an invalid keepalive_type; must be 'network' or 'standard'",
-        ),
         (
             "comms_return_char",
             True,
@@ -91,8 +83,6 @@ def test__repr():
         "auth_private_key",
         "auth_bypass",
         "timeout_exit",
-        "keepalive",
-        "keepalive_type",
         "comms_return_char",
         "comms_ansi",
         "on_init",
@@ -149,10 +139,6 @@ def test_unsupported_platform():
         ("timeout_transport", 100, 100),
         ("timeout_ops", 100, 100),
         ("timeout_exit", False, False),
-        ("keepalive", True, True),
-        ("keepalive_interval", 100, 100),
-        ("keepalive_type", "standard", "standard"),
-        ("keepalive_pattern", "tacocat", "tacocat"),
         ("comms_prompt_pattern", "tacocat", "tacocat"),
         ("comms_return_char", "tacocat", "tacocat"),
         ("comms_ansi", True, True),
@@ -177,10 +163,6 @@ def test_unsupported_platform():
         "timeout_transport",
         "timeout_ops",
         "timeout_exit",
-        "keepalive",
-        "keepalive_interval",
-        "keepalive_type",
-        "keepalive_pattern",
         "comms_prompt_pattern",
         "comms_return_char",
         "comms_ansi",

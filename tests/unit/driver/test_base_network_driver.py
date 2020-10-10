@@ -16,7 +16,7 @@ def test_check_kwargs_comms_prompt_pattern():
         conn = IOSXEDriver(host="localhost", comms_prompt_pattern="something")
     assert (
         conn.comms_prompt_pattern
-        == r"(^[a-z0-9.\-_@()/:]{1,63}>$)|(^[a-z0-9.\-_@/:]{1,63}#$)|(^[a-z0-9.\-_@/:]{1,63}\(conf[a-z0-9.\-@/:\+]{"
+        == r"(^[a-z0-9.\-_@()/:]{1,63}>$)|(^[a-z0-9.\-_@/:]{1,63}#$)|(^[a-z0-9.\-_@/:]{1,63}\([a-z0-9.\-@/:\+]{"
         "0,32}\\)#$)"
     )
     assert (
@@ -31,7 +31,7 @@ def test_check_kwargs_comms_prompt_pattern():
 def test_generate_comms_prompt_pattern(sync_cisco_iosxe_conn):
     assert (
         sync_cisco_iosxe_conn.comms_prompt_pattern
-        == "(^[a-z0-9.\\-_@()/:]{1,63}>$)|(^[a-z0-9.\\-_@/:]{1,63}#$)|(^[a-z0-9.\\-_@/:]{1,63}\\(conf[a-z0-9.\\-@/:\\+]{0,32}\\)#$)"
+        == "(^[a-z0-9.\\-_@()/:]{1,63}>$)|(^[a-z0-9.\\-_@/:]{1,63}#$)|(^[a-z0-9.\\-_@/:]{1,63}\\([a-z0-9.\\-@/:\\+]{0,32}\\)#$)"
     )
 
 
@@ -56,7 +56,7 @@ def test_update_privilege_levels(sync_cisco_iosxe_conn):
     sync_cisco_iosxe_conn.update_privilege_levels()
     assert (
         sync_cisco_iosxe_conn.comms_prompt_pattern
-        == r"(^[a-z0-9.\-_@()/:]{1,63}>$)|(^[a-z0-9.\-_@/:]{1,63}#$)|(^[a-z0-9.\-_@/:]{1,63}\(conf[a-z0-9.\-@/:\+]{0,32}\)#$)|(^weirdpatterndude$)"
+        == r"(^[a-z0-9.\-_@()/:]{1,63}>$)|(^[a-z0-9.\-_@/:]{1,63}#$)|(^[a-z0-9.\-_@/:]{1,63}\([a-z0-9.\-@/:\+]{0,32}\)#$)|(^weirdpatterndude$)"
     )
     assert sync_cisco_iosxe_conn._priv_map == {
         "exec": ["exec"],

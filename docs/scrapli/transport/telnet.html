@@ -31,7 +31,6 @@
 import re
 from datetime import datetime
 from telnetlib import Telnet
-from typing import Optional
 
 from scrapli.decorators import OperationTimeout, requires_open_session
 from scrapli.exceptions import ConnectionNotOpened, ScrapliAuthenticationFailed
@@ -436,7 +435,7 @@ class TelnetTransport(Transport):
         self.session.write(channel_input.encode())
 
     @requires_open_session()
-    def set_timeout(self, timeout: Optional[int] = None) -&gt; None:
+    def set_timeout(self, timeout: int) -&gt; None:
         &#34;&#34;&#34;
         Set session timeout
 
@@ -450,11 +449,7 @@ class TelnetTransport(Transport):
             N/A
 
         &#34;&#34;&#34;
-        if isinstance(timeout, int):
-            set_timeout = timeout
-        else:
-            set_timeout = self.timeout_transport
-        self.session.timeout = set_timeout
+        self.session.timeout = timeout
 
     def _keepalive_standard(self) -&gt; None:
         &#34;&#34;&#34;
@@ -1029,7 +1024,7 @@ and is ignored after authentication is completed.</dd>
         self.session.write(channel_input.encode())
 
     @requires_open_session()
-    def set_timeout(self, timeout: Optional[int] = None) -&gt; None:
+    def set_timeout(self, timeout: int) -&gt; None:
         &#34;&#34;&#34;
         Set session timeout
 
@@ -1043,11 +1038,7 @@ and is ignored after authentication is completed.</dd>
             N/A
 
         &#34;&#34;&#34;
-        if isinstance(timeout, int):
-            set_timeout = timeout
-        else:
-            set_timeout = self.timeout_transport
-        self.session.timeout = set_timeout
+        self.session.timeout = timeout
 
     def _keepalive_standard(self) -&gt; None:
         &#34;&#34;&#34;

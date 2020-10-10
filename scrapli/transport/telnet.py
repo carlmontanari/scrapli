@@ -2,7 +2,6 @@
 import re
 from datetime import datetime
 from telnetlib import Telnet
-from typing import Optional
 
 from scrapli.decorators import OperationTimeout, requires_open_session
 from scrapli.exceptions import ConnectionNotOpened, ScrapliAuthenticationFailed
@@ -54,10 +53,6 @@ class TelnetTransport(Transport):
         timeout_transport: int = 5,
         timeout_ops: int = 10,
         timeout_exit: bool = True,
-        keepalive: bool = False,
-        keepalive_interval: int = 30,
-        keepalive_type: str = "",
-        keepalive_pattern: str = "\005",
         comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
         comms_return_char: str = "\n",
         comms_ansi: bool = False,
@@ -94,16 +89,6 @@ class TelnetTransport(Transport):
             timeout_exit: True/False close transport if timeout encountered. If False and keepalives
                 are in use, keepalives will prevent program from exiting so you should be sure to
                 catch Timeout exceptions and handle them appropriately
-            keepalive: whether or not to try to keep session alive
-            keepalive_interval: interval to use for session keepalives
-            keepalive_type: network|standard -- 'network' sends actual characters over the
-                transport channel. This is useful for network-y type devices that may not support
-                "standard" keepalive mechanisms. 'standard' is not currently implemented for telnet
-            keepalive_pattern: pattern to send to keep network channel alive. Default is
-                u'\005' which is equivalent to 'ctrl+e'. This pattern moves cursor to end of the
-                line which should be an innocuous pattern. This will only be entered *if* a lock
-                can be acquired. This is only applicable if using keepalives and if the keepalive
-                type is 'network'
             comms_prompt_pattern: prompt pattern expected for device, same as the one provided to
                 channel -- telnet needs to know this to know how to decide if we are properly
                 sending/receiving data -- i.e. we are not stuck at some password prompt or some
@@ -136,10 +121,6 @@ class TelnetTransport(Transport):
             timeout_socket,
             timeout_transport,
             timeout_exit,
-            keepalive,
-            keepalive_interval,
-            keepalive_type,
-            keepalive_pattern,
         )
         self.auth_username: str = auth_username
         self.auth_password: str = auth_password
@@ -176,19 +157,18 @@ class TelnetTransport(Transport):
             ScrapliAuthenticationFailed: if cant successfully authenticate
 
         """
-        with self.session_lock:
-            # establish session with "socket" timeout, then reset timeout to "transport" timeout
-            try:
-                self.session = ScrapliTelnet(
-                    host=self.host, port=self.port, timeout=self.timeout_socket
-                )
-            except ConnectionError as exc:
-                msg = f"Failed to open telnet session to host {self.host}"
-                if "connection refused" in str(exc).lower():
-                    msg = f"Failed to open telnet session to host {self.host}, connection refused"
-                raise ConnectionNotOpened(msg) from exc
-            self.session.timeout = self.timeout_transport
-            self.logger.debug(f"Session to host {self.host} spawned")
+        # establish session with "socket" timeout, then reset timeout to "transport" timeout
+        try:
+            self.session = ScrapliTelnet(
+                host=self.host, port=self.port, timeout=self.timeout_socket
+            )
+        except ConnectionError as exc:
+            msg = f"Failed to open telnet session to host {self.host}"
+            if "connection refused" in str(exc).lower():
+                msg = f"Failed to open telnet session to host {self.host}, connection refused"
+            raise ConnectionNotOpened(msg) from exc
+        self.session.timeout = self.timeout_transport
+        self.logger.debug(f"Session to host {self.host} spawned")
 
         if not self.auth_bypass:
             self._authenticate()
@@ -230,39 +210,36 @@ class TelnetTransport(Transport):
         return_interval = self._timeout_ops / 10
         return_attempts = 1
 
-        with self.session_lock:
-            while True:
-                try:
-                    new_output = self.session.read_eager()
-                    output += new_output
-                    self.logger.debug(f"Attempting to authenticate. Read: {repr(new_output)}")
-                except EOFError as exc:
-                    # EOF means telnet connection is dead :(
-                    msg = f"Failed to open connection to host {self.host}. Connection lost."
-                    self.logger.critical(msg)
-                    raise ScrapliAuthenticationFailed(msg) from exc
+        while True:
+            try:
+                new_output = self.session.read_eager()
+                output += new_output
+                self.logger.debug(f"Attempting to authenticate. Read: {repr(new_output)}")
+            except EOFError as exc:
+                # EOF means telnet connection is dead :(
+                msg = f"Failed to open connection to host {self.host}. Connection lost."
+                self.logger.critical(msg)
+                raise ScrapliAuthenticationFailed(msg) from exc
 
-                if self.username_prompt.lower().encode() in output.lower():
-                    self.logger.info("Found username prompt, sending username")
-                    # if/when we see username, reset the output to empty byte string
-                    output = b""
-                    self.session.write(self.auth_username.encode())
+            if self.username_prompt.lower().encode() in output.lower():
+                self.logger.info("Found username prompt, sending username")
+                # if/when we see username, reset the output to empty byte string
+                output = b""
+                self.session.write(self.auth_username.encode())
+                self.session.write(self._comms_return_char.encode())
+            elif self.password_prompt.lower().encode() in output.lower():
+                self.logger.info("Found password prompt, sending password")
+                self.session.write(self.auth_password.encode())
+                self.session.write(self._comms_return_char.encode())
+                break
+            elif not output:
+                current_iteration_time = datetime.now().timestamp()
+                if (current_iteration_time - auth_start_time) > (return_interval * return_attempts):
+                    self.logger.debug(
+                        "No username or password prompt found, sending return character..."
+                    )
                     self.session.write(self._comms_return_char.encode())
-                elif self.password_prompt.lower().encode() in output.lower():
-                    self.logger.info("Found password prompt, sending password")
-                    self.session.write(self.auth_password.encode())
-                    self.session.write(self._comms_return_char.encode())
-                    break
-                elif not output:
-                    current_iteration_time = datetime.now().timestamp()
-                    if (current_iteration_time - auth_start_time) > (
-                        return_interval * return_attempts
-                    ):
-                        self.logger.debug(
-                            "No username or password prompt found, sending return character..."
-                        )
-                        self.session.write(self._comms_return_char.encode())
-                        return_attempts += 1
+                    return_attempts += 1
 
     @OperationTimeout("_timeout_ops_auth", "Timed determining if telnet session is authenticated")
     def _telnet_isauthenticated(self) -> bool:
@@ -270,7 +247,7 @@ class TelnetTransport(Transport):
         Check if session is authenticated
 
         This is very naive -- it only knows if the telnet session has not received an EOF.
-        Beyond that we lock the session and send the return character and re-read the channel.
+        Beyond that we send the return character and re-read the channel.
 
         Args:
             N/A
@@ -283,55 +260,52 @@ class TelnetTransport(Transport):
 
         """
         self.logger.debug("Attempting to determine if telnet authentication was successful")
-        with self.session_lock:
-            if not self.session.eof:
-                prompt_pattern = get_prompt_pattern(
-                    prompt="", class_prompt=self._comms_prompt_pattern
+        if not self.session.eof:
+            prompt_pattern = get_prompt_pattern(prompt="", class_prompt=self._comms_prompt_pattern)
+            self.session.write(self._comms_return_char.encode())
+            self._wait_for_session_fd_ready(fd=self.session.fileno())
+
+            output = b""
+            while True:
+                new_output = self.session.read_eager()
+                output += new_output
+                self.logger.debug(
+                    f"Attempting to validate authentication. Read: {repr(new_output)}"
                 )
-                self.session.write(self._comms_return_char.encode())
-                self._wait_for_session_fd_ready(fd=self.session.fileno())
-
-                output = b""
-                while True:
-                    new_output = self.session.read_eager()
-                    output += new_output
-                    self.logger.debug(
-                        f"Attempting to validate authentication. Read: {repr(new_output)}"
+                # we do not need to deal w/ line replacement for the actual output, only for
+                # parsing if a prompt-like thing is at the end of the output
+                output = output.replace(b"\r", b"")
+                # always check to see if we should strip ansi here; if we don't handle this we
+                # may raise auth failures for the wrong reason which would be confusing for
+                # users
+                if self._comms_ansi or b"\x1B" in output:
+                    output = strip_ansi(output=output)
+                channel_match = re.search(pattern=prompt_pattern, string=output)
+                if channel_match:
+                    self._isauthenticated = True
+                    break
+                if b"username:" in output.lower():
+                    # if we see "username" prompt we can assume (because telnet) that we failed
+                    # to authenticate
+                    self.logger.critical(
+                        "Found `username:` in output, assuming password authentication failed"
                     )
-                    # we do not need to deal w/ line replacement for the actual output, only for
-                    # parsing if a prompt-like thing is at the end of the output
-                    output = output.replace(b"\r", b"")
-                    # always check to see if we should strip ansi here; if we don't handle this we
-                    # may raise auth failures for the wrong reason which would be confusing for
-                    # users
-                    if self._comms_ansi or b"\x1B" in output:
-                        output = strip_ansi(output=output)
-                    channel_match = re.search(pattern=prompt_pattern, string=output)
-                    if channel_match:
-                        self._isauthenticated = True
-                        break
-                    if b"username:" in output.lower():
-                        # if we see "username" prompt we can assume (because telnet) that we failed
-                        # to authenticate
-                        self.logger.critical(
-                            "Found `username:` in output, assuming password authentication failed"
-                        )
-                        break
-                    if b"password:" in output.lower():
-                        # if we see "password" we know auth failed (hopefully in all scenarios!)
-                        self.logger.critical(
-                            "Found `password:` in output, assuming password authentication failed"
-                        )
-                        break
-                    if output:
-                        self.logger.debug(
-                            f"Cannot determine if authenticated, \n\tRead: {repr(output)}"
-                        )
+                    break
+                if b"password:" in output.lower():
+                    # if we see "password" we know auth failed (hopefully in all scenarios!)
+                    self.logger.critical(
+                        "Found `password:` in output, assuming password authentication failed"
+                    )
+                    break
+                if output:
+                    self.logger.debug(
+                        f"Cannot determine if authenticated, \n\tRead: {repr(output)}"
+                    )
 
-            if self._isauthenticated:
-                return True
+        if self._isauthenticated:
+            return True
 
-            return False
+        return False
 
     def close(self) -> None:
         """
@@ -347,10 +321,8 @@ class TelnetTransport(Transport):
             N/A
 
         """
-        self.session_lock.acquire()
         self.session.close()
         self.logger.debug(f"Channel to host {self.host} closed")
-        self.session_lock.release()
 
     def isalive(self) -> bool:
         """
@@ -407,7 +379,7 @@ class TelnetTransport(Transport):
         self.session.write(channel_input.encode())
 
     @requires_open_session()
-    def set_timeout(self, timeout: Optional[int] = None) -> None:
+    def set_timeout(self, timeout: int) -> None:
         """
         Set session timeout
 
@@ -421,24 +393,4 @@ class TelnetTransport(Transport):
             N/A
 
         """
-        if isinstance(timeout, int):
-            set_timeout = timeout
-        else:
-            set_timeout = self.timeout_transport
-        self.session.timeout = set_timeout
-
-    def _keepalive_standard(self) -> None:
-        """
-        Send "out of band" (protocol level) keepalives to devices.
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            NotImplementedError: always, because this is not implemented for telnet
-
-        """
-        raise NotImplementedError("No 'standard' keepalive mechanism for telnet.")
+        self.session.timeout = timeout
