@@ -579,14 +579,9 @@ class SystemSSHTransport(Transport):
         &#34;&#34;&#34;
         self.session.write(channel_input.encode())
 
-    def set_timeout(self, timeout: Optional[int] = None) -&gt; None:
+    def set_timeout(self, timeout: int) -&gt; None:
         &#34;&#34;&#34;
         Set session timeout
-
-        Note that this modifies the objects `timeout_transport` value directly as this value is
-        what controls the timeout decorator for read/write methods. This is slightly different
-        behavior from ssh2/paramiko/telnet in that those transports modify the session value and
-        leave the objects `timeout_transport` alone.
 
         Args:
             timeout: timeout in seconds
@@ -598,11 +593,7 @@ class SystemSSHTransport(Transport):
             N/A
 
         &#34;&#34;&#34;
-        if isinstance(timeout, int):
-            set_timeout = timeout
-        else:
-            set_timeout = self.timeout_transport
-        self.timeout_transport = set_timeout
+        self.timeout_transport = timeout
 
     def _keepalive_standard(self) -&gt; None:
         &#34;&#34;&#34;
@@ -1273,14 +1264,9 @@ terminal "normally", passing some bad arguments can break things!</dd>
         &#34;&#34;&#34;
         self.session.write(channel_input.encode())
 
-    def set_timeout(self, timeout: Optional[int] = None) -&gt; None:
+    def set_timeout(self, timeout: int) -&gt; None:
         &#34;&#34;&#34;
         Set session timeout
-
-        Note that this modifies the objects `timeout_transport` value directly as this value is
-        what controls the timeout decorator for read/write methods. This is slightly different
-        behavior from ssh2/paramiko/telnet in that those transports modify the session value and
-        leave the objects `timeout_transport` alone.
 
         Args:
             timeout: timeout in seconds
@@ -1292,11 +1278,7 @@ terminal "normally", passing some bad arguments can break things!</dd>
             N/A
 
         &#34;&#34;&#34;
-        if isinstance(timeout, int):
-            set_timeout = timeout
-        else:
-            set_timeout = self.timeout_transport
-        self.timeout_transport = set_timeout
+        self.timeout_transport = timeout
 
     def _keepalive_standard(self) -&gt; None:
         &#34;&#34;&#34;
@@ -1397,55 +1379,6 @@ terminal "normally", passing some bad arguments can break things!</dd>
         self._session_keepalive()</code></pre>
 </details>
 </dd>
-<dt id="scrapli.transport.systemssh.SystemSSHTransport.set_timeout"><code class="name flex">
-<span>def <span class="ident">set_timeout</span></span>(<span>self, timeout: Union[int, NoneType] = None) ‑> NoneType</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Set session timeout</p>
-<p>Note that this modifies the objects <code>timeout_transport</code> value directly as this value is
-what controls the timeout decorator for read/write methods. This is slightly different
-behavior from ssh2/paramiko/telnet in that those transports modify the session value and
-leave the objects <code>timeout_transport</code> alone.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>timeout</code></strong></dt>
-<dd>timeout in seconds</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>N/A
-# noqa: DAR202</p>
-<h2 id="raises">Raises</h2>
-<p>N/A</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def set_timeout(self, timeout: Optional[int] = None) -&gt; None:
-    &#34;&#34;&#34;
-    Set session timeout
-
-    Note that this modifies the objects `timeout_transport` value directly as this value is
-    what controls the timeout decorator for read/write methods. This is slightly different
-    behavior from ssh2/paramiko/telnet in that those transports modify the session value and
-    leave the objects `timeout_transport` alone.
-
-    Args:
-        timeout: timeout in seconds
-
-    Returns:
-        N/A  # noqa: DAR202
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    if isinstance(timeout, int):
-        set_timeout = timeout
-    else:
-        set_timeout = self.timeout_transport
-    self.timeout_transport = set_timeout</code></pre>
-</details>
-</dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -1453,6 +1386,7 @@ leave the objects <code>timeout_transport</code> alone.</p>
 <ul class="hlist">
 <li><code><a title="scrapli.transport.transport.Transport.close" href="base_transport.html#scrapli.transport.base_transport.TransportBase.close">close</a></code></li>
 <li><code><a title="scrapli.transport.transport.Transport.read" href="transport.html#scrapli.transport.transport.Transport.read">read</a></code></li>
+<li><code><a title="scrapli.transport.transport.Transport.set_timeout" href="base_transport.html#scrapli.transport.base_transport.TransportBase.set_timeout">set_timeout</a></code></li>
 <li><code><a title="scrapli.transport.transport.Transport.write" href="transport.html#scrapli.transport.transport.Transport.write">write</a></code></li>
 </ul>
 </li>
@@ -1479,7 +1413,6 @@ leave the objects <code>timeout_transport</code> alone.</p>
 <ul class="">
 <li><code><a title="scrapli.transport.systemssh.SystemSSHTransport.isalive" href="#scrapli.transport.systemssh.SystemSSHTransport.isalive">isalive</a></code></li>
 <li><code><a title="scrapli.transport.systemssh.SystemSSHTransport.open" href="#scrapli.transport.systemssh.SystemSSHTransport.open">open</a></code></li>
-<li><code><a title="scrapli.transport.systemssh.SystemSSHTransport.set_timeout" href="#scrapli.transport.systemssh.SystemSSHTransport.set_timeout">set_timeout</a></code></li>
 </ul>
 </li>
 </ul>

@@ -1,6 +1,32 @@
 CHANGELOG
 =======
 
+# 2020.10.10
+- Improve logging in helper functions - especially around resolving ssh config/known hosts
+- Add `ttp_parse_output` method to Response object; add `ttp_parse` function in helper
+- Load requirements from requirements files and parse them for setup.py -- stop me from forgetting to update in one
+ place or another!
+- Slacken the IOSXE configuration prompt pattern -- `hostname(ipsec-profile)` was not being caught by the pattern as
+ it was expecting the part in parenthesis to start with "conf" - thank you Talha Javaid for bringing this up on ntc
+  slack, and Alex Lardschneider for confirming the "fix" should be good to go!
+- Add `community` pip extra to install scrapli community
+- Minor README house keeping!
+- Made transport `set_timeout` saner -- I genuinely don't know what I was doing with that before... this included the
+ base class as well as updating telnet and systemssh... in theory this could be a breaking change if you were just
+  calling `set_timeout` for some reason without passing an argument... you probably weren't doing that... because why
+   would you? There was *some* precedent for doing it like this before but it isn't worth caring about now :)
+- Did smarter things with imports in helper, added tests to make sure the warnings are correct
+- Dramatically simplified session locking... this had just gotten out of hand over time... now only the channel locks
+. This means that basically all inputs/outputs should go through the channel and/or you should acquire the lock
+ yourself if you wish to read/write directly to the transport. Critically this means that all the external transport
+  plugins AND scrapli-netconf need to be updated as well -- this means that you *must* update all of these if you are
+   using this release! (requirements are of course pinned to make sure this is the case)
+- **BREAKING CHANGE:** removed **ALL** keepalive stuff... for now. This will probably get added back, but AFAIK nobody
+ uses it right now and the implementation of it is frankly not very good... keeping it around right now added complexity
+  for little gain. Keepalives will be back and improved hopefully in the next release. If you need them, please just
+   pin to 2020.09.26!
+
+
 # 2020.09.26
 - Improved error handling/exceptions for scrapli `Factory`
 - Fixed issue where `system` transport did not properly close/kill SSH connections
@@ -19,6 +45,8 @@ CHANGELOG
 - Fully give into the warm embrace of dependabot and pin all the dev requirements to specific versions... dependabot
  can keep us up to date and this lets us not worry about builds failing because of dev requirements getting changed
   around
+- Fix ptyprocess file object closing issue
+
 
 # 2020.08.28
 - Added Packet Pushers scrapli episode to the README!!

@@ -5,7 +5,7 @@ from io import TextIOWrapper
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from scrapli.exceptions import ScrapliCommandFailure
-from scrapli.helper import _textfsm_get_template, genie_parse, textfsm_parse
+from scrapli.helper import _textfsm_get_template, genie_parse, textfsm_parse, ttp_parse
 
 
 class Response:
@@ -170,6 +170,27 @@ class Response:
         structured_result = genie_parse(
             platform=self.genie_platform, command=self.channel_input, output=self.result
         )
+        return structured_result
+
+    def ttp_parse_output(
+        self, template: Union[str, TextIOWrapper]
+    ) -> Union[Dict[str, Any], List[Any]]:
+        """
+        Parse results with ttp, always return structured data
+
+        Returns an empty list if parsing fails!
+
+        Args:
+            template: string path to ttp template or opened ttp template file
+
+        Returns:
+            structured_result: empty list or parsed data from ttp
+
+        Raises:
+            N/A
+
+        """
+        structured_result = ttp_parse(template=template, output=self.result) or []
         return structured_result
 
     def raise_for_status(self) -> None:

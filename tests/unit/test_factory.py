@@ -1,3 +1,5 @@
+import importlib
+
 import pytest
 
 from scrapli.driver import AsyncNetworkDriver, NetworkDriver
@@ -15,7 +17,7 @@ from scrapli.driver.core import (
     NXOSDriver,
 )
 from scrapli.exceptions import ScrapliException
-from scrapli.factory import AsyncScrapli, Scrapli
+from scrapli.factory import AsyncScrapli, Scrapli, _get_community_platform_details
 
 TEST_COMMUNITY_PRIV_LEVELS = {
     "exec": (
@@ -212,3 +214,26 @@ def test_factory_community_platform_variant_driver_type(factory_setup):
     ):
         actual_priv_level.name == expected_priv_level.name
         actual_priv_level.pattern == expected_priv_level.pattern
+
+
+def test_factory_no_scrapli_community(monkeypatch):
+    def mock_import_module(name):
+        raise ModuleNotFoundError
+
+    monkeypatch.setattr(importlib, "import_module", mock_import_module)
+
+    with pytest.raises(ModuleNotFoundError) as exc:
+        _get_community_platform_details(community_platform_name="blah")
+    assert (
+        str(exc.value)
+        == "\n***** Module 'None' not found! ********************************************************\nTo resolve this issue, ensure you have the scrapli community package installed. You can install this with pip: `pip install scrapli_community`.\n***** Module 'None' not found! ********************************************************"
+    )
+
+
+def test_factory_no_scrapli_community_platform():
+    with pytest.raises(ModuleNotFoundError) as exc:
+        _get_community_platform_details(community_platform_name="blah")
+    assert (
+        str(exc.value)
+        == "\n***** Platform 'blah' not found! ******************************************************\nTo resolve this issue, ensure you have the correct platform name, and that a scrapli  community platform of that name exists!\n***** Platform 'blah' not found! ******************************************************"
+    )

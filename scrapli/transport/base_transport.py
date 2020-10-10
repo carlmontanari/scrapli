@@ -1,8 +1,6 @@
 """scrapli.transport.base_transport"""
 from abc import ABC, abstractmethod
 from logging import getLogger
-from threading import Lock
-from typing import Optional
 
 from scrapli.helper import attach_duplicate_log_filter
 
@@ -15,10 +13,6 @@ class TransportBase(ABC):
         timeout_socket: int = 5,
         timeout_transport: int = 5,
         timeout_exit: bool = True,
-        keepalive: bool = False,
-        keepalive_interval: int = 30,
-        keepalive_type: str = "network",
-        keepalive_pattern: str = "\005",
     ) -> None:
         r"""
         Transport Base Object
@@ -31,19 +25,6 @@ class TransportBase(ABC):
             timeout_exit: True/False close transport if timeout encountered. If False and keepalives
                 are in use, keepalives will prevent program from exiting so you should be sure to
                 catch Timeout exceptions and handle them appropriately
-            keepalive: whether or not to try to keep session alive
-            keepalive_interval: interval to use for session keepalives
-            keepalive_type: network|standard -- 'network' sends actual characters over the
-                transport channel. This is useful for network-y type devices that may not support
-                'standard' keepalive mechanisms. 'standard' attempts to use whatever 'standard'
-                keepalive mechanisms are available in the selected transport mechanism. Check the
-                transport documentation for details on what is supported and/or how it is
-                implemented for any given transport driver
-            keepalive_pattern: pattern to send to keep network channel alive. Default is
-                u'\005' which is equivalent to 'ctrl+e'. This pattern moves cursor to end of the
-                line which should be an innocuous pattern. This will only be entered *if* a lock
-                can be acquired. This is only applicable if using keepalives and if the keepalive
-                type is 'network'
 
         Returns:
             N/A  # noqa: DAR202
@@ -60,12 +41,6 @@ class TransportBase(ABC):
         self.timeout_socket: int = timeout_socket
         self.timeout_transport: int = timeout_transport
         self.timeout_exit: bool = timeout_exit
-        self.keepalive: bool = keepalive
-        self.keepalive_interval: int = keepalive_interval
-        self.keepalive_type: str = keepalive_type
-        self.keepalive_pattern: str = keepalive_pattern
-
-        self.session_lock: Lock = Lock()
 
     def __bool__(self) -> bool:
         """
@@ -118,7 +93,6 @@ class TransportBase(ABC):
             class_dict["auth_password"] = "********"
         if "auth_private_key_passphrase" in class_dict.keys():
             class_dict["auth_private_key_passphrase"] = "********"
-        class_dict["session_lock"] = self.session_lock.locked()
         class_dict["logger"] = self.logger.name
         return f"Transport {class_dict}"
 
@@ -155,7 +129,7 @@ class TransportBase(ABC):
         """
 
     @abstractmethod
-    def set_timeout(self, timeout: Optional[int] = None) -> None:
+    def set_timeout(self, timeout: int) -> None:
         """
         Set session timeout
 

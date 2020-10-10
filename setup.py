@@ -9,35 +9,37 @@ __author__ = "Carl Montanari"
 with open("README.md", "r", encoding="utf-8") as f:
     README = f.read()
 
+EXTRAS_REQUIRE = {
+    "textfsm": [],
+    "genie": [],
+    "ttp": [],
+    "paramiko": [],
+    "ssh2": [],
+    "asyncssh": [],
+    "community": [],
+}
+
+for extra in EXTRAS_REQUIRE:
+    with open(f"requirements-{extra}.txt", "r") as f:
+        EXTRAS_REQUIRE[extra] = f.read().splitlines()
+
+full_requirements = [requirement for extra in EXTRAS_REQUIRE.values() for requirement in extra]
+EXTRAS_REQUIRE["full"] = full_requirements
+
+
 setuptools.setup(
     name="scrapli",
     version=__version__,
     author=__author__,
     author_email="carl.r.montanari@gmail.com",
-    description="Screen scraping (ssh|telnet) client focused on network devices",
+    description="Fast, flexible, sync/async, Python 3.6+ screen scraping client specifically for "
+    "network devices",
     long_description=README,
     long_description_content_type="text/markdown",
     url="https://github.com/carlmontanari/scrapli",
     packages=setuptools.find_packages(),
     install_requires=[],
-    extras_require={
-        "textfsm": ["textfsm>=1.1.0,<2.0.0", "ntc-templates>=1.1.0,<2.0.0"],
-        "genie": ["genie>=20.2", "pyats>=20.2"],
-        "paramiko": ["scrapli_paramiko>=2020.06.06"],
-        "ssh2": ["scrapli_ssh2>=2020.06.06"],
-        "asyncssh": ["scrapli_asyncssh>=2020.07.04"],
-        "netconf": ["scrapli_netconf>=2020.07.26"],
-        "full": [
-            "textfsm>=1.1.0,<2.0.0",
-            "ntc-templates>=1.1.0,<2.0.0",
-            "genie>=20.2",
-            "pyats>=20.2",
-            "scrapli_paramiko>=2020.06.06",
-            "scrapli_ssh2>=2020.06.06",
-            "scrapli_asyncssh>=2020.07.04",
-            "scrapli_netconf>=2020.07.26",
-        ],
-    },
+    extras_require=EXTRAS_REQUIRE,
     classifiers=[
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",

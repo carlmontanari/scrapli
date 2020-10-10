@@ -54,6 +54,12 @@ def test_host__repr():
     )
 
 
+def test_init_ssh_config_invalid_config():
+    with pytest.raises(TypeError) as exc:
+        SSHConfig(None)
+    assert str(exc.value) == "`ssh_config_file` expected str, got <class 'NoneType'>"
+
+
 def test_init_ssh_config_file_explicit():
     ssh_conf = SSHConfig(f"{TEST_DATA_DIR}/files/_ssh_config")
     with open(f"{TEST_DATA_DIR}/files/_ssh_config", "r") as f:

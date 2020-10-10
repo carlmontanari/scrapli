@@ -2,6 +2,7 @@
 import re
 from abc import ABC
 from logging import getLogger
+from threading import Lock
 from typing import List, Optional, Tuple, Union
 
 from scrapli.helper import attach_duplicate_log_filter, get_prompt_pattern, normalize_lines
@@ -71,6 +72,8 @@ class ChannelBase(ABC):
         self.comms_auto_expand = comms_auto_expand
         self.timeout_ops = timeout_ops
 
+        self.session_lock = Lock()
+
     def __str__(self) -> str:
         """
         Magic str method for Channel
@@ -103,6 +106,7 @@ class ChannelBase(ABC):
         """
         class_dict = self.__dict__.copy()
         class_dict.pop("transport")
+        class_dict["session_lock"] = self.session_lock.locked()
         class_dict["logger"] = self.logger.name
         return f"scrapli Channel {class_dict}"
 
