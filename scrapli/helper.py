@@ -269,12 +269,8 @@ def genie_parse(platform: str, command: str, output: str) -> Union[List[Any], Di
     try:
         get_parser(command, genie_device)
         genie_parsed_result = genie_device.parse(command, output=output)
-        if not genie_parsed_result:
-            LOG.info("failed to parse data with genie")
-            return []
         if isinstance(genie_parsed_result, (list, dict)):
             return genie_parsed_result
-    # have to catch base exception because that is all genie raises for some reason :(
     except Exception as exc:  # pylint: disable=W0703
         LOG.error(f"failed to parse data with genie, genie raised exception: `{exc}`")
     return []
