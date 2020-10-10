@@ -52,6 +52,7 @@ Feel free to join the very awesome networktocode slack workspace [here](https://
   - [On Open](#on-open)
   - [On Close](#on-close)
   - [Timeouts](#timeouts)
+  - [Keepalives](#keepalives)
   - [Driver Privilege Levels](#driver-privilege-levels)
   - [Using Scrape Directly](#using-scrape-directly)
   - [Using the GenericDriver](#using-the-genericdriver)
@@ -873,10 +874,6 @@ The basic usage section outlined the most commonly used driver arguments, this o
 | timeout_transport               | timeout value for transport (i.e. paramiko)                 | Scrape            |                   
 | timeout_ops                     | timeout value for individual operations                     | Scrape            |                   
 | timeout_exit                    | True/False exit on timeout ops exceeded                     | Scrape            |                   
-| keepalive                       | True/False send keepalives to the remote host               | Scrape            |                   
-| keepalive_interval              | interval in seconds for keepalives                          | Scrape            |                   
-| keepalive_type                  | network or standard; see keepalive section for details      | Scrape            |                   
-| keepalive_pattern               | if network keepalive; pattern to send                       | Scrape            |                   
 | comms_prompt_pattern            | regex pattern for matching prompt(s); see platform regex    | Scrape            |                   
 | comms_return_char               | return char to use on the channel; default `\n`             | Scrape            |                   
 | comms_ansi                      | True/False strip ansi from returned output                  | Scrape            |                   
@@ -1016,6 +1013,9 @@ Finally, `timeout_ops` sets a timeout value for individual operations -- or put 
 
 
 ## Keepalives
+
+**NOTE** - Keepalives have been temporarily removed from scrapli. AFAIK nobody is/was using them and they need a re
+-write... stay tuned, they'll be back soonish :)
 
 In some cases it may be desirable to have a long running connection to a device, however it is generally a bad idea
  to allow for very long timeouts/exec sessions on devices. To cope with this scrapli supports sending "keepalives

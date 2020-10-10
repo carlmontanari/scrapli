@@ -16,6 +16,15 @@ CHANGELOG
   calling `set_timeout` for some reason without passing an argument... you probably weren't doing that... because why
    would you? There was *some* precedent for doing it like this before but it isn't worth caring about now :)
 - Did smarter things with imports in helper, added tests to make sure the warnings are correct
+- Dramatically simplified session locking... this had just gotten out of hand over time... now only the channel locks
+. This means that basically all inputs/outputs should go through the channel and/or you should acquire the lock
+ yourself if you wish to read/write directly to the transport. Critically this means that all the external transport
+  plugins AND scrapli-netconf need to be updated as well -- this means that you *must* update all of these if you are
+   using this release! (requirements are of course pinned to make sure this is the case)
+- **BREAKING CHANGE:** removed **ALL** keepalive stuff... for now. This will probably get added back, but AFAIK nobody
+ uses it right now and the implementation of it is frankly not very good... keeping it around right now added complexity
+  for little gain. Keepalives will be back and improved hopefully in the next release. If you need them, please just
+   pin to 2020.09.26!
 
 
 # 2020.09.26

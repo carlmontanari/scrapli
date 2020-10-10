@@ -2,7 +2,7 @@ import sys
 
 import pytest
 
-from scrapli.exceptions import ConnectionNotOpened, ScrapliAuthenticationFailed
+from scrapli.exceptions import ConnectionNotOpened
 from scrapli.transport import TelnetTransport
 from scrapli.transport.telnet import ScrapliTelnet
 
@@ -29,13 +29,6 @@ def test_open_failure():
     with pytest.raises(ConnectionNotOpened) as exc:
         conn.open()
     assert str(exc.value) == "Failed to open telnet session to host localhost, connection refused"
-
-
-def test_keepalive_standard():
-    conn = TelnetTransport("localhost")
-    with pytest.raises(NotImplementedError) as exc:
-        conn._keepalive_standard()
-    assert str(exc.value) == "No 'standard' keepalive mechanism for telnet."
 
 
 @pytest.mark.parametrize(

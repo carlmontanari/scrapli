@@ -1,1 +1,1 @@
-scrapli-asyncssh>=2020.07.04
+scrapli-asyncssh>=2020.10.10

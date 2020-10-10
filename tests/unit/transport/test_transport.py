@@ -29,12 +29,6 @@ class MockTransport(Transport):
     def set_timeout(self, timeout: Optional[int] = None) -> None:
         return
 
-    def _session_keepalive(self) -> None:
-        return
-
-    def _keepalive_standard(self) -> None:
-        return
-
 
 def test_transport_abc_init():
     transport = MockTransport("racecar")
