@@ -34,7 +34,7 @@ from io import TextIOWrapper
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from scrapli.exceptions import ScrapliCommandFailure
-from scrapli.helper import _textfsm_get_template, genie_parse, textfsm_parse
+from scrapli.helper import _textfsm_get_template, genie_parse, textfsm_parse, ttp_parse
 
 
 class Response:
@@ -199,6 +199,27 @@ class Response:
         structured_result = genie_parse(
             platform=self.genie_platform, command=self.channel_input, output=self.result
         )
+        return structured_result
+
+    def ttp_parse_output(
+        self, template: Union[str, TextIOWrapper]
+    ) -&gt; Union[Dict[str, Any], List[Any]]:
+        &#34;&#34;&#34;
+        Parse results with ttp, always return structured data
+
+        Returns an empty list if parsing fails!
+
+        Args:
+            template: string path to ttp template or opened ttp template file
+
+        Returns:
+            structured_result: empty list or parsed data from ttp
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        structured_result = ttp_parse(template=template, output=self.result) or []
         return structured_result
 
     def raise_for_status(self) -&gt; None:
@@ -759,6 +780,27 @@ failed command/interaction</dd>
         )
         return structured_result
 
+    def ttp_parse_output(
+        self, template: Union[str, TextIOWrapper]
+    ) -&gt; Union[Dict[str, Any], List[Any]]:
+        &#34;&#34;&#34;
+        Parse results with ttp, always return structured data
+
+        Returns an empty list if parsing fails!
+
+        Args:
+            template: string path to ttp template or opened ttp template file
+
+        Returns:
+            structured_result: empty list or parsed data from ttp
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        structured_result = ttp_parse(template=template, output=self.result) or []
+        return structured_result
+
     def raise_for_status(self) -&gt; None:
         &#34;&#34;&#34;
         Raise a `ScrapliCommandFailure` if command/config failed
@@ -906,6 +948,50 @@ dict from header and row data so it is easier to read/parse the output</dd>
     return structured_result</code></pre>
 </details>
 </dd>
+<dt id="scrapli.response.Response.ttp_parse_output"><code class="name flex">
+<span>def <span class="ident">ttp_parse_output</span></span>(<span>self, template: Union[str, _io.TextIOWrapper]) ‑> Union[Dict[str, Any], List[Any]]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Parse results with ttp, always return structured data</p>
+<p>Returns an empty list if parsing fails!</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>template</code></strong></dt>
+<dd>string path to ttp template or opened ttp template file</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>structured_result</code></dt>
+<dd>empty list or parsed data from ttp</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<p>N/A</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ttp_parse_output(
+    self, template: Union[str, TextIOWrapper]
+) -&gt; Union[Dict[str, Any], List[Any]]:
+    &#34;&#34;&#34;
+    Parse results with ttp, always return structured data
+
+    Returns an empty list if parsing fails!
+
+    Args:
+        template: string path to ttp template or opened ttp template file
+
+    Returns:
+        structured_result: empty list or parsed data from ttp
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    structured_result = ttp_parse(template=template, output=self.result) or []
+    return structured_result</code></pre>
+</details>
+</dd>
 </dl>
 </dd>
 </dl>
@@ -938,6 +1024,7 @@ dict from header and row data so it is easier to read/parse the output</dd>
 <li><code><a title="scrapli.response.Response.genie_parse_output" href="#scrapli.response.Response.genie_parse_output">genie_parse_output</a></code></li>
 <li><code><a title="scrapli.response.Response.raise_for_status" href="#scrapli.response.Response.raise_for_status">raise_for_status</a></code></li>
 <li><code><a title="scrapli.response.Response.textfsm_parse_output" href="#scrapli.response.Response.textfsm_parse_output">textfsm_parse_output</a></code></li>
+<li><code><a title="scrapli.response.Response.ttp_parse_output" href="#scrapli.response.Response.ttp_parse_output">ttp_parse_output</a></code></li>
 </ul>
 </li>
 </ul>

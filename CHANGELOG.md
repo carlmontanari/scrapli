@@ -1,7 +1,7 @@
 CHANGELOG
 =======
 
-# 2020.XX.XX
+# 2020.10.10
 - Improve logging in helper functions - especially around resolving ssh config/known hosts
 - Add `ttp_parse_output` method to Response object; add `ttp_parse` function in helper
 - Load requirements from requirements files and parse them for setup.py -- stop me from forgetting to update in one
