@@ -47,7 +47,7 @@ def test_requires_open(method_name):
     conn = TelnetTransport("localhost")
     method = getattr(conn, method_name)
     with pytest.raises(ConnectionNotOpened):
-        if method_name == "write":
-            method("blah")
-        else:
+        if method_name == "read":
             method()
+        else:
+            method("blah")

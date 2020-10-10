@@ -140,8 +140,8 @@ def _textfsm_get_template(platform: str, command: str) -> Optional[TextIO]:
 
     """
     try:
-        from ntc_templates import templates  # pylint: disable=C0415,W0611
-        from textfsm.clitable import CliTable  # pylint: disable=C0415
+        importlib.import_module(name=".templates", package="ntc_templates")
+        CliTable = getattr(importlib.import_module(name=".clitable", package="textfsm"), "CliTable")
     except ModuleNotFoundError as exc:
         err = f"Module '{exc.name}' not installed!"
         msg = f"***** {err} {'*' * (80 - len(err))}"
@@ -246,8 +246,10 @@ def genie_parse(platform: str, command: str, output: str) -> Union[List[Any], Di
 
     """
     try:
-        from genie.conf.base import Device  # pylint: disable=C0415
-        from genie.libs.parser.utils import get_parser  # pylint: disable=C0415
+        Device = getattr(importlib.import_module(name=".conf.base", package="genie"), "Device")
+        get_parser = getattr(
+            importlib.import_module(name=".libs.parser.utils", package="genie"), "get_parser"
+        )
     except ModuleNotFoundError as exc:
         err = f"Module '{exc.name}' not installed!"
         msg = f"***** {err} {'*' * (80 - len(err))}"
@@ -294,7 +296,7 @@ def ttp_parse(template: Union[str, TextIOWrapper], output: str) -> Union[List[An
 
     """
     try:
-        from ttp import ttp  # pylint: disable=C0415
+        ttp = getattr(importlib.import_module(name="ttp"), "ttp")
     except ModuleNotFoundError as exc:
         err = f"Module '{exc.name}' not installed!"
         msg = f"***** {err} {'*' * (80 - len(err))}"

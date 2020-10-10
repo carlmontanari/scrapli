@@ -2,7 +2,6 @@
 from abc import ABC, abstractmethod
 from logging import getLogger
 from threading import Lock
-from typing import Optional
 
 from scrapli.helper import attach_duplicate_log_filter
 
@@ -155,7 +154,7 @@ class TransportBase(ABC):
         """
 
     @abstractmethod
-    def set_timeout(self, timeout: Optional[int] = None) -> None:
+    def set_timeout(self, timeout: int) -> None:
         """
         Set session timeout
 

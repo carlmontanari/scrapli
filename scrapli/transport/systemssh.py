@@ -550,14 +550,9 @@ class SystemSSHTransport(Transport):
         """
         self.session.write(channel_input.encode())
 
-    def set_timeout(self, timeout: Optional[int] = None) -> None:
+    def set_timeout(self, timeout: int) -> None:
         """
         Set session timeout
-
-        Note that this modifies the objects `timeout_transport` value directly as this value is
-        what controls the timeout decorator for read/write methods. This is slightly different
-        behavior from ssh2/paramiko/telnet in that those transports modify the session value and
-        leave the objects `timeout_transport` alone.
 
         Args:
             timeout: timeout in seconds
@@ -569,11 +564,7 @@ class SystemSSHTransport(Transport):
             N/A
 
         """
-        if isinstance(timeout, int):
-            set_timeout = timeout
-        else:
-            set_timeout = self.timeout_transport
-        self.timeout_transport = set_timeout
+        self.timeout_transport = timeout
 
     def _keepalive_standard(self) -> None:
         """

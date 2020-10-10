@@ -1,3 +1,4 @@
+import importlib
 import os
 import re
 import sys
@@ -10,6 +11,7 @@ import pytest
 
 import scrapli
 from scrapli.helper import (
+    _find_transport_plugin,
     _textfsm_get_template,
     attach_duplicate_log_filter,
     genie_parse,
@@ -251,3 +253,54 @@ def test_attach_duplicate_log_filter():
     attach_duplicate_log_filter(logger=dummy_logger)
     # simple assert to confirm that we got the dup filter attached to the new logger
     assert dummy_logger.filters[0].__class__.__name__ == "DuplicateFilter"
+
+
+def test_factory_no_scrapli_community():
+    with pytest.raises(ModuleNotFoundError) as exc:
+        _find_transport_plugin(transport="blah")
+    assert (
+        str(exc.value)
+        == "\n***** Module 'scrapli_blah' not found! ************************************************\nTo resolve this issue, ensure you are referencing a valid transport plugin. Transport plugins should be named similar to `scrapli_paramiko` or `scrapli_ssh2`, and can be selected by passing simply `paramiko` or `ssh2` into the scrapli driver. You can install most plugins with pip: `pip install scrapli-ssh2` for example.\n***** Module 'scrapli_blah' not found! ************************************************"
+    )
+
+
+def test_textfsm_get_template_no_textfsm(monkeypatch):
+    def mock_import_module(name, package):
+        raise ModuleNotFoundError
+
+    monkeypatch.setattr(importlib, "import_module", mock_import_module)
+
+    with pytest.warns(UserWarning) as warning_msg:
+        _textfsm_get_template(platform="blah", command="blah")
+    assert (
+        str(warning_msg._list[0].message)
+        == "\n***** Module 'None' not installed! ****************************************************\nTo resolve this issue, install 'None'. You can do this in one of the following ways:\n1: 'pip install -r requirements-textfsm.txt'\n2: 'pip install scrapli[textfsm]'\n***** Module 'None' not installed! ****************************************************"
+    )
+
+
+def test_genie_parse_no_genie(monkeypatch):
+    def mock_import_module(name, package):
+        raise ModuleNotFoundError
+
+    monkeypatch.setattr(importlib, "import_module", mock_import_module)
+
+    with pytest.warns(UserWarning) as warning_msg:
+        genie_parse(platform="blah", command="blah", output="blah")
+    assert (
+        str(warning_msg._list[0].message)
+        == "\n***** Module 'None' not installed! ****************************************************\nTo resolve this issue, install 'None'. You can do this in one of the following ways:\n1: 'pip install -r requirements-genie.txt'\n2: 'pip install scrapli[genie]'\n***** Module 'None' not installed! ****************************************************"
+    )
+
+
+def test_ttp_parse_no_ttp(monkeypatch):
+    def mock_import_module(name):
+        raise ModuleNotFoundError
+
+    monkeypatch.setattr(importlib, "import_module", mock_import_module)
+
+    with pytest.warns(UserWarning) as warning_msg:
+        ttp_parse(template="blah", output="blah")
+    assert (
+        str(warning_msg._list[0].message)
+        == "\n***** Module 'None' not installed! ****************************************************\nTo resolve this issue, install 'None'. You can do this in one of the following ways:\n1: 'pip install -r requirements-ttp.txt'\n2: 'pip install scrapli[ttp]'\n***** Module 'None' not installed! ****************************************************"
+    )

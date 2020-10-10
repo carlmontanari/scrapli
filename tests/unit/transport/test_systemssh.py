@@ -172,8 +172,6 @@ def test_set_timeout():
     conn.set_timeout(1000)
     assert conn.timeout_transport == 1000
     conn.timeout_transport = 9999
-    conn.set_timeout()
-    assert conn.timeout_transport == 9999
 
 
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="systemssh not supported on windows")

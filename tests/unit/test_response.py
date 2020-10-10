@@ -131,6 +131,14 @@ def test_response_parse_textfsm_fail():
     assert response.textfsm_parse_output() == []
 
 
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting textfsm on windows")
+def test_response_parse_textfsm_no_template():
+    response = Response("localhost", channel_input="show ip arp", textfsm_platform="potato")
+    response_bytes = b""
+    response._record_response(response_bytes)
+    assert response.textfsm_parse_output() == []
+
+
 @pytest.mark.skipif(
     sys.version_info.minor > 8, reason="genie not currently available for python 3.9"
 )
@@ -170,23 +178,6 @@ def test_response_parse_ttp():
      ip vrf {{ vrf }}
     """
 
-    expected = [
-        [
-            {
-                "ip": "192.168.0.113",
-                "mask": "24",
-                "description": "Router-id-loopback",
-                "interface": "Loopback0",
-            },
-            {
-                "vrf": "CPE1",
-                "ip": "2002::fd37",
-                "mask": "124",
-                "description": "CPE_Acces_Vlan",
-                "interface": "Vlan778",
-            },
-        ]
-    ]
     response_bytes = b"""    interface Loopback0
      description Router-id-loopback
      ip address 192.168.0.113/24

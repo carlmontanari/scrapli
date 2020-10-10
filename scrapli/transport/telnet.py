@@ -2,7 +2,6 @@
 import re
 from datetime import datetime
 from telnetlib import Telnet
-from typing import Optional
 
 from scrapli.decorators import OperationTimeout, requires_open_session
 from scrapli.exceptions import ConnectionNotOpened, ScrapliAuthenticationFailed
@@ -407,7 +406,7 @@ class TelnetTransport(Transport):
         self.session.write(channel_input.encode())
 
     @requires_open_session()
-    def set_timeout(self, timeout: Optional[int] = None) -> None:
+    def set_timeout(self, timeout: int) -> None:
         """
         Set session timeout
 
@@ -421,11 +420,7 @@ class TelnetTransport(Transport):
             N/A
 
         """
-        if isinstance(timeout, int):
-            set_timeout = timeout
-        else:
-            set_timeout = self.timeout_transport
-        self.session.timeout = set_timeout
+        self.session.timeout = timeout
 
     def _keepalive_standard(self) -> None:
         """

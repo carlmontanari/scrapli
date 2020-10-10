@@ -11,6 +11,11 @@ CHANGELOG
   slack, and Alex Lardschneider for confirming the "fix" should be good to go!
 - Add `community` pip extra to install scrapli community
 - Minor README house keeping!
+- Made transport `set_timeout` saner -- I genuinely don't know what I was doing with that before... this included the
+ base class as well as updating telnet and systemssh... in theory this could be a breaking change if you were just
+  calling `set_timeout` for some reason without passing an argument... you probably weren't doing that... because why
+   would you? There was *some* precedent for doing it like this before but it isn't worth caring about now :)
+- Did smarter things with imports in helper, added tests to make sure the warnings are correct
 
 
 # 2020.09.26
