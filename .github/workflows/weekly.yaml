@@ -4,7 +4,7 @@ on:
   schedule:
     # weekly at 0700 PST/1400 UTC on Sunday
     - cron: '0 14 * * 0'
-
+  workflow_dispatch:
 
 # in the future make this just call the commit workflow, but right now looks a little hacky to do in actions
 jobs:

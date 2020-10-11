@@ -215,7 +215,7 @@ def test_ttp_parse_invalid_template():
 
 def test_ttp_parse_failed_to_parse():
     result = ttp_parse(template="mytemplateisneat", output="blah")
-    assert result == []
+    assert result == [{}]
 
 
 @pytest.mark.skipif(
