@@ -17,7 +17,6 @@ args = {
     "port": device["port"],
     "ssh_config_file": True,
     "auth_strict_key": False,
-    "keepalive_interval": device["keepalive_interval"],
     "transport": device["transport"],
     "keepalive": device["keepalive"],
 }
@@ -44,9 +43,5 @@ print(result, result[0].result)
 print("***** Show run:")
 result = conn.send_commands("show run")
 print(result, result[0].result)
-
-if device["keepalive"]:
-    print("***** Waiting for keepalive....")
-    time.sleep(5)
 
 conn.close()

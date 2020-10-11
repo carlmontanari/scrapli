@@ -1,5 +1,4 @@
 import logging
-import time
 from pathlib import Path
 
 from device_info import iosxe_device
@@ -30,9 +29,5 @@ print(result, result.result)
 print("***** Show run:")
 result = conn.send_command("show run")
 print(result, result.result)
-
-if iosxe_device["keepalive"]:
-    print("***** Waiting for keepalive....")
-    time.sleep(2)
 
 conn.close()
