@@ -197,4 +197,4 @@ def test_response_parse_ttp_fail():
     response = Response("localhost", channel_input="show ip arp", genie_platform="iosxe")
     response_bytes = b""
     response._record_response(response_bytes)
-    assert response.ttp_parse_output(template="blah") == []
+    assert response.ttp_parse_output(template="blah") == [{}]
