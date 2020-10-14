@@ -23,7 +23,6 @@ from scrapli.helper import (
     ttp_parse,
 )
 
-
 TEST_DATA_DIR = f"{Path(scrapli.__file__).parents[1]}/tests/test_data"
 
 IOS_ARP = """Protocol  Address          Age (min)  Hardware Addr   Type   Interface
@@ -274,10 +273,14 @@ def test__find_transport_plugin_failure():
 
 def test___find_transport_plugin_module_failed_to_load(monkeypatch):
     from scrapli_ssh2 import transport
+
     monkeypatch.setattr(transport, "Transport", None)
     with pytest.raises(TransportPluginError) as exc:
         _find_transport_plugin(transport="ssh2")
-    assert str(exc.value) == "Failed to load transport plugin `ssh2` transport class or required arguments"
+    assert (
+        str(exc.value)
+        == "Failed to load transport plugin `ssh2` transport class or required arguments"
+    )
 
 
 def test_textfsm_get_template_no_textfsm(monkeypatch):
