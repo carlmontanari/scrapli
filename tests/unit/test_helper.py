@@ -10,6 +10,7 @@ import pkg_resources  # pylint: disable=C041
 import pytest
 
 import scrapli
+from scrapli.exceptions import TransportPluginError
 from scrapli.helper import (
     _find_transport_plugin,
     _textfsm_get_template,
@@ -21,6 +22,7 @@ from scrapli.helper import (
     textfsm_parse,
     ttp_parse,
 )
+
 
 TEST_DATA_DIR = f"{Path(scrapli.__file__).parents[1]}/tests/test_data"
 
@@ -51,6 +53,12 @@ def test_get_prompt_pattern_arg_pattern():
 def test_get_prompt_pattern_arg_string():
     class_pattern = "averygoodpattern"
     result = get_prompt_pattern("awesomepattern", class_pattern)
+    assert result == re.compile(b"awesomepattern")
+
+
+def test_get_prompt_pattern_arg_bytes():
+    class_pattern = "averygoodpattern"
+    result = get_prompt_pattern(b"awesomepattern", class_pattern)
     assert result == re.compile(b"awesomepattern")
 
 
@@ -255,13 +263,21 @@ def test_attach_duplicate_log_filter():
     assert dummy_logger.filters[0].__class__.__name__ == "DuplicateFilter"
 
 
-def test_factory_no_scrapli_community():
+def test__find_transport_plugin_failure():
     with pytest.raises(ModuleNotFoundError) as exc:
         _find_transport_plugin(transport="blah")
     assert (
         str(exc.value)
         == "\n***** Module 'scrapli_blah' not found! ************************************************\nTo resolve this issue, ensure you are referencing a valid transport plugin. Transport plugins should be named similar to `scrapli_paramiko` or `scrapli_ssh2`, and can be selected by passing simply `paramiko` or `ssh2` into the scrapli driver. You can install most plugins with pip: `pip install scrapli-ssh2` for example.\n***** Module 'scrapli_blah' not found! ************************************************"
     )
+
+
+def test___find_transport_plugin_module_failed_to_load(monkeypatch):
+    from scrapli_ssh2 import transport
+    monkeypatch.setattr(transport, "Transport", None)
+    with pytest.raises(TransportPluginError) as exc:
+        _find_transport_plugin(transport="ssh2")
+    assert str(exc.value) == "Failed to load transport plugin `ssh2` transport class or required arguments"
 
 
 def test_textfsm_get_template_no_textfsm(monkeypatch):

@@ -174,7 +174,7 @@ class OperationTimeout:
 
     def _handle_timeout(self) -> None:
         """
-        Timeout handler method to release locks/raise exception consistently between timeout methods
+        Timeout handler method to close connections and raise ScrapliTimeout
 
         Args:
             N/A
