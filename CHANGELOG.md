@@ -2,6 +2,7 @@ CHANGELOG
 =======
 
 # XXXX.XX.XX
+- Fix a regex that sometimes caused a failed functional IOSXR test 
 
 
 # 2020.10.10

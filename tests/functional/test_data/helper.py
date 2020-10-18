@@ -68,9 +68,9 @@ def cisco_iosxr_clean_response(response):
         return response
 
     def _replace_commit_in_progress(response):
-        commit_in_progress_pattern = re.compile(r"System configuration.*", flags=re.M | re.I)
+        commit_in_progress_pattern = re.compile(r"System configuration.*", flags=re.M | re.I | re.S)
         response = re.sub(commit_in_progress_pattern, "", response)
-        return response
+        return response.rstrip()
 
     response = _replace_timestamps(response)
     response = _replace_configured_by(response)
