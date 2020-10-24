@@ -2,7 +2,11 @@ CHANGELOG
 =======
 
 # XXXX.XX.XX
-- Fix a regex that sometimes caused a failed functional IOSXR test 
+- Fix a regex that sometimes caused a failed functional IOSXR test
+- Add `ptyprocess` transport options for system transport -- sounds like this may be needed for huawei community
+ platform to be able to set the pty process terminal size -- also added some basic testing for this
+- Update scrapli-ssh2 pin to latest version -- now supports keyboard interactive auth; also un-skipped all related
+ EOS tests now that this works
 
 
 # 2020.10.10

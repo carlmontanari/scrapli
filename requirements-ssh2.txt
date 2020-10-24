@@ -1,1 +1,1 @@
-scrapli-ssh2>=2020.10.10
+scrapli-ssh2>=2020.10.24

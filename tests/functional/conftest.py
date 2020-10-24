@@ -59,11 +59,6 @@ def nix_conn_generic(transport):
 
 @pytest.fixture(scope="class")
 def conn(device_type, transport):
-    if device_type == "arista_eos" and transport == "ssh2":
-        pytest.skip(
-            "SSH2 (on pypi) doesn't support keyboard interactive auth, skipping ssh2 for arista_eos testing"
-        )
-
     device = DEVICES[device_type].copy()
     driver = device.pop("driver")
     device.pop("base_config")
@@ -197,10 +192,6 @@ def junos_conn(transport):
 
 @pytest.fixture(scope="class")
 def eos_conn(transport):
-    if transport == "ssh2":
-        pytest.skip(
-            "SSH2 (on pypi) doesn't support keyboard interactive auth, skipping ssh2 for arista_eos testing"
-        )
     device = DEVICES["arista_eos"].copy()
     driver = device.pop("driver")
     device.pop("base_config")

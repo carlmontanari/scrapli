@@ -167,11 +167,30 @@ class PtyProcess:
         self.delayafterterminate = 0.1
 
     @classmethod
-    def spawn(cls: Type[PtyProcessType], spawn_command: List[str]) -> PtyProcessType:
-        """Start the given command in a child process in a pseudo terminal.
+    def spawn(
+        cls: Type[PtyProcessType], spawn_command: List[str], rows: int = 24, cols: int = 80
+    ) -> PtyProcessType:
+        """
+        Start the given command in a child process in a pseudo terminal.
 
-        This does all the fork/exec type of stuff for a pty, and returns an
-        instance of PtyProcess.
+        This does all the fork/exec type of stuff for a pty, and returns an instance of PtyProcess.
+        For some devices setting terminal width strictly in the operating system (the actual network
+        operating system) does not seem to be sufficient by itself for setting terminal length or
+        width -- so we have optional values for rows/cols that can be passed here as well.
+
+        Args:
+            spawn_command: command to execute with arguments (if applicable), as a list
+            rows: integer number of rows for ptyprocess "window"
+            cols: integer number of cols for ptyprocess "window"
+
+        Returns:
+            inst: instantiated PtyProcess object
+
+        Raises:
+            SSHNotFound: if no ssh binary found on PATH
+            IOError: if unable to set window size of child process
+            OSError: if unable to spawn command in child process
+
         """
         # Note that it is difficult for this method to fail.
         # You cannot detect if the child process cannot start.
@@ -206,7 +225,7 @@ class PtyProcess:
         # allowing IOError for either.
         if pid == CHILD:
             try:
-                _setwinsize(fd=STDIN_FILENO, rows=24, cols=80)
+                _setwinsize(fd=STDIN_FILENO, rows=rows, cols=cols)
             except IOError as err:
                 if err.args[0] not in (errno.EINVAL, errno.ENOTTY):
                     raise
@@ -265,7 +284,7 @@ class PtyProcess:
                 raise exception
 
         try:
-            inst.setwinsize(rows=24, cols=80)
+            inst.setwinsize(rows=rows, cols=cols)
         except IOError as err:
             if err.args[0] not in (errno.EINVAL, errno.ENOTTY, errno.ENXIO):
                 raise

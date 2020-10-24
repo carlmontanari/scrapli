@@ -503,11 +503,6 @@ class TestAsyncNetworkDevice:
 
 
 def test_context_manager(device_type, transport):
-    if device_type == "arista_eos" and transport == "ssh2":
-        pytest.skip(
-            "SSH2 (on pypi) doesn't support keyboard interactive auth, skipping ssh2 for arista_eos testing"
-        )
-
     device = DEVICES[device_type].copy()
     driver = device.pop("driver")
     device.pop("base_config")
