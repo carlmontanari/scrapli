@@ -55,7 +55,6 @@ setuptools.setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3 :: Only",
         "Topic :: Software Development :: Libraries :: Python Modules",
-        "Topic :: Software Development :: Network Automation",
     ],
     python_requires=">=3.6",
 )
