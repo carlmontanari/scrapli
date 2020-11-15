@@ -42,7 +42,9 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install setuptools
           python -m pip install nox
-      - name: run nox darglint
+      - name: run nox
+        env:
+          TERM: xterm
         run: python -m nox -s unit_tests
       - name: Upload coverage
         uses: codecov/codecov-action@v1
