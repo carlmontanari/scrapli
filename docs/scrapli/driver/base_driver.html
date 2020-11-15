@@ -57,10 +57,6 @@ TRANSPORT_ARGS: Dict[str, Tuple[str, ...]] = {
 TRANSPORT_BASE_ARGS = (
     &#34;host&#34;,
     &#34;port&#34;,
-    &#34;keepalive&#34;,
-    &#34;keepalive_interval&#34;,
-    &#34;keepalive_type&#34;,
-    &#34;keepalive_pattern&#34;,
     &#34;timeout_socket&#34;,
     &#34;timeout_transport&#34;,
     &#34;timeout_exit&#34;,
@@ -83,10 +79,6 @@ class ScrapeBase:
         timeout_transport: int = 10,
         timeout_ops: float = 30,
         timeout_exit: bool = True,
-        keepalive: bool = False,
-        keepalive_interval: int = 30,
-        keepalive_type: str = &#34;network&#34;,
-        keepalive_pattern: str = &#34;\005&#34;,
         comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,48}[#&gt;$]\s*$&#34;,
         comms_return_char: str = &#34;\n&#34;,
         comms_ansi: bool = False,
@@ -126,19 +118,6 @@ class ScrapeBase:
             timeout_exit: True/False close transport if timeout encountered. If False and keepalives
                 are in use, keepalives will prevent program from exiting so you should be sure to
                 catch Timeout exceptions and handle them appropriately
-            keepalive: whether or not to try to keep session alive
-            keepalive_interval: interval to use for session keepalives
-            keepalive_type: network|standard -- &#39;network&#39; sends actual characters over the
-                transport channel. This is useful for network-y type devices that may not support
-                &#39;standard&#39; keepalive mechanisms. &#39;standard&#39; attempts to use whatever &#39;standard&#39;
-                keepalive mechanisms are available in the selected transport mechanism. Check the
-                transport documentation for details on what is supported and/or how it is
-                implemented for any given transport driver
-            keepalive_pattern: pattern to send to keep network channel alive. Default is
-                u&#39;\005&#39; which is equivalent to &#39;ctrl+e&#39;. This pattern moves cursor to end of the
-                line which should be an innocuous pattern. This will only be entered *if* a lock
-                can be acquired. This is only applicable if using keepalives and if the keepalive
-                type is &#39;network&#39;
             comms_prompt_pattern: raw string regex pattern -- preferably use `^` and `$` anchors!
                 this is the single most important attribute here! if this does not match a prompt,
                 scrapli will not work!
@@ -211,12 +190,7 @@ class ScrapeBase:
             timeout_exit=timeout_exit,
         )
         self._timeout_ops: float = self._initialization_args[&#34;timeout_ops&#34;]
-        self._setup_keepalive(
-            keepalive=keepalive,
-            keepalive_type=keepalive_type,
-            keepalive_interval=keepalive_interval,
-            keepalive_pattern=keepalive_pattern,
-        )
+
         self._setup_comms(
             comms_prompt_pattern=comms_prompt_pattern,
             comms_return_char=comms_return_char,
@@ -300,10 +274,6 @@ class ScrapeBase:
             f&#34;timeout_transport={self._initialization_args[&#39;timeout_transport&#39;]!r}, &#34;
             f&#34;timeout_ops={self._initialization_args[&#39;timeout_ops&#39;]!r}, &#34;
             f&#34;timeout_exit={self._initialization_args[&#39;timeout_exit&#39;]!r}, &#34;
-            f&#34;keepalive={self._initialization_args[&#39;keepalive&#39;]!r}, &#34;
-            f&#34;keepalive_interval={self._initialization_args[&#39;keepalive_interval&#39;]!r}, &#34;
-            f&#34;keepalive_type={self._initialization_args[&#39;keepalive_type&#39;]!r}, &#34;
-            f&#34;keepalive_pattern={self._initialization_args[&#39;keepalive_pattern&#39;]!r}, &#34;
             f&#34;comms_prompt_pattern={self._initialization_args[&#39;comms_prompt_pattern&#39;]!r}, &#34;
             f&#34;comms_return_char={self._initialization_args[&#39;comms_return_char&#39;]!r}, &#34;
             f&#34;comms_ansi={self._initialization_args[&#39;comms_ansi&#39;]!r}, &#34;
@@ -421,37 +391,6 @@ class ScrapeBase:
         self._initialization_args[&#34;timeout_transport&#34;] = int(timeout_transport)
         self._initialization_args[&#34;timeout_ops&#34;] = float(timeout_ops)
         self._initialization_args[&#34;timeout_exit&#34;] = timeout_exit
-
-    def _setup_keepalive(
-        self, keepalive: bool, keepalive_type: str, keepalive_interval: int, keepalive_pattern: str
-    ) -&gt; None:
-        &#34;&#34;&#34;
-        Parse and setup keepalive attributes
-
-        Args:
-            keepalive: keepalive to parse/set
-            keepalive_type: keepalive_type to parse/set
-            keepalive_interval: keepalive_interval to parse/set
-            keepalive_pattern: keepalive_pattern to parse/set
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            TypeError: if keepalive is not a bool
-            ValueError: if keepalive_type is not valid
-
-        &#34;&#34;&#34;
-        if not isinstance(keepalive, bool):
-            raise TypeError(f&#34;`keepalive` should be bool, got {type(keepalive)}&#34;)
-        if keepalive_type not in [&#34;network&#34;, &#34;standard&#34;]:
-            raise ValueError(
-                f&#34;`{keepalive_type}` is an invalid keepalive_type; must be &#39;network&#39; or &#39;standard&#39;&#34;
-            )
-        self._initialization_args[&#34;keepalive&#34;] = keepalive
-        self._initialization_args[&#34;keepalive_interval&#34;] = int(keepalive_interval)
-        self._initialization_args[&#34;keepalive_type&#34;] = keepalive_type
-        self._initialization_args[&#34;keepalive_pattern&#34;] = keepalive_pattern
 
     def _setup_comms(
         self, comms_prompt_pattern: str, comms_return_char: str, comms_ansi: bool
@@ -621,7 +560,7 @@ class ScrapeBase:
 <dl>
 <dt id="scrapli.driver.base_driver.ScrapeBase"><code class="flex name class">
 <span>class <span class="ident">ScrapeBase</span></span>
-<span>(</span><span>host: str = '', port: int = 22, auth_username: str = '', auth_password: str = '', auth_private_key: str = '', auth_private_key_passphrase: str = '', auth_strict_key: bool = True, auth_bypass: bool = False, timeout_socket: int = 5, timeout_transport: int = 10, timeout_ops: float = 30, timeout_exit: bool = True, keepalive: bool = False, keepalive_interval: int = 30, keepalive_type: str = 'network', keepalive_pattern: str = '\x05', comms_prompt_pattern: str = &#x27;^[a-z0-9.\\-@()/:]{1,48}[#&gt;$]\\s*$&#x27;, comms_return_char: str = '\n', comms_ansi: bool = False, ssh_config_file: Union[str, bool] = False, ssh_known_hosts_file: Union[str, bool] = False, on_init: Union[Callable[..., Any], NoneType] = None, on_open: Union[Callable[..., Any], NoneType] = None, on_close: Union[Callable[..., Any], NoneType] = None, transport: str = 'system', transport_options: Union[Dict[str, Any], NoneType] = None)</span>
+<span>(</span><span>host: str = '', port: int = 22, auth_username: str = '', auth_password: str = '', auth_private_key: str = '', auth_private_key_passphrase: str = '', auth_strict_key: bool = True, auth_bypass: bool = False, timeout_socket: int = 5, timeout_transport: int = 10, timeout_ops: float = 30, timeout_exit: bool = True, comms_prompt_pattern: str = &#x27;^[a-z0-9.\\-@()/:]{1,48}[#&gt;$]\\s*$&#x27;, comms_return_char: str = '\n', comms_ansi: bool = False, ssh_config_file: Union[str, bool] = False, ssh_known_hosts_file: Union[str, bool] = False, on_init: Union[Callable[..., Any], NoneType] = None, on_open: Union[Callable[..., Any], NoneType] = None, on_close: Union[Callable[..., Any], NoneType] = None, transport: str = 'system', transport_options: Union[Dict[str, Any], NoneType] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Scrape Object</p>
@@ -661,23 +600,6 @@ system transport; ignored on other transports</dd>
 <dd>True/False close transport if timeout encountered. If False and keepalives
 are in use, keepalives will prevent program from exiting so you should be sure to
 catch Timeout exceptions and handle them appropriately</dd>
-<dt><strong><code>keepalive</code></strong></dt>
-<dd>whether or not to try to keep session alive</dd>
-<dt><strong><code>keepalive_interval</code></strong></dt>
-<dd>interval to use for session keepalives</dd>
-<dt><strong><code>keepalive_type</code></strong></dt>
-<dd>network|standard &ndash; 'network' sends actual characters over the
-transport channel. This is useful for network-y type devices that may not support
-'standard' keepalive mechanisms. 'standard' attempts to use whatever 'standard'
-keepalive mechanisms are available in the selected transport mechanism. Check the
-transport documentation for details on what is supported and/or how it is
-implemented for any given transport driver</dd>
-<dt><strong><code>keepalive_pattern</code></strong></dt>
-<dd>pattern to send to keep network channel alive. Default is
-u'\005' which is equivalent to 'ctrl+e'. This pattern moves cursor to end of the
-line which should be an innocuous pattern. This will only be entered <em>if</em> a lock
-can be acquired. This is only applicable if using keepalives and if the keepalive
-type is 'network'</dd>
 <dt><strong><code>comms_prompt_pattern</code></strong></dt>
 <dd>raw string regex pattern &ndash; preferably use <code>^</code> and <code>$</code> anchors!
 this is the single most important attribute here! if this does not match a prompt,
@@ -758,10 +680,6 @@ docs for given transport class for details of what to pass here</dd>
         timeout_transport: int = 10,
         timeout_ops: float = 30,
         timeout_exit: bool = True,
-        keepalive: bool = False,
-        keepalive_interval: int = 30,
-        keepalive_type: str = &#34;network&#34;,
-        keepalive_pattern: str = &#34;\005&#34;,
         comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,48}[#&gt;$]\s*$&#34;,
         comms_return_char: str = &#34;\n&#34;,
         comms_ansi: bool = False,
@@ -801,19 +719,6 @@ docs for given transport class for details of what to pass here</dd>
             timeout_exit: True/False close transport if timeout encountered. If False and keepalives
                 are in use, keepalives will prevent program from exiting so you should be sure to
                 catch Timeout exceptions and handle them appropriately
-            keepalive: whether or not to try to keep session alive
-            keepalive_interval: interval to use for session keepalives
-            keepalive_type: network|standard -- &#39;network&#39; sends actual characters over the
-                transport channel. This is useful for network-y type devices that may not support
-                &#39;standard&#39; keepalive mechanisms. &#39;standard&#39; attempts to use whatever &#39;standard&#39;
-                keepalive mechanisms are available in the selected transport mechanism. Check the
-                transport documentation for details on what is supported and/or how it is
-                implemented for any given transport driver
-            keepalive_pattern: pattern to send to keep network channel alive. Default is
-                u&#39;\005&#39; which is equivalent to &#39;ctrl+e&#39;. This pattern moves cursor to end of the
-                line which should be an innocuous pattern. This will only be entered *if* a lock
-                can be acquired. This is only applicable if using keepalives and if the keepalive
-                type is &#39;network&#39;
             comms_prompt_pattern: raw string regex pattern -- preferably use `^` and `$` anchors!
                 this is the single most important attribute here! if this does not match a prompt,
                 scrapli will not work!
@@ -886,12 +791,7 @@ docs for given transport class for details of what to pass here</dd>
             timeout_exit=timeout_exit,
         )
         self._timeout_ops: float = self._initialization_args[&#34;timeout_ops&#34;]
-        self._setup_keepalive(
-            keepalive=keepalive,
-            keepalive_type=keepalive_type,
-            keepalive_interval=keepalive_interval,
-            keepalive_pattern=keepalive_pattern,
-        )
+
         self._setup_comms(
             comms_prompt_pattern=comms_prompt_pattern,
             comms_return_char=comms_return_char,
@@ -975,10 +875,6 @@ docs for given transport class for details of what to pass here</dd>
             f&#34;timeout_transport={self._initialization_args[&#39;timeout_transport&#39;]!r}, &#34;
             f&#34;timeout_ops={self._initialization_args[&#39;timeout_ops&#39;]!r}, &#34;
             f&#34;timeout_exit={self._initialization_args[&#39;timeout_exit&#39;]!r}, &#34;
-            f&#34;keepalive={self._initialization_args[&#39;keepalive&#39;]!r}, &#34;
-            f&#34;keepalive_interval={self._initialization_args[&#39;keepalive_interval&#39;]!r}, &#34;
-            f&#34;keepalive_type={self._initialization_args[&#39;keepalive_type&#39;]!r}, &#34;
-            f&#34;keepalive_pattern={self._initialization_args[&#39;keepalive_pattern&#39;]!r}, &#34;
             f&#34;comms_prompt_pattern={self._initialization_args[&#39;comms_prompt_pattern&#39;]!r}, &#34;
             f&#34;comms_return_char={self._initialization_args[&#39;comms_return_char&#39;]!r}, &#34;
             f&#34;comms_ansi={self._initialization_args[&#39;comms_ansi&#39;]!r}, &#34;
@@ -1096,37 +992,6 @@ docs for given transport class for details of what to pass here</dd>
         self._initialization_args[&#34;timeout_transport&#34;] = int(timeout_transport)
         self._initialization_args[&#34;timeout_ops&#34;] = float(timeout_ops)
         self._initialization_args[&#34;timeout_exit&#34;] = timeout_exit
-
-    def _setup_keepalive(
-        self, keepalive: bool, keepalive_type: str, keepalive_interval: int, keepalive_pattern: str
-    ) -&gt; None:
-        &#34;&#34;&#34;
-        Parse and setup keepalive attributes
-
-        Args:
-            keepalive: keepalive to parse/set
-            keepalive_type: keepalive_type to parse/set
-            keepalive_interval: keepalive_interval to parse/set
-            keepalive_pattern: keepalive_pattern to parse/set
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            TypeError: if keepalive is not a bool
-            ValueError: if keepalive_type is not valid
-
-        &#34;&#34;&#34;
-        if not isinstance(keepalive, bool):
-            raise TypeError(f&#34;`keepalive` should be bool, got {type(keepalive)}&#34;)
-        if keepalive_type not in [&#34;network&#34;, &#34;standard&#34;]:
-            raise ValueError(
-                f&#34;`{keepalive_type}` is an invalid keepalive_type; must be &#39;network&#39; or &#39;standard&#39;&#34;
-            )
-        self._initialization_args[&#34;keepalive&#34;] = keepalive
-        self._initialization_args[&#34;keepalive_interval&#34;] = int(keepalive_interval)
-        self._initialization_args[&#34;keepalive_type&#34;] = keepalive_type
-        self._initialization_args[&#34;keepalive_pattern&#34;] = keepalive_pattern
 
     def _setup_comms(
         self, comms_prompt_pattern: str, comms_return_char: str, comms_ansi: bool

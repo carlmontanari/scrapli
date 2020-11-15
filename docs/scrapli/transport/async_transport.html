@@ -94,7 +94,7 @@ class AsyncTransport(TransportBase, ABC):
 <dl>
 <dt id="scrapli.transport.async_transport.AsyncTransport"><code class="flex name class">
 <span>class <span class="ident">AsyncTransport</span></span>
-<span>(</span><span>host: str = '', port: int = 22, timeout_socket: int = 5, timeout_transport: int = 5, timeout_exit: bool = True, keepalive: bool = False, keepalive_interval: int = 30, keepalive_type: str = 'network', keepalive_pattern: str = '\x05')</span>
+<span>(</span><span>host: str = '', port: int = 22, timeout_socket: int = 5, timeout_transport: int = 5, timeout_exit: bool = True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -114,23 +114,6 @@ inheritance.</p>
 <dd>True/False close transport if timeout encountered. If False and keepalives
 are in use, keepalives will prevent program from exiting so you should be sure to
 catch Timeout exceptions and handle them appropriately</dd>
-<dt><strong><code>keepalive</code></strong></dt>
-<dd>whether or not to try to keep session alive</dd>
-<dt><strong><code>keepalive_interval</code></strong></dt>
-<dd>interval to use for session keepalives</dd>
-<dt><strong><code>keepalive_type</code></strong></dt>
-<dd>network|standard &ndash; 'network' sends actual characters over the
-transport channel. This is useful for network-y type devices that may not support
-'standard' keepalive mechanisms. 'standard' attempts to use whatever 'standard'
-keepalive mechanisms are available in the selected transport mechanism. Check the
-transport documentation for details on what is supported and/or how it is
-implemented for any given transport driver</dd>
-<dt><strong><code>keepalive_pattern</code></strong></dt>
-<dd>pattern to send to keep network channel alive. Default is
-u'\005' which is equivalent to 'ctrl+e'. This pattern moves cursor to end of the
-line which should be an innocuous pattern. This will only be entered <em>if</em> a lock
-can be acquired. This is only applicable if using keepalives and if the keepalive
-type is 'network'</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <p>N/A

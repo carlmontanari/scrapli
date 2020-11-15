@@ -1,8 +1,8 @@
-![](https://github.com/carlmontanari/scrapli/workflows/Weekly%20Build/badge.svg)
-[![PyPI version](https://badge.fury.io/py/scrapli.svg)](https://badge.fury.io/py/scrapli)
 [![Supported Versions](https://img.shields.io/pypi/pyversions/scrapli.svg)](https://pypi.org/project/scrapli)
-[![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
+[![PyPI version](https://badge.fury.io/py/scrapli.svg)](https://badge.fury.io/py/scrapli)
+[![Weekly Build](https://github.com/carlmontanari/scrapli/workflows/Weekly%20Build/badge.svg)](https://github.com/carlmontanari/scrapli/actions?query=workflow%3A%22Weekly+Build%22)
 [![Coverage](https://codecov.io/gh/carlmontanari/scrapli/branch/master/graph/badge.svg)](https://codecov.io/gh/carlmontanari/scrapli)
+[![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
 scrapli
 =======
