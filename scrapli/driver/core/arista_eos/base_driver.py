@@ -7,7 +7,12 @@ from scrapli.driver.base_network_driver import PrivilegeLevel
 PRIVS = {
     "exec": (
         PrivilegeLevel(
-            pattern=r"^[a-z0-9.\-@()/: ]{1,63}>\s?$",
+            # pattern has... gotten a bit out of hand. it seems some eos devices can have things in
+            # parenthesis in a "normal" (non config) prompt... something like `my(eos)#`. To make
+            # sure we account for that but do *not* include config modes we need this negative
+            # lookahead to *not* match "config"... the remaining pattern is the "normal" scrapli
+            # eos pattern basically
+            pattern=r"^((?!config)[a-z0-9.\-@()/: ]){1,63}>\s?$",
             name="exec",
             previous_priv="",
             deescalate="",
@@ -18,7 +23,7 @@ PRIVS = {
     ),
     "privilege_exec": (
         PrivilegeLevel(
-            pattern=r"^[a-z0-9.\-@/: ]{1,63}#\s?$",
+            pattern=r"^((?!config)[a-z0-9.\-@()/: ]){1,63}#\s?$",
             name="privilege_exec",
             previous_priv="exec",
             deescalate="disable",
@@ -29,7 +34,7 @@ PRIVS = {
     ),
     "configuration": (
         PrivilegeLevel(
-            pattern=r"^[a-z0-9.\-@/: ]{1,63}\(config(?!\-s\-)[a-z0-9_.\-@/:]{0,32}\)#\s?$",
+            pattern=r"^[a-z0-9.\-@()/: ]{1,63}\(config(?!\-s\-)[a-z0-9_.\-@/:]{0,32}\)#\s?$",
             name="configuration",
             previous_priv="privilege_exec",
             deescalate="end",

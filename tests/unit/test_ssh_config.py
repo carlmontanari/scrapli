@@ -176,6 +176,12 @@ def test_host_lookup_merged_data():
     )
 
 
+def test_init_ssh_known_hosts_file_exceptions():
+    with pytest.raises(TypeError) as exc:
+        SSHKnownHosts(None)
+    assert str(exc.value) == "`ssh_known_hosts_file` expected str, got <class 'NoneType'>"
+
+
 def test_init_ssh_known_hosts_file_explicit():
     known_hosts = SSHKnownHosts(f"{TEST_DATA_DIR}/files/_ssh_known_hosts")
     with open(f"{TEST_DATA_DIR}/files/_ssh_known_hosts", "r") as f:

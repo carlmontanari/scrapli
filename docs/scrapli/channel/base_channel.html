@@ -31,6 +31,7 @@
 import re
 from abc import ABC
 from logging import getLogger
+from threading import Lock
 from typing import List, Optional, Tuple, Union
 
 from scrapli.helper import attach_duplicate_log_filter, get_prompt_pattern, normalize_lines
@@ -100,6 +101,8 @@ class ChannelBase(ABC):
         self.comms_auto_expand = comms_auto_expand
         self.timeout_ops = timeout_ops
 
+        self.session_lock = Lock()
+
     def __str__(self) -&gt; str:
         &#34;&#34;&#34;
         Magic str method for Channel
@@ -132,6 +135,7 @@ class ChannelBase(ABC):
         &#34;&#34;&#34;
         class_dict = self.__dict__.copy()
         class_dict.pop(&#34;transport&#34;)
+        class_dict[&#34;session_lock&#34;] = self.session_lock.locked()
         class_dict[&#34;logger&#34;] = self.logger.name
         return f&#34;scrapli Channel {class_dict}&#34;
 
@@ -367,6 +371,8 @@ preferable to disable this type of behavior via the device itself if possible.</
         self.comms_auto_expand = comms_auto_expand
         self.timeout_ops = timeout_ops
 
+        self.session_lock = Lock()
+
     def __str__(self) -&gt; str:
         &#34;&#34;&#34;
         Magic str method for Channel
@@ -399,6 +405,7 @@ preferable to disable this type of behavior via the device itself if possible.</
         &#34;&#34;&#34;
         class_dict = self.__dict__.copy()
         class_dict.pop(&#34;transport&#34;)
+        class_dict[&#34;session_lock&#34;] = self.session_lock.locked()
         class_dict[&#34;logger&#34;] = self.logger.name
         return f&#34;scrapli Channel {class_dict}&#34;
 

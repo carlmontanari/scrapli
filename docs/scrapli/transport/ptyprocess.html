@@ -211,11 +211,30 @@ class PtyProcess:
         self.delayafterterminate = 0.1
 
     @classmethod
-    def spawn(cls: Type[PtyProcessType], spawn_command: List[str]) -&gt; PtyProcessType:
-        &#34;&#34;&#34;Start the given command in a child process in a pseudo terminal.
+    def spawn(
+        cls: Type[PtyProcessType], spawn_command: List[str], rows: int = 24, cols: int = 80
+    ) -&gt; PtyProcessType:
+        &#34;&#34;&#34;
+        Start the given command in a child process in a pseudo terminal.
 
-        This does all the fork/exec type of stuff for a pty, and returns an
-        instance of PtyProcess.
+        This does all the fork/exec type of stuff for a pty, and returns an instance of PtyProcess.
+        For some devices setting terminal width strictly in the operating system (the actual network
+        operating system) does not seem to be sufficient by itself for setting terminal length or
+        width -- so we have optional values for rows/cols that can be passed here as well.
+
+        Args:
+            spawn_command: command to execute with arguments (if applicable), as a list
+            rows: integer number of rows for ptyprocess &#34;window&#34;
+            cols: integer number of cols for ptyprocess &#34;window&#34;
+
+        Returns:
+            inst: instantiated PtyProcess object
+
+        Raises:
+            SSHNotFound: if no ssh binary found on PATH
+            IOError: if unable to set window size of child process
+            OSError: if unable to spawn command in child process
+
         &#34;&#34;&#34;
         # Note that it is difficult for this method to fail.
         # You cannot detect if the child process cannot start.
@@ -250,7 +269,7 @@ class PtyProcess:
         # allowing IOError for either.
         if pid == CHILD:
             try:
-                _setwinsize(fd=STDIN_FILENO, rows=24, cols=80)
+                _setwinsize(fd=STDIN_FILENO, rows=rows, cols=cols)
             except IOError as err:
                 if err.args[0] not in (errno.EINVAL, errno.ENOTTY):
                     raise
@@ -309,7 +328,7 @@ class PtyProcess:
                 raise exception
 
         try:
-            inst.setwinsize(rows=24, cols=80)
+            inst.setwinsize(rows=rows, cols=cols)
         except IOError as err:
             if err.args[0] not in (errno.EINVAL, errno.ENOTTY, errno.ENXIO):
                 raise
@@ -681,11 +700,30 @@ class PtyProcess:
         self.delayafterterminate = 0.1
 
     @classmethod
-    def spawn(cls: Type[PtyProcessType], spawn_command: List[str]) -&gt; PtyProcessType:
-        &#34;&#34;&#34;Start the given command in a child process in a pseudo terminal.
+    def spawn(
+        cls: Type[PtyProcessType], spawn_command: List[str], rows: int = 24, cols: int = 80
+    ) -&gt; PtyProcessType:
+        &#34;&#34;&#34;
+        Start the given command in a child process in a pseudo terminal.
 
-        This does all the fork/exec type of stuff for a pty, and returns an
-        instance of PtyProcess.
+        This does all the fork/exec type of stuff for a pty, and returns an instance of PtyProcess.
+        For some devices setting terminal width strictly in the operating system (the actual network
+        operating system) does not seem to be sufficient by itself for setting terminal length or
+        width -- so we have optional values for rows/cols that can be passed here as well.
+
+        Args:
+            spawn_command: command to execute with arguments (if applicable), as a list
+            rows: integer number of rows for ptyprocess &#34;window&#34;
+            cols: integer number of cols for ptyprocess &#34;window&#34;
+
+        Returns:
+            inst: instantiated PtyProcess object
+
+        Raises:
+            SSHNotFound: if no ssh binary found on PATH
+            IOError: if unable to set window size of child process
+            OSError: if unable to spawn command in child process
+
         &#34;&#34;&#34;
         # Note that it is difficult for this method to fail.
         # You cannot detect if the child process cannot start.
@@ -720,7 +758,7 @@ class PtyProcess:
         # allowing IOError for either.
         if pid == CHILD:
             try:
-                _setwinsize(fd=STDIN_FILENO, rows=24, cols=80)
+                _setwinsize(fd=STDIN_FILENO, rows=rows, cols=cols)
             except IOError as err:
                 if err.args[0] not in (errno.EINVAL, errno.ENOTTY):
                     raise
@@ -779,7 +817,7 @@ class PtyProcess:
                 raise exception
 
         try:
-            inst.setwinsize(rows=24, cols=80)
+            inst.setwinsize(rows=rows, cols=cols)
         except IOError as err:
             if err.args[0] not in (errno.EINVAL, errno.ENOTTY, errno.ENXIO):
                 raise
@@ -1081,22 +1119,66 @@ class PtyProcess:
 <h3>Static methods</h3>
 <dl>
 <dt id="scrapli.transport.ptyprocess.PtyProcess.spawn"><code class="name flex">
-<span>def <span class="ident">spawn</span></span>(<span>spawn_command: List[str]) ‑> ~PtyProcessType</span>
+<span>def <span class="ident">spawn</span></span>(<span>spawn_command: List[str], rows: int = 24, cols: int = 80) ‑> ~PtyProcessType</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Start the given command in a child process in a pseudo terminal.</p>
-<p>This does all the fork/exec type of stuff for a pty, and returns an
-instance of PtyProcess.</p></div>
+<p>This does all the fork/exec type of stuff for a pty, and returns an instance of PtyProcess.
+For some devices setting terminal width strictly in the operating system (the actual network
+operating system) does not seem to be sufficient by itself for setting terminal length or
+width &ndash; so we have optional values for rows/cols that can be passed here as well.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>spawn_command</code></strong></dt>
+<dd>command to execute with arguments (if applicable), as a list</dd>
+<dt><strong><code>rows</code></strong></dt>
+<dd>integer number of rows for ptyprocess "window"</dd>
+<dt><strong><code>cols</code></strong></dt>
+<dd>integer number of cols for ptyprocess "window"</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>inst</code></dt>
+<dd>instantiated PtyProcess object</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>SSHNotFound</code></dt>
+<dd>if no ssh binary found on PATH</dd>
+<dt><code>IOError</code></dt>
+<dd>if unable to set window size of child process</dd>
+<dt><code>OSError</code></dt>
+<dd>if unable to spawn command in child process</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def spawn(cls: Type[PtyProcessType], spawn_command: List[str]) -&gt; PtyProcessType:
-    &#34;&#34;&#34;Start the given command in a child process in a pseudo terminal.
+def spawn(
+    cls: Type[PtyProcessType], spawn_command: List[str], rows: int = 24, cols: int = 80
+) -&gt; PtyProcessType:
+    &#34;&#34;&#34;
+    Start the given command in a child process in a pseudo terminal.
 
-    This does all the fork/exec type of stuff for a pty, and returns an
-    instance of PtyProcess.
+    This does all the fork/exec type of stuff for a pty, and returns an instance of PtyProcess.
+    For some devices setting terminal width strictly in the operating system (the actual network
+    operating system) does not seem to be sufficient by itself for setting terminal length or
+    width -- so we have optional values for rows/cols that can be passed here as well.
+
+    Args:
+        spawn_command: command to execute with arguments (if applicable), as a list
+        rows: integer number of rows for ptyprocess &#34;window&#34;
+        cols: integer number of cols for ptyprocess &#34;window&#34;
+
+    Returns:
+        inst: instantiated PtyProcess object
+
+    Raises:
+        SSHNotFound: if no ssh binary found on PATH
+        IOError: if unable to set window size of child process
+        OSError: if unable to spawn command in child process
+
     &#34;&#34;&#34;
     # Note that it is difficult for this method to fail.
     # You cannot detect if the child process cannot start.
@@ -1131,7 +1213,7 @@ def spawn(cls: Type[PtyProcessType], spawn_command: List[str]) -&gt; PtyProcessT
     # allowing IOError for either.
     if pid == CHILD:
         try:
-            _setwinsize(fd=STDIN_FILENO, rows=24, cols=80)
+            _setwinsize(fd=STDIN_FILENO, rows=rows, cols=cols)
         except IOError as err:
             if err.args[0] not in (errno.EINVAL, errno.ENOTTY):
                 raise
@@ -1190,7 +1272,7 @@ def spawn(cls: Type[PtyProcessType], spawn_command: List[str]) -&gt; PtyProcessT
             raise exception
 
     try:
-        inst.setwinsize(rows=24, cols=80)
+        inst.setwinsize(rows=rows, cols=cols)
     except IOError as err:
         if err.args[0] not in (errno.EINVAL, errno.ENOTTY, errno.ENXIO):
             raise

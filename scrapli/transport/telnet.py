@@ -361,7 +361,6 @@ class TelnetTransport(Transport):
         return self.session.read_eager()
 
     @requires_open_session()
-    @OperationTimeout("timeout_transport", "Timed out writing to transport")
     def write(self, channel_input: str) -> None:
         """
         Write data to the channel

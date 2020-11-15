@@ -1,0 +1,9 @@
+codecov:
+  bot: "codecov-io"
+  strict_yaml_branch: "yaml-config"
+  max_report_age: 15
+  require_ci_to_pass: True
+
+coverage:
+  precision: 2
+  range: "85...100"

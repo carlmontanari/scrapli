@@ -1,5 +1,7 @@
-import os
+import fcntl
+import struct
 import sys
+import termios
 from pathlib import Path
 
 import pytest
@@ -187,3 +189,27 @@ def test_requires_open(method_name):
             method("blah")
         else:
             method()
+
+
+@pytest.mark.parametrize(
+    "winsize",
+    [(24, 80), (512, 512)],
+    ids=["default", "custom"],
+)
+def test_ptyprocess_winsize(sync_generic_driver_conn, winsize):
+    cols = winsize[0]
+    rows = winsize[1]
+
+    sync_generic_driver_conn.transport.transport_options = {
+        "ptyprocess": {"cols": cols, "rows": rows}
+    }
+    sync_generic_driver_conn.open()
+
+    packed = fcntl.ioctl(
+        sync_generic_driver_conn.transport.session.fd,
+        termios.TIOCGWINSZ,
+        struct.pack("HHHH", 0, 0, 0, 0),
+    )
+    actual_rows, actual_cols, _, _ = struct.unpack("HHHH", packed)
+    assert rows == actual_rows
+    assert cols == actual_cols

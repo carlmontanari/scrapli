@@ -57,7 +57,7 @@ class AsyncIOSXRDriver(AsyncNetworkDriver):
         auth_secondary: str = "",
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
-        textfsm_platform: str = "cisco_iosxr",
+        textfsm_platform: str = "cisco_xr",
         genie_platform: str = "iosxr",
         failed_when_contains: Optional[List[str]] = None,
         **kwargs: Dict[str, Any],

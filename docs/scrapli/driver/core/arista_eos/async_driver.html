@@ -49,6 +49,7 @@ async def eos_on_open(conn: AsyncNetworkDriver) -&gt; None:
     Raises:
         N/A
     &#34;&#34;&#34;
+    await conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
     await conn.send_command(command=&#34;terminal length 0&#34;)
     await conn.send_command(command=&#34;terminal width 32767&#34;)
 
@@ -247,6 +248,7 @@ class AsyncEOSDriver(AsyncNetworkDriver, EOSDriverBase):
     Raises:
         N/A
     &#34;&#34;&#34;
+    await conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
     await conn.send_command(command=&#34;terminal length 0&#34;)
     await conn.send_command(command=&#34;terminal width 32767&#34;)</code></pre>
 </details>

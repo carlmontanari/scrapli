@@ -6,8 +6,8 @@ from typing import Optional, Tuple
 from scrapli.driver import AsyncScrape, Scrape
 from scrapli.factory import AsyncScrapli, Scrapli
 
-__version__ = "2020.10.10"
-__all__ = ("AsyncScrape", "Scrape", "AsyncScrapli", "Scrapli")
+__version__ = "2020.11.15"
+__all__ = ("AsyncScrape", "Scrape", "AsyncScrapli", "Scrapli", "__version__")
 
 
 class DuplicateFilter(logging.Filter):
