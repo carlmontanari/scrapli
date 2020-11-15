@@ -66,7 +66,7 @@ def unit_tests(session):
         "pytest",
         "--cov=scrapli",
         "--cov-report",
-        "html",
+        "xml",
         "--cov-report",
         "term",
         "tests/unit",

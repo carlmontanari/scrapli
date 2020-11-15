@@ -88,6 +88,9 @@ class AsyncChannel(ChannelBase):
         while True:
             output += await self._read_chunk()
 
+            if self.comms_ansi:
+                output = strip_ansi(output=output)
+
             # replace any backspace chars (particular problem w/ junos), and remove any added spaces
             # this is just for comparison of the inputs to what was read from channel
             if not auto_expand and processed_channel_input in b"".join(

@@ -86,7 +86,7 @@ class IOSXRDriver(NetworkDriver):
         auth_secondary: str = &#34;&#34;,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
-        textfsm_platform: str = &#34;cisco_iosxr&#34;,
+        textfsm_platform: str = &#34;cisco_xr&#34;,
         genie_platform: str = &#34;iosxr&#34;,
         failed_when_contains: Optional[List[str]] = None,
         **kwargs: Dict[str, Any],
@@ -259,7 +259,7 @@ class IOSXRDriver(NetworkDriver):
 <dl>
 <dt id="scrapli.driver.core.cisco_iosxr.driver.IOSXRDriver"><code class="flex name class">
 <span>class <span class="ident">IOSXRDriver</span></span>
-<span>(</span><span>privilege_levels: Union[Dict[str, <a title="scrapli.driver.base_network_driver.PrivilegeLevel" href="../../base_network_driver.html#scrapli.driver.base_network_driver.PrivilegeLevel">PrivilegeLevel</a>], NoneType] = None, default_desired_privilege_level: str = 'privilege_exec', auth_secondary: str = '', on_open: Union[Callable[..., Any], NoneType] = None, on_close: Union[Callable[..., Any], NoneType] = None, textfsm_platform: str = 'cisco_iosxr', genie_platform: str = 'iosxr', failed_when_contains: Union[List[str], NoneType] = None, **kwargs: Dict[str, Any])</span>
+<span>(</span><span>privilege_levels: Union[Dict[str, <a title="scrapli.driver.base_network_driver.PrivilegeLevel" href="../../base_network_driver.html#scrapli.driver.base_network_driver.PrivilegeLevel">PrivilegeLevel</a>], NoneType] = None, default_desired_privilege_level: str = 'privilege_exec', auth_secondary: str = '', on_open: Union[Callable[..., Any], NoneType] = None, on_close: Union[Callable[..., Any], NoneType] = None, textfsm_platform: str = 'cisco_xr', genie_platform: str = 'iosxr', failed_when_contains: Union[List[str], NoneType] = None, **kwargs: Dict[str, Any])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>GenericDriverBase Object</p>
@@ -319,7 +319,7 @@ or to logout properly to free up vtys or similar.</dd>
         auth_secondary: str = &#34;&#34;,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
-        textfsm_platform: str = &#34;cisco_iosxr&#34;,
+        textfsm_platform: str = &#34;cisco_xr&#34;,
         genie_platform: str = &#34;iosxr&#34;,
         failed_when_contains: Optional[List[str]] = None,
         **kwargs: Dict[str, Any],

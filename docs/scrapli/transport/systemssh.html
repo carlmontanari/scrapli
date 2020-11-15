@@ -69,10 +69,6 @@ class SystemSSHTransport(Transport):
         timeout_transport: int = 5,
         timeout_ops: float = 10,
         timeout_exit: bool = True,
-        keepalive: bool = False,
-        keepalive_interval: int = 30,
-        keepalive_type: str = &#34;&#34;,
-        keepalive_pattern: str = &#34;\005&#34;,
         comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]$&#34;,
         comms_return_char: str = &#34;\n&#34;,
         comms_ansi: bool = False,
@@ -119,17 +115,6 @@ class SystemSSHTransport(Transport):
             timeout_exit: True/False close transport if timeout encountered. If False and keepalives
                 are in use, keepalives will prevent program from exiting so you should be sure to
                 catch Timeout exceptions and handle them appropriately
-            keepalive: whether or not to try to keep session alive
-            keepalive_interval: interval to use for session keepalives
-            keepalive_type: network|standard -- &#39;network&#39; sends actual characters over the
-                transport channel. This is useful for network-y type devices that may not support
-                &#39;standard&#39; keepalive mechanisms. &#39;standard&#39; is not currently implemented for
-                system ssh
-            keepalive_pattern: pattern to send to keep network channel alive. Default is
-                u&#39;\005&#39; which is equivalent to &#39;ctrl+e&#39;. This pattern moves cursor to end of the
-                line which should be an innocuous pattern. This will only be entered *if* a lock
-                can be acquired. This is only applicable if using keepalives and if the keepalive
-                type is &#39;network&#39;
             comms_prompt_pattern: prompt pattern expected for device, same as the one provided to
                 channel -- system ssh needs to know this to know how to decide if we are properly
                 sending/receiving data -- i.e. we are not stuck at some password prompt or some
@@ -163,6 +148,11 @@ class SystemSSHTransport(Transport):
                          -F /dev/null
                     You can pass any arguments that would be supported if you were ssh&#39;ing on your
                     terminal &#34;normally&#34;, passing some bad arguments can break things!
+                - ptyprocess: in general you should *not* ever need/care about this! Right now the
+                    only use for this setting is for the huawei community platform. This dict
+                    currently supports two possible arguments: `rows` and `cols` -- the values of
+                    which will be passed to the underlying `PtyProcess` spawn command, and used to
+                    set the window size of the pty process that is created.
 
         Returns:
             N/A  # noqa: DAR202
@@ -177,10 +167,6 @@ class SystemSSHTransport(Transport):
             timeout_socket,
             timeout_transport,
             timeout_exit,
-            keepalive,
-            keepalive_interval,
-            keepalive_type,
-            keepalive_pattern,
         )
 
         self.auth_username: str = auth_username
@@ -284,9 +270,6 @@ class SystemSSHTransport(Transport):
         self._open_pty()
         self.logger.info(f&#34;Successfully authenticated to {self.host}&#34;)
 
-        if self.keepalive:
-            self._session_keepalive()
-
     def _ssh_message_handler(self, output: bytes) -&gt; None:  # noqa: C901
         &#34;&#34;&#34;
         Parse EOF messages from _pty_authenticate and create log/stack exception message
@@ -367,7 +350,11 @@ class SystemSSHTransport(Transport):
 
         &#34;&#34;&#34;
         self.logger.info(f&#34;Attempting to open session with the following command: {self.open_cmd}&#34;)
-        self.session = PtyProcess.spawn(self.open_cmd)
+        self.session = PtyProcess.spawn(
+            self.open_cmd,
+            rows=self.transport_options.get(&#34;ptyprocess&#34;, {}).get(&#34;rows&#34;, 24),
+            cols=self.transport_options.get(&#34;ptyprocess&#34;, {}).get(&#34;cols&#34;, 80),
+        )
         self.logger.debug(f&#34;Session to host {self.host} spawned&#34;)
 
         if not self.auth_bypass:
@@ -403,47 +390,46 @@ class SystemSSHTransport(Transport):
         &#34;&#34;&#34;
         output = b&#34;&#34;
         prompt_pattern = get_prompt_pattern(prompt=&#34;&#34;, class_prompt=self._comms_prompt_pattern)
-        with self.session_lock:
-            while True:
-                try:
-                    new_output = self.session.read()
-                    output += new_output
-                    self.logger.debug(f&#34;Attempting to authenticate. Read: {repr(new_output)}&#34;)
-                except EOFError as exc:
-                    self._ssh_message_handler(output=output)
-                    # if _ssh_message_handler didn&#39;t raise any exception, we can raise the standard
-                    # &#34;did you disable strict key message/exception&#34;
-                    msg = (
-                        f&#34;Failed to open connection to host {self.host}. Do you need to disable &#34;
-                        &#34;`auth_strict_key`?&#34;
-                    )
-                    self.logger.critical(msg)
-                    raise ScrapliAuthenticationFailed(msg) from exc
-
-                # even if we dont hit EOF, we may still have hit a message we need to process such
-                # as insecure key permissions
+        while True:
+            try:
+                new_output = self.session.read()
+                output += new_output
+                self.logger.debug(f&#34;Attempting to authenticate. Read: {repr(new_output)}&#34;)
+            except EOFError as exc:
                 self._ssh_message_handler(output=output)
+                # if _ssh_message_handler didn&#39;t raise any exception, we can raise the standard
+                # &#34;did you disable strict key message/exception&#34;
+                msg = (
+                    f&#34;Failed to open connection to host {self.host}. Do you need to disable &#34;
+                    &#34;`auth_strict_key`?&#34;
+                )
+                self.logger.critical(msg)
+                raise ScrapliAuthenticationFailed(msg) from exc
 
-                if self._comms_ansi or b&#34;\x1B&#34; in output:
-                    output = strip_ansi(output=output)
-                if b&#34;password&#34; in output.lower():
-                    self.logger.info(&#34;Found password prompt, sending password&#34;)
-                    self.session.write(self.auth_password.encode())
-                    self.session.write(self._comms_return_char.encode())
-                    break
-                if b&#34;enter passphrase for key&#34; in output.lower():
-                    self.logger.info(&#34;Found key passphrase prompt, sending passphrase&#34;)
-                    self.session.write(self.auth_private_key_passphrase.encode())
-                    self.session.write(self._comms_return_char.encode())
-                    break
-                channel_match = re.search(pattern=prompt_pattern, string=output)
-                if channel_match:
-                    self.logger.info(
-                        &#34;Found channel prompt, assuming that key based authentication has succeeded&#34;
-                    )
-                    # set _isauthenticated to true, we&#39;ve already authenticated, don&#39;t re-check
-                    self._isauthenticated = True
-                    break
+            # even if we dont hit EOF, we may still have hit a message we need to process such
+            # as insecure key permissions
+            self._ssh_message_handler(output=output)
+
+            if self._comms_ansi or b&#34;\x1B&#34; in output:
+                output = strip_ansi(output=output)
+            if b&#34;password&#34; in output.lower():
+                self.logger.info(&#34;Found password prompt, sending password&#34;)
+                self.session.write(self.auth_password.encode())
+                self.session.write(self._comms_return_char.encode())
+                break
+            if b&#34;enter passphrase for key&#34; in output.lower():
+                self.logger.info(&#34;Found key passphrase prompt, sending passphrase&#34;)
+                self.session.write(self.auth_private_key_passphrase.encode())
+                self.session.write(self._comms_return_char.encode())
+                break
+            channel_match = re.search(pattern=prompt_pattern, string=output)
+            if channel_match:
+                self.logger.info(
+                    &#34;Found channel prompt, assuming that key based authentication has succeeded&#34;
+                )
+                # set _isauthenticated to true, we&#39;ve already authenticated, don&#39;t re-check
+                self._isauthenticated = True
+                break
 
     @OperationTimeout(&#34;_timeout_ops&#34;, &#34;Timed out determining if session is authenticated&#34;)
     def _system_isauthenticated(self) -&gt; bool:
@@ -451,7 +437,7 @@ class SystemSSHTransport(Transport):
         Check if session is authenticated
 
         This is very naive -- it only knows if the sub process is alive and has not received an EOF.
-        Beyond that we lock the session and send the return character and re-read the channel.
+        Beyond that we send the return character and re-read the channel.
 
         Args:
             N/A
@@ -464,43 +450,41 @@ class SystemSSHTransport(Transport):
 
         &#34;&#34;&#34;
         self.logger.debug(&#34;Attempting to determine if authentication was successful&#34;)
-        with self.session_lock:
-            if self.session.isalive() and not self.session.eof():
-                prompt_pattern = get_prompt_pattern(
-                    prompt=&#34;&#34;, class_prompt=self._comms_prompt_pattern
-                )
-                self.session.write(self._comms_return_char.encode())
-                self._wait_for_session_fd_ready(fd=self.session.fd)
 
-                output = b&#34;&#34;
-                while True:
-                    new_output = self.session.read()
-                    output += new_output
-                    self.logger.debug(
-                        f&#34;Attempting to validate authentication. Read: {repr(new_output)}&#34;
+        if self.session.isalive() and not self.session.eof():
+            prompt_pattern = get_prompt_pattern(prompt=&#34;&#34;, class_prompt=self._comms_prompt_pattern)
+            self.session.write(self._comms_return_char.encode())
+            self._wait_for_session_fd_ready(fd=self.session.fd)
+
+            output = b&#34;&#34;
+            while True:
+                new_output = self.session.read()
+                output += new_output
+                self.logger.debug(
+                    f&#34;Attempting to validate authentication. Read: {repr(new_output)}&#34;
+                )
+                # we do not need to deal w/ line replacement for the actual output, only for
+                # parsing if a prompt-like thing is at the end of the output
+                output = output.replace(b&#34;\r&#34;, b&#34;&#34;)
+                # always check to see if we should strip ansi here; if we don&#39;t handle this we
+                # may raise auth failures for the wrong reason which would be confusing for
+                # users
+                if self._comms_ansi or b&#34;\x1B&#34; in output:
+                    output = strip_ansi(output=output)
+                channel_match = re.search(pattern=prompt_pattern, string=output)
+                if channel_match:
+                    self._isauthenticated = True
+                    break
+                if b&#34;password:&#34; in output.lower():
+                    # if we see &#34;password&#34; we know auth failed (hopefully in all scenarios!)
+                    self.logger.critical(
+                        &#34;Found `password:` in output, assuming password authentication failed&#34;
                     )
-                    # we do not need to deal w/ line replacement for the actual output, only for
-                    # parsing if a prompt-like thing is at the end of the output
-                    output = output.replace(b&#34;\r&#34;, b&#34;&#34;)
-                    # always check to see if we should strip ansi here; if we don&#39;t handle this we
-                    # may raise auth failures for the wrong reason which would be confusing for
-                    # users
-                    if self._comms_ansi or b&#34;\x1B&#34; in output:
-                        output = strip_ansi(output=output)
-                    channel_match = re.search(pattern=prompt_pattern, string=output)
-                    if channel_match:
-                        self._isauthenticated = True
-                        break
-                    if b&#34;password:&#34; in output.lower():
-                        # if we see &#34;password&#34; we know auth failed (hopefully in all scenarios!)
-                        self.logger.critical(
-                            &#34;Found `password:` in output, assuming password authentication failed&#34;
-                        )
-                        break
-                    if output:
-                        self.logger.debug(
-                            f&#34;Cannot determine if authenticated, \n\tRead: {repr(output)}&#34;
-                        )
+                    break
+                if output:
+                    self.logger.debug(
+                        f&#34;Cannot determine if authenticated, \n\tRead: {repr(output)}&#34;
+                    )
 
         if self._isauthenticated:
             return True
@@ -562,7 +546,6 @@ class SystemSSHTransport(Transport):
         return self.session.read(read_bytes)
 
     @requires_open_session()
-    @OperationTimeout(&#34;timeout_transport&#34;, &#34;Timed out writing to transport&#34;)
     def write(self, channel_input: str) -&gt; None:
         &#34;&#34;&#34;
         Write data to the channel
@@ -593,23 +576,7 @@ class SystemSSHTransport(Transport):
             N/A
 
         &#34;&#34;&#34;
-        self.timeout_transport = timeout
-
-    def _keepalive_standard(self) -&gt; None:
-        &#34;&#34;&#34;
-        Send &#34;out of band&#34; (protocol level) keepalives to devices.
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            NotImplementedError: &#39;standard&#39; keepalive mechanism not yet implemented for system
-
-        &#34;&#34;&#34;
-        raise NotImplementedError(&#34;&#39;standard&#39; keepalive mechanism not yet implemented for system.&#34;)</code></pre>
+        self.timeout_transport = timeout</code></pre>
 </details>
 </section>
 <section>
@@ -623,7 +590,7 @@ class SystemSSHTransport(Transport):
 <dl>
 <dt id="scrapli.transport.systemssh.SystemSSHTransport"><code class="flex name class">
 <span>class <span class="ident">SystemSSHTransport</span></span>
-<span>(</span><span>host: str = '', port: int = 22, auth_username: str = '', auth_private_key: str = '', auth_private_key_passphrase: str = '', auth_password: str = '', auth_strict_key: bool = True, auth_bypass: bool = False, timeout_socket: int = 5, timeout_transport: int = 5, timeout_ops: float = 10, timeout_exit: bool = True, keepalive: bool = False, keepalive_interval: int = 30, keepalive_type: str = '', keepalive_pattern: str = '\x05', comms_prompt_pattern: str = &#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char: str = '\n', comms_ansi: bool = False, ssh_config_file: str = '', ssh_known_hosts_file: str = '', transport_options: Union[Dict[str, Any], NoneType] = None)</span>
+<span>(</span><span>host: str = '', port: int = 22, auth_username: str = '', auth_private_key: str = '', auth_private_key_passphrase: str = '', auth_password: str = '', auth_strict_key: bool = True, auth_bypass: bool = False, timeout_socket: int = 5, timeout_transport: int = 5, timeout_ops: float = 10, timeout_exit: bool = True, comms_prompt_pattern: str = &#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char: str = '\n', comms_ansi: bool = False, ssh_config_file: str = '', ssh_known_hosts_file: str = '', transport_options: Union[Dict[str, Any], NoneType] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -675,21 +642,6 @@ is completed.</dd>
 <dd>True/False close transport if timeout encountered. If False and keepalives
 are in use, keepalives will prevent program from exiting so you should be sure to
 catch Timeout exceptions and handle them appropriately</dd>
-<dt><strong><code>keepalive</code></strong></dt>
-<dd>whether or not to try to keep session alive</dd>
-<dt><strong><code>keepalive_interval</code></strong></dt>
-<dd>interval to use for session keepalives</dd>
-<dt><strong><code>keepalive_type</code></strong></dt>
-<dd>network|standard &ndash; 'network' sends actual characters over the
-transport channel. This is useful for network-y type devices that may not support
-'standard' keepalive mechanisms. 'standard' is not currently implemented for
-system ssh</dd>
-<dt><strong><code>keepalive_pattern</code></strong></dt>
-<dd>pattern to send to keep network channel alive. Default is
-u'\005' which is equivalent to 'ctrl+e'. This pattern moves cursor to end of the
-line which should be an innocuous pattern. This will only be entered <em>if</em> a lock
-can be acquired. This is only applicable if using keepalives and if the keepalive
-type is 'network'</dd>
 <dt><strong><code>comms_prompt_pattern</code></strong></dt>
 <dd>prompt pattern expected for device, same as the one provided to
 channel &ndash; system ssh needs to know this to know how to decide if we are properly
@@ -728,7 +680,12 @@ ssh 172.31.254.1 -p 22 -o ConnectTimeout=5 -o ServerAliveInterval=10
 -l scrapli -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
 -F /dev/null
 You can pass any arguments that would be supported if you were ssh'ing on your
-terminal "normally", passing some bad arguments can break things!</dd>
+terminal "normally", passing some bad arguments can break things!
+- ptyprocess: in general you should <em>not</em> ever need/care about this! Right now the
+only use for this setting is for the huawei community platform. This dict
+currently supports two possible arguments: <code>rows</code> and <code>cols</code> &ndash; the values of
+which will be passed to the underlying <code>PtyProcess</code> spawn command, and used to
+set the window size of the pty process that is created.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <p>N/A
@@ -754,10 +711,6 @@ terminal "normally", passing some bad arguments can break things!</dd>
         timeout_transport: int = 5,
         timeout_ops: float = 10,
         timeout_exit: bool = True,
-        keepalive: bool = False,
-        keepalive_interval: int = 30,
-        keepalive_type: str = &#34;&#34;,
-        keepalive_pattern: str = &#34;\005&#34;,
         comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]$&#34;,
         comms_return_char: str = &#34;\n&#34;,
         comms_ansi: bool = False,
@@ -804,17 +757,6 @@ terminal "normally", passing some bad arguments can break things!</dd>
             timeout_exit: True/False close transport if timeout encountered. If False and keepalives
                 are in use, keepalives will prevent program from exiting so you should be sure to
                 catch Timeout exceptions and handle them appropriately
-            keepalive: whether or not to try to keep session alive
-            keepalive_interval: interval to use for session keepalives
-            keepalive_type: network|standard -- &#39;network&#39; sends actual characters over the
-                transport channel. This is useful for network-y type devices that may not support
-                &#39;standard&#39; keepalive mechanisms. &#39;standard&#39; is not currently implemented for
-                system ssh
-            keepalive_pattern: pattern to send to keep network channel alive. Default is
-                u&#39;\005&#39; which is equivalent to &#39;ctrl+e&#39;. This pattern moves cursor to end of the
-                line which should be an innocuous pattern. This will only be entered *if* a lock
-                can be acquired. This is only applicable if using keepalives and if the keepalive
-                type is &#39;network&#39;
             comms_prompt_pattern: prompt pattern expected for device, same as the one provided to
                 channel -- system ssh needs to know this to know how to decide if we are properly
                 sending/receiving data -- i.e. we are not stuck at some password prompt or some
@@ -848,6 +790,11 @@ terminal "normally", passing some bad arguments can break things!</dd>
                          -F /dev/null
                     You can pass any arguments that would be supported if you were ssh&#39;ing on your
                     terminal &#34;normally&#34;, passing some bad arguments can break things!
+                - ptyprocess: in general you should *not* ever need/care about this! Right now the
+                    only use for this setting is for the huawei community platform. This dict
+                    currently supports two possible arguments: `rows` and `cols` -- the values of
+                    which will be passed to the underlying `PtyProcess` spawn command, and used to
+                    set the window size of the pty process that is created.
 
         Returns:
             N/A  # noqa: DAR202
@@ -862,10 +809,6 @@ terminal "normally", passing some bad arguments can break things!</dd>
             timeout_socket,
             timeout_transport,
             timeout_exit,
-            keepalive,
-            keepalive_interval,
-            keepalive_type,
-            keepalive_pattern,
         )
 
         self.auth_username: str = auth_username
@@ -969,9 +912,6 @@ terminal "normally", passing some bad arguments can break things!</dd>
         self._open_pty()
         self.logger.info(f&#34;Successfully authenticated to {self.host}&#34;)
 
-        if self.keepalive:
-            self._session_keepalive()
-
     def _ssh_message_handler(self, output: bytes) -&gt; None:  # noqa: C901
         &#34;&#34;&#34;
         Parse EOF messages from _pty_authenticate and create log/stack exception message
@@ -1052,7 +992,11 @@ terminal "normally", passing some bad arguments can break things!</dd>
 
         &#34;&#34;&#34;
         self.logger.info(f&#34;Attempting to open session with the following command: {self.open_cmd}&#34;)
-        self.session = PtyProcess.spawn(self.open_cmd)
+        self.session = PtyProcess.spawn(
+            self.open_cmd,
+            rows=self.transport_options.get(&#34;ptyprocess&#34;, {}).get(&#34;rows&#34;, 24),
+            cols=self.transport_options.get(&#34;ptyprocess&#34;, {}).get(&#34;cols&#34;, 80),
+        )
         self.logger.debug(f&#34;Session to host {self.host} spawned&#34;)
 
         if not self.auth_bypass:
@@ -1088,47 +1032,46 @@ terminal "normally", passing some bad arguments can break things!</dd>
         &#34;&#34;&#34;
         output = b&#34;&#34;
         prompt_pattern = get_prompt_pattern(prompt=&#34;&#34;, class_prompt=self._comms_prompt_pattern)
-        with self.session_lock:
-            while True:
-                try:
-                    new_output = self.session.read()
-                    output += new_output
-                    self.logger.debug(f&#34;Attempting to authenticate. Read: {repr(new_output)}&#34;)
-                except EOFError as exc:
-                    self._ssh_message_handler(output=output)
-                    # if _ssh_message_handler didn&#39;t raise any exception, we can raise the standard
-                    # &#34;did you disable strict key message/exception&#34;
-                    msg = (
-                        f&#34;Failed to open connection to host {self.host}. Do you need to disable &#34;
-                        &#34;`auth_strict_key`?&#34;
-                    )
-                    self.logger.critical(msg)
-                    raise ScrapliAuthenticationFailed(msg) from exc
-
-                # even if we dont hit EOF, we may still have hit a message we need to process such
-                # as insecure key permissions
+        while True:
+            try:
+                new_output = self.session.read()
+                output += new_output
+                self.logger.debug(f&#34;Attempting to authenticate. Read: {repr(new_output)}&#34;)
+            except EOFError as exc:
                 self._ssh_message_handler(output=output)
+                # if _ssh_message_handler didn&#39;t raise any exception, we can raise the standard
+                # &#34;did you disable strict key message/exception&#34;
+                msg = (
+                    f&#34;Failed to open connection to host {self.host}. Do you need to disable &#34;
+                    &#34;`auth_strict_key`?&#34;
+                )
+                self.logger.critical(msg)
+                raise ScrapliAuthenticationFailed(msg) from exc
 
-                if self._comms_ansi or b&#34;\x1B&#34; in output:
-                    output = strip_ansi(output=output)
-                if b&#34;password&#34; in output.lower():
-                    self.logger.info(&#34;Found password prompt, sending password&#34;)
-                    self.session.write(self.auth_password.encode())
-                    self.session.write(self._comms_return_char.encode())
-                    break
-                if b&#34;enter passphrase for key&#34; in output.lower():
-                    self.logger.info(&#34;Found key passphrase prompt, sending passphrase&#34;)
-                    self.session.write(self.auth_private_key_passphrase.encode())
-                    self.session.write(self._comms_return_char.encode())
-                    break
-                channel_match = re.search(pattern=prompt_pattern, string=output)
-                if channel_match:
-                    self.logger.info(
-                        &#34;Found channel prompt, assuming that key based authentication has succeeded&#34;
-                    )
-                    # set _isauthenticated to true, we&#39;ve already authenticated, don&#39;t re-check
-                    self._isauthenticated = True
-                    break
+            # even if we dont hit EOF, we may still have hit a message we need to process such
+            # as insecure key permissions
+            self._ssh_message_handler(output=output)
+
+            if self._comms_ansi or b&#34;\x1B&#34; in output:
+                output = strip_ansi(output=output)
+            if b&#34;password&#34; in output.lower():
+                self.logger.info(&#34;Found password prompt, sending password&#34;)
+                self.session.write(self.auth_password.encode())
+                self.session.write(self._comms_return_char.encode())
+                break
+            if b&#34;enter passphrase for key&#34; in output.lower():
+                self.logger.info(&#34;Found key passphrase prompt, sending passphrase&#34;)
+                self.session.write(self.auth_private_key_passphrase.encode())
+                self.session.write(self._comms_return_char.encode())
+                break
+            channel_match = re.search(pattern=prompt_pattern, string=output)
+            if channel_match:
+                self.logger.info(
+                    &#34;Found channel prompt, assuming that key based authentication has succeeded&#34;
+                )
+                # set _isauthenticated to true, we&#39;ve already authenticated, don&#39;t re-check
+                self._isauthenticated = True
+                break
 
     @OperationTimeout(&#34;_timeout_ops&#34;, &#34;Timed out determining if session is authenticated&#34;)
     def _system_isauthenticated(self) -&gt; bool:
@@ -1136,7 +1079,7 @@ terminal "normally", passing some bad arguments can break things!</dd>
         Check if session is authenticated
 
         This is very naive -- it only knows if the sub process is alive and has not received an EOF.
-        Beyond that we lock the session and send the return character and re-read the channel.
+        Beyond that we send the return character and re-read the channel.
 
         Args:
             N/A
@@ -1149,43 +1092,41 @@ terminal "normally", passing some bad arguments can break things!</dd>
 
         &#34;&#34;&#34;
         self.logger.debug(&#34;Attempting to determine if authentication was successful&#34;)
-        with self.session_lock:
-            if self.session.isalive() and not self.session.eof():
-                prompt_pattern = get_prompt_pattern(
-                    prompt=&#34;&#34;, class_prompt=self._comms_prompt_pattern
-                )
-                self.session.write(self._comms_return_char.encode())
-                self._wait_for_session_fd_ready(fd=self.session.fd)
 
-                output = b&#34;&#34;
-                while True:
-                    new_output = self.session.read()
-                    output += new_output
-                    self.logger.debug(
-                        f&#34;Attempting to validate authentication. Read: {repr(new_output)}&#34;
+        if self.session.isalive() and not self.session.eof():
+            prompt_pattern = get_prompt_pattern(prompt=&#34;&#34;, class_prompt=self._comms_prompt_pattern)
+            self.session.write(self._comms_return_char.encode())
+            self._wait_for_session_fd_ready(fd=self.session.fd)
+
+            output = b&#34;&#34;
+            while True:
+                new_output = self.session.read()
+                output += new_output
+                self.logger.debug(
+                    f&#34;Attempting to validate authentication. Read: {repr(new_output)}&#34;
+                )
+                # we do not need to deal w/ line replacement for the actual output, only for
+                # parsing if a prompt-like thing is at the end of the output
+                output = output.replace(b&#34;\r&#34;, b&#34;&#34;)
+                # always check to see if we should strip ansi here; if we don&#39;t handle this we
+                # may raise auth failures for the wrong reason which would be confusing for
+                # users
+                if self._comms_ansi or b&#34;\x1B&#34; in output:
+                    output = strip_ansi(output=output)
+                channel_match = re.search(pattern=prompt_pattern, string=output)
+                if channel_match:
+                    self._isauthenticated = True
+                    break
+                if b&#34;password:&#34; in output.lower():
+                    # if we see &#34;password&#34; we know auth failed (hopefully in all scenarios!)
+                    self.logger.critical(
+                        &#34;Found `password:` in output, assuming password authentication failed&#34;
                     )
-                    # we do not need to deal w/ line replacement for the actual output, only for
-                    # parsing if a prompt-like thing is at the end of the output
-                    output = output.replace(b&#34;\r&#34;, b&#34;&#34;)
-                    # always check to see if we should strip ansi here; if we don&#39;t handle this we
-                    # may raise auth failures for the wrong reason which would be confusing for
-                    # users
-                    if self._comms_ansi or b&#34;\x1B&#34; in output:
-                        output = strip_ansi(output=output)
-                    channel_match = re.search(pattern=prompt_pattern, string=output)
-                    if channel_match:
-                        self._isauthenticated = True
-                        break
-                    if b&#34;password:&#34; in output.lower():
-                        # if we see &#34;password&#34; we know auth failed (hopefully in all scenarios!)
-                        self.logger.critical(
-                            &#34;Found `password:` in output, assuming password authentication failed&#34;
-                        )
-                        break
-                    if output:
-                        self.logger.debug(
-                            f&#34;Cannot determine if authenticated, \n\tRead: {repr(output)}&#34;
-                        )
+                    break
+                if output:
+                    self.logger.debug(
+                        f&#34;Cannot determine if authenticated, \n\tRead: {repr(output)}&#34;
+                    )
 
         if self._isauthenticated:
             return True
@@ -1247,7 +1188,6 @@ terminal "normally", passing some bad arguments can break things!</dd>
         return self.session.read(read_bytes)
 
     @requires_open_session()
-    @OperationTimeout(&#34;timeout_transport&#34;, &#34;Timed out writing to transport&#34;)
     def write(self, channel_input: str) -&gt; None:
         &#34;&#34;&#34;
         Write data to the channel
@@ -1278,23 +1218,7 @@ terminal "normally", passing some bad arguments can break things!</dd>
             N/A
 
         &#34;&#34;&#34;
-        self.timeout_transport = timeout
-
-    def _keepalive_standard(self) -&gt; None:
-        &#34;&#34;&#34;
-        Send &#34;out of band&#34; (protocol level) keepalives to devices.
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            NotImplementedError: &#39;standard&#39; keepalive mechanism not yet implemented for system
-
-        &#34;&#34;&#34;
-        raise NotImplementedError(&#34;&#39;standard&#39; keepalive mechanism not yet implemented for system.&#34;)</code></pre>
+        self.timeout_transport = timeout</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1373,10 +1297,7 @@ terminal "normally", passing some bad arguments can break things!</dd>
     &#34;&#34;&#34;
     self.logger.info(f&#34;Attempting to authenticate to {self.host}&#34;)
     self._open_pty()
-    self.logger.info(f&#34;Successfully authenticated to {self.host}&#34;)
-
-    if self.keepalive:
-        self._session_keepalive()</code></pre>
+    self.logger.info(f&#34;Successfully authenticated to {self.host}&#34;)</code></pre>
 </details>
 </dd>
 </dl>

@@ -28,14 +28,9 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.transport.transport&#34;&#34;&#34;
-import atexit
-import time
 from abc import ABC, abstractmethod
-from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
 from select import select
 
-from scrapli.exceptions import ScrapliKeepaliveFailure
 from scrapli.transport.base_transport import TransportBase
 
 
@@ -88,102 +83,6 @@ class Transport(TransportBase, ABC):
 
         &#34;&#34;&#34;
 
-    def _session_keepalive(self) -&gt; None:
-        &#34;&#34;&#34;
-        Spawn keepalive thread for transport session
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        if not self.keepalive:
-            return
-        pool = ThreadPoolExecutor()
-        if self.keepalive_type == &#34;network&#34;:
-            pool.submit(self._keepalive_network)
-        else:
-            pool.submit(self._keepalive_standard)
-
-    def _keepalive_network(self) -&gt; None:
-        &#34;&#34;&#34;
-        Send &#34;in band&#34; keepalives to devices.
-
-        Generally used with &#34;network&#34; devices which do not have native keepalive support. This will
-        try to acquire a session lock and send an innocuous character -- such as CTRL+E -- to keep
-        the device &#34;exec-timeout&#34; (in network-y words) from expiring.
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            ScrapliKeepaliveFailure: if scrapli cant unlock and send keepalive in less than 3 *
-                the keepalive_interval
-
-        &#34;&#34;&#34;
-
-        def kill_transport() -&gt; None:
-            if self.isalive():
-                self.close()
-
-        # ensure the transport is closed so keepalive can terminate if main thread tries to exit
-        atexit.register(kill_transport)
-
-        lock_counter = 0
-        last_keepalive = datetime.now()
-        while True:
-            if not self.isalive():
-                return
-            diff = datetime.now() - last_keepalive
-            if diff.seconds &gt;= self.keepalive_interval:
-                if not self.session_lock.locked():
-                    self.logger.debug(
-                        f&#34;Sending &#39;network&#39; keepalive with pattern {repr(self.keepalive_pattern)}.&#34;
-                    )
-                    lock_counter = 0
-                    self.session_lock.acquire()
-                    self.write(channel_input=self.keepalive_pattern)
-                    self.session_lock.release()
-                    last_keepalive = datetime.now()
-                else:
-                    lock_counter += 1
-                    if lock_counter &gt;= 3:
-                        self.logger.info(
-                            f&#34;Keepalive thread missed {lock_counter} consecutive keepalives.&#34;
-                        )
-            if diff.seconds &gt; self.keepalive_interval * 3:
-                msg = (
-                    &#34;Keepalive thread has failed to send a keepalive in greater than three &#34;
-                    &#34;times the keepalive interval!&#34;
-                )
-                self.logger.critical(msg)
-                raise ScrapliKeepaliveFailure(msg)
-            time.sleep(self.keepalive_interval / 10)
-
-    @abstractmethod
-    def _keepalive_standard(self) -&gt; None:
-        &#34;&#34;&#34;
-        Send &#34;out of band&#34; (protocol level) keepalives to devices.
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-
     def _wait_for_session_fd_ready(self, fd: int) -&gt; None:
         &#34;&#34;&#34;
         Wait for a session fd to be ready to read
@@ -218,7 +117,7 @@ class Transport(TransportBase, ABC):
 <dl>
 <dt id="scrapli.transport.transport.Transport"><code class="flex name class">
 <span>class <span class="ident">Transport</span></span>
-<span>(</span><span>host: str = '', port: int = 22, timeout_socket: int = 5, timeout_transport: int = 5, timeout_exit: bool = True, keepalive: bool = False, keepalive_interval: int = 30, keepalive_type: str = 'network', keepalive_pattern: str = '\x05')</span>
+<span>(</span><span>host: str = '', port: int = 22, timeout_socket: int = 5, timeout_transport: int = 5, timeout_exit: bool = True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -238,23 +137,6 @@ inheritance.</p>
 <dd>True/False close transport if timeout encountered. If False and keepalives
 are in use, keepalives will prevent program from exiting so you should be sure to
 catch Timeout exceptions and handle them appropriately</dd>
-<dt><strong><code>keepalive</code></strong></dt>
-<dd>whether or not to try to keep session alive</dd>
-<dt><strong><code>keepalive_interval</code></strong></dt>
-<dd>interval to use for session keepalives</dd>
-<dt><strong><code>keepalive_type</code></strong></dt>
-<dd>network|standard &ndash; 'network' sends actual characters over the
-transport channel. This is useful for network-y type devices that may not support
-'standard' keepalive mechanisms. 'standard' attempts to use whatever 'standard'
-keepalive mechanisms are available in the selected transport mechanism. Check the
-transport documentation for details on what is supported and/or how it is
-implemented for any given transport driver</dd>
-<dt><strong><code>keepalive_pattern</code></strong></dt>
-<dd>pattern to send to keep network channel alive. Default is
-u'\005' which is equivalent to 'ctrl+e'. This pattern moves cursor to end of the
-line which should be an innocuous pattern. This will only be entered <em>if</em> a lock
-can be acquired. This is only applicable if using keepalives and if the keepalive
-type is 'network'</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <p>N/A
@@ -305,102 +187,6 @@ type is 'network'</dd>
 
         Args:
             channel_input: string to send to channel
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-
-    def _session_keepalive(self) -&gt; None:
-        &#34;&#34;&#34;
-        Spawn keepalive thread for transport session
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        if not self.keepalive:
-            return
-        pool = ThreadPoolExecutor()
-        if self.keepalive_type == &#34;network&#34;:
-            pool.submit(self._keepalive_network)
-        else:
-            pool.submit(self._keepalive_standard)
-
-    def _keepalive_network(self) -&gt; None:
-        &#34;&#34;&#34;
-        Send &#34;in band&#34; keepalives to devices.
-
-        Generally used with &#34;network&#34; devices which do not have native keepalive support. This will
-        try to acquire a session lock and send an innocuous character -- such as CTRL+E -- to keep
-        the device &#34;exec-timeout&#34; (in network-y words) from expiring.
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            ScrapliKeepaliveFailure: if scrapli cant unlock and send keepalive in less than 3 *
-                the keepalive_interval
-
-        &#34;&#34;&#34;
-
-        def kill_transport() -&gt; None:
-            if self.isalive():
-                self.close()
-
-        # ensure the transport is closed so keepalive can terminate if main thread tries to exit
-        atexit.register(kill_transport)
-
-        lock_counter = 0
-        last_keepalive = datetime.now()
-        while True:
-            if not self.isalive():
-                return
-            diff = datetime.now() - last_keepalive
-            if diff.seconds &gt;= self.keepalive_interval:
-                if not self.session_lock.locked():
-                    self.logger.debug(
-                        f&#34;Sending &#39;network&#39; keepalive with pattern {repr(self.keepalive_pattern)}.&#34;
-                    )
-                    lock_counter = 0
-                    self.session_lock.acquire()
-                    self.write(channel_input=self.keepalive_pattern)
-                    self.session_lock.release()
-                    last_keepalive = datetime.now()
-                else:
-                    lock_counter += 1
-                    if lock_counter &gt;= 3:
-                        self.logger.info(
-                            f&#34;Keepalive thread missed {lock_counter} consecutive keepalives.&#34;
-                        )
-            if diff.seconds &gt; self.keepalive_interval * 3:
-                msg = (
-                    &#34;Keepalive thread has failed to send a keepalive in greater than three &#34;
-                    &#34;times the keepalive interval!&#34;
-                )
-                self.logger.critical(msg)
-                raise ScrapliKeepaliveFailure(msg)
-            time.sleep(self.keepalive_interval / 10)
-
-    @abstractmethod
-    def _keepalive_standard(self) -&gt; None:
-        &#34;&#34;&#34;
-        Send &#34;out of band&#34; (protocol level) keepalives to devices.
-
-        Args:
-            N/A
 
         Returns:
             N/A  # noqa: DAR202

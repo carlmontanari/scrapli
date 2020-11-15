@@ -1,7 +1,17 @@
 CHANGELOG
 =======
 
-# XXXX.XX.XX
+# 2020.11.15
+- Fix a regex that sometimes caused a failed functional IOSXR test
+- Add `ptyprocess` transport options for system transport -- sounds like this may be needed for huawei community
+ platform to be able to set the pty process terminal size -- also added some basic testing for this
+- Update scrapli-ssh2 pin to latest version -- now supports keyboard interactive auth; also un-skipped all related
+ EOS tests now that this works
+- Fix missing acquire priv in default on_open methods for nxos and eos async version
+- Fix incorrect `textfsm_platform` for iosxr (was cisco_iosxr, now is cisco_xr)
+- Remove unnecessary decorator on write operations for systemssh and telnet -- this operation shouldn't block so this
+ was unnecessary; any issue here should raise some exception from the lower level library.
+- Playing around w/ adding coverage reports with Codecov
 
 
 # 2020.10.10

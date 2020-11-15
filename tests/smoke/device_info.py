@@ -12,8 +12,6 @@ iosxe_device = {
     "auth_password": password or "VR-netlab9",
     "auth_strict_key": False,
     "transport": "system",
-    "keepalive": True,
-    "keepalive_interval": 1,
 }
 
 nxos_device = {
@@ -23,8 +21,6 @@ nxos_device = {
     "auth_password": "VR-netlab9",
     "auth_strict_key": False,
     "transport": "system",
-    "keepalive": True,
-    "keepalive_interval": 1,
 }
 
 iosxr_device = {
@@ -34,8 +30,6 @@ iosxr_device = {
     "auth_password": "VR-netlab9",
     "auth_strict_key": False,
     "transport": "system",
-    "keepalive": True,
-    "keepalive_interval": 1,
 }
 
 eos_device = {
@@ -45,8 +39,6 @@ eos_device = {
     "auth_password": "VR-netlab9",
     "auth_strict_key": False,
     "transport": "system",
-    "keepalive": True,
-    "keepalive_interval": 1,
     "comms_ansi": True,
 }
 
@@ -57,6 +49,4 @@ junos_device = {
     "auth_password": "VR-netlab9",
     "auth_strict_key": False,
     "transport": "system",
-    "keepalive": True,
-    "keepalive_interval": 1,
 }

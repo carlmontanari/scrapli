@@ -161,6 +161,9 @@ inheritance.</p>
         while True:
             output += await self._read_chunk()
 
+            if self.comms_ansi:
+                output = strip_ansi(output=output)
+
             # replace any backspace chars (particular problem w/ junos), and remove any added spaces
             # this is just for comparison of the inputs to what was read from channel
             if not auto_expand and processed_channel_input in b&#34;&#34;.join(
@@ -311,7 +314,7 @@ inheritance.</p>
 
         bytes_channel_input = channel_input.encode()
 
-        with self.transport.session_lock:
+        with self.session_lock:
             self.logger.info(
                 f&#34;Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}&#34;
             )
@@ -358,7 +361,7 @@ inheritance.</p>
             channel_output.encode() for channel_output in expected_outputs or []
         ]
 
-        with self.transport.session_lock:
+        with self.session_lock:
             self.transport.write(channel_input=channel_input)
             self.logger.debug(f&#34;Write: {repr(channel_input)}&#34;)
             await self._read_until_input(channel_input=bytes_channel_input)
@@ -437,31 +440,30 @@ inheritance.</p>
         &#34;&#34;&#34;
         self._pre_send_inputs_interact(interact_events=interact_events)
 
-        self.transport.session_lock.acquire()
-        output = b&#34;&#34;
-        for interact_event in interact_events:
-            channel_input = interact_event[0]
-            bytes_channel_input = channel_input.encode()
-            channel_response = interact_event[1]
-            try:
-                hidden_input = interact_event[2]
-            except IndexError:
-                hidden_input = False
-            self.logger.info(
-                f&#34;Attempting to send input interact: {channel_input}; &#34;
-                f&#34;\texpecting: {channel_response};&#34;
-                f&#34;\thidden_input: {hidden_input}&#34;
-            )
-            self.transport.write(channel_input=channel_input)
-            self.logger.debug(f&#34;Write: {repr(channel_input)}&#34;)
-            if not channel_response or hidden_input is True:
-                self._send_return()
-            else:
-                output += await self._read_until_input(channel_input=bytes_channel_input)
-                self._send_return()
-            output += await self._read_until_prompt(prompt=channel_response)
-        # wait to release lock until after &#34;interact&#34; session is complete
-        self.transport.session_lock.release()
+        with self.session_lock:
+            output = b&#34;&#34;
+            for interact_event in interact_events:
+                channel_input = interact_event[0]
+                bytes_channel_input = channel_input.encode()
+                channel_response = interact_event[1]
+                try:
+                    hidden_input = interact_event[2]
+                except IndexError:
+                    hidden_input = False
+                self.logger.info(
+                    f&#34;Attempting to send input interact: {channel_input}; &#34;
+                    f&#34;\texpecting: {channel_response};&#34;
+                    f&#34;\thidden_input: {hidden_input}&#34;
+                )
+                self.transport.write(channel_input=channel_input)
+                self.logger.debug(f&#34;Write: {repr(channel_input)}&#34;)
+                if not channel_response or hidden_input is True:
+                    self._send_return()
+                else:
+                    output += await self._read_until_input(channel_input=bytes_channel_input)
+                    self._send_return()
+                output += await self._read_until_prompt(prompt=channel_response)
+
         return self._post_send_inputs_interact(output=output)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -677,6 +679,9 @@ inheritance.</p>
         while True:
             output += self._read_chunk()
 
+            if self.comms_ansi:
+                output = strip_ansi(output=output)
+
             # replace any backspace chars (particular problem w/ junos), and remove any added spaces
             # this is just for comparison of the inputs to what was read from channel
             if not auto_expand and processed_channel_input in b&#34;&#34;.join(
@@ -827,7 +832,7 @@ inheritance.</p>
 
         bytes_channel_input = channel_input.encode()
 
-        with self.transport.session_lock:
+        with self.session_lock:
             self.logger.info(
                 f&#34;Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}&#34;
             )
@@ -874,7 +879,7 @@ inheritance.</p>
             channel_output.encode() for channel_output in expected_outputs or []
         ]
 
-        with self.transport.session_lock:
+        with self.session_lock:
             self.transport.write(channel_input=channel_input)
             self.logger.debug(f&#34;Write: {repr(channel_input)}&#34;)
             self._read_until_input(channel_input=bytes_channel_input)
@@ -954,7 +959,7 @@ inheritance.</p>
         self._pre_send_inputs_interact(interact_events=interact_events)
 
         output = b&#34;&#34;
-        with self.transport.session_lock:
+        with self.session_lock:
             for interact_event in interact_events:
                 channel_input = interact_event[0]
                 bytes_channel_input = channel_input.encode()

@@ -119,6 +119,11 @@ class SystemSSHTransport(Transport):
                          -F /dev/null
                     You can pass any arguments that would be supported if you were ssh'ing on your
                     terminal "normally", passing some bad arguments can break things!
+                - ptyprocess: in general you should *not* ever need/care about this! Right now the
+                    only use for this setting is for the huawei community platform. This dict
+                    currently supports two possible arguments: `rows` and `cols` -- the values of
+                    which will be passed to the underlying `PtyProcess` spawn command, and used to
+                    set the window size of the pty process that is created.
 
         Returns:
             N/A  # noqa: DAR202
@@ -316,7 +321,11 @@ class SystemSSHTransport(Transport):
 
         """
         self.logger.info(f"Attempting to open session with the following command: {self.open_cmd}")
-        self.session = PtyProcess.spawn(self.open_cmd)
+        self.session = PtyProcess.spawn(
+            self.open_cmd,
+            rows=self.transport_options.get("ptyprocess", {}).get("rows", 24),
+            cols=self.transport_options.get("ptyprocess", {}).get("cols", 80),
+        )
         self.logger.debug(f"Session to host {self.host} spawned")
 
         if not self.auth_bypass:
@@ -508,7 +517,6 @@ class SystemSSHTransport(Transport):
         return self.session.read(read_bytes)
 
     @requires_open_session()
-    @OperationTimeout("timeout_transport", "Timed out writing to transport")
     def write(self, channel_input: str) -> None:
         """
         Write data to the channel
