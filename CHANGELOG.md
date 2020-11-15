@@ -9,6 +9,9 @@ CHANGELOG
  EOS tests now that this works
 - Fix missing acquire priv in default on_open methods for nxos and eos async version
 - Fix incorrect `textfsm_platform` for iosxr (was cisco_iosxr, now is cisco_xr)
+- Remove unnecessary decorator on write operations for systemssh and telnet -- this operation shouldn't block so this
+ was unnecessary; any issue here should raise some exception from the lower level library.
+- Playing around w/ adding coverage reports with Codecov
 
 
 # 2020.10.10

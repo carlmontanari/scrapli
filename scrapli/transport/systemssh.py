@@ -517,7 +517,6 @@ class SystemSSHTransport(Transport):
         return self.session.read(read_bytes)
 
     @requires_open_session()
-    @OperationTimeout("timeout_transport", "Timed out writing to transport")
     def write(self, channel_input: str) -> None:
         """
         Write data to the channel
