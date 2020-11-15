@@ -1,7 +1,7 @@
 CHANGELOG
 =======
 
-# XXXX.XX.XX
+# 2020.11.15
 - Fix a regex that sometimes caused a failed functional IOSXR test
 - Add `ptyprocess` transport options for system transport -- sounds like this may be needed for huawei community
  platform to be able to set the pty process terminal size -- also added some basic testing for this

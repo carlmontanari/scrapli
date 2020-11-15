@@ -3,6 +3,7 @@
 [![Weekly Build](https://github.com/carlmontanari/scrapli/workflows/Weekly%20Build/badge.svg)](https://github.com/carlmontanari/scrapli/actions?query=workflow%3A%22Weekly+Build%22)
 [![Coverage](https://codecov.io/gh/carlmontanari/scrapli/branch/master/graph/badge.svg)](https://codecov.io/gh/carlmontanari/scrapli)
 [![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blueviolet.svg)](https://opensource.org/licenses/MIT)
 
 scrapli
 =======
