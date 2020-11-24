@@ -2,7 +2,7 @@ CHANGELOG
 =======
 
 # XXXX.XX.XX
-- TBD!
+- Make log messages for textfsm and genie parsers failing to parse consistent as `log.warning`
 
 
 # 2020.11.15
