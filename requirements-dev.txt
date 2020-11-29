@@ -13,7 +13,7 @@ pylint==2.6.0
 darglint==1.5.6
 asyncssh==2.4.2
 napalm==3.2.0
-pdoc3==0.9.1 ; sys_platform != "win32"
+pdoc3==0.9.2 ; sys_platform != "win32"
 -e git+https://github.com/scrapli/scrapli_community@master#egg=scrapli_community
 -r requirements.txt
 -r requirements-textfsm.txt
