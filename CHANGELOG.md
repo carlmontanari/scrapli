@@ -3,6 +3,8 @@ CHANGELOG
 
 # XXXX.XX.XX
 - Make log messages for textfsm and genie parsers failing to parse consistent as `log.warning`
+- Add factory example
+- Add "root" priv level to junos driver -- probably should be considered experimental for now :)
 
 
 # 2020.11.15
