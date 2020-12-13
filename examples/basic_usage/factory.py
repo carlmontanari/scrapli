@@ -6,7 +6,7 @@ MY_DEVICE = {
     "auth_username": "vrnetlab",
     "auth_password": "VR-netlab9",
     "auth_strict_key": False,
-    "platform": "cisco_iosxe"
+    "platform": "cisco_iosxe",
 }
 
 
