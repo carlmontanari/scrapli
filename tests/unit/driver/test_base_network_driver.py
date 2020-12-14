@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -182,6 +183,9 @@ def test_post_send_config(sync_cisco_iosxe_conn):
     unified_response = sync_cisco_iosxe_conn._post_send_config(
         config="interface loopback0\ndescription scrapli is neat", multi_response=multi_response
     )
+    assert isinstance(unified_response.start_time, datetime)
+    assert isinstance(unified_response.finish_time, datetime)
+    assert isinstance(unified_response.elapsed_time, float)
     assert unified_response.failed is False
     assert unified_response.result == "greatsucccess\nalsosucess"
 

@@ -447,7 +447,8 @@ class NetworkDriverBase:
             failed_when_contains=failed_when_contains,
         )
         response.start_time = multi_response[0].start_time
-        response.elapsed_time = (datetime.now() - response.start_time).total_seconds()
+        response.finish_time = datetime.now()
+        response.elapsed_time = (response.finish_time - response.start_time).total_seconds()
 
         # join all the results together into a single final result
         response.result = "\n".join(response.result for response in multi_response)

@@ -5,6 +5,7 @@ CHANGELOG
 - Make log messages for textfsm and genie parsers failing to parse consistent as `log.warning`
 - Add factory example
 - Add "root" priv level to junos driver -- probably should be considered experimental for now :)
+- Fix issue where `send_config` unified result did not have finish time set
 
 
 # 2020.11.15
