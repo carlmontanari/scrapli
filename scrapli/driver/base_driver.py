@@ -144,7 +144,7 @@ class ScrapeBase:
         self._initialization_args: Dict[str, Any] = {}
 
         self._setup_host(host=host, port=port)
-        self.logger: Logger = getLogger(f"scrapli.driver-{self._host}")
+        self.logger: Logger = getLogger(f"scrapli.{self._host}:{self._port}.driver")
 
         self._setup_auth(
             auth_username=auth_username,
@@ -278,6 +278,7 @@ class ScrapeBase:
         if not isinstance(port, int):
             raise TypeError(f"`port` should be int, got {type(port)}")
         self._host = host.strip()
+        self._port = port
         self._initialization_args["host"] = host.strip()
         self._initialization_args["port"] = port
 

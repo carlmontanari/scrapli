@@ -6,6 +6,9 @@ CHANGELOG
 - Add factory example
 - Add "root" priv level to junos driver -- probably should be considered experimental for now :)
 - Fix issue where `send_config` unified result did not have finish time set
+- **POSSIBLY BREAKING CHANGE:** logger names have changed to be easier to get/make more sense -- the logger for each 
+  instance used to look like: "scrapli-channel-{{ HOST }}" which kinda was not really smart :). Loggers now look 
+  like: "scrapli.{{ HOST }}:{{ PORT }}.channel" -- can be channel|driver|transport!
 
 
 # 2020.11.15
