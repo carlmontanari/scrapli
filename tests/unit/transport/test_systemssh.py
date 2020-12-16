@@ -22,7 +22,7 @@ def test_repr():
     conn = SystemSSHTransport("localhost")
     assert (
         repr(conn)
-        == "Transport {'logger': 'scrapli.transport-localhost', 'host': 'localhost', 'port': 22, 'timeout_socket': 5, "
+        == "Transport {'logger': 'scrapli.localhost:22.transport', 'host': 'localhost', 'port': 22, 'timeout_socket': 5, "
         "'timeout_transport': 5, 'timeout_exit': True, 'auth_username': '', "
         "'auth_private_key': '', 'auth_private_key_passphrase': '********', 'auth_password': '********', "
         "'auth_strict_key': True, 'auth_bypass': False, '_timeout_ops': 10, '_comms_prompt_pattern': '^["
