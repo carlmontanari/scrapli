@@ -508,15 +508,15 @@ def test_context_manager(device_type, transport):
     device.pop("base_config")
     device.pop("async_driver")
 
-    port = 22
+    port = device.pop("port", 22)
     if transport == "telnet":
-        port = 23
+        port = port + 1
 
     device["port"] = port
     device["transport"] = transport
     device["timeout_socket"] = 5
     device["timeout_transport"] = 5
-    device["timeout_ops"] = 5
+    device["timeout_ops"] = 30
 
     with driver(**device) as conn:
         assert conn.isalive() is True
@@ -574,8 +574,8 @@ def test_public_key_auth_failure(device_type, transport):
     with pytest.raises(ScrapliAuthenticationFailed) as exc:
         conn.open()
     assert str(exc.value) == (
-        f"Failed to authenticate to host 172.18.0.11 with private key `{INVALID_PRIVATE_KEY}`. "
-        "Unable to continue authentication, missing username, password, or both."
+        f"Failed to authenticate to host {device['host']} with private key `{INVALID_PRIVATE_KEY}`."
+        " Unable to continue authentication, missing username, password, or both."
     )
 
 
@@ -600,4 +600,4 @@ def test_public_key_auth_failure_systemssh(device_type, transport):
 
     with pytest.raises(ScrapliAuthenticationFailed) as exc:
         conn.open()
-    assert str(exc.value) == "Authentication to host 172.18.0.11 failed"
+    assert str(exc.value) == f"Authentication to host {device['host']} failed"

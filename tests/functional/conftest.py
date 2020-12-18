@@ -4,6 +4,10 @@ from scrapli.driver import GenericDriver
 
 from .test_data.devices import DEVICES
 
+TIMEOUT_SOCKET = 10
+TIMEOUT_TRANSPORT = 10
+TIMEOUT_OPS = 30
+
 
 @pytest.fixture(
     scope="class",
@@ -64,24 +68,17 @@ def conn(device_type, transport):
     device.pop("base_config")
     device.pop("async_driver")
 
-    timeout_transport = 5
-    timeout_ops = 5
-    if device_type == "juniper_junos" or device_type == "cisco_iosxr":
-        # commits on vsrx take one whole eternity... and iosxr container is just flakey
-        timeout_transport = 30
-        timeout_ops = 30
-
-    port = 22
+    port = device.pop("port")
     if transport == "telnet":
-        port = 23
+        port = port + 1
 
     conn = driver(
         **device,
         port=port,
         transport=transport,
-        timeout_socket=5,
-        timeout_transport=timeout_transport,
-        timeout_ops=timeout_ops,
+        timeout_socket=TIMEOUT_SOCKET,
+        timeout_transport=TIMEOUT_TRANSPORT,
+        timeout_ops=TIMEOUT_OPS,
     )
     conn.open()
     return conn
@@ -95,20 +92,12 @@ async def async_conn(device_type, async_transport):
     device.pop("base_config")
     device.pop("driver")
 
-    timeout_transport = 5
-    timeout_ops = 5
-    if device_type == "juniper_junos" or device_type == "cisco_iosxr":
-        # commits on vsrx take one whole eternity... and iosxr container is just flakey
-        timeout_transport = 30
-        timeout_ops = 30
-
     async_conn = driver(
         **device,
-        port=22,
         transport=async_transport,
-        timeout_socket=5,
-        timeout_transport=timeout_transport,
-        timeout_ops=timeout_ops,
+        timeout_socket=TIMEOUT_SOCKET,
+        timeout_transport=TIMEOUT_TRANSPORT,
+        timeout_ops=TIMEOUT_OPS,
     )
     await async_conn.open()
     # yield then ensure we close since we are not persisting connections between tests for now
@@ -124,15 +113,15 @@ def iosxe_conn(transport):
     device.pop("base_config")
     device.pop("async_driver")
 
-    port = 22
+    port = device.pop("port")
     if transport == "telnet":
-        port = 23
+        port = port + 1
 
     iosxe_conn = driver(
         **device,
         port=port,
         transport=transport,
-        timeout_socket=5,
+        timeout_socket=TIMEOUT_SOCKET,
     )
     iosxe_conn.open()
     return iosxe_conn
@@ -145,20 +134,17 @@ def iosxr_conn(transport):
     device.pop("base_config")
     device.pop("async_driver")
 
-    timeout_transport = 30
-    timeout_ops = 30
-
-    port = 22
+    port = device.pop("port")
     if transport == "telnet":
-        port = 23
+        port = port + 1
 
     conn = driver(
         **device,
         port=port,
         transport=transport,
-        timeout_socket=5,
-        timeout_transport=timeout_transport,
-        timeout_ops=timeout_ops,
+        timeout_socket=TIMEOUT_SOCKET,
+        timeout_transport=TIMEOUT_TRANSPORT,
+        timeout_ops=TIMEOUT_OPS,
     )
     conn.open()
     return conn
@@ -171,20 +157,17 @@ def junos_conn(transport):
     device.pop("base_config")
     device.pop("async_driver")
 
-    timeout_transport = 30
-    timeout_ops = 30
-
-    port = 22
+    port = device.pop("port")
     if transport == "telnet":
-        port = 23
+        port = port + 1
 
     conn = driver(
         **device,
         port=port,
         transport=transport,
-        timeout_socket=5,
-        timeout_transport=timeout_transport,
-        timeout_ops=timeout_ops,
+        timeout_socket=TIMEOUT_SOCKET,
+        timeout_transport=TIMEOUT_TRANSPORT,
+        timeout_ops=TIMEOUT_OPS,
     )
     conn.open()
     return conn
@@ -197,15 +180,15 @@ def eos_conn(transport):
     device.pop("base_config")
     device.pop("async_driver")
 
-    port = 22
+    port = device.pop("port")
     if transport == "telnet":
-        port = 23
+        port = port + 1
 
     conn = driver(
         **device,
         port=port,
         transport=transport,
-        timeout_socket=5,
+        timeout_socket=TIMEOUT_SOCKET,
     )
     conn.open()
     return conn
@@ -218,15 +201,15 @@ def nxos_conn(transport):
     device.pop("base_config")
     device.pop("async_driver")
 
-    port = 22
+    port = device.pop("port")
     if transport == "telnet":
-        port = 23
+        port = port + 1
 
     conn = driver(
         **device,
         port=port,
         transport=transport,
-        timeout_socket=5,
+        timeout_socket=TIMEOUT_SOCKET,
     )
     conn.open()
     return conn

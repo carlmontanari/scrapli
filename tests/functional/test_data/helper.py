@@ -24,23 +24,32 @@ def cisco_iosxe_clean_response(response):
         )
         return response
 
-    def _replace_crypto_strings(response):
-        crypto_pattern = re.compile(
-            r"^\s+certificate self-signed.*$\s(^\s{2}(\w+\s){1,8})+\s+quit$", flags=re.M | re.I
-        )
-        response = re.sub(crypto_pattern, "CRYPTO_REPLACED", response)
-        return response
-
     def _replace_hashed_passwords(response):
         crypto_pattern = re.compile(r"^enable secret 5 (.*$)", flags=re.M | re.I)
         response = re.sub(crypto_pattern, "enable secret 5 HASHED_PASSWORD", response)
         return response
 
+    def _replace_call_home_comment(response):
+        # vrnetlab router seems to get this comment string but vrouter one does not. unclear why,
+        # but we'll just remove it just in case
+        crypto_pattern = re.compile(r"(^.*$)\n^! Call-home is enabled by Smart-Licensing.$(\n^.*$)", flags=re.M | re.I)
+        response = re.sub(crypto_pattern, r"\1\2", response)
+        return response
+
+    def _replace_certificates_and_license(response):
+        # replace pki/certificate stuff and license all in one go -- this is always lumped together
+        # but in vrnetlab vs vrouter things are sometimes in different order (trustpoints are
+        # switched for example) so comparing strings obviously fails even though content is correct
+        crypto_pattern = re.compile(r"^crypto pki .*\nlicense udi pid CSR1000V sn \w+$", flags=re.M | re.I | re.S)
+        response = re.sub(crypto_pattern, "CERTIFICATES AND LICENSE", response)
+        return response
+
     response = _replace_config_bytes(response)
     response = _replace_timestamps(response)
     response = _replace_configured_by(response)
-    response = _replace_crypto_strings(response)
     response = _replace_hashed_passwords(response)
+    response = _replace_call_home_comment(response)
+    response = _replace_certificates_and_license(response)
     return response
 
 
