@@ -107,7 +107,9 @@ def cisco_nxos_clean_response(response):
         return response
 
     def _replace_resource_limits(response):
-        crypto_pattern = re.compile(r"^(\s+limit-resource\s[a-z0-9\-]+\sminimum\s)\d+\smaximum\s\d+$", flags=re.M | re.I)
+        crypto_pattern = re.compile(
+            r"^(\s+limit-resource\s[a-z0-9\-]+\sminimum\s)\d+\smaximum\s\d+$", flags=re.M | re.I
+        )
         response = re.sub(crypto_pattern, r"\1N maximum N", response)
         return response
 

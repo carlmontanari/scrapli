@@ -1,7 +1,7 @@
 CHANGELOG
 =======
 
-# XXXX.XX.XX
+# 2020.XX.XX
 - Make log messages for textfsm and genie parsers failing to parse consistent as `log.warning`
 - Add factory example
 - Add "root" priv level to junos driver -- probably should be considered experimental for now :)
@@ -9,6 +9,18 @@ CHANGELOG
 - **POSSIBLY BREAKING CHANGE:** logger names have changed to be easier to get/make more sense -- the logger for each 
   instance used to look like: "scrapli-channel-{{ HOST }}" which kinda was not really smart :). Loggers now look 
   like: "scrapli.{{ HOST }}:{{ PORT }}.channel" -- can be channel|driver|transport!
+- Changes to test environment:
+  - Support running devices on localhost w/ nat'd management ports -- in "vrouter" mode (poorly named) -- this is 
+    enabled with the `SCRAPLI_VROUTER` environment variable set to on/true/something
+  - Added bootvar into nxos base config -- when missing causes qemu nxosv to boot into loader prompt so thats no good
+  - Replace resource settings in vdc in nxos to account for nxos instances with differing resources (memory/cpu)
+  - Got rid of static license udi in iosxe config, replaced more certificate stuff so show run comparisons are 
+    easier on iosxe
+- **NEW TRANSPORT** `asynctelnet` transport is built using standard library asyncio, as such it is part of scrapli core
+  - Should be considered beta for a while :)
+  - Added a bunch of tests mocking streamreader/writer to ensure that this driver is well tested
+- Added asynctelnet support in nxos and juniper drivers (to change prompt for those platforms)
+- Support asynctelnet in base driver
 
 
 # 2020.11.15

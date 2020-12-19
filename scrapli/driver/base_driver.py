@@ -10,20 +10,24 @@ from scrapli.channel import CHANNEL_ARGS
 from scrapli.exceptions import UnsupportedPlatform
 from scrapli.helper import _find_transport_plugin, resolve_ssh_config, resolve_ssh_known_hosts
 from scrapli.transport import (
+    ASYNC_TELNET_TRANSPORT_ARGS,
     SYSTEM_SSH_TRANSPORT_ARGS,
     TELNET_TRANSPORT_ARGS,
+    AsyncTelnetTransport,
     SystemSSHTransport,
     TelnetTransport,
-    Transport,
+    TransportBase,
 )
 
-TRANSPORT_CLASS: Dict[str, Callable[..., Transport]] = {
+TRANSPORT_CLASS: Dict[str, Callable[..., TransportBase]] = {
     "system": SystemSSHTransport,
     "telnet": TelnetTransport,
+    "asynctelnet": AsyncTelnetTransport,
 }
 TRANSPORT_ARGS: Dict[str, Tuple[str, ...]] = {
     "system": SYSTEM_SSH_TRANSPORT_ARGS,
     "telnet": TELNET_TRANSPORT_ARGS,
+    "asynctelnet": ASYNC_TELNET_TRANSPORT_ARGS,
 }
 TRANSPORT_BASE_ARGS = (
     "host",
@@ -32,7 +36,10 @@ TRANSPORT_BASE_ARGS = (
     "timeout_transport",
     "timeout_exit",
 )
-ASYNCIO_TRANSPORTS = ("asyncssh",)
+ASYNCIO_TRANSPORTS = (
+    "asyncssh",
+    "asynctelnet",
+)
 
 
 class ScrapeBase:
@@ -169,7 +176,11 @@ class ScrapeBase:
         )
         self._setup_callables(on_init=on_init, on_open=on_open, on_close=on_close)
 
-        if transport not in ("system", "telnet"):
+        if transport not in (
+            "system",
+            "telnet",
+            "asynctelnet",
+        ):
             self.logger.info(f"Non-core transport `{transport}` selected")
         self._transport = transport
 
