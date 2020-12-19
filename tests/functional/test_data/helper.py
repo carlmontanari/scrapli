@@ -32,7 +32,9 @@ def cisco_iosxe_clean_response(response):
     def _replace_call_home_comment(response):
         # vrnetlab router seems to get this comment string but vrouter one does not. unclear why,
         # but we'll just remove it just in case
-        crypto_pattern = re.compile(r"(^.*$)\n^! Call-home is enabled by Smart-Licensing.$(\n^.*$)", flags=re.M | re.I)
+        crypto_pattern = re.compile(
+            r"(^.*$)\n^! Call-home is enabled by Smart-Licensing.$(\n^.*$)", flags=re.M | re.I
+        )
         response = re.sub(crypto_pattern, r"\1\2", response)
         return response
 
@@ -40,7 +42,9 @@ def cisco_iosxe_clean_response(response):
         # replace pki/certificate stuff and license all in one go -- this is always lumped together
         # but in vrnetlab vs vrouter things are sometimes in different order (trustpoints are
         # switched for example) so comparing strings obviously fails even though content is correct
-        crypto_pattern = re.compile(r"^crypto pki .*\nlicense udi pid CSR1000V sn \w+$", flags=re.M | re.I | re.S)
+        crypto_pattern = re.compile(
+            r"^crypto pki .*\nlicense udi pid CSR1000V sn \w+$", flags=re.M | re.I | re.S
+        )
         response = re.sub(crypto_pattern, "CERTIFICATES AND LICENSE", response)
         return response
 
@@ -102,8 +106,14 @@ def cisco_nxos_clean_response(response):
         response = re.sub(crypto_pattern, "CRYPTO_REPLACED", response)
         return response
 
+    def _replace_resource_limits(response):
+        crypto_pattern = re.compile(r"^(\s+limit-resource\s[a-z0-9\-]+\sminimum\s)\d+\smaximum\s\d+$", flags=re.M | re.I)
+        response = re.sub(crypto_pattern, r"\1N maximum N", response)
+        return response
+
     response = _replace_timestamps(response)
     response = _replace_crypto_strings(response)
+    response = _replace_resource_limits(response)
     return response
 
 

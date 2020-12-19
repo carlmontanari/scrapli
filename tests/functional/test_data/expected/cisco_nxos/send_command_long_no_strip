@@ -4,13 +4,13 @@
 
 version 9.2(4) Bios:version
 vdc switch id 1
-  limit-resource vlan minimum 16 maximum 4094
-  limit-resource vrf minimum 2 maximum 4096
-  limit-resource port-channel minimum 0 maximum 511
-  limit-resource u4route-mem minimum 128 maximum 128
-  limit-resource u6route-mem minimum 96 maximum 96
-  limit-resource m4route-mem minimum 58 maximum 58
-  limit-resource m6route-mem minimum 8 maximum 8
+  limit-resource vlan minimum N maximum N
+  limit-resource vrf minimum N maximum N
+  limit-resource port-channel minimum N maximum N
+  limit-resource u4route-mem minimum N maximum N
+  limit-resource u6route-mem minimum N maximum N
+  limit-resource m4route-mem minimum N maximum N
+  limit-resource m6route-mem minimum N maximum N
 feature telnet
 feature nxapi
 feature scp-server
@@ -294,7 +294,7 @@ interface mgmt0
   ip address 10.0.0.15/24
 line console
 line vty
-
+boot nxos bootflash:/nxos.9.2.4.bin
 
 
 switch#
