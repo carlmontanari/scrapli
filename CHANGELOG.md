@@ -21,6 +21,9 @@ CHANGELOG
   - Added a bunch of tests mocking streamreader/writer to ensure that this driver is well tested
 - Added asynctelnet support in nxos and juniper drivers (to change prompt for those platforms)
 - Support asynctelnet in base driver
+- `auth_bypass` for both telnet drivers completely bypasses not only auth (as it did previously) but also the auth 
+  validation where we confirm we got logged in successfully -- reason being is that for console servers and such you 
+  may not care about that, you may just want to log in and read data.
 
 
 # 2020.11.15

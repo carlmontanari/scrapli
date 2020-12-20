@@ -170,13 +170,14 @@ class TelnetTransport(Transport):
         self.session.timeout = self.timeout_transport
         self.logger.debug(f"Session to host {self.host} spawned")
 
-        if not self.auth_bypass:
-            self._authenticate()
-        else:
+        if self.auth_bypass:
             self.logger.info("`auth_bypass` is True, bypassing authentication")
-            # if we skip auth, we'll manually set _isauthenticated to True
+            # if we skip auth, we'll manually set _isauthenticated to True, the rest is up to the
+            # user to handle, or things will just time out later... either way, not our problem :)
             self._isauthenticated = True
+            return
 
+        self._authenticate()
         if not self._isauthenticated and not self._telnet_isauthenticated():
             raise ScrapliAuthenticationFailed(
                 f"Could not authenticate over telnet to host: {self.host}"

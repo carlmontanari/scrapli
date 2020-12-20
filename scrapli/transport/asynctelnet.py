@@ -244,12 +244,14 @@ class AsyncTelnetTransport(AsyncTransport):
 
         self.logger.debug(f"Session to host {self.host} spawned")
 
-        if not self.auth_bypass:
-            await self._authenticate(output=output)
-        else:
+        if self.auth_bypass:
             self.logger.info("`auth_bypass` is True, bypassing authentication")
-            # if we skip auth, we'll manually set _isauthenticated to True
+            # if we skip auth, we'll manually set _isauthenticated to True, the rest is up to the
+            # user to handle, or things will just time out later... either way, not our problem :)
             self._isauthenticated = True
+            return
+
+        await self._authenticate(output=output)
 
         _telnet_isauthenticated = await self._telnet_isauthenticated()
         if not self._isauthenticated and not _telnet_isauthenticated:
@@ -443,8 +445,9 @@ class AsyncTelnetTransport(AsyncTransport):
             ScrapliTimeout: if async read does not complete within timeout_transport interval
 
         """
+        read_timeout = self.timeout_transport or None
         try:
-            output = await asyncio.wait_for(self.stdout.read(65535), timeout=self.timeout_transport)
+            output = await asyncio.wait_for(self.stdout.read(65535), timeout=read_timeout)
         except asyncio.TimeoutError as exc:
             msg = f"Timed out reading from transport, transport timeout: {self.timeout_transport}"
             self.logger.exception(msg)
