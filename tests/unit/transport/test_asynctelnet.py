@@ -55,6 +55,7 @@ async def test_handle_control_chars(transport, protocol):
     )
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7), reason="requires python3.7 or higher")
 @pytest.mark.asyncio
 async def test_authenticate(transport, protocol):
     conn = AsyncTelnetTransport(
