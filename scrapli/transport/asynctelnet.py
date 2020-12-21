@@ -408,7 +408,12 @@ class AsyncTelnetTransport(AsyncTransport):
 
         """
         self.stdin.close()
-        asyncio.get_event_loop().create_task(coro=self.stdin.wait_closed())
+        try:
+            asyncio.get_event_loop().create_task(coro=self.stdin.wait_closed())
+        except AttributeError:
+            # wait closed only in 3.7+... unclear if we should be doing something else for 3.6? but
+            # it doesnt seem to hurt anything...
+            pass
         self._isauthenticated = False
         self.logger.debug(f"Channel to host {self.host} closed")
 

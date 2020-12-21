@@ -3,7 +3,6 @@ import sys
 
 import jinja2
 from napalm import get_network_driver
-
 from test_data.devices import DEVICES
 
 VROUTER_MODE = bool(os.environ.get("SCRAPLI_VROUTER", False))
@@ -18,7 +17,9 @@ NAPALM_DEVICE_TYPE_MAP = {
 
 # we can just search at / because the "base_config" is already fully qualified
 JINJA_LOADER = jinja2.FileSystemLoader(searchpath="/")
-JINJA_ENV = jinja2.Environment(loader=JINJA_LOADER, trim_blocks=True, undefined=jinja2.StrictUndefined)
+JINJA_ENV = jinja2.Environment(
+    loader=JINJA_LOADER, trim_blocks=True, undefined=jinja2.StrictUndefined
+)
 
 
 def prepare_device(test_devices):
