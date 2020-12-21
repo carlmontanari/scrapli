@@ -1,7 +1,9 @@
 import os
 import sys
 
+import jinja2
 from napalm import get_network_driver
+
 from test_data.devices import DEVICES
 
 VROUTER_MODE = bool(os.environ.get("SCRAPLI_VROUTER", False))
@@ -13,6 +15,10 @@ NAPALM_DEVICE_TYPE_MAP = {
     "arista_eos": "eos",
     "juniper_junos": "junos",
 }
+
+# we can just search at / because the "base_config" is already fully qualified
+JINJA_LOADER = jinja2.FileSystemLoader(searchpath="/")
+JINJA_ENV = jinja2.Environment(loader=JINJA_LOADER, trim_blocks=True, undefined=jinja2.StrictUndefined)
 
 
 def prepare_device(test_devices):
@@ -39,7 +45,19 @@ def prepare_device(test_devices):
 
         napalm_conn = napalm_driver(**napalm_args)
         napalm_conn.open()
-        napalm_conn.load_replace_candidate(filename=base_config)
+
+        if device == "cisco_iosxe":
+            # getting existing crypto "stuff" from the device to stuff it into config template to
+            # avoid netconf complaints -- replacing crypto was strings caused things to not get
+            # registered in the keychain and netconf-yang connections would get denied
+            crypto_pki = napalm_conn._netmiko_device.send_command("show run | section crypto")
+            template = JINJA_ENV.get_template(f"{base_config}.j2")
+            loaded_base_config = template.render(crypto_pki=crypto_pki)
+        else:
+            with open(base_config, "r") as f:
+                loaded_base_config = f.read()
+
+        napalm_conn.load_replace_candidate(config=loaded_base_config)
         napalm_conn.commit_config()
         napalm_conn.close()
 

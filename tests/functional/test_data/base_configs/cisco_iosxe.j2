@@ -1,26 +1,119 @@
 version 16.12
+service timestamps debug datetime msec
+service timestamps log datetime msec
+! Call-home is enabled by Smart-Licensing.
+service call-home
+platform qfp utilization monitor load 80
+platform punt-keepalive disable-kernel-core
+platform console serial
 !
 hostname csr1000v
 !
+boot-start-marker
+boot-end-marker
+!
+!
 enable secret 9 $9$h6Ayg86tb/EImk$2T6Ns.ke08cAlZ2TbMf3YRCYr7ngDGzgAxZB0YMe7lQ
 !
+no aaa new-model
+call-home
+ ! If contact email address in call-home is configured as sch-smart-licensing@cisco.com
+ ! the email address configured in Cisco Smart License Portal will be used as contact email address to send SCH notifications.
+ contact-email-addr sch-smart-licensing@cisco.com
+ profile "CiscoTAC-1"
+  active
+  destination transport-method http
+  no destination transport-method email
+!
+!
+!
+!
+!
+!
+!
+ip domain name example.com
+!
+!
+!
+login on-success log
+!
+!
+!
+!
+!
+!
+!
+subscriber templating
+!
+!
+!
+!
+!
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+{{ crypto_pki }}
+!
+diagnostic bootup level minimal
 archive
  log config
   logging enable
  path bootflash:
+memory free low-watermark processor 72329
 file prompt quiet
+!
 !
 spanning-tree extend system-id
 !
 username vrnetlab privilege 15 password 0 VR-netlab9
+!
+redundancy
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
 !
 interface GigabitEthernet1
  ip address 10.0.0.15 255.255.255.0
  negotiation auto
  no mop enabled
  no mop sysid
-!
-default interface range GigabitEthernet2-10
 !
 interface GigabitEthernet2
  no ip address
@@ -85,15 +178,33 @@ interface GigabitEthernet10
  no mop enabled
  no mop sysid
 !
+!
+virtual-service csr_mgmt
+!
+ip forward-protocol nd
 no ip http server
 no ip http secure-server
 !
 ip scp server enable
 !
+!
+!
+!
+!
+!
 ip ssh pubkey-chain
   username vrnetlab
    key-hash ssh-rsa 5CC74A68B18B026A1709FB09D1F44E2F
 control-plane
+!
+ !
+ !
+ !
+ !
+!
+!
+!
+!
 !
 line con 0
  stopbits 1
@@ -105,8 +216,11 @@ line vty 5 15
  login local
  transport input all
 !
-restconf
 netconf ssh
+!
+!
+!
+!
 !
 netconf-yang
 end
