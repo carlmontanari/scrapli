@@ -1,0 +1,112 @@
+version 16.12
+!
+hostname csr1000v
+!
+enable secret 9 $9$h6Ayg86tb/EImk$2T6Ns.ke08cAlZ2TbMf3YRCYr7ngDGzgAxZB0YMe7lQ
+!
+archive
+ log config
+  logging enable
+ path bootflash:
+file prompt quiet
+!
+spanning-tree extend system-id
+!
+username vrnetlab privilege 15 password 0 VR-netlab9
+!
+interface GigabitEthernet1
+ ip address 10.0.0.15 255.255.255.0
+ negotiation auto
+ no mop enabled
+ no mop sysid
+!
+default interface range GigabitEthernet2-10
+!
+interface GigabitEthernet2
+ no ip address
+ shutdown
+ negotiation auto
+ no mop enabled
+ no mop sysid
+!
+interface GigabitEthernet3
+ no ip address
+ shutdown
+ negotiation auto
+ no mop enabled
+ no mop sysid
+!
+interface GigabitEthernet4
+ no ip address
+ shutdown
+ negotiation auto
+ no mop enabled
+ no mop sysid
+!
+interface GigabitEthernet5
+ no ip address
+ shutdown
+ negotiation auto
+ no mop enabled
+ no mop sysid
+!
+interface GigabitEthernet6
+ no ip address
+ shutdown
+ negotiation auto
+ no mop enabled
+ no mop sysid
+!
+interface GigabitEthernet7
+ no ip address
+ shutdown
+ negotiation auto
+ no mop enabled
+ no mop sysid
+!
+interface GigabitEthernet8
+ no ip address
+ shutdown
+ negotiation auto
+ no mop enabled
+ no mop sysid
+!
+interface GigabitEthernet9
+ no ip address
+ shutdown
+ negotiation auto
+ no mop enabled
+ no mop sysid
+!
+interface GigabitEthernet10
+ no ip address
+ shutdown
+ negotiation auto
+ no mop enabled
+ no mop sysid
+!
+no ip http server
+no ip http secure-server
+!
+ip scp server enable
+!
+ip ssh pubkey-chain
+  username vrnetlab
+   key-hash ssh-rsa 5CC74A68B18B026A1709FB09D1F44E2F
+control-plane
+!
+line con 0
+ stopbits 1
+line vty 0 4
+ login local
+ no length 0
+ transport input all
+line vty 5 15
+ login local
+ transport input all
+!
+restconf
+netconf ssh
+!
+netconf-yang
+end

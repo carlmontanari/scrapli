@@ -407,9 +407,8 @@ class AsyncTelnetTransport(AsyncTransport):
             N/A
 
         """
-        stdin_socket = self.stdin.get_extra_info("socket")
-        stdin_socket.close()
         self.stdin.close()
+        asyncio.get_event_loop().create_task(coro=self.stdin.wait_closed())
         self._isauthenticated = False
         self.logger.debug(f"Channel to host {self.host} closed")
 
