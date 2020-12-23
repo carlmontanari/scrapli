@@ -27,6 +27,12 @@ CHANGELOG
 - Removed unnecessary re-checking/verifying of ssh config file in system transport (was basically duplicated from 
   base transport, so was pointless!)
 - Bumped all the default timeout values up as they were probably a bit on the aggressive side
+- Added `eager` argument to send commands/commands from file and config/configs/configs from file methods -- 
+  basically this `eager` mode will *not* look for a prompt between lines of commands/configs. This means that things 
+  have a tiny potential to get out of whack because we will just send things as fast as possible. In order to not 
+  totally break things we *will* (whether you like it or not!) wait and find the prompt on the last command/config 
+  in the list though -- that way we dont get too out of whack. This now means we can use `eager` to configure 
+  banners and macros and things and we no longer need to do the dirty send interactive workaround.
 
 
 # 2020.11.15

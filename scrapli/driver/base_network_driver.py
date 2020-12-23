@@ -1,21 +1,15 @@
 """scrapli.driver.base_network_driver"""
 import re
 import warnings
-from collections import UserList
 from datetime import datetime
 from enum import Enum
 from functools import lru_cache
 from logging import Logger
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from scrapli.exceptions import UnknownPrivLevel
 from scrapli.helper import resolve_file
-from scrapli.response import Response
-
-if TYPE_CHECKING:
-    ScrapliMultiResponse = UserList[Response]  # pylint:  disable=E1136; # pragma:  no cover
-else:
-    ScrapliMultiResponse = UserList
+from scrapli.response import MultiResponse, Response
 
 
 class PrivilegeLevel:
@@ -416,7 +410,7 @@ class NetworkDriverBase:
     def _post_send_config(
         self,
         config: str,
-        multi_response: ScrapliMultiResponse,
+        multi_response: MultiResponse,
     ) -> Response:
         """
         Handle post "send_config" tasks for consistency between sync/async versions
@@ -504,7 +498,7 @@ class NetworkDriverBase:
 
         return resolved_privilege_level, failed_when_contains
 
-    def _post_send_configs(self, responses: ScrapliMultiResponse) -> ScrapliMultiResponse:
+    def _post_send_configs(self, responses: MultiResponse) -> MultiResponse:
         """
         Handle post "send_configs" tasks for consistency between sync/async versions
 
@@ -512,7 +506,7 @@ class NetworkDriverBase:
             responses: multi_response object to update
 
         Returns:
-            ScrapliMultiResponse: Unified response object
+            MultiResponse: Unified response object
 
         Raises:
             N/A
