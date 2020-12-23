@@ -26,6 +26,7 @@ CHANGELOG
   may not care about that, you may just want to log in and read data.
 - Removed unnecessary re-checking/verifying of ssh config file in system transport (was basically duplicated from 
   base transport, so was pointless!)
+- Bumped all the default timeout values up as they were probably a bit on the aggressive side
 
 
 # 2020.11.15

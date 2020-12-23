@@ -4,7 +4,7 @@ from asyncio import StreamReader, StreamWriter
 
 import pytest
 
-from scrapli.exceptions import ConnectionNotOpened, ScrapliAuthenticationFailed, ScrapliTimeout
+from scrapli.exceptions import ConnectionNotOpened, ScrapliTimeout
 from scrapli.transport import AsyncTelnetTransport
 
 
@@ -59,7 +59,11 @@ async def test_handle_control_chars(transport, protocol):
 @pytest.mark.asyncio
 async def test_authenticate(transport, protocol):
     conn = AsyncTelnetTransport(
-        "localhost", auth_password="lookforthispassword", auth_username="lookforthisusername"
+        "localhost",
+        auth_password="lookforthispassword",
+        auth_username="lookforthisusername",
+        timeout_ops=10,
+        timeout_socket=5,
     )
     conn.stdout = StreamReader()
     conn.stdin = StreamWriter(transport, protocol, reader=None, loop=asyncio.get_event_loop())
@@ -232,6 +236,6 @@ async def test_read_timeout():
 
 def test_set_timeout():
     conn = AsyncTelnetTransport("localhost")
-    assert conn.timeout_transport == 5
+    assert conn.timeout_transport == 30
     conn.set_timeout(999)
     assert conn.timeout_transport == 999
