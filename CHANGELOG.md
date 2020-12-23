@@ -24,6 +24,8 @@ CHANGELOG
 - `auth_bypass` for both telnet drivers completely bypasses not only auth (as it did previously) but also the auth 
   validation where we confirm we got logged in successfully -- reason being is that for console servers and such you 
   may not care about that, you may just want to log in and read data.
+- Removed unnecessary re-checking/verifying of ssh config file in system transport (was basically duplicated from 
+  base transport, so was pointless!)
 
 
 # 2020.11.15
