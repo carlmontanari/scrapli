@@ -3,7 +3,7 @@ import re
 from typing import Any, Dict, Optional
 
 from scrapli.decorators import OperationTimeout, requires_open_session
-from scrapli.exceptions import ScrapliAuthenticationFailed
+from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliConnectionLost
 from scrapli.helper import get_prompt_pattern, strip_ansi
 from scrapli.transport.ptyprocess import PtyProcess
 from scrapli.transport.transport import Transport
@@ -489,11 +489,19 @@ class SystemSSHTransport(Transport):
             bytes: bytes output as read from channel
 
         Raises:
-            N/A
+            ScrapliConnectionLost: if we get EOF reading from transport
 
         """
         read_bytes = 65535
-        return self.session.read(read_bytes)
+        try:
+            return self.session.read(read_bytes)
+        except EOFError as exc:
+            msg = (
+                "encountered end of file error reading from system transport, typically this means "
+                "that the device has closed the connection"
+            )
+            self.logger.critical(msg)
+            raise ScrapliConnectionLost(msg) from exc
 
     @requires_open_session()
     def write(self, channel_input: str) -> None:

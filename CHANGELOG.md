@@ -33,6 +33,8 @@ CHANGELOG
   totally break things we *will* (whether you like it or not!) wait and find the prompt on the last command/config 
   in the list though -- that way we dont get too out of whack. This now means we can use `eager` to configure 
   banners and macros and things and we no longer need to do the dirty send interactive workaround.
+- Added `ScrapliConnectionLost` exception and raise it if we get EOF in system transport -- with a message that is 
+  more clear than just "EOF" and some obscure line in ptyprocess!
 
 
 # 2020.11.15
