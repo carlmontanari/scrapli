@@ -198,7 +198,7 @@ class ScrapeBase:
         # so transport drivers don't need to support `transport_options` as an argument, if no
         # transport options provided, do nothing, otherwise add this to the args we ship to the
         # transport class
-        if transport_options is not None:
+        if transport_options:
             self.transport_args["transport_options"] = transport_options
         self.transport = self.transport_class(**self.transport_args)
 
