@@ -35,6 +35,9 @@ CHANGELOG
   banners and macros and things and we no longer need to do the dirty send interactive workaround.
 - Added `ScrapliConnectionLost` exception and raise it if we get EOF in system transport -- with a message that is 
   more clear than just "EOF" and some obscure line in ptyprocess!
+- Added `tclsh` privilege level for IOSXE
+- Fixed a bug that would prevent going to "parallel" privilege levels -- i.e. going from tclsh to configuration or 
+  visa versa in IOSXE or from configuration to configuration_exclusive in IOSXR
 
 
 # 2020.11.15

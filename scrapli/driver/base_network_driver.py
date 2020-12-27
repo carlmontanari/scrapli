@@ -75,6 +75,7 @@ class NetworkDriverBase:
     # NetworkDriverBase Mixin vars for typing/linting purposes
     logger: Logger
     comms_prompt_pattern: str
+    default_desired_privilege_level: str
     _current_priv_level = DUMMY_PRIV_LEVEL
     _priv_map: Dict[str, List[str]]
     failed_when_contains: Optional[List[str]]
@@ -362,7 +363,14 @@ class NetworkDriverBase:
             else map_to_desired_priv
         )
 
-        desired_priv_index = priv_map.index(resolved_priv)
+        try:
+            desired_priv_index = priv_map.index(resolved_priv)
+        except ValueError:
+            # its possible that the "current" priv map gives us no good way to get from the current
+            # to the desired priv -- for example - from tclsh -> configuration or visa versa
+            # in this event, we should bail out to the default desired priv level to "reset" things
+            desired_priv_index = priv_map.index(self.default_desired_privilege_level)
+
         try:
             current_priv_index = priv_map.index(current_priv.name)
         except ValueError:

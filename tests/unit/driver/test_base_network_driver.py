@@ -17,8 +17,8 @@ def test_check_kwargs_comms_prompt_pattern():
         conn = IOSXEDriver(host="localhost", comms_prompt_pattern="something")
     assert (
         conn.comms_prompt_pattern
-        == r"(^[a-z0-9.\-_@()/:]{1,63}>$)|(^[a-z0-9.\-_@/:]{1,63}#$)|(^[a-z0-9.\-_@/:]{1,63}\([a-z0-9.\-@/:\+]{"
-        "0,32}\\)#$)"
+        == "(^[a-z0-9.\\-_@()/:]{1,63}>$)|(^[a-z0-9.\\-_@/:]{1,63}#$)|(^[a-z0-9.\\-_@/:]{1,63}\\((?!tcl)["
+        "a-z0-9.\\-@/:\\+]{0,32}\\)#$)|(^[a-z0-9.\\-_@/:]{1,63}\\(tcl\\)#$)"
     )
     assert (
         str(warn[0].message) == "\n***** `comms_prompt_pattern` found in kwargs! "
@@ -32,7 +32,7 @@ def test_check_kwargs_comms_prompt_pattern():
 def test_generate_comms_prompt_pattern(sync_cisco_iosxe_conn):
     assert (
         sync_cisco_iosxe_conn.comms_prompt_pattern
-        == "(^[a-z0-9.\\-_@()/:]{1,63}>$)|(^[a-z0-9.\\-_@/:]{1,63}#$)|(^[a-z0-9.\\-_@/:]{1,63}\\([a-z0-9.\\-@/:\\+]{0,32}\\)#$)"
+        == "(^[a-z0-9.\\-_@()/:]{1,63}>$)|(^[a-z0-9.\\-_@/:]{1,63}#$)|(^[a-z0-9.\\-_@/:]{1,63}\\((?!tcl)[a-z0-9.\\-@/:\\+]{0,32}\\)#$)|(^[a-z0-9.\\-_@/:]{1,63}\\(tcl\\)#$)"
     )
 
 
@@ -41,6 +41,7 @@ def test_build_priv_map(sync_cisco_iosxe_conn):
         "exec": ["exec"],
         "privilege_exec": ["exec", "privilege_exec"],
         "configuration": ["exec", "privilege_exec", "configuration"],
+        "tclsh": ["exec", "privilege_exec", "tclsh"],
     }
 
 
@@ -57,12 +58,14 @@ def test_update_privilege_levels(sync_cisco_iosxe_conn):
     sync_cisco_iosxe_conn.update_privilege_levels()
     assert (
         sync_cisco_iosxe_conn.comms_prompt_pattern
-        == r"(^[a-z0-9.\-_@()/:]{1,63}>$)|(^[a-z0-9.\-_@/:]{1,63}#$)|(^[a-z0-9.\-_@/:]{1,63}\([a-z0-9.\-@/:\+]{0,32}\)#$)|(^weirdpatterndude$)"
+        == r"(^[a-z0-9.\-_@()/:]{1,63}>$)|(^[a-z0-9.\-_@/:]{1,63}#$)|(^[a-z0-9.\-_@/:]{1,63}\((?!tcl)["
+        r"a-z0-9.\-@/:\+]{0,32}\)#$)|(^[a-z0-9.\-_@/:]{1,63}\(tcl\)#$)|(^weirdpatterndude$)"
     )
     assert sync_cisco_iosxe_conn._priv_map == {
         "exec": ["exec"],
         "privilege_exec": ["exec", "privilege_exec"],
         "configuration": ["exec", "privilege_exec", "configuration"],
+        "tclsh": ["exec", "privilege_exec", "tclsh"],
         "scrapli": ["scrapli"],
     }
 
