@@ -16,6 +16,7 @@ from scrapli.driver.core.cisco_iosxe.driver import PRIVS
         ("configuration", "csr1000v(config-sg-tacacs+)#"),
         ("configuration", "819HGW(ipsec-profile)#"),
         ("tclsh", "819HGW(tcl)#"),
+        ("tclsh", "+>"),
     ],
     ids=[
         "base_prompt_exec",
@@ -26,6 +27,7 @@ from scrapli.driver.core.cisco_iosxe.driver import PRIVS
         "tacacs_configuration",
         "ipsec_profile",
         "tclsh",
+        "tclsh_command_mode",
     ],
 )
 def test_prompt_patterns(priv_pattern):

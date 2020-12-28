@@ -37,7 +37,7 @@ PRIVS = {
     ),
     "tclsh": (
         PrivilegeLevel(
-            pattern=r"^[a-z0-9.\-_@/:]{1,63}\(tcl\)#$",
+            pattern=r"(^[a-z0-9.\-_@/:]{1,63}\(tcl\)#$)|(^\+>$)",
             name="tclsh",
             previous_priv="privilege_exec",
             deescalate="tclquit",
