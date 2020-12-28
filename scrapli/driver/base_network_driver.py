@@ -371,7 +371,12 @@ class NetworkDriverBase:
             # in this event, we should bail out to the default desired priv level to "reset" things
             desired_priv_index = priv_map.index(self.default_desired_privilege_level)
 
-        current_priv_index = priv_map.index(current_priv.name)
+        try:
+            current_priv_index = priv_map.index(current_priv.name)
+        except ValueError:
+            # if the current priv is not in the map for the desired priv; set the current index
+            # to the "top" (end) of the priv map and work our way back down
+            current_priv_index = len(priv_map)
 
         if current_priv_index > desired_priv_index:
             deescalate_priv = priv_map[current_priv_index - 1]

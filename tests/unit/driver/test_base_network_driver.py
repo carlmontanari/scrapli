@@ -169,6 +169,15 @@ def test_process_acquire_priv_parallel_priv(sync_cisco_iosxe_conn):
     assert privilege_action == PrivilegeAction.DEESCALATE
 
 
+def test_process_acquire_priv_parallel_priv_from_opposite(sync_cisco_iosxe_conn):
+    privilege_action, priv = sync_cisco_iosxe_conn._process_acquire_priv(
+        resolved_priv="tclsh",
+        map_to_desired_priv=["exec", "privilege_exec", "tclsh"],
+        current_prompt="csr1000v(config)#",
+    )
+    assert privilege_action == PrivilegeAction.DEESCALATE
+
+
 def test_pre_send_config_exceptions(sync_cisco_iosxe_conn):
     with pytest.raises(TypeError) as exc:
         sync_cisco_iosxe_conn._pre_send_config(config=["boo"])
