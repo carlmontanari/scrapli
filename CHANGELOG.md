@@ -38,6 +38,8 @@ CHANGELOG
 - Added `tclsh` privilege level for IOSXE
 - Fixed a bug that would prevent going to "parallel" privilege levels -- i.e. going from tclsh to configuration or 
   visa versa in IOSXE or from configuration to configuration_exclusive in IOSXR
+- If no `failed_when_contains` is passed to `send_interactive` network drivers will now use the network drivers 
+  `failed_when_contains` attribute to bring it inline with the normal command/config methods
 
 
 # 2020.11.15

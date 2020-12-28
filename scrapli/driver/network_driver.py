@@ -361,6 +361,10 @@ class NetworkDriver(GenericDriver, NetworkDriverBase):
 
         if self._current_priv_level.name != resolved_privilege_level:
             self.acquire_priv(desired_priv=resolved_privilege_level)
+
+        if failed_when_contains is None:
+            failed_when_contains = self.failed_when_contains
+
         response = super().send_interactive(
             interact_events=interact_events, failed_when_contains=failed_when_contains
         )
