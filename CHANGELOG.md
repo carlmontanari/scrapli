@@ -38,6 +38,8 @@ CHANGELOG
 - Added `tclsh` privilege level for IOSXE
 - Fixed a bug that would prevent going to "parallel" privilege levels -- i.e. going from tclsh to configuration or 
   visa versa in IOSXE or from configuration to configuration_exclusive in IOSXR
+- Removed a (hopefully) pointless check in acquire priv for base network driver... wonder how much cruft there is in 
+  scrapli at this point.... hint: too much lol
 
 
 # 2020.11.15

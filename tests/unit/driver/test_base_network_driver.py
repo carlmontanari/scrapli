@@ -157,6 +157,18 @@ def test_process_acquire_priv_no_action(sync_cisco_iosxe_conn):
     assert privilege_action == PrivilegeAction.NO_ACTION
 
 
+def test_process_acquire_priv_parallel_priv(sync_cisco_iosxe_conn):
+    # tests that we can get across "parallel" priv levels -- ex: configuration -> tclsh in iosxe
+    # these priv levels are both "above" privilege_exec so there is not "straight" path between
+    # them
+    privilege_action, priv = sync_cisco_iosxe_conn._process_acquire_priv(
+        resolved_priv="tclsh",
+        map_to_desired_priv=["exec", "privilege_exec", "configuration"],
+        current_prompt="csr1000v(config)#",
+    )
+    assert privilege_action == PrivilegeAction.DEESCALATE
+
+
 def test_pre_send_config_exceptions(sync_cisco_iosxe_conn):
     with pytest.raises(TypeError) as exc:
         sync_cisco_iosxe_conn._pre_send_config(config=["boo"])
@@ -191,6 +203,19 @@ def test_post_send_config(sync_cisco_iosxe_conn):
     assert isinstance(unified_response.elapsed_time, float)
     assert unified_response.failed is False
     assert unified_response.result == "greatsucccess\nalsosucess"
+
+
+def test_post_send_config_failed(sync_cisco_iosxe_conn):
+    response_one = Response("localhost", "some input", failed_when_contains=["something"])
+    response_one._record_response(result=b"something")
+    multi_response = MultiResponse()
+    multi_response.append(response_one)
+    updated_responses = sync_cisco_iosxe_conn._post_send_config(
+        config="whocares", multi_response=multi_response
+    )
+    assert updated_responses.textfsm_platform == "cisco_iosxe"
+    assert updated_responses.genie_platform == "iosxe"
+    assert updated_responses.failed is True
 
 
 def test_pre_send_configs_exceptions(sync_cisco_iosxe_conn):
