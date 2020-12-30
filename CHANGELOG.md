@@ -40,6 +40,8 @@ CHANGELOG
   visa versa in IOSXE or from configuration to configuration_exclusive in IOSXR
 - If no `failed_when_contains` is passed to `send_interactive` network drivers will now use the network drivers 
   `failed_when_contains` attribute to bring it inline with the normal command/config methods
+- Added `timeout_ops` to `send_interactive` and wrap those methods with the `TimeoutModifier` decorator
+- Add logic to properly fetch socket address family type so we can handle IPv6 hosts (w/ scrapli-ssh2/scrapli-paramiko)
 
 
 # 2020.11.15

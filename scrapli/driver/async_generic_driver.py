@@ -250,11 +250,14 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
             timeout_ops=timeout_ops,
         )
 
+    @TimeoutModifier()
     async def send_interactive(
         self,
         interact_events: List[Tuple[str, str, Optional[bool]]],
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         privilege_level: str = "",
+        *,
+        timeout_ops: Optional[float] = None,
     ) -> Response:
         """
         Interact with a device with changing prompts per input.
@@ -310,6 +313,10 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
             failed_when_contains: list of strings that, if present in final output, represent a
                 failed command/interaction
             privilege_level: ignored in this base class; for LSP reasons for subclasses
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed. Note that this is the timeout value PER COMMAND sent, not for the total
+                of the commands being sent!
 
         Returns:
             Response: scrapli Response object
@@ -318,6 +325,9 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
             N/A
 
         """
+        # decorator cares about timeout_ops, but nothing else does, assign to _ to appease linters
+        _ = timeout_ops
+        # privilege level only matters "up" in the network driver layer
         _ = privilege_level
 
         response = self._pre_send_interactive(
