@@ -17,10 +17,6 @@ class ScrapliTimeout(ScrapliException):
     """Exception for any scrapli timeouts"""
 
 
-class ScrapliKeepaliveFailure(ScrapliException):
-    """Exception for scrapli missing keepalives"""
-
-
 class MissingDependencies(ScrapliException):
     """Exception for any missing (probably optional) dependencies"""
 
@@ -51,3 +47,7 @@ class ConnectionNotOpened(ScrapliException):
 
 class UnsupportedPlatform(ScrapliException):
     """Exception for unsupported platform; i.e. using system transport on windows"""
+
+
+class ScrapliConnectionLost(ScrapliException):
+    """Exception for underlying connection being lost"""

@@ -22,14 +22,14 @@ def test_repr():
     conn = SystemSSHTransport("localhost")
     assert (
         repr(conn)
-        == "Transport {'logger': 'scrapli.transport-localhost', 'host': 'localhost', 'port': 22, 'timeout_socket': 5, "
-        "'timeout_transport': 5, 'timeout_exit': True, 'auth_username': '', "
+        == "Transport {'logger': 'scrapli.localhost:22.transport', 'host': 'localhost', 'port': 22, 'timeout_socket': 10, "
+        "'timeout_transport': 30, 'timeout_exit': True, 'auth_username': '', "
         "'auth_private_key': '', 'auth_private_key_passphrase': '********', 'auth_password': '********', "
-        "'auth_strict_key': True, 'auth_bypass': False, '_timeout_ops': 10, '_comms_prompt_pattern': '^["
+        "'auth_strict_key': True, 'auth_bypass': False, '_timeout_ops': 30, '_comms_prompt_pattern': '^["
         "a-z0-9.\\\\-@()/:]{1,32}[#>$]$', '_comms_return_char': '\\n', '_comms_ansi': False, 'ssh_config_file': "
         "'', 'ssh_known_hosts_file': '', 'lib_auth_exception': <class "
         "'scrapli.exceptions.ScrapliAuthenticationFailed'>, '_isauthenticated': False, 'transport_options': {}, "
-        "'open_cmd': ['ssh', 'localhost', '-p', '22', '-o', 'ConnectTimeout=5', '-o', 'ServerAliveInterval=5', "
+        "'open_cmd': ['ssh', 'localhost', '-p', '22', '-o', 'ConnectTimeout=10', '-o', 'ServerAliveInterval=30', "
         "'-o', 'StrictHostKeyChecking=yes', '-F', '/dev/null']}"
     )
 
@@ -51,9 +51,9 @@ def test_build_open_cmd():
         "-p",
         "22",
         "-o",
-        "ConnectTimeout=5",
+        "ConnectTimeout=10",
         "-o",
-        "ServerAliveInterval=5",
+        "ServerAliveInterval=30",
         "-o",
         "StrictHostKeyChecking=yes",
         "-F",
@@ -81,9 +81,9 @@ def test_build_open_cmd_user_options(user_options):
         "-p",
         "22",
         "-o",
-        "ConnectTimeout=5",
+        "ConnectTimeout=10",
         "-o",
-        "ServerAliveInterval=5",
+        "ServerAliveInterval=30",
         "-o",
         "StrictHostKeyChecking=yes",
         "-F",
@@ -169,7 +169,7 @@ def test_ssh_message_handler(eof_msg):
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="systemssh not supported on windows")
 def test_set_timeout():
     conn = SystemSSHTransport("localhost")
-    assert conn.timeout_transport == 5
+    assert conn.timeout_transport == 30
     conn.set_timeout(1000)
     assert conn.timeout_transport == 1000
     conn.timeout_transport = 9999

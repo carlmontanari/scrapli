@@ -111,7 +111,7 @@ class AsyncJunosDriver(AsyncNetworkDriver):
             on_close = junos_on_close
 
         _telnet = False
-        if transport == "telnet":
+        if transport == "asynctelnet":
             _telnet = True
 
         if failed_when_contains is None:

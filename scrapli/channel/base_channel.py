@@ -62,7 +62,7 @@ class ChannelBase(ABC):
             N/A
 
         """
-        self.logger = getLogger(f"scrapli.channel-{transport.host}")
+        self.logger = getLogger(f"scrapli.{transport.host}:{transport.port}.channel")
         attach_duplicate_log_filter(logger=self.logger)
 
         self.transport = transport

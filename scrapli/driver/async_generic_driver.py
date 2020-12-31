@@ -1,17 +1,11 @@
 """scrapli.driver.async_generic_driver"""
-from collections import UserList
-from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union
 
 from scrapli.channel import AsyncChannel
 from scrapli.decorators import TimeoutModifier
 from scrapli.driver.async_driver import AsyncScrape
 from scrapli.driver.base_generic_driver import GenericDriverBase
-from scrapli.response import Response
-
-if TYPE_CHECKING:
-    ScrapliMultiResponse = UserList[Response]  # pylint:  disable=E1136; # pragma:  no cover
-else:
-    ScrapliMultiResponse = UserList
+from scrapli.response import MultiResponse, Response
 
 
 class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
@@ -67,24 +61,28 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
         return prompt
 
     @TimeoutModifier()
-    async def _send_command_eager(
+    async def _send_command(
         self,
         command: str,
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
-        *,
+        eager: bool = False,
         timeout_ops: Optional[float] = None,
     ) -> Response:
         """
         Send a command
 
-        Keeping as a private method rather than adding an argument to the "normal" `send_command`
-        method as this should not be used my users generally.
+        Private method so that we can handle `eager` w/out having to have that argument showing up
+        in all the methods that super to the "normal" send_command method as we only ever want eager
+        to be used for the plural options -- i.e. send_commands not send_command!
 
         Args:
             command: string to send to device in privilege exec mode
             strip_prompt: True/False strip prompt from returned output
             failed_when_contains: string or list of strings indicating failure if found in response
+            eager: if eager is True we do not read until prompt is seen at each command sent to the
+                channel. Do *not* use this unless you know what you are doing as it is possible that
+                it can make scrapli less reliable!
             timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
                 the duration of the operation, value is reset to initial value after operation is
                 completed
@@ -103,11 +101,12 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
             host=self.transport.host, command=command, failed_when_contains=failed_when_contains
         )
         raw_response, processed_response = await self.channel.send_input(
-            channel_input=command, strip_prompt=strip_prompt, eager=True
+            channel_input=command, strip_prompt=strip_prompt, eager=eager
         )
-        return self._post_send_command(
+        response = self._post_send_command(
             raw_response=raw_response, processed_response=processed_response, response=response
         )
+        return response
 
     @TimeoutModifier()
     async def send_command(
@@ -136,18 +135,13 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
             N/A
 
         """
-        # decorator cares about timeout_ops, but nothing else does, assign to _ to appease linters
-        _ = timeout_ops
-
-        response = self._pre_send_command(
-            host=self.transport.host, command=command, failed_when_contains=failed_when_contains
+        response: Response = await self._send_command(
+            command=command,
+            strip_prompt=strip_prompt,
+            failed_when_contains=failed_when_contains,
+            timeout_ops=timeout_ops,
         )
-        raw_response, processed_response = await self.channel.send_input(
-            channel_input=command, strip_prompt=strip_prompt
-        )
-        return self._post_send_command(
-            raw_response=raw_response, processed_response=processed_response, response=response
-        )
+        return response
 
     async def send_commands(
         self,
@@ -156,8 +150,9 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         *,
+        eager: bool = False,
         timeout_ops: Optional[float] = None,
-    ) -> ScrapliMultiResponse:
+    ) -> MultiResponse:
         """
         Send multiple commands
 
@@ -167,29 +162,46 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
             failed_when_contains: string or list of strings indicating failure if found in response
             stop_on_failed: True/False stop executing commands if a command fails, returns results
                 as of current execution
+            eager: if eager is True we do not read until prompt is seen at each command sent to the
+                channel. Do *not* use this unless you know what you are doing as it is possible that
+                it can make scrapli less reliable!
             timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER COMMAND sent, not for the total
                 of the commands being sent!
 
         Returns:
-            ScrapliMultiResponse: Scrapli MultiResponse object
+            MultiResponse: Scrapli MultiResponse object
 
         Raises:
             N/A
 
         """
         responses = self._pre_send_commands(commands=commands)
-        for command in commands:
-            response = await self.send_command(
+        for command in commands[:-1]:
+            response = await self._send_command(
                 command=command,
                 strip_prompt=strip_prompt,
                 failed_when_contains=failed_when_contains,
+                eager=eager,
                 timeout_ops=timeout_ops,
             )
             responses.append(response)
             if stop_on_failed is True and response.failed is True:
-                return responses
+                # should we find the prompt here w/ get_prompt?? or just let subsequent operations
+                # deal w/ finding that? future us problem? :)
+                break
+        else:
+            # if we did *not* break (i.e. no failure and/or no stop_on_failed) send the last command
+            # with eager = False -- this way we *always* find the prompt at the end of the commands
+            response = await self._send_command(
+                command=commands[-1],
+                strip_prompt=strip_prompt,
+                failed_when_contains=failed_when_contains,
+                timeout_ops=timeout_ops,
+                eager=False,
+            )
+            responses.append(response)
 
         return responses
 
@@ -200,8 +212,9 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         *,
+        eager: bool = False,
         timeout_ops: Optional[float] = None,
-    ) -> ScrapliMultiResponse:
+    ) -> MultiResponse:
         """
         Send command(s) from file
 
@@ -211,13 +224,16 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
             failed_when_contains: string or list of strings indicating failure if found in response
             stop_on_failed: True/False stop executing commands if a command fails, returns results
                 as of current execution
+            eager: if eager is True we do not read until prompt is seen at each command sent to the
+                channel. Do *not* use this unless you know what you are doing as it is possible that
+                it can make scrapli less reliable!
             timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER COMMAND sent, not for the total
                 of the commands being sent!
 
         Returns:
-            ScrapliMultiResponse: Scrapli MultiResponse object
+            MultiResponse: Scrapli MultiResponse object
 
         Raises:
             N/A
@@ -230,14 +246,18 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
             strip_prompt=strip_prompt,
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
+            eager=eager,
             timeout_ops=timeout_ops,
         )
 
+    @TimeoutModifier()
     async def send_interactive(
         self,
         interact_events: List[Tuple[str, str, Optional[bool]]],
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         privilege_level: str = "",
+        *,
+        timeout_ops: Optional[float] = None,
     ) -> Response:
         """
         Interact with a device with changing prompts per input.
@@ -293,6 +313,10 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
             failed_when_contains: list of strings that, if present in final output, represent a
                 failed command/interaction
             privilege_level: ignored in this base class; for LSP reasons for subclasses
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed. Note that this is the timeout value PER COMMAND sent, not for the total
+                of the commands being sent!
 
         Returns:
             Response: scrapli Response object
@@ -301,6 +325,9 @@ class AsyncGenericDriver(AsyncScrape, GenericDriverBase):
             N/A
 
         """
+        # decorator cares about timeout_ops, but nothing else does, assign to _ to appease linters
+        _ = timeout_ops
+        # privilege level only matters "up" in the network driver layer
         _ = privilege_level
 
         response = self._pre_send_interactive(

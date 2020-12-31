@@ -29,7 +29,7 @@ async def test_non_async_transport():
         AsyncIOSXEDriver(transport="system", **device)
     assert (
         str(exc.value)
-        == "Attempting to use transport type system with an asyncio driver, must use one of ['asyncssh'] transports"
+        == "Attempting to use transport type system with an asyncio driver, must use one of ['asyncssh', 'asynctelnet'] transports"
     )
 
 

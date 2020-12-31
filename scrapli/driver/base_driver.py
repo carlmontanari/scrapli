@@ -10,20 +10,24 @@ from scrapli.channel import CHANNEL_ARGS
 from scrapli.exceptions import UnsupportedPlatform
 from scrapli.helper import _find_transport_plugin, resolve_ssh_config, resolve_ssh_known_hosts
 from scrapli.transport import (
+    ASYNC_TELNET_TRANSPORT_ARGS,
     SYSTEM_SSH_TRANSPORT_ARGS,
     TELNET_TRANSPORT_ARGS,
+    AsyncTelnetTransport,
     SystemSSHTransport,
     TelnetTransport,
-    Transport,
+    TransportBase,
 )
 
-TRANSPORT_CLASS: Dict[str, Callable[..., Transport]] = {
+TRANSPORT_CLASS: Dict[str, Callable[..., TransportBase]] = {
     "system": SystemSSHTransport,
     "telnet": TelnetTransport,
+    "asynctelnet": AsyncTelnetTransport,
 }
 TRANSPORT_ARGS: Dict[str, Tuple[str, ...]] = {
     "system": SYSTEM_SSH_TRANSPORT_ARGS,
     "telnet": TELNET_TRANSPORT_ARGS,
+    "asynctelnet": ASYNC_TELNET_TRANSPORT_ARGS,
 }
 TRANSPORT_BASE_ARGS = (
     "host",
@@ -32,7 +36,10 @@ TRANSPORT_BASE_ARGS = (
     "timeout_transport",
     "timeout_exit",
 )
-ASYNCIO_TRANSPORTS = ("asyncssh",)
+ASYNCIO_TRANSPORTS = (
+    "asyncssh",
+    "asynctelnet",
+)
 
 
 class ScrapeBase:
@@ -46,8 +53,8 @@ class ScrapeBase:
         auth_private_key_passphrase: str = "",
         auth_strict_key: bool = True,
         auth_bypass: bool = False,
-        timeout_socket: int = 5,
-        timeout_transport: int = 10,
+        timeout_socket: int = 10,
+        timeout_transport: int = 30,
         timeout_ops: float = 30,
         timeout_exit: bool = True,
         comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,48}[#>$]\s*$",
@@ -144,7 +151,7 @@ class ScrapeBase:
         self._initialization_args: Dict[str, Any] = {}
 
         self._setup_host(host=host, port=port)
-        self.logger: Logger = getLogger(f"scrapli.driver-{self._host}")
+        self.logger: Logger = getLogger(f"scrapli.{self._host}:{self._port}.driver")
 
         self._setup_auth(
             auth_username=auth_username,
@@ -169,7 +176,11 @@ class ScrapeBase:
         )
         self._setup_callables(on_init=on_init, on_open=on_open, on_close=on_close)
 
-        if transport not in ("system", "telnet"):
+        if transport not in (
+            "system",
+            "telnet",
+            "asynctelnet",
+        ):
             self.logger.info(f"Non-core transport `{transport}` selected")
         self._transport = transport
 
@@ -187,7 +198,7 @@ class ScrapeBase:
         # so transport drivers don't need to support `transport_options` as an argument, if no
         # transport options provided, do nothing, otherwise add this to the args we ship to the
         # transport class
-        if transport_options is not None:
+        if transport_options:
             self.transport_args["transport_options"] = transport_options
         self.transport = self.transport_class(**self.transport_args)
 
@@ -278,6 +289,7 @@ class ScrapeBase:
         if not isinstance(port, int):
             raise TypeError(f"`port` should be int, got {type(port)}")
         self._host = host.strip()
+        self._port = port
         self._initialization_args["host"] = host.strip()
         self._initialization_args["port"] = port
 

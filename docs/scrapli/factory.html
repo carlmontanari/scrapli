@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>scrapli.factory API documentation</title>
 <meta name="description" content="scrapli.factory" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -310,7 +310,6 @@ class Scrapli(NetworkDriver):
         Scrapli Factory method for synchronous drivers
 
         Args:
-            cls: class object
             platform: name of target platform; i.e. `cisco_iosxe`, `arista_eos`, etc.
             variant: optional name of variant of community platform
             **kwargs: keyword arguments to pass to selected driver class
@@ -355,7 +354,6 @@ class AsyncScrapli(AsyncNetworkDriver):
         Scrapli Factory method for asynchronous drivers
 
         Args:
-            cls: class object
             platform: name of target platform; i.e. `cisco_iosxe`, `arista_eos`, etc.
             variant: optional name of variant of community platform
             **kwargs: keyword arguments to pass to selected driver class
@@ -452,7 +450,6 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         Scrapli Factory method for asynchronous drivers
 
         Args:
-            cls: class object
             platform: name of target platform; i.e. `cisco_iosxe`, `arista_eos`, etc.
             variant: optional name of variant of community platform
             **kwargs: keyword arguments to pass to selected driver class
@@ -504,6 +501,10 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 <div class="desc"></div>
 </dd>
 <dt id="scrapli.factory.AsyncScrapli.comms_prompt_pattern"><code class="name">var <span class="ident">comms_prompt_pattern</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="scrapli.factory.AsyncScrapli.default_desired_privilege_level"><code class="name">var <span class="ident">default_desired_privilege_level</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -602,7 +603,6 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         Scrapli Factory method for synchronous drivers
 
         Args:
-            cls: class object
             platform: name of target platform; i.e. `cisco_iosxe`, `arista_eos`, etc.
             variant: optional name of variant of community platform
             **kwargs: keyword arguments to pass to selected driver class
@@ -654,6 +654,10 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 <div class="desc"></div>
 </dd>
 <dt id="scrapli.factory.Scrapli.comms_prompt_pattern"><code class="name">var <span class="ident">comms_prompt_pattern</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="scrapli.factory.Scrapli.default_desired_privilege_level"><code class="name">var <span class="ident">default_desired_privilege_level</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -722,6 +726,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 <ul class="">
 <li><code><a title="scrapli.factory.AsyncScrapli.auth_secondary" href="#scrapli.factory.AsyncScrapli.auth_secondary">auth_secondary</a></code></li>
 <li><code><a title="scrapli.factory.AsyncScrapli.comms_prompt_pattern" href="#scrapli.factory.AsyncScrapli.comms_prompt_pattern">comms_prompt_pattern</a></code></li>
+<li><code><a title="scrapli.factory.AsyncScrapli.default_desired_privilege_level" href="#scrapli.factory.AsyncScrapli.default_desired_privilege_level">default_desired_privilege_level</a></code></li>
 <li><code><a title="scrapli.factory.AsyncScrapli.failed_when_contains" href="#scrapli.factory.AsyncScrapli.failed_when_contains">failed_when_contains</a></code></li>
 <li><code><a title="scrapli.factory.AsyncScrapli.genie_platform" href="#scrapli.factory.AsyncScrapli.genie_platform">genie_platform</a></code></li>
 <li><code><a title="scrapli.factory.AsyncScrapli.logger" href="#scrapli.factory.AsyncScrapli.logger">logger</a></code></li>
@@ -734,6 +739,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 <ul class="">
 <li><code><a title="scrapli.factory.Scrapli.auth_secondary" href="#scrapli.factory.Scrapli.auth_secondary">auth_secondary</a></code></li>
 <li><code><a title="scrapli.factory.Scrapli.comms_prompt_pattern" href="#scrapli.factory.Scrapli.comms_prompt_pattern">comms_prompt_pattern</a></code></li>
+<li><code><a title="scrapli.factory.Scrapli.default_desired_privilege_level" href="#scrapli.factory.Scrapli.default_desired_privilege_level">default_desired_privilege_level</a></code></li>
 <li><code><a title="scrapli.factory.Scrapli.failed_when_contains" href="#scrapli.factory.Scrapli.failed_when_contains">failed_when_contains</a></code></li>
 <li><code><a title="scrapli.factory.Scrapli.genie_platform" href="#scrapli.factory.Scrapli.genie_platform">genie_platform</a></code></li>
 <li><code><a title="scrapli.factory.Scrapli.logger" href="#scrapli.factory.Scrapli.logger">logger</a></code></li>
@@ -747,7 +753,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

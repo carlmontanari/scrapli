@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>scrapli.driver.base_driver API documentation</title>
 <meta name="description" content="scrapli.driver.base_driver" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -39,20 +39,24 @@ from scrapli.channel import CHANNEL_ARGS
 from scrapli.exceptions import UnsupportedPlatform
 from scrapli.helper import _find_transport_plugin, resolve_ssh_config, resolve_ssh_known_hosts
 from scrapli.transport import (
+    ASYNC_TELNET_TRANSPORT_ARGS,
     SYSTEM_SSH_TRANSPORT_ARGS,
     TELNET_TRANSPORT_ARGS,
+    AsyncTelnetTransport,
     SystemSSHTransport,
     TelnetTransport,
-    Transport,
+    TransportBase,
 )
 
-TRANSPORT_CLASS: Dict[str, Callable[..., Transport]] = {
+TRANSPORT_CLASS: Dict[str, Callable[..., TransportBase]] = {
     &#34;system&#34;: SystemSSHTransport,
     &#34;telnet&#34;: TelnetTransport,
+    &#34;asynctelnet&#34;: AsyncTelnetTransport,
 }
 TRANSPORT_ARGS: Dict[str, Tuple[str, ...]] = {
     &#34;system&#34;: SYSTEM_SSH_TRANSPORT_ARGS,
     &#34;telnet&#34;: TELNET_TRANSPORT_ARGS,
+    &#34;asynctelnet&#34;: ASYNC_TELNET_TRANSPORT_ARGS,
 }
 TRANSPORT_BASE_ARGS = (
     &#34;host&#34;,
@@ -61,7 +65,10 @@ TRANSPORT_BASE_ARGS = (
     &#34;timeout_transport&#34;,
     &#34;timeout_exit&#34;,
 )
-ASYNCIO_TRANSPORTS = (&#34;asyncssh&#34;,)
+ASYNCIO_TRANSPORTS = (
+    &#34;asyncssh&#34;,
+    &#34;asynctelnet&#34;,
+)
 
 
 class ScrapeBase:
@@ -75,8 +82,8 @@ class ScrapeBase:
         auth_private_key_passphrase: str = &#34;&#34;,
         auth_strict_key: bool = True,
         auth_bypass: bool = False,
-        timeout_socket: int = 5,
-        timeout_transport: int = 10,
+        timeout_socket: int = 10,
+        timeout_transport: int = 30,
         timeout_ops: float = 30,
         timeout_exit: bool = True,
         comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,48}[#&gt;$]\s*$&#34;,
@@ -173,7 +180,7 @@ class ScrapeBase:
         self._initialization_args: Dict[str, Any] = {}
 
         self._setup_host(host=host, port=port)
-        self.logger: Logger = getLogger(f&#34;scrapli.driver-{self._host}&#34;)
+        self.logger: Logger = getLogger(f&#34;scrapli.{self._host}:{self._port}.driver&#34;)
 
         self._setup_auth(
             auth_username=auth_username,
@@ -198,7 +205,11 @@ class ScrapeBase:
         )
         self._setup_callables(on_init=on_init, on_open=on_open, on_close=on_close)
 
-        if transport not in (&#34;system&#34;, &#34;telnet&#34;):
+        if transport not in (
+            &#34;system&#34;,
+            &#34;telnet&#34;,
+            &#34;asynctelnet&#34;,
+        ):
             self.logger.info(f&#34;Non-core transport `{transport}` selected&#34;)
         self._transport = transport
 
@@ -216,7 +227,7 @@ class ScrapeBase:
         # so transport drivers don&#39;t need to support `transport_options` as an argument, if no
         # transport options provided, do nothing, otherwise add this to the args we ship to the
         # transport class
-        if transport_options is not None:
+        if transport_options:
             self.transport_args[&#34;transport_options&#34;] = transport_options
         self.transport = self.transport_class(**self.transport_args)
 
@@ -307,6 +318,7 @@ class ScrapeBase:
         if not isinstance(port, int):
             raise TypeError(f&#34;`port` should be int, got {type(port)}&#34;)
         self._host = host.strip()
+        self._port = port
         self._initialization_args[&#34;host&#34;] = host.strip()
         self._initialization_args[&#34;port&#34;] = port
 
@@ -560,7 +572,7 @@ class ScrapeBase:
 <dl>
 <dt id="scrapli.driver.base_driver.ScrapeBase"><code class="flex name class">
 <span>class <span class="ident">ScrapeBase</span></span>
-<span>(</span><span>host: str = '', port: int = 22, auth_username: str = '', auth_password: str = '', auth_private_key: str = '', auth_private_key_passphrase: str = '', auth_strict_key: bool = True, auth_bypass: bool = False, timeout_socket: int = 5, timeout_transport: int = 10, timeout_ops: float = 30, timeout_exit: bool = True, comms_prompt_pattern: str = &#x27;^[a-z0-9.\\-@()/:]{1,48}[#&gt;$]\\s*$&#x27;, comms_return_char: str = '\n', comms_ansi: bool = False, ssh_config_file: Union[str, bool] = False, ssh_known_hosts_file: Union[str, bool] = False, on_init: Union[Callable[..., Any], NoneType] = None, on_open: Union[Callable[..., Any], NoneType] = None, on_close: Union[Callable[..., Any], NoneType] = None, transport: str = 'system', transport_options: Union[Dict[str, Any], NoneType] = None)</span>
+<span>(</span><span>host: str = '', port: int = 22, auth_username: str = '', auth_password: str = '', auth_private_key: str = '', auth_private_key_passphrase: str = '', auth_strict_key: bool = True, auth_bypass: bool = False, timeout_socket: int = 10, timeout_transport: int = 30, timeout_ops: float = 30, timeout_exit: bool = True, comms_prompt_pattern: str = &#x27;^[a-z0-9.\\-@()/:]{1,48}[#&gt;$]\\s*$&#x27;, comms_return_char: str = '\n', comms_ansi: bool = False, ssh_config_file: Union[str, bool] = False, ssh_known_hosts_file: Union[str, bool] = False, on_init: Union[Callable[..., Any], NoneType] = None, on_open: Union[Callable[..., Any], NoneType] = None, on_close: Union[Callable[..., Any], NoneType] = None, transport: str = 'system', transport_options: Union[Dict[str, Any], NoneType] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Scrape Object</p>
@@ -676,8 +688,8 @@ docs for given transport class for details of what to pass here</dd>
         auth_private_key_passphrase: str = &#34;&#34;,
         auth_strict_key: bool = True,
         auth_bypass: bool = False,
-        timeout_socket: int = 5,
-        timeout_transport: int = 10,
+        timeout_socket: int = 10,
+        timeout_transport: int = 30,
         timeout_ops: float = 30,
         timeout_exit: bool = True,
         comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,48}[#&gt;$]\s*$&#34;,
@@ -774,7 +786,7 @@ docs for given transport class for details of what to pass here</dd>
         self._initialization_args: Dict[str, Any] = {}
 
         self._setup_host(host=host, port=port)
-        self.logger: Logger = getLogger(f&#34;scrapli.driver-{self._host}&#34;)
+        self.logger: Logger = getLogger(f&#34;scrapli.{self._host}:{self._port}.driver&#34;)
 
         self._setup_auth(
             auth_username=auth_username,
@@ -799,7 +811,11 @@ docs for given transport class for details of what to pass here</dd>
         )
         self._setup_callables(on_init=on_init, on_open=on_open, on_close=on_close)
 
-        if transport not in (&#34;system&#34;, &#34;telnet&#34;):
+        if transport not in (
+            &#34;system&#34;,
+            &#34;telnet&#34;,
+            &#34;asynctelnet&#34;,
+        ):
             self.logger.info(f&#34;Non-core transport `{transport}` selected&#34;)
         self._transport = transport
 
@@ -817,7 +833,7 @@ docs for given transport class for details of what to pass here</dd>
         # so transport drivers don&#39;t need to support `transport_options` as an argument, if no
         # transport options provided, do nothing, otherwise add this to the args we ship to the
         # transport class
-        if transport_options is not None:
+        if transport_options:
             self.transport_args[&#34;transport_options&#34;] = transport_options
         self.transport = self.transport_class(**self.transport_args)
 
@@ -908,6 +924,7 @@ docs for given transport class for details of what to pass here</dd>
         if not isinstance(port, int):
             raise TypeError(f&#34;`port` should be int, got {type(port)}&#34;)
         self._host = host.strip()
+        self._port = port
         self._initialization_args[&#34;host&#34;] = host.strip()
         self._initialization_args[&#34;port&#34;] = port
 
@@ -1226,7 +1243,7 @@ docs for given transport class for details of what to pass here</dd>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

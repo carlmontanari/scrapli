@@ -2,7 +2,7 @@ import sys
 
 import pytest
 
-from scrapli.exceptions import ScrapliTimeout
+from scrapli.exceptions import ConnectionNotOpened, ScrapliTimeout
 from scrapli.transport.socket import Socket
 
 
@@ -11,6 +11,14 @@ def test_socket_open_success():
     sock = Socket("localhost", 22, 1)
     sock.socket_open()
     assert sock.socket_isalive() is True
+
+
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="not testing windows")
+def test_socket_connection_not_opened():
+    sock = Socket("x", 2222, 1)
+    with pytest.raises(ConnectionNotOpened) as e:
+        sock.socket_open()
+    assert str(e.value) == "Failed to determine socket address family for host"
 
 
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="not testing windows")

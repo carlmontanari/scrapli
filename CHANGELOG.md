@@ -1,6 +1,50 @@
 CHANGELOG
 =======
 
+# 2020.12.31
+- Make log messages for textfsm and genie parsers failing to parse consistent as `log.warning`
+- Add factory example
+- Add "root" priv level to junos driver -- probably should be considered experimental for now :)
+- Fix issue where `send_config` unified result did not have finish time set
+- **POSSIBLY BREAKING CHANGE:** logger names have changed to be easier to get/make more sense -- the logger for each 
+  instance used to look like: "scrapli-channel-{{ HOST }}" which kinda was not really smart :). Loggers now look 
+  like: "scrapli.{{ HOST }}:{{ PORT }}.channel" -- can be channel|driver|transport!
+- Changes to test environment:
+  - Support running devices on localhost w/ nat'd management ports -- in "vrouter" mode (poorly named) -- this is 
+    enabled with the `SCRAPLI_VROUTER` environment variable set to on/true/something
+  - Added bootvar into nxos base config -- when missing causes qemu nxosv to boot into loader prompt so thats no good
+  - Replace resource settings in vdc in nxos to account for nxos instances with differing resources (memory/cpu)
+  - Got rid of static license udi in iosxe config, replaced more certificate stuff so show run comparisons are 
+    easier on iosxe
+- **NEW TRANSPORT** `asynctelnet` transport is built using standard library asyncio, as such it is part of scrapli core
+  - Should be considered beta for a while :)
+  - Added a bunch of tests mocking streamreader/writer to ensure that this driver is well tested
+- Added asynctelnet support in nxos and juniper drivers (to change prompt for those platforms)
+- Support asynctelnet in base driver
+- `auth_bypass` for both telnet drivers completely bypasses not only auth (as it did previously) but also the auth 
+  validation where we confirm we got logged in successfully -- reason being is that for console servers and such you 
+  may not care about that, you may just want to log in and read data.
+- Removed unnecessary re-checking/verifying of ssh config file in system transport (was basically duplicated from 
+  base transport, so was pointless!)
+- Bumped all the default timeout values up as they were probably a bit on the aggressive side
+- Added `eager` argument to send commands/commands from file and config/configs/configs from file methods -- 
+  basically this `eager` mode will *not* look for a prompt between lines of commands/configs. This means that things 
+  have a tiny potential to get out of whack because we will just send things as fast as possible. In order to not 
+  totally break things we *will* (whether you like it or not!) wait and find the prompt on the last command/config 
+  in the list though -- that way we dont get too out of whack. This now means we can use `eager` to configure 
+  banners and macros and things and we no longer need to do the dirty send interactive workaround.
+- Added `ScrapliConnectionLost` exception and raise it if we get EOF in system transport -- with a message that is 
+  more clear than just "EOF" and some obscure line in ptyprocess!
+- Added `tclsh` privilege level for IOSXE
+- Fixed a bug that would prevent going to "parallel" privilege levels -- i.e. going from tclsh to configuration or 
+  visa versa in IOSXE or from configuration to configuration_exclusive in IOSXR
+- If no `failed_when_contains` is passed to `send_interactive` network drivers will now use the network drivers 
+  `failed_when_contains` attribute to bring it inline with the normal command/config methods
+- Added `timeout_ops` to `send_interactive` and wrap those methods with the `TimeoutModifier` decorator
+- Add logic to properly fetch socket address family type so we can handle IPv6 hosts (w/ scrapli-ssh2/scrapli-paramiko)
+- Added `tclsh` privilege level for NXOS, didn't even know that existed before!
+
+
 # 2020.11.15
 - Fix a regex that sometimes caused a failed functional IOSXR test
 - Add `ptyprocess` transport options for system transport -- sounds like this may be needed for huawei community

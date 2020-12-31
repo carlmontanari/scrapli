@@ -2,13 +2,24 @@
 from scrapli.driver.base_network_driver import PrivilegeLevel
 
 PRIVS = {
+    "root": (
+        PrivilegeLevel(
+            pattern=r"^root@%\s?$",
+            name="root",
+            previous_priv="",
+            deescalate="",
+            escalate="",
+            escalate_auth=False,
+            escalate_prompt="",
+        )
+    ),
     "exec": (
         PrivilegeLevel(
             pattern=r"^({\w+:\d}\n){0,1}[a-z0-9.\-_@()/:]{1,63}>\s?$",
             name="exec",
-            previous_priv="",
-            deescalate="",
-            escalate="",
+            previous_priv="root",
+            deescalate="start shell",
+            escalate="cli",
             escalate_auth=False,
             escalate_prompt="",
         )

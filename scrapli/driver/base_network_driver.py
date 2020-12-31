@@ -1,21 +1,15 @@
 """scrapli.driver.base_network_driver"""
 import re
 import warnings
-from collections import UserList
 from datetime import datetime
 from enum import Enum
 from functools import lru_cache
 from logging import Logger
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from scrapli.exceptions import UnknownPrivLevel
 from scrapli.helper import resolve_file
-from scrapli.response import Response
-
-if TYPE_CHECKING:
-    ScrapliMultiResponse = UserList[Response]  # pylint:  disable=E1136; # pragma:  no cover
-else:
-    ScrapliMultiResponse = UserList
+from scrapli.response import MultiResponse, Response
 
 
 class PrivilegeLevel:
@@ -81,6 +75,7 @@ class NetworkDriverBase:
     # NetworkDriverBase Mixin vars for typing/linting purposes
     logger: Logger
     comms_prompt_pattern: str
+    default_desired_privilege_level: str
     _current_priv_level = DUMMY_PRIV_LEVEL
     _priv_map: Dict[str, List[str]]
     failed_when_contains: Optional[List[str]]
@@ -368,7 +363,14 @@ class NetworkDriverBase:
             else map_to_desired_priv
         )
 
-        desired_priv_index = priv_map.index(resolved_priv)
+        try:
+            desired_priv_index = priv_map.index(resolved_priv)
+        except ValueError:
+            # its possible that the "current" priv map gives us no good way to get from the current
+            # to the desired priv -- for example - from tclsh -> configuration or visa versa
+            # in this event, we should bail out to the default desired priv level to "reset" things
+            desired_priv_index = priv_map.index(self.default_desired_privilege_level)
+
         try:
             current_priv_index = priv_map.index(current_priv.name)
         except ValueError:
@@ -416,7 +418,7 @@ class NetworkDriverBase:
     def _post_send_config(
         self,
         config: str,
-        multi_response: ScrapliMultiResponse,
+        multi_response: MultiResponse,
     ) -> Response:
         """
         Handle post "send_config" tasks for consistency between sync/async versions
@@ -447,7 +449,8 @@ class NetworkDriverBase:
             failed_when_contains=failed_when_contains,
         )
         response.start_time = multi_response[0].start_time
-        response.elapsed_time = (datetime.now() - response.start_time).total_seconds()
+        response.finish_time = datetime.now()
+        response.elapsed_time = (response.finish_time - response.start_time).total_seconds()
 
         # join all the results together into a single final result
         response.result = "\n".join(response.result for response in multi_response)
@@ -503,7 +506,7 @@ class NetworkDriverBase:
 
         return resolved_privilege_level, failed_when_contains
 
-    def _post_send_configs(self, responses: ScrapliMultiResponse) -> ScrapliMultiResponse:
+    def _post_send_configs(self, responses: MultiResponse) -> MultiResponse:
         """
         Handle post "send_configs" tasks for consistency between sync/async versions
 
@@ -511,7 +514,7 @@ class NetworkDriverBase:
             responses: multi_response object to update
 
         Returns:
-            ScrapliMultiResponse: Unified response object
+            MultiResponse: Unified response object
 
         Raises:
             N/A

@@ -22,8 +22,8 @@ def test__repr():
     assert (
         repr(conn)
         == "Scrape(host='myhost', port=22, auth_username='', auth_password='', auth_private_key='', "
-        "auth_private_key_passphrase='', auth_strict_key=True, auth_bypass=False, timeout_socket=5, "
-        "timeout_transport=10, timeout_ops=30.0, timeout_exit=True, comms_prompt_pattern='^[a-z0-9.\\\\-@()/:]{1,"
+        "auth_private_key_passphrase='', auth_strict_key=True, auth_bypass=False, timeout_socket=10, "
+        "timeout_transport=30, timeout_ops=30.0, timeout_exit=True, comms_prompt_pattern='^[a-z0-9.\\\\-@()/:]{1,"
         "48}[#>$]\\\\s*$', comms_return_char='\\n', comms_ansi=False, ssh_config_file='', ssh_known_hosts_file='', "
         "on_init=None, on_open=None, on_close=None, transport='system', transport_options=None)"
     )
