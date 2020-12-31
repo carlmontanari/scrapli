@@ -1,12 +1,7 @@
-Building configuration...
-
-Current configuration : CONFIG_BYTES
-!
-! Last configuration change at TIME_STAMP_REPLACED
-!
 version 16.12
 service timestamps debug datetime msec
 service timestamps log datetime msec
+! Call-home is enabled by Smart-Licensing.
 service call-home
 platform qfp utilization monitor load 80
 platform punt-keepalive disable-kernel-core
@@ -71,13 +66,15 @@ multilink bundle-name authenticated
 !
 !
 !
-CERTIFICATES AND LICENSE
+{{ crypto_pki }}
+!
 diagnostic bootup level minimal
 archive
  log config
   logging enable
  path bootflash:
 memory free low-watermark processor 72329
+file prompt quiet
 !
 !
 spanning-tree extend system-id
@@ -85,6 +82,10 @@ spanning-tree extend system-id
 username vrnetlab privilege 15 password 0 VR-netlab9
 !
 redundancy
+!
+!
+!
+!
 !
 !
 !
@@ -184,9 +185,6 @@ ip forward-protocol nd
 no ip http server
 no ip http secure-server
 !
-ip ssh pubkey-chain
-  username vrnetlab
-   key-hash ssh-rsa 5CC74A68B18B026A1709FB09D1F44E2F
 ip scp server enable
 !
 !
@@ -194,9 +192,15 @@ ip scp server enable
 !
 !
 !
-!
+ip ssh pubkey-chain
+  username vrnetlab
+   key-hash ssh-rsa 5CC74A68B18B026A1709FB09D1F44E2F
 control-plane
 !
+ !
+ !
+ !
+ !
 !
 !
 !
@@ -206,6 +210,7 @@ line con 0
  stopbits 1
 line vty 0 4
  login local
+ no length 0
  transport input all
 line vty 5 15
  login local

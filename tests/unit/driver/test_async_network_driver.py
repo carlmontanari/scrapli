@@ -20,8 +20,8 @@ def test_check_kwargs_comms_prompt_pattern():
         )
     assert (
         conn.comms_prompt_pattern
-        == "(^[a-z0-9.\\-_@()/:]{1,63}>$)|(^[a-z0-9.\\-_@/:]{1,63}#$)|(^[a-z0-9.\\-_@/:]{1,63}\\([a-z0-9.\\-@/:\\+]{"
-        "0,32}\\)#$)"
+        == "(^[a-z0-9.\\-_@()/:]{1,63}>$)|(^[a-z0-9.\\-_@/:]{1,63}#$)|(^[a-z0-9.\\-_@/:]{1,63}\\((?!tcl)["
+        "a-z0-9.\\-@/:\\+]{0,32}\\)#$)|((^[a-z0-9.\\-_@/:]{1,63}\\(tcl\\)#$)|(^\\+>$))"
     )
     assert (
         str(warn[0].message) == "\n***** `comms_prompt_pattern` found in kwargs! "
@@ -42,6 +42,7 @@ async def test_init(async_cisco_iosxe_conn):
         "exec",
         "privilege_exec",
         "configuration",
+        "tclsh",
     ]
     assert async_cisco_iosxe_conn.default_desired_privilege_level == "privilege_exec"
     assert async_cisco_iosxe_conn.textfsm_platform == "cisco_iosxe"

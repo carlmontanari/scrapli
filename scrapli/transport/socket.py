@@ -3,7 +3,7 @@ import socket
 from logging import getLogger
 from typing import Optional
 
-from scrapli.exceptions import ScrapliTimeout
+from scrapli.exceptions import ConnectionNotOpened, ScrapliTimeout
 
 
 class Socket:
@@ -90,12 +90,26 @@ class Socket:
             N/A  # noqa: DAR202
 
         Raises:
+            ConnectionNotOpened: if cant fetch socket addr info
             ConnectionRefusedError: if socket refuses connection
             ScrapliTimeout: if socket connection times out
 
         """
+        sock_info = None
+        try:
+            sock_info = socket.getaddrinfo(self.host, self.port)
+            if sock_info:
+                socket_af = sock_info[0][0]
+        except socket.gaierror:
+            pass
+
+        if not sock_info:
+            # this will likely need to be clearer just dont know what failure scenarios exist for
+            # this yet...
+            raise ConnectionNotOpened("Failed to determine socket address family for host")
+
         if not self.socket_isalive():
-            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.sock = socket.socket(socket_af, socket.SOCK_STREAM)
             self.sock.settimeout(self.timeout)
             try:
                 self.sock.connect((self.host, self.port))

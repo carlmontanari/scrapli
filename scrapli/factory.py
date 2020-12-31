@@ -281,7 +281,6 @@ class Scrapli(NetworkDriver):
         Scrapli Factory method for synchronous drivers
 
         Args:
-            cls: class object
             platform: name of target platform; i.e. `cisco_iosxe`, `arista_eos`, etc.
             variant: optional name of variant of community platform
             **kwargs: keyword arguments to pass to selected driver class
@@ -326,7 +325,6 @@ class AsyncScrapli(AsyncNetworkDriver):
         Scrapli Factory method for asynchronous drivers
 
         Args:
-            cls: class object
             platform: name of target platform; i.e. `cisco_iosxe`, `arista_eos`, etc.
             variant: optional name of variant of community platform
             **kwargs: keyword arguments to pass to selected driver class

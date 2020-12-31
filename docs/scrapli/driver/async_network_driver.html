@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>scrapli.driver.async_network_driver API documentation</title>
 <meta name="description" content="scrapli.driver.async_network_driver" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -28,18 +28,12 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli.driver.async_network_driver&#34;&#34;&#34;
-from collections import UserList
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from scrapli.driver.async_generic_driver import AsyncGenericDriver
 from scrapli.driver.base_network_driver import NetworkDriverBase, PrivilegeAction, PrivilegeLevel
 from scrapli.exceptions import CouldNotAcquirePrivLevel
 from scrapli.response import MultiResponse, Response
-
-if TYPE_CHECKING:
-    ScrapliMultiResponse = UserList[Response]  # pylint:  disable=E1136; # pragma:  no cover
-else:
-    ScrapliMultiResponse = UserList
 
 
 class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
@@ -222,8 +216,9 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         *,
+        eager: bool = False,
         timeout_ops: Optional[float] = None,
-    ) -&gt; ScrapliMultiResponse:
+    ) -&gt; MultiResponse:
         &#34;&#34;&#34;
         Send multiple commands
 
@@ -235,13 +230,16 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
             failed_when_contains: string or list of strings indicating failure if found in response
             stop_on_failed: True/False stop executing commands if a command fails, returns results
                 as of current execution
+            eager: if eager is True we do not read until prompt is seen at each command sent to the
+                channel. Do *not* use this unless you know what you are doing as it is possible that
+                it can make scrapli less reliable!
             timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER COMMAND sent, not for the total
                 of the commands being sent!
 
         Returns:
-            ScrapliMultiResponse: Scrapli MultiResponse object
+            MultiResponse: Scrapli MultiResponse object
 
         Raises:
             N/A
@@ -258,6 +256,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
             strip_prompt=strip_prompt,
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
+            eager=eager,
             timeout_ops=timeout_ops,
         )
 
@@ -273,8 +272,9 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         *,
+        eager: bool = False,
         timeout_ops: Optional[float] = None,
-    ) -&gt; ScrapliMultiResponse:
+    ) -&gt; MultiResponse:
         &#34;&#34;&#34;
         Send command(s) from file
 
@@ -284,13 +284,16 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
             failed_when_contains: string or list of strings indicating failure if found in response
             stop_on_failed: True/False stop executing commands if a command fails, returns results
                 as of current execution
+            eager: if eager is True we do not read until prompt is seen at each command sent to the
+                channel. Do *not* use this unless you know what you are doing as it is possible that
+                it can make scrapli less reliable!
             timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER COMMAND sent, not for the total
                 of the commands being sent!
 
         Returns:
-            ScrapliMultiResponse: Scrapli MultiResponse object
+            MultiResponse: Scrapli MultiResponse object
 
         Raises:
             N/A
@@ -307,6 +310,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
             strip_prompt=strip_prompt,
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
+            eager=eager,
             timeout_ops=timeout_ops,
         )
 
@@ -315,6 +319,8 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
         interact_events: List[Tuple[str, str, Optional[bool]]],
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         privilege_level: str = &#34;&#34;,
+        *,
+        timeout_ops: Optional[float] = None,
     ) -&gt; Response:
         &#34;&#34;&#34;
         Interact with a device with changing prompts per input.
@@ -370,6 +376,10 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
             failed_when_contains: list of strings that, if present in final output, represent a
                 failed command/interaction
             privilege_level: name of the privilege level to operate in
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed. Note that this is the timeout value PER COMMAND sent, not for the total
+                of the commands being sent!
 
         Returns:
             Response: scrapli Response object
@@ -387,8 +397,16 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
 
         if self._current_priv_level.name != resolved_privilege_level:
             await self.acquire_priv(desired_priv=resolved_privilege_level)
-        response = await super().send_interactive(
-            interact_events=interact_events, failed_when_contains=failed_when_contains
+
+        if failed_when_contains is None:
+            failed_when_contains = self.failed_when_contains
+
+        # type hint is due to the TimeoutModifier wrapper returning `Any` so that we dont anger the
+        # asyncio parts (which will get an awaitable not a Response returned)
+        response: Response = await super().send_interactive(
+            interact_events=interact_events,
+            failed_when_contains=failed_when_contains,
+            timeout_ops=timeout_ops,
         )
         self._update_response(response=response)
 
@@ -417,6 +435,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
         stop_on_failed: bool = False,
         privilege_level: str = &#34;&#34;,
         *,
+        eager: bool = False,
         timeout_ops: Optional[float] = None,
     ) -&gt; Response:
         &#34;&#34;&#34;
@@ -435,6 +454,9 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
                 JunosDriver. You can also pass in a name of a configuration session such as
                 &#34;my-config-session&#34; if you have registered a session using the
                 &#34;register_config_session&#34; method of the EOSDriver or NXOSDriver.
+            eager: if eager is True we do not read until prompt is seen at each command sent to the
+                channel. Do *not* use this unless you know what you are doing as it is possible that
+                it can make scrapli less reliable!
             timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER CONFIG sent, not for the total
@@ -456,6 +478,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
             privilege_level=privilege_level,
+            eager=eager,
             timeout_ops=timeout_ops,
         )
         return self._post_send_config(config=config, multi_response=multi_response)
@@ -468,8 +491,9 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
         stop_on_failed: bool = False,
         privilege_level: str = &#34;&#34;,
         *,
+        eager: bool = False,
         timeout_ops: Optional[float] = None,
-    ) -&gt; ScrapliMultiResponse:
+    ) -&gt; MultiResponse:
         &#34;&#34;&#34;
         Send configuration(s)
 
@@ -486,13 +510,16 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
                 JunosDriver. You can also pass in a name of a configuration session such as
                 &#34;my-config-session&#34; if you have registered a session using the
                 &#34;register_config_session&#34; method of the EOSDriver or NXOSDriver.
+            eager: if eager is True we do not read until prompt is seen at each command sent to the
+                channel. Do *not* use this unless you know what you are doing as it is possible that
+                it can make scrapli less reliable!
             timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER CONFIG sent, not for the total
                 of the configs being sent!
 
         Returns:
-            ScrapliMultiResponse: Scrapli MultiResponse object
+            MultiResponse: Scrapli MultiResponse object
 
         Raises:
             N/A
@@ -507,22 +534,16 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
         if self._current_priv_level.name != resolved_privilege_level:
             await self.acquire_priv(desired_priv=resolved_privilege_level)
 
-        responses = MultiResponse()
-        _failed_during_execution = False
-        for config in configs:
-            response = await super().send_command(
-                command=config,
-                strip_prompt=strip_prompt,
-                failed_when_contains=failed_when_contains,
-                timeout_ops=timeout_ops,
-            )
-            responses.append(response)
-            if response.failed is True:
-                _failed_during_execution = True
-                if stop_on_failed is True:
-                    break
+        responses = await super().send_commands(
+            commands=configs,
+            strip_prompt=strip_prompt,
+            failed_when_contains=failed_when_contains,
+            stop_on_failed=stop_on_failed,
+            eager=eager,
+            timeout_ops=timeout_ops,
+        )
 
-        if _failed_during_execution is True:
+        if responses.failed:
             await self._abort_config()
 
         return self._post_send_configs(responses=responses)
@@ -535,8 +556,9 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
         stop_on_failed: bool = False,
         privilege_level: str = &#34;&#34;,
         *,
+        eager: bool = False,
         timeout_ops: Optional[float] = None,
-    ) -&gt; ScrapliMultiResponse:
+    ) -&gt; MultiResponse:
         &#34;&#34;&#34;
         Send configuration(s) from a file
 
@@ -553,13 +575,16 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
                 in a name of a configuration session such as &#34;session_mysession&#34; if you have
                 registered a session using the &#34;register_config_session&#34; method of the EOSDriver or
                 NXOSDriver.
+            eager: if eager is True we do not read until prompt is seen at each command sent to the
+                channel. Do *not* use this unless you know what you are doing as it is possible that
+                it can make scrapli less reliable!
             timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER CONFIG sent, not for the total
                 of the configs being sent!
 
         Returns:
-            ScrapliMultiResponse: Scrapli MultiResponse object
+            MultiResponse: Scrapli MultiResponse object
 
         Raises:
             N/A
@@ -573,6 +598,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
             privilege_level=privilege_level,
+            eager=eager,
             timeout_ops=timeout_ops,
         )</code></pre>
 </details>
@@ -809,8 +835,9 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         *,
+        eager: bool = False,
         timeout_ops: Optional[float] = None,
-    ) -&gt; ScrapliMultiResponse:
+    ) -&gt; MultiResponse:
         &#34;&#34;&#34;
         Send multiple commands
 
@@ -822,13 +849,16 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
             failed_when_contains: string or list of strings indicating failure if found in response
             stop_on_failed: True/False stop executing commands if a command fails, returns results
                 as of current execution
+            eager: if eager is True we do not read until prompt is seen at each command sent to the
+                channel. Do *not* use this unless you know what you are doing as it is possible that
+                it can make scrapli less reliable!
             timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER COMMAND sent, not for the total
                 of the commands being sent!
 
         Returns:
-            ScrapliMultiResponse: Scrapli MultiResponse object
+            MultiResponse: Scrapli MultiResponse object
 
         Raises:
             N/A
@@ -845,6 +875,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
             strip_prompt=strip_prompt,
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
+            eager=eager,
             timeout_ops=timeout_ops,
         )
 
@@ -860,8 +891,9 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         *,
+        eager: bool = False,
         timeout_ops: Optional[float] = None,
-    ) -&gt; ScrapliMultiResponse:
+    ) -&gt; MultiResponse:
         &#34;&#34;&#34;
         Send command(s) from file
 
@@ -871,13 +903,16 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
             failed_when_contains: string or list of strings indicating failure if found in response
             stop_on_failed: True/False stop executing commands if a command fails, returns results
                 as of current execution
+            eager: if eager is True we do not read until prompt is seen at each command sent to the
+                channel. Do *not* use this unless you know what you are doing as it is possible that
+                it can make scrapli less reliable!
             timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER COMMAND sent, not for the total
                 of the commands being sent!
 
         Returns:
-            ScrapliMultiResponse: Scrapli MultiResponse object
+            MultiResponse: Scrapli MultiResponse object
 
         Raises:
             N/A
@@ -894,6 +929,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
             strip_prompt=strip_prompt,
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
+            eager=eager,
             timeout_ops=timeout_ops,
         )
 
@@ -902,6 +938,8 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         interact_events: List[Tuple[str, str, Optional[bool]]],
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         privilege_level: str = &#34;&#34;,
+        *,
+        timeout_ops: Optional[float] = None,
     ) -&gt; Response:
         &#34;&#34;&#34;
         Interact with a device with changing prompts per input.
@@ -957,6 +995,10 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
             failed_when_contains: list of strings that, if present in final output, represent a
                 failed command/interaction
             privilege_level: name of the privilege level to operate in
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed. Note that this is the timeout value PER COMMAND sent, not for the total
+                of the commands being sent!
 
         Returns:
             Response: scrapli Response object
@@ -974,8 +1016,16 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 
         if self._current_priv_level.name != resolved_privilege_level:
             await self.acquire_priv(desired_priv=resolved_privilege_level)
-        response = await super().send_interactive(
-            interact_events=interact_events, failed_when_contains=failed_when_contains
+
+        if failed_when_contains is None:
+            failed_when_contains = self.failed_when_contains
+
+        # type hint is due to the TimeoutModifier wrapper returning `Any` so that we dont anger the
+        # asyncio parts (which will get an awaitable not a Response returned)
+        response: Response = await super().send_interactive(
+            interact_events=interact_events,
+            failed_when_contains=failed_when_contains,
+            timeout_ops=timeout_ops,
         )
         self._update_response(response=response)
 
@@ -1004,6 +1054,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         stop_on_failed: bool = False,
         privilege_level: str = &#34;&#34;,
         *,
+        eager: bool = False,
         timeout_ops: Optional[float] = None,
     ) -&gt; Response:
         &#34;&#34;&#34;
@@ -1022,6 +1073,9 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
                 JunosDriver. You can also pass in a name of a configuration session such as
                 &#34;my-config-session&#34; if you have registered a session using the
                 &#34;register_config_session&#34; method of the EOSDriver or NXOSDriver.
+            eager: if eager is True we do not read until prompt is seen at each command sent to the
+                channel. Do *not* use this unless you know what you are doing as it is possible that
+                it can make scrapli less reliable!
             timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER CONFIG sent, not for the total
@@ -1043,6 +1097,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
             privilege_level=privilege_level,
+            eager=eager,
             timeout_ops=timeout_ops,
         )
         return self._post_send_config(config=config, multi_response=multi_response)
@@ -1055,8 +1110,9 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         stop_on_failed: bool = False,
         privilege_level: str = &#34;&#34;,
         *,
+        eager: bool = False,
         timeout_ops: Optional[float] = None,
-    ) -&gt; ScrapliMultiResponse:
+    ) -&gt; MultiResponse:
         &#34;&#34;&#34;
         Send configuration(s)
 
@@ -1073,13 +1129,16 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
                 JunosDriver. You can also pass in a name of a configuration session such as
                 &#34;my-config-session&#34; if you have registered a session using the
                 &#34;register_config_session&#34; method of the EOSDriver or NXOSDriver.
+            eager: if eager is True we do not read until prompt is seen at each command sent to the
+                channel. Do *not* use this unless you know what you are doing as it is possible that
+                it can make scrapli less reliable!
             timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER CONFIG sent, not for the total
                 of the configs being sent!
 
         Returns:
-            ScrapliMultiResponse: Scrapli MultiResponse object
+            MultiResponse: Scrapli MultiResponse object
 
         Raises:
             N/A
@@ -1094,22 +1153,16 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         if self._current_priv_level.name != resolved_privilege_level:
             await self.acquire_priv(desired_priv=resolved_privilege_level)
 
-        responses = MultiResponse()
-        _failed_during_execution = False
-        for config in configs:
-            response = await super().send_command(
-                command=config,
-                strip_prompt=strip_prompt,
-                failed_when_contains=failed_when_contains,
-                timeout_ops=timeout_ops,
-            )
-            responses.append(response)
-            if response.failed is True:
-                _failed_during_execution = True
-                if stop_on_failed is True:
-                    break
+        responses = await super().send_commands(
+            commands=configs,
+            strip_prompt=strip_prompt,
+            failed_when_contains=failed_when_contains,
+            stop_on_failed=stop_on_failed,
+            eager=eager,
+            timeout_ops=timeout_ops,
+        )
 
-        if _failed_during_execution is True:
+        if responses.failed:
             await self._abort_config()
 
         return self._post_send_configs(responses=responses)
@@ -1122,8 +1175,9 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
         stop_on_failed: bool = False,
         privilege_level: str = &#34;&#34;,
         *,
+        eager: bool = False,
         timeout_ops: Optional[float] = None,
-    ) -&gt; ScrapliMultiResponse:
+    ) -&gt; MultiResponse:
         &#34;&#34;&#34;
         Send configuration(s) from a file
 
@@ -1140,13 +1194,16 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
                 in a name of a configuration session such as &#34;session_mysession&#34; if you have
                 registered a session using the &#34;register_config_session&#34; method of the EOSDriver or
                 NXOSDriver.
+            eager: if eager is True we do not read until prompt is seen at each command sent to the
+                channel. Do *not* use this unless you know what you are doing as it is possible that
+                it can make scrapli less reliable!
             timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER CONFIG sent, not for the total
                 of the configs being sent!
 
         Returns:
-            ScrapliMultiResponse: Scrapli MultiResponse object
+            MultiResponse: Scrapli MultiResponse object
 
         Raises:
             N/A
@@ -1160,6 +1217,7 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
             privilege_level=privilege_level,
+            eager=eager,
             timeout_ops=timeout_ops,
         )</code></pre>
 </details>
@@ -1187,6 +1245,10 @@ for normal "command" operations (<code>send_command</code>, <code>send_commands<
 <div class="desc"></div>
 </dd>
 <dt id="scrapli.driver.async_network_driver.AsyncNetworkDriver.comms_prompt_pattern"><code class="name">var <span class="ident">comms_prompt_pattern</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="scrapli.driver.async_network_driver.AsyncNetworkDriver.default_desired_privilege_level"><code class="name">var <span class="ident">default_desired_privilege_level</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1353,7 +1415,7 @@ completed</dd>
 </details>
 </dd>
 <dt id="scrapli.driver.async_network_driver.AsyncNetworkDriver.send_commands"><code class="name flex">
-<span>async def <span class="ident">send_commands</span></span>(<span>self, commands: List[str], strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, *, timeout_ops: Union[float, NoneType] = None) ‑> collections.UserList</span>
+<span>async def <span class="ident">send_commands</span></span>(<span>self, commands: List[str], strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, *, eager: bool = False, timeout_ops: Union[float, NoneType] = None) ‑> <a title="scrapli.response.MultiResponse" href="../response.html#scrapli.response.MultiResponse">MultiResponse</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send multiple commands</p>
@@ -1369,6 +1431,10 @@ completed</dd>
 <dt><strong><code>stop_on_failed</code></strong></dt>
 <dd>True/False stop executing commands if a command fails, returns results
 as of current execution</dd>
+<dt><strong><code>eager</code></strong></dt>
+<dd>if eager is True we do not read until prompt is seen at each command sent to the
+channel. Do <em>not</em> use this unless you know what you are doing as it is possible that
+it can make scrapli less reliable!</dd>
 <dt><strong><code>timeout_ops</code></strong></dt>
 <dd>timeout ops value for this operation; only sets the timeout_ops value for
 the duration of the operation, value is reset to initial value after operation is
@@ -1377,7 +1443,7 @@ of the commands being sent!</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>ScrapliMultiResponse</code></dt>
+<dt><code>MultiResponse</code></dt>
 <dd>Scrapli MultiResponse object</dd>
 </dl>
 <h2 id="raises">Raises</h2>
@@ -1393,8 +1459,9 @@ of the commands being sent!</dd>
     failed_when_contains: Optional[Union[str, List[str]]] = None,
     stop_on_failed: bool = False,
     *,
+    eager: bool = False,
     timeout_ops: Optional[float] = None,
-) -&gt; ScrapliMultiResponse:
+) -&gt; MultiResponse:
     &#34;&#34;&#34;
     Send multiple commands
 
@@ -1406,13 +1473,16 @@ of the commands being sent!</dd>
         failed_when_contains: string or list of strings indicating failure if found in response
         stop_on_failed: True/False stop executing commands if a command fails, returns results
             as of current execution
+        eager: if eager is True we do not read until prompt is seen at each command sent to the
+            channel. Do *not* use this unless you know what you are doing as it is possible that
+            it can make scrapli less reliable!
         timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
             the duration of the operation, value is reset to initial value after operation is
             completed. Note that this is the timeout value PER COMMAND sent, not for the total
             of the commands being sent!
 
     Returns:
-        ScrapliMultiResponse: Scrapli MultiResponse object
+        MultiResponse: Scrapli MultiResponse object
 
     Raises:
         N/A
@@ -1429,6 +1499,7 @@ of the commands being sent!</dd>
         strip_prompt=strip_prompt,
         failed_when_contains=failed_when_contains,
         stop_on_failed=stop_on_failed,
+        eager=eager,
         timeout_ops=timeout_ops,
     )
 
@@ -1439,7 +1510,7 @@ of the commands being sent!</dd>
 </details>
 </dd>
 <dt id="scrapli.driver.async_network_driver.AsyncNetworkDriver.send_config"><code class="name flex">
-<span>async def <span class="ident">send_config</span></span>(<span>self, config: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '', *, timeout_ops: Union[float, NoneType] = None) ‑> <a title="scrapli.response.Response" href="../response.html#scrapli.response.Response">Response</a></span>
+<span>async def <span class="ident">send_config</span></span>(<span>self, config: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '', *, eager: bool = False, timeout_ops: Union[float, NoneType] = None) ‑> <a title="scrapli.response.Response" href="../response.html#scrapli.response.Response">Response</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send configuration(s)</p>
@@ -1462,6 +1533,10 @@ would be "configuration_exclusive" for IOSXRDriver, or "configuration_private" f
 JunosDriver. You can also pass in a name of a configuration session such as
 "my-config-session" if you have registered a session using the
 "register_config_session" method of the EOSDriver or NXOSDriver.</dd>
+<dt><strong><code>eager</code></strong></dt>
+<dd>if eager is True we do not read until prompt is seen at each command sent to the
+channel. Do <em>not</em> use this unless you know what you are doing as it is possible that
+it can make scrapli less reliable!</dd>
 <dt><strong><code>timeout_ops</code></strong></dt>
 <dd>timeout ops value for this operation; only sets the timeout_ops value for
 the duration of the operation, value is reset to initial value after operation is
@@ -1487,6 +1562,7 @@ of the configs being sent!</dd>
     stop_on_failed: bool = False,
     privilege_level: str = &#34;&#34;,
     *,
+    eager: bool = False,
     timeout_ops: Optional[float] = None,
 ) -&gt; Response:
     &#34;&#34;&#34;
@@ -1505,6 +1581,9 @@ of the configs being sent!</dd>
             JunosDriver. You can also pass in a name of a configuration session such as
             &#34;my-config-session&#34; if you have registered a session using the
             &#34;register_config_session&#34; method of the EOSDriver or NXOSDriver.
+        eager: if eager is True we do not read until prompt is seen at each command sent to the
+            channel. Do *not* use this unless you know what you are doing as it is possible that
+            it can make scrapli less reliable!
         timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
             the duration of the operation, value is reset to initial value after operation is
             completed. Note that this is the timeout value PER CONFIG sent, not for the total
@@ -1526,13 +1605,14 @@ of the configs being sent!</dd>
         failed_when_contains=failed_when_contains,
         stop_on_failed=stop_on_failed,
         privilege_level=privilege_level,
+        eager=eager,
         timeout_ops=timeout_ops,
     )
     return self._post_send_config(config=config, multi_response=multi_response)</code></pre>
 </details>
 </dd>
 <dt id="scrapli.driver.async_network_driver.AsyncNetworkDriver.send_configs"><code class="name flex">
-<span>async def <span class="ident">send_configs</span></span>(<span>self, configs: List[str], strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '', *, timeout_ops: Union[float, NoneType] = None) ‑> collections.UserList</span>
+<span>async def <span class="ident">send_configs</span></span>(<span>self, configs: List[str], strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '', *, eager: bool = False, timeout_ops: Union[float, NoneType] = None) ‑> <a title="scrapli.response.MultiResponse" href="../response.html#scrapli.response.MultiResponse">MultiResponse</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send configuration(s)</p>
@@ -1555,6 +1635,10 @@ would be "configuration_exclusive" for IOSXRDriver, or "configuration_private" f
 JunosDriver. You can also pass in a name of a configuration session such as
 "my-config-session" if you have registered a session using the
 "register_config_session" method of the EOSDriver or NXOSDriver.</dd>
+<dt><strong><code>eager</code></strong></dt>
+<dd>if eager is True we do not read until prompt is seen at each command sent to the
+channel. Do <em>not</em> use this unless you know what you are doing as it is possible that
+it can make scrapli less reliable!</dd>
 <dt><strong><code>timeout_ops</code></strong></dt>
 <dd>timeout ops value for this operation; only sets the timeout_ops value for
 the duration of the operation, value is reset to initial value after operation is
@@ -1563,7 +1647,7 @@ of the configs being sent!</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>ScrapliMultiResponse</code></dt>
+<dt><code>MultiResponse</code></dt>
 <dd>Scrapli MultiResponse object</dd>
 </dl>
 <h2 id="raises">Raises</h2>
@@ -1580,8 +1664,9 @@ of the configs being sent!</dd>
     stop_on_failed: bool = False,
     privilege_level: str = &#34;&#34;,
     *,
+    eager: bool = False,
     timeout_ops: Optional[float] = None,
-) -&gt; ScrapliMultiResponse:
+) -&gt; MultiResponse:
     &#34;&#34;&#34;
     Send configuration(s)
 
@@ -1598,13 +1683,16 @@ of the configs being sent!</dd>
             JunosDriver. You can also pass in a name of a configuration session such as
             &#34;my-config-session&#34; if you have registered a session using the
             &#34;register_config_session&#34; method of the EOSDriver or NXOSDriver.
+        eager: if eager is True we do not read until prompt is seen at each command sent to the
+            channel. Do *not* use this unless you know what you are doing as it is possible that
+            it can make scrapli less reliable!
         timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
             the duration of the operation, value is reset to initial value after operation is
             completed. Note that this is the timeout value PER CONFIG sent, not for the total
             of the configs being sent!
 
     Returns:
-        ScrapliMultiResponse: Scrapli MultiResponse object
+        MultiResponse: Scrapli MultiResponse object
 
     Raises:
         N/A
@@ -1619,29 +1707,23 @@ of the configs being sent!</dd>
     if self._current_priv_level.name != resolved_privilege_level:
         await self.acquire_priv(desired_priv=resolved_privilege_level)
 
-    responses = MultiResponse()
-    _failed_during_execution = False
-    for config in configs:
-        response = await super().send_command(
-            command=config,
-            strip_prompt=strip_prompt,
-            failed_when_contains=failed_when_contains,
-            timeout_ops=timeout_ops,
-        )
-        responses.append(response)
-        if response.failed is True:
-            _failed_during_execution = True
-            if stop_on_failed is True:
-                break
+    responses = await super().send_commands(
+        commands=configs,
+        strip_prompt=strip_prompt,
+        failed_when_contains=failed_when_contains,
+        stop_on_failed=stop_on_failed,
+        eager=eager,
+        timeout_ops=timeout_ops,
+    )
 
-    if _failed_during_execution is True:
+    if responses.failed:
         await self._abort_config()
 
     return self._post_send_configs(responses=responses)</code></pre>
 </details>
 </dd>
 <dt id="scrapli.driver.async_network_driver.AsyncNetworkDriver.send_configs_from_file"><code class="name flex">
-<span>async def <span class="ident">send_configs_from_file</span></span>(<span>self, file: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '', *, timeout_ops: Union[float, NoneType] = None) ‑> collections.UserList</span>
+<span>async def <span class="ident">send_configs_from_file</span></span>(<span>self, file: str, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '', *, eager: bool = False, timeout_ops: Union[float, NoneType] = None) ‑> <a title="scrapli.response.MultiResponse" href="../response.html#scrapli.response.MultiResponse">MultiResponse</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send configuration(s) from a file</p>
@@ -1664,6 +1746,10 @@ would be "exclusive" for IOSXRDriver, "private" for JunosDriver. You can also pa
 in a name of a configuration session such as "session_mysession" if you have
 registered a session using the "register_config_session" method of the EOSDriver or
 NXOSDriver.</dd>
+<dt><strong><code>eager</code></strong></dt>
+<dd>if eager is True we do not read until prompt is seen at each command sent to the
+channel. Do <em>not</em> use this unless you know what you are doing as it is possible that
+it can make scrapli less reliable!</dd>
 <dt><strong><code>timeout_ops</code></strong></dt>
 <dd>timeout ops value for this operation; only sets the timeout_ops value for
 the duration of the operation, value is reset to initial value after operation is
@@ -1672,7 +1758,7 @@ of the configs being sent!</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>ScrapliMultiResponse</code></dt>
+<dt><code>MultiResponse</code></dt>
 <dd>Scrapli MultiResponse object</dd>
 </dl>
 <h2 id="raises">Raises</h2>
@@ -1689,8 +1775,9 @@ of the configs being sent!</dd>
     stop_on_failed: bool = False,
     privilege_level: str = &#34;&#34;,
     *,
+    eager: bool = False,
     timeout_ops: Optional[float] = None,
-) -&gt; ScrapliMultiResponse:
+) -&gt; MultiResponse:
     &#34;&#34;&#34;
     Send configuration(s) from a file
 
@@ -1707,13 +1794,16 @@ of the configs being sent!</dd>
             in a name of a configuration session such as &#34;session_mysession&#34; if you have
             registered a session using the &#34;register_config_session&#34; method of the EOSDriver or
             NXOSDriver.
+        eager: if eager is True we do not read until prompt is seen at each command sent to the
+            channel. Do *not* use this unless you know what you are doing as it is possible that
+            it can make scrapli less reliable!
         timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
             the duration of the operation, value is reset to initial value after operation is
             completed. Note that this is the timeout value PER CONFIG sent, not for the total
             of the configs being sent!
 
     Returns:
-        ScrapliMultiResponse: Scrapli MultiResponse object
+        MultiResponse: Scrapli MultiResponse object
 
     Raises:
         N/A
@@ -1727,12 +1817,13 @@ of the configs being sent!</dd>
         failed_when_contains=failed_when_contains,
         stop_on_failed=stop_on_failed,
         privilege_level=privilege_level,
+        eager=eager,
         timeout_ops=timeout_ops,
     )</code></pre>
 </details>
 </dd>
 <dt id="scrapli.driver.async_network_driver.AsyncNetworkDriver.send_interactive"><code class="name flex">
-<span>async def <span class="ident">send_interactive</span></span>(<span>self, interact_events: List[Tuple[str, str, Union[bool, NoneType]]], failed_when_contains: Union[str, List[str], NoneType] = None, privilege_level: str = '') ‑> <a title="scrapli.response.Response" href="../response.html#scrapli.response.Response">Response</a></span>
+<span>async def <span class="ident">send_interactive</span></span>(<span>self, interact_events: List[Tuple[str, str, Union[bool, NoneType]]], failed_when_contains: Union[str, List[str], NoneType] = None, privilege_level: str = '', *, timeout_ops: Union[float, NoneType] = None) ‑> <a title="scrapli.response.Response" href="../response.html#scrapli.response.Response">Response</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Interact with a device with changing prompts per input.</p>
@@ -1783,6 +1874,11 @@ not provided it is assumed the input is "normal" (not hidden)</dd>
 failed command/interaction</dd>
 <dt><strong><code>privilege_level</code></strong></dt>
 <dd>name of the privilege level to operate in</dd>
+<dt><strong><code>timeout_ops</code></strong></dt>
+<dd>timeout ops value for this operation; only sets the timeout_ops value for
+the duration of the operation, value is reset to initial value after operation is
+completed. Note that this is the timeout value PER COMMAND sent, not for the total
+of the commands being sent!</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -1800,6 +1896,8 @@ failed command/interaction</dd>
     interact_events: List[Tuple[str, str, Optional[bool]]],
     failed_when_contains: Optional[Union[str, List[str]]] = None,
     privilege_level: str = &#34;&#34;,
+    *,
+    timeout_ops: Optional[float] = None,
 ) -&gt; Response:
     &#34;&#34;&#34;
     Interact with a device with changing prompts per input.
@@ -1855,6 +1953,10 @@ failed command/interaction</dd>
         failed_when_contains: list of strings that, if present in final output, represent a
             failed command/interaction
         privilege_level: name of the privilege level to operate in
+        timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+            the duration of the operation, value is reset to initial value after operation is
+            completed. Note that this is the timeout value PER COMMAND sent, not for the total
+            of the commands being sent!
 
     Returns:
         Response: scrapli Response object
@@ -1872,8 +1974,16 @@ failed command/interaction</dd>
 
     if self._current_priv_level.name != resolved_privilege_level:
         await self.acquire_priv(desired_priv=resolved_privilege_level)
-    response = await super().send_interactive(
-        interact_events=interact_events, failed_when_contains=failed_when_contains
+
+    if failed_when_contains is None:
+        failed_when_contains = self.failed_when_contains
+
+    # type hint is due to the TimeoutModifier wrapper returning `Any` so that we dont anger the
+    # asyncio parts (which will get an awaitable not a Response returned)
+    response: Response = await super().send_interactive(
+        interact_events=interact_events,
+        failed_when_contains=failed_when_contains,
+        timeout_ops=timeout_ops,
     )
     self._update_response(response=response)
 
@@ -1923,6 +2033,7 @@ failed command/interaction</dd>
 <li><code><a title="scrapli.driver.async_network_driver.AsyncNetworkDriver.acquire_priv" href="#scrapli.driver.async_network_driver.AsyncNetworkDriver.acquire_priv">acquire_priv</a></code></li>
 <li><code><a title="scrapli.driver.async_network_driver.AsyncNetworkDriver.auth_secondary" href="#scrapli.driver.async_network_driver.AsyncNetworkDriver.auth_secondary">auth_secondary</a></code></li>
 <li><code><a title="scrapli.driver.async_network_driver.AsyncNetworkDriver.comms_prompt_pattern" href="#scrapli.driver.async_network_driver.AsyncNetworkDriver.comms_prompt_pattern">comms_prompt_pattern</a></code></li>
+<li><code><a title="scrapli.driver.async_network_driver.AsyncNetworkDriver.default_desired_privilege_level" href="#scrapli.driver.async_network_driver.AsyncNetworkDriver.default_desired_privilege_level">default_desired_privilege_level</a></code></li>
 <li><code><a title="scrapli.driver.async_network_driver.AsyncNetworkDriver.failed_when_contains" href="#scrapli.driver.async_network_driver.AsyncNetworkDriver.failed_when_contains">failed_when_contains</a></code></li>
 <li><code><a title="scrapli.driver.async_network_driver.AsyncNetworkDriver.genie_platform" href="#scrapli.driver.async_network_driver.AsyncNetworkDriver.genie_platform">genie_platform</a></code></li>
 <li><code><a title="scrapli.driver.async_network_driver.AsyncNetworkDriver.logger" href="#scrapli.driver.async_network_driver.AsyncNetworkDriver.logger">logger</a></code></li>
@@ -1942,7 +2053,7 @@ failed command/interaction</dd>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

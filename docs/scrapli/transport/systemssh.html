@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>scrapli.transport.systemssh API documentation</title>
 <meta name="description" content="scrapli.transport.systemssh" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -32,9 +32,8 @@ import re
 from typing import Any, Dict, Optional
 
 from scrapli.decorators import OperationTimeout, requires_open_session
-from scrapli.exceptions import ScrapliAuthenticationFailed
+from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliConnectionLost
 from scrapli.helper import get_prompt_pattern, strip_ansi
-from scrapli.ssh_config import SSHConfig
 from scrapli.transport.ptyprocess import PtyProcess
 from scrapli.transport.transport import Transport
 
@@ -65,9 +64,9 @@ class SystemSSHTransport(Transport):
         auth_password: str = &#34;&#34;,
         auth_strict_key: bool = True,
         auth_bypass: bool = False,
-        timeout_socket: int = 5,
-        timeout_transport: int = 5,
-        timeout_ops: float = 10,
+        timeout_socket: int = 10,
+        timeout_transport: int = 30,
+        timeout_ops: float = 30,
         timeout_exit: bool = True,
         comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]$&#34;,
         comms_return_char: str = &#34;\n&#34;,
@@ -180,8 +179,9 @@ class SystemSSHTransport(Transport):
         self._comms_prompt_pattern: str = comms_prompt_pattern
         self._comms_return_char: str = comms_return_char
         self._comms_ansi: bool = comms_ansi
-        self._process_ssh_config(ssh_config_file)
-        self.ssh_known_hosts_file: str = ssh_known_hosts_file
+
+        self.ssh_config_file = ssh_config_file
+        self.ssh_known_hosts_file = ssh_known_hosts_file
 
         self.session: PtyProcess
         self.lib_auth_exception = ScrapliAuthenticationFailed
@@ -192,27 +192,6 @@ class SystemSSHTransport(Transport):
 
         self.open_cmd = [&#34;ssh&#34;, self.host]
         self._build_open_cmd()
-
-    def _process_ssh_config(self, ssh_config_file: str) -&gt; None:
-        &#34;&#34;&#34;
-        Method to parse ssh config file
-
-        Ensure ssh_config_file is valid (if providing a string path to config file), or resolve
-        config file if passed True.
-
-        Args:
-            ssh_config_file: string path to ssh config file; passed down from `Scrape`, or the
-                `NetworkDriver` or subclasses of it, in most cases.
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        ssh = SSHConfig(ssh_config_file=ssh_config_file)
-        self.ssh_config_file = ssh.ssh_config_file
 
     def _build_open_cmd(self) -&gt; None:
         &#34;&#34;&#34;
@@ -539,11 +518,19 @@ class SystemSSHTransport(Transport):
             bytes: bytes output as read from channel
 
         Raises:
-            N/A
+            ScrapliConnectionLost: if we get EOF reading from transport
 
         &#34;&#34;&#34;
         read_bytes = 65535
-        return self.session.read(read_bytes)
+        try:
+            return self.session.read(read_bytes)
+        except EOFError as exc:
+            msg = (
+                &#34;encountered end of file error reading from system transport, typically this means &#34;
+                &#34;that the device has closed the connection&#34;
+            )
+            self.logger.critical(msg)
+            raise ScrapliConnectionLost(msg) from exc
 
     @requires_open_session()
     def write(self, channel_input: str) -&gt; None:
@@ -590,7 +577,7 @@ class SystemSSHTransport(Transport):
 <dl>
 <dt id="scrapli.transport.systemssh.SystemSSHTransport"><code class="flex name class">
 <span>class <span class="ident">SystemSSHTransport</span></span>
-<span>(</span><span>host: str = '', port: int = 22, auth_username: str = '', auth_private_key: str = '', auth_private_key_passphrase: str = '', auth_password: str = '', auth_strict_key: bool = True, auth_bypass: bool = False, timeout_socket: int = 5, timeout_transport: int = 5, timeout_ops: float = 10, timeout_exit: bool = True, comms_prompt_pattern: str = &#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char: str = '\n', comms_ansi: bool = False, ssh_config_file: str = '', ssh_known_hosts_file: str = '', transport_options: Union[Dict[str, Any], NoneType] = None)</span>
+<span>(</span><span>host: str = '', port: int = 22, auth_username: str = '', auth_private_key: str = '', auth_private_key_passphrase: str = '', auth_password: str = '', auth_strict_key: bool = True, auth_bypass: bool = False, timeout_socket: int = 10, timeout_transport: int = 30, timeout_ops: float = 30, timeout_exit: bool = True, comms_prompt_pattern: str = &#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char: str = '\n', comms_ansi: bool = False, ssh_config_file: str = '', ssh_known_hosts_file: str = '', transport_options: Union[Dict[str, Any], NoneType] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -707,9 +694,9 @@ set the window size of the pty process that is created.</dd>
         auth_password: str = &#34;&#34;,
         auth_strict_key: bool = True,
         auth_bypass: bool = False,
-        timeout_socket: int = 5,
-        timeout_transport: int = 5,
-        timeout_ops: float = 10,
+        timeout_socket: int = 10,
+        timeout_transport: int = 30,
+        timeout_ops: float = 30,
         timeout_exit: bool = True,
         comms_prompt_pattern: str = r&#34;^[a-z0-9.\-@()/:]{1,32}[#&gt;$]$&#34;,
         comms_return_char: str = &#34;\n&#34;,
@@ -822,8 +809,9 @@ set the window size of the pty process that is created.</dd>
         self._comms_prompt_pattern: str = comms_prompt_pattern
         self._comms_return_char: str = comms_return_char
         self._comms_ansi: bool = comms_ansi
-        self._process_ssh_config(ssh_config_file)
-        self.ssh_known_hosts_file: str = ssh_known_hosts_file
+
+        self.ssh_config_file = ssh_config_file
+        self.ssh_known_hosts_file = ssh_known_hosts_file
 
         self.session: PtyProcess
         self.lib_auth_exception = ScrapliAuthenticationFailed
@@ -834,27 +822,6 @@ set the window size of the pty process that is created.</dd>
 
         self.open_cmd = [&#34;ssh&#34;, self.host]
         self._build_open_cmd()
-
-    def _process_ssh_config(self, ssh_config_file: str) -&gt; None:
-        &#34;&#34;&#34;
-        Method to parse ssh config file
-
-        Ensure ssh_config_file is valid (if providing a string path to config file), or resolve
-        config file if passed True.
-
-        Args:
-            ssh_config_file: string path to ssh config file; passed down from `Scrape`, or the
-                `NetworkDriver` or subclasses of it, in most cases.
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        ssh = SSHConfig(ssh_config_file=ssh_config_file)
-        self.ssh_config_file = ssh.ssh_config_file
 
     def _build_open_cmd(self) -&gt; None:
         &#34;&#34;&#34;
@@ -1181,11 +1148,19 @@ set the window size of the pty process that is created.</dd>
             bytes: bytes output as read from channel
 
         Raises:
-            N/A
+            ScrapliConnectionLost: if we get EOF reading from transport
 
         &#34;&#34;&#34;
         read_bytes = 65535
-        return self.session.read(read_bytes)
+        try:
+            return self.session.read(read_bytes)
+        except EOFError as exc:
+            msg = (
+                &#34;encountered end of file error reading from system transport, typically this means &#34;
+                &#34;that the device has closed the connection&#34;
+            )
+            self.logger.critical(msg)
+            raise ScrapliConnectionLost(msg) from exc
 
     @requires_open_session()
     def write(self, channel_input: str) -&gt; None:
@@ -1342,7 +1317,7 @@ set the window size of the pty process that is created.</dd>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

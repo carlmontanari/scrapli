@@ -33,7 +33,7 @@ class TransportBase(ABC):
             N/A
 
         """
-        self.logger = getLogger(f"scrapli.transport-{host}")
+        self.logger = getLogger(f"scrapli.{host}:{port}.transport")
         attach_duplicate_log_filter(logger=self.logger)
 
         self.host: str = host

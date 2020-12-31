@@ -225,7 +225,7 @@ def textfsm_parse(
             )
         return structured_output
     except textfsm.parser.TextFSMError:
-        LOG.info("failed to parse data with textfsm")
+        LOG.warning("failed to parse data with textfsm")
     return []
 
 
@@ -272,7 +272,7 @@ def genie_parse(platform: str, command: str, output: str) -> Union[List[Any], Di
         if isinstance(genie_parsed_result, (list, dict)):
             return genie_parsed_result
     except Exception as exc:  # pylint: disable=W0703
-        LOG.error(f"failed to parse data with genie, genie raised exception: `{exc}`")
+        LOG.warning(f"failed to parse data with genie, genie raised exception: `{exc}`")
     return []
 
 

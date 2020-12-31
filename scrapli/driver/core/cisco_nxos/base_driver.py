@@ -17,7 +17,7 @@ PRIVS = {
     ),
     "privilege_exec": (
         PrivilegeLevel(
-            pattern=r"^[a-z0-9.\-_@/:]{1,63}#\s?$",
+            pattern=r"^((?!\-tcl)[a-z0-9.\-_@/:]){1,63}#\s?$",
             name="privilege_exec",
             previous_priv="exec",
             deescalate="disable",
@@ -28,11 +28,22 @@ PRIVS = {
     ),
     "configuration": (
         PrivilegeLevel(
-            pattern=r"^[a-z0-9.\-_@/:]{1,63}\(config(?!\-s)[a-z0-9.\-@/:]{0,32}\)#\s?$",
+            pattern=r"^[a-z0-9.\-_@/:]{1,63}\(config(?!\-s)(?!\-tcl)[a-z0-9.\-@/:]{0,32}\)#\s?$",
             name="configuration",
             previous_priv="privilege_exec",
             deescalate="end",
             escalate="configure terminal",
+            escalate_auth=False,
+            escalate_prompt="",
+        )
+    ),
+    "tclsh": (
+        PrivilegeLevel(
+            pattern=r"(^[a-z0-9.\-_@/:]{1,63}\-tcl#\s?$)|(^>\s?$)",
+            name="tclsh",
+            previous_priv="privilege_exec",
+            deescalate="tclquit",
+            escalate="tclsh",
             escalate_auth=False,
             escalate_prompt="",
         )

@@ -3,9 +3,8 @@ import re
 from typing import Any, Dict, Optional
 
 from scrapli.decorators import OperationTimeout, requires_open_session
-from scrapli.exceptions import ScrapliAuthenticationFailed
+from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliConnectionLost
 from scrapli.helper import get_prompt_pattern, strip_ansi
-from scrapli.ssh_config import SSHConfig
 from scrapli.transport.ptyprocess import PtyProcess
 from scrapli.transport.transport import Transport
 
@@ -36,9 +35,9 @@ class SystemSSHTransport(Transport):
         auth_password: str = "",
         auth_strict_key: bool = True,
         auth_bypass: bool = False,
-        timeout_socket: int = 5,
-        timeout_transport: int = 5,
-        timeout_ops: float = 10,
+        timeout_socket: int = 10,
+        timeout_transport: int = 30,
+        timeout_ops: float = 30,
         timeout_exit: bool = True,
         comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]$",
         comms_return_char: str = "\n",
@@ -151,8 +150,9 @@ class SystemSSHTransport(Transport):
         self._comms_prompt_pattern: str = comms_prompt_pattern
         self._comms_return_char: str = comms_return_char
         self._comms_ansi: bool = comms_ansi
-        self._process_ssh_config(ssh_config_file)
-        self.ssh_known_hosts_file: str = ssh_known_hosts_file
+
+        self.ssh_config_file = ssh_config_file
+        self.ssh_known_hosts_file = ssh_known_hosts_file
 
         self.session: PtyProcess
         self.lib_auth_exception = ScrapliAuthenticationFailed
@@ -163,27 +163,6 @@ class SystemSSHTransport(Transport):
 
         self.open_cmd = ["ssh", self.host]
         self._build_open_cmd()
-
-    def _process_ssh_config(self, ssh_config_file: str) -> None:
-        """
-        Method to parse ssh config file
-
-        Ensure ssh_config_file is valid (if providing a string path to config file), or resolve
-        config file if passed True.
-
-        Args:
-            ssh_config_file: string path to ssh config file; passed down from `Scrape`, or the
-                `NetworkDriver` or subclasses of it, in most cases.
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        """
-        ssh = SSHConfig(ssh_config_file=ssh_config_file)
-        self.ssh_config_file = ssh.ssh_config_file
 
     def _build_open_cmd(self) -> None:
         """
@@ -510,11 +489,19 @@ class SystemSSHTransport(Transport):
             bytes: bytes output as read from channel
 
         Raises:
-            N/A
+            ScrapliConnectionLost: if we get EOF reading from transport
 
         """
         read_bytes = 65535
-        return self.session.read(read_bytes)
+        try:
+            return self.session.read(read_bytes)
+        except EOFError as exc:
+            msg = (
+                "encountered end of file error reading from system transport, typically this means "
+                "that the device has closed the connection"
+            )
+            self.logger.critical(msg)
+            raise ScrapliConnectionLost(msg) from exc
 
     @requires_open_session()
     def write(self, channel_input: str) -> None:

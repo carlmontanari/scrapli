@@ -997,7 +997,7 @@ interface mgmt0
 line console
 line vty
 xml server timeout 1200
-
+boot nxos bootflash:/nxos.9.2.4.bin
 no priority-flow-control override-interface mode off
 
 !#logging logfile messages 5 size 4194304

@@ -2,7 +2,7 @@
 import pytest
 
 from .async_usage import async_iosxe_driver
-from .basic_usage import generic_driver, iosxe_driver, scrapli_driver
+from .basic_usage import factory, generic_driver, iosxe_driver, scrapli_driver
 from .configuration_modes import eos_configure_session, iosxr_configure_exclusive
 from .logging import basic_logging
 from .ssh_keys import ssh_keys
@@ -18,8 +18,8 @@ async def test_async_usage():
 
 @pytest.mark.parametrize(
     "example_script",
-    [generic_driver, iosxe_driver, scrapli_driver],
-    ids=["generic_driver", "iosxe_driver", "scrapli_driver"],
+    [generic_driver, iosxe_driver, scrapli_driver, factory],
+    ids=["generic_driver", "iosxe_driver", "scrapli_driver", "scrapli_factory"],
 )
 def test_basic_usage(example_script):
     example_script.main()

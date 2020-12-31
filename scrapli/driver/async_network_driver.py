@@ -1,16 +1,10 @@
 """scrapli.driver.async_network_driver"""
-from collections import UserList
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from scrapli.driver.async_generic_driver import AsyncGenericDriver
 from scrapli.driver.base_network_driver import NetworkDriverBase, PrivilegeAction, PrivilegeLevel
 from scrapli.exceptions import CouldNotAcquirePrivLevel
 from scrapli.response import MultiResponse, Response
-
-if TYPE_CHECKING:
-    ScrapliMultiResponse = UserList[Response]  # pylint:  disable=E1136; # pragma:  no cover
-else:
-    ScrapliMultiResponse = UserList
 
 
 class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
@@ -193,8 +187,9 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         *,
+        eager: bool = False,
         timeout_ops: Optional[float] = None,
-    ) -> ScrapliMultiResponse:
+    ) -> MultiResponse:
         """
         Send multiple commands
 
@@ -206,13 +201,16 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
             failed_when_contains: string or list of strings indicating failure if found in response
             stop_on_failed: True/False stop executing commands if a command fails, returns results
                 as of current execution
+            eager: if eager is True we do not read until prompt is seen at each command sent to the
+                channel. Do *not* use this unless you know what you are doing as it is possible that
+                it can make scrapli less reliable!
             timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER COMMAND sent, not for the total
                 of the commands being sent!
 
         Returns:
-            ScrapliMultiResponse: Scrapli MultiResponse object
+            MultiResponse: Scrapli MultiResponse object
 
         Raises:
             N/A
@@ -229,6 +227,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
             strip_prompt=strip_prompt,
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
+            eager=eager,
             timeout_ops=timeout_ops,
         )
 
@@ -244,8 +243,9 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         *,
+        eager: bool = False,
         timeout_ops: Optional[float] = None,
-    ) -> ScrapliMultiResponse:
+    ) -> MultiResponse:
         """
         Send command(s) from file
 
@@ -255,13 +255,16 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
             failed_when_contains: string or list of strings indicating failure if found in response
             stop_on_failed: True/False stop executing commands if a command fails, returns results
                 as of current execution
+            eager: if eager is True we do not read until prompt is seen at each command sent to the
+                channel. Do *not* use this unless you know what you are doing as it is possible that
+                it can make scrapli less reliable!
             timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER COMMAND sent, not for the total
                 of the commands being sent!
 
         Returns:
-            ScrapliMultiResponse: Scrapli MultiResponse object
+            MultiResponse: Scrapli MultiResponse object
 
         Raises:
             N/A
@@ -278,6 +281,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
             strip_prompt=strip_prompt,
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
+            eager=eager,
             timeout_ops=timeout_ops,
         )
 
@@ -286,6 +290,8 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
         interact_events: List[Tuple[str, str, Optional[bool]]],
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         privilege_level: str = "",
+        *,
+        timeout_ops: Optional[float] = None,
     ) -> Response:
         """
         Interact with a device with changing prompts per input.
@@ -341,6 +347,10 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
             failed_when_contains: list of strings that, if present in final output, represent a
                 failed command/interaction
             privilege_level: name of the privilege level to operate in
+            timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
+                the duration of the operation, value is reset to initial value after operation is
+                completed. Note that this is the timeout value PER COMMAND sent, not for the total
+                of the commands being sent!
 
         Returns:
             Response: scrapli Response object
@@ -358,8 +368,16 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
 
         if self._current_priv_level.name != resolved_privilege_level:
             await self.acquire_priv(desired_priv=resolved_privilege_level)
-        response = await super().send_interactive(
-            interact_events=interact_events, failed_when_contains=failed_when_contains
+
+        if failed_when_contains is None:
+            failed_when_contains = self.failed_when_contains
+
+        # type hint is due to the TimeoutModifier wrapper returning `Any` so that we dont anger the
+        # asyncio parts (which will get an awaitable not a Response returned)
+        response: Response = await super().send_interactive(
+            interact_events=interact_events,
+            failed_when_contains=failed_when_contains,
+            timeout_ops=timeout_ops,
         )
         self._update_response(response=response)
 
@@ -388,6 +406,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
         stop_on_failed: bool = False,
         privilege_level: str = "",
         *,
+        eager: bool = False,
         timeout_ops: Optional[float] = None,
     ) -> Response:
         """
@@ -406,6 +425,9 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
                 JunosDriver. You can also pass in a name of a configuration session such as
                 "my-config-session" if you have registered a session using the
                 "register_config_session" method of the EOSDriver or NXOSDriver.
+            eager: if eager is True we do not read until prompt is seen at each command sent to the
+                channel. Do *not* use this unless you know what you are doing as it is possible that
+                it can make scrapli less reliable!
             timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER CONFIG sent, not for the total
@@ -427,6 +449,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
             privilege_level=privilege_level,
+            eager=eager,
             timeout_ops=timeout_ops,
         )
         return self._post_send_config(config=config, multi_response=multi_response)
@@ -439,8 +462,9 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
         stop_on_failed: bool = False,
         privilege_level: str = "",
         *,
+        eager: bool = False,
         timeout_ops: Optional[float] = None,
-    ) -> ScrapliMultiResponse:
+    ) -> MultiResponse:
         """
         Send configuration(s)
 
@@ -457,13 +481,16 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
                 JunosDriver. You can also pass in a name of a configuration session such as
                 "my-config-session" if you have registered a session using the
                 "register_config_session" method of the EOSDriver or NXOSDriver.
+            eager: if eager is True we do not read until prompt is seen at each command sent to the
+                channel. Do *not* use this unless you know what you are doing as it is possible that
+                it can make scrapli less reliable!
             timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER CONFIG sent, not for the total
                 of the configs being sent!
 
         Returns:
-            ScrapliMultiResponse: Scrapli MultiResponse object
+            MultiResponse: Scrapli MultiResponse object
 
         Raises:
             N/A
@@ -478,22 +505,16 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
         if self._current_priv_level.name != resolved_privilege_level:
             await self.acquire_priv(desired_priv=resolved_privilege_level)
 
-        responses = MultiResponse()
-        _failed_during_execution = False
-        for config in configs:
-            response = await super().send_command(
-                command=config,
-                strip_prompt=strip_prompt,
-                failed_when_contains=failed_when_contains,
-                timeout_ops=timeout_ops,
-            )
-            responses.append(response)
-            if response.failed is True:
-                _failed_during_execution = True
-                if stop_on_failed is True:
-                    break
+        responses = await super().send_commands(
+            commands=configs,
+            strip_prompt=strip_prompt,
+            failed_when_contains=failed_when_contains,
+            stop_on_failed=stop_on_failed,
+            eager=eager,
+            timeout_ops=timeout_ops,
+        )
 
-        if _failed_during_execution is True:
+        if responses.failed:
             await self._abort_config()
 
         return self._post_send_configs(responses=responses)
@@ -506,8 +527,9 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
         stop_on_failed: bool = False,
         privilege_level: str = "",
         *,
+        eager: bool = False,
         timeout_ops: Optional[float] = None,
-    ) -> ScrapliMultiResponse:
+    ) -> MultiResponse:
         """
         Send configuration(s) from a file
 
@@ -524,13 +546,16 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
                 in a name of a configuration session such as "session_mysession" if you have
                 registered a session using the "register_config_session" method of the EOSDriver or
                 NXOSDriver.
+            eager: if eager is True we do not read until prompt is seen at each command sent to the
+                channel. Do *not* use this unless you know what you are doing as it is possible that
+                it can make scrapli less reliable!
             timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER CONFIG sent, not for the total
                 of the configs being sent!
 
         Returns:
-            ScrapliMultiResponse: Scrapli MultiResponse object
+            MultiResponse: Scrapli MultiResponse object
 
         Raises:
             N/A
@@ -544,5 +569,6 @@ class AsyncNetworkDriver(AsyncGenericDriver, NetworkDriverBase):
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
             privilege_level=privilege_level,
+            eager=eager,
             timeout_ops=timeout_ops,
         )

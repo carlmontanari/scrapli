@@ -12,12 +12,16 @@ from scrapli.driver.core.cisco_nxos.driver import PRIVS
         ("privilege_exec", "switch# "),
         ("configuration", "switch(config)# "),
         ("privilege_exec", "swi_tch# "),
+        ("tclsh", "switch-tcl# "),
+        ("tclsh", "> "),
     ],
     ids=[
         "exec",
         "privilege_exec",
         "configuration",
         "underscore_privilege_exec",
+        "tclsh",
+        "tclsh_command_mode",
     ],
 )
 def test_prompt_patterns(priv_pattern):

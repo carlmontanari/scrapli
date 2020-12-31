@@ -300,7 +300,7 @@ def requires_open_session() -> Callable[..., Any]:
         decorate: wrapped function
 
     Raises:
-        ConnectionNotOpened: if scrapli connection has not been opened yet
+        ConnectionNotOpened: if scrapli connection has not been opened yet  # noqa: DAR402
 
     """
 

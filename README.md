@@ -183,19 +183,27 @@ scrapli is built primarily in three parts: transport, channel, and driver. The t
  providing a file-like interface to the target server. The channel layer is responsible for reading and writing
   to the provided file-like interface. Finally, the driver provides the user facing API/interface to scrapli.
 
-There are two available "transports" in scrapli "core" -- both of which inherit from a base transport class
+There are three available "transports" in scrapli "core" -- all of which inherit from a base transport class
  and provide the same file-like interface to the upstream channel. There are also (currently!) three transport plugins
   available -- all of which are installable as optional extras. The transport options are:
 
-- [paramiko](https://github.com/paramiko/paramiko) (optional extra)
-- [ssh2-python](https://github.com/ParallelSSH/ssh2-python) (optional extra)
-- OpenSSH/System available SSH (scrapli core)
-- telnetlib (scrapli core)
-- [asyncssh](https://github.com/ronf/asyncssh) (optional extra)
+#### "Core"
+
+- "system" -- OpenSSH/System available SSH binary
+- "telnet" -- Python standard library telnetlib
+- "asynctelnet" -- Python standard library asyncio stream
+
+
+#### Optional Extra/Plugin
+
+- [asyncssh](https://github.com/ronf/asyncssh)
+- [ssh2-python](https://github.com/ParallelSSH/ssh2-python)
+- [paramiko](https://github.com/paramiko/paramiko)
+
 
 A good question to ask at this point is probably "why?". Why multiple transport options? Why not just use paramiko
  like most folks do? Historically the reason for moving away from paramiko was simply speed. ssh2-python is a wrapper
-  around the libssh2 C library, and as such is very very fast. In a prior project
+  around the libssh2 C library, and as such is very, very fast. In a prior project
    ([ssh2net](https://github.com/carlmontanari/ssh2net)), of which scrapli is the successor/evolution, ssh2-python
     was used with great success, however, it is a bit feature-limited, and development had stalled around the same
      time scrapli was getting going.
@@ -217,10 +225,12 @@ With the goal of supporting all of the OpenSSH configuration options the primary
 Adding telnet support via telnetlib was trivial, as the interface is basically the same as SystemSSH, and it turns out
  telnet is still actually useful for things like terminal servers and the like!
 
-Finally, the most recent scrapli transport plugin is the `asyncssh` transport. This transport option represents a
- very big change for scrapli as the entire "backend" was basically re-worked in order to provide the exact same API
-  for both synchronous and asynchronous applications. Currently asyncssh is the only asynchronous transport supported
-  , but of course there could be additional transports (telnetlib3 perhaps?) in the future!
+Next, perhaps the most interesting scrapli transport plugin is the `asyncssh` transport. This transport option 
+represented a very big change for scrapli as the entire "backend" was basically re-worked in order to provide the 
+exact same API for both synchronous and asynchronous applications.
+
+Lastly, the `asynctelnet` transport is the latest (and perhaps last?!) transport plugin. This transport plugin was 
+built with only the python standard library (just like system/telnet) and as such it is part of scrapli "core".
 
 The final piece of scrapli is the actual "driver" -- or the component that binds the transport and channel together and
  deals with instantiation of a scrapli object. There is a "base" driver object -- `Scrape` -- which provides essentially
