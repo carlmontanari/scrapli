@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>scrapli.exceptions API documentation</title>
 <meta name="description" content="scrapli.exceptions" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -46,10 +46,6 @@ class ScrapliTimeout(ScrapliException):
     &#34;&#34;&#34;Exception for any scrapli timeouts&#34;&#34;&#34;
 
 
-class ScrapliKeepaliveFailure(ScrapliException):
-    &#34;&#34;&#34;Exception for scrapli missing keepalives&#34;&#34;&#34;
-
-
 class MissingDependencies(ScrapliException):
     &#34;&#34;&#34;Exception for any missing (probably optional) dependencies&#34;&#34;&#34;
 
@@ -79,7 +75,11 @@ class ConnectionNotOpened(ScrapliException):
 
 
 class UnsupportedPlatform(ScrapliException):
-    &#34;&#34;&#34;Exception for unsupported platform; i.e. using system transport on windows&#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;Exception for unsupported platform; i.e. using system transport on windows&#34;&#34;&#34;
+
+
+class ScrapliConnectionLost(ScrapliException):
+    &#34;&#34;&#34;Exception for underlying connection being lost&#34;&#34;&#34;</code></pre>
 </details>
 </section>
 <section>
@@ -231,6 +231,26 @@ class UnsupportedPlatform(ScrapliException):
 <li>builtins.BaseException</li>
 </ul>
 </dd>
+<dt id="scrapli.exceptions.ScrapliConnectionLost"><code class="flex name class">
+<span>class <span class="ident">ScrapliConnectionLost</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Exception for underlying connection being lost</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ScrapliConnectionLost(ScrapliException):
+    &#34;&#34;&#34;Exception for underlying connection being lost&#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="scrapli.exceptions.ScrapliException" href="#scrapli.exceptions.ScrapliException">ScrapliException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
 <dt id="scrapli.exceptions.ScrapliException"><code class="flex name class">
 <span>class <span class="ident">ScrapliException</span></span>
 <span>(</span><span>*args, **kwargs)</span>
@@ -258,31 +278,11 @@ class UnsupportedPlatform(ScrapliException):
 <li><a title="scrapli.exceptions.SSHNotFound" href="#scrapli.exceptions.SSHNotFound">SSHNotFound</a></li>
 <li><a title="scrapli.exceptions.ScrapliAuthenticationFailed" href="#scrapli.exceptions.ScrapliAuthenticationFailed">ScrapliAuthenticationFailed</a></li>
 <li><a title="scrapli.exceptions.ScrapliCommandFailure" href="#scrapli.exceptions.ScrapliCommandFailure">ScrapliCommandFailure</a></li>
-<li><a title="scrapli.exceptions.ScrapliKeepaliveFailure" href="#scrapli.exceptions.ScrapliKeepaliveFailure">ScrapliKeepaliveFailure</a></li>
+<li><a title="scrapli.exceptions.ScrapliConnectionLost" href="#scrapli.exceptions.ScrapliConnectionLost">ScrapliConnectionLost</a></li>
 <li><a title="scrapli.exceptions.ScrapliTimeout" href="#scrapli.exceptions.ScrapliTimeout">ScrapliTimeout</a></li>
 <li><a title="scrapli.exceptions.TransportPluginError" href="#scrapli.exceptions.TransportPluginError">TransportPluginError</a></li>
 <li><a title="scrapli.exceptions.UnknownPrivLevel" href="#scrapli.exceptions.UnknownPrivLevel">UnknownPrivLevel</a></li>
 <li><a title="scrapli.exceptions.UnsupportedPlatform" href="#scrapli.exceptions.UnsupportedPlatform">UnsupportedPlatform</a></li>
-</ul>
-</dd>
-<dt id="scrapli.exceptions.ScrapliKeepaliveFailure"><code class="flex name class">
-<span>class <span class="ident">ScrapliKeepaliveFailure</span></span>
-<span>(</span><span>*args, **kwargs)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Exception for scrapli missing keepalives</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class ScrapliKeepaliveFailure(ScrapliException):
-    &#34;&#34;&#34;Exception for scrapli missing keepalives&#34;&#34;&#34;</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="scrapli.exceptions.ScrapliException" href="#scrapli.exceptions.ScrapliException">ScrapliException</a></li>
-<li>builtins.Exception</li>
-<li>builtins.BaseException</li>
 </ul>
 </dd>
 <dt id="scrapli.exceptions.ScrapliTimeout"><code class="flex name class">
@@ -403,10 +403,10 @@ class UnsupportedPlatform(ScrapliException):
 <h4><code><a title="scrapli.exceptions.ScrapliCommandFailure" href="#scrapli.exceptions.ScrapliCommandFailure">ScrapliCommandFailure</a></code></h4>
 </li>
 <li>
-<h4><code><a title="scrapli.exceptions.ScrapliException" href="#scrapli.exceptions.ScrapliException">ScrapliException</a></code></h4>
+<h4><code><a title="scrapli.exceptions.ScrapliConnectionLost" href="#scrapli.exceptions.ScrapliConnectionLost">ScrapliConnectionLost</a></code></h4>
 </li>
 <li>
-<h4><code><a title="scrapli.exceptions.ScrapliKeepaliveFailure" href="#scrapli.exceptions.ScrapliKeepaliveFailure">ScrapliKeepaliveFailure</a></code></h4>
+<h4><code><a title="scrapli.exceptions.ScrapliException" href="#scrapli.exceptions.ScrapliException">ScrapliException</a></code></h4>
 </li>
 <li>
 <h4><code><a title="scrapli.exceptions.ScrapliTimeout" href="#scrapli.exceptions.ScrapliTimeout">ScrapliTimeout</a></code></h4>
@@ -426,7 +426,7 @@ class UnsupportedPlatform(ScrapliException):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

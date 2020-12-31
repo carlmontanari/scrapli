@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>scrapli.driver.base_network_driver API documentation</title>
 <meta name="description" content="scrapli.driver.base_network_driver" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -30,21 +30,15 @@
 <pre><code class="python">&#34;&#34;&#34;scrapli.driver.base_network_driver&#34;&#34;&#34;
 import re
 import warnings
-from collections import UserList
 from datetime import datetime
 from enum import Enum
 from functools import lru_cache
 from logging import Logger
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from scrapli.exceptions import UnknownPrivLevel
 from scrapli.helper import resolve_file
-from scrapli.response import Response
-
-if TYPE_CHECKING:
-    ScrapliMultiResponse = UserList[Response]  # pylint:  disable=E1136; # pragma:  no cover
-else:
-    ScrapliMultiResponse = UserList
+from scrapli.response import MultiResponse, Response
 
 
 class PrivilegeLevel:
@@ -110,6 +104,7 @@ class NetworkDriverBase:
     # NetworkDriverBase Mixin vars for typing/linting purposes
     logger: Logger
     comms_prompt_pattern: str
+    default_desired_privilege_level: str
     _current_priv_level = DUMMY_PRIV_LEVEL
     _priv_map: Dict[str, List[str]]
     failed_when_contains: Optional[List[str]]
@@ -397,7 +392,14 @@ class NetworkDriverBase:
             else map_to_desired_priv
         )
 
-        desired_priv_index = priv_map.index(resolved_priv)
+        try:
+            desired_priv_index = priv_map.index(resolved_priv)
+        except ValueError:
+            # its possible that the &#34;current&#34; priv map gives us no good way to get from the current
+            # to the desired priv -- for example - from tclsh -&gt; configuration or visa versa
+            # in this event, we should bail out to the default desired priv level to &#34;reset&#34; things
+            desired_priv_index = priv_map.index(self.default_desired_privilege_level)
+
         try:
             current_priv_index = priv_map.index(current_priv.name)
         except ValueError:
@@ -445,7 +447,7 @@ class NetworkDriverBase:
     def _post_send_config(
         self,
         config: str,
-        multi_response: ScrapliMultiResponse,
+        multi_response: MultiResponse,
     ) -&gt; Response:
         &#34;&#34;&#34;
         Handle post &#34;send_config&#34; tasks for consistency between sync/async versions
@@ -476,7 +478,8 @@ class NetworkDriverBase:
             failed_when_contains=failed_when_contains,
         )
         response.start_time = multi_response[0].start_time
-        response.elapsed_time = (datetime.now() - response.start_time).total_seconds()
+        response.finish_time = datetime.now()
+        response.elapsed_time = (response.finish_time - response.start_time).total_seconds()
 
         # join all the results together into a single final result
         response.result = &#34;\n&#34;.join(response.result for response in multi_response)
@@ -532,7 +535,7 @@ class NetworkDriverBase:
 
         return resolved_privilege_level, failed_when_contains
 
-    def _post_send_configs(self, responses: ScrapliMultiResponse) -&gt; ScrapliMultiResponse:
+    def _post_send_configs(self, responses: MultiResponse) -&gt; MultiResponse:
         &#34;&#34;&#34;
         Handle post &#34;send_configs&#34; tasks for consistency between sync/async versions
 
@@ -540,7 +543,7 @@ class NetworkDriverBase:
             responses: multi_response object to update
 
         Returns:
-            ScrapliMultiResponse: Unified response object
+            MultiResponse: Unified response object
 
         Raises:
             N/A
@@ -600,6 +603,7 @@ class NetworkDriverBase:
     # NetworkDriverBase Mixin vars for typing/linting purposes
     logger: Logger
     comms_prompt_pattern: str
+    default_desired_privilege_level: str
     _current_priv_level = DUMMY_PRIV_LEVEL
     _priv_map: Dict[str, List[str]]
     failed_when_contains: Optional[List[str]]
@@ -887,7 +891,14 @@ class NetworkDriverBase:
             else map_to_desired_priv
         )
 
-        desired_priv_index = priv_map.index(resolved_priv)
+        try:
+            desired_priv_index = priv_map.index(resolved_priv)
+        except ValueError:
+            # its possible that the &#34;current&#34; priv map gives us no good way to get from the current
+            # to the desired priv -- for example - from tclsh -&gt; configuration or visa versa
+            # in this event, we should bail out to the default desired priv level to &#34;reset&#34; things
+            desired_priv_index = priv_map.index(self.default_desired_privilege_level)
+
         try:
             current_priv_index = priv_map.index(current_priv.name)
         except ValueError:
@@ -935,7 +946,7 @@ class NetworkDriverBase:
     def _post_send_config(
         self,
         config: str,
-        multi_response: ScrapliMultiResponse,
+        multi_response: MultiResponse,
     ) -&gt; Response:
         &#34;&#34;&#34;
         Handle post &#34;send_config&#34; tasks for consistency between sync/async versions
@@ -966,7 +977,8 @@ class NetworkDriverBase:
             failed_when_contains=failed_when_contains,
         )
         response.start_time = multi_response[0].start_time
-        response.elapsed_time = (datetime.now() - response.start_time).total_seconds()
+        response.finish_time = datetime.now()
+        response.elapsed_time = (response.finish_time - response.start_time).total_seconds()
 
         # join all the results together into a single final result
         response.result = &#34;\n&#34;.join(response.result for response in multi_response)
@@ -1022,7 +1034,7 @@ class NetworkDriverBase:
 
         return resolved_privilege_level, failed_when_contains
 
-    def _post_send_configs(self, responses: ScrapliMultiResponse) -&gt; ScrapliMultiResponse:
+    def _post_send_configs(self, responses: MultiResponse) -&gt; MultiResponse:
         &#34;&#34;&#34;
         Handle post &#34;send_configs&#34; tasks for consistency between sync/async versions
 
@@ -1030,7 +1042,7 @@ class NetworkDriverBase:
             responses: multi_response object to update
 
         Returns:
-            ScrapliMultiResponse: Unified response object
+            MultiResponse: Unified response object
 
         Raises:
             N/A
@@ -1079,6 +1091,10 @@ class NetworkDriverBase:
 <div class="desc"></div>
 </dd>
 <dt id="scrapli.driver.base_network_driver.NetworkDriverBase.comms_prompt_pattern"><code class="name">var <span class="ident">comms_prompt_pattern</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="scrapli.driver.base_network_driver.NetworkDriverBase.default_desired_privilege_level"><code class="name">var <span class="ident">default_desired_privilege_level</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1362,6 +1378,7 @@ False for class initialization before channel is opened</dd>
 <ul class="">
 <li><code><a title="scrapli.driver.base_network_driver.NetworkDriverBase.auth_secondary" href="#scrapli.driver.base_network_driver.NetworkDriverBase.auth_secondary">auth_secondary</a></code></li>
 <li><code><a title="scrapli.driver.base_network_driver.NetworkDriverBase.comms_prompt_pattern" href="#scrapli.driver.base_network_driver.NetworkDriverBase.comms_prompt_pattern">comms_prompt_pattern</a></code></li>
+<li><code><a title="scrapli.driver.base_network_driver.NetworkDriverBase.default_desired_privilege_level" href="#scrapli.driver.base_network_driver.NetworkDriverBase.default_desired_privilege_level">default_desired_privilege_level</a></code></li>
 <li><code><a title="scrapli.driver.base_network_driver.NetworkDriverBase.failed_when_contains" href="#scrapli.driver.base_network_driver.NetworkDriverBase.failed_when_contains">failed_when_contains</a></code></li>
 <li><code><a title="scrapli.driver.base_network_driver.NetworkDriverBase.genie_platform" href="#scrapli.driver.base_network_driver.NetworkDriverBase.genie_platform">genie_platform</a></code></li>
 <li><code><a title="scrapli.driver.base_network_driver.NetworkDriverBase.logger" href="#scrapli.driver.base_network_driver.NetworkDriverBase.logger">logger</a></code></li>
@@ -1397,7 +1414,7 @@ False for class initialization before channel is opened</dd>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>
