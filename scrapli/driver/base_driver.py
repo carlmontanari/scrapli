@@ -2,7 +2,7 @@
 import os
 import re
 import sys
-from logging import Logger, getLogger
+from logging import LoggerAdapter, getLogger
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Tuple, Union
 
@@ -151,7 +151,11 @@ class ScrapeBase:
         self._initialization_args: Dict[str, Any] = {}
 
         self._setup_host(host=host, port=port)
-        self.logger: Logger = getLogger(f"scrapli.{self._host}:{self._port}.driver")
+
+        logger = getLogger("scrapli.driver")
+        self.logger: LoggerAdapter = LoggerAdapter(
+            logger, extra={"host": self._host, "port": self._port}
+        )
 
         self._setup_auth(
             auth_username=auth_username,

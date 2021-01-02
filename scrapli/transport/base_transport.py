@@ -1,6 +1,6 @@
 """scrapli.transport.base_transport"""
 from abc import ABC, abstractmethod
-from logging import getLogger
+from logging import LoggerAdapter, getLogger
 
 from scrapli.helper import attach_duplicate_log_filter
 
@@ -33,8 +33,9 @@ class TransportBase(ABC):
             N/A
 
         """
-        self.logger = getLogger(f"scrapli.{host}:{port}.transport")
-        attach_duplicate_log_filter(logger=self.logger)
+        logger = getLogger("scrapli.transport")
+        attach_duplicate_log_filter(logger=logger)
+        self.logger = LoggerAdapter(logger, extra={"host": host, "port": port})
 
         self.host: str = host
         self.port: int = port
@@ -93,7 +94,7 @@ class TransportBase(ABC):
             class_dict["auth_password"] = "********"
         if "auth_private_key_passphrase" in class_dict.keys():
             class_dict["auth_private_key_passphrase"] = "********"
-        class_dict["logger"] = self.logger.name
+        class_dict["logger"] = self.logger.logger.name
         return f"Transport {class_dict}"
 
     @abstractmethod

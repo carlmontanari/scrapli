@@ -1,7 +1,7 @@
 """scrapli.channel.base_channel"""
 import re
 from abc import ABC
-from logging import getLogger
+from logging import LoggerAdapter, getLogger
 from threading import Lock
 from typing import List, Optional, Tuple, Union
 
@@ -62,8 +62,9 @@ class ChannelBase(ABC):
             N/A
 
         """
-        self.logger = getLogger(f"scrapli.{transport.host}:{transport.port}.channel")
-        attach_duplicate_log_filter(logger=self.logger)
+        logger = getLogger("scrapli.channel")
+        attach_duplicate_log_filter(logger=logger)
+        self.logger = LoggerAdapter(logger, extra={"host": transport.host, "port": transport.port})
 
         self.transport = transport
         self.comms_prompt_pattern = comms_prompt_pattern
@@ -107,7 +108,7 @@ class ChannelBase(ABC):
         class_dict = self.__dict__.copy()
         class_dict.pop("transport")
         class_dict["session_lock"] = self.session_lock.locked()
-        class_dict["logger"] = self.logger.name
+        class_dict["logger"] = self.logger.logger.name
         return f"scrapli Channel {class_dict}"
 
     def _restructure_output(self, output: bytes, strip_prompt: bool = False) -> bytes:
@@ -174,7 +175,10 @@ class ChannelBase(ABC):
 
         """
         self.transport.write(channel_input=self.comms_return_char)
-        self.logger.debug(f"Write (sending return character): {repr(self.comms_return_char)}")
+        self.logger.debug(
+            f"Write (sending return character): {repr(self.comms_return_char)}",
+            extra={"host": "POOHEAD"},
+        )
 
     @staticmethod
     def _pre_send_input(channel_input: str) -> None:

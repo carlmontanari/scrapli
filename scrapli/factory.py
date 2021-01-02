@@ -1,7 +1,7 @@
 """scrapli.factory"""
 import importlib
 from copy import deepcopy
-from logging import getLogger
+from logging import LoggerAdapter, getLogger
 from typing import Any, Dict, Optional, Tuple, Type, Union
 
 from scrapli.driver import AsyncGenericDriver, AsyncNetworkDriver, GenericDriver, NetworkDriver
@@ -20,7 +20,8 @@ from scrapli.driver.core import (
 )
 from scrapli.exceptions import ScrapliException
 
-LOG = getLogger("scrapli.factory")
+factory_logger = getLogger("scrapli.factory")
+LOG = LoggerAdapter(factory_logger, extra={"host": None, "port": None})
 
 ASYNC_CORE_PLATFORM_MAP = {
     "arista_eos": AsyncEOSDriver,

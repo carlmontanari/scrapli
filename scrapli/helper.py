@@ -5,7 +5,7 @@ import re
 import warnings
 from functools import lru_cache
 from io import TextIOWrapper
-from logging import Logger, getLogger
+from logging import Logger, LoggerAdapter, getLogger
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Pattern, TextIO, Tuple, Union
 
@@ -13,7 +13,8 @@ import pkg_resources  # pylint: disable=C0411
 
 from scrapli.exceptions import TransportPluginError
 
-LOG = getLogger("scrapli.helper")
+helper_logger = getLogger("scrapli.helper")
+LOG = LoggerAdapter(helper_logger, extra={"host": None, "port": None})
 
 
 def _find_transport_plugin(transport: str) -> Tuple[Any, Tuple[str, ...]]:

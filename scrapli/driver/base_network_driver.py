@@ -4,7 +4,7 @@ import warnings
 from datetime import datetime
 from enum import Enum
 from functools import lru_cache
-from logging import Logger
+from logging import LoggerAdapter
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from scrapli.exceptions import UnknownPrivLevel
@@ -73,7 +73,7 @@ class PrivilegeAction(Enum):
 
 class NetworkDriverBase:
     # NetworkDriverBase Mixin vars for typing/linting purposes
-    logger: Logger
+    logger: LoggerAdapter
     comms_prompt_pattern: str
     default_desired_privilege_level: str
     _current_priv_level = DUMMY_PRIV_LEVEL
