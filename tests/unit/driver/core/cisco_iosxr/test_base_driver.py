@@ -2,7 +2,7 @@ import re
 
 import pytest
 
-from scrapli.driver.core.cisco_iosxr.driver import PRIVS
+from scrapli.driver.core.cisco_iosxr.base_driver import PRIVS
 
 
 @pytest.mark.parametrize(

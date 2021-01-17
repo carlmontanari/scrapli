@@ -1,10 +1,10 @@
 """scrapli.driver.core.arista_eos.async_driver"""
 from copy import deepcopy
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from scrapli.driver import AsyncNetworkDriver
-from scrapli.driver.base_network_driver import PrivilegeLevel
 from scrapli.driver.core.arista_eos.base_driver import PRIVS, EOSDriverBase
+from scrapli.driver.network.base_driver import PrivilegeLevel
 
 
 async def eos_on_open(conn: AsyncNetworkDriver) -> None:
@@ -15,10 +15,11 @@ async def eos_on_open(conn: AsyncNetworkDriver) -> None:
         conn: NetworkDriver object
 
     Returns:
-        N/A  # noqa: DAR202
+        None
 
     Raises:
         N/A
+
     """
     await conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
     await conn.send_command(command="terminal length 0")
@@ -33,30 +34,48 @@ async def eos_on_close(conn: AsyncNetworkDriver) -> None:
         conn: NetworkDriver object
 
     Returns:
-        N/A  # noqa: DAR202
+        None
 
     Raises:
         N/A
+
     """
-    # write exit directly to the transport as channel would fail to find the prompt after sending
-    # the exit command!
     await conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
-    conn.transport.write(channel_input="exit")
-    conn.transport.write(channel_input=conn.channel.comms_return_char)
+    conn.channel.write(channel_input="exit")
+    conn.channel.send_return()
 
 
 class AsyncEOSDriver(AsyncNetworkDriver, EOSDriverBase):
     def __init__(
         self,
+        host: str,
         privilege_levels: Optional[Dict[str, PrivilegeLevel]] = None,
         default_desired_privilege_level: str = "privilege_exec",
-        auth_secondary: str = "",
+        port: int = 22,
+        auth_username: str = "",
+        auth_password: str = "",
+        auth_private_key: str = "",
+        auth_private_key_passphrase: str = "",
+        auth_strict_key: bool = True,
+        auth_bypass: bool = False,
+        timeout_socket: float = 15.0,
+        timeout_transport: float = 30.0,
+        timeout_ops: float = 30.0,
+        comms_return_char: str = "\n",
+        comms_ansi: bool = False,
+        ssh_config_file: Union[str, bool] = False,
+        ssh_known_hosts_file: Union[str, bool] = False,
+        on_init: Optional[Callable[..., Any]] = None,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
+        transport: str = "system",
+        transport_options: Optional[Dict[str, Any]] = None,
+        channel_log: Union[str, bool] = False,
+        channel_lock: bool = False,
+        auth_secondary: str = "",
+        failed_when_contains: Optional[List[str]] = None,
         textfsm_platform: str = "arista_eos",
         genie_platform: str = "",
-        failed_when_contains: Optional[List[str]] = None,
-        **kwargs: Dict[str, Any],
     ):
         """
         AsyncEOSDriver Object
@@ -83,12 +102,15 @@ class AsyncEOSDriver(AsyncNetworkDriver, EOSDriverBase):
             **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
-            N/A  # noqa: DAR202
+            None
 
         Raises:
             N/A
 
         """
+        # somewhere/somehow the mixin is causing mypy to be upset about comms_prompt_pattern...
+        self.comms_prompt_pattern: str
+
         if privilege_levels is None:
             privilege_levels = deepcopy(PRIVS)
 
@@ -100,21 +122,41 @@ class AsyncEOSDriver(AsyncNetworkDriver, EOSDriverBase):
         if failed_when_contains is None:
             failed_when_contains = [
                 "% Ambiguous command",
+                "% Error",
                 "% Incomplete command",
                 "% Invalid input",
                 "% Cannot commit",
             ]
 
         super().__init__(
+            host=host,
+            port=port,
+            auth_username=auth_username,
+            auth_password=auth_password,
+            auth_private_key=auth_private_key,
+            auth_private_key_passphrase=auth_private_key_passphrase,
+            auth_strict_key=auth_strict_key,
+            auth_bypass=auth_bypass,
+            timeout_socket=timeout_socket,
+            timeout_transport=timeout_transport,
+            timeout_ops=timeout_ops,
+            comms_return_char=comms_return_char,
+            comms_ansi=comms_ansi,
+            ssh_config_file=ssh_config_file,
+            ssh_known_hosts_file=ssh_known_hosts_file,
+            on_init=on_init,
+            on_open=on_open,
+            on_close=on_close,
+            transport=transport,
+            transport_options=transport_options,
+            channel_log=channel_log,
+            channel_lock=channel_lock,
             privilege_levels=privilege_levels,
             default_desired_privilege_level=default_desired_privilege_level,
             auth_secondary=auth_secondary,
             failed_when_contains=failed_when_contains,
             textfsm_platform=textfsm_platform,
             genie_platform=genie_platform,
-            on_open=on_open,
-            on_close=on_close,
-            **kwargs,
         )
 
     async def _abort_config(self) -> None:
@@ -125,7 +167,7 @@ class AsyncEOSDriver(AsyncNetworkDriver, EOSDriverBase):
             N/A
 
         Returns:
-            N/A:  # noqa: DAR202
+            None
 
         Raises:
             N/A
@@ -137,5 +179,18 @@ class AsyncEOSDriver(AsyncNetworkDriver, EOSDriverBase):
             self._current_priv_level = self.privilege_levels["privilege_exec"]
 
     def register_configuration_session(self, session_name: str) -> None:
+        """
+        Register EOS configuration session
+
+        Args:
+            session_name: name of config session to register
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        """
         self._create_configuration_session(session_name=session_name)
-        self.update_privilege_levels(update_channel=True)
+        self.update_privilege_levels()

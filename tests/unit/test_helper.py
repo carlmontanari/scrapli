@@ -1,29 +1,21 @@
-import importlib
-import os
-import re
 import sys
 from io import TextIOWrapper
-from logging import getLogger
 from pathlib import Path
+from shutil import get_terminal_size
 
 import pkg_resources  # pylint: disable=C041
 import pytest
 
-import scrapli
-from scrapli.exceptions import TransportPluginError
+from scrapli.exceptions import ScrapliValueError
 from scrapli.helper import (
-    _find_transport_plugin,
     _textfsm_get_template,
-    attach_duplicate_log_filter,
+    format_user_warning,
     genie_parse,
-    get_prompt_pattern,
     resolve_file,
-    strip_ansi,
     textfsm_parse,
     ttp_parse,
+    user_warning,
 )
-
-TEST_DATA_DIR = f"{Path(scrapli.__file__).parents[1]}/tests/test_data"
 
 IOS_ARP = """Protocol  Address          Age (min)  Hardware Addr   Type   Interface
 Internet  172.31.254.1            -   0000.0c07.acfe  ARPA   Vlan254
@@ -31,59 +23,32 @@ Internet  172.31.254.2            -   c800.84b2.e9c2  ARPA   Vlan254
 """
 
 
-def test_get_prompt_pattern_class_pattern():
-    class_pattern = "^averygoodpattern$"
-    result = get_prompt_pattern("", class_pattern)
-    assert result == re.compile(b"^averygoodpattern$", re.IGNORECASE | re.MULTILINE)
-
-
-def test_get_prompt_pattern_class_pattern_no_line_start_end_markers():
-    class_pattern = "averygoodpattern"
-    result = get_prompt_pattern(class_pattern, "")
-    assert result == re.compile(b"averygoodpattern")
-
-
-def test_get_prompt_pattern_arg_pattern():
-    class_pattern = "averygoodpattern"
-    result = get_prompt_pattern("^awesomepattern$", class_pattern)
-    assert result == re.compile(b"^awesomepattern$", re.IGNORECASE | re.MULTILINE)
-
-
-def test_get_prompt_pattern_arg_string():
-    class_pattern = "averygoodpattern"
-    result = get_prompt_pattern("awesomepattern", class_pattern)
-    assert result == re.compile(b"awesomepattern")
-
-
-def test_get_prompt_pattern_arg_bytes():
-    class_pattern = "averygoodpattern"
-    result = get_prompt_pattern(b"awesomepattern", class_pattern)
-    assert result == re.compile(b"awesomepattern")
-
-
-def test__strip_ansi():
-    output = b"[admin@CoolDevice.Sea1: \x1b[1m/\x1b[0;0m]$"
-    output = strip_ansi(output)
-    assert output == b"[admin@CoolDevice.Sea1: /]$"
-
-
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting textfsm on windows")
-def test__textfsm_get_template_valid_template():
+def test_textfsm_get_template():
     template = _textfsm_get_template("cisco_nxos", "show ip arp")
     template_dir = pkg_resources.resource_filename("ntc_templates", "templates")
     assert isinstance(template, TextIOWrapper)
     assert template.name == f"{template_dir}/cisco_nxos_show_ip_arp.textfsm"
 
 
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting textfsm on windows")
-def test__textfsm_get_template_invalid_template():
+def test_textfsm_get_template_invalid_template():
     template = _textfsm_get_template("cisco_nxos", "show racecar")
     assert not template
 
 
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting textfsm on windows")
+def test_textfsm_no_ntc_templates(monkeypatch):
+    def _import_module(name, package):
+        raise ModuleNotFoundError
+
+    monkeypatch.setattr("importlib.import_module", _import_module)
+
+    with pytest.warns(UserWarning) as exc:
+        _textfsm_get_template("cisco_nxos", "show racecar")
+
+    assert "Optional Extra Not Installed!" in str(exc.list[0].message)
+
+
 @pytest.mark.parametrize(
-    "parse_type",
+    "test_data",
     [
         (
             False,
@@ -103,18 +68,16 @@ def test__textfsm_get_template_invalid_template():
     ],
     ids=["to_dict_false", "to_dict_true"],
 )
-def test_textfsm_parse_success(parse_type):
-    to_dict = parse_type[0]
-    expected_result = parse_type[1]
+def test_textfsm_parse(test_data):
+    to_dict, expected_output = test_data
     template = _textfsm_get_template("cisco_ios", "show ip arp")
     result = textfsm_parse(template, IOS_ARP, to_dict=to_dict)
     assert isinstance(result, list)
-    assert result[0] == expected_result
+    assert result[0] == expected_output
 
 
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting textfsm on windows")
 @pytest.mark.parametrize(
-    "parse_type",
+    "test_data",
     [
         (
             False,
@@ -134,17 +97,15 @@ def test_textfsm_parse_success(parse_type):
     ],
     ids=["to_dict_false", "to_dict_true"],
 )
-def test_textfsm_parse_success_string_path(parse_type):
-    to_dict = parse_type[0]
-    expected_result = parse_type[1]
+def test_textfsm_parse_string_path(test_data):
+    to_dict, expected_output = test_data
     template = _textfsm_get_template("cisco_ios", "show ip arp")
     result = textfsm_parse(template.name, IOS_ARP, to_dict=to_dict)
     assert isinstance(result, list)
-    assert result[0] == expected_result
+    assert result[0] == expected_output
 
 
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting textfsm on windows")
-def test_textfsm_parse_failure():
+def test_textfsm_parse_failed_to_parse():
     template = _textfsm_get_template("cisco_ios", "show ip arp")
     result = textfsm_parse(template, "not really arp data")
     assert result == []
@@ -153,8 +114,7 @@ def test_textfsm_parse_failure():
 @pytest.mark.skipif(
     sys.version_info.minor > 8, reason="genie not currently available for python 3.9"
 )
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting genie on windows")
-def test_genie_parse_success():
+def test_genie_parser():
     result = genie_parse("iosxe", "show ip arp", IOS_ARP)
     assert isinstance(result, dict)
     assert (
@@ -165,12 +125,24 @@ def test_genie_parse_success():
 @pytest.mark.skipif(
     sys.version_info.minor > 8, reason="genie not currently available for python 3.9"
 )
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting genie on windows")
 def test_genie_parse_failure():
     result = genie_parse("iosxe", "show ip arp", "not really arp data")
     assert result == []
     # w/out killing this module pyfakefs explodes. dont remember why/how i found that out...
     del sys.modules["pyats.configuration"]
+
+
+def test_genie_no_genie_installed(monkeypatch):
+    def _import_module(name, package):
+        raise ModuleNotFoundError
+
+    monkeypatch.setattr("importlib.import_module", _import_module)
+
+    with pytest.warns(UserWarning) as exc:
+        output = genie_parse("cisco_nxos", "show racecar", "something")
+
+    assert "Optional Extra Not Installed!" in str(exc.list[0].message)
+    assert output == []
 
 
 def test_ttp_parse():
@@ -225,101 +197,53 @@ def test_ttp_parse_failed_to_parse():
     assert result == [{}]
 
 
-@pytest.mark.skipif(
-    sys.platform.startswith("win"), reason="not dealing with windows path things in tests"
-)
-def test_resolve_file():
-    resolved_file = resolve_file(file=f"{TEST_DATA_DIR}/files/_ssh_config")
-    assert resolved_file == f"{TEST_DATA_DIR}/files/_ssh_config"
+def test_ttp_no_ttp_installed(monkeypatch):
+    def _import_module(name):
+        raise ModuleNotFoundError
+
+    monkeypatch.setattr("importlib.import_module", _import_module)
+
+    with pytest.warns(UserWarning) as exc:
+        output = ttp_parse("cisco_nxos", "show racecar")
+
+    assert "Optional Extra Not Installed!" in str(exc.list[0].message)
+    assert output == []
 
 
-@pytest.mark.skipif(
-    sys.platform.startswith("win"), reason="not dealing with windows path things in tests"
-)
-def test_resolve_file_expanduser(fs):
+def test_resolve_file(fs, real_ssh_config_file_path):
+    # pyfakefs so this is not host dependent
+    _ = fs
+    fs.add_real_file(source_path=real_ssh_config_file_path, target_path="/some/neat/path/myfile")
+    assert resolve_file(file="/some/neat/path/myfile") == "/some/neat/path/myfile"
+
+
+def test_resolve_file_expanduser(fs, real_ssh_config_file_path):
+    # pyfakefs so this is not host dependent
+    _ = fs
     fs.add_real_file(
-        source_path=f"{TEST_DATA_DIR}/files/_ssh_config",
-        target_path=f"{os.path.expanduser('~')}/myneatfile",
+        source_path=real_ssh_config_file_path, target_path=Path("~/myfile").expanduser()
     )
-    resolved_file = resolve_file(file=f"~/myneatfile")
-    assert resolved_file == f"{os.path.expanduser('~')}/myneatfile"
+    assert resolve_file(file="~/myfile") == str(Path("~/myfile").expanduser())
 
 
-@pytest.mark.skipif(
-    sys.platform.startswith("win"), reason="not dealing with windows path things in tests"
-)
 def test_resolve_file_failure():
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ScrapliValueError) as exc:
         resolve_file(file=f"~/myneatfile")
-    assert str(exc.value) == "File path `~/myneatfile` could not be resolved"
 
 
-def test_attach_duplicate_log_filter():
-    dummy_logger = getLogger("this_is_a_dumb_test_log")
-    assert dummy_logger.filters == []
-    attach_duplicate_log_filter(logger=dummy_logger)
-    # simple assert to confirm that we got the dup filter attached to the new logger
-    assert dummy_logger.filters[0].__class__.__name__ == "DuplicateFilter"
+def test_format_user_warning():
+    warning_string = format_user_warning(title="blah", message="something")
+    assert "* blah *" in warning_string
+    assert "something" in warning_string
 
 
-def test__find_transport_plugin_failure():
-    with pytest.raises(ModuleNotFoundError) as exc:
-        _find_transport_plugin(transport="blah")
-    assert (
-        str(exc.value)
-        == "\n***** Module 'scrapli_blah' not found! ************************************************\nTo resolve this issue, ensure you are referencing a valid transport plugin. Transport plugins should be named similar to `scrapli_paramiko` or `scrapli_ssh2`, and can be selected by passing simply `paramiko` or `ssh2` into the scrapli driver. You can install most plugins with pip: `pip install scrapli-ssh2` for example.\n***** Module 'scrapli_blah' not found! ************************************************"
-    )
+def test_format_user_warning_really_long_title():
+    terminal_width = get_terminal_size().columns
+
+    warning_string = format_user_warning(title=("blah" * 30), message="something")
+    assert warning_string.lstrip().startswith("*" * terminal_width)
 
 
-def test___find_transport_plugin_module_failed_to_load(monkeypatch):
-    from scrapli_ssh2 import transport
-
-    monkeypatch.setattr(transport, "Transport", None)
-    with pytest.raises(TransportPluginError) as exc:
-        _find_transport_plugin(transport="ssh2")
-    assert (
-        str(exc.value)
-        == "Failed to load transport plugin `ssh2` transport class or required arguments"
-    )
-
-
-def test_textfsm_get_template_no_textfsm(monkeypatch):
-    def mock_import_module(name, package):
-        raise ModuleNotFoundError
-
-    monkeypatch.setattr(importlib, "import_module", mock_import_module)
-
-    with pytest.warns(UserWarning) as warning_msg:
-        _textfsm_get_template(platform="blah", command="blah")
-    assert (
-        str(warning_msg._list[0].message)
-        == "\n***** Module 'None' not installed! ****************************************************\nTo resolve this issue, install 'None'. You can do this in one of the following ways:\n1: 'pip install -r requirements-textfsm.txt'\n2: 'pip install scrapli[textfsm]'\n***** Module 'None' not installed! ****************************************************"
-    )
-
-
-def test_genie_parse_no_genie(monkeypatch):
-    def mock_import_module(name, package):
-        raise ModuleNotFoundError
-
-    monkeypatch.setattr(importlib, "import_module", mock_import_module)
-
-    with pytest.warns(UserWarning) as warning_msg:
-        genie_parse(platform="blah", command="blah", output="blah")
-    assert (
-        str(warning_msg._list[0].message)
-        == "\n***** Module 'None' not installed! ****************************************************\nTo resolve this issue, install 'None'. You can do this in one of the following ways:\n1: 'pip install -r requirements-genie.txt'\n2: 'pip install scrapli[genie]'\n***** Module 'None' not installed! ****************************************************"
-    )
-
-
-def test_ttp_parse_no_ttp(monkeypatch):
-    def mock_import_module(name):
-        raise ModuleNotFoundError
-
-    monkeypatch.setattr(importlib, "import_module", mock_import_module)
-
-    with pytest.warns(UserWarning) as warning_msg:
-        ttp_parse(template="blah", output="blah")
-    assert (
-        str(warning_msg._list[0].message)
-        == "\n***** Module 'None' not installed! ****************************************************\nTo resolve this issue, install 'None'. You can do this in one of the following ways:\n1: 'pip install -r requirements-ttp.txt'\n2: 'pip install scrapli[ttp]'\n***** Module 'None' not installed! ****************************************************"
-    )
+def test_user_warning():
+    with pytest.warns(UserWarning):
+        user_warning(title="blah", message="something")

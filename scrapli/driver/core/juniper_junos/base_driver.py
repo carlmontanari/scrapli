@@ -1,5 +1,5 @@
 """scrapli.driver.core.juniper_junos.base_driver"""
-from scrapli.driver.base_network_driver import PrivilegeLevel
+from scrapli.driver.network.base_driver import PrivilegeLevel
 
 PRIVS = {
     "root": (

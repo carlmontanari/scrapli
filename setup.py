@@ -9,6 +9,11 @@ __author__ = "Carl Montanari"
 with open("README.md", "r", encoding="utf-8") as f:
     README = f.read()
 
+
+with open("requirements.txt", "r") as f:
+    INSTALL_REQUIRES = f.read().splitlines()
+
+
 EXTRAS_REQUIRE = {
     "textfsm": [],
     "genie": [],
@@ -39,10 +44,10 @@ setuptools.setup(
     keywords="ssh telnet netconf automation network cisco iosxr iosxe nxos arista eos juniper "
     "junos",
     url="https://github.com/carlmontanari/scrapli",
-    project_urls={"Changelog": "https://github.com/carlmontanari/scrapli/blob/master/CHANGELOG.md"},
+    project_urls={"Changelog": "https://carlmontanari.github.io/scrapli/changelog"},
     license="MIT",
     packages=setuptools.find_packages(),
-    install_requires=[],
+    install_requires=INSTALL_REQUIRES,
     extras_require=EXTRAS_REQUIRE,
     classifiers=[
         "License :: OSI Approved :: MIT License",
