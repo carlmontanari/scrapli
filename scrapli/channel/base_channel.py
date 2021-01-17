@@ -177,7 +177,7 @@ class ChannelBase(ABC):
         self.transport.write(channel_input=self.comms_return_char)
         self.logger.debug(
             f"Write (sending return character): {repr(self.comms_return_char)}",
-            extra={"host": "POOHEAD"},
+            extra={"host": ""},
         )
 
     @staticmethod

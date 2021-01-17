@@ -156,6 +156,26 @@ class ScrapeBase:
         self.logger: LoggerAdapter = LoggerAdapter(
             logger, extra={"host": self._host, "port": self._port}
         )
+        if logger.hasHandlers():
+            if logger.handlers or logger.parent.handlers:
+                # user set a handler directly for scrapli root logger or the driver logger, leave it
+                # alone! we only set the "core" scrapli formatter if the user has left things alone
+                pass
+            else:
+                # TODO - use custom formatter to not have the None host for helper/factory
+                # TODO - probably this needs to happen in factory and here? penalty from doing it
+                #  in both places? where can it be done once so it does not screw things up?
+                import logging
+                from copy import copy
+                formatter = logging.Formatter("%(levelname)s %(asctime)s %(host)s:%(port)s : %(message)s")
+                handlers = logger.root.handlers
+                scrapli_logger = getLogger('scrapli')
+                scrapli_logger.handlers.clear()
+                for handler in handlers:
+                    _handler = copy(handler)
+                    _handler.setFormatter(formatter)
+                    scrapli_logger.addHandler(_handler)
+                    scrapli_logger.propagate = False
 
         self._setup_auth(
             auth_username=auth_username,

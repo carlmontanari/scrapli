@@ -21,7 +21,7 @@ from scrapli.driver.core import (
 from scrapli.exceptions import ScrapliException
 
 factory_logger = getLogger("scrapli.factory")
-LOG = LoggerAdapter(factory_logger, extra={"host": None, "port": None})
+LOG = LoggerAdapter(factory_logger, extra={"host": None, "port": ""})
 
 ASYNC_CORE_PLATFORM_MAP = {
     "arista_eos": AsyncEOSDriver,

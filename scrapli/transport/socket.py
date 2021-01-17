@@ -1,6 +1,6 @@
 """scrapli.transport.socket"""
 import socket
-from logging import getLogger
+from logging import getLogger, LoggerAdapter
 from typing import Optional
 
 from scrapli.exceptions import ConnectionNotOpened, ScrapliTimeout
@@ -23,7 +23,8 @@ class Socket:
             N/A
 
         """
-        self.logger = getLogger(f"scrapli.socket-{host}")
+        logger = getLogger(f"scrapli.socket-{host}")
+        self.logger = LoggerAdapter(logger, extra={"host": None, "port": ""})
         self.host: str = host
         self.port: int = port
         self.timeout: int = timeout

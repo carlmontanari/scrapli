@@ -14,7 +14,7 @@ import pkg_resources  # pylint: disable=C0411
 from scrapli.exceptions import TransportPluginError
 
 helper_logger = getLogger("scrapli.helper")
-LOG = LoggerAdapter(helper_logger, extra={"host": None, "port": None})
+LOG = LoggerAdapter(helper_logger, extra={"host": None, "port": ""})
 
 
 def _find_transport_plugin(transport: str) -> Tuple[Any, Tuple[str, ...]]:
