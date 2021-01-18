@@ -1,1 +1,1 @@
-scrapli-asyncssh>=2020.10.10
+asyncssh>=2.2.1,<3.0.0

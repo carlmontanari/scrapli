@@ -115,11 +115,12 @@ class AsyncChannel(BaseChannel):
             if processed_channel_input in b"".join(buf.lower().replace(b"\x08", b"").split()):
                 return buf
 
-    async def _read_until_prompt(self, prompt: str = "") -> bytes:
+    async def _read_until_prompt(self, buf: bytes = b"", prompt: str = "") -> bytes:
         """
         Read until expected prompt is seen
 
         Args:
+            buf: output from previous reads if needed (used in scrapli netconf)
             prompt: prompt to look for if not looking for base prompt (comms_prompt_pattern)
 
         Returns:
@@ -132,8 +133,6 @@ class AsyncChannel(BaseChannel):
         search_pattern = self._get_prompt_pattern(
             class_pattern=self._base_channel_args.comms_prompt_pattern, pattern=prompt
         )
-
-        buf = b""
 
         while True:
             buf += await self.read()
@@ -320,13 +319,6 @@ class AsyncChannel(BaseChannel):
         auth_start_time = datetime.now().timestamp()
         return_interval = self._base_channel_args.timeout_ops / 10
         return_attempts = 1
-
-        # TODO - is any of this send return shit necessary?? need to test this against a
-        #  console server prolly to see if it is... also the sync version is almost
-        #  certainly not doing shit because there is no way that buf is ever empty...
-        #  would just read something or timeout right??? j/k i think it works because
-        #  `read_eager` does not block.... anyway... test that shit and make this and
-        #  that work right
 
         async with self._channel_lock():
             while True:

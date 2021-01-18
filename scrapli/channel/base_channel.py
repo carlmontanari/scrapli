@@ -131,8 +131,6 @@ class BaseChannel:
             ScrapliAuthenticationFailed: if any errors are read in the output
 
         """
-        # TODO - make this smart? dict keys of the output contains, w/ values being the msg?
-
         msg = ""
         if b"host key verification failed" in output.lower():
             msg = "Host key verification failed"

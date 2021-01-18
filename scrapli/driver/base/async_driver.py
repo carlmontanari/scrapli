@@ -13,7 +13,10 @@ class AsyncDriver(BaseDriver):
         super().__init__(**kwargs)
 
         if self.transport_name not in ASYNCIO_TRANSPORTS:
-            raise ScrapliValueError
+            raise ScrapliValueError(
+                "provided transport is *not* an asyncio transport, must use an async transport with"
+                " the AsyncDriver(s)"
+            )
 
         self.channel = AsyncChannel(
             transport=self.transport,

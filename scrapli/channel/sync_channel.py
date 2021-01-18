@@ -109,11 +109,12 @@ class Channel(BaseChannel):
             if processed_channel_input in b"".join(buf.lower().replace(b"\x08", b"").split()):
                 return buf
 
-    def _read_until_prompt(self, prompt: str = "") -> bytes:
+    def _read_until_prompt(self, buf: bytes = b"", prompt: str = "") -> bytes:
         """
         Read until expected prompt is seen
 
         Args:
+            buf: output from previous reads if needed (used in scrapli netconf)
             prompt: prompt to look for if not looking for base prompt (comms_prompt_pattern)
 
         Returns:
@@ -126,8 +127,6 @@ class Channel(BaseChannel):
         search_pattern = self._get_prompt_pattern(
             class_pattern=self._base_channel_args.comms_prompt_pattern, pattern=prompt
         )
-
-        buf = b""
 
         while True:
             buf += self.read()

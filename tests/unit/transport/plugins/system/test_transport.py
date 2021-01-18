@@ -132,9 +132,10 @@ def test_read(fs, monkeypatch, system_transport):
     # lie and pretend the session is already assigned
     # giving ptyprocess a "real" (but not like... real real) fd seemed like a good idea... dunno
     # if its really necessary, but it *does* need a fd of some sort so whatever
+    dummy_pid, fd = pty.fork()
     fs.create_file("dummy")
     dummy_file = open("dummy")
-    system_transport.session = PtyProcess(pid=0, fd=dummy_file.fileno())
+    system_transport.session = PtyProcess(pid=dummy_pid, fd=dummy_file.fileno())
 
     assert system_transport.read() == b"somebytes"
 
