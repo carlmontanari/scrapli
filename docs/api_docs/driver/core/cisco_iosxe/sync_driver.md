@@ -107,6 +107,40 @@ class IOSXEDriver(NetworkDriver):
         textfsm_platform: str = "cisco_iosxe",
         genie_platform: str = "iosxe",
     ):
+        """
+        IOSXEDriver Object
+
+        Please see `scrapli.driver.base.base_driver.Driver` for all "base driver" arguments!
+
+        # noqa: DAR101
+
+        Args:
+            privilege_levels: optional user provided privilege levels, if left None will default to
+                scrapli standard privilege levels
+            default_desired_privilege_level: string of name of default desired priv, this is the
+                priv level that is generally used to disable paging/set terminal width and things
+                like that upon first login, and is also the priv level scrapli will try to acquire
+                for normal "command" operations (`send_command`, `send_commands`)
+            auth_secondary: password to use for secondary authentication (enable)
+            on_open: callable that accepts the class instance as its only argument. this callable,
+                if provided, is executed immediately after authentication is completed. Common use
+                cases for this callable would be to disable paging or accept any kind of banner
+                message that prompts a user upon connection
+            on_close: callable that accepts the class instance as its only argument. this callable,
+                if provided, is executed immediately prior to closing the underlying transport.
+                Common use cases for this callable would be to save configurations prior to exiting,
+                or to logout properly to free up vtys or similar.
+            textfsm_platform: string name of textfsm parser platform
+            genie_platform: string name of cisco genie parser platform
+            failed_when_contains: List of strings that indicate a command/config has failed
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        """
         if privilege_levels is None:
             privilege_levels = deepcopy(PRIVS)
 
@@ -165,50 +199,20 @@ class IOSXEDriver(NetworkDriver):
 
 
 ```text
-BaseDriver Object
+IOSXEDriver Object
 
-BaseDriver is the root for all Scrapli driver classes. The synchronous and asyncio driver
-base driver classes can be used to provide a semi-pexpect like experience over top of
-whatever transport a user prefers. Generally, however, the base driver classes should not be
-used directly. It is best to use the GenericDriver (or AsyncGenericDriver) or NetworkDriver
-(or AsyncNetworkDriver) sub-classes of the base drivers.
+Please see `scrapli.driver.base.base_driver.Driver` for all "base driver" arguments!
+
+# noqa: DAR101
 
 Args:
-    host: host ip/name to connect to
-    port: port to connect to
-    auth_username: username for authentication
-    auth_private_key: path to private key for authentication
-    auth_private_key_passphrase: passphrase for decrypting ssh key if necessary
-    auth_password: password for authentication
-    auth_strict_key: strict host checking or not
-    auth_bypass: bypass "in channel" authentication -- only supported with telnet,
-        asynctelnet, and system transport plugins
-    timeout_socket: timeout for establishing socket/initial connection in seconds
-    timeout_transport: timeout for ssh|telnet transport in seconds
-    timeout_ops: timeout for ssh channel operations
-    comms_prompt_pattern: raw string regex pattern -- preferably use `^` and `$` anchors!
-        this is the single most important attribute here! if this does not match a prompt,
-        scrapli will not work!
-        IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
-        for highly reliably matching for prompts however we do NOT strip trailing whitespace
-        for each line, so be sure to add '\\s?' or similar if your device needs that. This
-        should be mostly sorted for you if using network drivers (i.e. `IOSXEDriver`).
-        Lastly, the case insensitive is just a convenience factor so i can be lazy.
-    comms_return_char: character to use to send returns to host
-    comms_ansi: True/False strip comms_ansi characters from output, generally the default
-        value of False should be fine
-    ssh_config_file: string to path for ssh config file, True to use default ssh config file
-        or False to ignore default ssh config file
-    ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
-        file locations. Only applicable/needed if `auth_strict_key` is set to True
-    on_init: callable that accepts the class instance as its only argument. this callable,
-        if provided, is executed as the last step of object instantiation -- its purpose is
-        primarily to provide a mechanism for scrapli community platforms to have an easy way
-        to modify initialization arguments/object attributes without needing to create a
-        class that extends the driver, instead allowing the community platforms to simply
-        build from the GenericDriver or NetworkDriver classes, and pass this callable to do
-        things such as appending to a username (looking at you RouterOS!!). Note that this
-        is *always* a synchronous function (even for asyncio drivers)!
+    privilege_levels: optional user provided privilege levels, if left None will default to
+        scrapli standard privilege levels
+    default_desired_privilege_level: string of name of default desired priv, this is the
+        priv level that is generally used to disable paging/set terminal width and things
+        like that upon first login, and is also the priv level scrapli will try to acquire
+        for normal "command" operations (`send_command`, `send_commands`)
+    auth_secondary: password to use for secondary authentication (enable)
     on_open: callable that accepts the class instance as its only argument. this callable,
         if provided, is executed immediately after authentication is completed. Common use
         cases for this callable would be to disable paging or accept any kind of banner
@@ -216,25 +220,10 @@ Args:
     on_close: callable that accepts the class instance as its only argument. this callable,
         if provided, is executed immediately prior to closing the underlying transport.
         Common use cases for this callable would be to save configurations prior to exiting,
-        or to logout properly to free up vtys or similar
-    transport: name of the transport plugin to use for the actual telnet/ssh/netconf
-        connection. Available "core" transports are:
-            - system
-            - telnet
-            - asynctelnet
-            - ssh2
-            - paramiko
-            - asyncssh
-        Please see relevant transport plugin section for details. Additionally third party
-        transport plugins may be available.
-    transport_options: dictionary of options to pass to selected transport class; see
-        docs for given transport class for details of what to pass here
-    channel_lock: True/False to lock the channel (threading.Lock/asyncio.Lock) during
-        any channel operations, defaults to False
-    channel_log: True/False or a string path to a file of where to write out channel logs --
-        these are not "logs" in the normal logging module sense, but only the output that is
-        read from the channel. In other words, the output of the channel log should look
-        similar to what you would see as a human connecting to a device
+        or to logout properly to free up vtys or similar.
+    textfsm_platform: string name of textfsm parser platform
+    genie_platform: string name of cisco genie parser platform
+    failed_when_contains: List of strings that indicate a command/config has failed
 
 Returns:
     None
@@ -281,6 +270,40 @@ class IOSXEDriver(NetworkDriver):
         textfsm_platform: str = "cisco_iosxe",
         genie_platform: str = "iosxe",
     ):
+        """
+        IOSXEDriver Object
+
+        Please see `scrapli.driver.base.base_driver.Driver` for all "base driver" arguments!
+
+        # noqa: DAR101
+
+        Args:
+            privilege_levels: optional user provided privilege levels, if left None will default to
+                scrapli standard privilege levels
+            default_desired_privilege_level: string of name of default desired priv, this is the
+                priv level that is generally used to disable paging/set terminal width and things
+                like that upon first login, and is also the priv level scrapli will try to acquire
+                for normal "command" operations (`send_command`, `send_commands`)
+            auth_secondary: password to use for secondary authentication (enable)
+            on_open: callable that accepts the class instance as its only argument. this callable,
+                if provided, is executed immediately after authentication is completed. Common use
+                cases for this callable would be to disable paging or accept any kind of banner
+                message that prompts a user upon connection
+            on_close: callable that accepts the class instance as its only argument. this callable,
+                if provided, is executed immediately prior to closing the underlying transport.
+                Common use cases for this callable would be to save configurations prior to exiting,
+                or to logout properly to free up vtys or similar.
+            textfsm_platform: string name of textfsm parser platform
+            genie_platform: string name of cisco genie parser platform
+            failed_when_contains: List of strings that indicate a command/config has failed
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        """
         if privilege_levels is None:
             privilege_levels = deepcopy(PRIVS)
 

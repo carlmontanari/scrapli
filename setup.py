@@ -48,6 +48,11 @@ setuptools.setup(
     license="MIT",
     packages=setuptools.find_packages(),
     install_requires=INSTALL_REQUIRES,
+    # temp for pinning to non-release scrapli community for testing
+    dependency_links=[
+        "git+https://github.com/scrapli/scrapli_community@scrapli_core_overhaul#"
+        "egg=scrapli_community"
+    ],
     extras_require=EXTRAS_REQUIRE,
     classifiers=[
         "License :: OSI Approved :: MIT License",

@@ -162,7 +162,6 @@ class ScrapliFileHandler(FileHandler):
         mode: str = "a",
         encoding: Optional[str] = None,
         delay: bool = False,
-        errors: Optional[str] = None,
     ) -> None:
         """
         Handle "buffering" log read messages for logging.FileHandler
@@ -172,7 +171,6 @@ class ScrapliFileHandler(FileHandler):
             mode: file mode
             encoding: encoding to use for file
             delay: actually not sure what this is for :)
-            errors: string of how to handle errors (see builtins.open)
 
         Returns:
             None
@@ -186,8 +184,6 @@ class ScrapliFileHandler(FileHandler):
             mode=mode,
             encoding=encoding,
             delay=delay,
-            # errors is 100% in the signature of this in cpython but mypy is furious?
-            errors=errors,  # type: ignore
         )
         self._record_buf: Optional[LogRecord] = None
         self._record_msg_buf: bytes = b""
@@ -350,7 +346,6 @@ Args:
     mode: file mode
     encoding: encoding to use for file
     delay: actually not sure what this is for :)
-    errors: string of how to handle errors (see builtins.open)
 
 Returns:
     None
@@ -372,7 +367,6 @@ class ScrapliFileHandler(FileHandler):
         mode: str = "a",
         encoding: Optional[str] = None,
         delay: bool = False,
-        errors: Optional[str] = None,
     ) -> None:
         """
         Handle "buffering" log read messages for logging.FileHandler
@@ -382,7 +376,6 @@ class ScrapliFileHandler(FileHandler):
             mode: file mode
             encoding: encoding to use for file
             delay: actually not sure what this is for :)
-            errors: string of how to handle errors (see builtins.open)
 
         Returns:
             None
@@ -396,8 +389,6 @@ class ScrapliFileHandler(FileHandler):
             mode=mode,
             encoding=encoding,
             delay=delay,
-            # errors is 100% in the signature of this in cpython but mypy is furious?
-            errors=errors,  # type: ignore
         )
         self._record_buf: Optional[LogRecord] = None
         self._record_msg_buf: bytes = b""

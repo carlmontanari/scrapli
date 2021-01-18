@@ -81,6 +81,7 @@ class BaseChannel:
         BaseChannel Object -- provides convenience methods to both sync and async Channels
 
         Args:
+            transport: initialized scrapli Transport/AsyncTransport object
             base_channel_args: BaseChannelArgs object
 
         Returns:
@@ -161,8 +162,6 @@ class BaseChannel:
             ScrapliAuthenticationFailed: if any errors are read in the output
 
         """
-        # TODO - make this smart? dict keys of the output contains, w/ values being the msg?
-
         msg = ""
         if b"host key verification failed" in output.lower():
             msg = "Host key verification failed"
@@ -331,6 +330,7 @@ class BaseChannel:
 BaseChannel Object -- provides convenience methods to both sync and async Channels
 
 Args:
+    transport: initialized scrapli Transport/AsyncTransport object
     base_channel_args: BaseChannelArgs object
 
 Returns:
@@ -356,6 +356,7 @@ class BaseChannel:
         BaseChannel Object -- provides convenience methods to both sync and async Channels
 
         Args:
+            transport: initialized scrapli Transport/AsyncTransport object
             base_channel_args: BaseChannelArgs object
 
         Returns:
@@ -436,8 +437,6 @@ class BaseChannel:
             ScrapliAuthenticationFailed: if any errors are read in the output
 
         """
-        # TODO - make this smart? dict keys of the output contains, w/ values being the msg?
-
         msg = ""
         if b"host key verification failed" in output.lower():
             msg = "Host key verification failed"
@@ -674,7 +673,6 @@ Raises:
     </summary>
     <pre>
         <code class="python">
-@dataclass()
 class BaseChannelArgs:
     """
     Dataclass for all base Channel arguments

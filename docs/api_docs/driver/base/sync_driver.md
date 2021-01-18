@@ -43,7 +43,10 @@ class Driver(BaseDriver):
         super().__init__(**kwargs)
 
         if self.transport_name in ASYNCIO_TRANSPORTS:
-            raise ScrapliValueError
+            raise ScrapliValueError(
+                "provided transport is *not* an sync transport, must use an sync transport with"
+                " the (sync)Driver(s)"
+            )
 
         self.channel = Channel(
             transport=self.transport,
@@ -256,7 +259,10 @@ class Driver(BaseDriver):
         super().__init__(**kwargs)
 
         if self.transport_name in ASYNCIO_TRANSPORTS:
-            raise ScrapliValueError
+            raise ScrapliValueError(
+                "provided transport is *not* an sync transport, must use an sync transport with"
+                " the (sync)Driver(s)"
+            )
 
         self.channel = Channel(
             transport=self.transport,

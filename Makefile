@@ -34,7 +34,7 @@ test_unit:
 
 .PHONY: docs
 docs:
-	python -m docs/generate/generate.py
+	python docs/generate/generate_docs.py
 
 start_dev_env:
 	${DOCKER_COMPOSE} \

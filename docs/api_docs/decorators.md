@@ -32,6 +32,7 @@ scrapli.decorators
 import asyncio
 import signal
 import sys
+import threading
 from concurrent.futures import ThreadPoolExecutor, wait
 from functools import update_wrapper
 from logging import LoggerAdapter
@@ -118,6 +119,7 @@ class TransportTimeout:
                 if (
                     transport_instance_class_name in ("SystemTransport", "TelnetTransport")
                     or _IS_WINDOWS
+                    or threading.current_thread() is not threading.main_thread()
                 ):
                     return self._multiprocessing_timeout(
                         wrapped_func=wrapped_func,
@@ -298,6 +300,7 @@ class ChannelTimeout:
                 if (
                     transport_instance_class_name in ("SystemTransport", "TelnetTransport")
                     or _IS_WINDOWS
+                    or threading.current_thread() is not threading.main_thread()
                 ):
                     return self._multiprocessing_timeout(
                         wrapped_func=wrapped_func,
@@ -559,6 +562,7 @@ class ChannelTimeout:
                 if (
                     transport_instance_class_name in ("SystemTransport", "TelnetTransport")
                     or _IS_WINDOWS
+                    or threading.current_thread() is not threading.main_thread()
                 ):
                     return self._multiprocessing_timeout(
                         wrapped_func=wrapped_func,
@@ -827,6 +831,7 @@ class TransportTimeout:
                 if (
                     transport_instance_class_name in ("SystemTransport", "TelnetTransport")
                     or _IS_WINDOWS
+                    or threading.current_thread() is not threading.main_thread()
                 ):
                     return self._multiprocessing_timeout(
                         wrapped_func=wrapped_func,

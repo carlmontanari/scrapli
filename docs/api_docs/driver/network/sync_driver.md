@@ -1381,7 +1381,7 @@ Raises:
     
 
 ##### send_command
-`send_command(self, command: str, *, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, timeout_ops: Optional[float] = None) ‑> scrapli.response.Response`
+`send_command(self, command: str, *, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, timeout_ops: Union[float, NoneType] = None) ‑> scrapli.response.Response`
 
 ```text
 Send a command
@@ -1408,7 +1408,7 @@ Raises:
     
 
 ##### send_commands
-`send_commands(self, commands: List[str], *, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, eager: bool = False, timeout_ops: Optional[float] = None) ‑> scrapli.response.MultiResponse`
+`send_commands(self, commands: List[str], *, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, eager: bool = False, timeout_ops: Union[float, NoneType] = None) ‑> scrapli.response.MultiResponse`
 
 ```text
 Send multiple commands
@@ -1441,7 +1441,7 @@ Raises:
     
 
 ##### send_config
-`send_config(self, config: str, *, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '', eager: bool = False, timeout_ops: Optional[float] = None) ‑> scrapli.response.Response`
+`send_config(self, config: str, *, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '', eager: bool = False, timeout_ops: Union[float, NoneType] = None) ‑> scrapli.response.Response`
 
 ```text
 Send configuration string
@@ -1479,7 +1479,7 @@ Raises:
     
 
 ##### send_configs
-`send_configs(self, configs: List[str], *, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '', eager: bool = False, timeout_ops: Optional[float] = None) ‑> scrapli.response.MultiResponse`
+`send_configs(self, configs: List[str], *, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '', eager: bool = False, timeout_ops: Union[float, NoneType] = None) ‑> scrapli.response.MultiResponse`
 
 ```text
 Send configuration(s)
@@ -1517,7 +1517,7 @@ Raises:
     
 
 ##### send_configs_from_file
-`send_configs_from_file(self, file: str, *, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '', eager: bool = False, timeout_ops: Optional[float] = None) ‑> scrapli.response.MultiResponse`
+`send_configs_from_file(self, file: str, *, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, privilege_level: str = '', eager: bool = False, timeout_ops: Union[float, NoneType] = None) ‑> scrapli.response.MultiResponse`
 
 ```text
 Send configuration(s) from a file
@@ -1555,7 +1555,7 @@ Raises:
     
 
 ##### send_interactive
-`send_interactive(self, interact_events: List[Tuple[str, str, Optional[bool]]], *, failed_when_contains: Union[str, List[str], NoneType] = None, privilege_level: str = '', timeout_ops: Optional[float] = None) ‑> scrapli.response.Response`
+`send_interactive(self, interact_events: List[Tuple[str, str, Union[bool, NoneType]]], *, failed_when_contains: Union[str, List[str], NoneType] = None, privilege_level: str = '', timeout_ops: Union[float, NoneType] = None) ‑> scrapli.response.Response`
 
 ```text
 Interact with a device with changing prompts per input.

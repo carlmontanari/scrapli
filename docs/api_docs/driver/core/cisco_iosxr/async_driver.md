@@ -54,7 +54,6 @@ async def iosxr_on_open(conn: AsyncNetworkDriver) -> None:
     """
     # sleep for session to establish; without this we never find base prompt for some reason?
     # maybe this is an artifact from previous iterations/tests and can be done away with...
-    # TODO, can this shit go away finally?
     time.sleep(1)
     await conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
     await conn.send_command(command="terminal length 0")
@@ -114,6 +113,10 @@ class AsyncIOSXRDriver(AsyncNetworkDriver):
         """
         IOSXRDriver Object
 
+        Please see `scrapli.driver.base.base_driver.Driver` for all "base driver" arguments!
+
+        # noqa: DAR101
+
         Args:
             privilege_levels: optional user provided privilege levels, if left None will default to
                 scrapli standard privilege levels
@@ -133,13 +136,13 @@ class AsyncIOSXRDriver(AsyncNetworkDriver):
             textfsm_platform: string name of textfsm parser platform
             genie_platform: string name of cisco genie parser platform
             failed_when_contains: List of strings that indicate a command/config has failed
-            **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
             N/A  # noqa: DAR202
 
         Raises:
             N/A
+
         """
         if privilege_levels is None:
             privilege_levels = deepcopy(PRIVS)
@@ -217,6 +220,10 @@ class AsyncIOSXRDriver(AsyncNetworkDriver):
 ```text
 IOSXRDriver Object
 
+Please see `scrapli.driver.base.base_driver.Driver` for all "base driver" arguments!
+
+# noqa: DAR101
+
 Args:
     privilege_levels: optional user provided privilege levels, if left None will default to
         scrapli standard privilege levels
@@ -236,7 +243,6 @@ Args:
     textfsm_platform: string name of textfsm parser platform
     genie_platform: string name of cisco genie parser platform
     failed_when_contains: List of strings that indicate a command/config has failed
-    **kwargs: keyword args to pass to inherited class(es)
 
 Returns:
     N/A  # noqa: DAR202
@@ -286,6 +292,10 @@ class AsyncIOSXRDriver(AsyncNetworkDriver):
         """
         IOSXRDriver Object
 
+        Please see `scrapli.driver.base.base_driver.Driver` for all "base driver" arguments!
+
+        # noqa: DAR101
+
         Args:
             privilege_levels: optional user provided privilege levels, if left None will default to
                 scrapli standard privilege levels
@@ -305,13 +315,13 @@ class AsyncIOSXRDriver(AsyncNetworkDriver):
             textfsm_platform: string name of textfsm parser platform
             genie_platform: string name of cisco genie parser platform
             failed_when_contains: List of strings that indicate a command/config has failed
-            **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
             N/A  # noqa: DAR202
 
         Raises:
             N/A
+
         """
         if privilege_levels is None:
             privilege_levels = deepcopy(PRIVS)

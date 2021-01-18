@@ -139,11 +139,12 @@ class Channel(BaseChannel):
             if processed_channel_input in b"".join(buf.lower().replace(b"\x08", b"").split()):
                 return buf
 
-    def _read_until_prompt(self, prompt: str = "") -> bytes:
+    def _read_until_prompt(self, buf: bytes = b"", prompt: str = "") -> bytes:
         """
         Read until expected prompt is seen
 
         Args:
+            buf: output from previous reads if needed (used in scrapli netconf)
             prompt: prompt to look for if not looking for base prompt (comms_prompt_pattern)
 
         Returns:
@@ -156,8 +157,6 @@ class Channel(BaseChannel):
         search_pattern = self._get_prompt_pattern(
             class_pattern=self._base_channel_args.comms_prompt_pattern, pattern=prompt
         )
-
-        buf = b""
 
         while True:
             buf += self.read()
@@ -629,6 +628,7 @@ class Channel(BaseChannel):
 BaseChannel Object -- provides convenience methods to both sync and async Channels
 
 Args:
+    transport: initialized scrapli Transport/AsyncTransport object
     base_channel_args: BaseChannelArgs object
 
 Returns:
@@ -741,11 +741,12 @@ class Channel(BaseChannel):
             if processed_channel_input in b"".join(buf.lower().replace(b"\x08", b"").split()):
                 return buf
 
-    def _read_until_prompt(self, prompt: str = "") -> bytes:
+    def _read_until_prompt(self, buf: bytes = b"", prompt: str = "") -> bytes:
         """
         Read until expected prompt is seen
 
         Args:
+            buf: output from previous reads if needed (used in scrapli netconf)
             prompt: prompt to look for if not looking for base prompt (comms_prompt_pattern)
 
         Returns:
@@ -758,8 +759,6 @@ class Channel(BaseChannel):
         search_pattern = self._get_prompt_pattern(
             class_pattern=self._base_channel_args.comms_prompt_pattern, pattern=prompt
         )
-
-        buf = b""
 
         while True:
             buf += self.read()
@@ -1223,8 +1222,6 @@ class Channel(BaseChannel):
 
 #### Ancestors (in MRO)
 - scrapli.channel.base_channel.BaseChannel
-#### Descendants
-- scrapli.server.collect.RecordChannel
 #### Methods
 
     
@@ -1340,7 +1337,7 @@ Raises:
     
 
 ##### send_input_and_read
-`send_input_and_read(self, channel_input: str, *, strip_prompt: bool = True, expected_outputs: Optional[List[str]] = None, read_duration: Optional[float] = None) ‑> Tuple[bytes, bytes]`
+`send_input_and_read(self, channel_input: str, *, strip_prompt: bool = True, expected_outputs: Union[List[str], NoneType] = None, read_duration: Union[float, NoneType] = None) ‑> Tuple[bytes, bytes]`
 
 ```text
 Send a command and read until expected prompt is seen, outputs are seen, or for duration
@@ -1364,7 +1361,7 @@ Raises:
     
 
 ##### send_inputs_interact
-`send_inputs_interact(self, interact_events: List[Tuple[str, str, Optional[bool]]]) ‑> Tuple[bytes, bytes]`
+`send_inputs_interact(self, interact_events: List[Tuple[str, str, Union[bool, NoneType]]]) ‑> Tuple[bytes, bytes]`
 
 ```text
 Interact with a device with changing prompts per input.

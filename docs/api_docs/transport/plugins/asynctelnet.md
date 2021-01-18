@@ -189,12 +189,7 @@ class AsynctelnetTransport(AsyncTransport):
             self.stdin.close()
 
             try:
-                # TODO - have tried all these combos... the run until complete seems sane but
-                #  causes errors in pytest... the just basic "close" seems great but im sure it was
-                #  not used at some poitn for a reason...? the last create task one seems worst?
-                # asyncio.get_event_loop().run_until_complete(self.stdin.wait_closed())
                 self.stdin.close()
-                # asyncio.get_event_loop().create_task(self.stdin.wait_closed())
             except AttributeError:
                 # wait closed only in 3.7+... unclear if we should be doing something else for 3.6?
                 # it doesnt seem to hurt anything...
@@ -399,12 +394,7 @@ class AsynctelnetTransport(AsyncTransport):
             self.stdin.close()
 
             try:
-                # TODO - have tried all these combos... the run until complete seems sane but
-                #  causes errors in pytest... the just basic "close" seems great but im sure it was
-                #  not used at some poitn for a reason...? the last create task one seems worst?
-                # asyncio.get_event_loop().run_until_complete(self.stdin.wait_closed())
                 self.stdin.close()
-                # asyncio.get_event_loop().create_task(self.stdin.wait_closed())
             except AttributeError:
                 # wait closed only in 3.7+... unclear if we should be doing something else for 3.6?
                 # it doesnt seem to hurt anything...
@@ -474,7 +464,6 @@ PluginTransportArgs()
     </summary>
     <pre>
         <code class="python">
-@dataclass()
 class PluginTransportArgs(BasePluginTransportArgs):
     pass
         </code>

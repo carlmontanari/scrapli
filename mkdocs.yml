@@ -20,7 +20,7 @@ nav:
   - Scrapli: index.md
   - User Guide:
       - Quick Start Guide: user_guide/quickstart.md
-      - Project Structure: user_guide/project_structure.md
+      - Project Details: user_guide/project_details.md
       - Versioning: user_guide/versioning.md
       - Installation: user_guide/installation.md
       - Basic Usage: user_guide/basic_usage.md

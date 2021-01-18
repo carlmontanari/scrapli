@@ -110,6 +110,10 @@ class EOSDriver(NetworkDriver, EOSDriverBase):
         """
         EOSDriver Object
 
+        Please see `scrapli.driver.base.base_driver.Driver` for all "base driver" arguments!
+
+        # noqa: DAR101
+
         Args:
             privilege_levels: optional user provided privilege levels, if left None will default to
                 scrapli standard privilege levels
@@ -129,7 +133,6 @@ class EOSDriver(NetworkDriver, EOSDriverBase):
             textfsm_platform: string name of textfsm parser platform
             genie_platform: string name of cisco genie parser platform
             failed_when_contains: List of strings that indicate a command/config has failed
-            **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
             None
@@ -238,6 +241,10 @@ class EOSDriver(NetworkDriver, EOSDriverBase):
 ```text
 EOSDriver Object
 
+Please see `scrapli.driver.base.base_driver.Driver` for all "base driver" arguments!
+
+# noqa: DAR101
+
 Args:
     privilege_levels: optional user provided privilege levels, if left None will default to
         scrapli standard privilege levels
@@ -257,7 +264,6 @@ Args:
     textfsm_platform: string name of textfsm parser platform
     genie_platform: string name of cisco genie parser platform
     failed_when_contains: List of strings that indicate a command/config has failed
-    **kwargs: keyword args to pass to inherited class(es)
 
 Returns:
     None
@@ -307,6 +313,10 @@ class EOSDriver(NetworkDriver, EOSDriverBase):
         """
         EOSDriver Object
 
+        Please see `scrapli.driver.base.base_driver.Driver` for all "base driver" arguments!
+
+        # noqa: DAR101
+
         Args:
             privilege_levels: optional user provided privilege levels, if left None will default to
                 scrapli standard privilege levels
@@ -326,7 +336,6 @@ class EOSDriver(NetworkDriver, EOSDriverBase):
             textfsm_platform: string name of textfsm parser platform
             genie_platform: string name of cisco genie parser platform
             failed_when_contains: List of strings that indicate a command/config has failed
-            **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
             None

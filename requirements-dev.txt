@@ -11,7 +11,6 @@ pycodestyle==2.6.0
 pydocstyle==5.1.1
 pylint==2.6.0
 darglint==1.5.8
-asyncssh==2.5.0
 napalm==3.2.0
 -e git+https://github.com/scrapli/scrapli_community@scrapli_core_overhaul#egg=scrapli_community
 -r requirements.txt

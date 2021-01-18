@@ -54,7 +54,6 @@ def iosxr_on_open(conn: NetworkDriver) -> None:
     """
     # sleep for session to establish; without this we never find base prompt for some reason?
     # maybe this is an artifact from previous iterations/tests and can be done away with...
-    # TODO can this finally go away
     time.sleep(1)
     conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
     conn.send_command(command="terminal length 0")
@@ -117,6 +116,10 @@ class IOSXRDriver(NetworkDriver):
         """
         IOSXRDriver Object
 
+        Please see `scrapli.driver.base.base_driver.Driver` for all "base driver" arguments!
+
+        # noqa: DAR101
+
         Args:
             privilege_levels: optional user provided privilege levels, if left None will default to
                 scrapli standard privilege levels
@@ -136,7 +139,6 @@ class IOSXRDriver(NetworkDriver):
             textfsm_platform: string name of textfsm parser platform
             genie_platform: string name of cisco genie parser platform
             failed_when_contains: List of strings that indicate a command/config has failed
-            **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
             None
@@ -221,6 +223,10 @@ class IOSXRDriver(NetworkDriver):
 ```text
 IOSXRDriver Object
 
+Please see `scrapli.driver.base.base_driver.Driver` for all "base driver" arguments!
+
+# noqa: DAR101
+
 Args:
     privilege_levels: optional user provided privilege levels, if left None will default to
         scrapli standard privilege levels
@@ -240,7 +246,6 @@ Args:
     textfsm_platform: string name of textfsm parser platform
     genie_platform: string name of cisco genie parser platform
     failed_when_contains: List of strings that indicate a command/config has failed
-    **kwargs: keyword args to pass to inherited class(es)
 
 Returns:
     None
@@ -290,6 +295,10 @@ class IOSXRDriver(NetworkDriver):
         """
         IOSXRDriver Object
 
+        Please see `scrapli.driver.base.base_driver.Driver` for all "base driver" arguments!
+
+        # noqa: DAR101
+
         Args:
             privilege_levels: optional user provided privilege levels, if left None will default to
                 scrapli standard privilege levels
@@ -309,7 +318,6 @@ class IOSXRDriver(NetworkDriver):
             textfsm_platform: string name of textfsm parser platform
             genie_platform: string name of cisco genie parser platform
             failed_when_contains: List of strings that indicate a command/config has failed
-            **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
             None

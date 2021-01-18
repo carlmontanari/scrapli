@@ -188,7 +188,6 @@ PluginTransportArgs(auth_username: str, auth_private_key: str = '', auth_strict_
     </summary>
     <pre>
         <code class="python">
-@dataclass()
 class PluginTransportArgs(BasePluginTransportArgs):
     auth_username: str
     auth_private_key: str = ""

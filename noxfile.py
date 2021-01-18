@@ -7,8 +7,6 @@ import nox
 
 nox.options.error_on_missing_interpreters = False
 nox.options.stop_on_first_error = False
-# virtualenv seemed to just decide to refuse to install async-generator for 3.6? also i use venv
-# anyway so may as well use it for nox too
 nox.options.default_venv_backend = "venv"
 
 
@@ -54,11 +52,12 @@ def unit_tests(session):
         N/A
 
     """
+    if session.python == "3.6":
+        session.install("dataclasses", "async_generator")
+
     # ensure test ssh key permissions are appropriate
     session.run("chmod", "0600", "tests/test_data/files/vrnetlab_key", external=True)
     session.run("chmod", "0600", "tests/test_data/files/vrnetlab_key_encrypted", external=True)
-
-    session.install("-r", "requirements-dev.txt")
 
     # install this repo in editable mode so that other scrapli libs can depend on a yet to be
     # released version. for example, scrapli_asyncssh is new and released and requires the *next*
@@ -67,6 +66,7 @@ def unit_tests(session):
     # updated to match the new pins in other scrapli libs
     session.install("-e", ".")
 
+    session.install("-r", "requirements-dev.txt")
     session.run(
         "pytest",
         "--cov=scrapli",
