@@ -191,6 +191,8 @@ class PtyProcess:
             ScrapliValueError: if no ssh binary found on PATH
             Exception: IOError - if unable to set window size of child process
             Exception: OSError - if unable to spawn command in child process
+            IOError: failing to reset window size
+            exception: if we get an exception decoding output
 
         """
         # Note that it is difficult for this method to fail.

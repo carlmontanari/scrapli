@@ -80,8 +80,12 @@ class NXOSDriver(NetworkDriver, NXOSDriverBase):
         """
         NXOSDriver Object
 
+        Please see `scrapli.driver.base.base_driver.Driver` for all "base driver" arguments!
+
+        # noqa: DAR101
+
         Args:
-            privilege_levels: optional user provided privilege levels, if left None will default to
+             privilege_levels: optional user provided privilege levels, if left None will default to
                 scrapli standard privilege levels
             default_desired_privilege_level: string of name of default desired priv, this is the
                 priv level that is generally used to disable paging/set terminal width and things
@@ -99,18 +103,6 @@ class NXOSDriver(NetworkDriver, NXOSDriverBase):
             textfsm_platform: string name of textfsm parser platform
             genie_platform: string name of cisco genie parser platform
             failed_when_contains: List of strings that indicate a command/config has failed
-            transport: system|telnet or a plugin -- type of transport to use for connection
-                system uses system available ssh (/usr/bin/ssh)
-                ssh2 uses ssh2-python *has been migrated to a plugin
-                paramiko uses... paramiko *has been migrated to a plugin
-                telnet uses telnetlib
-                choice of driver depends on the features you need. in general system is easiest as
-                it will just 'auto-magically' use your ssh config file ('~/.ssh/config' or
-                '/etc/ssh/config_file'). ssh2 is very very fast as it is a thin wrapper around
-                libssh2 however it is slightly feature limited. paramiko is slower than ssh2, but
-                has more features built in (though scrapli does not expose/support them all).
-                explicitly added here to allow for nicely checking if transport is telnet.
-            **kwargs: keyword args to pass to inherited class(es)
 
         Returns:
             None

@@ -13,11 +13,7 @@ pylint==2.6.0
 darglint==1.5.8
 asyncssh==2.5.0
 napalm==3.2.0
-pdoc3==0.9.2 ; sys_platform != "win32"
-mkdocs==1.1.2
-mkdocs-material==6.2.5
-mkdocs-material-extensions==1.0.1
--e git+https://github.com/scrapli/scrapli_community@master#egg=scrapli_community
+-e git+https://github.com/scrapli/scrapli_community@scrapli_core_overhaul#egg=scrapli_community
 -r requirements.txt
 -r requirements-textfsm.txt
 -r requirements-genie.txt

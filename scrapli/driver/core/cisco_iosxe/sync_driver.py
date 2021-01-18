@@ -77,6 +77,40 @@ class IOSXEDriver(NetworkDriver):
         textfsm_platform: str = "cisco_iosxe",
         genie_platform: str = "iosxe",
     ):
+        """
+        IOSXEDriver Object
+
+        Please see `scrapli.driver.base.base_driver.Driver` for all "base driver" arguments!
+
+        # noqa: DAR101
+
+        Args:
+            privilege_levels: optional user provided privilege levels, if left None will default to
+                scrapli standard privilege levels
+            default_desired_privilege_level: string of name of default desired priv, this is the
+                priv level that is generally used to disable paging/set terminal width and things
+                like that upon first login, and is also the priv level scrapli will try to acquire
+                for normal "command" operations (`send_command`, `send_commands`)
+            auth_secondary: password to use for secondary authentication (enable)
+            on_open: callable that accepts the class instance as its only argument. this callable,
+                if provided, is executed immediately after authentication is completed. Common use
+                cases for this callable would be to disable paging or accept any kind of banner
+                message that prompts a user upon connection
+            on_close: callable that accepts the class instance as its only argument. this callable,
+                if provided, is executed immediately prior to closing the underlying transport.
+                Common use cases for this callable would be to save configurations prior to exiting,
+                or to logout properly to free up vtys or similar.
+            textfsm_platform: string name of textfsm parser platform
+            genie_platform: string name of cisco genie parser platform
+            failed_when_contains: List of strings that indicate a command/config has failed
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        """
         if privilege_levels is None:
             privilege_levels = deepcopy(PRIVS)
 

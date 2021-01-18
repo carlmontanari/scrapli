@@ -51,6 +51,7 @@ class BaseChannel:
         BaseChannel Object -- provides convenience methods to both sync and async Channels
 
         Args:
+            transport: initialized scrapli Transport/AsyncTransport object
             base_channel_args: BaseChannelArgs object
 
         Returns:

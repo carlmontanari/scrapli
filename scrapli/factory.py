@@ -59,7 +59,7 @@ def _build_provided_kwargs_dict(  # pylint: disable=R0914
     genie_platform: str,
     **kwargs: Dict[Any, Any],
 ) -> Dict[str, Any]:
-    """
+    r"""
     Build arguments dict based on provided inputs
 
     This function builds the dict of keyword args to unpack and send to the driver -- in the factory
@@ -67,7 +67,17 @@ def _build_provided_kwargs_dict(  # pylint: disable=R0914
     ssh_config_file which defaults to False) from None which is their default in the factory, back
     to their normal default if they are still None -OR- to whatever the user provided.
 
-    TODO args/returns/etc.
+    # noqa: DAR101
+
+    Args:
+        N/A
+
+    Returns:
+        dict: dictionary with user args merged with the appropriate default options
+
+    Raises:
+        N/A
+
     """
     # handle the args that would be None/False so we dont strip them out if not provided
     auth_strict_key = auth_strict_key if auth_strict_key is not None else True
@@ -365,13 +375,78 @@ class Scrapli(NetworkDriver):
         variant: Optional[str] = None,
         **kwargs: Dict[Any, Any],
     ) -> "Scrapli":
-        """
+        r"""
         Scrapli Factory method for synchronous drivers
 
         Args:
-            platform: name of target platform; i.e. `cisco_iosxe`, `arista_eos`, etc.
-            variant: optional name of variant of community platform
-            **kwargs: keyword arguments to pass to selected driver class
+            platform: name of the scrapli platform to return a connection object for; should be
+                one of the "core" platforms or a valid community platform name
+            host: host ip/name to connect to
+            port: port to connect to
+            auth_username: username for authentication
+            auth_private_key: path to private key for authentication
+            auth_private_key_passphrase: passphrase for decrypting ssh key if necessary
+            auth_password: password for authentication
+            auth_strict_key: strict host checking or not
+            auth_bypass: bypass "in channel" authentication -- only supported with telnet,
+                asynctelnet, and system transport plugins
+            timeout_socket: timeout for establishing socket/initial connection in seconds
+            timeout_transport: timeout for ssh|telnet transport in seconds
+            timeout_ops: timeout for ssh channel operations
+            comms_return_char: character to use to send returns to host
+            comms_ansi: True/False strip comms_ansi characters from output, generally the default
+                value of False should be fine
+            ssh_config_file: string to path for ssh config file, True to use default ssh config file
+                or False to ignore default ssh config file
+            ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
+                file locations. Only applicable/needed if `auth_strict_key` is set to True
+            on_init: callable that accepts the class instance as its only argument. this callable,
+                if provided, is executed as the last step of object instantiation -- its purpose is
+                primarily to provide a mechanism for scrapli community platforms to have an easy way
+                to modify initialization arguments/object attributes without needing to create a
+                class that extends the driver, instead allowing the community platforms to simply
+                build from the GenericDriver or NetworkDriver classes, and pass this callable to do
+                things such as appending to a username (looking at you RouterOS!!). Note that this
+                is *always* a synchronous function (even for asyncio drivers)!
+            on_open: callable that accepts the class instance as its only argument. this callable,
+                if provided, is executed immediately after authentication is completed. Common use
+                cases for this callable would be to disable paging or accept any kind of banner
+                message that prompts a user upon connection
+            on_close: callable that accepts the class instance as its only argument. this callable,
+                if provided, is executed immediately prior to closing the underlying transport.
+                Common use cases for this callable would be to save configurations prior to exiting,
+                or to logout properly to free up vtys or similar
+            transport: name of the transport plugin to use for the actual telnet/ssh/netconf
+                connection. Available "core" transports are:
+                    - system
+                    - telnet
+                    - asynctelnet
+                    - ssh2
+                    - paramiko
+                    - asyncssh
+                Please see relevant transport plugin section for details. Additionally third party
+                transport plugins may be available.
+            transport_options: dictionary of options to pass to selected transport class; see
+                docs for given transport class for details of what to pass here
+            channel_lock: True/False to lock the channel (threading.Lock/asyncio.Lock) during
+                any channel operations, defaults to False
+            channel_log: True/False or a string path to a file of where to write out channel logs --
+                these are not "logs" in the normal logging module sense, but only the output that is
+                read from the channel. In other words, the output of the channel log should look
+                similar to what you would see as a human connecting to a device
+            failed_when_contains: list of strings indicating command/config failure
+            textfsm_platform: string to use to fetch ntc-templates templates for textfsm parsing
+            genie_platform: string to use to fetch genie parser templates
+            privilege_levels: optional user provided privilege levels, if left None will default to
+                scrapli standard privilege levels
+            default_desired_privilege_level: string of name of default desired priv, this is the
+                priv level that is generally used to disable paging/set terminal width and things
+                like that upon first login, and is also the priv level scrapli will try to acquire
+                for normal "command" operations (`send_command`, `send_commands`)
+            auth_secondary: password to use for secondary authentication (enable)
+            failed_when_contains: List of strings that indicate a command/config has failed
+            variant: name of the community platform variant if desired
+            **kwargs: should be unused, but here to accept any additional kwargs from users
 
         Returns:
             final_driver: synchronous driver class for provided driver
@@ -451,7 +526,21 @@ class AsyncScrapli(AsyncNetworkDriver):
     def _get_driver_class(
         cls, platform_details: Dict[str, Any], variant: Optional[str]
     ) -> Union[Type[AsyncNetworkDriver], Type[AsyncGenericDriver]]:
-        """TODO"""
+        """
+        Fetch community driver class based on platform details
+
+        Args:
+            platform_details: dict of details about community platform from scrapli_community
+                library
+            variant: optional name of variant of community platform
+
+        Returns:
+            NetworkDriver: final driver class
+
+        Raises:
+            N/A
+
+        """
         final_driver: Union[
             Type[AsyncNetworkDriver],
             Type[AsyncGenericDriver],
@@ -475,7 +564,20 @@ class AsyncScrapli(AsyncNetworkDriver):
     def _get_community_driver(
         cls, community_platform_name: str, variant: Optional[str]
     ) -> Tuple[Union[Type[AsyncNetworkDriver], Type[AsyncGenericDriver]], Dict[str, Any]]:
-        """TODO"""
+        """
+        Get community driver
+
+        Args:
+            community_platform_name: name of community
+            variant: optional name of variant of community platform
+
+        Returns:
+            NetworkDriver: final driver class
+
+        Raises:
+            N/A
+
+        """
         platform_details = _get_community_platform_details(
             community_platform_name=community_platform_name
         )
@@ -491,7 +593,22 @@ class AsyncScrapli(AsyncNetworkDriver):
     def _get_driver(
         cls, platform: str, variant: Optional[str]
     ) -> Tuple[Union[Type[AsyncNetworkDriver], Type[AsyncGenericDriver]], Dict[str, Any]]:
-        """TODO"""
+        """
+        Parent get driver method for sync Scrapli
+
+        Args:
+            platform: name of target platform; i.e. `cisco_iosxe`, `arista_eos`, etc.
+            variant: name of the target platform variant
+
+        Returns:
+            NetworkDriver: final driver class; generally NetworkDriver, but for some community
+                platforms could be GenericDriver, also returns any additional kwargs comming from
+                the community platform (if any)
+
+        Raises:
+            N/A
+
+        """
         additional_kwargs: Dict[str, Any] = {}
         final_driver: Union[Type[AsyncGenericDriver], Type[AsyncNetworkDriver]]
 
@@ -544,7 +661,87 @@ class AsyncScrapli(AsyncNetworkDriver):
         variant: Optional[str] = None,
         **kwargs: Dict[Any, Any],
     ) -> "AsyncScrapli":
-        """TODO"""
+        r"""
+        Scrapli Factory method for asynchronous drivers
+
+        Args:
+            platform: name of the scrapli platform to return a connection object for; should be
+                one of the "core" platforms or a valid community platform name
+            host: host ip/name to connect to
+            port: port to connect to
+            auth_username: username for authentication
+            auth_private_key: path to private key for authentication
+            auth_private_key_passphrase: passphrase for decrypting ssh key if necessary
+            auth_password: password for authentication
+            auth_strict_key: strict host checking or not
+            auth_bypass: bypass "in channel" authentication -- only supported with telnet,
+                asynctelnet, and system transport plugins
+            timeout_socket: timeout for establishing socket/initial connection in seconds
+            timeout_transport: timeout for ssh|telnet transport in seconds
+            timeout_ops: timeout for ssh channel operations
+            comms_return_char: character to use to send returns to host
+            comms_ansi: True/False strip comms_ansi characters from output, generally the default
+                value of False should be fine
+            ssh_config_file: string to path for ssh config file, True to use default ssh config file
+                or False to ignore default ssh config file
+            ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
+                file locations. Only applicable/needed if `auth_strict_key` is set to True
+            on_init: callable that accepts the class instance as its only argument. this callable,
+                if provided, is executed as the last step of object instantiation -- its purpose is
+                primarily to provide a mechanism for scrapli community platforms to have an easy way
+                to modify initialization arguments/object attributes without needing to create a
+                class that extends the driver, instead allowing the community platforms to simply
+                build from the GenericDriver or NetworkDriver classes, and pass this callable to do
+                things such as appending to a username (looking at you RouterOS!!). Note that this
+                is *always* a synchronous function (even for asyncio drivers)!
+            on_open: callable that accepts the class instance as its only argument. this callable,
+                if provided, is executed immediately after authentication is completed. Common use
+                cases for this callable would be to disable paging or accept any kind of banner
+                message that prompts a user upon connection
+            on_close: callable that accepts the class instance as its only argument. this callable,
+                if provided, is executed immediately prior to closing the underlying transport.
+                Common use cases for this callable would be to save configurations prior to exiting,
+                or to logout properly to free up vtys or similar
+            transport: name of the transport plugin to use for the actual telnet/ssh/netconf
+                connection. Available "core" transports are:
+                    - system
+                    - telnet
+                    - asynctelnet
+                    - ssh2
+                    - paramiko
+                    - asyncssh
+                Please see relevant transport plugin section for details. Additionally third party
+                transport plugins may be available.
+            transport_options: dictionary of options to pass to selected transport class; see
+                docs for given transport class for details of what to pass here
+            channel_lock: True/False to lock the channel (threading.Lock/asyncio.Lock) during
+                any channel operations, defaults to False
+            channel_log: True/False or a string path to a file of where to write out channel logs --
+                these are not "logs" in the normal logging module sense, but only the output that is
+                read from the channel. In other words, the output of the channel log should look
+                similar to what you would see as a human connecting to a device
+            failed_when_contains: list of strings indicating command/config failure
+            textfsm_platform: string to use to fetch ntc-templates templates for textfsm parsing
+            genie_platform: string to use to fetch genie parser templates
+            privilege_levels: optional user provided privilege levels, if left None will default to
+                scrapli standard privilege levels
+            default_desired_privilege_level: string of name of default desired priv, this is the
+                priv level that is generally used to disable paging/set terminal width and things
+                like that upon first login, and is also the priv level scrapli will try to acquire
+                for normal "command" operations (`send_command`, `send_commands`)
+            auth_secondary: password to use for secondary authentication (enable)
+            failed_when_contains: List of strings that indicate a command/config has failed
+            variant: name of the community platform variant if desired
+            **kwargs: should be unused, but here to accept any additional kwargs from users
+
+        Returns:
+            final_driver: asynchronous driver class for provided driver
+
+        Raises:
+            ScrapliValueError: if provided transport is asyncio
+            ScrapliTypeError: if `platform` not in keyword arguments
+
+        """
         logger.debug("AsyncScrapli factory initialized")
 
         if transport not in ASYNCIO_TRANSPORTS:
