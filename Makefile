@@ -36,6 +36,9 @@ test_unit:
 docs:
 	python docs/generate/generate_docs.py
 
+deploy_docs:
+	mkdocs gh-deploy
+
 start_dev_env:
 	${DOCKER_COMPOSE} \
 		up -d \
