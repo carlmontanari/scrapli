@@ -19,6 +19,9 @@ Changelog
   confusion about where to update what timeout/value
 - `Response._record_response` is now public but only for linting reasons, people generally should ignore this anyway!
 - Python 3.6 will now require dataclasses backport
+- All driver methods now have only the "main" argument as an allowable positional argument, the rest of the 
+  arguments are keyword-only! For example, `send_command` you can pass a positional argument for `command`, but 
+  `strip_prompt` and any additional arguments *must* be keyword arguments!
 - *BREAKING CHANGE* `Scrape`/`AsyncScrape` renamed --> `Driver`/`AsyncDriver` -- given most folks should not be using 
   these directly there will be no alias for this, just a hard change!
 

@@ -147,7 +147,7 @@ class BaseDriver:
             port=port,
             timeout_socket=timeout_socket,
             timeout_transport=timeout_transport,
-            logging_uid=logging_uid
+            logging_uid=logging_uid,
         )
 
         self.host, self.port = self._setup_host(host=host, port=port)
