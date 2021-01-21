@@ -70,6 +70,7 @@ class BaseDriver:
         transport_options: Optional[Dict[str, Any]] = None,
         channel_log: Union[str, bool] = False,
         channel_lock: bool = False,
+        logging_uid: str = "",
     ) -> None:
         r"""
         BaseDriver Object
@@ -142,6 +143,9 @@ class BaseDriver:
                 these are not "logs" in the normal logging module sense, but only the output that is
                 read from the channel. In other words, the output of the channel log should look
                 similar to what you would see as a human connecting to a device
+            logging_uid: unique identifier (string) to associate to log messages; useful if you have
+                multiple connections to the same device (i.e. one console, one ssh, or one to each
+                supervisor module, etc.)
 
         Returns:
             None
@@ -150,7 +154,9 @@ class BaseDriver:
             N/A
 
         """
-        self.logger = get_instance_logger(instance_name="scrapli.driver", host=host, port=port)
+        self.logger = get_instance_logger(
+            instance_name="scrapli.driver", host=host, port=port, uid=logging_uid
+        )
 
         self._base_channel_args = BaseChannelArgs(
             comms_prompt_pattern=comms_prompt_pattern,
@@ -171,6 +177,7 @@ class BaseDriver:
             port=port,
             timeout_socket=timeout_socket,
             timeout_transport=timeout_transport,
+            logging_uid=logging_uid
         )
 
         self.host, self.port = self._setup_host(host=host, port=port)
@@ -1052,6 +1059,9 @@ Args:
         these are not "logs" in the normal logging module sense, but only the output that is
         read from the channel. In other words, the output of the channel log should look
         similar to what you would see as a human connecting to a device
+    logging_uid: unique identifier (string) to associate to log messages; useful if you have
+        multiple connections to the same device (i.e. one console, one ssh, or one to each
+        supervisor module, etc.)
 
 Returns:
     None
@@ -1092,6 +1102,7 @@ class BaseDriver:
         transport_options: Optional[Dict[str, Any]] = None,
         channel_log: Union[str, bool] = False,
         channel_lock: bool = False,
+        logging_uid: str = "",
     ) -> None:
         r"""
         BaseDriver Object
@@ -1164,6 +1175,9 @@ class BaseDriver:
                 these are not "logs" in the normal logging module sense, but only the output that is
                 read from the channel. In other words, the output of the channel log should look
                 similar to what you would see as a human connecting to a device
+            logging_uid: unique identifier (string) to associate to log messages; useful if you have
+                multiple connections to the same device (i.e. one console, one ssh, or one to each
+                supervisor module, etc.)
 
         Returns:
             None
@@ -1172,7 +1186,9 @@ class BaseDriver:
             N/A
 
         """
-        self.logger = get_instance_logger(instance_name="scrapli.driver", host=host, port=port)
+        self.logger = get_instance_logger(
+            instance_name="scrapli.driver", host=host, port=port, uid=logging_uid
+        )
 
         self._base_channel_args = BaseChannelArgs(
             comms_prompt_pattern=comms_prompt_pattern,
@@ -1193,6 +1209,7 @@ class BaseDriver:
             port=port,
             timeout_socket=timeout_socket,
             timeout_transport=timeout_transport,
+            logging_uid=logging_uid
         )
 
         self.host, self.port = self._setup_host(host=host, port=port)

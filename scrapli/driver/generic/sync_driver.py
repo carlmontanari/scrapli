@@ -34,6 +34,7 @@ class GenericDriver(Driver, BaseGenericDriver):
         transport_options: Optional[Dict[str, Any]] = None,
         channel_log: Union[str, bool] = False,
         channel_lock: bool = False,
+        logging_uid: str = "",
     ) -> None:
         super().__init__(
             host=host,
@@ -59,6 +60,7 @@ class GenericDriver(Driver, BaseGenericDriver):
             transport_options=transport_options,
             channel_log=channel_log,
             channel_lock=channel_lock,
+            logging_uid=logging_uid,
         )
 
     def get_prompt(self) -> str:

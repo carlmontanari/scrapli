@@ -63,10 +63,10 @@ class ScrapliFormatter(Formatter):
             N/A
 
         """
-        log_format = "{message_id:<5} | {asctime} | {levelname:<8} | {target: <15} | {message}"
+        log_format = "{message_id:<5} | {asctime} | {levelname:<8} | {target: <25} | {message}"
         if caller_info:
             log_format = (
-                "{message_id:<5} | {asctime} | {levelname:<8} | {target: <15} | "
+                "{message_id:<5} | {asctime} | {levelname:<8} | {target: <25} | "
                 "{module:<20} | {funcName:<20} | {lineno:<5} | {message}"
             )
 
@@ -89,7 +89,7 @@ class ScrapliFormatter(Formatter):
         self.header_record.asctime = "TIMESTAMP".ljust(23, " ")
         self.header_record.levelname = "LEVEL"
         self.header_record.uid = "(UID:)"
-        self.header_record.host = "ADDR"
+        self.header_record.host = "HOST"
         self.header_record.port = "PORT"
         self.header_record.module = "MODULE"
         self.header_record.funcName = "FUNCNAME"
@@ -131,6 +131,9 @@ class ScrapliFormatter(Formatter):
             _uid = f"{record.uid}:"
 
         record.target = f"{_uid}{_host_port}"
+        record.target = (
+            record.target[:25] if len(record.target) <= 25 else f"{record.target[:22]}..."
+        )
 
         if self.caller_info:
             record.module = (
@@ -146,7 +149,7 @@ class ScrapliFormatter(Formatter):
             # ignoring type for these fields so we can put "pretty" data into the log "header" row
             self.header_record.message_id = "ID"  # type: ignore
             self.header_record.lineno = "LINE"  # type: ignore
-            self.header_record.target = "(UID:)ADDR:PORT".ljust(len(record.target))
+            self.header_record.target = "(UID:)HOST:PORT".ljust(len(record.target))
             header_message = self._style.format(self.header_record)
             message = header_message + "\n" + message
 
@@ -251,7 +254,9 @@ class ScrapliFileHandler(FileHandler):
         self._record_msg_buf += literal_eval(record.msg[self._read_msg_prefix_len :])  # noqa
 
 
-def get_instance_logger(instance_name: str, host: str = "", port: int = 0) -> LoggerAdapter:
+def get_instance_logger(
+    instance_name: str, host: str = "", port: int = 0, uid: str = ""
+) -> LoggerAdapter:
     """
     Get an adapted logger instance for a given instance (driver/channel/transport)
 
@@ -259,6 +264,7 @@ def get_instance_logger(instance_name: str, host: str = "", port: int = 0) -> Lo
         instance_name: logger/instance name, i.e. "scrapli.driver"
         host: host to add to logging extras if applicable
         port: port to add to logging extras if applicable
+        uid: unique id for a logging instance
 
     Returns:
         LoggerAdapter: adapter logger for the instance
@@ -272,6 +278,9 @@ def get_instance_logger(instance_name: str, host: str = "", port: int = 0) -> Lo
     if host and port:
         extras["host"] = host
         extras["port"] = str(port)
+
+    if uid:
+        extras["uid"] = uid
 
     _logger = getLogger(instance_name)
     return LoggerAdapter(_logger, extra=extras)
@@ -593,10 +602,10 @@ class ScrapliFormatter(Formatter):
             N/A
 
         """
-        log_format = "{message_id:<5} | {asctime} | {levelname:<8} | {target: <15} | {message}"
+        log_format = "{message_id:<5} | {asctime} | {levelname:<8} | {target: <25} | {message}"
         if caller_info:
             log_format = (
-                "{message_id:<5} | {asctime} | {levelname:<8} | {target: <15} | "
+                "{message_id:<5} | {asctime} | {levelname:<8} | {target: <25} | "
                 "{module:<20} | {funcName:<20} | {lineno:<5} | {message}"
             )
 
@@ -619,7 +628,7 @@ class ScrapliFormatter(Formatter):
         self.header_record.asctime = "TIMESTAMP".ljust(23, " ")
         self.header_record.levelname = "LEVEL"
         self.header_record.uid = "(UID:)"
-        self.header_record.host = "ADDR"
+        self.header_record.host = "HOST"
         self.header_record.port = "PORT"
         self.header_record.module = "MODULE"
         self.header_record.funcName = "FUNCNAME"
@@ -661,6 +670,9 @@ class ScrapliFormatter(Formatter):
             _uid = f"{record.uid}:"
 
         record.target = f"{_uid}{_host_port}"
+        record.target = (
+            record.target[:25] if len(record.target) <= 25 else f"{record.target[:22]}..."
+        )
 
         if self.caller_info:
             record.module = (
@@ -676,7 +688,7 @@ class ScrapliFormatter(Formatter):
             # ignoring type for these fields so we can put "pretty" data into the log "header" row
             self.header_record.message_id = "ID"  # type: ignore
             self.header_record.lineno = "LINE"  # type: ignore
-            self.header_record.target = "(UID:)ADDR:PORT".ljust(len(record.target))
+            self.header_record.target = "(UID:)HOST:PORT".ljust(len(record.target))
             header_message = self._style.format(self.header_record)
             message = header_message + "\n" + message
 

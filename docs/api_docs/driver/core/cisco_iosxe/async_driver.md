@@ -102,6 +102,7 @@ class AsyncIOSXEDriver(AsyncNetworkDriver):
         transport_options: Optional[Dict[str, Any]] = None,
         channel_log: Union[str, bool] = False,
         channel_lock: bool = False,
+        logging_uid: str = "",
         auth_secondary: str = "",
         failed_when_contains: Optional[List[str]] = None,
         textfsm_platform: str = "cisco_iosxe",
@@ -180,6 +181,7 @@ class AsyncIOSXEDriver(AsyncNetworkDriver):
             transport_options=transport_options,
             channel_log=channel_log,
             channel_lock=channel_lock,
+            logging_uid=logging_uid,
             privilege_levels=privilege_levels,
             default_desired_privilege_level=default_desired_privilege_level,
             auth_secondary=auth_secondary,
@@ -265,6 +267,7 @@ class AsyncIOSXEDriver(AsyncNetworkDriver):
         transport_options: Optional[Dict[str, Any]] = None,
         channel_log: Union[str, bool] = False,
         channel_lock: bool = False,
+        logging_uid: str = "",
         auth_secondary: str = "",
         failed_when_contains: Optional[List[str]] = None,
         textfsm_platform: str = "cisco_iosxe",
@@ -343,6 +346,7 @@ class AsyncIOSXEDriver(AsyncNetworkDriver):
             transport_options=transport_options,
             channel_log=channel_log,
             channel_lock=channel_lock,
+            logging_uid=logging_uid,
             privilege_levels=privilege_levels,
             default_desired_privilege_level=default_desired_privilege_level,
             auth_secondary=auth_secondary,
@@ -378,6 +382,12 @@ class AsyncIOSXEDriver(AsyncNetworkDriver):
 
     
 `genie_platform: str`
+
+
+
+
+    
+`logger: logging.LoggerAdapter`
 
 
 

@@ -375,7 +375,14 @@ PRIVS = {
 @pytest.fixture(scope="function")
 def base_network_driver():
     """Fixture to provide base network driver instance"""
-    base_network_driver = BaseNetworkDriver()
+    # even though we are testing the "base" driver, need the driver so that we get the logger
+    # in the instance (mixins are weird!)
+    base_network_driver = NetworkDriver(
+        host="localhost",
+        privilege_levels=deepcopy(PRIVS),
+        auth_secondary="scrapli",
+        default_desired_privilege_level="privilege_exec",
+    )
     base_network_driver.auth_secondary = "scrapli"
     base_network_driver.failed_when_contains = []
     base_network_driver.textfsm_platform = "cisco_iosxe"

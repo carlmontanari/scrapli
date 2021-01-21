@@ -286,4 +286,5 @@ def user_warning(title: str, message: str) -> None:
 
     """
     warning_message = format_user_warning(title=title, message=message)
+    logger.warning(warning_message)
     warn(warning_message)

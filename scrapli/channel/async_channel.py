@@ -436,6 +436,10 @@ class AsyncChannel(BaseChannel):
         buf = b""
         bytes_channel_input = channel_input.encode()
 
+        self.logger.info(
+            f"sending channel input: {channel_input}; strip_prompt: {strip_prompt}; eager: {eager}"
+        )
+
         async with self._channel_lock():
             self.write(channel_input=channel_input)
             _buf_until_input = await self._read_until_input(channel_input=bytes_channel_input)
@@ -482,6 +486,11 @@ class AsyncChannel(BaseChannel):
         bytes_channel_outputs = [
             channel_output.encode() for channel_output in expected_outputs or []
         ]
+
+        self.logger.info(
+            f"sending channel input and read: {channel_input}; strip_prompt: {strip_prompt}; "
+            f"expected_outputs: {expected_outputs}; read_duration: {read_duration}"
+        )
 
         async with self._channel_lock():
             self.write(channel_input=channel_input)
@@ -577,6 +586,13 @@ class AsyncChannel(BaseChannel):
                     hidden_input = interact_event[2]
                 except IndexError:
                     hidden_input = False
+
+                _channel_input = channel_input if not hidden_input else "REDACTED"
+                self.logger.info(
+                    f"sending interactive input: {_channel_input}; "
+                    f"expecting: {channel_response}; "
+                    f"hidden_input: {hidden_input}"
+                )
 
                 self.write(channel_input=channel_input)
                 if not channel_response or hidden_input is True:

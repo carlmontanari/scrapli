@@ -35,6 +35,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
         transport_options: Optional[Dict[str, Any]] = None,
         channel_log: Union[str, bool] = False,
         channel_lock: bool = False,
+        logging_uid: str = "",
         auth_secondary: str = "",
         failed_when_contains: Optional[List[str]] = None,
         textfsm_platform: str = "",
@@ -66,6 +67,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
             transport_options=transport_options,
             channel_log=channel_log,
             channel_lock=channel_lock,
+            logging_uid=logging_uid,
         )
 
         self.auth_secondary = auth_secondary

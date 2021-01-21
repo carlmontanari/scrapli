@@ -13,6 +13,7 @@ class BaseTransportArgs:
     port: int = 22
     timeout_socket: float = 10.0
     timeout_transport: float = 30.0
+    logging_uid: str = ""
 
 
 @dataclass()
@@ -28,6 +29,7 @@ class BaseTransport(ABC):
             instance_name="scrapli.transport",
             host=self._base_transport_args.host,
             port=self._base_transport_args.port,
+            uid=self._base_transport_args.logging_uid,
         )
 
     @abstractmethod

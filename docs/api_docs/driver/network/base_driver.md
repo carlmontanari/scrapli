@@ -34,6 +34,7 @@ from collections import defaultdict
 from datetime import datetime
 from enum import Enum
 from functools import lru_cache
+from logging import LoggerAdapter
 from typing import DefaultDict, Dict, List, Optional, Set, Tuple, Union
 
 from scrapli.exceptions import ScrapliPrivilegeError, ScrapliTypeError
@@ -102,6 +103,7 @@ class PrivilegeAction(Enum):
 
 class BaseNetworkDriver:
     # BaseNetworkDriver Mixin vars for typing/linting purposes
+    logger: LoggerAdapter
     auth_secondary: str
     failed_when_contains: List[str]
     textfsm_platform: str
@@ -125,6 +127,7 @@ class BaseNetworkDriver:
             N/A
 
         """
+        self.logger.debug("generating combined network comms prompt pattern")
         self.comms_prompt_pattern = r"|".join(
             rf"({priv_level_data.pattern})" for priv_level_data in self.privilege_levels.values()
         )
@@ -153,9 +156,11 @@ class BaseNetworkDriver:
                 continue
             matching_priv_levels.append(priv_level.name)
         if not matching_priv_levels:
-            raise ScrapliPrivilegeError(
-                f"Could not determine privilege level from provided prompt: `{current_prompt}`"
-            )
+            msg = f"could not determine privilege level from provided prompt: '{current_prompt}'"
+            self.logger.critical(msg)
+            raise ScrapliPrivilegeError(msg)
+
+        self.logger.debug(f"determined current privilege level is one of '{matching_priv_levels}'")
         return matching_priv_levels
 
     def _build_priv_graph(self) -> None:
@@ -283,10 +288,12 @@ class BaseNetworkDriver:
         """
         desired_privilege_level = self.privilege_levels.get(privilege_level_name)
         if desired_privilege_level is None:
-            raise ScrapliPrivilegeError(
-                f"Requested privilege level `{privilege_level_name}` not a valid privilege level of"
-                f" `{self.__class__.__name__}`"
+            msg = (
+                f"requested privilege level '{privilege_level_name}' not a valid privilege level of"
+                f" '{self.__class__.__name__}'"
             )
+            self.logger.critical(msg)
+            raise ScrapliPrivilegeError(msg)
 
     def _pre_escalate(self, escalate_priv: PrivilegeLevel) -> None:
         """
@@ -306,7 +313,7 @@ class BaseNetworkDriver:
             title = "Authentication Warning!"
             message = (
                 "scrapli will try to escalate privilege without entering a password but may "
-                "fail.\nSet an `auth_secondary` password if your device requires a password to "
+                "fail.\nSet an 'auth_secondary' password if your device requires a password to "
                 "increase privilege, otherwise ignore this message."
             )
             user_warning(title=title, message=message)
@@ -332,6 +339,8 @@ class BaseNetworkDriver:
             N/A
 
         """
+        self.logger.info(f"attempting to acquire '{destination_priv}' privilege level")
+
         # decide if we are already at the desired priv, then we don't need to do any thing!
         current_priv_patterns = self._determine_current_priv(current_prompt=current_prompt)
 
@@ -339,6 +348,9 @@ class BaseNetworkDriver:
         current_priv = self.privilege_levels[current_priv_patterns[0]]
 
         if destination_priv in current_priv_patterns:
+            self.logger.debug(
+                "determined current privilege level is target privilege level, no action needed"
+            )
             self._current_priv_level = self.privilege_levels[destination_priv]
             return PrivilegeAction.NO_ACTION, current_priv
 
@@ -347,8 +359,10 @@ class BaseNetworkDriver:
         )
 
         if self.privilege_levels[map_to_destination_priv[1]].previous_priv != current_priv.name:
+            self.logger.debug("determined privilege deescalation necessary")
             return PrivilegeAction.DEESCALATE, current_priv
 
+        self.logger.debug("determined privilege escalation necessary")
         return PrivilegeAction.ESCALATE, self.privilege_levels[map_to_destination_priv[1]]
 
     def _update_response(self, response: Response) -> None:
@@ -388,8 +402,8 @@ class BaseNetworkDriver:
         """
         if not isinstance(config, str):
             raise ScrapliTypeError(
-                f"`send_config` expects a single string, got {type(config)}, "
-                "to send a list of configs use the `send_configs` method instead."
+                f"'send_config' expects a single string, got {type(config)}, "
+                "to send a list of configs use the 'send_configs' method instead."
             )
 
         # in order to handle multi-line strings, we split lines
@@ -473,8 +487,8 @@ class BaseNetworkDriver:
         """
         if not isinstance(configs, list):
             raise ScrapliTypeError(
-                f"`send_configs` expects a list of strings, got {type(configs)}, "
-                "to send a single configuration line/string use the `send_config` method instead."
+                f"'send_configs' expects a list of strings, got {type(configs)}, "
+                "to send a single configuration line/string use the 'send_config' method instead."
             )
 
         if failed_when_contains is None:
@@ -530,6 +544,7 @@ class BaseNetworkDriver:
         <code class="python">
 class BaseNetworkDriver:
     # BaseNetworkDriver Mixin vars for typing/linting purposes
+    logger: LoggerAdapter
     auth_secondary: str
     failed_when_contains: List[str]
     textfsm_platform: str
@@ -553,6 +568,7 @@ class BaseNetworkDriver:
             N/A
 
         """
+        self.logger.debug("generating combined network comms prompt pattern")
         self.comms_prompt_pattern = r"|".join(
             rf"({priv_level_data.pattern})" for priv_level_data in self.privilege_levels.values()
         )
@@ -581,9 +597,11 @@ class BaseNetworkDriver:
                 continue
             matching_priv_levels.append(priv_level.name)
         if not matching_priv_levels:
-            raise ScrapliPrivilegeError(
-                f"Could not determine privilege level from provided prompt: `{current_prompt}`"
-            )
+            msg = f"could not determine privilege level from provided prompt: '{current_prompt}'"
+            self.logger.critical(msg)
+            raise ScrapliPrivilegeError(msg)
+
+        self.logger.debug(f"determined current privilege level is one of '{matching_priv_levels}'")
         return matching_priv_levels
 
     def _build_priv_graph(self) -> None:
@@ -711,10 +729,12 @@ class BaseNetworkDriver:
         """
         desired_privilege_level = self.privilege_levels.get(privilege_level_name)
         if desired_privilege_level is None:
-            raise ScrapliPrivilegeError(
-                f"Requested privilege level `{privilege_level_name}` not a valid privilege level of"
-                f" `{self.__class__.__name__}`"
+            msg = (
+                f"requested privilege level '{privilege_level_name}' not a valid privilege level of"
+                f" '{self.__class__.__name__}'"
             )
+            self.logger.critical(msg)
+            raise ScrapliPrivilegeError(msg)
 
     def _pre_escalate(self, escalate_priv: PrivilegeLevel) -> None:
         """
@@ -734,7 +754,7 @@ class BaseNetworkDriver:
             title = "Authentication Warning!"
             message = (
                 "scrapli will try to escalate privilege without entering a password but may "
-                "fail.\nSet an `auth_secondary` password if your device requires a password to "
+                "fail.\nSet an 'auth_secondary' password if your device requires a password to "
                 "increase privilege, otherwise ignore this message."
             )
             user_warning(title=title, message=message)
@@ -760,6 +780,8 @@ class BaseNetworkDriver:
             N/A
 
         """
+        self.logger.info(f"attempting to acquire '{destination_priv}' privilege level")
+
         # decide if we are already at the desired priv, then we don't need to do any thing!
         current_priv_patterns = self._determine_current_priv(current_prompt=current_prompt)
 
@@ -767,6 +789,9 @@ class BaseNetworkDriver:
         current_priv = self.privilege_levels[current_priv_patterns[0]]
 
         if destination_priv in current_priv_patterns:
+            self.logger.debug(
+                "determined current privilege level is target privilege level, no action needed"
+            )
             self._current_priv_level = self.privilege_levels[destination_priv]
             return PrivilegeAction.NO_ACTION, current_priv
 
@@ -775,8 +800,10 @@ class BaseNetworkDriver:
         )
 
         if self.privilege_levels[map_to_destination_priv[1]].previous_priv != current_priv.name:
+            self.logger.debug("determined privilege deescalation necessary")
             return PrivilegeAction.DEESCALATE, current_priv
 
+        self.logger.debug("determined privilege escalation necessary")
         return PrivilegeAction.ESCALATE, self.privilege_levels[map_to_destination_priv[1]]
 
     def _update_response(self, response: Response) -> None:
@@ -816,8 +843,8 @@ class BaseNetworkDriver:
         """
         if not isinstance(config, str):
             raise ScrapliTypeError(
-                f"`send_config` expects a single string, got {type(config)}, "
-                "to send a list of configs use the `send_configs` method instead."
+                f"'send_config' expects a single string, got {type(config)}, "
+                "to send a list of configs use the 'send_configs' method instead."
             )
 
         # in order to handle multi-line strings, we split lines
@@ -901,8 +928,8 @@ class BaseNetworkDriver:
         """
         if not isinstance(configs, list):
             raise ScrapliTypeError(
-                f"`send_configs` expects a list of strings, got {type(configs)}, "
-                "to send a single configuration line/string use the `send_config` method instead."
+                f"'send_configs' expects a list of strings, got {type(configs)}, "
+                "to send a single configuration line/string use the 'send_config' method instead."
             )
 
         if failed_when_contains is None:
@@ -968,6 +995,12 @@ class BaseNetworkDriver:
 
     
 `genie_platform: str`
+
+
+
+
+    
+`logger: logging.LoggerAdapter`
 
 
 

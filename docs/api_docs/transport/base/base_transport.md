@@ -43,6 +43,7 @@ class BaseTransportArgs:
     port: int = 22
     timeout_socket: float = 10.0
     timeout_transport: float = 30.0
+    logging_uid: str = ""
 
 
 @dataclass()
@@ -58,6 +59,7 @@ class BaseTransport(ABC):
             instance_name="scrapli.transport",
             host=self._base_transport_args.host,
             port=self._base_transport_args.port,
+            uid=self._base_transport_args.logging_uid,
         )
 
     @abstractmethod
@@ -209,6 +211,7 @@ class BaseTransport(ABC):
             instance_name="scrapli.transport",
             host=self._base_transport_args.host,
             port=self._base_transport_args.port,
+            uid=self._base_transport_args.logging_uid,
         )
 
     @abstractmethod
@@ -378,7 +381,7 @@ Raises:
 
 
 ```text
-BaseTransportArgs(transport_options: Dict[str, Any], host: str, port: int = 22, timeout_socket: float = 10.0, timeout_transport: float = 30.0)
+BaseTransportArgs(transport_options: Dict[str, Any], host: str, port: int = 22, timeout_socket: float = 10.0, timeout_transport: float = 30.0, logging_uid: str = '')
 ```
 
 <details class="source">
@@ -393,6 +396,7 @@ class BaseTransportArgs:
     port: int = 22
     timeout_socket: float = 10.0
     timeout_transport: float = 30.0
+    logging_uid: str = ""
         </code>
     </pre>
 </details>
@@ -402,6 +406,12 @@ class BaseTransportArgs:
 
     
 `host: str`
+
+
+
+
+    
+`logging_uid: str`
 
 
 

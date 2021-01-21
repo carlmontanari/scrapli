@@ -34,9 +34,9 @@ def test_scrapli_formatter():
             pattern=r"\d{4}-\d{2}\-\d{2} \d{2}:\d{2}:\d{2},\d{3}",
             repl="_TIMESTMAMP__TIMESTAMP_",
         )
-        == "ID    | TIMESTAMP               | LEVEL    | (UID:)ADDR:PORT | MODULE               | FUNCNAME            "
-        " | LINE  | MESSAGE\n1     | _TIMESTMAMP__TIMESTAMP_ | INFO     | UID:scrapli:22  | somepath             | "
-        "coolfunc             | 999   | thisisalogmessage!"
+        == "ID    | TIMESTAMP               | LEVEL    | (UID:)HOST:PORT           | MODULE               | FUNCNAME  "
+        "           | LINE  | MESSAGE\n1     | _TIMESTMAMP__TIMESTAMP_ | INFO     | UID:scrapli:22            | "
+        "somepath             | coolfunc             | 999   | thisisalogmessage!"
     )
 
 

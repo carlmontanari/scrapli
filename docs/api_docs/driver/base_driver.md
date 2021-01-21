@@ -67,7 +67,9 @@ the base drivers.
   to False
 - __channel_log__: True/False, or a string path to a file of where to write out channel logs -- these are not "logs" in 
   the normal logging module sense, but only the output that is read from the channel. In other words, the output of 
-  the channel log should look similar to what you would see as a human connecting to a device
+  the channel log should look similar to what you would see as a human connecting to a device 
+- __logging_uid__: unique identifier (string) to associate to log messages; useful if you have multiple connections 
+  to the same device (i.e. one console, one ssh, or one to each supervisor module, etc.)
 
 
 ## Returns

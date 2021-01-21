@@ -65,6 +65,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
         transport_options: Optional[Dict[str, Any]] = None,
         channel_log: Union[str, bool] = False,
         channel_lock: bool = False,
+        logging_uid: str = "",
         auth_secondary: str = "",
         failed_when_contains: Optional[List[str]] = None,
         textfsm_platform: str = "",
@@ -96,6 +97,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
             transport_options=transport_options,
             channel_log=channel_log,
             channel_lock=channel_lock,
+            logging_uid=logging_uid,
         )
 
         self.auth_secondary = auth_secondary
@@ -706,6 +708,9 @@ Args:
         these are not "logs" in the normal logging module sense, but only the output that is
         read from the channel. In other words, the output of the channel log should look
         similar to what you would see as a human connecting to a device
+    logging_uid: unique identifier (string) to associate to log messages; useful if you have
+        multiple connections to the same device (i.e. one console, one ssh, or one to each
+        supervisor module, etc.)
 
 Returns:
     None
@@ -747,6 +752,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
         transport_options: Optional[Dict[str, Any]] = None,
         channel_log: Union[str, bool] = False,
         channel_lock: bool = False,
+        logging_uid: str = "",
         auth_secondary: str = "",
         failed_when_contains: Optional[List[str]] = None,
         textfsm_platform: str = "",
@@ -778,6 +784,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
             transport_options=transport_options,
             channel_log=channel_log,
             channel_lock=channel_lock,
+            logging_uid=logging_uid,
         )
 
         self.auth_secondary = auth_secondary
@@ -1340,6 +1347,12 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
 
     
 `genie_platform: str`
+
+
+
+
+    
+`logger: logging.LoggerAdapter`
 
 
 

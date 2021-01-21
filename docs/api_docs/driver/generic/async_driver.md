@@ -64,6 +64,7 @@ class AsyncGenericDriver(AsyncDriver, BaseGenericDriver):
         transport_options: Optional[Dict[str, Any]] = None,
         channel_log: Union[str, bool] = False,
         channel_lock: bool = False,
+        logging_uid: str = "",
     ) -> None:
         super().__init__(
             host=host,
@@ -89,6 +90,7 @@ class AsyncGenericDriver(AsyncDriver, BaseGenericDriver):
             transport_options=transport_options,
             channel_log=channel_log,
             channel_lock=channel_lock,
+            logging_uid=logging_uid,
         )
 
     async def get_prompt(self) -> str:
@@ -539,6 +541,9 @@ Args:
         these are not "logs" in the normal logging module sense, but only the output that is
         read from the channel. In other words, the output of the channel log should look
         similar to what you would see as a human connecting to a device
+    logging_uid: unique identifier (string) to associate to log messages; useful if you have
+        multiple connections to the same device (i.e. one console, one ssh, or one to each
+        supervisor module, etc.)
 
 Returns:
     None
@@ -579,6 +584,7 @@ class AsyncGenericDriver(AsyncDriver, BaseGenericDriver):
         transport_options: Optional[Dict[str, Any]] = None,
         channel_log: Union[str, bool] = False,
         channel_lock: bool = False,
+        logging_uid: str = "",
     ) -> None:
         super().__init__(
             host=host,
@@ -604,6 +610,7 @@ class AsyncGenericDriver(AsyncDriver, BaseGenericDriver):
             transport_options=transport_options,
             channel_log=channel_log,
             channel_lock=channel_lock,
+            logging_uid=logging_uid,
         )
 
     async def get_prompt(self) -> str:

@@ -98,6 +98,7 @@ class BaseChannel:
             instance_name="scrapli.channel",
             host=self.transport._base_transport_args.host,
             port=self.transport._base_transport_args.port,
+            uid=self.transport._base_transport_args.logging_uid,
         )
 
         self.channel_log: Optional[BinaryIO] = None
@@ -373,6 +374,7 @@ class BaseChannel:
             instance_name="scrapli.channel",
             host=self.transport._base_transport_args.host,
             port=self.transport._base_transport_args.port,
+            uid=self.transport._base_transport_args.logging_uid,
         )
 
         self.channel_log: Optional[BinaryIO] = None

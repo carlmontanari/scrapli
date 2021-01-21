@@ -83,6 +83,7 @@ def _build_provided_kwargs_dict(  # pylint: disable=R0914
     transport_options: Optional[Dict[str, Any]],
     channel_log: Optional[Union[str, bool]],
     channel_lock: Optional[bool],
+    logging_uid: str,
     auth_secondary: str,
     failed_when_contains: Optional[List[str]],
     textfsm_platform: str,
@@ -137,6 +138,7 @@ def _build_provided_kwargs_dict(  # pylint: disable=R0914
         "on_close": on_close,
         "transport": transport,
         "transport_options": transport_options,
+        "logging_uid": logging_uid,
         "auth_secondary": auth_secondary,
         "failed_when_contains": failed_when_contains,
         "textfsm_platform": textfsm_platform,
@@ -398,6 +400,7 @@ class Scrapli(NetworkDriver):
         transport_options: Optional[Dict[str, Any]] = None,
         channel_log: Optional[Union[str, bool]] = None,
         channel_lock: Optional[bool] = None,
+        logging_uid: str = "",
         auth_secondary: str = "",
         failed_when_contains: Optional[List[str]] = None,
         textfsm_platform: str = "",
@@ -464,6 +467,9 @@ class Scrapli(NetworkDriver):
                 these are not "logs" in the normal logging module sense, but only the output that is
                 read from the channel. In other words, the output of the channel log should look
                 similar to what you would see as a human connecting to a device
+            logging_uid: unique identifier (string) to associate to log messages; useful if you have
+                multiple connections to the same device (i.e. one console, one ssh, or one to each
+                supervisor module, etc.)
             failed_when_contains: list of strings indicating command/config failure
             textfsm_platform: string to use to fetch ntc-templates templates for textfsm parsing
             genie_platform: string to use to fetch genie parser templates
@@ -517,6 +523,7 @@ class Scrapli(NetworkDriver):
             transport_options=transport_options,
             channel_log=channel_log,
             channel_lock=channel_lock,
+            logging_uid=logging_uid,
             privilege_levels=privilege_levels,
             default_desired_privilege_level=default_desired_privilege_level,
             auth_secondary=auth_secondary,
@@ -684,6 +691,7 @@ class AsyncScrapli(AsyncNetworkDriver):
         transport_options: Optional[Dict[str, Any]] = None,
         channel_log: Optional[Union[str, bool]] = None,
         channel_lock: Optional[bool] = None,
+        logging_uid: str = "",
         auth_secondary: str = "",
         failed_when_contains: Optional[List[str]] = None,
         textfsm_platform: str = "",
@@ -750,6 +758,9 @@ class AsyncScrapli(AsyncNetworkDriver):
                 these are not "logs" in the normal logging module sense, but only the output that is
                 read from the channel. In other words, the output of the channel log should look
                 similar to what you would see as a human connecting to a device
+            logging_uid: unique identifier (string) to associate to log messages; useful if you have
+                multiple connections to the same device (i.e. one console, one ssh, or one to each
+                supervisor module, etc.)
             failed_when_contains: list of strings indicating command/config failure
             textfsm_platform: string to use to fetch ntc-templates templates for textfsm parsing
             genie_platform: string to use to fetch genie parser templates
@@ -803,6 +814,7 @@ class AsyncScrapli(AsyncNetworkDriver):
             transport_options=transport_options,
             channel_log=channel_log,
             channel_lock=channel_lock,
+            logging_uid=logging_uid,
             privilege_levels=privilege_levels,
             default_desired_privilege_level=default_desired_privilege_level,
             auth_secondary=auth_secondary,
@@ -908,6 +920,9 @@ Args:
         these are not "logs" in the normal logging module sense, but only the output that is
         read from the channel. In other words, the output of the channel log should look
         similar to what you would see as a human connecting to a device
+    logging_uid: unique identifier (string) to associate to log messages; useful if you have
+        multiple connections to the same device (i.e. one console, one ssh, or one to each
+        supervisor module, etc.)
 
 Returns:
     None
@@ -1064,6 +1079,7 @@ class AsyncScrapli(AsyncNetworkDriver):
         transport_options: Optional[Dict[str, Any]] = None,
         channel_log: Optional[Union[str, bool]] = None,
         channel_lock: Optional[bool] = None,
+        logging_uid: str = "",
         auth_secondary: str = "",
         failed_when_contains: Optional[List[str]] = None,
         textfsm_platform: str = "",
@@ -1130,6 +1146,9 @@ class AsyncScrapli(AsyncNetworkDriver):
                 these are not "logs" in the normal logging module sense, but only the output that is
                 read from the channel. In other words, the output of the channel log should look
                 similar to what you would see as a human connecting to a device
+            logging_uid: unique identifier (string) to associate to log messages; useful if you have
+                multiple connections to the same device (i.e. one console, one ssh, or one to each
+                supervisor module, etc.)
             failed_when_contains: list of strings indicating command/config failure
             textfsm_platform: string to use to fetch ntc-templates templates for textfsm parsing
             genie_platform: string to use to fetch genie parser templates
@@ -1183,6 +1202,7 @@ class AsyncScrapli(AsyncNetworkDriver):
             transport_options=transport_options,
             channel_log=channel_log,
             channel_lock=channel_lock,
+            logging_uid=logging_uid,
             privilege_levels=privilege_levels,
             default_desired_privilege_level=default_desired_privilege_level,
             auth_secondary=auth_secondary,
@@ -1246,6 +1266,12 @@ class AsyncScrapli(AsyncNetworkDriver):
 
     
 `genie_platform: str`
+
+
+
+
+    
+`logger: logging.LoggerAdapter`
 
 
 
@@ -1338,6 +1364,9 @@ Args:
         these are not "logs" in the normal logging module sense, but only the output that is
         read from the channel. In other words, the output of the channel log should look
         similar to what you would see as a human connecting to a device
+    logging_uid: unique identifier (string) to associate to log messages; useful if you have
+        multiple connections to the same device (i.e. one console, one ssh, or one to each
+        supervisor module, etc.)
 
 Returns:
     None
@@ -1494,6 +1523,7 @@ class Scrapli(NetworkDriver):
         transport_options: Optional[Dict[str, Any]] = None,
         channel_log: Optional[Union[str, bool]] = None,
         channel_lock: Optional[bool] = None,
+        logging_uid: str = "",
         auth_secondary: str = "",
         failed_when_contains: Optional[List[str]] = None,
         textfsm_platform: str = "",
@@ -1560,6 +1590,9 @@ class Scrapli(NetworkDriver):
                 these are not "logs" in the normal logging module sense, but only the output that is
                 read from the channel. In other words, the output of the channel log should look
                 similar to what you would see as a human connecting to a device
+            logging_uid: unique identifier (string) to associate to log messages; useful if you have
+                multiple connections to the same device (i.e. one console, one ssh, or one to each
+                supervisor module, etc.)
             failed_when_contains: list of strings indicating command/config failure
             textfsm_platform: string to use to fetch ntc-templates templates for textfsm parsing
             genie_platform: string to use to fetch genie parser templates
@@ -1613,6 +1646,7 @@ class Scrapli(NetworkDriver):
             transport_options=transport_options,
             channel_log=channel_log,
             channel_lock=channel_lock,
+            logging_uid=logging_uid,
             privilege_levels=privilege_levels,
             default_desired_privilege_level=default_desired_privilege_level,
             auth_secondary=auth_secondary,
@@ -1676,6 +1710,12 @@ class Scrapli(NetworkDriver):
 
     
 `genie_platform: str`
+
+
+
+
+    
+`logger: logging.LoggerAdapter`
 
 
 
