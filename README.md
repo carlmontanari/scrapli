@@ -35,7 +35,7 @@ scrapli -- scrap(e c)li --  is a python 3.6+ library focused on connecting to de
   simply extend the base classes and add your own! Need additional device support? Create a simple "platform" in 
   [scrapli_community](https://github.com/scrapli/scrapli_community) to easily add new device support!
 - __But wait, there's more!__: Have NETCONF devices in your environment, but love the speed and simplicity of 
-  scrapli? You're in luck! Check out [scrapli_netconf]()!
+  scrapli? You're in luck! Check out [scrapli_netconf](https://github.com/scrapli/scrapli_netconf)!
 - __Concurrency on Easy Mode__: [Nornir's](https://github.com/nornir-automation/nornir) 
   [scrapli plugin](https://github.com/scrapli/nornir_scrapli) gives you all the normal benefits of scrapli __plus__ 
   all the great features of Nornir.

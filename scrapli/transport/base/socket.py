@@ -67,8 +67,7 @@ class Socket:
 
         socket_af = None
         try:
-            sock_host = socket.gethostbyname(self.host)
-            sock_info = socket.getaddrinfo(sock_host, self.port)
+            sock_info = socket.getaddrinfo(self.host, self.port)
             if sock_info:
                 socket_af = sock_info[0][0]
         except socket.gaierror:
@@ -84,7 +83,7 @@ class Socket:
             self.sock.settimeout(self.timeout)
 
             try:
-                self.sock.connect((sock_host, self.port))
+                self.sock.connect((self.host, self.port))
             except ConnectionRefusedError as exc:
                 raise ScrapliConnectionNotOpened(
                     f"connection refused trying to open socket to {self.host} on port {self.port}"
