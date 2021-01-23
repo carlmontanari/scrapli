@@ -2,6 +2,7 @@
 import re
 from dataclasses import dataclass
 from functools import lru_cache
+from io import BytesIO
 from typing import BinaryIO, List, Optional, Pattern, Tuple, Union
 
 from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliTypeError
@@ -37,7 +38,7 @@ class BaseChannelArgs:
     comms_return_char: str = "\n"
     comms_ansi: bool = False
     timeout_ops: float = 30.0
-    channel_log: Union[str, bool] = False
+    channel_log: Union[str, bool, BytesIO] = False
     channel_lock: bool = False
 
 
@@ -73,13 +74,16 @@ class BaseChannel:
 
         self.channel_log: Optional[BinaryIO] = None
         if self._base_channel_args.channel_log:
-            channel_log_destination = "scrapli_channel.log"
-            if isinstance(self._base_channel_args.channel_log, str):
-                channel_log_destination = self._base_channel_args.channel_log
-            self.logger.info(
-                f"channel log enabled, logging channel output to '{channel_log_destination}'"
-            )
-            self.channel_log = open(channel_log_destination, "wb")
+            if isinstance(self._base_channel_args.channel_log, BytesIO):
+                self.channel_log = self._base_channel_args.channel_log
+            else:
+                channel_log_destination = "scrapli_channel.log"
+                if isinstance(self._base_channel_args.channel_log, str):
+                    channel_log_destination = self._base_channel_args.channel_log
+                self.logger.info(
+                    f"channel log enabled, logging channel output to '{channel_log_destination}'"
+                )
+                self.channel_log = open(channel_log_destination, "wb")
 
         self.buf = b""
 
