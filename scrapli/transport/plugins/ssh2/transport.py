@@ -238,8 +238,8 @@ class Ssh2Transport(Transport):
             if self.socket:
                 self.socket.close()
 
-            self.session = None
-            self.session_channel = None
+        self.session = None
+        self.session_channel = None
 
         self._post_open_closing_log(closing=True)
 

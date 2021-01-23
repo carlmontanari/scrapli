@@ -165,8 +165,8 @@ class AsynctelnetTransport(AsyncTransport):
                 # it doesnt seem to hurt anything...
                 pass
 
-            self.stdin = None
-            self.stdout = None
+        self.stdin = None
+        self.stdout = None
 
         self._post_open_closing_log(closing=True)
 
