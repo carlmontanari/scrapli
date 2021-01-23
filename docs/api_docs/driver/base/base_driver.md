@@ -31,6 +31,7 @@ scrapli.driver.base.base_driver
 """scrapli.driver.base.base_driver"""
 import importlib
 from dataclasses import fields
+from io import BytesIO
 from pathlib import Path
 from types import ModuleType
 from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
@@ -68,7 +69,7 @@ class BaseDriver:
         on_close: Optional[Callable[..., Any]] = None,
         transport: str = "system",
         transport_options: Optional[Dict[str, Any]] = None,
-        channel_log: Union[str, bool] = False,
+        channel_log: Union[str, bool, BytesIO] = False,
         channel_lock: bool = False,
         logging_uid: str = "",
     ) -> None:
@@ -177,7 +178,7 @@ class BaseDriver:
             port=port,
             timeout_socket=timeout_socket,
             timeout_transport=timeout_transport,
-            logging_uid=logging_uid
+            logging_uid=logging_uid,
         )
 
         self.host, self.port = self._setup_host(host=host, port=port)
@@ -1100,7 +1101,7 @@ class BaseDriver:
         on_close: Optional[Callable[..., Any]] = None,
         transport: str = "system",
         transport_options: Optional[Dict[str, Any]] = None,
-        channel_log: Union[str, bool] = False,
+        channel_log: Union[str, bool, BytesIO] = False,
         channel_lock: bool = False,
         logging_uid: str = "",
     ) -> None:
@@ -1209,7 +1210,7 @@ class BaseDriver:
             port=port,
             timeout_socket=timeout_socket,
             timeout_transport=timeout_transport,
-            logging_uid=logging_uid
+            logging_uid=logging_uid,
         )
 
         self.host, self.port = self._setup_host(host=host, port=port)

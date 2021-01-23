@@ -1,4 +1,5 @@
 """scrapli.driver.generic.async_driver"""
+from io import BytesIO
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from scrapli.decorators import TimeoutOpsModifier
@@ -32,7 +33,7 @@ class AsyncGenericDriver(AsyncDriver, BaseGenericDriver):
         on_close: Optional[Callable[..., Any]] = None,
         transport: str = "system",
         transport_options: Optional[Dict[str, Any]] = None,
-        channel_log: Union[str, bool] = False,
+        channel_log: Union[str, bool, BytesIO] = False,
         channel_lock: bool = False,
         logging_uid: str = "",
     ) -> None:

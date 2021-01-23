@@ -44,7 +44,7 @@ from scrapli.exceptions import (
 )
 from scrapli.ssh_config import SSHKnownHosts
 from scrapli.transport.base import BasePluginTransportArgs, BaseTransportArgs, Transport
-from scrapli.transport.base.socket import Socket
+from scrapli.transport.base.base_socket import Socket
 
 
 @dataclass()
@@ -82,7 +82,7 @@ class ParamikoTransport(Transport):
             self.socket.open()
 
         try:
-            self.session = _ParamikoTransport(self.socket.sock)
+            self.session = _ParamikoTransport(self.socket.sock)  # type: ignore
             self.session.start_client()
         except Exception as exc:
             self.logger.critical("failed to complete handshake with host")
@@ -190,7 +190,7 @@ class ParamikoTransport(Transport):
             raise ScrapliConnectionNotOpened
 
         try:
-            paramiko_key = RSAKey(filename=self.plugin_transport_args.auth_private_key.encode())
+            paramiko_key = RSAKey(filename=self.plugin_transport_args.auth_private_key)
             self.session.auth_publickey(
                 username=self.plugin_transport_args.auth_username, key=paramiko_key
             )
@@ -256,8 +256,8 @@ class ParamikoTransport(Transport):
             if self.socket:
                 self.socket.close()
 
-            self.session = None
-            self.session_channel = None
+        self.session = None
+        self.session_channel = None
 
         self._post_open_closing_log(closing=True)
 
@@ -350,7 +350,7 @@ class ParamikoTransport(Transport):
             self.socket.open()
 
         try:
-            self.session = _ParamikoTransport(self.socket.sock)
+            self.session = _ParamikoTransport(self.socket.sock)  # type: ignore
             self.session.start_client()
         except Exception as exc:
             self.logger.critical("failed to complete handshake with host")
@@ -458,7 +458,7 @@ class ParamikoTransport(Transport):
             raise ScrapliConnectionNotOpened
 
         try:
-            paramiko_key = RSAKey(filename=self.plugin_transport_args.auth_private_key.encode())
+            paramiko_key = RSAKey(filename=self.plugin_transport_args.auth_private_key)
             self.session.auth_publickey(
                 username=self.plugin_transport_args.auth_username, key=paramiko_key
             )
@@ -524,8 +524,8 @@ class ParamikoTransport(Transport):
             if self.socket:
                 self.socket.close()
 
-            self.session = None
-            self.session_channel = None
+        self.session = None
+        self.session_channel = None
 
         self._post_open_closing_log(closing=True)
 

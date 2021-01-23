@@ -103,12 +103,14 @@ class AsyncChannel(BaseChannel):
         """
         buf = await self.transport.read()
         buf = buf.replace(b"\r", b"")
-        self.buf += buf
 
         self.logger.debug(f"read: {repr(buf)}")
 
         if self.channel_log:
             self.channel_log.write(buf)
+
+        if self._base_channel_args.comms_ansi:
+            buf = self._strip_ansi(buf=buf)
 
         return buf
 
@@ -137,9 +139,6 @@ class AsyncChannel(BaseChannel):
         while True:
             buf += await self.read()
 
-            if self._base_channel_args.comms_ansi:
-                buf = self._strip_ansi(buf=buf)
-
             # replace any backspace chars (particular problem w/ junos), and remove any added spaces
             # this is just for comparison of the inputs to what was read from channel
             if processed_channel_input in b"".join(buf.lower().replace(b"\x08", b"").split()):
@@ -166,9 +165,6 @@ class AsyncChannel(BaseChannel):
 
         while True:
             buf += await self.read()
-
-            if self._base_channel_args.comms_ansi:
-                buf = self._strip_ansi(buf=buf)
 
             channel_match = re.search(
                 pattern=search_pattern,
@@ -223,9 +219,6 @@ class AsyncChannel(BaseChannel):
             except ScrapliTimeout:
                 pass
 
-            if self._base_channel_args.comms_ansi:
-                buf = self._strip_ansi(buf=buf)
-
             if (time.time() - start) > read_duration:
                 break
             if any([channel_output in buf for channel_output in channel_outputs]):
@@ -273,7 +266,11 @@ class AsyncChannel(BaseChannel):
                 except asyncio.TimeoutError:
                     buf = b""
 
-                if self._base_channel_args.comms_ansi:
+                # if user sets comms_ansi *or* if we see an escape char, strip ansi... at least eos
+                # tends to have one escape char in the login output that will break things; other
+                # than this and telnet login, stripping ansi will only ever be governed by the users
+                # comms_ansi setting
+                if self._base_channel_args.comms_ansi or b"\x1B" in buf:
                     buf = self._strip_ansi(buf=buf)
 
                 authenticate_buf += buf.lower()
@@ -354,7 +351,9 @@ class AsyncChannel(BaseChannel):
             while True:
                 buf = await self.read()
 
-                if self._base_channel_args.comms_ansi:
+                # telnet auth *probably* wont have ansi chars, but strip them if they do exist so
+                # we can at least get past auth
+                if self._base_channel_args.comms_ansi or b"\x1B" in buf:
                     buf = self._strip_ansi(buf=buf)
 
                 if not buf:
@@ -423,9 +422,6 @@ class AsyncChannel(BaseChannel):
 
             while True:
                 buf += await self.read()
-
-                if self._base_channel_args.comms_ansi:
-                    buf = self._strip_ansi(buf=buf)
 
                 channel_match = re.search(
                     pattern=search_pattern,
@@ -510,8 +506,9 @@ class AsyncChannel(BaseChannel):
             N/A
 
         """
-        buf = self._pre_send_input(channel_input=channel_input)
+        self._pre_send_input(channel_input=channel_input)
 
+        buf = b""
         bytes_channel_input = channel_input.encode()
         bytes_channel_outputs = [
             channel_output.encode() for channel_output in expected_outputs or []
@@ -724,12 +721,14 @@ class AsyncChannel(BaseChannel):
         """
         buf = await self.transport.read()
         buf = buf.replace(b"\r", b"")
-        self.buf += buf
 
         self.logger.debug(f"read: {repr(buf)}")
 
         if self.channel_log:
             self.channel_log.write(buf)
+
+        if self._base_channel_args.comms_ansi:
+            buf = self._strip_ansi(buf=buf)
 
         return buf
 
@@ -758,9 +757,6 @@ class AsyncChannel(BaseChannel):
         while True:
             buf += await self.read()
 
-            if self._base_channel_args.comms_ansi:
-                buf = self._strip_ansi(buf=buf)
-
             # replace any backspace chars (particular problem w/ junos), and remove any added spaces
             # this is just for comparison of the inputs to what was read from channel
             if processed_channel_input in b"".join(buf.lower().replace(b"\x08", b"").split()):
@@ -787,9 +783,6 @@ class AsyncChannel(BaseChannel):
 
         while True:
             buf += await self.read()
-
-            if self._base_channel_args.comms_ansi:
-                buf = self._strip_ansi(buf=buf)
 
             channel_match = re.search(
                 pattern=search_pattern,
@@ -844,9 +837,6 @@ class AsyncChannel(BaseChannel):
             except ScrapliTimeout:
                 pass
 
-            if self._base_channel_args.comms_ansi:
-                buf = self._strip_ansi(buf=buf)
-
             if (time.time() - start) > read_duration:
                 break
             if any([channel_output in buf for channel_output in channel_outputs]):
@@ -894,7 +884,11 @@ class AsyncChannel(BaseChannel):
                 except asyncio.TimeoutError:
                     buf = b""
 
-                if self._base_channel_args.comms_ansi:
+                # if user sets comms_ansi *or* if we see an escape char, strip ansi... at least eos
+                # tends to have one escape char in the login output that will break things; other
+                # than this and telnet login, stripping ansi will only ever be governed by the users
+                # comms_ansi setting
+                if self._base_channel_args.comms_ansi or b"\x1B" in buf:
                     buf = self._strip_ansi(buf=buf)
 
                 authenticate_buf += buf.lower()
@@ -975,7 +969,9 @@ class AsyncChannel(BaseChannel):
             while True:
                 buf = await self.read()
 
-                if self._base_channel_args.comms_ansi:
+                # telnet auth *probably* wont have ansi chars, but strip them if they do exist so
+                # we can at least get past auth
+                if self._base_channel_args.comms_ansi or b"\x1B" in buf:
                     buf = self._strip_ansi(buf=buf)
 
                 if not buf:
@@ -1044,9 +1040,6 @@ class AsyncChannel(BaseChannel):
 
             while True:
                 buf += await self.read()
-
-                if self._base_channel_args.comms_ansi:
-                    buf = self._strip_ansi(buf=buf)
 
                 channel_match = re.search(
                     pattern=search_pattern,
@@ -1131,8 +1124,9 @@ class AsyncChannel(BaseChannel):
             N/A
 
         """
-        buf = self._pre_send_input(channel_input=channel_input)
+        self._pre_send_input(channel_input=channel_input)
 
+        buf = b""
         bytes_channel_input = channel_input.encode()
         bytes_channel_outputs = [
             channel_output.encode() for channel_output in expected_outputs or []

@@ -29,6 +29,7 @@ scrapli.driver.generic.sync_driver
     <pre>
         <code class="python">
 """scrapli.driver.generic.sync_driver"""
+from io import BytesIO
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from scrapli.decorators import TimeoutOpsModifier
@@ -62,7 +63,7 @@ class GenericDriver(Driver, BaseGenericDriver):
         on_close: Optional[Callable[..., Any]] = None,
         transport: str = "system",
         transport_options: Optional[Dict[str, Any]] = None,
-        channel_log: Union[str, bool] = False,
+        channel_log: Union[str, bool, BytesIO] = False,
         channel_lock: bool = False,
         logging_uid: str = "",
     ) -> None:
@@ -583,7 +584,7 @@ class GenericDriver(Driver, BaseGenericDriver):
         on_close: Optional[Callable[..., Any]] = None,
         transport: str = "system",
         transport_options: Optional[Dict[str, Any]] = None,
-        channel_log: Union[str, bool] = False,
+        channel_log: Union[str, bool, BytesIO] = False,
         channel_lock: bool = False,
         logging_uid: str = "",
     ) -> None:

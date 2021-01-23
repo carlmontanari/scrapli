@@ -44,7 +44,7 @@ from scrapli.exceptions import (
 )
 from scrapli.ssh_config import SSHKnownHosts
 from scrapli.transport.base import BasePluginTransportArgs, BaseTransportArgs, Transport
-from scrapli.transport.base.socket import Socket
+from scrapli.transport.base.base_socket import Socket
 
 
 @dataclass()
@@ -268,8 +268,8 @@ class Ssh2Transport(Transport):
             if self.socket:
                 self.socket.close()
 
-            self.session = None
-            self.session_channel = None
+        self.session = None
+        self.session_channel = None
 
         self._post_open_closing_log(closing=True)
 
@@ -617,8 +617,8 @@ class Ssh2Transport(Transport):
             if self.socket:
                 self.socket.close()
 
-            self.session = None
-            self.session_channel = None
+        self.session = None
+        self.session_channel = None
 
         self._post_open_closing_log(closing=True)
 

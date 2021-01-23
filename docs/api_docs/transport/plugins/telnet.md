@@ -105,7 +105,8 @@ class TelnetTransport(Transport):
 
         if self.session:
             self.session.close()
-            self.session = None
+
+        self.session = None
 
         self._post_open_closing_log(closing=True)
 
@@ -323,7 +324,8 @@ class TelnetTransport(Transport):
 
         if self.session:
             self.session.close()
-            self.session = None
+
+        self.session = None
 
         self._post_open_closing_log(closing=True)
 

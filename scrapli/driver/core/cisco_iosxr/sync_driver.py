@@ -1,6 +1,7 @@
 """scrapli.driver.core.cisco_iosxr.sync_driver"""
 import time
 from copy import deepcopy
+from io import BytesIO
 from typing import Any, Callable, Dict, List, Optional, Union
 
 from scrapli.driver import NetworkDriver
@@ -76,7 +77,7 @@ class IOSXRDriver(NetworkDriver):
         on_close: Optional[Callable[..., Any]] = None,
         transport: str = "system",
         transport_options: Optional[Dict[str, Any]] = None,
-        channel_log: Union[str, bool] = False,
+        channel_log: Union[str, bool, BytesIO] = False,
         channel_lock: bool = False,
         logging_uid: str = "",
         auth_secondary: str = "",

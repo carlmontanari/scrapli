@@ -31,6 +31,7 @@ scrapli.factory
 """scrapli.factory"""
 import importlib
 from copy import deepcopy
+from io import BytesIO
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union, cast
 
 from scrapli.driver import AsyncGenericDriver, AsyncNetworkDriver, GenericDriver, NetworkDriver
@@ -81,7 +82,7 @@ def _build_provided_kwargs_dict(  # pylint: disable=R0914
     on_close: Optional[Callable[..., Any]],
     transport: str,
     transport_options: Optional[Dict[str, Any]],
-    channel_log: Optional[Union[str, bool]],
+    channel_log: Optional[Union[str, bool, BytesIO]],
     channel_lock: Optional[bool],
     logging_uid: str,
     auth_secondary: str,
@@ -120,7 +121,7 @@ def _build_provided_kwargs_dict(  # pylint: disable=R0914
     channel_lock = channel_lock if channel_lock is not None else False
 
     # dict of all args coming from the factories minus the None/False args above
-    _provided_args = {
+    _provided_args: Dict[str, Any] = {
         "host": host,
         "privilege_levels": privilege_levels,
         "default_desired_privilege_level": default_desired_privilege_level,
@@ -398,7 +399,7 @@ class Scrapli(NetworkDriver):
         on_close: Optional[Callable[..., Any]] = None,
         transport: str = "",
         transport_options: Optional[Dict[str, Any]] = None,
-        channel_log: Optional[Union[str, bool]] = None,
+        channel_log: Optional[Union[str, bool, BytesIO]] = None,
         channel_lock: Optional[bool] = None,
         logging_uid: str = "",
         auth_secondary: str = "",
@@ -689,7 +690,7 @@ class AsyncScrapli(AsyncNetworkDriver):
         on_close: Optional[Callable[..., Any]] = None,
         transport: str = "",
         transport_options: Optional[Dict[str, Any]] = None,
-        channel_log: Optional[Union[str, bool]] = None,
+        channel_log: Optional[Union[str, bool, BytesIO]] = None,
         channel_lock: Optional[bool] = None,
         logging_uid: str = "",
         auth_secondary: str = "",
@@ -1077,7 +1078,7 @@ class AsyncScrapli(AsyncNetworkDriver):
         on_close: Optional[Callable[..., Any]] = None,
         transport: str = "",
         transport_options: Optional[Dict[str, Any]] = None,
-        channel_log: Optional[Union[str, bool]] = None,
+        channel_log: Optional[Union[str, bool, BytesIO]] = None,
         channel_lock: Optional[bool] = None,
         logging_uid: str = "",
         auth_secondary: str = "",
@@ -1521,7 +1522,7 @@ class Scrapli(NetworkDriver):
         on_close: Optional[Callable[..., Any]] = None,
         transport: str = "",
         transport_options: Optional[Dict[str, Any]] = None,
-        channel_log: Optional[Union[str, bool]] = None,
+        channel_log: Optional[Union[str, bool, BytesIO]] = None,
         channel_lock: Optional[bool] = None,
         logging_uid: str = "",
         auth_secondary: str = "",

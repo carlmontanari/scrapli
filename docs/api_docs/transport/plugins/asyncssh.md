@@ -193,9 +193,10 @@ class AsyncsshTransport(AsyncTransport):
                 # ubuntu-latest w/ py3.8...
                 pass
 
-            self.session = None
-            self.stdin = None
-            self.stdout = None
+        # always reset session/stdin/stdout back to None if we are closing!
+        self.session = None
+        self.stdin = None
+        self.stdout = None
 
         self._post_open_closing_log(closing=True)
 
@@ -393,9 +394,10 @@ class AsyncsshTransport(AsyncTransport):
                 # ubuntu-latest w/ py3.8...
                 pass
 
-            self.session = None
-            self.stdin = None
-            self.stdout = None
+        # always reset session/stdin/stdout back to None if we are closing!
+        self.session = None
+        self.stdin = None
+        self.stdout = None
 
         self._post_open_closing_log(closing=True)
 
