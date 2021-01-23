@@ -14,7 +14,7 @@ from scrapli.exceptions import (
 )
 from scrapli.ssh_config import SSHKnownHosts
 from scrapli.transport.base import BasePluginTransportArgs, BaseTransportArgs, Transport
-from scrapli.transport.base.socket import Socket
+from scrapli.transport.base.base_socket import Socket
 
 
 @dataclass()

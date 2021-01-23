@@ -514,8 +514,8 @@ def test_context_manager(device_type, transport):
 
     device["port"] = port
     device["transport"] = transport
-    device["timeout_socket"] = 5
     # nxos running on macos is crazy slow....
+    device["timeout_socket"] = 30
     device["timeout_transport"] = 30
     device["timeout_ops"] = 30
 

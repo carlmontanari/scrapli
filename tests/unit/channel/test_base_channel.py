@@ -1,5 +1,6 @@
 import logging
 import re
+from io import BytesIO
 from pathlib import Path
 
 import pytest
@@ -22,6 +23,13 @@ def test_channel_log_user_defined(fs, base_transport_no_abc):
     base_channel_args = BaseChannelArgs(channel_log="/log.log")
     BaseChannel(transport=base_transport_no_abc, base_channel_args=base_channel_args)
     assert Path("/log.log").is_file()
+
+
+def test_channel_log_user_bytesio(base_transport_no_abc):
+    bytes_log = BytesIO()
+    base_channel_args = BaseChannelArgs(channel_log=bytes_log)
+    channel = BaseChannel(transport=base_transport_no_abc, base_channel_args=base_channel_args)
+    assert channel.channel_log is bytes_log
 
 
 def test_channel_write(caplog, monkeypatch, base_channel):
@@ -175,12 +183,6 @@ def test_strip_ansi(base_channel):
         buf=b"[admin@CoolDevice.Sea1: \x1b[1m/\x1b[0;0m]$"
     )
     assert actual_strip_ansi_output == b"[admin@CoolDevice.Sea1: /]$"
-
-
-def test_pre_send_input(base_channel):
-    base_channel.buf = b"something in the  buffer"
-    actual_pre_send_input_output = base_channel._pre_send_input(channel_input="nada")
-    assert actual_pre_send_input_output == b"something in the  buffer"
 
 
 def test_pre_send_input_exception(base_channel):

@@ -29,11 +29,11 @@ from scrapli.driver.generic.async_driver import AsyncGenericDriver
 from scrapli.driver.generic.base_driver import BaseGenericDriver
 from scrapli.driver.generic.sync_driver import GenericDriver
 from scrapli.driver.network.async_driver import AsyncNetworkDriver
-from scrapli.driver.network.base_driver import BaseNetworkDriver, PrivilegeLevel
+from scrapli.driver.network.base_driver import PrivilegeLevel
 from scrapli.driver.network.sync_driver import NetworkDriver
 from scrapli.transport.base.async_transport import AsyncTransport
+from scrapli.transport.base.base_socket import Socket
 from scrapli.transport.base.base_transport import BaseTransport, BaseTransportArgs
-from scrapli.transport.base.socket import Socket
 from scrapli.transport.base.sync_transport import Transport
 from scrapli.transport.plugins.asyncssh.transport import AsyncsshTransport
 from scrapli.transport.plugins.asyncssh.transport import (
