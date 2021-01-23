@@ -85,8 +85,6 @@ class BaseChannel:
                 )
                 self.channel_log = open(channel_log_destination, "wb")
 
-        self.buf = b""
-
     def write(self, channel_input: str, redacted: bool = False) -> None:
         """
         Write input to the underlying Transport session
@@ -253,7 +251,8 @@ class BaseChannel:
         buf = re.sub(pattern=ansi_escape_pattern, repl=b"", string=buf)
         return buf
 
-    def _pre_send_input(self, channel_input: str) -> bytes:
+    @staticmethod
+    def _pre_send_input(channel_input: str) -> None:
         """
         Handle pre "send_input" tasks for consistency between sync/async versions
 
@@ -271,7 +270,6 @@ class BaseChannel:
             raise ScrapliTypeError(
                 f"`send_input` expects a single string, got {type(channel_input)}."
             )
-        return self.buf
 
     @staticmethod
     def _pre_send_inputs_interact(interact_events: List[Tuple[str, str, Optional[bool]]]) -> None:

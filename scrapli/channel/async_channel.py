@@ -73,7 +73,6 @@ class AsyncChannel(BaseChannel):
         """
         buf = await self.transport.read()
         buf = buf.replace(b"\r", b"")
-        self.buf += buf
 
         self.logger.debug(f"read: {repr(buf)}")
 
@@ -477,8 +476,9 @@ class AsyncChannel(BaseChannel):
             N/A
 
         """
-        buf = self._pre_send_input(channel_input=channel_input)
+        self._pre_send_input(channel_input=channel_input)
 
+        buf = b""
         bytes_channel_input = channel_input.encode()
         bytes_channel_outputs = [
             channel_output.encode() for channel_output in expected_outputs or []
