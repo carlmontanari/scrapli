@@ -24,6 +24,9 @@ Changelog
   `strip_prompt` and any additional arguments *must* be keyword arguments!
 - *BREAKING CHANGE* `Scrape`/`AsyncScrape` renamed --> `Driver`/`AsyncDriver` -- given most folks should not be using 
   these directly there will be no alias for this, just a hard change!
+- More improvements to IOSXE tclsh pattern handling; handles tclsh in exec or privilege exec mode now
+- `read_until_prompt_or_time` now supports regex patterns in the `channel_outputs` list (pass as a string, will be 
+  compiled for you)
 
 
 ## 2020.12.31

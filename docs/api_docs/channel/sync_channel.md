@@ -202,6 +202,8 @@ class Channel(BaseChannel):
         if read_duration is None:
             read_duration = 2.5
 
+        regex_channel_outputs_pattern = self._join_and_compile(channel_outputs=channel_outputs)
+
         _transport_args = self.transport._base_transport_args  # pylint: disable=W0212
         previous_timeout_transport = _transport_args.timeout_transport
         _transport_args.timeout_transport = int(read_duration)
@@ -216,6 +218,8 @@ class Channel(BaseChannel):
             if (time.time() - start) > read_duration:
                 break
             if any([channel_output in buf for channel_output in channel_outputs]):
+                break
+            if re.search(pattern=regex_channel_outputs_pattern, string=buf):
                 break
             if re.search(pattern=search_pattern, string=buf):
                 break
@@ -817,6 +821,8 @@ class Channel(BaseChannel):
         if read_duration is None:
             read_duration = 2.5
 
+        regex_channel_outputs_pattern = self._join_and_compile(channel_outputs=channel_outputs)
+
         _transport_args = self.transport._base_transport_args  # pylint: disable=W0212
         previous_timeout_transport = _transport_args.timeout_transport
         _transport_args.timeout_transport = int(read_duration)
@@ -831,6 +837,8 @@ class Channel(BaseChannel):
             if (time.time() - start) > read_duration:
                 break
             if any([channel_output in buf for channel_output in channel_outputs]):
+                break
+            if re.search(pattern=regex_channel_outputs_pattern, string=buf):
                 break
             if re.search(pattern=search_pattern, string=buf):
                 break

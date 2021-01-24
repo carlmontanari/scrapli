@@ -151,6 +151,30 @@ class BaseChannel:
         """
         self.write(channel_input=self._base_channel_args.comms_return_char)
 
+    @staticmethod
+    def _join_and_compile(channel_outputs: Optional[List[bytes]]) -> Pattern[bytes]:
+        """
+        Convenience method for read_until_prompt_or_time to join channel inputs into a regex pattern
+
+        Args:
+            channel_outputs: list of bytes channel inputs to join into a regex pattern
+
+        Returns:
+            Pattern: joined regex pattern or an empty pattern (empty bytes)
+
+        Raises:
+            N/A
+
+        """
+        regex_channel_outputs = b""
+        if channel_outputs:
+            regex_channel_outputs = b"|".join(
+                [b"(" + channel_output + b")" for channel_output in channel_outputs]
+            )
+        regex_channel_outputs_pattern = re.compile(pattern=regex_channel_outputs, flags=re.I | re.M)
+
+        return regex_channel_outputs_pattern
+
     def _ssh_message_handler(self, output: bytes) -> None:  # noqa: C901
         """
         Parse EOF messages from _pty_authenticate and create log/stack exception message
@@ -427,6 +451,30 @@ class BaseChannel:
 
         """
         self.write(channel_input=self._base_channel_args.comms_return_char)
+
+    @staticmethod
+    def _join_and_compile(channel_outputs: Optional[List[bytes]]) -> Pattern[bytes]:
+        """
+        Convenience method for read_until_prompt_or_time to join channel inputs into a regex pattern
+
+        Args:
+            channel_outputs: list of bytes channel inputs to join into a regex pattern
+
+        Returns:
+            Pattern: joined regex pattern or an empty pattern (empty bytes)
+
+        Raises:
+            N/A
+
+        """
+        regex_channel_outputs = b""
+        if channel_outputs:
+            regex_channel_outputs = b"|".join(
+                [b"(" + channel_output + b")" for channel_output in channel_outputs]
+            )
+        regex_channel_outputs_pattern = re.compile(pattern=regex_channel_outputs, flags=re.I | re.M)
+
+        return regex_channel_outputs_pattern
 
     def _ssh_message_handler(self, output: bytes) -> None:  # noqa: C901
         """
