@@ -1,7 +1,7 @@
 Changelog
 =========
 
-## 2021.XX.XX
+## 2021.01.30
 
 - *BREAKING CHANGE* `PrivilegeLevel` import location changed -- this will break things! 
 - `timeout_exit` deprecated; will always close connection on timeout now

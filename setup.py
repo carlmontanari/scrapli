@@ -2,7 +2,7 @@
 """scrapli - ssh|telnet screen scraping client library"""
 import setuptools
 
-__version__ = "2021.01.18"
+__version__ = "2021.01.30a1"
 __author__ = "Carl Montanari"
 
 with open("README.md", "r", encoding="utf-8") as f:
@@ -45,11 +45,7 @@ setuptools.setup(
     license="MIT",
     packages=setuptools.find_packages(),
     install_requires=INSTALL_REQUIRES,
-    # temp for pinning to non-release scrapli community for testing
-    dependency_links=[
-        "git+https://github.com/scrapli/scrapli_community@scrapli_core_overhaul#"
-        "egg=scrapli_community"
-    ],
+    dependency_links=[],
     extras_require=EXTRAS_REQUIRE,
     classifiers=[
         "License :: OSI Approved :: MIT License",
