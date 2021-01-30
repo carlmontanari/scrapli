@@ -32,33 +32,33 @@ from scrapli.transport import ASYNCIO_TRANSPORTS
 def _build_provided_kwargs_dict(  # pylint: disable=R0914
     host: str,
     privilege_levels: Optional[Dict[str, PrivilegeLevel]],
-    default_desired_privilege_level: str,
-    port: int,
-    auth_username: str,
-    auth_password: str,
-    auth_private_key: str,
-    auth_private_key_passphrase: str,
+    default_desired_privilege_level: Optional[str],
+    port: Optional[int],
+    auth_username: Optional[str],
+    auth_password: Optional[str],
+    auth_private_key: Optional[str],
+    auth_private_key_passphrase: Optional[str],
     auth_strict_key: Optional[bool],
     auth_bypass: Optional[bool],
-    timeout_socket: float,
-    timeout_transport: float,
-    timeout_ops: float,
-    comms_return_char: str,
+    timeout_socket: Optional[float],
+    timeout_transport: Optional[float],
+    timeout_ops: Optional[float],
+    comms_return_char: Optional[str],
     comms_ansi: Optional[bool],
     ssh_config_file: Optional[Union[str, bool]],
     ssh_known_hosts_file: Optional[Union[str, bool]],
     on_init: Optional[Callable[..., Any]],
     on_open: Optional[Callable[..., Any]],
     on_close: Optional[Callable[..., Any]],
-    transport: str,
+    transport: Optional[str],
     transport_options: Optional[Dict[str, Any]],
     channel_log: Optional[Union[str, bool, BytesIO]],
     channel_lock: Optional[bool],
-    logging_uid: str,
-    auth_secondary: str,
+    logging_uid: Optional[str],
+    auth_secondary: Optional[str],
     failed_when_contains: Optional[List[str]],
-    textfsm_platform: str,
-    genie_platform: str,
+    textfsm_platform: Optional[str],
+    genie_platform: Optional[str],
     **kwargs: Dict[Any, Any],
 ) -> Dict[str, Any]:
     r"""
@@ -81,16 +81,7 @@ def _build_provided_kwargs_dict(  # pylint: disable=R0914
         N/A
 
     """
-    # handle the args that would be None/False so we dont strip them out if not provided
-    auth_strict_key = auth_strict_key if auth_strict_key is not None else True
-    auth_bypass = auth_bypass if auth_bypass is not None else False
-    comms_ansi = comms_ansi if comms_ansi is not None else False
-    ssh_config_file = ssh_config_file if ssh_config_file is not None else False
-    ssh_known_hosts_file = ssh_known_hosts_file if ssh_known_hosts_file is not None else False
-    channel_log = channel_log if channel_log is not None else False
-    channel_lock = channel_lock if channel_lock is not None else False
-
-    # dict of all args coming from the factories minus the None/False args above
+    # dict of all args coming from the factories
     _provided_args: Dict[str, Any] = {
         "host": host,
         "privilege_levels": privilege_levels,
@@ -100,15 +91,22 @@ def _build_provided_kwargs_dict(  # pylint: disable=R0914
         "auth_password": auth_password,
         "auth_private_key": auth_private_key,
         "auth_private_key_passphrase": auth_private_key_passphrase,
+        "auth_strict_key": auth_strict_key,
+        "auth_bypass": auth_bypass,
         "timeout_socket": timeout_socket,
         "timeout_transport": timeout_transport,
         "timeout_ops": timeout_ops,
         "comms_return_char": comms_return_char,
+        "comms_ansi": comms_ansi,
+        "ssh_config_file": ssh_config_file,
+        "ssh_known_hosts_file": ssh_known_hosts_file,
         "on_init": on_init,
         "on_open": on_open,
         "on_close": on_close,
         "transport": transport,
         "transport_options": transport_options,
+        "channel_log": channel_log,
+        "channel_lock": channel_lock,
         "logging_uid": logging_uid,
         "auth_secondary": auth_secondary,
         "failed_when_contains": failed_when_contains,
@@ -117,14 +115,7 @@ def _build_provided_kwargs_dict(  # pylint: disable=R0914
     }
 
     # add back in the None/False args
-    _provided_args = {key: value for key, value in _provided_args.items() if value}
-    _provided_args["auth_strict_key"] = auth_strict_key
-    _provided_args["auth_bypass"] = auth_bypass
-    _provided_args["comms_ansi"] = comms_ansi
-    _provided_args["ssh_config_file"] = ssh_config_file
-    _provided_args["ssh_known_hosts_file"] = ssh_known_hosts_file
-    _provided_args["channel_log"] = channel_log
-    _provided_args["channel_lock"] = channel_lock
+    _provided_args = {key: value for key, value in _provided_args.items() if value is not None}
 
     # merge in any kwargs that maybe need to get passed down
     all_provided_args = {**_provided_args, **kwargs}
@@ -349,33 +340,33 @@ class Scrapli(NetworkDriver):
         platform: str,
         host: str,
         privilege_levels: Optional[Dict[str, PrivilegeLevel]] = None,
-        default_desired_privilege_level: str = "",
-        port: int = 22,
-        auth_username: str = "",
-        auth_password: str = "",
-        auth_private_key: str = "",
-        auth_private_key_passphrase: str = "",
+        default_desired_privilege_level: Optional[str] = None,
+        port: Optional[int] = None,
+        auth_username: Optional[str] = None,
+        auth_password: Optional[str] = None,
+        auth_private_key: Optional[str] = None,
+        auth_private_key_passphrase: Optional[str] = None,
         auth_strict_key: Optional[bool] = None,
         auth_bypass: Optional[bool] = None,
-        timeout_socket: float = 15.0,
-        timeout_transport: float = 30.0,
-        timeout_ops: float = 30.0,
-        comms_return_char: str = "\n",
+        timeout_socket: Optional[float] = None,
+        timeout_transport: Optional[float] = None,
+        timeout_ops: Optional[float] = None,
+        comms_return_char: Optional[str] = None,
         comms_ansi: Optional[bool] = None,
         ssh_config_file: Optional[Union[str, bool]] = None,
         ssh_known_hosts_file: Optional[Union[str, bool]] = None,
         on_init: Optional[Callable[..., Any]] = None,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
-        transport: str = "",
+        transport: Optional[str] = None,
         transport_options: Optional[Dict[str, Any]] = None,
         channel_log: Optional[Union[str, bool, BytesIO]] = None,
         channel_lock: Optional[bool] = None,
-        logging_uid: str = "",
-        auth_secondary: str = "",
+        logging_uid: Optional[str] = None,
+        auth_secondary: Optional[str] = None,
         failed_when_contains: Optional[List[str]] = None,
-        textfsm_platform: str = "",
-        genie_platform: str = "",
+        textfsm_platform: Optional[str] = None,
+        genie_platform: Optional[str] = None,
         variant: Optional[str] = None,
         **kwargs: Dict[Any, Any],
     ) -> "Scrapli":
@@ -640,33 +631,33 @@ class AsyncScrapli(AsyncNetworkDriver):
         platform: str,
         host: str,
         privilege_levels: Optional[Dict[str, PrivilegeLevel]] = None,
-        default_desired_privilege_level: str = "",
-        port: int = 22,
-        auth_username: str = "",
-        auth_password: str = "",
-        auth_private_key: str = "",
-        auth_private_key_passphrase: str = "",
+        default_desired_privilege_level: Optional[str] = None,
+        port: Optional[int] = None,
+        auth_username: Optional[str] = None,
+        auth_password: Optional[str] = None,
+        auth_private_key: Optional[str] = None,
+        auth_private_key_passphrase: Optional[str] = None,
         auth_strict_key: Optional[bool] = None,
         auth_bypass: Optional[bool] = None,
-        timeout_socket: float = 15.0,
-        timeout_transport: float = 30.0,
-        timeout_ops: float = 30.0,
-        comms_return_char: str = "\n",
+        timeout_socket: Optional[float] = None,
+        timeout_transport: Optional[float] = None,
+        timeout_ops: Optional[float] = None,
+        comms_return_char: Optional[str] = None,
         comms_ansi: Optional[bool] = None,
         ssh_config_file: Optional[Union[str, bool]] = None,
         ssh_known_hosts_file: Optional[Union[str, bool]] = None,
         on_init: Optional[Callable[..., Any]] = None,
         on_open: Optional[Callable[..., Any]] = None,
         on_close: Optional[Callable[..., Any]] = None,
-        transport: str = "",
+        transport: Optional[str] = None,
         transport_options: Optional[Dict[str, Any]] = None,
         channel_log: Optional[Union[str, bool, BytesIO]] = None,
         channel_lock: Optional[bool] = None,
-        logging_uid: str = "",
-        auth_secondary: str = "",
+        logging_uid: Optional[str] = None,
+        auth_secondary: Optional[str] = None,
         failed_when_contains: Optional[List[str]] = None,
-        textfsm_platform: str = "",
-        genie_platform: str = "",
+        textfsm_platform: Optional[str] = None,
+        genie_platform: Optional[str] = None,
         variant: Optional[str] = None,
         **kwargs: Dict[Any, Any],
     ) -> "AsyncScrapli":

@@ -27,6 +27,8 @@ Changelog
 - More improvements to IOSXE tclsh pattern handling; handles tclsh in exec or privilege exec mode now
 - `read_until_prompt_or_time` now supports regex patterns in the `channel_outputs` list (pass as a string, will be 
   compiled for you)
+- Big improvements to Factory for users of IDEs -- factories now have proper typing data so you will have nice auto 
+  completion things there/typing will be much happier
 
 
 ## 2020.12.31
