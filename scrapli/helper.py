@@ -1,128 +1,15 @@
 """scrapli.helper"""
 import importlib
-import os
-import re
-import warnings
-from functools import lru_cache
 from io import TextIOWrapper
-from logging import Logger, LoggerAdapter, getLogger
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Pattern, TextIO, Tuple, Union
+from shutil import get_terminal_size
+from typing import Any, Dict, List, Optional, TextIO, Union
+from warnings import warn
 
 import pkg_resources  # pylint: disable=C0411
 
-from scrapli.exceptions import TransportPluginError
-
-helper_logger = getLogger("scrapli.helper")
-LOG = LoggerAdapter(helper_logger, extra={"host": None, "port": None})
-
-
-def _find_transport_plugin(transport: str) -> Tuple[Any, Tuple[str, ...]]:
-    """
-    Find non-core transport plugins and required plugin arguments
-
-    Args:
-        transport: string name of the desired transport, i.e.: paramiko or ssh2
-
-    Returns:
-        transport_class: class representing the given transport
-        required_transport_args: tuple of required arguments for given transport
-
-    Raises:
-        ModuleNotFoundError: if unable to  find scrapli transport module
-        TransportPluginError: if unable to load `Transport` and `TRANSPORT_ARGS` from given
-            transport module
-
-    """
-    try:
-        transport_plugin_lib = importlib.import_module(f"scrapli_{transport}.transport")
-    except ModuleNotFoundError as exc:
-        err = f"Module '{exc.name}' not found!"
-        msg = f"***** {err} {'*' * (80 - len(err))}"
-        fix = (
-            "To resolve this issue, ensure you are referencing a valid transport plugin. Transport"
-            " plugins should be named similar to `scrapli_paramiko` or `scrapli_ssh2`, and can be "
-            "selected by passing simply `paramiko` or `ssh2` into the scrapli driver. You can "
-            "install most plugins with pip: `pip install scrapli-ssh2` for example."
-        )
-        warning = "\n" + msg + "\n" + fix + "\n" + msg
-        LOG.warning(warning)
-        raise ModuleNotFoundError(warning) from exc
-    transport_class = getattr(transport_plugin_lib, "Transport", None)
-    required_transport_args = getattr(transport_plugin_lib, "TRANSPORT_ARGS", None)
-    if not all([transport_class, required_transport_args]):
-        msg = f"Failed to load transport plugin `{transport}` transport class or required arguments"
-        raise TransportPluginError(msg)
-    return transport_class, required_transport_args
-
-
-@lru_cache()
-def get_prompt_pattern(prompt: str, class_prompt: str) -> Pattern[bytes]:
-    """
-    Return compiled prompt pattern
-
-    Given a potential prompt and the Channel class' prompt, return compiled prompt pattern
-
-    Args:
-        prompt: bytes string to process
-        class_prompt: Channel class prompt pattern; never re.escape class prompt pattern
-
-    Returns:
-        output: bytes string each line right stripped
-
-    Raises:
-        N/A
-
-    """
-    check_prompt = prompt or class_prompt
-    if isinstance(check_prompt, str):
-        bytes_check_prompt = check_prompt.encode()
-    else:
-        bytes_check_prompt = check_prompt
-
-    if bytes_check_prompt.startswith(b"^") and bytes_check_prompt.endswith(b"$"):
-        return re.compile(bytes_check_prompt, flags=re.M | re.I)
-    if check_prompt == class_prompt:
-        return re.compile(bytes_check_prompt, flags=re.M | re.I)
-    return re.compile(re.escape(bytes_check_prompt))
-
-
-def normalize_lines(output: bytes) -> bytes:
-    r"""
-    Normalize lines
-
-    Split output lines to remove \r\n, rstrip each line and rejoin
-
-    Args:
-        output: bytes string to process
-
-    Returns:
-        bytes: bytes string each line right stripped
-
-    Raises:
-        N/A
-
-    """
-    return b"\n".join([line.rstrip() for line in output.splitlines()])
-
-
-def strip_ansi(output: bytes) -> bytes:
-    """
-    Strip ansi characters from output
-
-    Args:
-        output: bytes from previous reads if needed
-
-    Returns:
-        bytes: bytes output read from channel with ansi characters removed
-
-    Raises:
-        N/A
-
-    """
-    ansi_escape_pattern = re.compile(rb"\x1b(\[.*?[@-~]|\].*?(\x07|\x1b\\))")
-    output = re.sub(pattern=ansi_escape_pattern, repl=b"", string=output)
-    return output
+from scrapli.exceptions import ScrapliValueError
+from scrapli.logging import logger
 
 
 def _textfsm_get_template(platform: str, command: str) -> Optional[TextIO]:
@@ -144,23 +31,21 @@ def _textfsm_get_template(platform: str, command: str) -> Optional[TextIO]:
         importlib.import_module(name=".templates", package="ntc_templates")
         CliTable = getattr(importlib.import_module(name=".clitable", package="textfsm"), "CliTable")
     except ModuleNotFoundError as exc:
-        err = f"Module '{exc.name}' not installed!"
-        msg = f"***** {err} {'*' * (80 - len(err))}"
-        fix = (
+        title = "Optional Extra Not Installed!"
+        message = (
+            "Optional extra 'textfsm' is not installed!\n"
             f"To resolve this issue, install '{exc.name}'. You can do this in one of the following"
             " ways:\n"
             "1: 'pip install -r requirements-textfsm.txt'\n"
             "2: 'pip install scrapli[textfsm]'"
         )
-        warning = "\n" + msg + "\n" + fix + "\n" + msg
-        LOG.warning(warning)
-        warnings.warn(warning)
+        user_warning(title=title, message=message)
         return None
     template_dir = pkg_resources.resource_filename("ntc_templates", "templates")
     cli_table = CliTable("index", template_dir)
     template_index = cli_table.index.GetRowMatch({"Platform": platform, "Command": command})
     if not template_index:
-        LOG.warning(
+        logger.warning(
             f"No match in ntc_templates index for platform `{platform}` and command `{command}`"
         )
         return None
@@ -186,7 +71,7 @@ def _textfsm_to_dict(
         N/A
 
     """
-    LOG.debug("converting textfsm output to dictionary representation")
+    logger.debug("converting textfsm output to dictionary representation")
     header_lower = [h.lower() for h in header]
     structured_output = [dict(zip(header_lower, row)) for row in structured_output]
     return structured_output
@@ -226,7 +111,7 @@ def textfsm_parse(
             )
         return structured_output
     except textfsm.parser.TextFSMError:
-        LOG.warning("failed to parse data with textfsm")
+        logger.warning("failed to parse data with textfsm")
     return []
 
 
@@ -252,17 +137,15 @@ def genie_parse(platform: str, command: str, output: str) -> Union[List[Any], Di
             importlib.import_module(name=".libs.parser.utils", package="genie"), "get_parser"
         )
     except ModuleNotFoundError as exc:
-        err = f"Module '{exc.name}' not installed!"
-        msg = f"***** {err} {'*' * (80 - len(err))}"
-        fix = (
+        title = "Optional Extra Not Installed!"
+        message = (
+            "Optional extra 'genie' is not installed!\n"
             f"To resolve this issue, install '{exc.name}'. You can do this in one of the following"
             " ways:\n"
             "1: 'pip install -r requirements-genie.txt'\n"
             "2: 'pip install scrapli[genie]'"
         )
-        warning = "\n" + msg + "\n" + fix + "\n" + msg
-        LOG.warning(warning)
-        warnings.warn(warning)
+        user_warning(title=title, message=message)
         return []
 
     genie_device = Device("scrapli_device", custom={"abstraction": {"order": ["os"]}}, os=platform)
@@ -273,7 +156,7 @@ def genie_parse(platform: str, command: str, output: str) -> Union[List[Any], Di
         if isinstance(genie_parsed_result, (list, dict)):
             return genie_parsed_result
     except Exception as exc:  # pylint: disable=W0703
-        LOG.warning(f"failed to parse data with genie, genie raised exception: `{exc}`")
+        logger.warning(f"failed to parse data with genie, genie raised exception: `{exc}`")
     return []
 
 
@@ -295,21 +178,19 @@ def ttp_parse(template: Union[str, TextIOWrapper], output: str) -> Union[List[An
     try:
         ttp = getattr(importlib.import_module(name="ttp"), "ttp")
     except ModuleNotFoundError as exc:
-        err = f"Module '{exc.name}' not installed!"
-        msg = f"***** {err} {'*' * (80 - len(err))}"
-        fix = (
+        title = "Optional Extra Not Installed!"
+        message = (
+            "Optional extra 'ttp' is not installed!\n"
             f"To resolve this issue, install '{exc.name}'. You can do this in one of the following"
             " ways:\n"
             "1: 'pip install -r requirements-ttp.txt'\n"
             "2: 'pip install scrapli[ttp]'"
         )
-        warning = "\n" + msg + "\n" + fix + "\n" + msg
-        LOG.warning(warning)
-        warnings.warn(warning)
+        user_warning(title=title, message=message)
         return []
 
     if not isinstance(template, (str, TextIOWrapper)):
-        LOG.info(f"invalid template `{template}`; template should be string or TextIOWrapper")
+        logger.info(f"invalid template `{template}`; template should be string or TextIOWrapper")
         return []
 
     ttp_parser_template_name = "scrapli_ttp_parse"
@@ -319,74 +200,6 @@ def ttp_parse(template: Union[str, TextIOWrapper], output: str) -> Union[List[An
     ttp_parser.parse()
     ttp_result: Dict[str, List[Any]] = ttp_parser.result(structure="dictionary")
     return ttp_result[ttp_parser_template_name]
-
-
-def resolve_ssh_config(ssh_config_file: str) -> str:
-    """
-    Resolve ssh configuration file from provided string
-
-    If provided string is empty (`""`) try to resolve system ssh config files located at
-    `~/.ssh/config` or `/etc/ssh/ssh_config`.
-
-    Args:
-        ssh_config_file: string representation of ssh config file to try to use
-
-    Returns:
-        str: string path to ssh config file or an empty string
-
-    Raises:
-        N/A
-
-    """
-    LOG.debug(f"attempting to resolve ssh config file from `{ssh_config_file}`")
-    if Path(ssh_config_file).is_file():
-        resolved_ssh_config_file = str(Path(ssh_config_file))
-        LOG.info(f"found ssh config file at `{resolved_ssh_config_file}`")
-        return resolved_ssh_config_file
-    if Path(os.path.expanduser("~/.ssh/config")).is_file():
-        resolved_ssh_config_file = str(Path(os.path.expanduser("~/.ssh/config")))
-        LOG.info(f"found ssh config file at `{resolved_ssh_config_file}`")
-        return resolved_ssh_config_file
-    if Path("/etc/ssh/ssh_config").is_file():
-        resolved_ssh_config_file = str(Path("/etc/ssh/ssh_config"))
-        LOG.info(f"found ssh config file at `{resolved_ssh_config_file}`")
-        return resolved_ssh_config_file
-    LOG.debug("could not resolve ssh config file")
-    return ""
-
-
-def resolve_ssh_known_hosts(ssh_known_hosts: str) -> str:
-    """
-    Resolve ssh known hosts file from provided string
-
-    If provided string is empty (`""`) try to resolve system known hosts files located at
-    `~/.ssh/known_hosts` or `/etc/ssh/ssh_known_hosts`.
-
-    Args:
-        ssh_known_hosts: string representation of ssh config file to try to use
-
-    Returns:
-        str: string path to ssh known hosts file or an empty string
-
-    Raises:
-        N/A
-
-    """
-    LOG.debug(f"attempting to resolve ssh known hosts file from `{ssh_known_hosts}`")
-    if Path(ssh_known_hosts).is_file():
-        resolved_ssh_known_hosts = str(Path(ssh_known_hosts))
-        LOG.info(f"found ssh config file at `{resolved_ssh_known_hosts}`")
-        return resolved_ssh_known_hosts
-    if Path(os.path.expanduser("~/.ssh/known_hosts")).is_file():
-        resolved_ssh_known_hosts = str(Path(os.path.expanduser("~/.ssh/known_hosts")))
-        LOG.info(f"found ssh config file at `{resolved_ssh_known_hosts}`")
-        return resolved_ssh_known_hosts
-    if Path("/etc/ssh/ssh_known_hosts").is_file():
-        resolved_ssh_known_hosts = str(Path("/etc/ssh/ssh_known_hosts"))
-        LOG.info(f"found ssh config file at `{resolved_ssh_known_hosts}`")
-        return resolved_ssh_known_hosts
-    LOG.debug("could not resolve ssh known hosts file")
-    return ""
 
 
 def resolve_file(file: str) -> str:
@@ -400,39 +213,78 @@ def resolve_file(file: str) -> str:
         str: string path to file
 
     Raises:
-        ValueError: if file cannot be resolved
+        ScrapliValueError: if file cannot be resolved
 
     """
     if Path(file).is_file():
         return str(Path(file))
-    if Path(os.path.expanduser(file)).is_file():
-        return str(Path(os.path.expanduser(file)))
-    raise ValueError(f"File path `{file}` could not be resolved")
+    if Path(file).expanduser().is_file():
+        return str(Path(file).expanduser())
+    raise ScrapliValueError(f"File path `{file}` could not be resolved")
 
 
-def attach_duplicate_log_filter(logger: Logger) -> None:
+def format_user_warning(title: str, message: str) -> str:
     """
-    Attach the base scrapli logger DuplicateFilter filter to a provided logger
-
-    Fails silently for now... forever?
+    Nicely format a warning message for users
 
     Args:
-        logger: logger to attach the filter to
+        title: title of the warning message
+        message: actual message body
 
     Returns:
-        N/A  # noqa: DAR202
+        str: nicely formatted warning
 
     Raises:
         N/A
 
     """
-    base_logger = getLogger("scrapli")
-    try:
-        dup_filter = [
-            logging_filter.__class__
-            for logging_filter in base_logger.filters
-            if logging_filter.__class__.__name__ == "DuplicateFilter"
-        ][0]
-        logger.addFilter(dup_filter())
-    except IndexError:
-        pass
+    terminal_width = get_terminal_size().columns
+    warning_banner_char = "*"
+
+    if len(title) > (terminal_width - 4):
+        warning_header = warning_banner_char * terminal_width
+    else:
+        banner_char_count = terminal_width - len(title) - 2
+        left_banner_char_count = banner_char_count // 2
+        right_banner_char_count = (
+            banner_char_count / 2 if banner_char_count % 2 == 0 else (banner_char_count // 2) + 1
+        )
+        warning_header = (
+            f"{warning_banner_char:{warning_banner_char}>{left_banner_char_count}}"
+            f" {title} "
+            f"{warning_banner_char:{warning_banner_char}<{right_banner_char_count}}"
+        )
+
+    warning_footer = warning_banner_char * terminal_width
+
+    warning_message = (
+        "\n\n"
+        + warning_header
+        + "\n"
+        + message.center(terminal_width)
+        + "\n"
+        + warning_footer
+        + "\n"
+    )
+
+    return warning_message
+
+
+def user_warning(title: str, message: str) -> None:
+    """
+    Nicely raise warning messages for users
+
+    Args:
+        title: title of the warning message
+        message: actual message body
+
+    Returns:
+        None
+
+    Raises:
+        N/A
+
+    """
+    warning_message = format_user_warning(title=title, message=message)
+    logger.warning(warning_message)
+    warn(warning_message)

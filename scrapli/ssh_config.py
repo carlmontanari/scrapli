@@ -6,6 +6,8 @@ import sys
 from copy import deepcopy
 from typing import Dict, Optional
 
+from scrapli.exceptions import ScrapliTypeError
+
 if sys.version_info >= (3, 8):
     Match = re.Match
 else:
@@ -59,14 +61,14 @@ class SSHConfig:
             ssh_config_file: string path to ssh configuration file
 
         Returns:
-            N/A  # noqa: DAR202
+            None
 
         Raises:
-            TypeError: if non-string value provided for ssh_config_file
+            ScrapliTypeError: if non-string value provided for ssh_config_file
 
         """
         if not isinstance(ssh_config_file, str):
-            raise TypeError(f"`ssh_config_file` expected str, got {type(ssh_config_file)}")
+            raise ScrapliTypeError(f"`ssh_config_file` expected str, got {type(ssh_config_file)}")
 
         self.ssh_config_file = os.path.expanduser(ssh_config_file)
         if self.ssh_config_file:
@@ -242,7 +244,7 @@ class SSHConfig:
             N/A
 
         Returns:
-            N/A  # noqa: DAR202
+            None
 
         Raises:
             N/A
@@ -418,7 +420,7 @@ class SSHKnownHosts:
             ssh_known_hosts_file: string path to ssh known hosts file
 
         Returns:
-            N/A  # noqa: DAR202
+            None
 
         Raises:
             TypeError: if non-string value provided for ssh_known_hosts

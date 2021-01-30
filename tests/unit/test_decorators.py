@@ -1,152 +1,292 @@
 import asyncio
 import time
-from threading import Lock
 
 import pytest
 
-from scrapli.decorators import OperationTimeout, TimeoutModifier, requires_open_session
-from scrapli.driver import AsyncScrape, Scrape
-from scrapli.driver.base_driver import ScrapeBase
-from scrapli.exceptions import ConnectionNotOpened, ScrapliTimeout
-
-
-class SlowClass(ScrapeBase):
-    def __init__(self):
-        # subclass base scrape to have a logger setup and such
-        # set transport to telnet as it works on all platforms and is standard library!
-        super().__init__(host="localhost", transport="telnet")
-        self.timeout_test = 0.25
-        self.timeout_exit = True
-        self.session_lock = Lock()
-        self.session_lock.acquire()
-
-    @OperationTimeout("timeout_test")
-    def slow_function(self):
-        time.sleep(1)
-
-    @OperationTimeout("timeout_test")
-    def fast_function(self):
-        return "fast"
-
-    @OperationTimeout("non_existent_class_attr")
-    def confused_function(self):
-        return "fast"
-
-    @OperationTimeout("timeout_test")
-    async def async_slow_function(self):
-        await asyncio.sleep(1)
-
-    @OperationTimeout("timeout_test")
-    async def async_fast_function(self):
-        return "fast"
-
-    @OperationTimeout("non_existent_class_attr")
-    async def async_confused_function(self):
-        return "fast"
-
-    def close(self):
-        return
-
-    @requires_open_session()
-    def raise_attribute_error(self):
-        raise AttributeError
-
-
-def test_operation_timeout_timeout():
-    slow = SlowClass()
-    with pytest.raises(ScrapliTimeout):
-        slow.slow_function()
-
-
-def test_operation_timeout_success():
-    slow = SlowClass()
-    result = slow.fast_function()
-    assert result == "fast"
-
-
-def test_operation_timeout_no_class_attr():
-    slow = SlowClass()
-    result = slow.confused_function()
-    assert result == "fast"
-
-
-@pytest.mark.asyncio
-async def test_async_operation_timeout_timeout():
-    slow = SlowClass()
-    with pytest.raises(ScrapliTimeout):
-        await slow.async_slow_function()
-
-
-@pytest.mark.asyncio
-async def test_async_operation_timeout_success():
-    slow = SlowClass()
-    result = await slow.async_fast_function()
-    assert result == "fast"
-
-
-@pytest.mark.asyncio
-async def test_async_operation_timeout_no_class_attr():
-    slow = SlowClass()
-    result = await slow.async_confused_function()
-    assert result == "fast"
-
-
-def test_requires_open_session():
-    slow = SlowClass()
-    with pytest.raises(ConnectionNotOpened) as exc:
-        slow.raise_attribute_error()
-    assert (
-        str(exc.value)
-        == "Attempting to call method that requires an open connection, but connection is not open. "
-        "Call the `.open()` method of your connection object, or use a context manager to ensue "
-        "your connection has been opened."
-    )
+from scrapli.decorators import ChannelTimeout, TimeoutOpsModifier, TransportTimeout
+from scrapli.exceptions import ScrapliTimeout
 
 
 @pytest.mark.parametrize(
-    "timeout_ops",
-    [
-        999,
-        30,
-        None,
-    ],
-    ids=["timeout_modified", "timeout_unchanged", "timeout_not_provided"],
+    "test_data",
+    (
+        1,
+        0,
+    ),
+    ids=("timeout_operation", "timeout_disabled"),
 )
-def test_timeout_modifier(monkeypatch, timeout_ops):
-    scrape = Scrape(host="localhost")
-    assert scrape.timeout_ops == 30
+def test_transport_timeout_sync_signals(monkeypatch, sync_transport_no_abc, test_data):
+    timeout_transport = test_data
+    sync_transport_no_abc._base_transport_args.timeout_transport = timeout_transport
 
-    @TimeoutModifier()
-    def test_timeout_modifier(cls, timeout_ops):
-        return cls.timeout_ops
+    @TransportTimeout()
+    def _open(cls):
+        return cls._base_transport_args.timeout_transport
 
     # stupid patch but does confirm the timeout modifier works as expected!
-    monkeypatch.setattr(Scrape, "open", test_timeout_modifier)
-    modified_timeout = scrape.open(timeout_ops=timeout_ops)
-    assert modified_timeout == timeout_ops if timeout_ops else 30
-    assert scrape.timeout_ops == 30
+    monkeypatch.setattr("scrapli.transport.base.sync_transport.Transport.open", _open)
+
+    # simply running this to make sure it runs and allows the wrapped function to return nicely
+    assert sync_transport_no_abc.open() == timeout_transport
+
+
+@pytest.mark.parametrize(
+    "test_data",
+    (
+        1,
+        0,
+    ),
+    ids=("timeout_operation", "timeout_disabled"),
+)
+def test_transport_timeout_sync_multiprocessing(monkeypatch, sync_transport_no_abc, test_data):
+    timeout_transport = test_data
+    sync_transport_no_abc._base_transport_args.timeout_transport = timeout_transport
+
+    @TransportTimeout()
+    def _open(cls):
+        return cls._base_transport_args.timeout_transport
+
+    # stupid patch but does confirm the timeout modifier works as expected!
+    monkeypatch.setattr("scrapli.transport.base.sync_transport.Transport.open", _open)
+    # just patch _IS_WINDOWS to force using multiprocessing timeout
+    monkeypatch.setattr("scrapli.decorators._IS_WINDOWS", True)
+
+    # simply running this to make sure it runs and allows the wrapped function to return nicely
+    assert sync_transport_no_abc.open() == timeout_transport
+
+
+def test_transport_timeout_sync_timed_out_signals(monkeypatch, sync_transport_no_abc):
+    sync_transport_no_abc._base_transport_args.timeout_transport = 0.1
+
+    @TransportTimeout()
+    def _open(cls):
+        time.sleep(0.5)
+
+    # stupid patch but does confirm the timeout modifier works as expected!
+    monkeypatch.setattr("scrapli.transport.base.sync_transport.Transport.open", _open)
+
+    with pytest.raises(ScrapliTimeout):
+        sync_transport_no_abc.open()
+
+
+def test_transport_timeout_sync_timed_out_multiprocessing(monkeypatch, sync_transport_no_abc):
+    sync_transport_no_abc._base_transport_args.timeout_transport = 0.1
+
+    @TransportTimeout()
+    def _open(cls):
+        time.sleep(0.5)
+
+    # stupid patch but does confirm the timeout modifier works as expected!
+    monkeypatch.setattr("scrapli.transport.base.sync_transport.Transport.open", _open)
+    # just patch _IS_WINDOWS to force using multiprocessing timeout
+    monkeypatch.setattr("scrapli.decorators._IS_WINDOWS", True)
+
+    with pytest.raises(ScrapliTimeout):
+        sync_transport_no_abc.open()
+
+
+@pytest.mark.asyncio
+async def test_transport_timeout_async_timed_out(monkeypatch, async_transport_no_abc):
+    async_transport_no_abc._base_transport_args.timeout_transport = 0.1
+
+    @TransportTimeout()
+    async def _open(cls):
+        await asyncio.sleep(0.5)
+
+    # stupid patch but does confirm the timeout modifier works as expected!
+    monkeypatch.setattr("scrapli.transport.base.async_transport.AsyncTransport.open", _open)
+
+    with pytest.raises(ScrapliTimeout):
+        await async_transport_no_abc.open()
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "timeout_ops",
-    [
+    "test_data",
+    (
+        1,
+        0,
+    ),
+    ids=("timeout_operation", "timeout_disabled"),
+)
+async def test_transport_timeout_async(monkeypatch, async_transport_no_abc, test_data):
+    timeout_transport = test_data
+    async_transport_no_abc._base_transport_args.timeout_transport = timeout_transport
+
+    @TransportTimeout()
+    async def _open(cls):
+        return cls._base_transport_args.timeout_transport
+
+    # stupid patch but does confirm the timeout modifier works as expected!
+    monkeypatch.setattr("scrapli.transport.base.async_transport.AsyncTransport.open", _open)
+
+    # simply running this to make sure it runs and allows the wrapped function to return nicely
+    assert await async_transport_no_abc.open() == timeout_transport
+
+
+@pytest.mark.parametrize(
+    "test_data",
+    (
+        1,
+        0,
+    ),
+    ids=("timeout_operation", "timeout_disabled"),
+)
+def test_channel_timeout_sync_signals(monkeypatch, sync_channel, test_data):
+    timeout_ops = test_data
+    sync_channel._base_channel_args.timeout_ops = timeout_ops
+
+    @ChannelTimeout()
+    def _send_input(cls):
+        return cls._base_channel_args.timeout_ops
+
+    # stupid patch but does confirm the timeout modifier works as expected!
+    monkeypatch.setattr("scrapli.channel.sync_channel.Channel.send_input", _send_input)
+
+    # simply running this to make sure it runs and allows the wrapped function to return nicely
+    assert sync_channel.send_input() == timeout_ops
+
+
+@pytest.mark.parametrize(
+    "test_data",
+    (
+        1,
+        0,
+    ),
+    ids=("timeout_operation", "timeout_disabled"),
+)
+def test_channel_timeout_sync_multiprocessing(monkeypatch, sync_channel, test_data):
+    timeout_ops = test_data
+    sync_channel._base_channel_args.timeout_ops = timeout_ops
+
+    @ChannelTimeout()
+    def _send_input(cls):
+        return cls._base_channel_args.timeout_ops
+
+    # stupid patch but does confirm the timeout modifier works as expected!
+    monkeypatch.setattr("scrapli.channel.sync_channel.Channel.send_input", _send_input)
+    # just patch _IS_WINDOWS to force using multiprocessing timeout
+    monkeypatch.setattr("scrapli.decorators._IS_WINDOWS", True)
+
+    # simply running this to make sure it runs and allows the wrapped function to return nicely
+    assert sync_channel.send_input() == timeout_ops
+
+
+def test_channel_timeout_sync_timed_out_signals(monkeypatch, sync_channel):
+    sync_channel._base_channel_args.timeout_ops = 0.1
+
+    @ChannelTimeout()
+    def _send_input(cls):
+        time.sleep(0.5)
+
+    # stupid patch but does confirm the timeout modifier works as expected!
+    monkeypatch.setattr("scrapli.channel.sync_channel.Channel.send_input", _send_input)
+
+    with pytest.raises(ScrapliTimeout):
+        sync_channel.send_input()
+
+
+def test_channel_timeout_sync_timed_out_multiprocessing(monkeypatch, sync_channel):
+    sync_channel._base_channel_args.timeout_ops = 0.1
+
+    @ChannelTimeout()
+    def _send_input(cls):
+        time.sleep(0.5)
+
+    # stupid patch but does confirm the timeout modifier works as expected!
+    monkeypatch.setattr("scrapli.channel.sync_channel.Channel.send_input", _send_input)
+
+    # just patch _IS_WINDOWS to force using multiprocessing timeout
+    monkeypatch.setattr("scrapli.decorators._IS_WINDOWS", True)
+
+    with pytest.raises(ScrapliTimeout):
+        sync_channel.send_input()
+
+
+@pytest.mark.asyncio
+async def test_channel_timeout_async_timed_out(monkeypatch, async_channel):
+    async_channel._base_channel_args.timeout_ops = 0.1
+
+    @ChannelTimeout()
+    async def _send_input(cls):
+        await asyncio.sleep(0.5)
+
+    # stupid patch but does confirm the timeout modifier works as expected!
+    monkeypatch.setattr("scrapli.channel.async_channel.AsyncChannel.send_input", _send_input)
+
+    with pytest.raises(ScrapliTimeout):
+        await async_channel.send_input()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "test_data",
+    (
+        1,
+        0,
+    ),
+    ids=("timeout_operation", "timeout_disabled"),
+)
+async def test_channel_timeout_async(monkeypatch, async_channel, test_data):
+    timeout_ops = test_data
+    async_channel._base_channel_args.timeout_ops = timeout_ops
+
+    @ChannelTimeout()
+    async def _send_input(cls):
+        return cls._base_channel_args.timeout_ops
+
+    # stupid patch but does confirm the timeout modifier works as expected!
+    monkeypatch.setattr("scrapli.channel.async_channel.AsyncChannel.send_input", _send_input)
+
+    # simply running this to make sure it runs and allows the wrapped function to return nicely
+    assert await async_channel.send_input() == timeout_ops
+
+
+@pytest.mark.parametrize(
+    "test_data",
+    (
         999,
         30,
         None,
-    ],
-    ids=["timeout_modified", "timeout_unchanged", "timeout_not_provided"],
+    ),
+    ids=("timeout_modified", "timeout_unchanged", "timeout_not_provided"),
 )
-async def test_timeout_modifier_async(monkeypatch, timeout_ops):
-    scrape = AsyncScrape(host="localhost", transport="asyncssh")
-    assert scrape.timeout_ops == 30
+def test_timeout_modifier(monkeypatch, sync_driver, test_data):
+    timeout_ops = test_data
+    assert sync_driver.timeout_ops == 30
 
-    @TimeoutModifier()
-    async def test_timeout_modifier(cls, timeout_ops):
+    @TimeoutOpsModifier()
+    def _test_timeout_modifier(cls, timeout_ops):
         return cls.timeout_ops
 
     # stupid patch but does confirm the timeout modifier works as expected!
-    monkeypatch.setattr(AsyncScrape, "open", test_timeout_modifier)
-    modified_timeout = await scrape.open(timeout_ops=timeout_ops)
+    monkeypatch.setattr("scrapli.driver.base.sync_driver.Driver.open", _test_timeout_modifier)
+
+    modified_timeout = sync_driver.open(timeout_ops=timeout_ops)
     assert modified_timeout == timeout_ops if timeout_ops else 30
-    assert scrape.timeout_ops == 30
+    assert sync_driver.timeout_ops == 30
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "test_data",
+    (
+        999,
+        30,
+        None,
+    ),
+    ids=("timeout_modified", "timeout_unchanged", "timeout_not_provided"),
+)
+async def test_timeout_modifier_async(monkeypatch, async_driver, test_data):
+    timeout_ops = test_data
+    assert async_driver.timeout_ops == 30
+
+    @TimeoutOpsModifier()
+    async def _test_timeout_modifier(cls, timeout_ops):
+        return cls.timeout_ops
+
+    # stupid patch but does confirm the timeout modifier works as expected!
+    monkeypatch.setattr("scrapli.driver.base.async_driver.AsyncDriver.open", _test_timeout_modifier)
+    modified_timeout = await async_driver.open(timeout_ops=timeout_ops)
+    assert modified_timeout == timeout_ops if timeout_ops else 30
+    assert async_driver.timeout_ops == 30

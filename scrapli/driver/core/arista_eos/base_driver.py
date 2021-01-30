@@ -2,7 +2,8 @@
 import re
 from typing import Dict
 
-from scrapli.driver.base_network_driver import PrivilegeLevel
+from scrapli.driver.network.base_driver import PrivilegeLevel
+from scrapli.exceptions import ScrapliValueError
 
 PRIVS = {
     "exec": (
@@ -58,10 +59,10 @@ class EOSDriverBase:
             session_name: name of session to register
 
         Returns:
-            N/A:  # noqa: DAR202
+            None
 
         Raises:
-            ValueError: if a session of given name already exists
+            ScrapliValueError: if a session of given name already exists
 
         """
         if session_name in self.privilege_levels.keys():
@@ -69,7 +70,7 @@ class EOSDriverBase:
                 f"session name `{session_name}` already registered as a privilege level, chose a "
                 "unique session name"
             )
-            raise ValueError(msg)
+            raise ScrapliValueError(msg)
         session_prompt = re.escape(session_name[:6])
         pattern = (
             rf"^[a-z0-9.\-@/:]{{1,32}}\(config\-s\-{session_prompt}[a-z0-9_.\-@/:]{{0,32}}\)#\s?$"

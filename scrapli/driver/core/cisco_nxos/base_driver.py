@@ -1,7 +1,8 @@
 """scrapli.driver.core.cisco_nxos.base_driver"""
 from typing import Dict
 
-from scrapli.driver.base_network_driver import PrivilegeLevel
+from scrapli.driver.network.base_driver import PrivilegeLevel
+from scrapli.exceptions import ScrapliValueError
 
 PRIVS = {
     "exec": (
@@ -63,10 +64,10 @@ class NXOSDriverBase:
             session_name: name of session to register
 
         Returns:
-            N/A:  # noqa: DAR202
+            None
 
         Raises:
-            ValueError: if a session of given name already exists
+            ScrapliValueError: if a session of given name already exists
 
         """
         if session_name in self.privilege_levels.keys():
@@ -74,7 +75,7 @@ class NXOSDriverBase:
                 f"session name `{session_name}` already registered as a privilege level, chose a "
                 "unique session name"
             )
-            raise ValueError(msg)
+            raise ScrapliValueError(msg)
         pattern = r"^[a-z0-9.\-_@/:]{1,32}\(config\-s[a-z0-9.\-@/:]{0,32}\)#\s?$"
         name = session_name
         config_session = PrivilegeLevel(

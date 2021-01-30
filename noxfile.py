@@ -7,6 +7,8 @@ import nox
 
 nox.options.error_on_missing_interpreters = False
 nox.options.stop_on_first_error = False
+nox.options.default_venv_backend = "venv"
+
 
 DEV_REQUIREMENTS: Dict[str, str] = {}
 
@@ -50,6 +52,9 @@ def unit_tests(session):
         N/A
 
     """
+    if session.python == "3.6":
+        session.install("dataclasses", "async_generator")
+
     # ensure test ssh key permissions are appropriate
     session.run("chmod", "0600", "tests/test_data/files/vrnetlab_key", external=True)
     session.run("chmod", "0600", "tests/test_data/files/vrnetlab_key_encrypted", external=True)

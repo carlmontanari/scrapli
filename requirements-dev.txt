@@ -1,9 +1,9 @@
 nox==2020.12.31
 black==20.8b1
 isort==5.7.0
-mypy==0.790
+mypy==0.800
 pytest==6.2.1
-pytest-cov==2.10.1
+pytest-cov==2.11.1
 pytest-asyncio==0.14.0
 pyfakefs==4.3.3
 pylama==7.7.1
@@ -11,14 +11,9 @@ pycodestyle==2.6.0
 pydocstyle==5.1.1
 pylint==2.6.0
 darglint==1.5.8
-# leave this pinned at 2.4.2 for now... some tests (seemingly only on ubuntu w/ 3.8) fail due to
-# asyncssh raising a brokenpipeerror which was added in 2.5.0; next release of scrapli_asyncssh
-# will catch and ignore this (as it is only happening when connection is closing anyway...)
-asyncssh==2.4.2
 napalm==3.2.0
-pdoc3==0.9.2 ; sys_platform != "win32"
--e git+https://github.com/scrapli/scrapli_community@master#egg=scrapli_community
 -r requirements.txt
+-r requirements-community.txt
 -r requirements-textfsm.txt
 -r requirements-genie.txt
 -r requirements-ttp.txt

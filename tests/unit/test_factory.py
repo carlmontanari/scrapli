@@ -3,7 +3,6 @@ import importlib
 import pytest
 
 from scrapli.driver import AsyncNetworkDriver, NetworkDriver
-from scrapli.driver.base_network_driver import PrivilegeLevel
 from scrapli.driver.core import (
     AsyncEOSDriver,
     AsyncIOSXEDriver,
@@ -16,7 +15,8 @@ from scrapli.driver.core import (
     JunosDriver,
     NXOSDriver,
 )
-from scrapli.exceptions import ScrapliException
+from scrapli.driver.network.base_driver import PrivilegeLevel
+from scrapli.exceptions import ScrapliModuleNotFound, ScrapliTypeError, ScrapliValueError
 from scrapli.factory import AsyncScrapli, Scrapli, _get_community_platform_details
 
 TEST_COMMUNITY_PRIV_LEVELS = {
@@ -57,7 +57,7 @@ TEST_COMMUNITY_PRIV_LEVELS = {
 
 
 @pytest.mark.parametrize(
-    "platform",
+    "test_data",
     [
         ("cisco_iosxe", IOSXEDriver),
         ("cisco_iosxr", IOSXRDriver),
@@ -67,13 +67,14 @@ TEST_COMMUNITY_PRIV_LEVELS = {
     ],
     ids=["cisco_iosxe", "cisco_iosxr", "cisco_nxos", "arista_eos", "juniper_junos"],
 )
-def test_sync_factory(platform):
-    driver = Scrapli(platform=platform[0], host="localhost")
-    assert isinstance(driver, platform[1])
+def test_sync_factory(test_data):
+    platform, expected_platform_class = test_data
+    driver = Scrapli(platform=platform, host="localhost", transport="system")
+    assert isinstance(driver, expected_platform_class)
 
 
 @pytest.mark.parametrize(
-    "platform",
+    "test_data",
     [
         ("cisco_iosxe", AsyncIOSXEDriver),
         ("cisco_iosxr", AsyncIOSXRDriver),
@@ -83,48 +84,46 @@ def test_sync_factory(platform):
     ],
     ids=["cisco_iosxe", "cisco_iosxr", "cisco_nxos", "arista_eos", "juniper_junos"],
 )
-def test_async_factory(platform):
-    driver = AsyncScrapli(platform=platform[0], host="localhost", transport="asyncssh")
-    assert isinstance(driver, platform[1])
+def test_async_factory(test_data):
+    platform, expected_platform_class = test_data
+    driver = AsyncScrapli(platform=platform, host="localhost", transport="asynctelnet")
+    assert isinstance(driver, expected_platform_class)
 
 
 def test_sync_factory_async_transport_exception():
-    with pytest.raises(ScrapliException) as exc:
-        Scrapli(platform="cisco_iosxe", transport="asyncssh")
-    assert str(exc.value) == "Use `AsyncScrapli` if using an async transport!"
+    with pytest.raises(ScrapliValueError) as exc:
+        Scrapli(platform="cisco_iosxe", host="localhost", transport="asyncssh")
+    assert str(exc.value) == "Use 'AsyncScrapli' if using an async transport!"
 
 
 def test_async_factory_sync_transport_exception():
-    with pytest.raises(ScrapliException) as exc:
-        AsyncScrapli(platform="cisco_iosxe", transport="system")
-    assert str(exc.value) == "Use `Scrapli` if using a synchronous transport!"
+    with pytest.raises(ScrapliValueError) as exc:
+        AsyncScrapli(platform="cisco_iosxe", host="localhost", transport="system")
+    assert str(exc.value) == "Use 'Scrapli' if using a synchronous transport!"
 
 
 @pytest.mark.parametrize(
-    "factory_setup",
+    "test_data",
     [(Scrapli, "system"), (AsyncScrapli, "asyncssh")],
     ids=["sync_factory", "async_factory"],
 )
-def test_factory_platform_bad_type(factory_setup):
-    Factory = factory_setup[0]
-    transport = factory_setup[1]
-    with pytest.raises(ScrapliException) as exc:
-        Factory(platform=True, transport=transport)
-    assert str(exc.value) == "Argument `platform` must be `str` got `<class 'bool'>`"
+def test_factory_platform_bad_type(test_data):
+    Factory, transport = test_data
+    with pytest.raises(ScrapliTypeError) as exc:
+        Factory(platform=True, host="localhost", transport=transport)
+    assert str(exc.value) == "Argument 'platform' must be 'str' got '<class 'bool'>'"
 
 
 @pytest.mark.parametrize(
-    "factory_setup",
+    "test_data",
     [(Scrapli, "system", NetworkDriver), (AsyncScrapli, "asyncssh", AsyncNetworkDriver)],
     ids=["sync_factory", "async_factory"],
 )
-def test_factory_community_platform_defaults(factory_setup):
-    Factory = factory_setup[0]
-    transport = factory_setup[1]
-    expected_driver = factory_setup[2]
+def test_factory_community_platform_defaults(test_data):
+    Factory, transport, expected_driver = test_data
     driver = Factory(platform="scrapli_networkdriver", host="localhost", transport=transport)
     assert isinstance(driver, expected_driver)
-    assert driver._transport == transport
+    assert driver.transport_name == transport
     assert driver.failed_when_contains == [
         "% Ambiguous command",
         "% Incomplete command",
@@ -139,19 +138,17 @@ def test_factory_community_platform_defaults(factory_setup):
     for actual_priv_level, expected_priv_level in zip(
         driver.privilege_levels.values(), TEST_COMMUNITY_PRIV_LEVELS.values()
     ):
-        actual_priv_level.name == expected_priv_level.name
-        actual_priv_level.pattern == expected_priv_level.pattern
+        assert actual_priv_level.name == expected_priv_level.name
+        assert actual_priv_level.pattern == expected_priv_level.pattern
 
 
 @pytest.mark.parametrize(
-    "factory_setup",
+    "test_data",
     [(Scrapli, "system", NetworkDriver), (AsyncScrapli, "asyncssh", AsyncNetworkDriver)],
     ids=["sync_factory", "async_factory"],
 )
-def test_factory_community_platform_variant(factory_setup):
-    Factory = factory_setup[0]
-    transport = factory_setup[1]
-    expected_driver = factory_setup[2]
+def test_factory_community_platform_variant(test_data):
+    Factory, transport, expected_driver = test_data
     driver = Factory(
         platform="scrapli_networkdriver",
         host="localhost",
@@ -159,7 +156,7 @@ def test_factory_community_platform_variant(factory_setup):
         transport=transport,
     )
     assert isinstance(driver, expected_driver)
-    assert driver._transport == transport
+    assert driver.transport_name == transport
     assert driver.failed_when_contains == [
         "% Ambiguous command",
         "% Incomplete command",
@@ -174,30 +171,28 @@ def test_factory_community_platform_variant(factory_setup):
     for actual_priv_level, expected_priv_level in zip(
         driver.privilege_levels.values(), TEST_COMMUNITY_PRIV_LEVELS.values()
     ):
-        actual_priv_level.name == expected_priv_level.name
-        actual_priv_level.pattern == expected_priv_level.pattern
+        assert actual_priv_level.name == expected_priv_level.name
+        assert actual_priv_level.pattern == expected_priv_level.pattern
 
 
 @pytest.mark.parametrize(
-    "factory_setup",
+    "test_data",
     [
         (Scrapli, "system", "ScrapliNetworkDriverWithMethods"),
         (AsyncScrapli, "asyncssh", "AsyncScrapliNetworkDriverWithMethods"),
     ],
     ids=["sync_factory", "async_factory"],
 )
-def test_factory_community_platform_variant_driver_type(factory_setup):
-    Factory = factory_setup[0]
-    transport = factory_setup[1]
-    expected_driver_name = factory_setup[2]
+def test_factory_community_platform_variant_driver_type(test_data):
+    Factory, transport, expected_driver = test_data
     driver = Factory(
         platform="scrapli_networkdriver",
         host="localhost",
         variant="test_variant2",
         transport=transport,
     )
-    assert type(driver).__name__ == expected_driver_name
-    assert driver._transport == transport
+    assert type(driver).__name__ == expected_driver
+    assert driver.transport_name == transport
     assert driver.failed_when_contains == [
         "% Ambiguous command",
         "% Incomplete command",
@@ -212,8 +207,8 @@ def test_factory_community_platform_variant_driver_type(factory_setup):
     for actual_priv_level, expected_priv_level in zip(
         driver.privilege_levels.values(), TEST_COMMUNITY_PRIV_LEVELS.values()
     ):
-        actual_priv_level.name == expected_priv_level.name
-        actual_priv_level.pattern == expected_priv_level.pattern
+        assert actual_priv_level.name == expected_priv_level.name
+        assert actual_priv_level.pattern == expected_priv_level.pattern
 
 
 def test_factory_no_scrapli_community(monkeypatch):
@@ -222,18 +217,12 @@ def test_factory_no_scrapli_community(monkeypatch):
 
     monkeypatch.setattr(importlib, "import_module", mock_import_module)
 
-    with pytest.raises(ModuleNotFoundError) as exc:
+    with pytest.raises(ScrapliModuleNotFound) as exc:
         _get_community_platform_details(community_platform_name="blah")
-    assert (
-        str(exc.value)
-        == "\n***** Module 'None' not found! ********************************************************\nTo resolve this issue, ensure you have the scrapli community package installed. You can install this with pip: `pip install scrapli_community`.\n***** Module 'None' not found! ********************************************************"
-    )
+    assert "Module not found!" in str(exc.value)
 
 
 def test_factory_no_scrapli_community_platform():
-    with pytest.raises(ModuleNotFoundError) as exc:
+    with pytest.raises(ScrapliModuleNotFound) as exc:
         _get_community_platform_details(community_platform_name="blah")
-    assert (
-        str(exc.value)
-        == "\n***** Platform 'blah' not found! ******************************************************\nTo resolve this issue, ensure you have the correct platform name, and that a scrapli  community platform of that name exists!\n***** Platform 'blah' not found! ******************************************************"
-    )
+    assert "Scrapli Community platform 'blah` not found!" in str(exc.value)

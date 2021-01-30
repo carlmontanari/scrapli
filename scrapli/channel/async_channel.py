@@ -1,40 +1,65 @@
 """scrapli.channel.async_channel"""
+import asyncio
 import re
 import time
-from typing import Any, List, Optional, Tuple
 
-from scrapli.channel.base_channel import ChannelBase
-from scrapli.decorators import OperationTimeout
-from scrapli.exceptions import ScrapliTimeout
-from scrapli.helper import get_prompt_pattern, strip_ansi
-from scrapli.transport.async_transport import AsyncTransport
+try:
+    from contextlib import asynccontextmanager
+except ImportError:  # pragma: nocover
+    # needed for 3.6 support, no asynccontextmanager until 3.7
+    from async_generator import asynccontextmanager  # type: ignore  # pragma: nocover
+
+from datetime import datetime
+from typing import AsyncIterator, List, Optional, Tuple
+
+from scrapli.channel.base_channel import BaseChannel, BaseChannelArgs
+from scrapli.decorators import ChannelTimeout
+from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliTimeout
+from scrapli.transport.base import AsyncTransport
 
 
-class AsyncChannel(ChannelBase):
-    def __init__(self, transport: AsyncTransport, **kwargs: Any) -> None:
-        """
-        AsyncChannel Object
-
-        Args:
-            transport: Scrapli Transport class
-            kwargs: keyword arguments to pass to ChannelBase
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        """
-        super().__init__(transport, **kwargs)
-
-        # ChannelBase supports union of Transport and AsyncTransport, but as this is the
-        # AsyncChannel, transport will always be async
+class AsyncChannel(BaseChannel):
+    def __init__(
+        self,
+        transport: AsyncTransport,
+        base_channel_args: BaseChannelArgs,
+    ) -> None:
+        super().__init__(
+            transport=transport,
+            base_channel_args=base_channel_args,
+        )
         self.transport: AsyncTransport
 
-    async def _read_chunk(self) -> bytes:
+        self.channel_lock: Optional[asyncio.Lock] = None
+        if self._base_channel_args.channel_lock:
+            self.channel_lock = asyncio.Lock()
+
+    @asynccontextmanager
+    async def _channel_lock(self) -> AsyncIterator[None]:
         """
-        Private method to async read chunk
+        Lock the channel during public channel operations if channel_lock is enabled
+
+        Args:
+            N/A
+
+        Yields:
+            None
+
+        Raises:
+            N/A
+
+        """
+        if self.channel_lock:
+            async with self.channel_lock:
+                yield
+        else:
+            yield
+
+    async def read(self) -> bytes:
+        r"""
+        Read chunks of output from the channel
+
+        Replaces any \r characters that sometimes get stuffed into the output from the devices
 
         Args:
             N/A
@@ -46,72 +71,56 @@ class AsyncChannel(ChannelBase):
             N/A
 
         """
-        new_output = await self.transport.read()
-        new_output = new_output.replace(b"\r", b"")
-        self.logger.debug(f"Read: {repr(new_output)}")
-        return new_output
+        buf = await self.transport.read()
+        buf = buf.replace(b"\r", b"")
 
-    async def _read_until_input(
-        self, channel_input: bytes, auto_expand: Optional[bool] = None
-    ) -> bytes:
+        self.logger.debug(f"read: {repr(buf)}")
+
+        if self.channel_log:
+            self.channel_log.write(buf)
+
+        if self._base_channel_args.comms_ansi:
+            buf = self._strip_ansi(buf=buf)
+
+        return buf
+
+    async def _read_until_input(self, channel_input: bytes) -> bytes:
         """
-        Async read until all input has been entered.
+        Read until all channel_input has been read on the channel
 
         Args:
-            channel_input: bytes to write to channel
-            auto_expand: bool to indicate if a device auto-expands commands, for example juniper
-                devices without `cli complete-on-space` disabled will convert `config` to
-                `configuration` after entering a space character after `config`; because scrapli
-                reads the channel until each command is entered, the command changing from `config`
-                to `configuration` will cause scrapli (by default) to never think the command has
-                been entered.
+            channel_input: bytes that should have been written to the channel
 
         Returns:
-            bytes: output read from channel
+            bytes: output read from channel while checking for the input in the channel stream
 
         Raises:
             N/A
 
         """
-        output = b""
+        buf = b""
 
         if not channel_input:
-            self.logger.info(f"Read: {repr(output)}")
-            return output
-
-        if auto_expand is None:
-            auto_expand = self.comms_auto_expand
+            return buf
 
         # squish all channel input words together and cast to lower to make comparison easier
         processed_channel_input = b"".join(channel_input.lower().split())
 
         while True:
-            output += await self._read_chunk()
-
-            if self.comms_ansi:
-                output = strip_ansi(output=output)
+            buf += await self.read()
 
             # replace any backspace chars (particular problem w/ junos), and remove any added spaces
             # this is just for comparison of the inputs to what was read from channel
-            if not auto_expand and processed_channel_input in b"".join(
-                output.lower().replace(b"\x08", b"").split()
-            ):
-                break
-            if auto_expand and self._process_auto_expand(
-                output=output, channel_input=channel_input
-            ):
-                break
+            if processed_channel_input in b"".join(buf.lower().replace(b"\x08", b"").split()):
+                return buf
 
-        self.logger.info(f"Read: {repr(output)}")
-        return output
-
-    async def _read_until_prompt(self, output: bytes = b"", prompt: str = "") -> bytes:
+    async def _read_until_prompt(self, buf: bytes = b"", prompt: str = "") -> bytes:
         """
-        Async read until expected prompt is seen.
+        Read until expected prompt is seen
 
         Args:
-            output: bytes from previous reads if needed
-            prompt: prompt to look for if not looking for base prompt (self.comms_prompt_pattern)
+            buf: output from previous reads if needed (used in scrapli netconf)
+            prompt: prompt to look for if not looking for base prompt (comms_prompt_pattern)
 
         Returns:
             bytes: output read from channel
@@ -120,20 +129,24 @@ class AsyncChannel(ChannelBase):
             N/A
 
         """
-        prompt_pattern = get_prompt_pattern(prompt=prompt, class_prompt=self.comms_prompt_pattern)
+        search_pattern = self._get_prompt_pattern(
+            class_pattern=self._base_channel_args.comms_prompt_pattern, pattern=prompt
+        )
 
         while True:
-            output += await self._read_chunk()
-            if self.comms_ansi:
-                output = strip_ansi(output=output)
-            channel_match = re.search(pattern=prompt_pattern, string=output)
+            buf += await self.read()
+
+            channel_match = re.search(
+                pattern=search_pattern,
+                string=buf,
+            )
+
             if channel_match:
-                self.logger.info(f"Read: {repr(output)}")
-                return output
+                return buf
 
     async def _read_until_prompt_or_time(
         self,
-        output: bytes = b"",
+        buf: bytes = b"",
         channel_outputs: Optional[List[bytes]] = None,
         read_duration: Optional[float] = None,
     ) -> bytes:
@@ -144,7 +157,7 @@ class AsyncChannel(ChannelBase):
         and any `ScrapliTimeout` that is raised while reading is ignored.
 
         Args:
-            output: bytes from previous reads if needed
+            buf: bytes from previous reads if needed
             channel_outputs: List of bytes to search for in channel output, if any are seen, return
                 read output
             read_duration: duration to read from channel for
@@ -156,71 +169,253 @@ class AsyncChannel(ChannelBase):
             N/A
 
         """
-        prompt_pattern = get_prompt_pattern(prompt="", class_prompt=self.comms_prompt_pattern)
+        search_pattern = self._get_prompt_pattern(
+            class_pattern=self._base_channel_args.comms_prompt_pattern,
+        )
 
         if channel_outputs is None:
             channel_outputs = []
         if read_duration is None:
             read_duration = 2.5
 
-        previous_timeout_transport = self.transport.timeout_transport
-        self.transport.timeout_transport = int(read_duration)
+        regex_channel_outputs_pattern = self._join_and_compile(channel_outputs=channel_outputs)
+
+        _transport_args = self.transport._base_transport_args  # pylint: disable=W0212
+        previous_timeout_transport = _transport_args.timeout_transport
+        _transport_args.timeout_transport = int(read_duration)
 
         start = time.time()
         while True:
             try:
-                output += await self._read_chunk()
+                buf += await self.read()
             except ScrapliTimeout:
                 pass
 
-            if self.comms_ansi:
-                output = strip_ansi(output=output)
-
             if (time.time() - start) > read_duration:
                 break
-            if any([channel_output in output for channel_output in channel_outputs]):
+            if any([channel_output in buf for channel_output in channel_outputs]):
                 break
-            if re.search(pattern=prompt_pattern, string=output):
+            if re.search(pattern=regex_channel_outputs_pattern, string=buf):
+                break
+            if re.search(pattern=search_pattern, string=buf):
                 break
 
-        self.transport.timeout_transport = previous_timeout_transport
+        _transport_args.timeout_transport = previous_timeout_transport
 
-        self.logger.info(f"Read: {repr(output)}")
-        return output
+        return buf
 
-    @OperationTimeout(attribute="timeout_ops", message="Timed out determining prompt on device.")
+    @ChannelTimeout(message="timed out during in channel ssh authentication")
+    async def channel_authenticate_ssh(
+        self, auth_password: str, auth_private_key_passphrase: str
+    ) -> None:
+        """
+        Handle SSH Authentication for transports that only operate "in the channel" (i.e. system)
+
+        Args:
+            auth_password: password to authenticate with
+            auth_private_key_passphrase: passphrase for ssh key if necessary
+
+        Returns:
+            None
+
+        Raises:
+            ScrapliAuthenticationFailed: if password prompt seen more than twice
+            ScrapliAuthenticationFailed: if passphrase prompt seen more than twice
+
+        """
+        self.logger.debug("attempting in channel ssh authentication")
+
+        password_count = 0
+        passphrase_count = 0
+        authenticate_buf = b""
+
+        search_pattern = self._get_prompt_pattern(
+            class_pattern=self._base_channel_args.comms_prompt_pattern
+        )
+
+        async with self._channel_lock():
+            while True:
+                try:
+                    buf = await asyncio.wait_for(self.read(), timeout=1)
+                except asyncio.TimeoutError:
+                    buf = b""
+
+                # if user sets comms_ansi *or* if we see an escape char, strip ansi... at least eos
+                # tends to have one escape char in the login output that will break things; other
+                # than this and telnet login, stripping ansi will only ever be governed by the users
+                # comms_ansi setting
+                if self._base_channel_args.comms_ansi or b"\x1B" in buf:
+                    buf = self._strip_ansi(buf=buf)
+
+                authenticate_buf += buf.lower()
+
+                if b"password" in authenticate_buf:
+                    # clear the authentication buffer so we don't re-read the password prompt
+                    authenticate_buf = b""
+                    password_count += 1
+                    if password_count > 2:
+                        msg = "password prompt seen more than once, assuming auth failed"
+                        self.logger.critical(msg)
+                        raise ScrapliAuthenticationFailed(msg)
+                    self.write(channel_input=auth_password, redacted=True)
+                    self.send_return()
+
+                if b"enter passphrase for key" in authenticate_buf:
+                    # clear the authentication buffer so we don't re-read the passphrase prompt
+                    authenticate_buf = b""
+                    passphrase_count += 1
+                    if passphrase_count > 2:
+                        msg = "passphrase prompt seen more than once, assuming auth failed"
+                        self.logger.critical(msg)
+                        raise ScrapliAuthenticationFailed(msg)
+                    self.write(channel_input=auth_private_key_passphrase, redacted=True)
+                    self.send_return()
+
+                channel_match = re.search(
+                    pattern=search_pattern,
+                    string=authenticate_buf,
+                )
+
+                if channel_match:
+                    return
+
+    @ChannelTimeout(message="timed out during in channel telnet authentication")
+    async def channel_authenticate_telnet(
+        self, auth_username: str = "", auth_password: str = ""
+    ) -> None:
+        """
+        Handle Telnet Authentication
+
+        Args:
+            auth_username: username to use for telnet authentication
+            auth_password: password to use for telnet authentication
+
+        Returns:
+            None
+
+        Raises:
+            ScrapliAuthenticationFailed: if password prompt seen more than twice
+            ScrapliAuthenticationFailed: if login prompt seen more than twice
+
+        """
+        self.logger.debug("attempting in channel telnet authentication")
+
+        username_count = 0
+        password_count = 0
+        authenticate_buf = b""
+
+        # ignoring type here out of laziness mostly, telnet is kind of special and this should be
+        # the only real one off type thing hopefully
+        bytes_username_prompt = self.transport.username_prompt.encode()  # type: ignore
+        bytes_password_prompt = self.transport.password_prompt.encode()  # type: ignore
+
+        search_pattern = self._get_prompt_pattern(
+            class_pattern=self._base_channel_args.comms_prompt_pattern
+        )
+
+        # capture the start time of the authentication event; we also set a "return_interval" which
+        # is 1/10 the timout_ops value, we will send a return character at roughly this interval if
+        # there is no output on the channel. we do this because sometimes telnet needs a kick to get
+        # it to prompt for auth -- particularity when connecting to terminal server/console port
+        auth_start_time = datetime.now().timestamp()
+        return_interval = self._base_channel_args.timeout_ops / 10
+        return_attempts = 1
+
+        async with self._channel_lock():
+            while True:
+                buf = await self.read()
+
+                # telnet auth *probably* wont have ansi chars, but strip them if they do exist so
+                # we can at least get past auth
+                if self._base_channel_args.comms_ansi or b"\x1B" in buf:
+                    buf = self._strip_ansi(buf=buf)
+
+                if not buf:
+                    current_iteration_time = datetime.now().timestamp()
+                    if (current_iteration_time - auth_start_time) > (
+                        return_interval * return_attempts
+                    ):
+                        self.send_return()
+                        return_attempts += 1
+
+                authenticate_buf += buf.lower()
+
+                if bytes_username_prompt in authenticate_buf:
+                    # clear the authentication buffer so we don't re-read the username prompt
+                    authenticate_buf = b""
+                    username_count += 1
+                    if username_count > 2:
+                        msg = "username/login prompt seen more than once, assuming auth failed"
+                        self.logger.critical(msg)
+                        raise ScrapliAuthenticationFailed(msg)
+                    self.write(channel_input=auth_username)
+                    self.send_return()
+
+                if bytes_password_prompt in authenticate_buf:
+                    # clear the authentication buffer so we don't re-read the password prompt
+                    authenticate_buf = b""
+                    password_count += 1
+                    if password_count > 2:
+                        msg = "password prompt seen more than once, assuming auth failed"
+                        self.logger.critical(msg)
+                        raise ScrapliAuthenticationFailed(msg)
+                    self.write(channel_input=auth_password, redacted=True)
+                    self.send_return()
+
+                channel_match = re.search(
+                    pattern=search_pattern,
+                    string=authenticate_buf,
+                )
+
+                if channel_match:
+                    return
+
+    @ChannelTimeout(message="timed out getting prompt")
     async def get_prompt(self) -> str:
         """
-        Async get current channel prompt
+        Get current channel prompt
 
         Args:
             N/A
 
         Returns:
-            N/A  # noqa: DAR202
+            str: string of the current prompt
 
         Raises:
             N/A
 
         """
-        prompt_pattern = get_prompt_pattern(prompt="", class_prompt=self.comms_prompt_pattern)
-        self._send_return()
-        output = b""
-        while True:
-            output += await self._read_chunk()
-            if self.comms_ansi:
-                output = strip_ansi(output=output)
-            channel_match = re.search(pattern=prompt_pattern, string=output)
-            if channel_match:
-                current_prompt = channel_match.group(0)
-                return current_prompt.decode().strip()
+        buf = b""
 
-    @OperationTimeout(attribute="timeout_ops", message="Timed out sending input to device.")
+        search_pattern = self._get_prompt_pattern(
+            class_pattern=self._base_channel_args.comms_prompt_pattern
+        )
+
+        async with self._channel_lock():
+            self.send_return()
+
+            while True:
+                buf += await self.read()
+
+                channel_match = re.search(
+                    pattern=search_pattern,
+                    string=buf,
+                )
+
+                if channel_match:
+                    current_prompt = channel_match.group(0)
+                    return current_prompt.decode().strip()
+
+    @ChannelTimeout(message="timed out sending input to device")
     async def send_input(
-        self, channel_input: str, strip_prompt: bool = True, eager: bool = False
+        self,
+        channel_input: str,
+        *,
+        strip_prompt: bool = True,
+        eager: bool = False,
     ) -> Tuple[bytes, bytes]:
         """
-        Primary entry point to send data to devices in async shell mode; accept input, return result
+        Primary entry point to send data to devices in shell mode; accept input and returns result
 
         Args:
             channel_input: string input to send to channel
@@ -230,8 +425,7 @@ class AsyncChannel(ChannelBase):
                 `send_configs` with the eager flag set)
 
         Returns:
-            raw_result: output read from the channel with no whitespace trimming/cleaning
-            processed_result: output read from the channel that has been cleaned up
+            Tuple[bytes, bytes]: tuple of "raw" output and "processed" (cleaned up/stripped) output
 
         Raises:
             N/A
@@ -239,26 +433,32 @@ class AsyncChannel(ChannelBase):
         """
         self._pre_send_input(channel_input=channel_input)
 
+        buf = b""
         bytes_channel_input = channel_input.encode()
 
-        with self.session_lock:
-            self.logger.info(
-                f"Attempting to send input: {channel_input}; strip_prompt: {strip_prompt}"
-            )
-            self.transport.write(channel_input=channel_input)
-            self.logger.debug(f"Write: {repr(channel_input)}")
-            output = await self._read_until_input(channel_input=bytes_channel_input)
-            self._send_return()
+        self.logger.info(
+            f"sending channel input: {channel_input}; strip_prompt: {strip_prompt}; eager: {eager}"
+        )
+
+        async with self._channel_lock():
+            self.write(channel_input=channel_input)
+            _buf_until_input = await self._read_until_input(channel_input=bytes_channel_input)
+            self.send_return()
+
             if not eager:
-                output = await self._read_until_prompt()
-        processed_output = self._restructure_output(output=output, strip_prompt=strip_prompt)
+                buf += await self._read_until_prompt()
 
-        return output, processed_output
+        processed_buf = self._process_output(
+            buf=buf,
+            strip_prompt=strip_prompt,
+        )
+        return buf, processed_buf
 
-    @OperationTimeout(attribute="timeout_ops", message="Timed out sending and reading to device.")
+    @ChannelTimeout(message="timed out sending input to device")
     async def send_input_and_read(
         self,
         channel_input: str,
+        *,
         strip_prompt: bool = True,
         expected_outputs: Optional[List[str]] = None,
         read_duration: Optional[float] = None,
@@ -274,8 +474,7 @@ class AsyncChannel(ChannelBase):
             read_duration: float duration to read for
 
         Returns:
-            raw_result: output read from the channel with no whitespace trimming/cleaning
-            processed_result: output read from the channel that has been cleaned up
+            Tuple[bytes, bytes]: tuple of "raw" output and "processed" (cleaned up/stripped) output
 
         Raises:
             N/A
@@ -283,30 +482,39 @@ class AsyncChannel(ChannelBase):
         """
         self._pre_send_input(channel_input=channel_input)
 
+        buf = b""
         bytes_channel_input = channel_input.encode()
         bytes_channel_outputs = [
             channel_output.encode() for channel_output in expected_outputs or []
         ]
 
-        with self.session_lock:
-            self.transport.write(channel_input=channel_input)
-            self.logger.debug(f"Write: {repr(channel_input)}")
-            await self._read_until_input(channel_input=bytes_channel_input)
-            self._send_return()
-            output = await self._read_until_prompt_or_time(
+        self.logger.info(
+            f"sending channel input and read: {channel_input}; strip_prompt: {strip_prompt}; "
+            f"expected_outputs: {expected_outputs}; read_duration: {read_duration}"
+        )
+
+        async with self._channel_lock():
+            self.write(channel_input=channel_input)
+            _buf_until_input = await self._read_until_input(channel_input=bytes_channel_input)
+            self.send_return()
+
+            buf += await self._read_until_prompt_or_time(
                 channel_outputs=bytes_channel_outputs, read_duration=read_duration
             )
-        processed_output = self._restructure_output(output=output, strip_prompt=strip_prompt)
-        return output, processed_output
 
-    @OperationTimeout(
-        attribute="timeout_ops", message="Timed out sending interactive input to device."
-    )
+        processed_buf = self._process_output(
+            buf=buf,
+            strip_prompt=strip_prompt,
+        )
+
+        return buf, processed_buf
+
+    @ChannelTimeout(message="timed out sending interactive input to device")
     async def send_inputs_interact(
         self, interact_events: List[Tuple[str, str, Optional[bool]]]
     ) -> Tuple[bytes, bytes]:
         """
-        Async interact with a device with changing prompts per input.
+        Interact with a device with changing prompts per input.
 
         Used to interact with devices where prompts change per input, and where inputs may be hidden
         such as in the case of a password input. This can be used to respond to challenges from
@@ -318,7 +526,7 @@ class AsyncChannel(ChannelBase):
 
         An example where we need this sort of capability:
 
-        ```
+        '''
         3560CX#copy flash: scp:
         Source filename []? test1.txt
         Address or name of remote host []? 172.31.254.100
@@ -331,11 +539,11 @@ class AsyncChannel(ChannelBase):
         !
         639 bytes copied in 12.066 secs (53 bytes/sec)
         3560CX#
-        ```
+        '''
 
         To accomplish this we can use the following:
 
-        ```
+        '''
         interact = conn.channel.send_inputs_interact(
             [
                 ("copy flash: scp:", "Source filename []?", False),
@@ -345,7 +553,7 @@ class AsyncChannel(ChannelBase):
                 ("super_secure_password", prompt, True),
             ]
         )
-        ```
+        '''
 
         If we needed to deal with more prompts we could simply continue adding tuples to the list of
         interact "events".
@@ -358,8 +566,8 @@ class AsyncChannel(ChannelBase):
                 not provided it is assumed the input is "normal" (not hidden)
 
         Returns:
-            raw_result: output read from the channel with no whitespace trimming/cleaning
-            processed_result: output read from the channel that has been cleaned up
+            Tuple[bytes, bytes]: output read from the channel with no whitespace trimming/cleaning,
+                and the output read from the channel that has been "cleaned up"
 
         Raises:
             N/A
@@ -367,8 +575,10 @@ class AsyncChannel(ChannelBase):
         """
         self._pre_send_inputs_interact(interact_events=interact_events)
 
-        with self.session_lock:
-            output = b""
+        buf = b""
+        processed_buf = b""
+
+        async with self._channel_lock():
             for interact_event in interact_events:
                 channel_input = interact_event[0]
                 bytes_channel_input = channel_input.encode()
@@ -377,18 +587,25 @@ class AsyncChannel(ChannelBase):
                     hidden_input = interact_event[2]
                 except IndexError:
                     hidden_input = False
-                self.logger.info(
-                    f"Attempting to send input interact: {channel_input}; "
-                    f"\texpecting: {channel_response};"
-                    f"\thidden_input: {hidden_input}"
-                )
-                self.transport.write(channel_input=channel_input)
-                self.logger.debug(f"Write: {repr(channel_input)}")
-                if not channel_response or hidden_input is True:
-                    self._send_return()
-                else:
-                    output += await self._read_until_input(channel_input=bytes_channel_input)
-                    self._send_return()
-                output += await self._read_until_prompt(prompt=channel_response)
 
-        return self._post_send_inputs_interact(output=output)
+                _channel_input = channel_input if not hidden_input else "REDACTED"
+                self.logger.info(
+                    f"sending interactive input: {_channel_input}; "
+                    f"expecting: {channel_response}; "
+                    f"hidden_input: {hidden_input}"
+                )
+
+                self.write(channel_input=channel_input)
+                if not channel_response or hidden_input is True:
+                    self.send_return()
+                else:
+                    buf += await self._read_until_input(channel_input=bytes_channel_input)
+                    self.send_return()
+                buf += await self._read_until_prompt(prompt=channel_response)
+
+        processed_buf += self._process_output(
+            buf=buf,
+            strip_prompt=False,
+        )
+
+        return buf, processed_buf
