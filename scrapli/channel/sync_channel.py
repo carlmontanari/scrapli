@@ -586,7 +586,7 @@ class Channel(BaseChannel):
                     f"hidden_input: {hidden_input}"
                 )
 
-                self.write(channel_input=channel_input)
+                self.write(channel_input=channel_input, redacted=bool(hidden_input))
                 if not channel_response or hidden_input is True:
                     self.send_return()
                 else:
