@@ -40,7 +40,14 @@ PRIVS = {
     ),
     "tclsh": (
         PrivilegeLevel(
-            pattern=r"(^[a-z0-9.\-_@/:]{1,63}\-tcl#\s?$)|(^>\s?$)",
+            # annoyingly tclsh has many variations... exec/priv exec/config and just ">"
+            # for now doesnt seem to be a reason to differentiate between them, so just have one
+            # giant pattern
+            pattern=(
+                r"(^[a-z0-9.\-_@/:]{1,63}\-tcl#\s?$)|"
+                r"(^[a-z0-9.\-_@/:]{1,63}\(config\-tcl\)#\s?$)|"
+                r"(^>\s?$)"
+            ),
             name="tclsh",
             previous_priv="privilege_exec",
             deescalate="tclquit",
