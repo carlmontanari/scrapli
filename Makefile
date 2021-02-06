@@ -25,6 +25,14 @@ cov_unit:
 	--cov-report term \
 	tests/unit/
 
+cov_integration:
+	python -m pytest \
+	--cov=scrapli \
+	--cov-report html \
+	--cov-report term \
+	tests/integration/ \
+	tests/unit/
+
 test:
 	python -m pytest tests/
 	python -m pytest examples/

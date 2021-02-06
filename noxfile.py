@@ -79,6 +79,38 @@ def unit_tests(session):
     )
 
 
+@nox.session(python=["3.6", "3.7", "3.8", "3.9"])
+def integration_tests(session):
+    """
+    Nox run integration tests
+
+    Args:
+        session: nox session
+
+    Returns:
+        N/A  # noqa: DAR202
+
+    Raises:
+        N/A
+
+    """
+    if session.python == "3.6":
+        session.install("dataclasses", "async_generator")
+
+    session.install("-e", ".")
+    session.install("-r", "requirements-dev.txt")
+    session.run(
+        "pytest",
+        "--cov=scrapli",
+        "--cov-report",
+        "xml",
+        "--cov-report",
+        "term",
+        "tests/integration",
+        "-v",
+    )
+
+
 @nox.session(python=["3.9"])
 def isort(session):
     """
