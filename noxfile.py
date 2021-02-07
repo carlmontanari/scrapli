@@ -96,6 +96,8 @@ def integration_tests(session):
         N/A
 
     """
+    session.install("-U", "pip")
+
     if session.python == "3.6":
         session.install("dataclasses", "async_generator")
 
@@ -167,6 +169,7 @@ def pylama(session):
         N/A
 
     """
+    session.install("-U", "pip")
     session.install("-e", ".")
     session.install("-r", "requirements-dev.txt")
     session.run("pylama", ".")
