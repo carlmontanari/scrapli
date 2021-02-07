@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 import scrapli
+from scrapli.exceptions import ScrapliTypeError
 from scrapli.ssh_config import Host, SSHConfig, SSHKnownHosts
 
 TEST_DATA_DIR = f"{Path(scrapli.__file__).parents[1]}/tests/test_data"
@@ -55,7 +56,7 @@ def test_host__repr():
 
 
 def test_init_ssh_config_invalid_config():
-    with pytest.raises(TypeError) as exc:
+    with pytest.raises(ScrapliTypeError) as exc:
         SSHConfig(None)
     assert str(exc.value) == "`ssh_config_file` expected str, got <class 'NoneType'>"
 

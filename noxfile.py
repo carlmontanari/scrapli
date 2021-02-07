@@ -7,6 +7,8 @@ import nox
 
 nox.options.error_on_missing_interpreters = False
 nox.options.stop_on_first_error = False
+nox.options.default_venv_backend = "venv"
+
 
 DEV_REQUIREMENTS: Dict[str, str] = {}
 
@@ -50,6 +52,9 @@ def unit_tests(session):
         N/A
 
     """
+    if session.python == "3.6":
+        session.install("dataclasses", "async_generator")
+
     # ensure test ssh key permissions are appropriate
     session.run("chmod", "0600", "tests/test_data/files/vrnetlab_key", external=True)
     session.run("chmod", "0600", "tests/test_data/files/vrnetlab_key_encrypted", external=True)
@@ -70,6 +75,38 @@ def unit_tests(session):
         "--cov-report",
         "term",
         "tests/unit",
+        "-v",
+    )
+
+
+@nox.session(python=["3.6", "3.7", "3.8", "3.9"])
+def integration_tests(session):
+    """
+    Nox run integration tests
+
+    Args:
+        session: nox session
+
+    Returns:
+        N/A  # noqa: DAR202
+
+    Raises:
+        N/A
+
+    """
+    if session.python == "3.6":
+        session.install("dataclasses", "async_generator")
+
+    session.install("-e", ".")
+    session.install("-r", "requirements-dev.txt")
+    session.run(
+        "pytest",
+        "--cov=scrapli",
+        "--cov-report",
+        "xml",
+        "--cov-report",
+        "term",
+        "tests/integration",
         "-v",
     )
 

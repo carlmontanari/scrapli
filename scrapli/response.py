@@ -32,10 +32,10 @@ class Response:
                 failed command/interaction
 
         Returns:
-            N/A  # noqa: DAR202
+            None
 
         Raises:
-            N/A  # noqa
+            N/A
 
         """
         self.host = host
@@ -102,7 +102,7 @@ class Response:
         """
         return f"Response <Success: {str(not self.failed)}>"
 
-    def _record_response(self, result: bytes) -> None:
+    def record_response(self, result: bytes) -> None:
         """
         Record channel_input results and elapsed time of channel input/reading output
 
@@ -110,7 +110,7 @@ class Response:
             result: string result of channel_input
 
         Returns:
-            N/A  # noqa: DAR202
+            None
 
         Raises:
             N/A
@@ -201,7 +201,7 @@ class Response:
             N/A
 
         Returns:
-            N/A  # noqa: DAR202
+            None
 
         Raises:
             ScrapliCommandFailure: if command/config failed
@@ -303,7 +303,7 @@ class MultiResponse(ScrapliMultiResponse):
             N/A
 
         Returns:
-            N/A  # noqa: DAR202
+            None
 
         Raises:
             ScrapliCommandFailure: if any elements are failed

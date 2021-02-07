@@ -2,7 +2,7 @@ import re
 
 import pytest
 
-from scrapli.driver.core.juniper_junos.driver import PRIVS
+from scrapli.driver.core.juniper_junos.base_driver import PRIVS
 
 
 @pytest.mark.parametrize(

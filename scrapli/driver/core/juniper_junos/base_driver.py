@@ -1,25 +1,14 @@
 """scrapli.driver.core.juniper_junos.base_driver"""
-from scrapli.driver.base_network_driver import PrivilegeLevel
+from scrapli.driver.network.base_driver import PrivilegeLevel
 
 PRIVS = {
-    "root": (
-        PrivilegeLevel(
-            pattern=r"^root@%\s?$",
-            name="root",
-            previous_priv="",
-            deescalate="",
-            escalate="",
-            escalate_auth=False,
-            escalate_prompt="",
-        )
-    ),
     "exec": (
         PrivilegeLevel(
             pattern=r"^({\w+:\d}\n){0,1}[a-z0-9.\-_@()/:]{1,63}>\s?$",
             name="exec",
-            previous_priv="root",
-            deescalate="start shell",
-            escalate="cli",
+            previous_priv="",
+            deescalate="",
+            escalate="",
             escalate_auth=False,
             escalate_prompt="",
         )
@@ -53,6 +42,17 @@ PRIVS = {
             previous_priv="exec",
             deescalate="exit configuration-mode",
             escalate="configure private",
+            escalate_auth=False,
+            escalate_prompt="",
+        )
+    ),
+    "shell": (
+        PrivilegeLevel(
+            pattern=r"^%\s?$",
+            name="shell",
+            previous_priv="exec",
+            deescalate="exit",
+            escalate="start shell",
             escalate_auth=False,
             escalate_prompt="",
         )

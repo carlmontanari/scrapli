@@ -1,53 +1,76 @@
 """scrapli.exceptions"""
+from typing import Optional
 
 
 class ScrapliException(Exception):
-    """Base Exception for scrapli"""
+    """Base Exception for all scrapli exceptions"""
 
 
-class SSHNotFound(ScrapliException):
-    """Exception for system transport unable to find ssh executable"""
+class ScrapliModuleNotFound(ScrapliException):
+    """ModuleNotFound but for scrapli related issues"""
 
 
-class ScrapliCommandFailure(ScrapliException):
-    """Exception for scrapli command/config failures"""
+class ScrapliTypeError(ScrapliException):
+    """TypeError but for scrapli related typing issues"""
+
+
+class ScrapliValueError(ScrapliException):
+    """ValueError but for scrapli related value issues"""
+
+
+class ScrapliUnsupportedPlatform(ScrapliException):
+    """Exception for unsupported platform; i.e. using system transport on windows"""
+
+
+class ScrapliTransportPluginError(ScrapliException):
+    """Exception for transport plugin issues"""
+
+
+class ScrapliConnectionNotOpened(ScrapliException):
+    """Exception for trying to operate on a transport which has not been opened"""
+
+    def __init__(
+        self,
+        message: Optional[str] = None,
+    ) -> None:
+        """
+        Scrapli connection not opened exception
+
+        Args:
+            message: optional message
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        """
+        if not message:
+            self.message = (
+                "connection not opened, but attempting to call a method that requires an open "
+                "connection, do you need to call 'open()'?"
+            )
+        else:
+            self.message = message
+        super().__init__(self.message)
+
+
+class ScrapliAuthenticationFailed(ScrapliException):
+    """Exception for scrapli authentication issues"""
+
+
+class ScrapliConnectionError(ScrapliException):
+    """Exception for underlying connection issues"""
 
 
 class ScrapliTimeout(ScrapliException):
     """Exception for any scrapli timeouts"""
 
 
-class MissingDependencies(ScrapliException):
-    """Exception for any missing (probably optional) dependencies"""
+class ScrapliCommandFailure(ScrapliException):
+    """Exception for scrapli command/config failures"""
 
 
-class KeyVerificationFailed(ScrapliException):
-    """Exception for scrapli public key verification failure"""
-
-
-class ScrapliAuthenticationFailed(ScrapliException):
-    """Exception for scrapli authentication failure"""
-
-
-class UnknownPrivLevel(ScrapliException):
-    """Exception for encountering unknown privilege level"""
-
-
-class CouldNotAcquirePrivLevel(ScrapliException):
-    """Exception for failure to acquire desired privilege level"""
-
-
-class TransportPluginError(ScrapliException):
-    """Exception for transport plugin loading errors"""
-
-
-class ConnectionNotOpened(ScrapliException):
-    """Exception for failures due to connection not being open"""
-
-
-class UnsupportedPlatform(ScrapliException):
-    """Exception for unsupported platform; i.e. using system transport on windows"""
-
-
-class ScrapliConnectionLost(ScrapliException):
-    """Exception for underlying connection being lost"""
+class ScrapliPrivilegeError(ScrapliException):
+    """Exception for all privilege related scrapli issues"""
