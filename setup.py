@@ -2,7 +2,7 @@
 """scrapli - ssh|telnet screen scraping client library"""
 import setuptools
 
-__version__ = "2021.01.30a2"
+__version__ = "2021.01.30"
 __author__ = "Carl Montanari"
 
 with open("README.md", "r", encoding="utf-8") as f:
