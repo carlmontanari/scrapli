@@ -51,12 +51,12 @@ pip install scrapli[paramiko]
 
 The available optional installation extras options are:
 
-- paramiko (paramiko and the scrapli_paramiko transport)
-- ssh2 (ssh2-python and the scrapli_ssh2 transport)
+- paramiko
+- ssh2
+- asyncssh  
 - textfsm (textfsm and ntc-templates)
 - ttp (ttp template parser)  
 - genie (genie/pyats)
-- asynchssh (asyncssh and the scrapli_asyncssh transport)
 - netconf (scrapli_netconf)
 - community (scrapli_community)
 

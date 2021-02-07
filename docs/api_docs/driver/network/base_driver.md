@@ -260,7 +260,7 @@ class BaseNetworkDriver:
         # build/update the priv graph
         self._build_priv_graph()
 
-        # build/update the joined ocmms prompt pattern
+        # build/update the joined comms prompt pattern
         self._generate_comms_prompt_pattern()
 
         # ensure the channel has the updated prompt pattern so it knows how to match any newly
@@ -701,7 +701,7 @@ class BaseNetworkDriver:
         # build/update the priv graph
         self._build_priv_graph()
 
-        # build/update the joined ocmms prompt pattern
+        # build/update the joined comms prompt pattern
         self._generate_comms_prompt_pattern()
 
         # ensure the channel has the updated prompt pattern so it knows how to match any newly

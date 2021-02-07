@@ -1,4 +1,4 @@
-# Project Structure
+# Project Details
 
 ## What is scrapli
 

@@ -4,7 +4,7 @@
 ## Installation
 
 In most cases installation via pip is the simplest and best way to install scrapli.
-See below or [here](/user_guide/installation) for advanced installation details.
+See [here](/user_guide/installation) for advanced installation details.
 
 ```
 pip install scrapli
@@ -54,16 +54,16 @@ end
 
 ## More Examples
 
-- [Basic "native" Scrape operations](https://github.com/carlmontanari/scrapli/tree/master//examples/basic_usage/scrapli_driver.py)
-- [Basic "GenericDriver" operations](https://github.com/carlmontanari/scrapli/tree/master//examples/basic_usage/generic_driver.py)
-- [Basic "core" Driver operations](https://github.com/carlmontanari/scrapli/tree/master//examples/basic_usage/iosxe_driver.py)
-- [Basic async operations](https://github.com/carlmontanari/scrapli/tree/master//examples/async_usage/async_iosxe_driver.py)
-- [Async multiple connections](https://github.com/carlmontanari/scrapli/tree/master//examples/async_usage/async_multiple_connections.py)
-- [Setting up basic logging](https://github.com/carlmontanari/scrapli/tree/master//examples/logging/basic_logging.py)
-- [Using SSH Key for authentication](https://github.com/carlmontanari/scrapli/tree/master//examples/ssh_keys/ssh_keys.py)
-- [Using SSH config file](https://github.com/carlmontanari/scrapli/tree/master//examples/ssh_config_files/ssh_config_file.py)
-- [Parse output with TextFSM/ntc-templates](https://github.com/carlmontanari/scrapli/tree/master//examples/structured_data/structured_data_textfsm.py)
-- [Parse output with Genie](https://github.com/carlmontanari/scrapli/tree/master//examples/structured_data/structured_data_genie.py)
+- [Basic "native" Scrape operations](https://github.com/carlmontanari/scrapli/tree/master/examples/basic_usage/scrapli_driver.py)
+- [Basic "GenericDriver" operations](https://github.com/carlmontanari/scrapli/tree/master/examples/basic_usage/generic_driver.py)
+- [Basic "core" Driver operations](https://github.com/carlmontanari/scrapli/tree/master/examples/basic_usage/iosxe_driver.py)
+- [Basic async operations](https://github.com/carlmontanari/scrapli/tree/master/examples/async_usage/async_iosxe_driver.py)
+- [Async multiple connections](https://github.com/carlmontanari/scrapli/tree/master/examples/async_usage/async_multiple_connections.py)
+- [Setting up basic logging](https://github.com/carlmontanari/scrapli/tree/master/examples/logging/basic_logging.py)
+- [Using SSH Key for authentication](https://github.com/carlmontanari/scrapli/tree/master/examples/ssh_keys/ssh_keys.py)
+- [Using SSH config file](https://github.com/carlmontanari/scrapli/tree/master/examples/ssh_config_files/ssh_config_file.py)
+- [Parse output with TextFSM/ntc-templates](https://github.com/carlmontanari/scrapli/tree/master/examples/structured_data/structured_data_textfsm.py)
+- [Parse output with Genie](https://github.com/carlmontanari/scrapli/tree/master/examples/structured_data/structured_data_genie.py)
 - [Transport Options](https://github.com/carlmontanari/scrapli/tree/master/examples/transport_options/system_ssh_args.py)
 - [Configuration Modes - IOSXR Configure Exclusive](https://github.com/carlmontanari/scrapli/tree/master/examples/configuration_modes/iosxr_configure_exclusive.py)
 - [Configuration Modes - EOS Configure Session](https://github.com/carlmontanari/scrapli/tree/master/examples/configuration_modes/eos_configure_session.py)

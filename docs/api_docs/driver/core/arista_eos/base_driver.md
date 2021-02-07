@@ -101,9 +101,9 @@ class EOSDriverBase:
                 "unique session name"
             )
             raise ScrapliValueError(msg)
-        session_prompt = re.escape(session_name[:6])
+        sess_prompt = re.escape(session_name[:6])
         pattern = (
-            rf"^[a-z0-9.\-@/:]{{1,32}}\(config\-s\-{session_prompt}[a-z0-9_.\-@/:]{{0,32}}\)#\s?$"
+            rf"^[a-z0-9.\-@()/: ]{{1,63}}\(config\-s\-{sess_prompt}[a-z0-9_.\-@/:]{{0,32}}\)#\s?$"
         )
         name = session_name
         config_session = PrivilegeLevel(
@@ -158,9 +158,9 @@ class EOSDriverBase:
                 "unique session name"
             )
             raise ScrapliValueError(msg)
-        session_prompt = re.escape(session_name[:6])
+        sess_prompt = re.escape(session_name[:6])
         pattern = (
-            rf"^[a-z0-9.\-@/:]{{1,32}}\(config\-s\-{session_prompt}[a-z0-9_.\-@/:]{{0,32}}\)#\s?$"
+            rf"^[a-z0-9.\-@()/: ]{{1,63}}\(config\-s\-{sess_prompt}[a-z0-9_.\-@/:]{{0,32}}\)#\s?$"
         )
         name = session_name
         config_session = PrivilegeLevel(
