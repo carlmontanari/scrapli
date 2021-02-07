@@ -514,8 +514,9 @@ def test_context_manager(device_type, transport):
 
     device["port"] = port
     device["transport"] = transport
-    device["timeout_socket"] = 5
-    device["timeout_transport"] = 5
+    # nxos running on macos is crazy slow....
+    device["timeout_socket"] = 30
+    device["timeout_transport"] = 30
     device["timeout_ops"] = 30
 
     with driver(**device) as conn:
@@ -564,9 +565,9 @@ def test_public_key_auth_failure(device_type, transport):
     device.pop("async_driver")
 
     device["transport"] = transport
-    device["timeout_socket"] = 2
-    device["timeout_transport"] = 2
-    device["timeout_ops"] = 2
+    device["timeout_socket"] = 5
+    device["timeout_transport"] = 5
+    device["timeout_ops"] = 5
     device["auth_private_key"] = INVALID_PRIVATE_KEY
     device.pop("auth_password")
     conn = driver(**device)
@@ -591,8 +592,8 @@ def test_public_key_auth_failure_systemssh(device_type, transport):
     device.pop("async_driver")
 
     device["transport"] = transport
-    device["timeout_socket"] = 2
-    device["timeout_transport"] = 2
+    device["timeout_socket"] = 5
+    device["timeout_transport"] = 5
     device["timeout_ops"] = 5
     device["auth_private_key"] = INVALID_PRIVATE_KEY
     device.pop("auth_password")
@@ -600,4 +601,4 @@ def test_public_key_auth_failure_systemssh(device_type, transport):
 
     with pytest.raises(ScrapliAuthenticationFailed) as exc:
         conn.open()
-    assert str(exc.value) == f"Authentication to host {device['host']} failed"
+    assert "auth failed" in str(exc.value)

@@ -2,7 +2,8 @@ import re
 
 import pytest
 
-from scrapli.driver.core.arista_eos.driver import PRIVS
+from scrapli.driver.core.arista_eos.base_driver import PRIVS
+from scrapli.exceptions import ScrapliValueError
 
 
 @pytest.mark.parametrize(
@@ -36,3 +37,9 @@ def test_prompt_patterns(priv_pattern):
     prompt_pattern = PRIVS.get(priv_level_name).pattern
     match = re.search(pattern=prompt_pattern, string=prompt, flags=re.M | re.I)
     assert match
+
+
+def test_register_duplicate_configuration_session(sync_eos_driver):
+    sync_eos_driver.register_configuration_session(session_name="scrapli")
+    with pytest.raises(ScrapliValueError):
+        sync_eos_driver.register_configuration_session(session_name="scrapli")

@@ -1,5 +1,5 @@
 """scrapli.driver.core.cisco_iosxr.base_driver"""
-from scrapli.driver.base_network_driver import PrivilegeLevel
+from scrapli.driver.network.base_driver import PrivilegeLevel
 
 PRIVS = {
     "privilege_exec": (

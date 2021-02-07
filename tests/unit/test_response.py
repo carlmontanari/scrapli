@@ -51,7 +51,7 @@ drwxr-xr-x  34 carl  staff   1088 Jan 27 19:07 ./
 drwxr-xr-x  21 carl  staff    672 Jan 25 15:56 ../
 -rw-r--r--   1 carl  staff  53248 Jan 27 19:07 .coverage
 drwxr-xr-x  12 carl  staff    384 Jan 27 19:13 .git/"""
-    response._record_response(response_bytes)
+    response.record_response(response_bytes)
     assert str(response.finish_time)[:-7] == response_end_time
     assert response.result == response_bytes.decode()
     assert response.failed is False
@@ -67,7 +67,7 @@ drwxr-xr-x  34 carl  staff   1088 Jan 27 19:07 ./
 drwxr-xr-x  21 carl  staff    672 Jan 25 15:56 ../
 -rw-r--r--   1 carl  staff  53248 Jan 27 19:07 !racecar!
 drwxr-xr-x  12 carl  staff    384 Jan 27 19:13 .git/"""
-    response._record_response(response_bytes)
+    response.record_response(response_bytes)
     assert str(response.finish_time)[:-7] == response_end_time
     assert response.result == response_bytes.decode()
     assert response.failed is True
@@ -83,7 +83,7 @@ drwxr-xr-x  34 carl  staff   1088 Jan 27 19:07 ./
 drwxr-xr-x  21 carl  staff    672 Jan 25 15:56 ../
 -rw-r--r--   1 carl  staff  53248 Jan 27 19:07 .coverage
 drwxr-xr-x  12 carl  staff    384 Jan 27 19:13 .git/"""
-    response._record_response(response_bytes)
+    response.record_response(response_bytes)
     assert str(response.finish_time)[:-7] == response_end_time
     assert response.result == response_bytes.decode()
     assert response.failed is False
@@ -119,7 +119,7 @@ def test_response_parse_textfsm(parse_type):
 Internet  172.31.254.1            -   0000.0c07.acfe  ARPA   Vlan254
 Internet  172.31.254.2            -   c800.84b2.e9c2  ARPA   Vlan254
 """
-    response._record_response(response_bytes)
+    response.record_response(response_bytes)
     assert response.textfsm_parse_output(to_dict=to_dict)[0] == expected_result
 
 
@@ -127,7 +127,7 @@ Internet  172.31.254.2            -   c800.84b2.e9c2  ARPA   Vlan254
 def test_response_parse_textfsm_fail():
     response = Response("localhost", channel_input="show ip arp", textfsm_platform="cisco_ios")
     response_bytes = b""
-    response._record_response(response_bytes)
+    response.record_response(response_bytes)
     assert response.textfsm_parse_output() == []
 
 
@@ -135,7 +135,7 @@ def test_response_parse_textfsm_fail():
 def test_response_parse_textfsm_no_template():
     response = Response("localhost", channel_input="show ip arp", textfsm_platform="potato")
     response_bytes = b""
-    response._record_response(response_bytes)
+    response.record_response(response_bytes)
     assert response.textfsm_parse_output() == []
 
 
@@ -149,7 +149,7 @@ def test_response_parse_genie():
 Internet  172.31.254.1            -   0000.0c07.acfe  ARPA   Vlan254
 Internet  172.31.254.2            -   c800.84b2.e9c2  ARPA   Vlan254
 """
-    response._record_response(response_bytes)
+    response.record_response(response_bytes)
     result = response.genie_parse_output()
     assert (
         result["interfaces"]["Vlan254"]["ipv4"]["neighbors"]["172.31.254.1"]["ip"] == "172.31.254.1"
@@ -163,7 +163,7 @@ Internet  172.31.254.2            -   c800.84b2.e9c2  ARPA   Vlan254
 def test_response_parse_genie_fail():
     response = Response("localhost", channel_input="show ip arp", genie_platform="iosxe")
     response_bytes = b""
-    response._record_response(response_bytes)
+    response.record_response(response_bytes)
     assert response.genie_parse_output() == []
 
 
@@ -188,7 +188,7 @@ def test_response_parse_ttp():
      ip vrf CPE1
     !
 """
-    response._record_response(response_bytes)
+    response.record_response(response_bytes)
     result = response.ttp_parse_output(template=ttp_template)
     assert result[0][0]["ip"] == "192.168.0.113"
 
@@ -196,5 +196,5 @@ def test_response_parse_ttp():
 def test_response_parse_ttp_fail():
     response = Response("localhost", channel_input="show ip arp", genie_platform="iosxe")
     response_bytes = b""
-    response._record_response(response_bytes)
+    response.record_response(response_bytes)
     assert response.ttp_parse_output(template="blah") == [{}]

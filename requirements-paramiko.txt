@@ -1,1 +1,1 @@
-scrapli-paramiko>=2020.10.10
+paramiko>=2.6.0,<3.0.0

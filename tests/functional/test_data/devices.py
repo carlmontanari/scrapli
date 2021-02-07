@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 import scrapli
-from scrapli import AsyncScrape, Scrape
+from scrapli import AsyncDriver, Driver
 from scrapli.driver.core import (
     AsyncEOSDriver,
     AsyncIOSXEDriver,
@@ -82,8 +82,8 @@ DEVICES = {
         "base_config": f"{TEST_DATA_PATH}/base_configs/juniper_junos",
     },
     "linux": {
-        "driver": Scrape,
-        "async_driver": AsyncScrape,
+        "driver": Driver,
+        "async_driver": AsyncDriver,
         "auth_username": "root",
         "auth_password": "docker",
         "auth_strict_key": False,

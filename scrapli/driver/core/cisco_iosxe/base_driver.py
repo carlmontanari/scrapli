@@ -1,10 +1,10 @@
 """scrapli.driver.core.cisco_iosxe.base_driver"""
-from scrapli.driver.base_network_driver import PrivilegeLevel
+from scrapli.driver.network.base_driver import PrivilegeLevel
 
 PRIVS = {
     "exec": (
         PrivilegeLevel(
-            pattern=r"^[a-z0-9.\-_@()/:]{1,63}>$",
+            pattern=r"^((?!tcl)[a-z0-9.\-_@()/:]){1,63}>$",
             name="exec",
             previous_priv="",
             deescalate="",
@@ -15,7 +15,7 @@ PRIVS = {
     ),
     "privilege_exec": (
         PrivilegeLevel(
-            pattern=r"^[a-z0-9.\-_@/:]{1,63}#$",
+            pattern=r"^((?!tcl)[a-z0-9.\-_@/:]){1,63}#$",
             name="privilege_exec",
             previous_priv="exec",
             deescalate="disable",
@@ -37,7 +37,7 @@ PRIVS = {
     ),
     "tclsh": (
         PrivilegeLevel(
-            pattern=r"(^[a-z0-9.\-_@/:]{1,63}\(tcl\)#$)|(^\+>$)",
+            pattern=r"(^[a-z0-9.\-_@/:]{1,63}\(tcl\)[>#]$)|(^\+>$)",
             name="tclsh",
             previous_priv="privilege_exec",
             deescalate="tclquit",

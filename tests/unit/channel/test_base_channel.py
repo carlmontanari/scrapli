@@ -1,75 +1,195 @@
+import logging
+import re
+from io import BytesIO
+from pathlib import Path
+
 import pytest
 
-from ...test_data.unit_test_cases import TEST_CASES
+from scrapli.channel.base_channel import BaseChannel, BaseChannelArgs
+from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliTypeError
 
 
-def test__str(sync_cisco_iosxe_conn):
-    assert str(sync_cisco_iosxe_conn.channel) == "scrapli Channel Object"
+def test_channel_log(fs, base_transport_no_abc):
+    # fs needed to mock filesystem for asserting log location
+    _ = fs
+    base_channel_args = BaseChannelArgs(channel_log=True)
+    BaseChannel(transport=base_transport_no_abc, base_channel_args=base_channel_args)
+    assert Path("/scrapli_channel.log").is_file()
 
 
-def test__repr(sync_cisco_iosxe_conn):
-    assert (
-        repr(sync_cisco_iosxe_conn.channel)
-        == "scrapli Channel {'logger': 'scrapli.localhost:2211.channel', 'comms_prompt_pattern': '(^[a-z0-9.\\\\-_@("
-        ")/:]{1,63}>$)|(^[a-z0-9.\\\\-_@/:]{1,63}#$)|(^[a-z0-9.\\\\-_@/:]{1,63}\\\\((?!tcl)[a-z0-9.\\\\-@/:\\\\+]{"
-        "0,32}\\\\)#$)|((^[a-z0-9.\\\\-_@/:]{1,63}\\\\(tcl\\\\)#$)|(^\\\\+>$))', 'comms_return_char': '\\n', "
-        "'comms_ansi': True, 'comms_auto_expand': False, 'timeout_ops': 30.0, 'session_lock': False}"
-    )
+def test_channel_log_user_defined(fs, base_transport_no_abc):
+    # fs needed to mock filesystem for asserting log location
+    _ = fs
+    base_channel_args = BaseChannelArgs(channel_log="/log.log")
+    BaseChannel(transport=base_transport_no_abc, base_channel_args=base_channel_args)
+    assert Path("/log.log").is_file()
+
+
+def test_channel_log_user_bytesio(base_transport_no_abc):
+    bytes_log = BytesIO()
+    base_channel_args = BaseChannelArgs(channel_log=bytes_log)
+    channel = BaseChannel(transport=base_transport_no_abc, base_channel_args=base_channel_args)
+    assert channel.channel_log is bytes_log
+
+
+def test_channel_write(caplog, monkeypatch, base_channel):
+    caplog.set_level(logging.DEBUG, logger="scrapli.channel")
+
+    transport_write_called = False
+
+    def _write(cls, channel_input, redacted: bool = False):
+        nonlocal transport_write_called
+        transport_write_called = True
+
+    monkeypatch.setattr("scrapli.transport.base.base_transport.BaseTransport.write", _write)
+
+    base_channel.write(channel_input="blah")
+
+    assert transport_write_called is True
+
+    log_record = next(iter(caplog.records))
+    assert "write: 'blah'" == log_record.msg
+    assert logging.DEBUG == log_record.levelno
+
+
+def test_channel_write_redacted(caplog, monkeypatch, base_channel):
+    caplog.set_level(logging.DEBUG, logger="scrapli.channel")
+    transport_write_called = False
+
+    def _write(cls, channel_input, redacted: bool = False):
+        nonlocal transport_write_called
+        transport_write_called = True
+
+    monkeypatch.setattr("scrapli.transport.base.base_transport.BaseTransport.write", _write)
+
+    base_channel.write(channel_input="blah", redacted=True)
+
+    assert transport_write_called is True
+
+    log_record = next(iter(caplog.records))
+    assert "write: REDACTED" == log_record.msg
+    assert logging.DEBUG == log_record.levelno
+
+
+def test_channel_send_return(monkeypatch, base_channel):
+    base_channel._base_channel_args.comms_return_char = "RETURNCHAR"
+
+    def _write(cls, channel_input, redacted: bool = False):
+        assert channel_input == b"RETURNCHAR"
+
+    monkeypatch.setattr("scrapli.transport.base.base_transport.BaseTransport.write", _write)
+
+    base_channel.send_return()
 
 
 @pytest.mark.parametrize(
-    "attr_setup",
-    [
-        ({"strip_prompt": True}, b"hostname 3560CX"),
-        ({"strip_prompt": False}, b"hostname 3560CX\n3560CX#"),
-    ],
-    ids=[
-        "strip_prompt_true",
-        "strip_prompt_false",
-    ],
+    "test_data",
+    (
+        (
+            b"Host key verification failed",
+            "Host key verification failed",
+        ),
+        (
+            b"Operation timed out",
+            "Timed out connecting",
+        ),
+        (
+            b"Connection timed out",
+            "Timed out connecting",
+        ),
+        (
+            b"No route to host",
+            "No route to host",
+        ),
+        (
+            b"no matching key exchange found.",
+            "No matching key exchange found",
+        ),
+        (
+            b"no matching key exchange found. Their offer: diffie-hellman-group-exchange-sha1,diffie-hellman-group14-sha1",
+            "No matching key exchange found for host, their offer: diffie-hellman-group-exchange-sha1,diffie-hellman-group14-sha1",
+        ),
+        (
+            b"no matching cipher found",
+            "No matching cipher found",
+        ),
+        (
+            b"no matching cipher found, their offer: aes128-cbc,aes256-cbc",
+            "No matching cipher found for host, their offer: aes128-cbc,aes256-cbc",
+        ),
+        (
+            b"command-line: line 0: Bad configuration option: ciphers+",
+            "Bad SSH configuration option(s) for host",
+        ),
+        (
+            b"WARNING: UNPROTECTED PRIVATE KEY FILE!",
+            # note: empty quotes in the middle is where private key filename would be
+            "Permissions for private key are too open, authentication failed!",
+        ),
+        (
+            b"Could not resolve hostname BLAH: No address associated with hostname",
+            # note: empty quotes in the middle is where private key filename would be
+            "Could not resolve address for host",
+        ),
+    ),
+    ids=(
+        "host key verification",
+        "operation time out",
+        "connection time out",
+        "no route to host",
+        "no matching key exchange",
+        "no matching key exchange found key exchange",
+        "no matching cipher",
+        "no matching cipher found ciphers",
+        "bad configuration option",
+        "unprotected key",
+        "could not resolve host",
+    ),
 )
-def test__restructure_output(sync_cisco_iosxe_conn, attr_setup):
-    args = attr_setup[0]
-    expected = attr_setup[1]
-    channel_output = b"hostname 3560CX\r\n3560CX#"
-    output = sync_cisco_iosxe_conn.channel._restructure_output(channel_output, **args)
-    assert output == expected
+def test_ssh_message_handler(base_channel, test_data):
+    error_message, expected_message = test_data
+    with pytest.raises(ScrapliAuthenticationFailed) as exc:
+        base_channel._ssh_message_handler(error_message)
+    assert expected_message in str(exc.value)
 
 
-def test_pre_send_input(sync_cisco_iosxe_conn):
-    with pytest.raises(TypeError) as exc:
-        sync_cisco_iosxe_conn.channel._pre_send_input(channel_input=[])
-    assert str(exc.value) == "`send_input` expects a single string, got <class 'list'>."
+def test_get_prompt_pattern_no_pattern_provided(base_channel):
+    actual_pattern = base_channel._get_prompt_pattern(class_pattern="class_pattern_blah")
+    assert actual_pattern == re.compile(b"class_pattern_blah", flags=re.M | re.I)
 
 
-def test_pre_send_inputs_interact(sync_cisco_iosxe_conn):
-    with pytest.raises(TypeError) as exc:
-        sync_cisco_iosxe_conn.channel._pre_send_inputs_interact(interact_events="blah")
-    assert str(exc.value) == "`interact_events` expects a List, got <class 'str'>"
-
-
-def test_post_send_inputs_interact(sync_cisco_iosxe_conn):
-    expected_raw = TEST_CASES["cisco_iosxe"]["test_send_input"]["raw_result"]
-    expected_processed = TEST_CASES["cisco_iosxe"]["test_send_input"]["processed_result"][
-        "no_strip"
-    ]
-    raw_result, processed_result = sync_cisco_iosxe_conn.channel._post_send_inputs_interact(
-        output=expected_raw.encode()
+def test_get_prompt_pattern_provided_multiline(base_channel):
+    actual_pattern = base_channel._get_prompt_pattern(
+        class_pattern="", pattern="^provided_pattern$"
     )
-    assert raw_result == expected_raw.encode()
-    assert processed_result == expected_processed.encode()
+    assert actual_pattern == re.compile(b"^provided_pattern$", flags=re.M | re.I)
 
 
-@pytest.mark.parametrize(
-    "attr_setup",
-    [(True, "show version", "sho ver"), (False, "show vkasjflkdsjafl", "sho ver")],
-    ids=["not expanded", "expanded"],
-)
-def test_process_auto_expand(sync_cisco_iosxe_conn, attr_setup):
-    expanded = attr_setup[0]
-    output = attr_setup[1]
-    channel_input = attr_setup[2]
-    result = sync_cisco_iosxe_conn.channel._process_auto_expand(
-        output=output, channel_input=channel_input
+def test_get_prompt_pattern_provided_no_multiline(base_channel):
+    actual_pattern = base_channel._get_prompt_pattern(class_pattern="", pattern="some_pattern")
+    assert actual_pattern == re.compile(b"some_pattern")
+
+
+def test_process_output(base_channel):
+    base_channel._base_channel_args.comms_prompt_pattern = "^scrapli>$"
+    actual_processed_buf = base_channel._process_output(
+        buf=b"linewithtrailingspace   \nsomethingelse\nscrapli>", strip_prompt=True
     )
-    assert expanded == result
+    assert actual_processed_buf == b"linewithtrailingspace\nsomethingelse"
+
+
+def test_strip_ansi(base_channel):
+    actual_strip_ansi_output = base_channel._strip_ansi(
+        buf=b"[admin@CoolDevice.Sea1: \x1b[1m/\x1b[0;0m]$"
+    )
+    assert actual_strip_ansi_output == b"[admin@CoolDevice.Sea1: /]$"
+
+
+def test_pre_send_input_exception(base_channel):
+    with pytest.raises(ScrapliTypeError):
+        base_channel._pre_send_input(channel_input=None)
+
+
+def test_pre_send_inputs_interact_exception(base_channel):
+    with pytest.raises(ScrapliTypeError):
+        base_channel._pre_send_inputs_interact(interact_events=None)
