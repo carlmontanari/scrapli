@@ -52,6 +52,8 @@ def unit_tests(session):
         N/A
 
     """
+    session.install("-U", "pip")
+
     if session.python == "3.6":
         session.install("dataclasses", "async_generator")
 
