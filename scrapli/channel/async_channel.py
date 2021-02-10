@@ -244,7 +244,7 @@ class AsyncChannel(BaseChannel):
                 # tends to have one escape char in the login output that will break things; other
                 # than this and telnet login, stripping ansi will only ever be governed by the users
                 # comms_ansi setting
-                if self._base_channel_args.comms_ansi or b"\x1B" in buf:
+                if self._base_channel_args.comms_ansi or b"\x1b" in buf.lower():
                     buf = self._strip_ansi(buf=buf)
 
                 authenticate_buf += buf.lower()
