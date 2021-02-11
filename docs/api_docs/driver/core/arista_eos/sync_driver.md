@@ -236,6 +236,50 @@ class EOSDriver(NetworkDriver, EOSDriverBase):
 
 
 
+## Functions
+
+    
+
+#### eos_on_close
+`eos_on_close(conn: scrapli.driver.network.sync_driver.NetworkDriver) ‑> NoneType`
+
+```text
+EOSDriver default on_close callable
+
+Args:
+    conn: NetworkDriver object
+
+Returns:
+    None
+
+Raises:
+    N/A
+```
+
+
+
+
+    
+
+#### eos_on_open
+`eos_on_open(conn: scrapli.driver.network.sync_driver.NetworkDriver) ‑> NoneType`
+
+```text
+EOSDriver default on_open callable
+
+Args:
+    conn: NetworkDriver object
+
+Returns:
+    None
+
+Raises:
+    N/A
+```
+
+
+
+
 ## Classes
 
 ### EOSDriver

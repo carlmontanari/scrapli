@@ -75,7 +75,7 @@ nav:
         - Base Transport: api_docs/transport/base/base_transport.md
         - Sync Transport: api_docs/transport/base/sync_transport.md
         - Async Transport: api_docs/transport/base/async_transport.md
-        - Socket: api_docs/transport/base/socket.md
+        - Socket: api_docs/transport/base/base_socket.md
       - Plugins:
         - Asyncssh: api_docs/transport/plugins/asyncssh.md
         - Asynctelnet: api_docs/transport/plugins/asynctelnet.md

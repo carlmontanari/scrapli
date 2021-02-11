@@ -196,6 +196,50 @@ class AsyncIOSXEDriver(AsyncNetworkDriver):
 
 
 
+## Functions
+
+    
+
+#### iosxe_on_close
+`iosxe_on_close(conn: scrapli.driver.network.async_driver.AsyncNetworkDriver) ‑> NoneType`
+
+```text
+AsyncIOSXEDriver default on_close callable
+
+Args:
+    conn: NetworkDriver object
+
+Returns:
+    None
+
+Raises:
+    N/A
+```
+
+
+
+
+    
+
+#### iosxe_on_open
+`iosxe_on_open(conn: scrapli.driver.network.async_driver.AsyncNetworkDriver) ‑> NoneType`
+
+```text
+AsyncIOSXEDriver default on_open callable
+
+Args:
+    conn: NetworkDriver object
+
+Returns:
+    None
+
+Raises:
+    N/A
+```
+
+
+
+
 ## Classes
 
 ### AsyncIOSXEDriver

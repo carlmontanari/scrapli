@@ -218,6 +218,50 @@ class IOSXRDriver(NetworkDriver):
 
 
 
+## Functions
+
+    
+
+#### iosxr_on_close
+`iosxr_on_close(conn: scrapli.driver.network.sync_driver.NetworkDriver) ‑> NoneType`
+
+```text
+IOSXRDriver default on_close callable
+
+Args:
+    conn: NetworkDriver object
+
+Returns:
+    None
+
+Raises:
+    N/A
+```
+
+
+
+
+    
+
+#### iosxr_on_open
+`iosxr_on_open(conn: scrapli.driver.network.sync_driver.NetworkDriver) ‑> NoneType`
+
+```text
+IOSXRDriver default on_open callable
+
+Args:
+    conn: NetworkDriver object
+
+Returns:
+    None
+
+Raises:
+    N/A
+```
+
+
+
+
 ## Classes
 
 ### IOSXRDriver

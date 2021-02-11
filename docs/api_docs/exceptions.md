@@ -110,6 +110,7 @@ class ScrapliPrivilegeError(ScrapliException):
 
 
 
+
 ## Classes
 
 ### ScrapliAuthenticationFailed
