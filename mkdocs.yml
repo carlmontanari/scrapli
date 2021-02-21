@@ -114,7 +114,7 @@ markdown_extensions:
 extra:
     social:
         - icon: fontawesome/brands/github-alt
-          link: 'https://github.com/carlmontanari/scrapli'
+          link: 'https://github.com/carlmontanari/'
         - icon: fontawesome/brands/twitter
           link: 'https://twitter.com/carlrmontanari'
         - icon: fontawesome/brands/linkedin
