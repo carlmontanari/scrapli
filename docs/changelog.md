@@ -1,6 +1,12 @@
 Changelog
 =========
 
+## (in development) 2021.07.30
+
+- Added "% Unavailable command" to EOS `failed_when_contains`
+- Moved core platform `failed_when_contains` to base to not have to duplicate them in sync and async platforms
+
+
 ## 2021.01.30
 
 - *BREAKING CHANGE* `PrivilegeLevel` import location changed -- this will break things! 
