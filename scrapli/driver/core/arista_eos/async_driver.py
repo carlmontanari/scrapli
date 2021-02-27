@@ -131,6 +131,7 @@ class AsyncEOSDriver(AsyncNetworkDriver, EOSDriverBase):
                 "% Incomplete command",
                 "% Invalid input",
                 "% Cannot commit",
+                "% Unavailable command",
             ]
 
         super().__init__(

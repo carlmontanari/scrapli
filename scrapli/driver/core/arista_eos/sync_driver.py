@@ -131,6 +131,7 @@ class EOSDriver(NetworkDriver, EOSDriverBase):
                 "% Incomplete command",
                 "% Invalid input",
                 "% Cannot commit",
+                "% Unavailable command",
             ]
 
         super().__init__(
