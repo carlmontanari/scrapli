@@ -43,7 +43,7 @@ setuptools.setup(
     url="https://github.com/carlmontanari/scrapli",
     project_urls={
         "Changelog": "https://carlmontanari.github.io/scrapli/changelog",
-        "Docs": "https://carlmontanari.github.io/scrapli/"
+        "Docs": "https://carlmontanari.github.io/scrapli/",
     },
     license="MIT",
     packages=setuptools.find_packages(),
