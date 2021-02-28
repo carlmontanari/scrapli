@@ -26,7 +26,7 @@ with open("requirements-dev.txt") as f:
 
 for requirement in dev_requirements_lines:
     parsed_requirement = re.match(
-        pattern=r"^([a-z0-9\-]+)([><=]{1,2}\S*)(?:.*)$", string=requirement, flags=re.I | re.M
+        pattern=r"^([a-z0-9\-\_]+)([><=]{1,2}\S*)(?:.*)$", string=requirement, flags=re.I | re.M
     )
     DEV_REQUIREMENTS[parsed_requirement.groups()[0]] = parsed_requirement.groups()[1]
 
