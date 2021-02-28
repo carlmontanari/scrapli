@@ -340,6 +340,57 @@ logger.addHandler(NullHandler())
 
 
 
+## Functions
+
+    
+
+#### enable_basic_logging
+`enable_basic_logging(file: Union[str, bool] = False, level: str = 'info', caller_info: bool = False, buffer_log: bool = True) ‑> NoneType`
+
+```text
+Enable opinionated logging for scrapli
+
+Args:
+    file: True to output to default log path ("scrapli.log"), otherwise string path to write log
+        file to
+    level: string name of logging level to use, i.e. "info", "debug", etc.
+    caller_info: add info about module/function/line in the log entry
+    buffer_log: buffer log read outputs
+
+Returns:
+    None
+
+Raises:
+    N/A
+```
+
+
+
+
+    
+
+#### get_instance_logger
+`get_instance_logger(instance_name: str, host: str = '', port: int = 0, uid: str = '') ‑> logging.LoggerAdapter`
+
+```text
+Get an adapted logger instance for a given instance (driver/channel/transport)
+
+Args:
+    instance_name: logger/instance name, i.e. "scrapli.driver"
+    host: host to add to logging extras if applicable
+    port: port to add to logging extras if applicable
+    uid: unique id for a logging instance
+
+Returns:
+    LoggerAdapter: adapter logger for the instance
+
+Raises:
+    N/A
+```
+
+
+
+
 ## Classes
 
 ### ScrapliFileHandler

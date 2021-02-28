@@ -4,7 +4,7 @@ from io import BytesIO
 from typing import Any, Callable, Dict, List, Optional, Union
 
 from scrapli.driver import NetworkDriver
-from scrapli.driver.core.juniper_junos.base_driver import PRIVS
+from scrapli.driver.core.juniper_junos.base_driver import FAILED_WHEN_CONTAINS, PRIVS
 from scrapli.driver.network.base_driver import PrivilegeLevel
 
 
@@ -23,9 +23,9 @@ def junos_on_open(conn: NetworkDriver) -> None:
 
     """
     conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
-    conn.send_command(command="set cli complete-on-space off")
     conn.send_command(command="set cli screen-length 0")
     conn.send_command(command="set cli screen-width 511")
+    conn.send_command(command="set cli complete-on-space off")
 
 
 def junos_on_close(conn: NetworkDriver) -> None:
@@ -123,12 +123,7 @@ class JunosDriver(NetworkDriver):
             on_close = junos_on_close
 
         if failed_when_contains is None:
-            failed_when_contains = [
-                "is ambiguous",
-                "No valid completions",
-                "unknown command",
-                "syntax error",
-            ]
+            failed_when_contains = FAILED_WHEN_CONTAINS.copy()
 
         super().__init__(
             host=host,

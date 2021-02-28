@@ -8,7 +8,7 @@ Contributions of all kinds are welcomed -- typos, doc updates, adding examples, 
 
 Some notes on contributing:
 
-- Please open an issue to discuss any bug fixes, feature adds, or really any thing that could result in a pull
+- Please open an issue to discuss any bug fixes, feature adds, or really anything that could result in a pull
  request. This allows us to all be on the same page, and could save everyone some extra work!
 - Once we've discussed any changes, pull requests are of course welcome and very much appreciated!
   - All PRs should pass tests -- checkout the Makefile for some shortcuts for linting and testing.

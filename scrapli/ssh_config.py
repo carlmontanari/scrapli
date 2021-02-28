@@ -341,7 +341,7 @@ class SSHConfig:
         if host in self.hosts.keys():
             return self.hosts[host]
         # return match if given host is an exact match for a host entry
-        for host_entry in self.hosts.keys():
+        for host_entry in self.hosts:
             host_list = host_entry.split()
             if host in host_list:
                 return self.hosts[host_entry]

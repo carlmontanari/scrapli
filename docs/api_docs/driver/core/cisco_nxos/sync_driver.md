@@ -238,6 +238,50 @@ class NXOSDriver(NetworkDriver, NXOSDriverBase):
 
 
 
+## Functions
+
+    
+
+#### nxos_on_close
+`nxos_on_close(conn: scrapli.driver.network.sync_driver.NetworkDriver) ‑> NoneType`
+
+```text
+NXOSDriver default on_close callable
+
+Args:
+    conn: NetworkDriver object
+
+Returns:
+    None
+
+Raises:
+    N/A
+```
+
+
+
+
+    
+
+#### nxos_on_open
+`nxos_on_open(conn: scrapli.driver.network.sync_driver.NetworkDriver) ‑> NoneType`
+
+```text
+NXOSDriver default on_open callable
+
+Args:
+    conn: NetworkDriver object
+
+Returns:
+    None
+
+Raises:
+    N/A
+```
+
+
+
+
 ## Classes
 
 ### NXOSDriver

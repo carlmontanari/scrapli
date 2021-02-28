@@ -1,5 +1,5 @@
 pdoc3==0.9.2 ; sys_platform != "win32"
 mkdocs==1.1.2
-mkdocs-material==6.2.8
+mkdocs-material==7.0.3
 mkdocs-material-extensions==1.0.1
 mdx-gh-links==0.2

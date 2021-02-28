@@ -8,11 +8,11 @@ def test_on_open(monkeypatch, sync_junos_driver):
         nonlocal _input_counter
 
         if _input_counter == 0:
-            assert channel_input == "set cli complete-on-space off"
-        elif _input_counter == 1:
             assert channel_input == "set cli screen-length 0"
-        else:
+        elif _input_counter == 1:
             assert channel_input == "set cli screen-width 511"
+        else:
+            assert channel_input == "set cli complete-on-space off"
 
         _input_counter += 1
 

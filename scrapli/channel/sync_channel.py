@@ -187,7 +187,7 @@ class Channel(BaseChannel):
 
             if (time.time() - start) > read_duration:
                 break
-            if any([channel_output in buf for channel_output in channel_outputs]):
+            if any((channel_output in buf for channel_output in channel_outputs)):
                 break
             if re.search(pattern=regex_channel_outputs_pattern, string=buf):
                 break
@@ -235,7 +235,7 @@ class Channel(BaseChannel):
                 # tends to have one escape char in the login output that will break things; other
                 # than this and telnet login, stripping ansi will only ever be governed by the users
                 # comms_ansi setting
-                if self._base_channel_args.comms_ansi or b"\x1B" in buf:
+                if self._base_channel_args.comms_ansi or b"\x1b" in buf.lower():
                     buf = self._strip_ansi(buf=buf)
 
                 authenticate_buf += buf.lower()

@@ -1,1 +1,1 @@
-scrapli_community>=2021.01.30a1
+scrapli_community>=2021.01.30

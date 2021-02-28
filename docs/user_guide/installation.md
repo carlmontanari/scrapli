@@ -21,7 +21,7 @@ pip install git+https://github.com/carlmontanari/scrapli
 
 ## Installing current develop branch
 
-To install from this repositories develop branch:
+To install from the source repositories develop branch:
 
 ```
 pip install -e git+https://github.com/carlmontanari/scrapli.git@develop#egg=scrapli

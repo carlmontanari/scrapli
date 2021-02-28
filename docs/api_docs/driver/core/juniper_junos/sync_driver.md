@@ -217,6 +217,50 @@ class JunosDriver(NetworkDriver):
 
 
 
+## Functions
+
+    
+
+#### junos_on_close
+`junos_on_close(conn: scrapli.driver.network.sync_driver.NetworkDriver) ‑> NoneType`
+
+```text
+JunosDriver default on_close callable
+
+Args:
+    conn: NetworkDriver object
+
+Returns:
+    None
+
+Raises:
+    N/A
+```
+
+
+
+
+    
+
+#### junos_on_open
+`junos_on_open(conn: scrapli.driver.network.sync_driver.NetworkDriver) ‑> NoneType`
+
+```text
+JunosDriver default on_open callable
+
+Args:
+    conn: NetworkDriver object
+
+Returns:
+    None
+
+Raises:
+    N/A
+```
+
+
+
+
 ## Classes
 
 ### JunosDriver

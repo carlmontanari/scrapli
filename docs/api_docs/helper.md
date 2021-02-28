@@ -321,3 +321,138 @@ def user_warning(title: str, message: str) -> None:
         </code>
     </pre>
 </details>
+
+
+
+## Functions
+
+    
+
+#### format_user_warning
+`format_user_warning(title: str, message: str) ‑> str`
+
+```text
+Nicely format a warning message for users
+
+Args:
+    title: title of the warning message
+    message: actual message body
+
+Returns:
+    str: nicely formatted warning
+
+Raises:
+    N/A
+```
+
+
+
+
+    
+
+#### genie_parse
+`genie_parse(platform: str, command: str, output: str) ‑> Union[List[Any], Dict[str, Any]]`
+
+```text
+Parse output with Cisco genie parsers, try to return structured output
+
+Args:
+    platform: genie device type; i.e. iosxe, iosxr, etc.
+    command: string of command that was executed (to find appropriate parser)
+    output: unstructured output from device to parse
+
+Returns:
+    output: structured data
+
+Raises:
+    N/A
+```
+
+
+
+
+    
+
+#### resolve_file
+`resolve_file(file: str) ‑> str`
+
+```text
+Resolve file from provided string
+
+Args:
+    file: string path to file
+
+Returns:
+    str: string path to file
+
+Raises:
+    ScrapliValueError: if file cannot be resolved
+```
+
+
+
+
+    
+
+#### textfsm_parse
+`textfsm_parse(template: Union[str, _io.TextIOWrapper], output: str, to_dict: bool = True) ‑> Union[List[Any], Dict[str, Any]]`
+
+```text
+Parse output with TextFSM and ntc-templates, try to return structured output
+
+Args:
+    template: TextIOWrapper or string path to template to use to parse data
+    output: unstructured output from device to parse
+    to_dict: convert textfsm output from list of lists to list of dicts -- basically create dict
+        from header and row data so it is easier to read/parse the output
+
+Returns:
+    output: structured data
+
+Raises:
+    N/A
+```
+
+
+
+
+    
+
+#### ttp_parse
+`ttp_parse(template: Union[str, _io.TextIOWrapper], output: str) ‑> Union[List[Any], Dict[str, Any]]`
+
+```text
+Parse output with TTP, try to return structured output
+
+Args:
+    template: TextIOWrapper or string path to template to use to parse data
+    output: unstructured output from device to parse
+
+Returns:
+    output: structured data
+
+Raises:
+    N/A
+```
+
+
+
+
+    
+
+#### user_warning
+`user_warning(title: str, message: str) ‑> NoneType`
+
+```text
+Nicely raise warning messages for users
+
+Args:
+    title: title of the warning message
+    message: actual message body
+
+Returns:
+    None
+
+Raises:
+    N/A
+```
