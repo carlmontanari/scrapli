@@ -217,7 +217,7 @@ class Channel(BaseChannel):
 
             if (time.time() - start) > read_duration:
                 break
-            if any([channel_output in buf for channel_output in channel_outputs]):
+            if any((channel_output in buf for channel_output in channel_outputs)):
                 break
             if re.search(pattern=regex_channel_outputs_pattern, string=buf):
                 break
@@ -837,7 +837,7 @@ class Channel(BaseChannel):
 
             if (time.time() - start) > read_duration:
                 break
-            if any([channel_output in buf for channel_output in channel_outputs]):
+            if any((channel_output in buf for channel_output in channel_outputs)):
                 break
             if re.search(pattern=regex_channel_outputs_pattern, string=buf):
                 break
