@@ -46,7 +46,7 @@ def unit_tests(session):
         session: nox session
 
     Returns:
-        N/A  # noqa: DAR202
+        None
 
     Raises:
         N/A
@@ -90,7 +90,7 @@ def integration_tests(session):
         session: nox session
 
     Returns:
-        N/A  # noqa: DAR202
+        None
 
     Raises:
         N/A
@@ -124,7 +124,7 @@ def isort(session):
         session: nox session
 
     Returns:
-        N/A  # noqa: DAR202
+        None
 
     Raises:
         N/A
@@ -143,7 +143,7 @@ def black(session):
         session: nox session
 
     Returns:
-        N/A  # noqa: DAR202
+        None
 
     Raises:
         N/A
@@ -163,7 +163,7 @@ def pylama(session):
         session: nox session
 
     Returns:
-        N/A  # noqa: DAR202
+        None
 
     Raises:
         N/A
@@ -184,7 +184,7 @@ def pydocstyle(session):
         session: nox session
 
     Returns:
-        N/A  # noqa: DAR202
+        None
 
     Raises:
         N/A
@@ -203,7 +203,7 @@ def mypy(session):
         session: nox session
 
     Returns:
-        N/A  # noqa: DAR202
+        None
 
     Raises:
         N/A
@@ -222,7 +222,7 @@ def darglint(session):
         session: nox session
 
     Returns:
-        N/A  # noqa: DAR202
+        None
 
     Raises:
         N/A
