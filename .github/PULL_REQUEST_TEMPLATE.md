@@ -21,7 +21,7 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 
 # Checklist:
 
-- [ ] My code follows the style guidelines of this project (no GitHub actions compalints! run `make lint` before
+- [ ] My code follows the style guidelines of this project (no GitHub actions complaints! run `make lint` before
  committing!)
 - [ ] I have commented my code, pydocstyle and darglint are happy, docstrings are in google docstring format, and all
  docstrings include a summary, args, returns and raises fields (even if N/A)

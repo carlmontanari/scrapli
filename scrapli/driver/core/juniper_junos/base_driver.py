@@ -58,3 +58,10 @@ PRIVS = {
         )
     ),
 }
+
+FAILED_WHEN_CONTAINS = [
+    "is ambiguous",
+    "No valid completions",
+    "unknown command",
+    "syntax error",
+]

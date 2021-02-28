@@ -165,14 +165,14 @@ ${module.source}
 ##
 ##     % endfor
 ## % endif
-##
-## % if functions:
-## <%text>## Functions</%text>
-##     % for f in functions:
-## ${function(f)}
-##
-##     % endfor
-## % endif
+
+% if functions:
+<%text>## Functions</%text>
+    % for f in functions:
+${function(f)}
+
+    % endfor
+% endif
 
 % if classes:
 <%text>## Classes</%text>

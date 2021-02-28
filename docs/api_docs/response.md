@@ -347,6 +347,7 @@ class MultiResponse(ScrapliMultiResponse):
 
 
 
+
 ## Classes
 
 ### MultiResponse

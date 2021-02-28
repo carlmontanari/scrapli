@@ -4,7 +4,7 @@ from io import BytesIO
 from typing import Any, Callable, Dict, List, Optional, Union
 
 from scrapli.driver import AsyncNetworkDriver
-from scrapli.driver.core.arista_eos.base_driver import PRIVS, EOSDriverBase
+from scrapli.driver.core.arista_eos.base_driver import FAILED_WHEN_CONTAINS, PRIVS, EOSDriverBase
 from scrapli.driver.network.base_driver import PrivilegeLevel
 
 
@@ -125,13 +125,7 @@ class AsyncEOSDriver(AsyncNetworkDriver, EOSDriverBase):
             on_close = eos_on_close
 
         if failed_when_contains is None:
-            failed_when_contains = [
-                "% Ambiguous command",
-                "% Error",
-                "% Incomplete command",
-                "% Invalid input",
-                "% Cannot commit",
-            ]
+            failed_when_contains = FAILED_WHEN_CONTAINS.copy()
 
         super().__init__(
             host=host,

@@ -30,7 +30,6 @@ If applicable, add screenshots to help explain your problem, but do note that fo
  - OS: [e.g. Ubuntu, MacOS, etc. - Note scrapli is *not* thoroughly tested on Windows and some/many things will not
   be supported]
  - scrapli version
- - version of any optional extras (paramiko|ssh2-python|textfsm, etc.)
 
 **Additional context**
 Add any other context about the problem here.

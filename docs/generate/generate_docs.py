@@ -92,7 +92,7 @@ doc_map = {
         "path": "transport/base/async_transport",
         "content": None,
     },
-    "scrapli.transport.base.socket": {"path": "transport/base/socket", "content": None},
+    "scrapli.transport.base.base_socket": {"path": "transport/base/base_socket", "content": None},
     "scrapli.transport.plugins.asyncssh.transport": {
         "path": "transport/plugins/asyncssh",
         "conent": None,

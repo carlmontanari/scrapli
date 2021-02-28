@@ -5,7 +5,7 @@ from io import BytesIO
 from typing import Any, Callable, Dict, List, Optional, Union
 
 from scrapli.driver import NetworkDriver
-from scrapli.driver.core.cisco_iosxr.base_driver import PRIVS
+from scrapli.driver.core.cisco_iosxr.base_driver import FAILED_WHEN_CONTAINS, PRIVS
 from scrapli.driver.network.base_driver import PrivilegeLevel
 
 
@@ -128,11 +128,7 @@ class IOSXRDriver(NetworkDriver):
             on_close = iosxr_on_close
 
         if failed_when_contains is None:
-            failed_when_contains = [
-                "% Ambiguous command",
-                "% Incomplete command",
-                "% Invalid input detected",
-            ]
+            failed_when_contains = FAILED_WHEN_CONTAINS.copy()
 
         super().__init__(
             host=host,
