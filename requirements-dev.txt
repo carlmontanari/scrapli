@@ -9,7 +9,7 @@ pyfakefs==4.4.0
 pylama==7.7.1
 pycodestyle==2.6.0
 pydocstyle==5.1.1
-pylint==2.7.1
+pylint==2.7.2
 darglint==1.7.0
 napalm==3.2.0
 scrapli-replay==2021.2.6a1
