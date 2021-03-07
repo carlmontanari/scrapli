@@ -12,7 +12,7 @@ pydocstyle==5.1.1
 pylint==2.7.1
 darglint==1.7.0
 napalm==3.2.0
-scrapli-replay==2021.2.6a1
+scrapli-replay==2021.7.30a3
 -r requirements.txt
 -r requirements-community.txt
 -r requirements-textfsm.txt
