@@ -2,6 +2,9 @@ import logging
 import re
 from pathlib import Path
 
+import pytest
+
+from scrapli.exceptions import ScrapliException
 from scrapli.logging import (
     ScrapliFileHandler,
     ScrapliFormatter,
@@ -37,6 +40,19 @@ def test_scrapli_formatter():
         == "ID    | TIMESTAMP               | LEVEL    | (UID:)HOST:PORT           | MODULE               | FUNCNAME  "
         "           | LINE  | MESSAGE\n1     | _TIMESTMAMP__TIMESTAMP_ | INFO     | UID:scrapli:22            | "
         "somepath             | coolfunc             | 999   | thisisalogmessage!"
+    )
+
+    # validate format for messages w/out uid/host
+    del record.host
+    del record.uid
+    formatted_record = formatter.format(record=record)
+    assert (
+        re.sub(
+            string=formatted_record,
+            pattern=r"\d{4}-\d{2}\-\d{2} \d{2}:\d{2}:\d{2},\d{3}",
+            repl="_TIMESTMAMP__TIMESTAMP_",
+        )
+        == "2     | _TIMESTMAMP__TIMESTAMP_ | INFO     |                           | somepath             | coolfunc             | 999   | thisisalogmessage!"
     )
 
 
@@ -77,3 +93,11 @@ def test_enable_basic_logging_no_buffer(fs):
     # reset the main logger to propagate and delete the file handler so caplog works!
     logger.propagate = True
     del logger.handlers[1]
+
+
+def test_enable_basic_logging_bad_mode():
+    with pytest.raises(ScrapliException):
+        enable_basic_logging(file="mylog.log", level="debug", mode="tacocat")
+
+    # reset the main logger to propagate and delete the file handler so caplog works!
+    logger.propagate = True

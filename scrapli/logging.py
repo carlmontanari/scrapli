@@ -261,6 +261,7 @@ def enable_basic_logging(
     level: str = "info",
     caller_info: bool = False,
     buffer_log: bool = True,
+    mode: str = "write",
 ) -> None:
     """
     Enable opinionated logging for scrapli
@@ -271,6 +272,7 @@ def enable_basic_logging(
         level: string name of logging level to use, i.e. "info", "debug", etc.
         caller_info: add info about module/function/line in the log entry
         buffer_log: buffer log read outputs
+        mode: string of "write" or "append"
 
     Returns:
         None
@@ -284,6 +286,13 @@ def enable_basic_logging(
 
     scrapli_formatter = ScrapliFormatter(caller_info=caller_info)
 
+    if mode.lower() not in (
+        "write",
+        "append",
+    ):
+        raise ScrapliException("logging file 'mode' must be 'write' or 'append'!")
+    file_mode = "a" if mode.lower() == "append" else "w"
+
     if file:
         if isinstance(file, bool):
             filename = "scrapli.log"
@@ -291,9 +300,9 @@ def enable_basic_logging(
             filename = file
 
         if not buffer_log:
-            fh = FileHandler(filename=filename, mode="w")
+            fh = FileHandler(filename=filename, mode=file_mode)
         else:
-            fh = ScrapliFileHandler(filename=filename, mode="w")
+            fh = ScrapliFileHandler(filename=filename, mode=file_mode)
 
         fh.setFormatter(scrapli_formatter)
 
