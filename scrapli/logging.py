@@ -278,7 +278,7 @@ def enable_basic_logging(
         None
 
     Raises:
-        N/A
+        ScrapliException: if invalid mode is passed
 
     """
     logger.propagate = False
