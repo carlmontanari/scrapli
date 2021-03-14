@@ -154,6 +154,7 @@ PluginTransportArgs()
     </summary>
     <pre>
         <code class="python">
+@dataclass()
 class PluginTransportArgs(BasePluginTransportArgs):
     pass
         </code>

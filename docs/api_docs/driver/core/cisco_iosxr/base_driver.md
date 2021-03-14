@@ -66,6 +66,12 @@ PRIVS = {
         )
     ),
 }
+
+FAILED_WHEN_CONTAINS = [
+    "% Ambiguous command",
+    "% Incomplete command",
+    "% Invalid input detected",
+]
         </code>
     </pre>
 </details>

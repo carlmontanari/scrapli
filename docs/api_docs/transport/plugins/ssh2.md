@@ -339,6 +339,7 @@ PluginTransportArgs(auth_username: str, auth_password: str = '', auth_private_ke
     </summary>
     <pre>
         <code class="python">
+@dataclass()
 class PluginTransportArgs(BasePluginTransportArgs):
     auth_username: str
     auth_password: str = ""
