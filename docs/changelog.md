@@ -5,6 +5,7 @@ Changelog
 
 - Added "% Unavailable command" to EOS `failed_when_contains`
 - Moved core platform `failed_when_contains` to base to not have to duplicate them in sync and async platforms
+- Add `file_mode` to the `enable_basic_logging` function, can now choose "append" or "write" for logfile
 
 
 ## 2021.01.30

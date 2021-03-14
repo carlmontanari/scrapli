@@ -76,6 +76,15 @@ PRIVS = {
     ),
 }
 
+FAILED_WHEN_CONTAINS = [
+    "% Ambiguous command",
+    "% Error",
+    "% Incomplete command",
+    "% Invalid input",
+    "% Cannot commit",
+    "% Unavailable command",
+]
+
 
 class EOSDriverBase:
     # EOSDriverBase Mixin values set in init of sync/async NetworkDriver classes

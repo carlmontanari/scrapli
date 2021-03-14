@@ -727,6 +727,7 @@ Raises:
     </summary>
     <pre>
         <code class="python">
+@dataclass()
 class BaseChannelArgs:
     """
     Dataclass for all base Channel arguments

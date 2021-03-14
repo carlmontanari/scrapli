@@ -217,7 +217,7 @@ class Channel(BaseChannel):
 
             if (time.time() - start) > read_duration:
                 break
-            if any([channel_output in buf for channel_output in channel_outputs]):
+            if any((channel_output in buf for channel_output in channel_outputs)):
                 break
             if re.search(pattern=regex_channel_outputs_pattern, string=buf):
                 break
@@ -837,7 +837,7 @@ class Channel(BaseChannel):
 
             if (time.time() - start) > read_duration:
                 break
-            if any([channel_output in buf for channel_output in channel_outputs]):
+            if any((channel_output in buf for channel_output in channel_outputs)):
                 break
             if re.search(pattern=regex_channel_outputs_pattern, string=buf):
                 break
@@ -1372,7 +1372,7 @@ Raises:
     
 
 ##### send_input_and_read
-`send_input_and_read(self, channel_input: str, *, strip_prompt: bool = True, expected_outputs: Union[List[str], NoneType] = None, read_duration: Union[float, NoneType] = None) ‑> Tuple[bytes, bytes]`
+`send_input_and_read(self, channel_input: str, *, strip_prompt: bool = True, expected_outputs: Optional[List[str]] = None, read_duration: Optional[float] = None) ‑> Tuple[bytes, bytes]`
 
 ```text
 Send a command and read until expected prompt is seen, outputs are seen, or for duration
@@ -1396,7 +1396,7 @@ Raises:
     
 
 ##### send_inputs_interact
-`send_inputs_interact(self, interact_events: List[Tuple[str, str, Union[bool, NoneType]]]) ‑> Tuple[bytes, bytes]`
+`send_inputs_interact(self, interact_events: List[Tuple[str, str, Optional[bool]]]) ‑> Tuple[bytes, bytes]`
 
 ```text
 Interact with a device with changing prompts per input.

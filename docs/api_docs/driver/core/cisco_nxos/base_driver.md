@@ -88,6 +88,13 @@ PRIVS = {
     ),
 }
 
+FAILED_WHEN_CONTAINS = [
+    "% Ambiguous command",
+    "% Incomplete command",
+    "% Invalid input detected",
+    "% Invalid command at",
+]
+
 
 class NXOSDriverBase:
     # NXOSDriverBase Mixin values set in init of sync/async NetworkDriver classes

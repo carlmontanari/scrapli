@@ -173,6 +173,7 @@ BasePluginTransportArgs()
     </summary>
     <pre>
         <code class="python">
+@dataclass()
 class BasePluginTransportArgs:
     pass
         </code>
@@ -391,6 +392,7 @@ BaseTransportArgs(transport_options: Dict[str, Any], host: str, port: int = 22, 
     </summary>
     <pre>
         <code class="python">
+@dataclass()
 class BaseTransportArgs:
     transport_options: Dict[str, Any]
     host: str
