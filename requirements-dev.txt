@@ -1,6 +1,6 @@
 nox==2020.12.31
 black==20.8b1
-isort==5.7.0
+isort==5.8.0
 mypy==0.812
 pytest==6.2.2
 pytest-cov==2.11.1
