@@ -5,7 +5,7 @@ from functools import lru_cache
 from io import BytesIO
 from typing import BinaryIO, List, Optional, Pattern, Tuple, Union
 
-from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliTypeError
+from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliTypeError, ScrapliValueError
 from scrapli.logging import get_instance_logger
 from scrapli.transport.base import AsyncTransport, Transport
 
@@ -24,6 +24,8 @@ class BaseChannelArgs:
         channel_log: log "channel" output -- this would be the output you would normally see on a
             terminal. If `True` logs to `scrapli_channel.log`, if a string is provided, logs to
             wherever that string points
+        channel_log_mode: "write"|"append", all other values will raise ValueError,
+            does what it sounds like it should by setting the channel log to the provided mode
         channel_lock: bool indicated if channel lock should be used for all read/write operations
 
     Returns:
@@ -39,7 +41,36 @@ class BaseChannelArgs:
     comms_ansi: bool = False
     timeout_ops: float = 30.0
     channel_log: Union[str, bool, BytesIO] = False
+    channel_log_mode: str = "write"
     channel_lock: bool = False
+
+    def __post_init__(self) -> None:
+        """
+        Validate dataclass arguments at end of initialization
+
+        Args:
+            N/A
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        """
+        if self.channel_log_mode.lower() not in (
+            "write",
+            "append",
+        ):
+            raise ScrapliValueError(
+                f"provided channel_log_mode '{self.channel_log_mode}' is not valid, mode must be "
+                f"one of: 'write', 'append'"
+            )
+
+        if self.channel_log_mode.lower() == "write":
+            self.channel_log_mode = "w"
+        else:
+            self.channel_log_mode = "a"
 
 
 class BaseChannel:
@@ -73,6 +104,21 @@ class BaseChannel:
         )
 
         self.channel_log: Optional[BinaryIO] = None
+
+    def open(self) -> None:
+        """
+        Channel open method
+
+        Args:
+            N/A
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        """
         if self._base_channel_args.channel_log:
             if isinstance(self._base_channel_args.channel_log, BytesIO):
                 self.channel_log = self._base_channel_args.channel_log
@@ -83,7 +129,31 @@ class BaseChannel:
                 self.logger.info(
                     f"channel log enabled, logging channel output to '{channel_log_destination}'"
                 )
-                self.channel_log = open(channel_log_destination, "wb")
+                # have to ignore type due to mypy not wanting to read the mode from formatted string
+                # if you change the mode --> "wb" or "ab" it works as you would hope/expect; those
+                # are the only values it can possibly be at this point though so we can safely
+                # ignore here
+                self.channel_log = open(
+                    channel_log_destination,
+                    mode=f"{self._base_channel_args.channel_log_mode}b",  # type: ignore
+                )
+
+    def close(self) -> None:
+        """
+        Channel close method
+
+        Args:
+            N/A
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        """
+        if self.channel_log:
+            self.channel_log.close()
 
     def write(self, channel_input: str, redacted: bool = False) -> None:
         """

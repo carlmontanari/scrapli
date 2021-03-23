@@ -41,6 +41,7 @@ def test_channel_read(fs, caplog, monkeypatch, sync_transport_no_abc):
 
     base_channel_args = BaseChannelArgs(channel_log=True)
     sync_channel = Channel(transport=sync_transport_no_abc, base_channel_args=base_channel_args)
+    sync_channel.open()
 
     def _read(cls):
         nonlocal channel_read_called

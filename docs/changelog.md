@@ -6,6 +6,7 @@ Changelog
 - Added "% Unavailable command" to EOS `failed_when_contains`
 - Moved core platform `failed_when_contains` to base to not have to duplicate them in sync and async platforms
 - Add `file_mode` to the `enable_basic_logging` function, can now choose "append" or "write" for logfile
+- Add `channel_log_mode` to the base driver arguments; you can now choose "append" or "write" for this as well!
 
 
 ## 2021.01.30
