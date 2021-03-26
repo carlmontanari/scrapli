@@ -136,9 +136,11 @@ class AsyncChannel(BaseChannel):
         while True:
             buf += await self.read()
 
+            search_buf = self._get_search_buf(buf=buf)
+
             channel_match = re.search(
                 pattern=search_pattern,
-                string=buf,
+                string=search_buf,
             )
 
             if channel_match:
@@ -191,13 +193,15 @@ class AsyncChannel(BaseChannel):
             except ScrapliTimeout:
                 pass
 
+            search_buf = self._get_search_buf(buf=buf)
+
             if (time.time() - start) > read_duration:
                 break
-            if any((channel_output in buf for channel_output in channel_outputs)):
+            if any((channel_output in search_buf for channel_output in channel_outputs)):
                 break
-            if re.search(pattern=regex_channel_outputs_pattern, string=buf):
+            if re.search(pattern=regex_channel_outputs_pattern, string=search_buf):
                 break
-            if re.search(pattern=search_pattern, string=buf):
+            if re.search(pattern=search_pattern, string=search_buf):
                 break
 
         _transport_args.timeout_transport = previous_timeout_transport

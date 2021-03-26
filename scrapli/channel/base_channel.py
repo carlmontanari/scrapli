@@ -19,6 +19,9 @@ class BaseChannelArgs:
         comms_prompt_pattern: comms_prompt_pattern to assign to the channel; should generally be
             created/passed from the driver class
         comms_return_char: comms_return_char to assign to the channel, see above
+        comms_prompt_search_depth: depth of the buffer to search in for searching for the prompt
+            in "read_until_prompt"; smaller number here will generally be faster, though may be less
+            reliable; default value is 1000
         comms_ansi: comms_ansi to assign to the channel, see above
         timeout_ops: timeout_ops to assign to the channel, see above
         channel_log: log "channel" output -- this would be the output you would normally see on a
@@ -38,6 +41,7 @@ class BaseChannelArgs:
 
     comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]$"
     comms_return_char: str = "\n"
+    comms_prompt_search_depth: int = 1000
     comms_ansi: bool = False
     timeout_ops: float = 30.0
     channel_log: Union[str, bool, BytesIO] = False
@@ -190,6 +194,23 @@ class BaseChannel:
 
         """
         self.write(channel_input=self._base_channel_args.comms_return_char)
+
+    def _get_search_buf(self, buf: bytes) -> bytes:
+        """
+        Return last N chars of buffer where N is comms_prompt_search_depth
+
+        Args:
+            buf: current buf to return last N chars of
+
+        Returns:
+            bytes: bytes object of N chars
+
+        Raises:
+            N/A
+
+        """
+        search_buf = buf[-self._base_channel_args.comms_prompt_search_depth :]  # noqa
+        return search_buf
 
     @staticmethod
     def _join_and_compile(channel_outputs: Optional[List[bytes]]) -> Pattern[bytes]:
