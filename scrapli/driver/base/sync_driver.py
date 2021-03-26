@@ -80,6 +80,7 @@ class Driver(BaseDriver):
         self._pre_open_closing_log(closing=False)
 
         self.transport.open()
+        self.channel.open()
 
         if self.transport_name in ("system",) and not self.auth_bypass:
             self.channel.channel_authenticate_ssh(
@@ -122,9 +123,7 @@ class Driver(BaseDriver):
         if self.on_close:
             self.on_close(self)
 
-        if self.channel.channel_log:
-            self.channel.channel_log.close()
-
         self.transport.close()
+        self.channel.close()
 
         self._post_open_closing_log(closing=True)

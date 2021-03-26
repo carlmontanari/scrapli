@@ -80,6 +80,7 @@ class AsyncDriver(BaseDriver):
         self._pre_open_closing_log(closing=False)
 
         await self.transport.open()
+        self.channel.open()
 
         if (
             self.transport_name
@@ -117,9 +118,7 @@ class AsyncDriver(BaseDriver):
         if self.on_close:
             await self.on_close(self)
 
-        if self.channel.channel_log:
-            self.channel.channel_log.close()
-
         self.transport.close()
+        self.channel.close()
 
         self._post_open_closing_log(closing=True)

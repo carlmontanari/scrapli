@@ -6,14 +6,35 @@ from pathlib import Path
 import pytest
 
 from scrapli.channel.base_channel import BaseChannel, BaseChannelArgs
-from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliTypeError
+from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliTypeError, ScrapliValueError
+
+
+def test_channel_log_append(fs, base_transport_no_abc):
+    fs.create_file(
+        "scrapli_channel.log",
+        contents="APPEND TO ME PLEASE!",
+    )
+    base_channel_args = BaseChannelArgs(channel_log=True, channel_log_mode="append")
+    chan = BaseChannel(transport=base_transport_no_abc, base_channel_args=base_channel_args)
+    chan.open()
+    chan.channel_log.write(b"\nDOIN IT!")
+    chan.close()
+
+    channel_log_contents = open("scrapli_channel.log", "rb")
+    assert channel_log_contents.read() == b"APPEND TO ME PLEASE!\nDOIN IT!"
+
+
+def test_channel_log_invalid_mode(base_transport_no_abc):
+    with pytest.raises(ScrapliValueError):
+        BaseChannelArgs(channel_log=True, channel_log_mode="not valid")
 
 
 def test_channel_log(fs, base_transport_no_abc):
     # fs needed to mock filesystem for asserting log location
     _ = fs
     base_channel_args = BaseChannelArgs(channel_log=True)
-    BaseChannel(transport=base_transport_no_abc, base_channel_args=base_channel_args)
+    chan = BaseChannel(transport=base_transport_no_abc, base_channel_args=base_channel_args)
+    chan.open()
     assert Path("/scrapli_channel.log").is_file()
 
 
@@ -21,15 +42,17 @@ def test_channel_log_user_defined(fs, base_transport_no_abc):
     # fs needed to mock filesystem for asserting log location
     _ = fs
     base_channel_args = BaseChannelArgs(channel_log="/log.log")
-    BaseChannel(transport=base_transport_no_abc, base_channel_args=base_channel_args)
+    chan = BaseChannel(transport=base_transport_no_abc, base_channel_args=base_channel_args)
+    chan.open()
     assert Path("/log.log").is_file()
 
 
 def test_channel_log_user_bytesio(base_transport_no_abc):
     bytes_log = BytesIO()
     base_channel_args = BaseChannelArgs(channel_log=bytes_log)
-    channel = BaseChannel(transport=base_transport_no_abc, base_channel_args=base_channel_args)
-    assert channel.channel_log is bytes_log
+    chan = BaseChannel(transport=base_transport_no_abc, base_channel_args=base_channel_args)
+    chan.open()
+    assert chan.channel_log is bytes_log
 
 
 def test_channel_write(caplog, monkeypatch, base_channel):
