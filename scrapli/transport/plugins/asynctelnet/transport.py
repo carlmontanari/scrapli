@@ -114,8 +114,10 @@ class AsynctelnetTransport(AsyncTransport):
         control_buf = b""
 
         # initial read timeout for control characters can be 1/4 of socket timeout, after reading a
-        # single byte we crank it way down to 0.1 as we now expect all the characters to already be
-        # in the buffer to be read
+        # single byte we crank it way down; the next value used to be 0.1 but this was causing some
+        # issues for folks that had devices behaving very slowly... so hopefully 1/10 is a
+        # reasonable value for the follow up char read timeout... of course we will return early if
+        # we do get a char in the buffer so it should be all good!
         char_read_timeout = self._base_transport_args.timeout_socket / 4
 
         while True:
@@ -123,7 +125,7 @@ class AsynctelnetTransport(AsyncTransport):
                 c = await asyncio.wait_for(self.stdout.read(1), timeout=char_read_timeout)
             except asyncio.TimeoutError:
                 return
-            char_read_timeout = 0.1
+            char_read_timeout = self._base_transport_args.timeout_socket / 10
             control_buf = self._handle_control_chars_response(control_buf=control_buf, c=c)
 
     async def open(self) -> None:

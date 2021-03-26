@@ -59,7 +59,7 @@ class BaseChannelArgs:
             None
 
         Raises:
-            N/A
+            ScrapliValueError: if invalid channel_log_mode provided
 
         """
         if self.channel_log_mode.lower() not in (
@@ -194,23 +194,6 @@ class BaseChannel:
 
         """
         self.write(channel_input=self._base_channel_args.comms_return_char)
-
-    def _get_search_buf(self, buf: bytes) -> bytes:
-        """
-        Return last N chars of buffer where N is comms_prompt_search_depth
-
-        Args:
-            buf: current buf to return last N chars of
-
-        Returns:
-            bytes: bytes object of N chars
-
-        Raises:
-            N/A
-
-        """
-        search_buf = buf[-self._base_channel_args.comms_prompt_search_depth :]  # noqa
-        return search_buf
 
     @staticmethod
     def _join_and_compile(channel_outputs: Optional[List[bytes]]) -> Pattern[bytes]:

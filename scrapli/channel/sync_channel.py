@@ -3,6 +3,7 @@ import re
 import time
 from contextlib import contextmanager
 from datetime import datetime
+from io import SEEK_END, BytesIO
 from threading import Lock
 from typing import Iterator, List, Optional, Tuple
 
@@ -127,10 +128,13 @@ class Channel(BaseChannel):
             class_pattern=self._base_channel_args.comms_prompt_pattern, pattern=prompt
         )
 
-        while True:
-            buf += self.read()
+        read_buf = BytesIO(buf)
 
-            search_buf = self._get_search_buf(buf=buf)
+        while True:
+            read_buf.write(self.read())
+
+            read_buf.seek(-self._base_channel_args.comms_prompt_search_depth, SEEK_END)
+            search_buf = read_buf.read()
 
             channel_match = re.search(
                 pattern=search_pattern,
@@ -138,7 +142,7 @@ class Channel(BaseChannel):
             )
 
             if channel_match:
-                return buf
+                return read_buf.getvalue()
 
     def _read_until_prompt_or_time(
         self,
@@ -180,14 +184,17 @@ class Channel(BaseChannel):
         previous_timeout_transport = _transport_args.timeout_transport
         _transport_args.timeout_transport = int(read_duration)
 
+        read_buf = BytesIO(buf)
+
         start = time.time()
         while True:
             try:
-                buf += self.read()
+                read_buf.write(self.read())
             except ScrapliTimeout:
                 pass
 
-            search_buf = self._get_search_buf(buf=buf)
+            read_buf.seek(-self._base_channel_args.comms_prompt_search_depth, SEEK_END)
+            search_buf = read_buf.read()
 
             if (time.time() - start) > read_duration:
                 break
@@ -200,7 +207,7 @@ class Channel(BaseChannel):
 
         _transport_args.timeout_transport = previous_timeout_transport
 
-        return buf
+        return read_buf.getvalue()
 
     @ChannelTimeout(message="timed out during in channel ssh authentication")
     def channel_authenticate_ssh(
