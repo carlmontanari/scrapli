@@ -110,6 +110,7 @@ class Driver(BaseDriver):
         self._pre_open_closing_log(closing=False)
 
         self.transport.open()
+        self.channel.open()
 
         if self.transport_name in ("system",) and not self.auth_bypass:
             self.channel.channel_authenticate_ssh(
@@ -152,10 +153,8 @@ class Driver(BaseDriver):
         if self.on_close:
             self.on_close(self)
 
-        if self.channel.channel_log:
-            self.channel.channel_log.close()
-
         self.transport.close()
+        self.channel.close()
 
         self._post_open_closing_log(closing=True)
         </code>
@@ -241,6 +240,8 @@ Args:
         these are not "logs" in the normal logging module sense, but only the output that is
         read from the channel. In other words, the output of the channel log should look
         similar to what you would see as a human connecting to a device
+    channel_log_mode: "write"|"append", all other values will raise ValueError,
+        does what it sounds like it should by setting the channel log to the provided mode
     logging_uid: unique identifier (string) to associate to log messages; useful if you have
         multiple connections to the same device (i.e. one console, one ssh, or one to each
         supervisor module, etc.)
@@ -330,6 +331,7 @@ class Driver(BaseDriver):
         self._pre_open_closing_log(closing=False)
 
         self.transport.open()
+        self.channel.open()
 
         if self.transport_name in ("system",) and not self.auth_bypass:
             self.channel.channel_authenticate_ssh(
@@ -372,10 +374,8 @@ class Driver(BaseDriver):
         if self.on_close:
             self.on_close(self)
 
-        if self.channel.channel_log:
-            self.channel.channel_log.close()
-
         self.transport.close()
+        self.channel.close()
 
         self._post_open_closing_log(closing=True)
         </code>
