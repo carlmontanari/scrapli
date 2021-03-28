@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""scrapli - ssh|telnet screen scraping client library"""
+"""scrapli"""
 import setuptools
 
 __version__ = "2021.01.30"
