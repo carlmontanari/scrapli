@@ -127,3 +127,40 @@ class Driver(BaseDriver):
         self.channel.close()
 
         self._post_open_closing_log(closing=True)
+
+    def commandeer(self, conn: "Driver", execute_on_open: bool = True) -> None:
+        """
+        Commandeer an existing connection
+
+        Used to "take over" or "commandeer" a connection. This method accepts a second scrapli conn
+        object and "steals" the transport from this connection and uses it for the current instance.
+        The primary reason you would want this is to use a `GenericDriver` to connect to a console
+        server and then to "commandeer" that connection and convert it to a "normal" network driver
+        connection type (i.e. Junos, EOS, etc.) once connected to the network device (via the
+        console server)
+
+        Args:
+            conn: connection to commandeer
+            execute_on_open: execute the `on_open` function of the current object once the existing
+                connection has been commandeered
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        """
+        original_logger = conn.logger
+        original_transport = conn.transport
+        original_transport_logger = conn.transport.logger
+        original_channel_logger = conn.channel.logger
+
+        self.logger = original_logger
+        self.channel.logger = original_channel_logger
+        self.channel.transport = original_transport
+        self.transport = original_transport
+        self.transport.logger = original_transport_logger
+
+        if execute_on_open is True and self.on_open is not None:
+            self.on_open(self)
