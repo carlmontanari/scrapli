@@ -123,6 +123,44 @@ class AsyncDriver(BaseDriver):
 
         self._post_open_closing_log(closing=True)
 
+    async def commandeer(self, conn: "AsyncDriver", execute_on_open: bool = True) -> None:
+        """
+        Commandeer an existing connection
+
+        See docstring in sync version for more details: `scrapli.driver.base.sync_driver.commandeer`
+
+        Args:
+            conn: connection to commandeer
+            execute_on_open: execute the `on_open` function of the current object once the existing
+                connection has been commandeered
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        """
+        original_logger = conn.logger
+        original_transport = conn.transport
+        original_transport_logger = conn.transport.logger
+        original_channel_logger = conn.channel.logger
+        original_channel_channel_log = conn.channel.channel_log
+
+        self.logger = original_logger
+        self.channel.logger = original_channel_logger
+        self.channel.transport = original_transport
+        self.transport = original_transport
+        self.transport.logger = original_transport_logger
+
+        if original_channel_channel_log is not None:
+            # if the original connection had a channel log we also commandeer that; note that when
+            # the new connection is closed this will also close the channel log; see docstring.
+            self.channel.channel_log = original_channel_channel_log
+
+        if execute_on_open is True and self.on_open is not None:
+            await self.on_open(self)
+
     @staticmethod
     def ___getwide___() -> None:  # pragma: no cover
         """
