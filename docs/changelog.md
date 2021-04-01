@@ -14,6 +14,10 @@ Changelog
   for testing; *most* people shouldn't have noticed an issue here, but if you had slow devices this could cause 
   issues that "looked" like an authentication issue due to scrapli not having responded to all telnet control 
   characters before punting to auth
+- Added `commandeer` to driver object; this is used to "commandeer" an existing connection but treat it like the new 
+  connection object (prompt patterns, methods, etc.) -- generally this would be used for using `GenericDriver` to 
+  connect to a console server, then "commandeering" that connection and turning it into an IOSXR/IOSXE/etc. 
+  connection object so you have all the "normal" behavior of scrapli
 
 
 ## 2021.01.30

@@ -3,6 +3,7 @@ from io import BytesIO
 import pytest
 
 from scrapli.driver.base.sync_driver import Driver
+from scrapli.driver.core import IOSXRDriver
 from scrapli.exceptions import ScrapliValueError
 
 
@@ -110,3 +111,28 @@ def test_close(sync_driver):
 
     assert on_close_called is True
     assert sync_driver.channel.channel_log.closed is True
+
+
+def test_commandeer(sync_driver):
+    """
+    Test commandeer works as expected
+    """
+    on_open_called = False
+
+    def on_open(cls):
+        nonlocal on_open_called
+        on_open_called = True
+
+    channel_log_dummy = BytesIO()
+    sync_driver.channel.channel_log = channel_log_dummy
+
+    new_conn = IOSXRDriver(host="tacocat", on_open=on_open)
+    new_conn.commandeer(sync_driver, execute_on_open=True)
+
+    assert on_open_called is True
+    assert new_conn.transport is sync_driver.transport
+    assert new_conn.channel.transport is sync_driver.transport
+    assert new_conn.logger is sync_driver.logger
+    assert new_conn.transport.logger is sync_driver.transport.logger
+    assert new_conn.channel.logger is sync_driver.channel.logger
+    assert new_conn.channel.channel_log is channel_log_dummy

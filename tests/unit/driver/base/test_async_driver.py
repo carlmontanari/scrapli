@@ -4,6 +4,7 @@ import pytest
 
 from scrapli.driver.base.async_driver import AsyncDriver
 from scrapli.exceptions import ScrapliValueError
+from scrapli.driver.core import AsyncIOSXRDriver
 
 
 def test_sync_transport_exception():
@@ -93,3 +94,29 @@ async def test_close(async_driver):
 
     assert on_close_called is True
     assert async_driver.channel.channel_log.closed is True
+
+
+@pytest.mark.asyncio
+async def test_commandeer(async_driver):
+    """
+    Test commandeer works as expected
+    """
+    on_open_called = False
+
+    async def on_open(cls):
+        nonlocal on_open_called
+        on_open_called = True
+
+    channel_log_dummy = BytesIO()
+    async_driver.channel.channel_log = channel_log_dummy
+
+    new_conn = AsyncIOSXRDriver(host="tacocat", on_open=on_open, transport="asyncssh")
+    await new_conn.commandeer(async_driver, execute_on_open=True)
+
+    assert on_open_called is True
+    assert new_conn.transport is async_driver.transport
+    assert new_conn.channel.transport is async_driver.transport
+    assert new_conn.logger is async_driver.logger
+    assert new_conn.transport.logger is async_driver.transport.logger
+    assert new_conn.channel.logger is async_driver.channel.logger
+    assert new_conn.channel.channel_log is channel_log_dummy
