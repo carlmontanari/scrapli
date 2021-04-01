@@ -127,3 +127,53 @@ class Driver(BaseDriver):
         self.channel.close()
 
         self._post_open_closing_log(closing=True)
+
+    def commandeer(self, conn: "Driver", execute_on_open: bool = True) -> None:
+        """
+        Commandeer an existing connection
+
+        Used to "take over" or "commandeer" a connection. This method accepts a second scrapli conn
+        object and "steals" the transport from this connection and uses it for the current instance.
+        The primary reason you would want this is to use a `GenericDriver` to connect to a console
+        server and then to "commandeer" that connection and convert it to a "normal" network driver
+        connection type (i.e. Junos, EOS, etc.) once connected to the network device (via the
+        console server).
+
+        Right now closing the connection that "commandeers" the initial connection will *also close
+        the original connection* -- this is because we are re-using the transport in this new conn.
+        In the future perhaps this will change to *not* close the original connection so users can
+        handle any type of cleanup operations that need to happen on the original connection.
+        Alternatively, you can simply continue using the "original" connection to close things for
+        yourself or do any type of clean up work (just dont close the commandeering connection!).
+
+        Args:
+            conn: connection to commandeer
+            execute_on_open: execute the `on_open` function of the current object once the existing
+                connection has been commandeered
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        """
+        original_logger = conn.logger
+        original_transport = conn.transport
+        original_transport_logger = conn.transport.logger
+        original_channel_logger = conn.channel.logger
+        original_channel_channel_log = conn.channel.channel_log
+
+        self.logger = original_logger
+        self.channel.logger = original_channel_logger
+        self.channel.transport = original_transport
+        self.transport = original_transport
+        self.transport.logger = original_transport_logger
+
+        if original_channel_channel_log is not None:
+            # if the original connection had a channel log we also commandeer that; note that when
+            # the new connection is closed this will also close the channel log; see docstring.
+            self.channel.channel_log = original_channel_channel_log
+
+        if execute_on_open is True and self.on_open is not None:
+            self.on_open(self)
