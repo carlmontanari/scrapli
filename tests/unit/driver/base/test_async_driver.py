@@ -3,8 +3,8 @@ from io import BytesIO
 import pytest
 
 from scrapli.driver.base.async_driver import AsyncDriver
-from scrapli.exceptions import ScrapliValueError
 from scrapli.driver.core import AsyncIOSXRDriver
+from scrapli.exceptions import ScrapliValueError
 
 
 def test_sync_transport_exception():
