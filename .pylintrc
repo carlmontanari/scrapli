@@ -65,7 +65,7 @@ confidence=
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use"--disable=all --enable=classes
 # --disable=W"
-disable=C0103,C0115,C0330,W1202,W1203,R0901,R0902,R0913
+disable=C0103,C0115,C0330,R0901,R0902,R0913,W1202,W1203
 # C0103 = constant-name (a little too aggressive for some things that aren't "really" constants")
 # C0115 = class docstrings (init doc strings cover this already)
 # C0330 = bad-continuation (hanging indent that black doesnt like)

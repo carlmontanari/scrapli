@@ -1,8 +1,10 @@
 #!/usr/bin/env python
-"""scrapli - ssh|telnet screen scraping client library"""
+"""scrapli"""
+from pathlib import Path
+
 import setuptools
 
-__version__ = "2021.01.30"
+__version__ = "2021.07.30a1"
 __author__ = "Carl Montanari"
 
 with open("README.md", "r", encoding="utf-8") as f:
@@ -29,6 +31,11 @@ full_requirements = [requirement for extra in EXTRAS_REQUIRE.values() for requir
 EXTRAS_REQUIRE["full"] = full_requirements
 
 
+def get_packages(package):
+    """Return root package and all sub-packages"""
+    return [str(path.parent) for path in Path(package).glob("**/__init__.py")]
+
+
 setuptools.setup(
     name="scrapli",
     version=__version__,
@@ -46,7 +53,8 @@ setuptools.setup(
         "Docs": "https://carlmontanari.github.io/scrapli/",
     },
     license="MIT",
-    packages=setuptools.find_packages(),
+    package_data={"scrapli": ["py.typed"]},
+    packages=get_packages("scrapli"),
     install_requires=INSTALL_REQUIRES,
     dependency_links=[],
     extras_require=EXTRAS_REQUIRE,
@@ -63,4 +71,7 @@ setuptools.setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
     python_requires=">=3.6",
+    # zip_safe False for mypy
+    # https://mypy.readthedocs.io/en/stable/installed_packages.html
+    zip_safe=False,
 )

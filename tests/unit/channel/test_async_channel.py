@@ -49,9 +49,10 @@ async def test_channel_read(fs, caplog, monkeypatch, async_transport_no_abc):
     expected_read_output = b"read_data"
 
     base_channel_args = BaseChannelArgs(channel_log=True)
-    sync_channel = AsyncChannel(
+    async_channel = AsyncChannel(
         transport=async_transport_no_abc, base_channel_args=base_channel_args
     )
+    async_channel.open()
 
     async def _read(cls):
         nonlocal channel_read_called
@@ -60,8 +61,8 @@ async def test_channel_read(fs, caplog, monkeypatch, async_transport_no_abc):
 
     monkeypatch.setattr("scrapli.transport.base.async_transport.AsyncTransport.read", _read)
 
-    actual_read_output = await sync_channel.read()
-    sync_channel.channel_log.close()
+    actual_read_output = await async_channel.read()
+    async_channel.channel_log.close()
 
     assert channel_read_called is True
     assert actual_read_output == expected_read_output

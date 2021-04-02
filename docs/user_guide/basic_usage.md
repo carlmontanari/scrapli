@@ -451,10 +451,14 @@ If telnet for some reason becomes an important use case, the telnet Transport la
 
 scrapli supports using OpenSSH configuration files in a few ways. For "system" SSH transport (default setting
 ), passing a path to a config file will simply make scrapli "point" to that file, and therefore use that
- configuration files attributes (because it is just exec'ing system SSH!). See the [Transport Notes](/user_guide/caveats_known_issues/#transport-notes-caveats-and-known-issues) 
-section for details about what Transport supports what configuration options. You can also pass `True` to let 
-scrapli search in system default locations for an ssh config file (`~/.ssh/config` and `/etc/ssh/ssh_config`.)
-   
+ configuration files attributes (because it is just exec'ing system SSH!). You can also pass `True` to let 
+scrapli search in system default locations for a ssh config file (`~/.ssh/config` and `/etc/ssh/ssh_config`).
+
+SSH transports other than "system" transport may support *some* subset of the OpenSSH configuration files, but will 
+not provide full support. Asyncssh, for example, will automatically pick up and handle proxy-jumps, SSH keys, and 
+some other items -- this is a 100% asyncssh feature and has nothing to do with scrapli (other than the fact that 
+scrapli allows you to use asyncssh).
+
 *NOTE* -- scrapli does NOT disable strict host checking by default. Obviously this is the "smart" behavior, but it
  can be overridden on a per host basis in your SSH config file, or by passing `False` to the "auth_strict_key
  " argument on object instantiation.

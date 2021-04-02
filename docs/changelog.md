@@ -6,6 +6,20 @@ Changelog
 - Added "% Unavailable command" to EOS `failed_when_contains`
 - Moved core platform `failed_when_contains` to base to not have to duplicate them in sync and async platforms
 - Add `file_mode` to the `enable_basic_logging` function, can now choose "append" or "write" for logfile
+- Add `channel_log_mode` to the base driver arguments; you can now choose "append" or "write" for this as well!
+- Improve reading until prompt methods; no longer use re.search on the entire received byte string, now only checks 
+  for prompt on the last N chars where N is governed by the base channel args `comms_prompt_search_depth` attribute..
+  . this fixes an issue where scrapli could be wayyyyyy slow for very very large outputs (like full tables show bgp)
+- Fix bug (or just terrible initial idea!?) in asynctelnet that reset a timer back to a very small value that was used 
+  for testing; *most* people shouldn't have noticed an issue here, but if you had slow devices this could cause 
+  issues that "looked" like an authentication issue due to scrapli not having responded to all telnet control 
+  characters before punting to auth
+- Added `commandeer` to driver object; this is used to "commandeer" an existing connection but treat it like the new 
+  connection object (prompt patterns, methods, etc.) -- generally this would be used for using `GenericDriver` to 
+  connect to a console server, then "commandeering" that connection and turning it into an IOSXR/IOSXE/etc. 
+  connection object so you have all the "normal" behavior of scrapli
+- Add missing timeout on the asynctelnet open method
+- Add py.typed to hopefully do typing more correctly :P
 
 
 ## 2021.01.30
