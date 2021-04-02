@@ -69,6 +69,8 @@ the base drivers.
   write to -- these are not "logs" in the normal logging module sense, but only the output that is read from the 
   channel. In other words, the output of the channel log should look similar to what you would see as a human 
   connecting to a device 
+- __channel_log_mode__: "write"|"append", all other values will raise ValueError, does what it sounds like it should 
+  by setting the channel log to the provided mode
 - __logging_uid__: unique identifier (string) to associate to log messages; useful if you have multiple connections 
   to the same device (i.e. one console, one ssh, or one to each supervisor module, etc.)
 

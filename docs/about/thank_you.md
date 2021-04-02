@@ -18,6 +18,7 @@ Thank you to the following people who have made contributions other than (and ma
 - [Brett Canter](https://github.com/wonderbred) for building the very first `scrapli_community` platform! (ruckus_fastiron)
 - [Alex Lardschneider](https://github.com/AlexLardschneider) for great conversation, many contributions to
  `scrapli_community`, and helping to improve various pieces of `scrapli` with great testing and troubleshooting! 
+- [Marion](https://github.com/marionGh) for loads of testing hard to track down issues with the async transports!
 
  
 The following people have helped identify and report bugs in scrapli, thank you all!
@@ -32,3 +33,5 @@ The following people have helped identify and report bugs in scrapli, thank you 
     - [telnet authentication when requiring a return char/telnet auth bypass](https://github.com/carlmontanari/scrapli/issues/31)
 - [Dave P](https://github.com/network-dave)
     - [Additional enable password prompt format IOSXE](https://github.com/carlmontanari/scrapli/issues/45)
+- [Natasha Samoylenko](https://github.com/natenka)
+    - Missing open timeout on `asynctelnet` transport

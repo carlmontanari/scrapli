@@ -34,7 +34,7 @@ from scrapli.driver.network.base_driver import PrivilegeLevel
 PRIVS = {
     "exec": (
         PrivilegeLevel(
-            pattern=r"^((?!tcl)[a-z0-9.\-_@()/:]){1,63}>$",
+            pattern=r"^(?!tcl)[\w.\-@/:]+>$",
             name="exec",
             previous_priv="",
             deescalate="",
@@ -45,7 +45,7 @@ PRIVS = {
     ),
     "privilege_exec": (
         PrivilegeLevel(
-            pattern=r"^((?!tcl)[a-z0-9.\-_@/:]){1,63}#$",
+            pattern=r"^(?!tcl)[\w.\-@/:]+#$",
             name="privilege_exec",
             previous_priv="exec",
             deescalate="disable",
@@ -56,7 +56,7 @@ PRIVS = {
     ),
     "configuration": (
         PrivilegeLevel(
-            pattern=r"^[a-z0-9.\-_@/:]{1,63}\((?!tcl)[a-z0-9.\-@/:\+]{0,32}\)#$",
+            pattern=r"^[\w.\-@/:]+\((?!tcl)[\w.\-@/:+]{0,32}\)#$",
             name="configuration",
             previous_priv="privilege_exec",
             deescalate="end",
@@ -67,7 +67,7 @@ PRIVS = {
     ),
     "tclsh": (
         PrivilegeLevel(
-            pattern=r"(^[a-z0-9.\-_@/:]{1,63}\(tcl\)[>#]$)|(^\+>$)",
+            pattern=r"^([\w.\-@/+>:]+\(tcl\)[>#]|\+>)$",
             name="tclsh",
             previous_priv="privilege_exec",
             deescalate="tclquit",

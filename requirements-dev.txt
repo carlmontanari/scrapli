@@ -1,23 +1,23 @@
-nox==2020.12.31
 black==20.8b1
-isort==5.7.0
+darglint==1.7.0
+isort==5.8.0
 mypy==0.812
-pytest==6.2.2
-pytest-cov==2.11.1
-pytest-asyncio==0.14.0
+napalm==3.2.0
+nox==2020.12.31
+pycodestyle==2.7.0
+pydocstyle==6.0.0
 pyfakefs==4.4.0
 pylama==7.7.1
-pycodestyle==2.6.0
-pydocstyle==5.1.1
-pylint==2.7.2
-darglint==1.7.0
-napalm==3.2.0
+pylint==2.7.4
+pytest-asyncio==0.14.0
+pytest-cov==2.11.1
+pytest==6.2.2
 scrapli-replay==2021.7.30a3
--r requirements.txt
+-r requirements-asyncssh.txt
 -r requirements-community.txt
--r requirements-textfsm.txt
 -r requirements-genie.txt
--r requirements-ttp.txt
 -r requirements-paramiko.txt
 -r requirements-ssh2.txt
--r requirements-asyncssh.txt
+-r requirements-textfsm.txt
+-r requirements-ttp.txt
+-r requirements.txt

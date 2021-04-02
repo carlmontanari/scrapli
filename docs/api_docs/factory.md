@@ -83,6 +83,7 @@ def _build_provided_kwargs_dict(  # pylint: disable=R0914
     transport: Optional[str],
     transport_options: Optional[Dict[str, Any]],
     channel_log: Optional[Union[str, bool, BytesIO]],
+    channel_log_mode: Optional[str],
     channel_lock: Optional[bool],
     logging_uid: Optional[str],
     auth_secondary: Optional[str],
@@ -136,6 +137,7 @@ def _build_provided_kwargs_dict(  # pylint: disable=R0914
         "transport": transport,
         "transport_options": transport_options,
         "channel_log": channel_log,
+        "channel_log_mode": channel_log_mode,
         "channel_lock": channel_lock,
         "logging_uid": logging_uid,
         "auth_secondary": auth_secondary,
@@ -392,6 +394,7 @@ class Scrapli(NetworkDriver):
         transport_options: Optional[Dict[str, Any]] = None,
         channel_log: Optional[Union[str, bool, BytesIO]] = None,
         channel_lock: Optional[bool] = None,
+        channel_log_mode: Optional[str] = None,
         logging_uid: Optional[str] = None,
         auth_secondary: Optional[str] = None,
         failed_when_contains: Optional[List[str]] = None,
@@ -459,6 +462,8 @@ class Scrapli(NetworkDriver):
                 these are not "logs" in the normal logging module sense, but only the output that is
                 read from the channel. In other words, the output of the channel log should look
                 similar to what you would see as a human connecting to a device
+            channel_log_mode: "write"|"append", all other values will raise ValueError,
+                does what it sounds like it should by setting the channel log to the provided mode
             logging_uid: unique identifier (string) to associate to log messages; useful if you have
                 multiple connections to the same device (i.e. one console, one ssh, or one to each
                 supervisor module, etc.)
@@ -514,6 +519,7 @@ class Scrapli(NetworkDriver):
             transport=transport,
             transport_options=transport_options,
             channel_log=channel_log,
+            channel_log_mode=channel_log_mode,
             channel_lock=channel_lock,
             logging_uid=logging_uid,
             privilege_levels=privilege_levels,
@@ -682,6 +688,7 @@ class AsyncScrapli(AsyncNetworkDriver):
         transport: Optional[str] = None,
         transport_options: Optional[Dict[str, Any]] = None,
         channel_log: Optional[Union[str, bool, BytesIO]] = None,
+        channel_log_mode: Optional[str] = None,
         channel_lock: Optional[bool] = None,
         logging_uid: Optional[str] = None,
         auth_secondary: Optional[str] = None,
@@ -750,6 +757,8 @@ class AsyncScrapli(AsyncNetworkDriver):
                 these are not "logs" in the normal logging module sense, but only the output that is
                 read from the channel. In other words, the output of the channel log should look
                 similar to what you would see as a human connecting to a device
+            channel_log_mode: "write"|"append", all other values will raise ValueError,
+                does what it sounds like it should by setting the channel log to the provided mode
             logging_uid: unique identifier (string) to associate to log messages; useful if you have
                 multiple connections to the same device (i.e. one console, one ssh, or one to each
                 supervisor module, etc.)
@@ -805,6 +814,7 @@ class AsyncScrapli(AsyncNetworkDriver):
             transport=transport,
             transport_options=transport_options,
             channel_log=channel_log,
+            channel_log_mode=channel_log_mode,
             channel_lock=channel_lock,
             logging_uid=logging_uid,
             privilege_levels=privilege_levels,
@@ -913,6 +923,8 @@ Args:
         these are not "logs" in the normal logging module sense, but only the output that is
         read from the channel. In other words, the output of the channel log should look
         similar to what you would see as a human connecting to a device
+    channel_log_mode: "write"|"append", all other values will raise ValueError,
+        does what it sounds like it should by setting the channel log to the provided mode
     logging_uid: unique identifier (string) to associate to log messages; useful if you have
         multiple connections to the same device (i.e. one console, one ssh, or one to each
         supervisor module, etc.)
@@ -1071,6 +1083,7 @@ class AsyncScrapli(AsyncNetworkDriver):
         transport: Optional[str] = None,
         transport_options: Optional[Dict[str, Any]] = None,
         channel_log: Optional[Union[str, bool, BytesIO]] = None,
+        channel_log_mode: Optional[str] = None,
         channel_lock: Optional[bool] = None,
         logging_uid: Optional[str] = None,
         auth_secondary: Optional[str] = None,
@@ -1139,6 +1152,8 @@ class AsyncScrapli(AsyncNetworkDriver):
                 these are not "logs" in the normal logging module sense, but only the output that is
                 read from the channel. In other words, the output of the channel log should look
                 similar to what you would see as a human connecting to a device
+            channel_log_mode: "write"|"append", all other values will raise ValueError,
+                does what it sounds like it should by setting the channel log to the provided mode
             logging_uid: unique identifier (string) to associate to log messages; useful if you have
                 multiple connections to the same device (i.e. one console, one ssh, or one to each
                 supervisor module, etc.)
@@ -1194,6 +1209,7 @@ class AsyncScrapli(AsyncNetworkDriver):
             transport=transport,
             transport_options=transport_options,
             channel_log=channel_log,
+            channel_log_mode=channel_log_mode,
             channel_lock=channel_lock,
             logging_uid=logging_uid,
             privilege_levels=privilege_levels,
@@ -1357,6 +1373,8 @@ Args:
         these are not "logs" in the normal logging module sense, but only the output that is
         read from the channel. In other words, the output of the channel log should look
         similar to what you would see as a human connecting to a device
+    channel_log_mode: "write"|"append", all other values will raise ValueError,
+        does what it sounds like it should by setting the channel log to the provided mode
     logging_uid: unique identifier (string) to associate to log messages; useful if you have
         multiple connections to the same device (i.e. one console, one ssh, or one to each
         supervisor module, etc.)
@@ -1516,6 +1534,7 @@ class Scrapli(NetworkDriver):
         transport_options: Optional[Dict[str, Any]] = None,
         channel_log: Optional[Union[str, bool, BytesIO]] = None,
         channel_lock: Optional[bool] = None,
+        channel_log_mode: Optional[str] = None,
         logging_uid: Optional[str] = None,
         auth_secondary: Optional[str] = None,
         failed_when_contains: Optional[List[str]] = None,
@@ -1583,6 +1602,8 @@ class Scrapli(NetworkDriver):
                 these are not "logs" in the normal logging module sense, but only the output that is
                 read from the channel. In other words, the output of the channel log should look
                 similar to what you would see as a human connecting to a device
+            channel_log_mode: "write"|"append", all other values will raise ValueError,
+                does what it sounds like it should by setting the channel log to the provided mode
             logging_uid: unique identifier (string) to associate to log messages; useful if you have
                 multiple connections to the same device (i.e. one console, one ssh, or one to each
                 supervisor module, etc.)
@@ -1638,6 +1659,7 @@ class Scrapli(NetworkDriver):
             transport=transport,
             transport_options=transport_options,
             channel_log=channel_log,
+            channel_log_mode=channel_log_mode,
             channel_lock=channel_lock,
             logging_uid=logging_uid,
             privilege_levels=privilege_levels,

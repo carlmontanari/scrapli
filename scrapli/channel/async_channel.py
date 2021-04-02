@@ -2,6 +2,7 @@
 import asyncio
 import re
 import time
+from io import SEEK_END, BytesIO
 
 try:
     from contextlib import asynccontextmanager
@@ -133,16 +134,22 @@ class AsyncChannel(BaseChannel):
             class_pattern=self._base_channel_args.comms_prompt_pattern, pattern=prompt
         )
 
+        read_buf = BytesIO(buf)
+
         while True:
-            buf += await self.read()
+            b = await self.read()
+            read_buf.write(b)
+
+            read_buf.seek(-self._base_channel_args.comms_prompt_search_depth, SEEK_END)
+            search_buf = read_buf.read()
 
             channel_match = re.search(
                 pattern=search_pattern,
-                string=buf,
+                string=search_buf,
             )
 
             if channel_match:
-                return buf
+                return read_buf.getvalue()
 
     async def _read_until_prompt_or_time(
         self,
@@ -184,25 +191,31 @@ class AsyncChannel(BaseChannel):
         previous_timeout_transport = _transport_args.timeout_transport
         _transport_args.timeout_transport = int(read_duration)
 
+        read_buf = BytesIO(buf)
+
         start = time.time()
         while True:
             try:
-                buf += await self.read()
+                b = await self.read()
+                read_buf.write(b)
             except ScrapliTimeout:
                 pass
 
+            read_buf.seek(-self._base_channel_args.comms_prompt_search_depth, SEEK_END)
+            search_buf = read_buf.read()
+
             if (time.time() - start) > read_duration:
                 break
-            if any((channel_output in buf for channel_output in channel_outputs)):
+            if any((channel_output in search_buf for channel_output in channel_outputs)):
                 break
-            if re.search(pattern=regex_channel_outputs_pattern, string=buf):
+            if re.search(pattern=regex_channel_outputs_pattern, string=search_buf):
                 break
-            if re.search(pattern=search_pattern, string=buf):
+            if re.search(pattern=search_pattern, string=search_buf):
                 break
 
         _transport_args.timeout_transport = previous_timeout_transport
 
-        return buf
+        return read_buf.getvalue()
 
     @ChannelTimeout(message="timed out during in channel ssh authentication")
     async def channel_authenticate_ssh(
