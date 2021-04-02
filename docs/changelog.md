@@ -18,6 +18,8 @@ Changelog
   connection object (prompt patterns, methods, etc.) -- generally this would be used for using `GenericDriver` to 
   connect to a console server, then "commandeering" that connection and turning it into an IOSXR/IOSXE/etc. 
   connection object so you have all the "normal" behavior of scrapli
+- Add missing timeout on the asynctelnet open method
+- Add py.typed to hopefully do typing more correctly :P
 
 
 ## 2021.01.30
