@@ -5,7 +5,11 @@ from dataclasses import dataclass
 from typing import Optional
 
 from scrapli.decorators import TransportTimeout
-from scrapli.exceptions import ScrapliConnectionError, ScrapliConnectionNotOpened
+from scrapli.exceptions import (
+    ScrapliAuthenticationFailed,
+    ScrapliConnectionError,
+    ScrapliConnectionNotOpened,
+)
 from scrapli.transport.base import AsyncTransport, BasePluginTransportArgs, BaseTransportArgs
 
 # telnet control characters we care about
@@ -132,8 +136,11 @@ class AsynctelnetTransport(AsyncTransport):
         self._pre_open_closing_log(closing=False)
 
         try:
-            self.stdout, self.stdin = await asyncio.open_connection(
+            fut = asyncio.open_connection(
                 host=self._base_transport_args.host, port=self._base_transport_args.port
+            )
+            self.stdout, self.stdin = await asyncio.wait_for(
+                fut, timeout=self._base_transport_args.timeout_socket
             )
         except ConnectionError as exc:
             msg = f"Failed to open telnet session to host {self._base_transport_args.host}"
@@ -149,6 +156,10 @@ class AsynctelnetTransport(AsyncTransport):
                 "do you have a bad host/port?"
             )
             raise ScrapliConnectionError(msg) from exc
+        except asyncio.TimeoutError as exc:
+            msg = "timed out opening connection to device"
+            self.logger.critical(msg)
+            raise ScrapliAuthenticationFailed(msg) from exc
 
         await self._handle_control_chars()
 

@@ -33,3 +33,5 @@ The following people have helped identify and report bugs in scrapli, thank you 
     - [telnet authentication when requiring a return char/telnet auth bypass](https://github.com/carlmontanari/scrapli/issues/31)
 - [Dave P](https://github.com/network-dave)
     - [Additional enable password prompt format IOSXE](https://github.com/carlmontanari/scrapli/issues/45)
+- [Natasha Samoylenko](https://github.com/natenka)
+    - Missing open timeout on `asynctelnet` transport
