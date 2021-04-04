@@ -11,7 +11,7 @@ pylama==7.7.1
 pylint==2.7.4
 pytest-asyncio==0.14.0
 pytest-cov==2.11.1
-pytest==6.2.2
+pytest==6.2.3
 scrapli-replay==2021.7.30a3
 -r requirements-asyncssh.txt
 -r requirements-community.txt
