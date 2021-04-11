@@ -1,5 +1,5 @@
 black==20.8b1
-darglint==1.7.0
+darglint==1.8.0
 isort==5.8.0
 mypy==0.812
 napalm==3.2.0
