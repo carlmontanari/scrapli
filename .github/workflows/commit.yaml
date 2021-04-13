@@ -87,7 +87,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - run: docker run -v $(pwd):/docs --entrypoint mkdocs squidfunk/mkdocs-material:latest build --clean --strict
+      - run: docker run -v $(pwd):/docs --entrypoint "" squidfunk/mkdocs-material:latest ash -c 'pip install mdx_gh_links && mkdocs build --clean --strict'
       - name: htmltest
         run: |
           curl https://htmltest.wjdp.uk | bash
