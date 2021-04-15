@@ -513,7 +513,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
             timeout_ops=timeout_ops,
         )
 
-        if responses.failed:
+        if stop_on_failed and responses.failed:
             self._abort_config()
 
         return self._post_send_configs(responses=responses)
@@ -1203,7 +1203,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
             timeout_ops=timeout_ops,
         )
 
-        if responses.failed:
+        if stop_on_failed and responses.failed:
             self._abort_config()
 
         return self._post_send_configs(responses=responses)

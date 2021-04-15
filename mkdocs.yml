@@ -1,6 +1,5 @@
 ---
 site_name: Scrapli
-site_url: https://github.com/carlmontanari/scrapli
 site_description: "Scrapli: fast, flexible, sync or async, telnet/ssh/netconf"
 site_author: Carl Montanari
 
@@ -118,11 +117,11 @@ markdown_extensions:
 extra:
     social:
         - icon: fontawesome/brands/github-alt
-          link: 'https://github.com/carlmontanari/'
+          link: 'https://github.com/carlmontanari'
         - icon: fontawesome/brands/twitter
           link: 'https://twitter.com/carlrmontanari'
         - icon: fontawesome/brands/linkedin
-          link: 'https://www.linkedin.com/in/carl-montanari-47888931/'
+          link: 'https://www.linkedin.com/in/carl-montanari-47888931'
         - icon: fontawesome/solid/globe
           link: 'https://montanari.io'
 
