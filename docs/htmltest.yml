@@ -3,6 +3,7 @@
 DirectoryPath: ./site
 IgnoreURLs:
   - fonts.gstatic.com
+  - linkedin.com
 IgnoreDirectoryMissingTrailingSlash: true
 IgnoreAltMissing: true
 IgnoreSSLVerify: true
