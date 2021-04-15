@@ -19,6 +19,8 @@ Thank you to the following people who have made contributions other than (and ma
 - [Alex Lardschneider](https://github.com/AlexLardschneider) for great conversation, many contributions to
  `scrapli_community`, and helping to improve various pieces of `scrapli` with great testing and troubleshooting! 
 - [Marion](https://github.com/marionGh) for loads of testing hard to track down issues with the async transports!
+- [Roman Dodin](https://github.com/hellt) for inspiration to make the docs much better and for adding the doc 
+  testing to keep them looking good!
 
  
 The following people have helped identify and report bugs in scrapli, thank you all!
