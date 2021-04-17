@@ -1,6 +1,3 @@
-DOCKER_COMPOSE_FILE=docker-compose.yaml
-DOCKER_COMPOSE=docker-compose -f ${DOCKER_COMPOSE_FILE}
-
 lint:
 	python -m isort .
 	python -m black .
@@ -9,7 +6,11 @@ lint:
 	python -m mypy --strict scrapli/
 
 darglint:
-	find scrapli -type f \( -iname "*.py" ! -iname "ptyprocess.py" \) | xargs darglint -x
+	find scrapli_cfg -type f \( -iname "*.py"\) | xargs darglint -x
+
+test:
+	python -m pytest \
+	tests/
 
 cov:
 	python -m pytest \
@@ -18,6 +19,13 @@ cov:
 	--cov-report term \
 	tests/
 
+test_unit:
+	python -m pytest \
+	--cov=scrapli \
+	--cov-report html \
+	--cov-report term \
+	tests/unit/
+
 cov_unit:
 	python -m pytest \
 	--cov=scrapli \
@@ -25,20 +33,33 @@ cov_unit:
 	--cov-report term \
 	tests/unit/
 
+test_integration:
+	python -m pytest \
+	--cov=scrapli \
+	--cov-report html \
+	--cov-report term \
+	tests/integration/
+
 cov_integration:
 	python -m pytest \
 	--cov=scrapli \
 	--cov-report html \
 	--cov-report term \
-	tests/integration/ \
-	tests/unit/
+	tests/integration/
 
-test:
-	python -m pytest tests/
-	python -m pytest examples/
+test_functional:
+	python -m pytest \
+	--cov=scrapli \
+	--cov-report html \
+	--cov-report term \
+	tests/functional/
 
-test_unit:
-	python -m pytest tests/unit/
+cov_functional:
+	python -m pytest \
+	--cov=scrapli \
+	--cov-report html \
+	--cov-report term \
+	tests/functional/
 
 .PHONY: docs
 docs:
@@ -47,14 +68,8 @@ docs:
 deploy_docs:
 	mkdocs gh-deploy
 
-start_dev_env:
-	${DOCKER_COMPOSE} \
-		up -d \
-		iosxe \
-		nxos \
-		junos \
-		iosxr \
-		linux
+DOCKER_COMPOSE_FILE=docker-compose.yaml
+DOCKER_COMPOSE=docker-compose -f ${DOCKER_COMPOSE_FILE}
 
 start_dev_env_iosxe:
 	${DOCKER_COMPOSE} \
@@ -88,7 +103,6 @@ start_dev_env_linux:
 
 stop_dev_env:
 	${DOCKER_COMPOSE} \
-		down
 
 prepare_dev_env:
 	python tests/functional/prepare_devices.py cisco_iosxe,cisco_nxos,cisco_iosxr,arista_eos,juniper_junos
