@@ -60,13 +60,13 @@ def mock_ssh_servers():
     with ThreadPoolExecutor(max_workers=1) as pool:
         loop = asyncio.new_event_loop()
         pool.submit(sync_run_servers, loop)
-        time.sleep(1)
+        time.sleep(1.5)
         # yield to let all the tests run, then we can deal w/ cleaning up the thread/loop
         # we need to have this scoped to module so it starts/stops just for integration tests
         yield
         loop.call_soon_threadsafe(loop.stop)
     # seems a little sleep before and after starting/stopping makes things a little smoother...
-    time.sleep(1)
+    time.sleep(1.5)
 
 
 @pytest.fixture(

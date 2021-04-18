@@ -22,6 +22,7 @@ Changelog
 - Add py.typed to hopefully do typing more correctly :P
 - BUGFIX: network drivers aborted configuration sessions if responses were failed even if the `stop_on_failed` arg 
   was set to False; this has been fixed now so that sessions are only aborted if the response is failed *and*
+- Improved typing for `send_interactive`
 
 
 ## 2021.01.30
