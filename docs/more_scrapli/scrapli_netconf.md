@@ -1,4 +1,4 @@
-# scrapli Netconf
+# Scrapli Netconf
 
 
 [scrapli_netconf](https://github.com/scrapli/scrapli_netconf) ([docs](https://scrapli.github.io/scrapli_netconf/)) 

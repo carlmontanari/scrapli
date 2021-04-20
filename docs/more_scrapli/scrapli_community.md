@@ -1,4 +1,4 @@
-# scrapli Community
+# Scrapli Community
 
 
 If you would like to use scrapli, but the platform(s) that you work with are not supported in the "core" scrapli 
