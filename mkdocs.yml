@@ -27,61 +27,61 @@ nav:
     - Linting and Testing: user_guide/linting_testing.md
     - FAQ: user_guide/faq.md
   - API Docs:
-  - Public API Status: public_api_status.md
-  - Driver:
-    - Base Driver Arguments: api_docs/driver/base_driver.md
-    - Generic Driver Arguments: api_docs/driver/generic_driver.md
-    - Network Driver Arguments: api_docs/driver/network_driver.md
-    - Base:
-      - Base Driver: api_docs/driver/base/base_driver.md
-      - Sync Driver: api_docs/driver/base/sync_driver.md
-      - Async Driver: api_docs/driver/base/async_driver.md
-    - Generic:
-      - Base Driver: api_docs/driver/generic/base_driver.md
-      - Sync Driver: api_docs/driver/generic/sync_driver.md
-      - Async Driver: api_docs/driver/generic/async_driver.md
-    - Network:
-      - Base Driver: api_docs/driver/network/base_driver.md
-      - Sync Driver: api_docs/driver/network/sync_driver.md
-      - Async Driver: api_docs/driver/network/async_driver.md
-    - Core:
-      - Arista EOS:
-        - Base Driver: api_docs/driver/core/arista_eos/base_driver.md
-        - Sync Driver: api_docs/driver/core/arista_eos/sync_driver.md
-        - Async Driver: api_docs/driver/core/arista_eos/async_driver.md
-      - Cisco IOSXE:
-        - Base Driver: api_docs/driver/core/cisco_iosxe/base_driver.md
-        - Sync Driver: api_docs/driver/core/cisco_iosxe/sync_driver.md
-        - Async Driver: api_docs/driver/core/cisco_iosxe/async_driver.md
-      - Cisco IOSXR:
-        - Base Driver: api_docs/driver/core/cisco_iosxr/base_driver.md
-        - Sync Driver: api_docs/driver/core/cisco_iosxr/sync_driver.md
-        - Async Driver: api_docs/driver/core/cisco_iosxr/async_driver.md
-      - Cisco NXOS:
-        - Base Driver: api_docs/driver/core/cisco_nxos/base_driver.md
-        - Sync Driver: api_docs/driver/core/cisco_nxos/sync_driver.md
-        - Async Driver: api_docs/driver/core/cisco_nxos/async_driver.md
-      - Juniper Junos:
-        - Base Driver: api_docs/driver/core/juniper_junos/base_driver.md
-        - Sync Driver: api_docs/driver/core/juniper_junos/sync_driver.md
-        - Async Driver: api_docs/driver/core/juniper_junos/async_driver.md
-  - Channel:
-    - Base Channel: api_docs/channel/base_channel.md
-    - Sync Channel: api_docs/channel/sync_channel.md
-    - Async Channel: api_docs/channel/async_channel.md
-  - Transports:
-    - Base:
-      - Base Transport: api_docs/transport/base/base_transport.md
-      - Sync Transport: api_docs/transport/base/sync_transport.md
-      - Async Transport: api_docs/transport/base/async_transport.md
-      - Socket: api_docs/transport/base/base_socket.md
-    - Plugins:
-      - Asyncssh: api_docs/transport/plugins/asyncssh.md
-      - Asynctelnet: api_docs/transport/plugins/asynctelnet.md
-      - Paramiko: api_docs/transport/plugins/paramiko.md
-      - SSH2: api_docs/transport/plugins/ssh2.md
-      - System: api_docs/transport/plugins/system.md
-      - Telnet: api_docs/transport/plugins/telnet.md
+    - Public API Status: public_api_status.md
+    - Driver:
+      - Base Driver Arguments: api_docs/driver/base_driver.md
+      - Generic Driver Arguments: api_docs/driver/generic_driver.md
+      - Network Driver Arguments: api_docs/driver/network_driver.md
+      - Base:
+        - Base Driver: api_docs/driver/base/base_driver.md
+        - Sync Driver: api_docs/driver/base/sync_driver.md
+        - Async Driver: api_docs/driver/base/async_driver.md
+      - Generic:
+        - Base Driver: api_docs/driver/generic/base_driver.md
+        - Sync Driver: api_docs/driver/generic/sync_driver.md
+        - Async Driver: api_docs/driver/generic/async_driver.md
+      - Network:
+        - Base Driver: api_docs/driver/network/base_driver.md
+        - Sync Driver: api_docs/driver/network/sync_driver.md
+        - Async Driver: api_docs/driver/network/async_driver.md
+      - Core:
+        - Arista EOS:
+          - Base Driver: api_docs/driver/core/arista_eos/base_driver.md
+          - Sync Driver: api_docs/driver/core/arista_eos/sync_driver.md
+          - Async Driver: api_docs/driver/core/arista_eos/async_driver.md
+        - Cisco IOSXE:
+          - Base Driver: api_docs/driver/core/cisco_iosxe/base_driver.md
+          - Sync Driver: api_docs/driver/core/cisco_iosxe/sync_driver.md
+          - Async Driver: api_docs/driver/core/cisco_iosxe/async_driver.md
+        - Cisco IOSXR:
+          - Base Driver: api_docs/driver/core/cisco_iosxr/base_driver.md
+          - Sync Driver: api_docs/driver/core/cisco_iosxr/sync_driver.md
+          - Async Driver: api_docs/driver/core/cisco_iosxr/async_driver.md
+        - Cisco NXOS:
+          - Base Driver: api_docs/driver/core/cisco_nxos/base_driver.md
+          - Sync Driver: api_docs/driver/core/cisco_nxos/sync_driver.md
+          - Async Driver: api_docs/driver/core/cisco_nxos/async_driver.md
+        - Juniper Junos:
+          - Base Driver: api_docs/driver/core/juniper_junos/base_driver.md
+          - Sync Driver: api_docs/driver/core/juniper_junos/sync_driver.md
+          - Async Driver: api_docs/driver/core/juniper_junos/async_driver.md
+    - Channel:
+      - Base Channel: api_docs/channel/base_channel.md
+      - Sync Channel: api_docs/channel/sync_channel.md
+      - Async Channel: api_docs/channel/async_channel.md
+    - Transports:
+      - Base:
+        - Base Transport: api_docs/transport/base/base_transport.md
+        - Sync Transport: api_docs/transport/base/sync_transport.md
+        - Async Transport: api_docs/transport/base/async_transport.md
+        - Socket: api_docs/transport/base/base_socket.md
+      - Plugins:
+        - Asyncssh: api_docs/transport/plugins/asyncssh.md
+        - Asynctelnet: api_docs/transport/plugins/asynctelnet.md
+        - Paramiko: api_docs/transport/plugins/paramiko.md
+        - SSH2: api_docs/transport/plugins/ssh2.md
+        - System: api_docs/transport/plugins/system.md
+        - Telnet: api_docs/transport/plugins/telnet.md
   - Decorators: api_docs/decorators.md
   - Exceptions: api_docs/exceptions.md
   - Factory: api_docs/factory.md
