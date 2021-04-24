@@ -2,16 +2,16 @@ black==20.8b1
 darglint==1.8.0
 isort==5.8.0
 mypy==0.812
-napalm==3.2.0
 nox==2020.12.31
 pycodestyle==2.7.0
 pydocstyle==6.0.0
 pyfakefs==4.4.0
 pylama==7.7.1
 pylint==2.7.4
-pytest-asyncio==0.14.0
+pytest-asyncio==0.15.1
 pytest-cov==2.11.1
 pytest==6.2.3
+scrapli-cfg==2021.7.30a7
 scrapli-replay==2021.7.30a4
 -r requirements-asyncssh.txt
 -r requirements-community.txt
