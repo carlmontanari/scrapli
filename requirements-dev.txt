@@ -7,7 +7,7 @@ pycodestyle==2.7.0
 pydocstyle==6.0.0
 pyfakefs==4.4.0
 pylama==7.7.1
-pylint==2.7.4
+pylint==2.8.0
 pytest-asyncio==0.15.1
 pytest-cov==2.11.1
 pytest==6.2.3
