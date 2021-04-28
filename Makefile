@@ -6,7 +6,7 @@ lint:
 	python -m mypy --strict scrapli/
 
 darglint:
-	find scrapli_cfg -type f \( -iname "*.py"\) | xargs darglint -x
+	find scrapli -type f \( -iname "*.py" \) | xargs darglint -x
 
 test:
 	python -m pytest \

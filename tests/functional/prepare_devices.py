@@ -45,7 +45,7 @@ def prepare_device(test_devices):
                 with open(base_config, "r") as f:
                     loaded_base_config = f.read()
 
-            with ScrapliCfg(conn=conn, preserve_connection=True) as cfg_conn:
+            with ScrapliCfg(conn=conn) as cfg_conn:
                 cfg_conn.load_config(config=loaded_base_config, replace=True)
                 cfg_conn.commit_config()
 
