@@ -124,7 +124,6 @@ def test_genie_parse_failure():
     assert result == []
     # w/out killing this module pyfakefs explodes. dont remember why/how i found that out...
     del sys.modules["pyats.configuration"]
-    del sys.modules["ats.configuration"]
 
 
 def test_genie_no_genie_installed(monkeypatch):
