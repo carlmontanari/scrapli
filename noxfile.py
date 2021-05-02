@@ -10,31 +10,54 @@ nox.options.stop_on_first_error = False
 nox.options.default_venv_backend = "venv"
 
 
-DEV_REQUIREMENTS: Dict[str, str] = {}
+def parse_requirements(dev: bool = True) -> Dict[str, str]:
+    """
+    Parse requirements file
 
-# this wouldn't work for other projects probably as its kinda hacky, but works just fine for scrapli
-with open("requirements-dev.txt") as f:
-    req_lines = f.readlines()
-    dev_requirements_lines: List[str] = [
+    Args:
+        dev: parse dev requirements (or not)
+
+    Returns:
+        dict: dict of parsed requirements
+
+    Raises:
+        N/A
+
+    """
+    requirements = {}
+    requirements_file = "requirements.txt" if dev is False else "requirements-dev.txt"
+
+    with open(requirements_file, "r") as f:
+        requirements_file_lines = f.readlines()
+
+    requirements_lines: List[str] = [
         line
-        for line in req_lines
+        for line in requirements_file_lines
         if not line.startswith("-r") and not line.startswith("#") and not line.startswith("-e")
     ]
-    dev_editable_requirements_lines: List[str] = [
-        line for line in req_lines if line.startswith("-e")
+    editable_requirements_lines: List[str] = [
+        line for line in requirements_file_lines if line.startswith("-e")
     ]
 
-for requirement in dev_requirements_lines:
-    parsed_requirement = re.match(
-        pattern=r"^([a-z0-9\-\_]+)([><=]{1,2}\S*)(?:.*)$", string=requirement, flags=re.I | re.M
-    )
-    DEV_REQUIREMENTS[parsed_requirement.groups()[0]] = parsed_requirement.groups()[1]
+    for requirement in requirements_lines:
+        parsed_requirement = re.match(
+            pattern=r"^([a-z0-9\-\_\.]+)([><=]{1,2}\S*)(?:.*)$",
+            string=requirement,
+            flags=re.I | re.M,
+        )
+        requirements[parsed_requirement.groups()[0]] = parsed_requirement.groups()[1]
 
-for requirement in dev_editable_requirements_lines:
-    parsed_requirement = re.match(
-        pattern=r"^-e\s.*(?:#egg=)(\w+)$", string=requirement, flags=re.I | re.M
-    )
-    DEV_REQUIREMENTS[parsed_requirement.groups()[0]] = requirement
+    for requirement in editable_requirements_lines:
+        parsed_requirement = re.match(
+            pattern=r"^-e\s.*(?:#egg=)(\w+)$", string=requirement, flags=re.I | re.M
+        )
+        requirements[parsed_requirement.groups()[0]] = requirement
+
+    return requirements
+
+
+REQUIREMENTS: Dict[str, str] = parse_requirements(dev=False)
+DEV_REQUIREMENTS: Dict[str, str] = parse_requirements(dev=True)
 
 
 @nox.session(python=["3.6", "3.7", "3.8", "3.9"])
@@ -52,24 +75,13 @@ def unit_tests(session):
         N/A
 
     """
-    session.install("-U", "pip")
-
-    if session.python == "3.6":
-        session.install("dataclasses", "async_generator")
-
-    # ensure test ssh key permissions are appropriate
     session.run("chmod", "0600", "tests/test_data/files/vrnetlab_key", external=True)
     session.run("chmod", "0600", "tests/test_data/files/vrnetlab_key_encrypted", external=True)
-
-    # install this repo in editable mode so that other scrapli libs can depend on a yet to be
-    # released version. for example, scrapli_asyncssh is new and released and requires the *next*
-    # release of scrapli; if we set the version to the next release in __init__ and install locally
-    # we can avoid a kind of circular dependency thing where pypi version of scrapli is not yet
-    # updated to match the new pins in other scrapli libs
     session.install("-e", ".")
-
     session.install("-r", "requirements-dev.txt")
     session.run(
+        "python",
+        "-m",
         "pytest",
         "--cov=scrapli",
         "--cov-report",
@@ -81,7 +93,7 @@ def unit_tests(session):
     )
 
 
-@nox.session(python=["3.6", "3.7", "3.8", "3.9"])
+@nox.session(python=["3.9"])
 def integration_tests(session):
     """
     Nox run integration tests
@@ -96,14 +108,13 @@ def integration_tests(session):
         N/A
 
     """
-    session.install("-U", "pip")
-
-    if session.python == "3.6":
-        session.install("dataclasses", "async_generator")
-
-    session.install("-e", ".")
     session.install("-r", "requirements-dev.txt")
+    session.install(".")
+    # setting scrapli vrouter -> 1 so that the saved scrapli replay sessions are "correctly"
+    # pointing to the vrouter dev env (i.e. port 21022 instead of 22 for iosxe, etc.)
     session.run(
+        "python",
+        "-m",
         "pytest",
         "--cov=scrapli",
         "--cov-report",
@@ -112,6 +123,7 @@ def integration_tests(session):
         "term",
         "tests/integration",
         "-v",
+        env={"SCRAPLI_VROUTER": "1"},
     )
 
 
@@ -131,7 +143,7 @@ def isort(session):
 
     """
     session.install(f"isort{DEV_REQUIREMENTS['isort']}")
-    session.run("isort", "-c", ".")
+    session.run("python", "-m", "isort", "-c", ".")
 
 
 @nox.session(python=["3.9"])
@@ -150,7 +162,7 @@ def black(session):
 
     """
     session.install(f"black{DEV_REQUIREMENTS['black']}")
-    session.run("black", "--check", ".")
+    session.run("python", "-m", "black", "--check", ".")
 
 
 @nox.session(python=["3.9"])
@@ -168,10 +180,8 @@ def pylama(session):
         N/A
 
     """
-    session.install("-U", "pip")
-    session.install("-e", ".")
     session.install("-r", "requirements-dev.txt")
-    session.run("pylama", ".")
+    session.run("python", "-m", "pylama", ".")
 
 
 @nox.session(python=["3.9"])
@@ -190,7 +200,7 @@ def pydocstyle(session):
 
     """
     session.install(f"pydocstyle{DEV_REQUIREMENTS['pydocstyle']}")
-    session.run("pydocstyle", ".")
+    session.run("python", "-m", "pydocstyle", ".")
 
 
 @nox.session(python=["3.9"])
@@ -208,8 +218,9 @@ def mypy(session):
         N/A
 
     """
+    session.install(".")
     session.install(f"mypy{DEV_REQUIREMENTS['mypy']}")
-    session.run("mypy", "--strict", "scrapli/")
+    session.run("python", "-m", "mypy", "--strict", "scrapli/")
 
 
 @nox.session(python=["3.9"])
@@ -228,9 +239,5 @@ def darglint(session):
 
     """
     session.install(f"darglint{DEV_REQUIREMENTS['darglint']}")
-    # snag all the files other than ptyprocess.py -- not linting/covering that file at this time
-    files_to_darglint = [
-        path for path in Path("scrapli").rglob("*.py") if not path.name.endswith("ptyprocess.py")
-    ]
-    for file in files_to_darglint:
+    for file in Path("scrapli").rglob("*.py"):
         session.run("darglint", f"{file.absolute()}")

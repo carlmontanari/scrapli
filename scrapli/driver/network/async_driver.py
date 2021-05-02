@@ -313,7 +313,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
 
     async def send_interactive(
         self,
-        interact_events: List[Tuple[str, str, Optional[bool]]],
+        interact_events: Union[List[Tuple[str, str]], List[Tuple[str, str, bool]]],
         *,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         privilege_level: str = "",
@@ -483,7 +483,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
             timeout_ops=timeout_ops,
         )
 
-        if responses.failed:
+        if stop_on_failed and responses.failed:
             await self._abort_config()
 
         return self._post_send_configs(responses=responses)

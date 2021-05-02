@@ -1,2 +1,2 @@
-genie>=20.2 ; sys_platform != "win32" and python_version < "3.9"
-pyats>=20.2 ; sys_platform != "win32" and python_version < "3.9"
+genie>=20.2 ; sys_platform != "win32"
+pyats>=20.2 ; sys_platform != "win32"
