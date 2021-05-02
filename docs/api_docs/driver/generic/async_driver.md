@@ -368,7 +368,7 @@ class AsyncGenericDriver(AsyncDriver, BaseGenericDriver):
     @TimeoutOpsModifier()
     async def send_interactive(
         self,
-        interact_events: List[Tuple[str, str, Optional[bool]]],
+        interact_events: Union[List[Tuple[str, str]], List[Tuple[str, str, bool]]],
         *,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         privilege_level: str = "",
@@ -891,7 +891,7 @@ class AsyncGenericDriver(AsyncDriver, BaseGenericDriver):
     @TimeoutOpsModifier()
     async def send_interactive(
         self,
-        interact_events: List[Tuple[str, str, Optional[bool]]],
+        interact_events: Union[List[Tuple[str, str]], List[Tuple[str, str, bool]]],
         *,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         privilege_level: str = "",
@@ -1140,7 +1140,7 @@ Raises:
     
 
 ##### send_interactive
-`send_interactive(self, interact_events: List[Tuple[str, str, Optional[bool]]], *, failed_when_contains: Union[str, List[str], NoneType] = None, privilege_level: str = '', timeout_ops: Optional[float] = None) ‑> scrapli.response.Response`
+`send_interactive(self, interact_events: Union[List[Tuple[str, str]], List[Tuple[str, str, bool]]], *, failed_when_contains: Union[str, List[str], NoneType] = None, privilege_level: str = '', timeout_ops: Optional[float] = None) ‑> scrapli.response.Response`
 
 ```text
 Interact with a device with changing prompts per input.

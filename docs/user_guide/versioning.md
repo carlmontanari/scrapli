@@ -9,7 +9,7 @@ The reason for choosing CalVer is simply to make it very clear how old a given r
    been very stable -- there are only so many things you can/need to do over SSH after all!
  
 Please also note that the [CHANGELOG](/changelog) contains notes about each version (and is updated in develop branch 
-while updates are happening), and the "public" API is documented [here](/api_docs/public_api_status), and includes the 
+while updates are happening), and the "public" API is documented [here](/public_api_status), and includes the 
 date/version of each public method's creation as well as the latest updated/modified date and any relevant notes.
 
 A final note regarding versioning: scrapli updates are released as often as necessary/there are things to update

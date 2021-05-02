@@ -164,11 +164,11 @@ class TransportTimeout:
             N/A
 
         """
-        pool = ThreadPoolExecutor(max_workers=1)
-        future = pool.submit(wrapped_func, *args, **kwargs)
-        wait([future], timeout=self.transport_timeout_transport)
-        if not future.done():
-            self._handle_timeout()
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            future = pool.submit(wrapped_func, *args, **kwargs)
+            wait([future], timeout=self.transport_timeout_transport)
+            if not future.done():
+                self._handle_timeout()
         return future.result()
 
     def _signal_raise_exception(self, signum: Any, frame: Any) -> None:
@@ -328,11 +328,11 @@ class ChannelTimeout:
             N/A
 
         """
-        pool = ThreadPoolExecutor(max_workers=1)
-        future = pool.submit(wrapped_func, *args, **kwargs)
-        wait([future], timeout=self.channel_timeout_ops)
-        if not future.done():
-            self._handle_timeout()
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            future = pool.submit(wrapped_func, *args, **kwargs)
+            wait([future], timeout=self.channel_timeout_ops)
+            if not future.done():
+                self._handle_timeout()
         return future.result()
 
     def _signal_raise_exception(self, signum: Any, frame: Any) -> None:

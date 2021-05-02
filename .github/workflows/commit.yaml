@@ -82,3 +82,13 @@ jobs:
           # needed to make the terminal a tty (i think? without this system ssh is super broken)
           TERM: xterm
         run: python -m nox -p $FRIENDLY_PYTHON_VERSION -k "not darglint"
+
+  docs-test:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - run: docker run -v $(pwd):/docs --entrypoint "" squidfunk/mkdocs-material:latest ash -c 'pip install mdx_gh_links && mkdocs build --clean --strict'
+      - name: htmltest
+        run: |
+          curl https://htmltest.wjdp.uk | bash
+          ./bin/htmltest -c docs/htmltest.yml

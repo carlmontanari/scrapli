@@ -117,7 +117,7 @@ class BaseGenericDriver:
     def _pre_send_interactive(
         cls,
         host: str,
-        interact_events: List[Tuple[str, str, Optional[bool]]],
+        interact_events: Union[List[Tuple[str, str]], List[Tuple[str, str, bool]]],
         failed_when_contains: Optional[Union[str, List[str]]] = None,
     ) -> Response:
         """

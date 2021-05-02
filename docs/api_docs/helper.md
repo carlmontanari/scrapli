@@ -80,7 +80,7 @@ def _textfsm_get_template(platform: str, command: str) -> Optional[TextIO]:
         )
         return None
     template_name = cli_table.index.index[template_index]["Template"]
-    template = open(f"{template_dir}/{template_name}")
+    template = open(f"{template_dir}/{template_name}")  # pylint: disable=R1732
     return template
 
 
@@ -129,7 +129,7 @@ def textfsm_parse(
     import textfsm  # pylint: disable=C0415
 
     if not isinstance(template, TextIOWrapper):
-        template_file = open(template)
+        template_file = open(template)  # pylint: disable=R1732
     else:
         template_file = template
     re_table = textfsm.TextFSM(template_file)
