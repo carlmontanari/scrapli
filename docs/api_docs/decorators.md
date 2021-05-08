@@ -482,7 +482,7 @@ class DeprecateCommsAnsi:  # pragma: no cover
             if comms_ansi is None:
                 return wrapped_func(*args, **kwargs)
 
-            warn(self.warning, DeprecationWarning)
+            warn(self.warning, FutureWarning)
 
             return wrapped_func(*args, **kwargs)
 
@@ -730,7 +730,7 @@ class DeprecateCommsAnsi:  # pragma: no cover
             if comms_ansi is None:
                 return wrapped_func(*args, **kwargs)
 
-            warn(self.warning, DeprecationWarning)
+            warn(self.warning, FutureWarning)
 
             return wrapped_func(*args, **kwargs)
 
