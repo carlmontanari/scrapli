@@ -9,12 +9,10 @@ from scrapli.exceptions import ScrapliTypeError
     (
         ("comms_prompt_pattern", "new_value"),
         ("comms_return_char", "new_value"),
-        ("comms_ansi", True),
     ),
     ids=(
         "comms_prompt_pattern",
         "comms_return_char",
-        "comms_ansi",
     ),
 )
 def test_comms_properties(base_drivers, test_data):
@@ -39,9 +37,8 @@ def test_comms_properties(base_drivers, test_data):
     (
         ("comms_prompt_pattern", False),
         ("comms_return_char", False),
-        ("comms_ansi", "new_value"),
     ),
-    ids=("comms_prompt_pattern", "comms_return_char", "comms_ansi"),
+    ids=("comms_prompt_pattern", "comms_return_char"),
 )
 def test_comms_properties_exception(base_drivers, test_data):
     """Assert sync driver raises an exception for invalid comms property values"""

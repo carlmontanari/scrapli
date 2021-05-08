@@ -30,8 +30,6 @@ the base drivers.
     for each line, so be sure to add '\\s?' or similar if your device needs that. This
     should be mostly sorted for you if using network drivers (i.e. `IOSXEDriver`).
 - __comms_return_char__: character to used to send returns to host
-- __comms_ansi__: True/False strip comms_ansi characters from output, generally the default value of False should be 
-  fine
 - __ssh_config_file__: string to path for ssh config file, True to use default ssh config file or False to ignore 
   default ssh config file
 - __ssh_known_hosts_file__: string to path for ssh known hosts file, True to use default known file locations. Only 

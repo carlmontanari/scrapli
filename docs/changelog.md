@@ -25,6 +25,9 @@ Changelog
 - Improved typing for `send_interactive`
 - Remove napalm dev requirement -- switch to scrapli-cfg for dev environment config management; something something 
   eating dog food or whatever.
+- Deprecate `comms_ansi` -- if there is an ANSI escape sequence we will now just strip it out automagically; this is 
+  *not* currently a breaking change, but will be -- there is a deprecation warning now and `comms_ansi` will be 
+  fully removed in the 2022.01.30 release (and pre-releases).
 
 
 ## 2021.01.30
