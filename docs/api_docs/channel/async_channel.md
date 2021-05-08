@@ -110,7 +110,7 @@ class AsyncChannel(BaseChannel):
         if self.channel_log:
             self.channel_log.write(buf)
 
-        if self._base_channel_args.comms_ansi:
+        if b"\x1b" in buf.lower():
             buf = self._strip_ansi(buf=buf)
 
         return buf
@@ -283,11 +283,7 @@ class AsyncChannel(BaseChannel):
                 except asyncio.TimeoutError:
                     buf = b""
 
-                # if user sets comms_ansi *or* if we see an escape char, strip ansi... at least eos
-                # tends to have one escape char in the login output that will break things; other
-                # than this and telnet login, stripping ansi will only ever be governed by the users
-                # comms_ansi setting
-                if self._base_channel_args.comms_ansi or b"\x1b" in buf.lower():
+                if b"\x1b" in buf.lower():
                     buf = self._strip_ansi(buf=buf)
 
                 authenticate_buf += buf.lower()
@@ -370,7 +366,7 @@ class AsyncChannel(BaseChannel):
 
                 # telnet auth *probably* wont have ansi chars, but strip them if they do exist so
                 # we can at least get past auth
-                if self._base_channel_args.comms_ansi or b"\x1B" in buf:
+                if b"\x1B" in buf:
                     buf = self._strip_ansi(buf=buf)
 
                 if not buf:
@@ -745,7 +741,7 @@ class AsyncChannel(BaseChannel):
         if self.channel_log:
             self.channel_log.write(buf)
 
-        if self._base_channel_args.comms_ansi:
+        if b"\x1b" in buf.lower():
             buf = self._strip_ansi(buf=buf)
 
         return buf
@@ -918,11 +914,7 @@ class AsyncChannel(BaseChannel):
                 except asyncio.TimeoutError:
                     buf = b""
 
-                # if user sets comms_ansi *or* if we see an escape char, strip ansi... at least eos
-                # tends to have one escape char in the login output that will break things; other
-                # than this and telnet login, stripping ansi will only ever be governed by the users
-                # comms_ansi setting
-                if self._base_channel_args.comms_ansi or b"\x1b" in buf.lower():
+                if b"\x1b" in buf.lower():
                     buf = self._strip_ansi(buf=buf)
 
                 authenticate_buf += buf.lower()
@@ -1005,7 +997,7 @@ class AsyncChannel(BaseChannel):
 
                 # telnet auth *probably* wont have ansi chars, but strip them if they do exist so
                 # we can at least get past auth
-                if self._base_channel_args.comms_ansi or b"\x1B" in buf:
+                if b"\x1B" in buf:
                     buf = self._strip_ansi(buf=buf)
 
                 if not buf:

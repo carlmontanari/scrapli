@@ -37,6 +37,7 @@ from types import ModuleType
 from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
 
 from scrapli.channel.base_channel import BaseChannelArgs
+from scrapli.decorators import DeprecateCommsAnsi
 from scrapli.exceptions import ScrapliTransportPluginError, ScrapliTypeError, ScrapliValueError
 from scrapli.helper import format_user_warning, resolve_file
 from scrapli.logging import get_instance_logger
@@ -46,6 +47,7 @@ from scrapli.transport.base import BasePluginTransportArgs, BaseTransportArgs
 
 
 class BaseDriver:
+    @DeprecateCommsAnsi()
     def __init__(
         self,
         host: str,
@@ -61,7 +63,6 @@ class BaseDriver:
         timeout_ops: float = 30.0,
         comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,48}[#>$]\s*$",
         comms_return_char: str = "\n",
-        comms_ansi: bool = False,
         ssh_config_file: Union[str, bool] = False,
         ssh_known_hosts_file: Union[str, bool] = False,
         on_init: Optional[Callable[..., Any]] = None,
@@ -105,8 +106,6 @@ class BaseDriver:
                 should be mostly sorted for you if using network drivers (i.e. `IOSXEDriver`).
                 Lastly, the case insensitive is just a convenience factor so i can be lazy.
             comms_return_char: character to use to send returns to host
-            comms_ansi: True/False strip comms_ansi characters from output, generally the default
-                value of False should be fine
             ssh_config_file: string to path for ssh config file, True to use default ssh config file
                 or False to ignore default ssh config file
             ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
@@ -165,7 +164,6 @@ class BaseDriver:
         self._base_channel_args = BaseChannelArgs(
             comms_prompt_pattern=comms_prompt_pattern,
             comms_return_char=comms_return_char,
-            comms_ansi=comms_ansi,
             timeout_ops=timeout_ops,
             channel_log=channel_log,
             channel_log_mode=channel_log_mode,
@@ -269,7 +267,6 @@ class BaseDriver:
             f"timeout_ops={self._base_channel_args.timeout_ops!r}, "
             f"comms_prompt_pattern={self._base_channel_args.comms_prompt_pattern!r}, "
             f"comms_return_char={self._base_channel_args.comms_return_char!r}, "
-            f"comms_ansi={self._base_channel_args.comms_ansi!r}, "
             f"ssh_config_file={self.ssh_config_file!r}, "
             f"ssh_known_hosts_file={self.ssh_known_hosts_file!r}, "
             f"on_init={self.on_init!r}, "
@@ -760,45 +757,6 @@ class BaseDriver:
             raise ScrapliTypeError
 
         self._base_channel_args.comms_return_char = value
-
-    @property
-    def comms_ansi(self) -> bool:
-        """
-        Getter for `comms_ansi` attribute
-
-        Args:
-            N/A
-
-        Returns:
-            bool: comms_ansi bool
-
-        Raises:
-            N/A
-
-        """
-        return self._base_channel_args.comms_ansi
-
-    @comms_ansi.setter
-    def comms_ansi(self, value: bool) -> None:
-        """
-        Setter for `comms_ansi` attribute
-
-        Args:
-            value: bool value for comms_ansi
-
-        Returns:
-            None
-
-        Raises:
-            ScrapliTypeError: if value is not of type bool
-
-        """
-        self.logger.debug(f"setting 'comms_ansi' value to '{value}'")
-
-        if not isinstance(value, bool):
-            raise ScrapliTypeError
-
-        self._base_channel_args.comms_ansi = value
 
     @property
     def timeout_socket(self) -> float:
@@ -1025,8 +983,6 @@ Args:
         should be mostly sorted for you if using network drivers (i.e. `IOSXEDriver`).
         Lastly, the case insensitive is just a convenience factor so i can be lazy.
     comms_return_char: character to use to send returns to host
-    comms_ansi: True/False strip comms_ansi characters from output, generally the default
-        value of False should be fine
     ssh_config_file: string to path for ssh config file, True to use default ssh config file
         or False to ignore default ssh config file
     ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
@@ -1085,6 +1041,7 @@ Raises:
     <pre>
         <code class="python">
 class BaseDriver:
+    @DeprecateCommsAnsi()
     def __init__(
         self,
         host: str,
@@ -1100,7 +1057,6 @@ class BaseDriver:
         timeout_ops: float = 30.0,
         comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,48}[#>$]\s*$",
         comms_return_char: str = "\n",
-        comms_ansi: bool = False,
         ssh_config_file: Union[str, bool] = False,
         ssh_known_hosts_file: Union[str, bool] = False,
         on_init: Optional[Callable[..., Any]] = None,
@@ -1144,8 +1100,6 @@ class BaseDriver:
                 should be mostly sorted for you if using network drivers (i.e. `IOSXEDriver`).
                 Lastly, the case insensitive is just a convenience factor so i can be lazy.
             comms_return_char: character to use to send returns to host
-            comms_ansi: True/False strip comms_ansi characters from output, generally the default
-                value of False should be fine
             ssh_config_file: string to path for ssh config file, True to use default ssh config file
                 or False to ignore default ssh config file
             ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
@@ -1204,7 +1158,6 @@ class BaseDriver:
         self._base_channel_args = BaseChannelArgs(
             comms_prompt_pattern=comms_prompt_pattern,
             comms_return_char=comms_return_char,
-            comms_ansi=comms_ansi,
             timeout_ops=timeout_ops,
             channel_log=channel_log,
             channel_log_mode=channel_log_mode,
@@ -1308,7 +1261,6 @@ class BaseDriver:
             f"timeout_ops={self._base_channel_args.timeout_ops!r}, "
             f"comms_prompt_pattern={self._base_channel_args.comms_prompt_pattern!r}, "
             f"comms_return_char={self._base_channel_args.comms_return_char!r}, "
-            f"comms_ansi={self._base_channel_args.comms_ansi!r}, "
             f"ssh_config_file={self.ssh_config_file!r}, "
             f"ssh_known_hosts_file={self.ssh_known_hosts_file!r}, "
             f"on_init={self.on_init!r}, "
@@ -1801,45 +1753,6 @@ class BaseDriver:
         self._base_channel_args.comms_return_char = value
 
     @property
-    def comms_ansi(self) -> bool:
-        """
-        Getter for `comms_ansi` attribute
-
-        Args:
-            N/A
-
-        Returns:
-            bool: comms_ansi bool
-
-        Raises:
-            N/A
-
-        """
-        return self._base_channel_args.comms_ansi
-
-    @comms_ansi.setter
-    def comms_ansi(self, value: bool) -> None:
-        """
-        Setter for `comms_ansi` attribute
-
-        Args:
-            value: bool value for comms_ansi
-
-        Returns:
-            None
-
-        Raises:
-            ScrapliTypeError: if value is not of type bool
-
-        """
-        self.logger.debug(f"setting 'comms_ansi' value to '{value}'")
-
-        if not isinstance(value, bool):
-            raise ScrapliTypeError
-
-        self._base_channel_args.comms_ansi = value
-
-    @property
     def timeout_socket(self) -> float:
         """
         Getter for `timeout_socket` attribute
@@ -2030,24 +1943,6 @@ class BaseDriver:
 - scrapli.driver.base.async_driver.AsyncDriver
 - scrapli.driver.base.sync_driver.Driver
 #### Instance variables
-
-    
-`comms_ansi: bool`
-
-```text
-Getter for `comms_ansi` attribute
-
-Args:
-    N/A
-
-Returns:
-    bool: comms_ansi bool
-
-Raises:
-    N/A
-```
-
-
 
     
 `comms_prompt_pattern: str`
