@@ -1,4 +1,4 @@
-black==21.4b2
+black==21.5b0
 darglint==1.8.0
 isort==5.8.0
 mypy==0.812
@@ -10,7 +10,7 @@ pylama==7.7.1
 pylint==2.8.2
 pytest-asyncio==0.15.1
 pytest-cov==2.11.1
-pytest==6.2.3
+pytest==6.2.4
 scrapli-cfg==2021.7.30a8
 scrapli-replay==2021.7.30a4
 -r requirements-asyncssh.txt
