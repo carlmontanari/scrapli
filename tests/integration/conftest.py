@@ -97,4 +97,10 @@ def sync_conn(device_type, transport):
     )
     conn.open()
     yield conn
-    conn.close()
+
+    try:
+        conn.close()
+    except EOFError:
+        # sometimes paramiko has a fit and raises EOF... havent been able to tell why, but tired of
+        # builds failing for this one tiny issue
+        pass
