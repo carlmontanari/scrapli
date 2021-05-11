@@ -1,4 +1,5 @@
 import pty
+import sys
 from io import BytesIO
 
 import pytest
@@ -83,6 +84,7 @@ def test_build_open_cmd_alternate_options(system_transport):
     ]
 
 
+@pytest.mark.skipif(sys.version_info > (3, 9), reason="skipping pending pyfakefs 3.10 support")
 def test_close(fs, monkeypatch, system_transport):
     def _close(cls):
         pass
@@ -106,6 +108,7 @@ def test_isalive_no_session(system_transport):
     assert system_transport.isalive() is False
 
 
+@pytest.mark.skipif(sys.version_info > (3, 9), reason="skipping pending pyfakefs 3.10 support")
 def test_isalive(fs, system_transport):
     # lie and pretend the session is already assigned
     # giving ptyprocess a "real" (but not like... real real) fd seemed like a good idea... dunno
@@ -120,6 +123,7 @@ def test_isalive(fs, system_transport):
     assert system_transport.isalive() is True
 
 
+@pytest.mark.skipif(sys.version_info > (3, 9), reason="skipping pending pyfakefs 3.10 support")
 def test_read(fs, monkeypatch, system_transport):
     def _read(cls, _):
         return b"somebytes"
@@ -145,6 +149,7 @@ def test_read_exception_not_open(system_transport):
         system_transport.read()
 
 
+@pytest.mark.skipif(sys.version_info > (3, 9), reason="skipping pending pyfakefs 3.10 support")
 def test_read_exception_eof(fs, monkeypatch, system_transport):
     def _read(cls, _):
         raise EOFError
