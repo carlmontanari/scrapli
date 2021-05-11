@@ -1,5 +1,4 @@
 """scrapli.driver.core.cisco_iosxr.sync_driver"""
-import time
 from copy import deepcopy
 from io import BytesIO
 from typing import Any, Callable, Dict, List, Optional, Union
@@ -23,9 +22,6 @@ def iosxr_on_open(conn: NetworkDriver) -> None:
         N/A
 
     """
-    # sleep for session to establish; without this we never find base prompt for some reason?
-    # maybe this is an artifact from previous iterations/tests and can be done away with...
-    time.sleep(1)
     conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
     conn.send_command(command="terminal length 0")
     conn.send_command(command="terminal width 512")

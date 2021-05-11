@@ -16,7 +16,7 @@ from scrapli.driver.core import (
     NXOSDriver,
 )
 
-TEST_DATA_PATH = f"{Path(scrapli.__file__).parents[1]}/tests/functional/test_data"
+TEST_DATA_PATH = f"{Path(scrapli.__file__).parents[1]}/tests/test_data"
 
 USERNAME = "vrnetlab"
 PASSWORD = "VR-netlab9"

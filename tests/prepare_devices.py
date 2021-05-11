@@ -1,13 +1,10 @@
-import os
 import sys
 
 import jinja2
+from devices import DEVICES
 from scrapli_cfg import ScrapliCfg
-from test_data.devices import DEVICES
 
 from scrapli import Scrapli
-
-VROUTER_MODE = bool(os.environ.get("SCRAPLI_VROUTER", False))
 
 # we can just search at / because the "base_config" is already fully qualified
 JINJA_LOADER = jinja2.FileSystemLoader(searchpath="/")

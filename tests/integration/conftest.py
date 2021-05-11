@@ -3,6 +3,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest
+from run import sync_run_servers
 
 from scrapli.driver.core import (
     AsyncEOSDriver,
@@ -16,8 +17,6 @@ from scrapli.driver.core import (
     JunosDriver,
     NXOSDriver,
 )
-
-from .run import sync_run_servers
 
 DEVICES = {
     "common": {

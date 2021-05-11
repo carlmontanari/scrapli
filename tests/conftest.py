@@ -1,8 +1,8 @@
 from pathlib import Path
 
-import scrapli
-
-from .helper import (
+import pytest
+from devices import DEVICES
+from helper import (
     arista_eos_clean_response,
     cisco_iosxe_clean_response,
     cisco_iosxr_clean_response,
@@ -10,7 +10,21 @@ from .helper import (
     juniper_junos_clean_response,
 )
 
-TEST_DATA_PATH = f"{Path(scrapli.__file__).parents[1]}/tests/functional/test_data"
+import scrapli
+
+TEST_DATA_PATH = f"{Path(scrapli.__file__).parents[1]}/tests/test_data"
+
+
+@pytest.fixture(scope="session")
+def test_data_path():
+    """Fixture to provide path to test data files"""
+    return TEST_DATA_PATH
+
+
+@pytest.fixture(scope="session")
+def test_devices_dict():
+    """Fixture to return test devices dict"""
+    return DEVICES
 
 
 TEST_CASES = {
@@ -383,3 +397,9 @@ TEST_CASES = {
         },
     },
 }
+
+
+@pytest.fixture(scope="session")
+def test_cases():
+    """Fixture to return test cases shared across functional and integration tests"""
+    return TEST_CASES

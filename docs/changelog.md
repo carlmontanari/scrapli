@@ -28,6 +28,9 @@ Changelog
 - Deprecate `comms_ansi` -- if there is an ANSI escape sequence we will now just strip it out automagically; this is 
   *not* currently a breaking change, but will be -- there is a deprecation warning now and `comms_ansi` will be 
   fully removed in the 2022.01.30 release (and pre-releases).
+- Removed a sleep that was in the default `on_open` for IOSXR devices... this has been there a while and I *think* 
+  it was just a hold over from early early versions of scrapli that perhaps had a less robust in channel 
+  authentication handler. 1 second faster IOSXR for free! Yay!
 
 
 ## 2021.01.30

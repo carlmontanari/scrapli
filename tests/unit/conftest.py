@@ -1,10 +1,8 @@
 import sys
 from copy import deepcopy
-from pathlib import Path
 
 import pytest
 
-import scrapli
 from scrapli.channel.async_channel import AsyncChannel
 from scrapli.channel.base_channel import BaseChannel, BaseChannelArgs
 from scrapli.channel.sync_channel import Channel
@@ -61,24 +59,18 @@ from scrapli.transport.plugins.telnet.transport import TelnetTransport
 
 
 @pytest.fixture(scope="session")
-def unit_test_data_path():
-    """Fixture to provide path to unit test data files"""
-    return f"{Path(scrapli.__file__).parents[1]}/tests/test_data"
+def real_ssh_config_file_path(test_data_path):
+    return f"{test_data_path}/files/_ssh_config"
 
 
 @pytest.fixture(scope="session")
-def real_ssh_config_file_path(unit_test_data_path):
-    return f"{unit_test_data_path}/files/_ssh_config"
+def real_ssh_known_hosts_file_path(test_data_path):
+    return f"{test_data_path}/files/_ssh_known_hosts"
 
 
 @pytest.fixture(scope="session")
-def real_ssh_known_hosts_file_path(unit_test_data_path):
-    return f"{unit_test_data_path}/files/_ssh_known_hosts"
-
-
-@pytest.fixture(scope="session")
-def real_ssh_commands_file_path(unit_test_data_path):
-    return f"{unit_test_data_path}/files/cisco_iosxe_commands"
+def real_ssh_commands_file_path(test_data_path):
+    return f"{test_data_path}/files/cisco_iosxe_commands"
 
 
 # transport fixtures
