@@ -111,6 +111,9 @@ def test_textfsm_parse_failed_to_parse():
     assert result == []
 
 
+@pytest.mark.skipif(
+    sys.version_info.minor > 9, reason="genie not currently available for python 3.10"
+)
 def test_genie_parser():
     result = genie_parse("iosxe", "show ip arp", IOS_ARP)
     assert isinstance(result, dict)
@@ -119,6 +122,9 @@ def test_genie_parser():
     )
 
 
+@pytest.mark.skipif(
+    sys.version_info.minor > 9, reason="genie not currently available for python 3.10"
+)
 def test_genie_parse_failure():
     result = genie_parse("iosxe", "show ip arp", "not really arp data")
     assert result == []
