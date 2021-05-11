@@ -214,7 +214,9 @@ def paramiko_transport(base_transport_args, paramiko_transport_plugin_args):
 @pytest.fixture(scope="function")
 def ssh2_transport_plugin_args():
     """Fixture to provide ssh2 transport plugin args instance"""
-    from scrapli.transport.plugins.ssh2.transport import PluginTransportArgs as Ssh2PluginTransportArgs
+    from scrapli.transport.plugins.ssh2.transport import (
+        PluginTransportArgs as Ssh2PluginTransportArgs,
+    )
 
     plugin_args = Ssh2PluginTransportArgs(auth_username="scrapli", auth_password="scrapli")
     return plugin_args
