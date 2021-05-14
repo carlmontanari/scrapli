@@ -252,10 +252,6 @@ class AsyncChannel(BaseChannel):
                     buf = await asyncio.wait_for(self.read(), timeout=1)
                 except asyncio.TimeoutError:
                     buf = b""
-
-                if b"\x1b" in buf.lower():
-                    buf = self._strip_ansi(buf=buf)
-
                 authenticate_buf += buf.lower()
 
                 if b"password" in authenticate_buf:

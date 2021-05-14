@@ -241,10 +241,6 @@ class Channel(BaseChannel):
         with self._channel_lock():
             while True:
                 buf = self.read()
-
-                if b"\x1b" in buf.lower():
-                    buf = self._strip_ansi(buf=buf)
-
                 authenticate_buf += buf.lower()
 
                 self._ssh_message_handler(output=authenticate_buf)
