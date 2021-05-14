@@ -1,4 +1,4 @@
-"""examples.basic_usage.iosxe_driver"""
+"""examples.configuration_modes.eos_configure_session"""
 from scrapli.driver.core import EOSDriver
 
 MY_DEVICE = {

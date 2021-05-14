@@ -1,4 +1,4 @@
-"""examples.basic_usage.iosxe_driver"""
+"""examples.configuration_modes.iosxr_configure_exclusive"""
 from scrapli.driver.core import IOSXRDriver
 
 MY_DEVICE = {

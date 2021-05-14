@@ -33,6 +33,7 @@ Changelog
   authentication handler. 1 second faster IOSXR for free! Yay!
 - Fixed an issue with system transport where the transport would get closed twice causing an unhandled exception -- 
   thank you to Alex Lardschneider for finding this!
+- Added an example for the `enable_basic_logging` function as well as the `commandeer` method
 
 
 ## 2021.01.30
