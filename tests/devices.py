@@ -67,7 +67,6 @@ DEVICES = {
         "auth_strict_key": False,
         "host": "localhost" if VROUTER_MODE else "172.18.0.14",
         "port": 24022 if VROUTER_MODE else 22,
-        "comms_ansi": True,
         "base_config": f"{TEST_DATA_PATH}/base_configs/arista_eos",
     },
     "juniper_junos": {

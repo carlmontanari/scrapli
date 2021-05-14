@@ -29,7 +29,6 @@ def main():
         "timeout_ops": 120.0,
         "timeout_socket": 120.0,
         "timeout_transport": 120.0,
-        "comms_ansi": True,
     }
 
     collector = ScrapliCollector(
