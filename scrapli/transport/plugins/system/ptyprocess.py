@@ -369,7 +369,10 @@ class PtyProcess:
             # course re-create the fileobject this seems like an ok workaround because for reasons
             # unknown to me... this does not hang (even though in theory delete method just closes
             # things...?)
-            del self.fileobj
+            try:
+                del self.fileobj
+            except AttributeError:
+                pass
             # Give kernel time to update process status.
             time.sleep(self.delayafterclose)
             if self.isalive():

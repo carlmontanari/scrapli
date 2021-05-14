@@ -31,6 +31,8 @@ Changelog
 - Removed a sleep that was in the default `on_open` for IOSXR devices... this has been there a while and I *think* 
   it was just a hold over from early early versions of scrapli that perhaps had a less robust in channel 
   authentication handler. 1 second faster IOSXR for free! Yay!
+- Fixed an issue with system transport where the transport would get closed twice causing an unhandled exception -- 
+  thank you to Alex Lardschneider for finding this!
 
 
 ## 2021.01.30
