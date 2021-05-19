@@ -4,7 +4,7 @@ isort==5.8.0
 mypy==0.812
 nox==2020.12.31
 pycodestyle==2.7.0
-pydocstyle==6.0.0
+pydocstyle==6.1.1
 pyfakefs==4.4.0
 pylama==7.7.1
 pylint==2.8.2
