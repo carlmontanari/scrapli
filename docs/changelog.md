@@ -34,6 +34,9 @@ Changelog
 - Fixed an issue with system transport where the transport would get closed twice causing an unhandled exception -- 
   thank you to Alex Lardschneider for finding this!
 - Added an example for the `enable_basic_logging` function as well as the `commandeer` method
+- Improved priv level handling -- if you try to acquire "parallel" privileges (ex. configuration and configuration 
+  exclusive in IOSXR) previously we would say things worked, but we would just stay in configuration mode. This has 
+  been fixed (hopefully)!
 
 
 ## 2021.01.30

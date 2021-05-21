@@ -41,7 +41,7 @@ def test_deescalate(monkeypatch, sync_network_driver):
 
     monkeypatch.setattr("scrapli.channel.sync_channel.Channel.send_input", _send_input)
 
-    sync_network_driver._current_priv_level = "privilege_exec"
+    sync_network_driver._current_priv_level = sync_network_driver.privilege_levels["privilege_exec"]
     sync_network_driver._deescalate(
         current_priv=sync_network_driver.privilege_levels["privilege_exec"]
     )
@@ -53,7 +53,7 @@ def test_acquire_priv_no_action(monkeypatch, sync_network_driver):
         lambda _, **kwargs: "scrapli#",
     )
 
-    sync_network_driver._current_priv_level = "privilege_exec"
+    sync_network_driver._current_priv_level = sync_network_driver.privilege_levels["privilege_exec"]
     sync_network_driver.acquire_priv(desired_priv="privilege_exec")
 
 
@@ -76,7 +76,7 @@ def test_acquire_priv_escalate(monkeypatch, sync_network_driver):
     monkeypatch.setattr("scrapli.channel.sync_channel.Channel.get_prompt", _get_prompt)
     monkeypatch.setattr("scrapli.channel.sync_channel.Channel.send_input", _send_input)
 
-    sync_network_driver._current_priv_level = "privilege_exec"
+    sync_network_driver._current_priv_level = sync_network_driver.privilege_levels["privilege_exec"]
     sync_network_driver.acquire_priv(desired_priv="configuration")
 
 
@@ -99,7 +99,7 @@ def test_acquire_priv_deescalate(monkeypatch, sync_network_driver):
     monkeypatch.setattr("scrapli.channel.sync_channel.Channel.get_prompt", _get_prompt)
     monkeypatch.setattr("scrapli.channel.sync_channel.Channel.send_input", _send_input)
 
-    sync_network_driver._current_priv_level = "configuration"
+    sync_network_driver._current_priv_level = sync_network_driver.privilege_levels["configuration"]
     sync_network_driver.acquire_priv(desired_priv="privilege_exec")
 
 
@@ -114,7 +114,7 @@ def test_acquire_priv_failure(monkeypatch, sync_network_driver):
     monkeypatch.setattr("scrapli.channel.sync_channel.Channel.get_prompt", _get_prompt)
     monkeypatch.setattr("scrapli.channel.sync_channel.Channel.send_input", _send_input)
 
-    sync_network_driver._current_priv_level = "configuration"
+    sync_network_driver._current_priv_level = sync_network_driver.privilege_levels["configuration"]
 
     with pytest.raises(ScrapliPrivilegeError):
         sync_network_driver.acquire_priv(desired_priv="privilege_exec")

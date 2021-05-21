@@ -62,7 +62,9 @@ async def test_acquire_priv_no_action(monkeypatch, async_network_driver):
         _get_prompt,
     )
 
-    async_network_driver._current_priv_level = "privilege_exec"
+    async_network_driver._current_priv_level = async_network_driver.privilege_levels[
+        "privilege_exec"
+    ]
     await async_network_driver.acquire_priv(desired_priv="privilege_exec")
 
 
@@ -86,7 +88,9 @@ async def test_acquire_priv_escalate(monkeypatch, async_network_driver):
     monkeypatch.setattr("scrapli.channel.async_channel.AsyncChannel.get_prompt", _get_prompt)
     monkeypatch.setattr("scrapli.channel.async_channel.AsyncChannel.send_input", _send_input)
 
-    async_network_driver._current_priv_level = "privilege_exec"
+    async_network_driver._current_priv_level = async_network_driver.privilege_levels[
+        "privilege_exec"
+    ]
     await async_network_driver.acquire_priv(desired_priv="configuration")
 
 
@@ -110,7 +114,9 @@ async def test_acquire_priv_deescalate(monkeypatch, async_network_driver):
     monkeypatch.setattr("scrapli.channel.async_channel.AsyncChannel.get_prompt", _get_prompt)
     monkeypatch.setattr("scrapli.channel.async_channel.AsyncChannel.send_input", _send_input)
 
-    async_network_driver._current_priv_level = "configuration"
+    async_network_driver._current_priv_level = async_network_driver.privilege_levels[
+        "configuration"
+    ]
     await async_network_driver.acquire_priv(desired_priv="privilege_exec")
 
 
@@ -126,7 +132,9 @@ async def test_acquire_priv_failure(monkeypatch, async_network_driver):
     monkeypatch.setattr("scrapli.channel.async_channel.AsyncChannel.get_prompt", _get_prompt)
     monkeypatch.setattr("scrapli.channel.async_channel.AsyncChannel.send_input", _send_input)
 
-    async_network_driver._current_priv_level = "configuration"
+    async_network_driver._current_priv_level = async_network_driver.privilege_levels[
+        "configuration"
+    ]
 
     with pytest.raises(ScrapliPrivilegeError):
         await async_network_driver.acquire_priv(desired_priv="privilege_exec")
