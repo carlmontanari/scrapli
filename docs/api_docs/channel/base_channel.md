@@ -39,6 +39,8 @@ from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliTypeError, Sc
 from scrapli.logging import get_instance_logger
 from scrapli.transport.base import AsyncTransport, Transport
 
+ANSI_ESCAPE_PATTERN = re.compile(rb"\x1b(\[.*?[@-~]|\].*?(\x07|\x1b\\))")
+
 
 @dataclass()
 class BaseChannelArgs:
@@ -373,8 +375,7 @@ class BaseChannel:
             N/A
 
         """
-        ansi_escape_pattern = re.compile(rb"\x1b(\[.*?[@-~]|\].*?(\x07|\x1b\\))")
-        buf = re.sub(pattern=ansi_escape_pattern, repl=b"", string=buf)
+        buf = re.sub(pattern=ANSI_ESCAPE_PATTERN, repl=b"", string=buf)
         return buf
 
     @staticmethod
@@ -714,8 +715,7 @@ class BaseChannel:
             N/A
 
         """
-        ansi_escape_pattern = re.compile(rb"\x1b(\[.*?[@-~]|\].*?(\x07|\x1b\\))")
-        buf = re.sub(pattern=ansi_escape_pattern, repl=b"", string=buf)
+        buf = re.sub(pattern=ANSI_ESCAPE_PATTERN, repl=b"", string=buf)
         return buf
 
     @staticmethod

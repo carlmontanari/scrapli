@@ -282,10 +282,6 @@ class AsyncChannel(BaseChannel):
                     buf = await asyncio.wait_for(self.read(), timeout=1)
                 except asyncio.TimeoutError:
                     buf = b""
-
-                if b"\x1b" in buf.lower():
-                    buf = self._strip_ansi(buf=buf)
-
                 authenticate_buf += buf.lower()
 
                 if b"password" in authenticate_buf:
@@ -363,11 +359,6 @@ class AsyncChannel(BaseChannel):
         async with self._channel_lock():
             while True:
                 buf = await self.read()
-
-                # telnet auth *probably* wont have ansi chars, but strip them if they do exist so
-                # we can at least get past auth
-                if b"\x1B" in buf:
-                    buf = self._strip_ansi(buf=buf)
 
                 if not buf:
                     current_iteration_time = datetime.now().timestamp()
@@ -913,10 +904,6 @@ class AsyncChannel(BaseChannel):
                     buf = await asyncio.wait_for(self.read(), timeout=1)
                 except asyncio.TimeoutError:
                     buf = b""
-
-                if b"\x1b" in buf.lower():
-                    buf = self._strip_ansi(buf=buf)
-
                 authenticate_buf += buf.lower()
 
                 if b"password" in authenticate_buf:
@@ -994,11 +981,6 @@ class AsyncChannel(BaseChannel):
         async with self._channel_lock():
             while True:
                 buf = await self.read()
-
-                # telnet auth *probably* wont have ansi chars, but strip them if they do exist so
-                # we can at least get past auth
-                if b"\x1B" in buf:
-                    buf = self._strip_ansi(buf=buf)
 
                 if not buf:
                     current_iteration_time = datetime.now().timestamp()

@@ -344,19 +344,31 @@ class BaseNetworkDriver:
         # decide if we are already at the desired priv, then we don't need to do any thing!
         current_priv_patterns = self._determine_current_priv(current_prompt=current_prompt)
 
-        # if multiple patterns match pick the zeroith... hopefully this never happens though... :)
-        current_priv = self.privilege_levels[current_priv_patterns[0]]
+        if self._current_priv_level.name in current_priv_patterns:
+            current_priv = self.privilege_levels[self._current_priv_level.name]
+        elif destination_priv in current_priv_patterns:
+            current_priv = self.privilege_levels[destination_priv]
+        else:
+            # if multiple patterns match pick the zeroith... hopefully this never happens though...
+            # and it *shouldn't* because right now the only way to have the same priv patterns is
+            # to be *basically* the same privilege level -- i.e. configuration and configuration
+            # exclusive for iosxr
+            current_priv = self.privilege_levels[current_priv_patterns[0]]
 
-        if destination_priv in current_priv_patterns:
+        if current_priv.name == destination_priv:
             self.logger.debug(
                 "determined current privilege level is target privilege level, no action needed"
             )
             self._current_priv_level = self.privilege_levels[destination_priv]
-            return PrivilegeAction.NO_ACTION, current_priv
+            return PrivilegeAction.NO_ACTION, self.privilege_levels[destination_priv]
 
         map_to_destination_priv = self._build_priv_change_map(
             starting_priv_name=current_priv.name, destination_priv_name=destination_priv
         )
+
+        # at this point we basically dont *know* the privilege leve we are at (or we wont/cant after
+        # we do an escalation or deescalation, so we reset to the dummy priv level
+        self._current_priv_level = DUMMY_PRIV_LEVEL
 
         if self.privilege_levels[map_to_destination_priv[1]].previous_priv != current_priv.name:
             self.logger.debug("determined privilege deescalation necessary")
@@ -786,19 +798,31 @@ class BaseNetworkDriver:
         # decide if we are already at the desired priv, then we don't need to do any thing!
         current_priv_patterns = self._determine_current_priv(current_prompt=current_prompt)
 
-        # if multiple patterns match pick the zeroith... hopefully this never happens though... :)
-        current_priv = self.privilege_levels[current_priv_patterns[0]]
+        if self._current_priv_level.name in current_priv_patterns:
+            current_priv = self.privilege_levels[self._current_priv_level.name]
+        elif destination_priv in current_priv_patterns:
+            current_priv = self.privilege_levels[destination_priv]
+        else:
+            # if multiple patterns match pick the zeroith... hopefully this never happens though...
+            # and it *shouldn't* because right now the only way to have the same priv patterns is
+            # to be *basically* the same privilege level -- i.e. configuration and configuration
+            # exclusive for iosxr
+            current_priv = self.privilege_levels[current_priv_patterns[0]]
 
-        if destination_priv in current_priv_patterns:
+        if current_priv.name == destination_priv:
             self.logger.debug(
                 "determined current privilege level is target privilege level, no action needed"
             )
             self._current_priv_level = self.privilege_levels[destination_priv]
-            return PrivilegeAction.NO_ACTION, current_priv
+            return PrivilegeAction.NO_ACTION, self.privilege_levels[destination_priv]
 
         map_to_destination_priv = self._build_priv_change_map(
             starting_priv_name=current_priv.name, destination_priv_name=destination_priv
         )
+
+        # at this point we basically dont *know* the privilege leve we are at (or we wont/cant after
+        # we do an escalation or deescalation, so we reset to the dummy priv level
+        self._current_priv_level = DUMMY_PRIV_LEVEL
 
         if self.privilege_levels[map_to_destination_priv[1]].previous_priv != current_priv.name:
             self.logger.debug("determined privilege deescalation necessary")

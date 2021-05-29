@@ -271,10 +271,6 @@ class Channel(BaseChannel):
         with self._channel_lock():
             while True:
                 buf = self.read()
-
-                if b"\x1b" in buf.lower():
-                    buf = self._strip_ansi(buf=buf)
-
                 authenticate_buf += buf.lower()
 
                 self._ssh_message_handler(output=authenticate_buf)
@@ -352,11 +348,6 @@ class Channel(BaseChannel):
         with self._channel_lock():
             while True:
                 buf = self.read()
-
-                # telnet auth *probably* wont have ansi chars, but strip them if they do exist so
-                # we can at least get past auth
-                if b"\x1B" in buf:
-                    buf = self._strip_ansi(buf=buf)
 
                 if not buf:
                     current_iteration_time = datetime.now().timestamp()
@@ -897,10 +888,6 @@ class Channel(BaseChannel):
         with self._channel_lock():
             while True:
                 buf = self.read()
-
-                if b"\x1b" in buf.lower():
-                    buf = self._strip_ansi(buf=buf)
-
                 authenticate_buf += buf.lower()
 
                 self._ssh_message_handler(output=authenticate_buf)
@@ -978,11 +965,6 @@ class Channel(BaseChannel):
         with self._channel_lock():
             while True:
                 buf = self.read()
-
-                # telnet auth *probably* wont have ansi chars, but strip them if they do exist so
-                # we can at least get past auth
-                if b"\x1B" in buf:
-                    buf = self._strip_ansi(buf=buf)
 
                 if not buf:
                     current_iteration_time = datetime.now().timestamp()
