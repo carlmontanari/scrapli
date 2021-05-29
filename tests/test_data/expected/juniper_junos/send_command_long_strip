@@ -5,7 +5,7 @@ system {
 CRYPTO_REPLACED
     }
     login {
-        user vrnetlab {
+        user boxen {
             uid 2000;
             class super-user;
             authentication {

@@ -18,7 +18,7 @@ feature scp-server
 no password strength-check
 CRYPTO_REPLACED
 CRYPTO_REPLACED
-username vrnetlab passphrase  lifetime 99999 warntime 14 gracetime 3
+username boxen passphrase  lifetime 99999 warntime 14 gracetime 3
 ip domain-lookup
 copp profile strict
 CRYPTO_REPLACED

@@ -4,7 +4,7 @@ Building configuration...
 !! Last configuration change at TIME_STAMP_REPLACED
 !
 telnet vrf default ipv4 server max-servers 10
-username vrnetlab
+username boxen
  group root-lr
  group cisco-support
 CRYPTO_REPLACED

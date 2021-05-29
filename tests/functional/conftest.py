@@ -18,7 +18,7 @@ def real_invalid_ssh_key_path(test_data_path):
 
 @pytest.fixture(scope="session")
 def real_valid_ssh_key_path(test_data_path):
-    return f"{test_data_path}/files/vrnetlab_key"
+    return f"{test_data_path}/files/scrapli_key"
 
 
 @pytest.fixture(

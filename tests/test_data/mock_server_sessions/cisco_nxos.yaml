@@ -68,7 +68,7 @@ events:
         type: standard
       show run:
         channel_output: "\n!Command: show running-config\n!Running configuration last\
-          \ done at: Sat Feb  6 17:36:14 2021\n!Time: Sat Feb  6 19:41:17 2021\n\n\
+          \ done at: Fri May 28 20:56:59 2021\n!Time: Fri May 28 23:27:47 2021\n\n\
           version 9.2(4) Bios:version  \nvdc switch id 1\n  limit-resource vlan minimum\
           \ 16 maximum 4094\n  limit-resource vrf minimum 2 maximum 4096\n  limit-resource\
           \ port-channel minimum 0 maximum 511\n  limit-resource u4route-mem minimum\
@@ -76,8 +76,8 @@ events:
           \  limit-resource m4route-mem minimum 58 maximum 58\n  limit-resource m6route-mem\
           \ minimum 8 maximum 8\nfeature telnet\nfeature nxapi\nfeature scp-server\n\
           \nno password strength-check\nusername admin password 5 $5$LOIMHI$hIaO64VM40/x.MTQoeWg8/IAn2iBY5jv4WZyzQbb5q9\
-          \ \n role network-admin\nusername vrnetlab password 5 $5$AT5s3bhE$4/A..pCU3QK/YfesFHYPgbStJuRKK2JoYO7dEOG\n\
-          N2n3  role network-admin\n--More--"
+          \ \n role network-admin\nusername boxen password 5 $5$rFrywOjz$buvWY6uEPf79GVyfGNO6SGOi5gbxV2VAcsbBtyXDZy\n\
+          B  role network-admin\n--More--"
         result_privilege_level: privilege_exec
         returns_prompt: false
         closes_connection: false
@@ -157,8 +157,8 @@ events:
           \ 9.2(4)\n  BIOS compile time:  \n  NXOS image file is: bootflash:///nxos.9.2.4.bin\n\
           \  NXOS compile time:  8/20/2019 7:00:00 [08/20/2019 15:52:22]\n\n\nHardware\n\
           \  cisco Nexus9000 9000v Chassis \n   with 8159680 kB of memory.\n  Processor\
-          \ Board ID 9HV124BGIKU\n\n  Device name: switch\n  bootflash:    3509454\
-          \ kB\nKernel uptime is 0 day(s), 2 hour(s), 15 minute(s), 27 second(s)\n\
+          \ Board ID 9FPSFFLS9ZL\n\n  Device name: switch\n  bootflash:    3509454\
+          \ kB\nKernel uptime is 0 day(s), 3 hour(s), 31 minute(s), 27 second(s)\n\
           \nLast reset \n  Reason: Unknown\n  System version: \n  Service: \n\nplugin\n\
           \  Core Plugin, Ethernet Plugin\n\nActive Package(s):\n\t\nswitch# "
         result_privilege_level: privilege_exec
@@ -167,7 +167,7 @@ events:
         type: standard
       show run:
         channel_output: "\n!Command: show running-config\n!Running configuration last\
-          \ done at: Sat Feb  6 17:36:14 2021\n!Time: Sat Feb  6 19:42:26 2021\n\n\
+          \ done at: Fri May 28 20:56:59 2021\n!Time: Fri May 28 23:29:00 2021\n\n\
           version 9.2(4) Bios:version  \nvdc switch id 1\n  limit-resource vlan minimum\
           \ 16 maximum 4094\n  limit-resource vrf minimum 2 maximum 4096\n  limit-resource\
           \ port-channel minimum 0 maximum 511\n  limit-resource u4route-mem minimum\
@@ -175,12 +175,12 @@ events:
           \  limit-resource m4route-mem minimum 58 maximum 58\n  limit-resource m6route-mem\
           \ minimum 8 maximum 8\nfeature telnet\nfeature nxapi\nfeature scp-server\n\
           \nno password strength-check\nusername admin password 5 $5$LOIMHI$hIaO64VM40/x.MTQoeWg8/IAn2iBY5jv4WZyzQbb5q9\
-          \  role network-admin\nusername vrnetlab password 5 $5$AT5s3bhE$4/A..pCU3QK/YfesFHYPgbStJuRKK2JoYO7dEOGN2n3\
-          \  role network-admin\nusername vrnetlab passphrase  lifetime 99999 warntime\
+          \  role network-admin\nusername boxen password 5 $5$rFrywOjz$buvWY6uEPf79GVyfGNO6SGOi5gbxV2VAcsbBtyXDZyB\
+          \  role network-admin\nusername boxen passphrase  lifetime 99999 warntime\
           \ 14 gracetime 3\nip domain-lookup\ncopp profile strict\nsnmp-server user\
           \ admin network-admin auth md5 0xd42fc9f6e153a348e1ab40f0f5b84589 priv 0xd42fc9f6e153a348e1ab40f0f5b84589\
-          \ localizedkey\nsnmp-server user vrnetlab network-admin auth md5 0x1a3abb28531cf988a22cc61af30861a7\
-          \ priv 0x1a3abb28531cf988a22cc61af30861a7 localizedkey\nrmon event 1 description\
+          \ localizedkey\nsnmp-server user boxen network-admin auth md5 0xc168bfc2b500129bd35ee550b6d5d93d\
+          \ priv 0xc168bfc2b500129bd35ee550b6d5d93d localizedkey\nrmon event 1 description\
           \ FATAL(1) owner PMON@FATAL\nrmon event 2 description CRITICAL(2) owner\
           \ PMON@CRITICAL\nrmon event 3 description ERROR(3) owner PMON@ERROR\nrmon\
           \ event 4 description WARNING(4) owner PMON@WARNING\nrmon event 5 description\
@@ -316,7 +316,7 @@ events:
         type: standard
       show run:
         channel_output: "\n!Command: show running-config\n!Running configuration last\
-          \ done at: Sat Feb  6 17:36:14 2021\n!Time: Sat Feb  6 19:41:18 2021\n\n\
+          \ done at: Fri May 28 20:56:59 2021\n!Time: Fri May 28 23:27:48 2021\n\n\
           version 9.2(4) Bios:version  \nvdc switch id 1\n  limit-resource vlan minimum\
           \ 16 maximum 4094\n  limit-resource vrf minimum 2 maximum 4096\n  limit-resource\
           \ port-channel minimum 0 maximum 511\n  limit-resource u4route-mem minimum\
@@ -324,8 +324,8 @@ events:
           \  limit-resource m4route-mem minimum 58 maximum 58\n  limit-resource m6route-mem\
           \ minimum 8 maximum 8\nfeature telnet\nfeature nxapi\nfeature scp-server\n\
           \nno password strength-check\nusername admin password 5 $5$LOIMHI$hIaO64VM40/x.MTQoeWg8/IAn2iBY5jv4WZyzQbb5q9\
-          \ \n role network-admin\nusername vrnetlab password 5 $5$AT5s3bhE$4/A..pCU3QK/YfesFHYPgbStJuRKK2JoYO7dEOG\n\
-          N2n3  role network-admin\n--More--"
+          \ \n role network-admin\nusername boxen password 5 $5$rFrywOjz$buvWY6uEPf79GVyfGNO6SGOi5gbxV2VAcsbBtyXDZy\n\
+          B  role network-admin\n--More--"
         result_privilege_level: configuration
         returns_prompt: false
         closes_connection: false
@@ -405,8 +405,8 @@ events:
           \ 9.2(4)\n  BIOS compile time:  \n  NXOS image file is: bootflash:///nxos.9.2.4.bin\n\
           \  NXOS compile time:  8/20/2019 7:00:00 [08/20/2019 15:52:22]\n\n\nHardware\n\
           \  cisco Nexus9000 9000v Chassis \n   with 8159680 kB of memory.\n  Processor\
-          \ Board ID 9HV124BGIKU\n\n  Device name: switch\n  bootflash:    3509454\
-          \ kB\nKernel uptime is 0 day(s), 2 hour(s), 15 minute(s), 35 second(s)\n\
+          \ Board ID 9FPSFFLS9ZL\n\n  Device name: switch\n  bootflash:    3509454\
+          \ kB\nKernel uptime is 0 day(s), 3 hour(s), 31 minute(s), 34 second(s)\n\
           \nLast reset \n  Reason: Unknown\n  System version: \n  Service: \n\nplugin\n\
           \  Core Plugin, Ethernet Plugin\n\nActive Package(s):\n\t\nswitch(config)# "
         result_privilege_level: configuration
@@ -415,7 +415,7 @@ events:
         type: standard
       show run:
         channel_output: "\n!Command: show running-config\n!Running configuration last\
-          \ done at: Sat Feb  6 17:36:14 2021\n!Time: Sat Feb  6 19:42:28 2021\n\n\
+          \ done at: Fri May 28 20:56:59 2021\n!Time: Fri May 28 23:29:03 2021\n\n\
           version 9.2(4) Bios:version  \nvdc switch id 1\n  limit-resource vlan minimum\
           \ 16 maximum 4094\n  limit-resource vrf minimum 2 maximum 4096\n  limit-resource\
           \ port-channel minimum 0 maximum 511\n  limit-resource u4route-mem minimum\
@@ -423,12 +423,12 @@ events:
           \  limit-resource m4route-mem minimum 58 maximum 58\n  limit-resource m6route-mem\
           \ minimum 8 maximum 8\nfeature telnet\nfeature nxapi\nfeature scp-server\n\
           \nno password strength-check\nusername admin password 5 $5$LOIMHI$hIaO64VM40/x.MTQoeWg8/IAn2iBY5jv4WZyzQbb5q9\
-          \  role network-admin\nusername vrnetlab password 5 $5$AT5s3bhE$4/A..pCU3QK/YfesFHYPgbStJuRKK2JoYO7dEOGN2n3\
-          \  role network-admin\nusername vrnetlab passphrase  lifetime 99999 warntime\
+          \  role network-admin\nusername boxen password 5 $5$rFrywOjz$buvWY6uEPf79GVyfGNO6SGOi5gbxV2VAcsbBtyXDZyB\
+          \  role network-admin\nusername boxen passphrase  lifetime 99999 warntime\
           \ 14 gracetime 3\nip domain-lookup\ncopp profile strict\nsnmp-server user\
           \ admin network-admin auth md5 0xd42fc9f6e153a348e1ab40f0f5b84589 priv 0xd42fc9f6e153a348e1ab40f0f5b84589\
-          \ localizedkey\nsnmp-server user vrnetlab network-admin auth md5 0x1a3abb28531cf988a22cc61af30861a7\
-          \ priv 0x1a3abb28531cf988a22cc61af30861a7 localizedkey\nrmon event 1 description\
+          \ localizedkey\nsnmp-server user boxen network-admin auth md5 0xc168bfc2b500129bd35ee550b6d5d93d\
+          \ priv 0xc168bfc2b500129bd35ee550b6d5d93d localizedkey\nrmon event 1 description\
           \ FATAL(1) owner PMON@FATAL\nrmon event 2 description CRITICAL(2) owner\
           \ PMON@CRITICAL\nrmon event 3 description ERROR(3) owner PMON@ERROR\nrmon\
           \ event 4 description WARNING(4) owner PMON@WARNING\nrmon event 5 description\
@@ -564,7 +564,7 @@ events:
         type: standard
       show run:
         channel_output: "\n!Command: show running-config\n!Running configuration last\
-          \ done at: Sat Feb  6 17:36:14 2021\n!Time: Sat Feb  6 19:41:19 2021\n\n\
+          \ done at: Fri May 28 20:56:59 2021\n!Time: Fri May 28 23:27:50 2021\n\n\
           version 9.2(4) Bios:version  \nvdc switch id 1\n  limit-resource vlan minimum\
           \ 16 maximum 4094\n  limit-resource vrf minimum 2 maximum 4096\n  limit-resource\
           \ port-channel minimum 0 maximum 511\n  limit-resource u4route-mem minimum\
@@ -572,8 +572,8 @@ events:
           \  limit-resource m4route-mem minimum 58 maximum 58\n  limit-resource m6route-mem\
           \ minimum 8 maximum 8\nfeature telnet\nfeature nxapi\nfeature scp-server\n\
           \nno password strength-check\nusername admin password 5 $5$LOIMHI$hIaO64VM40/x.MTQoeWg8/IAn2iBY5jv4WZyzQbb5q9\
-          \ \n role network-admin\nusername vrnetlab password 5 $5$AT5s3bhE$4/A..pCU3QK/YfesFHYPgbStJuRKK2JoYO7dEOG\n\
-          N2n3  role network-admin\n--More--"
+          \ \n role network-admin\nusername boxen password 5 $5$rFrywOjz$buvWY6uEPf79GVyfGNO6SGOi5gbxV2VAcsbBtyXDZy\n\
+          B  role network-admin\n--More--"
         result_privilege_level: tclsh
         returns_prompt: false
         closes_connection: false
@@ -653,8 +653,8 @@ events:
           \ 9.2(4)\n  BIOS compile time:  \n  NXOS image file is: bootflash:///nxos.9.2.4.bin\n\
           \  NXOS compile time:  8/20/2019 7:00:00 [08/20/2019 15:52:22]\n\n\nHardware\n\
           \  cisco Nexus9000 9000v Chassis \n   with 8159680 kB of memory.\n  Processor\
-          \ Board ID 9HV124BGIKU\n\n  Device name: switch\n  bootflash:    3509454\
-          \ kB\nKernel uptime is 0 day(s), 2 hour(s), 15 minute(s), 43 second(s)\n\
+          \ Board ID 9FPSFFLS9ZL\n\n  Device name: switch\n  bootflash:    3509454\
+          \ kB\nKernel uptime is 0 day(s), 3 hour(s), 31 minute(s), 42 second(s)\n\
           \nLast reset \n  Reason: Unknown\n  System version: \n  Service: \n\nplugin\n\
           \  Core Plugin, Ethernet Plugin\n\nActive Package(s):\n\t\nswitch-tcl# "
         result_privilege_level: tclsh
@@ -663,7 +663,7 @@ events:
         type: standard
       show run:
         channel_output: "\n!Command: show running-config\n!Running configuration last\
-          \ done at: Sat Feb  6 17:36:14 2021\n!Time: Sat Feb  6 19:42:30 2021\n\n\
+          \ done at: Fri May 28 20:56:59 2021\n!Time: Fri May 28 23:29:05 2021\n\n\
           version 9.2(4) Bios:version  \nvdc switch id 1\n  limit-resource vlan minimum\
           \ 16 maximum 4094\n  limit-resource vrf minimum 2 maximum 4096\n  limit-resource\
           \ port-channel minimum 0 maximum 511\n  limit-resource u4route-mem minimum\
@@ -671,12 +671,12 @@ events:
           \  limit-resource m4route-mem minimum 58 maximum 58\n  limit-resource m6route-mem\
           \ minimum 8 maximum 8\nfeature telnet\nfeature nxapi\nfeature scp-server\n\
           \nno password strength-check\nusername admin password 5 $5$LOIMHI$hIaO64VM40/x.MTQoeWg8/IAn2iBY5jv4WZyzQbb5q9\
-          \  role network-admin\nusername vrnetlab password 5 $5$AT5s3bhE$4/A..pCU3QK/YfesFHYPgbStJuRKK2JoYO7dEOGN2n3\
-          \  role network-admin\nusername vrnetlab passphrase  lifetime 99999 warntime\
+          \  role network-admin\nusername boxen password 5 $5$rFrywOjz$buvWY6uEPf79GVyfGNO6SGOi5gbxV2VAcsbBtyXDZyB\
+          \  role network-admin\nusername boxen passphrase  lifetime 99999 warntime\
           \ 14 gracetime 3\nip domain-lookup\ncopp profile strict\nsnmp-server user\
           \ admin network-admin auth md5 0xd42fc9f6e153a348e1ab40f0f5b84589 priv 0xd42fc9f6e153a348e1ab40f0f5b84589\
-          \ localizedkey\nsnmp-server user vrnetlab network-admin auth md5 0x1a3abb28531cf988a22cc61af30861a7\
-          \ priv 0x1a3abb28531cf988a22cc61af30861a7 localizedkey\nrmon event 1 description\
+          \ localizedkey\nsnmp-server user boxen network-admin auth md5 0xc168bfc2b500129bd35ee550b6d5d93d\
+          \ priv 0xc168bfc2b500129bd35ee550b6d5d93d localizedkey\nrmon event 1 description\
           \ FATAL(1) owner PMON@FATAL\nrmon event 2 description CRITICAL(2) owner\
           \ PMON@CRITICAL\nrmon event 3 description ERROR(3) owner PMON@ERROR\nrmon\
           \ event 4 description WARNING(4) owner PMON@WARNING\nrmon event 5 description\

@@ -13,7 +13,7 @@ boot-start-marker
 boot-end-marker
 !
 !
-enable secret 9 $9$h6Ayg86tb/EImk$2T6Ns.ke08cAlZ2TbMf3YRCYr7ngDGzgAxZB0YMe7lQ
+enable secret 9 $9$xvWnx8Fe35f8xE$E9ijp7GM/V48P5y1Uz3IEPtotXgwkJKYJmN0q3q2E92
 !
 no aaa new-model
 call-home
@@ -79,7 +79,7 @@ file prompt quiet
 !
 spanning-tree extend system-id
 !
-username vrnetlab privilege 15 password 0 VR-netlab9
+username boxen priv 15 pass 0 b0x3N-b0x3N
 !
 redundancy
 !
@@ -193,7 +193,7 @@ ip scp server enable
 !
 !
 ip ssh pubkey-chain
-  username vrnetlab
+  username boxen
    key-hash ssh-rsa 5CC74A68B18B026A1709FB09D1F44E2F
 control-plane
 !

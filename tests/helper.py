@@ -30,8 +30,7 @@ def cisco_iosxe_clean_response(response):
         return response
 
     def _replace_call_home_comment(response):
-        # vrnetlab router seems to get this comment string but vrouter one does not. unclear why,
-        # but we'll just remove it just in case
+        # this shows up in some csr1000v versions, so strip it out just in case
         crypto_pattern = re.compile(
             r"(^.*$)\n^! Call-home is enabled by Smart-Licensing.$(\n^.*$)", flags=re.M | re.I
         )
@@ -39,9 +38,7 @@ def cisco_iosxe_clean_response(response):
         return response
 
     def _replace_certificates_and_license(response):
-        # replace pki/certificate stuff and license all in one go -- this is always lumped together
-        # but in vrnetlab vs vrouter things are sometimes in different order (trustpoints are
-        # switched for example) so comparing strings obviously fails even though content is correct
+        # replace pki/certificate stuff and license all in one go
         crypto_pattern = re.compile(
             r"^crypto pki .*\nlicense udi pid CSR1000V sn \w+$", flags=re.M | re.I | re.S
         )

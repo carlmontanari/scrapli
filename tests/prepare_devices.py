@@ -14,7 +14,7 @@ JINJA_ENV = jinja2.Environment(
 
 
 def prepare_device(test_devices):
-    # push base config via napalm to ensure consistent testing experience
+    # push base config via scrapli-cfg to ensure consistent testing experience
     for device in test_devices:
         base_config = DEVICES[device]["base_config"]
         conn_dict = {

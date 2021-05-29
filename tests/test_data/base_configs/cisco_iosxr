@@ -1,8 +1,8 @@
 telnet vrf default ipv4 server max-servers 10
-username vrnetlab
+username boxen
  group root-lr
  group cisco-support
- secret 5 $1$5aFx$Ul43RjEjA7C4LFsghgQCu0
+ secret 5 $1$ERrP$IwIygdqbJGkqrXZDtaWVI0
 !
 call-home
  service active

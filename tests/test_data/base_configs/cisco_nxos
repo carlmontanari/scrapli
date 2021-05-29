@@ -126,8 +126,8 @@ role name priv-0
   rule 1 permit read  
 no password strength-check
 username admin password 5 $5$LOIMHI$hIaO64VM40/x.MTQoeWg8/IAn2iBY5jv4WZyzQbb5q9  role network-admin
-username vrnetlab password 5 $5$AT5s3bhE$4/A..pCU3QK/YfesFHYPgbStJuRKK2JoYO7dEOGN2n3  role network-admin
-username vrnetlab passphrase  lifetime 99999 warntime 14 gracetime 3
+username boxen password 5 $5$rFrywOjz$buvWY6uEPf79GVyfGNO6SGOi5gbxV2VAcsbBtyXDZyB  role network-admin
+username boxen passphrase  lifetime 99999 warntime 14 gracetime 3
 ip domain-lookup
 !# qos statistics
 !# class-map type queuing match-any c-out-q3
@@ -199,7 +199,7 @@ policy-map type queuing default-8q-out-policy
 copp profile strict
 no system mode maintenance
 snmp-server user admin network-admin auth md5 0xd42fc9f6e153a348e1ab40f0f5b84589 priv 0xd42fc9f6e153a348e1ab40f0f5b84589 localizedkey
-snmp-server user vrnetlab network-admin auth md5 0x1a3abb28531cf988a22cc61af30861a7 priv 0x1a3abb28531cf988a22cc61af30861a7 localizedkey
+snmp-server user boxen network-admin auth md5 0xc168bfc2b500129bd35ee550b6d5d93d priv 0xc168bfc2b500129bd35ee550b6d5d93d localizedkey
 rmon event 1 description FATAL(1) owner PMON@FATAL
 rmon event 2 description CRITICAL(2) owner PMON@CRITICAL
 rmon event 3 description ERROR(3) owner PMON@ERROR

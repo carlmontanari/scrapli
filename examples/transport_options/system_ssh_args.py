@@ -3,8 +3,8 @@ from scrapli.driver.core import IOSXEDriver
 
 MY_DEVICE = {
     "host": "172.18.0.11",
-    "auth_username": "vrnetlab",
-    "auth_password": "VR-netlab9",
+    "auth_username": "scrapli",
+    "auth_password": "scrapli",
     "auth_strict_key": False,
     "transport_options": {"open_cmd": ["-o", "KexAlgorithms=+diffie-hellman-group1-sha1"]},
 }

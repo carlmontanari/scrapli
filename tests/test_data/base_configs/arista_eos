@@ -108,10 +108,10 @@ logging level ZTP informational
 !
 spanning-tree mode mstp
 !
-enable secret sha512 $6$P1M9SV2bLTmQJpwW$KVoaaIa7i34uTFp7JRRp.hqL55nr7jSJJiDA.9CHTCW7q4GDIwyceMMSp6TavgYiAokjobyBYCO70L7FxpZon1
+enable secret sha512 $6$TVJ6KgdC0qsGkKfb$LjGGPd6W3S1iJQVQ.Vvo3Bca4Yt1R3y4nOjWAaaTCsk1NuIoqB/gOMseoigt/HQVFDTvDAJ3IPmsF9sWfxi1V/
 no aaa root
 !
-username vrnetlab role network-admin secret sha512 $6$8zrJ4ESW2fqG2QqH$9u768TvLXXDeUJmG2Std71EX1ip6q4MoJrMwDng1cmpuSYc9ECWytRjvXpMH7C3dzSdoEv0MxAUiAZeeTre3h.
+username boxen role network-admin secret sha512 $6$1ex07TzYfKx23A9z$c02oeDxnr4J7HMgj0PcabYvACZfjdiu3zp4IAgjJQ51IBtkstpvOjm0FYbxSSBhsl.mytIr9Y4PaERp4MDXJM/
 !
 interface Ethernet1
    speed forced 10000full

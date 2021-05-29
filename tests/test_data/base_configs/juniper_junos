@@ -2,14 +2,14 @@
 version 17.3R2.10;
 system {
     root-authentication {
-        encrypted-password "$6$dWt4Lg4V$wiqols.Ou//eIg.3kpdu98L9hSzA7VSytcnV4NWI3S2BKM4rfruJf5JKLBdihyCyEgUVHb1Rw3xHIVxQR/O0F."; ## SECRET-DATA
+        encrypted-password "$6$RhR81Jm4$DEXKIbZNGjv.agJvM.FlIZWtFqX/966PZk0r4/Ps3LlS.OQZn9fHoVGuYJ7Q.hj2OQLyPJO6Mq7aQ3xLQiNrx/"; ## SECRET-DATA
     }
     login {
-        user vrnetlab {
+        user boxen {
             uid 2000;
             class super-user;
             authentication {
-                encrypted-password "$6$1tKhsTEi$VjaGckqjhgSqaZf5rrWqlhDkI1xAsaTWxFRtVQQnpE4qaeIWFuQUZ3GulwPfBYq2RLSTTl/ZnyyZJrcBl.7lP0"; ## SECRET-DATA
+                encrypted-password "$6$iYt26fU9$gkt6bgxPs.VqHgCoLuSD6Kxv1JUHJLQzXJgzAEUIxobvxWwRErtpaOFvBOjIHr3KMI7sEo.V/7xLXzr0Ok20h0"; ## SECRET-DATA
             }
         }
     }

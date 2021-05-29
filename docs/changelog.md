@@ -37,6 +37,10 @@ Changelog
 - Improved priv level handling -- if you try to acquire "parallel" privileges (ex. configuration and configuration 
   exclusive in IOSXR) previously we would say things worked, but we would just stay in configuration mode. This has 
   been fixed (hopefully)!
+- Move ansi escape pattern to compile globally, so it only compiles once (why it was never like that before... who knows)
+- Simplify the `collect` bits for integration tests... this is still not used heavily but hopefully will be soon!
+- Replace vrnetlab creds in examples with scrapli (felt confusing to have vrnetlab creds everywhere, plus functional 
+  testing is moving away from (but still supporting) vrnetlab test environment)
 
 
 ## 2021.01.30

@@ -111,7 +111,7 @@ spanning-tree mode mstp
 enable CRYPTO_REPLACED
 no aaa root
 !
-username vrnetlab role network-admin CRYPTO_REPLACED
+username boxen role network-admin CRYPTO_REPLACED
 !
 interface Ethernet1
    speed forced 10000full

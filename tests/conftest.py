@@ -311,13 +311,13 @@ TEST_CASES = {
     },
     "juniper_junos": {
         "get_prompt": {
-            "exec": "vrnetlab>",
+            "exec": "boxen>",
             "privilege_exec": None,
-            "configuration": "vrnetlab#",
+            "configuration": "boxen#",
         },
         "send_command_short": {
             "command": "show configuration | match 10.0.0.15",
-            "expected_no_strip": "                address 10.0.0.15/24;\n\nvrnetlab>",
+            "expected_no_strip": "                address 10.0.0.15/24;\n\nboxen>",
             "expected_strip": "                address 10.0.0.15/24;",
         },
         "send_command_long": {
@@ -332,8 +332,8 @@ TEST_CASES = {
         "send_commands_from_file": {
             "file": f"{TEST_DATA_PATH}/source/juniper_junos/send_commands",
             "expected_no_strip": [
-                "                address 10.0.0.15/24;\n\nvrnetlab>",
-                "                address 10.0.0.15/24;\n\nvrnetlab>",
+                "                address 10.0.0.15/24;\n\nboxen>",
+                "                address 10.0.0.15/24;\n\nboxen>",
             ],
             "expected_strip": [
                 "                address 10.0.0.15/24;",
@@ -347,25 +347,25 @@ TEST_CASES = {
         "send_interactive_hidden_response": None,
         "send_config": {
             "configs": 'set interfaces fxp0 unit 0 description "scrapli was here"\ncommit',
-            "expected_no_strip": "[edit]\nvrnetlab#\ncommit complete\n\n[edit]\nvrnetlab#",
+            "expected_no_strip": "[edit]\nboxen#\ncommit complete\n\n[edit]\nboxen#",
             "expected_strip": "[edit]\ncommit complete\n\n[edit]",
             "verification": "show configuration interfaces fxp0",
-            "verification_expected_no_strip": 'unit 0 {\n    description "scrapli was here";\n    family inet {\n        address 10.0.0.15/24;\n    }\n}\n\nvrnetlab>',
+            "verification_expected_no_strip": 'unit 0 {\n    description "scrapli was here";\n    family inet {\n        address 10.0.0.15/24;\n    }\n}\n\nboxen>',
             "verification_expected_strip": 'unit 0 {\n    description "scrapli was here";\n    family inet {\n        address 10.0.0.15/24;\n    }\n}',
             "teardown_configs": ["delete interfaces fxp0 unit 0 description", "commit"],
         },
         "send_configs": {
             "configs": ['set interfaces fxp0 unit 0 description "scrapli was here"', "commit"],
-            "expected_no_strip": ["[edit]\nvrnetlab#", "commit complete\n\n[edit]\nvrnetlab#"],
+            "expected_no_strip": ["[edit]\nboxen#", "commit complete\n\n[edit]\nboxen#"],
             "expected_strip": ["[edit]", "commit complete\n\n[edit]"],
             "verification": "show configuration interfaces fxp0",
-            "verification_expected_no_strip": 'unit 0 {\n    description "scrapli was here";\n    family inet {\n        address 10.0.0.15/24;\n    }\n}\n\nvrnetlab>',
+            "verification_expected_no_strip": 'unit 0 {\n    description "scrapli was here";\n    family inet {\n        address 10.0.0.15/24;\n    }\n}\n\nboxen>',
             "verification_expected_strip": 'unit 0 {\n    description "scrapli was here";\n    family inet {\n        address 10.0.0.15/24;\n    }\n}',
             "teardown_configs": ["delete interfaces fxp0 unit 0 description", "commit"],
         },
         "send_configs_from_file": {
             "file": f"{TEST_DATA_PATH}/source/juniper_junos/send_configs",
-            "expected_no_strip": ["[edit]\nvrnetlab#", "commit complete\n\n[edit]\nvrnetlab#"],
+            "expected_no_strip": ["[edit]\nboxen#", "commit complete\n\n[edit]\nboxen#"],
             "expected_strip": ["[edit]", "commit complete\n\n[edit]"],
             "teardown_configs": ["delete interfaces fxp0 unit 0 description", "commit"],
         },

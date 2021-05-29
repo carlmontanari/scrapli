@@ -84,8 +84,8 @@ def unit_tests(session):
     if f"unit_tests-{PLATFORM}-{session.python}" in SKIP_LIST:
         return
 
-    session.run("chmod", "0600", "tests/test_data/files/vrnetlab_key", external=True)
-    session.run("chmod", "0600", "tests/test_data/files/vrnetlab_key_encrypted", external=True)
+    session.run("chmod", "0600", "tests/test_data/files/scrapli_key", external=True)
+    session.run("chmod", "0600", "tests/test_data/files/scrapli_key_encrypted", external=True)
     session.install("-e", ".")
     session.install("-r", "requirements-dev.txt")
     session.run(
