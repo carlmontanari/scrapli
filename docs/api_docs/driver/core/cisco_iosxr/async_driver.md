@@ -29,7 +29,6 @@ scrapli.driver.core.cisco_iosxr.async_driver
     <pre>
         <code class="python">
 """scrapli.driver.core.cisco_iosxr.async_driver"""
-import time
 from copy import deepcopy
 from io import BytesIO
 from typing import Any, Callable, Dict, List, Optional, Union
@@ -53,9 +52,6 @@ async def iosxr_on_open(conn: AsyncNetworkDriver) -> None:
         N/A
 
     """
-    # sleep for session to establish; without this we never find base prompt for some reason?
-    # maybe this is an artifact from previous iterations/tests and can be done away with...
-    time.sleep(1)
     await conn.acquire_priv(desired_priv=conn.default_desired_privilege_level)
     await conn.send_command(command="terminal length 0")
     await conn.send_command(command="terminal width 512")
@@ -96,7 +92,7 @@ class AsyncIOSXRDriver(AsyncNetworkDriver):
         timeout_transport: float = 30.0,
         timeout_ops: float = 30.0,
         comms_return_char: str = "\n",
-        comms_ansi: bool = False,
+        comms_ansi: Optional[bool] = None,
         ssh_config_file: Union[str, bool] = False,
         ssh_known_hosts_file: Union[str, bool] = False,
         on_init: Optional[Callable[..., Any]] = None,
@@ -317,7 +313,7 @@ class AsyncIOSXRDriver(AsyncNetworkDriver):
         timeout_transport: float = 30.0,
         timeout_ops: float = 30.0,
         comms_return_char: str = "\n",
-        comms_ansi: bool = False,
+        comms_ansi: Optional[bool] = None,
         ssh_config_file: Union[str, bool] = False,
         ssh_known_hosts_file: Union[str, bool] = False,
         on_init: Optional[Callable[..., Any]] = None,

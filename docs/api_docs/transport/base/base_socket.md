@@ -119,7 +119,7 @@ class Socket:
                     raise ScrapliConnectionNotOpened(msg) from exc
             except socket.timeout as exc:
                 msg = (
-                    f"timed out trying to open socket to {self.host} on port {self.port} for"
+                    f"timed out trying to open socket to {self.host} on port {self.port} for "
                     f"address family {address_family.name}"
                 )
                 self.logger.warning(msg)
@@ -327,7 +327,7 @@ class Socket:
                     raise ScrapliConnectionNotOpened(msg) from exc
             except socket.timeout as exc:
                 msg = (
-                    f"timed out trying to open socket to {self.host} on port {self.port} for"
+                    f"timed out trying to open socket to {self.host} on port {self.port} for "
                     f"address family {address_family.name}"
                 )
                 self.logger.warning(msg)

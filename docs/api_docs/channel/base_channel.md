@@ -39,6 +39,8 @@ from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliTypeError, Sc
 from scrapli.logging import get_instance_logger
 from scrapli.transport.base import AsyncTransport, Transport
 
+ANSI_ESCAPE_PATTERN = re.compile(rb"\x1b(\[.*?[@-~]|\].*?(\x07|\x1b\\))")
+
 
 @dataclass()
 class BaseChannelArgs:
@@ -52,7 +54,6 @@ class BaseChannelArgs:
         comms_prompt_search_depth: depth of the buffer to search in for searching for the prompt
             in "read_until_prompt"; smaller number here will generally be faster, though may be less
             reliable; default value is 1000
-        comms_ansi: comms_ansi to assign to the channel, see above
         timeout_ops: timeout_ops to assign to the channel, see above
         channel_log: log "channel" output -- this would be the output you would normally see on a
             terminal. If `True` logs to `scrapli_channel.log`, if a string is provided, logs to
@@ -72,7 +73,6 @@ class BaseChannelArgs:
     comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]$"
     comms_return_char: str = "\n"
     comms_prompt_search_depth: int = 1000
-    comms_ansi: bool = False
     timeout_ops: float = 30.0
     channel_log: Union[str, bool, BytesIO] = False
     channel_log_mode: str = "write"
@@ -375,8 +375,7 @@ class BaseChannel:
             N/A
 
         """
-        ansi_escape_pattern = re.compile(rb"\x1b(\[.*?[@-~]|\].*?(\x07|\x1b\\))")
-        buf = re.sub(pattern=ansi_escape_pattern, repl=b"", string=buf)
+        buf = re.sub(pattern=ANSI_ESCAPE_PATTERN, repl=b"", string=buf)
         return buf
 
     @staticmethod
@@ -716,8 +715,7 @@ class BaseChannel:
             N/A
 
         """
-        ansi_escape_pattern = re.compile(rb"\x1b(\[.*?[@-~]|\].*?(\x07|\x1b\\))")
-        buf = re.sub(pattern=ansi_escape_pattern, repl=b"", string=buf)
+        buf = re.sub(pattern=ANSI_ESCAPE_PATTERN, repl=b"", string=buf)
         return buf
 
     @staticmethod
@@ -863,7 +861,6 @@ Args:
     comms_prompt_search_depth: depth of the buffer to search in for searching for the prompt
         in "read_until_prompt"; smaller number here will generally be faster, though may be less
         reliable; default value is 1000
-    comms_ansi: comms_ansi to assign to the channel, see above
     timeout_ops: timeout_ops to assign to the channel, see above
     channel_log: log "channel" output -- this would be the output you would normally see on a
         terminal. If `True` logs to `scrapli_channel.log`, if a string is provided, logs to
@@ -897,7 +894,6 @@ class BaseChannelArgs:
         comms_prompt_search_depth: depth of the buffer to search in for searching for the prompt
             in "read_until_prompt"; smaller number here will generally be faster, though may be less
             reliable; default value is 1000
-        comms_ansi: comms_ansi to assign to the channel, see above
         timeout_ops: timeout_ops to assign to the channel, see above
         channel_log: log "channel" output -- this would be the output you would normally see on a
             terminal. If `True` logs to `scrapli_channel.log`, if a string is provided, logs to
@@ -917,7 +913,6 @@ class BaseChannelArgs:
     comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]$"
     comms_return_char: str = "\n"
     comms_prompt_search_depth: int = 1000
-    comms_ansi: bool = False
     timeout_ops: float = 30.0
     channel_log: Union[str, bool, BytesIO] = False
     channel_log_mode: str = "write"
@@ -971,12 +966,6 @@ class BaseChannelArgs:
 
     
 `channel_log_mode: str`
-
-
-
-
-    
-`comms_ansi: bool`
 
 
 

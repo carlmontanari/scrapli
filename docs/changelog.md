@@ -25,6 +25,22 @@ Changelog
 - Improved typing for `send_interactive`
 - Remove napalm dev requirement -- switch to scrapli-cfg for dev environment config management; something something 
   eating dog food or whatever.
+- Deprecate `comms_ansi` -- if there is an ANSI escape sequence we will now just strip it out automagically; this is 
+  *not* currently a breaking change, but will be -- there is a deprecation warning now and `comms_ansi` will be 
+  fully removed in the 2022.01.30 release (and pre-releases).
+- Removed a sleep that was in the default `on_open` for IOSXR devices... this has been there a while and I *think* 
+  it was just a hold over from early early versions of scrapli that perhaps had a less robust in channel 
+  authentication handler. 1 second faster IOSXR for free! Yay!
+- Fixed an issue with system transport where the transport would get closed twice causing an unhandled exception -- 
+  thank you to Alex Lardschneider for finding this!
+- Added an example for the `enable_basic_logging` function as well as the `commandeer` method
+- Improved priv level handling -- if you try to acquire "parallel" privileges (ex. configuration and configuration 
+  exclusive in IOSXR) previously we would say things worked, but we would just stay in configuration mode. This has 
+  been fixed (hopefully)!
+- Move ansi escape pattern to compile globally, so it only compiles once (why it was never like that before... who knows)
+- Simplify the `collect` bits for integration tests... this is still not used heavily but hopefully will be soon!
+- Replace vrnetlab creds in examples with scrapli (felt confusing to have vrnetlab creds everywhere, plus functional 
+  testing is moving away from (but still supporting) vrnetlab test environment)
 
 
 ## 2021.01.30

@@ -9,8 +9,8 @@ SSH_KEYS_EXAMPLE_DIR = f"{Path(scrapli.__file__).parents[1]}/examples/ssh_keys"
 
 MY_DEVICE = {
     "host": "172.18.0.11",
-    "auth_username": "vrnetlab",
-    "auth_private_key": f"{SSH_KEYS_EXAMPLE_DIR}/vrnetlab_key",
+    "auth_username": "scrapli",
+    "auth_private_key": f"{SSH_KEYS_EXAMPLE_DIR}/scrapli_key",
     "auth_strict_key": False,
 }
 

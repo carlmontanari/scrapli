@@ -1,4 +1,5 @@
 import logging
+import sys
 import time
 from pathlib import Path
 
@@ -31,6 +32,7 @@ def test_channel_lock_context_manager_no_channel_lock(base_transport_no_abc):
         assert True
 
 
+@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping pending pyfakefs 3.10 support")
 def test_channel_read(fs, caplog, monkeypatch, sync_transport_no_abc):
     # fs needed to mock filesystem for asserting log location
     _ = fs
@@ -69,8 +71,6 @@ def test_channel_read(fs, caplog, monkeypatch, sync_transport_no_abc):
 
 
 def test_channel_read_until_input(monkeypatch, sync_channel):
-    sync_channel._base_channel_args.comms_ansi = True
-
     expected_read_output = b"read_data\nthisismyinput"
     _read_counter = 0
 
@@ -95,8 +95,6 @@ def test_channel_read_until_input_no_input(sync_channel):
 
 
 def test_channel_read_until_prompt(monkeypatch, sync_channel):
-    sync_channel._base_channel_args.comms_ansi = True
-
     expected_read_output = b"read_data\nscrapli>"
     _read_counter = 0
 
@@ -120,8 +118,6 @@ def test_channel_read_until_prompt(monkeypatch, sync_channel):
 
 
 def test_channel_authenticate_ssh(monkeypatch, sync_channel):
-    sync_channel._base_channel_args.comms_ansi = True
-
     _read_counter = 0
     _write_counter = 0
 
@@ -164,8 +160,6 @@ def test_channel_authenticate_ssh(monkeypatch, sync_channel):
 
 
 def test_channel_authenticate_ssh_fail_password(monkeypatch, sync_channel):
-    sync_channel._base_channel_args.comms_ansi = True
-
     def _read(cls):
         return b"password"
 
@@ -183,8 +177,6 @@ def test_channel_authenticate_ssh_fail_password(monkeypatch, sync_channel):
 
 
 def test_channel_authenticate_ssh_fail_passphrase(monkeypatch, sync_channel):
-    sync_channel._base_channel_args.comms_ansi = True
-
     def _read(cls):
         return b"enter passphrase for key"
 
@@ -202,8 +194,6 @@ def test_channel_authenticate_ssh_fail_passphrase(monkeypatch, sync_channel):
 
 
 def test_channel_authenticate_telnet(monkeypatch, sync_channel):
-    sync_channel._base_channel_args.comms_ansi = True
-
     _read_counter = 0
     _write_counter = 0
 
@@ -246,8 +236,6 @@ def test_channel_authenticate_telnet(monkeypatch, sync_channel):
 
 
 def test_channel_authenticate_telnet_fail_login(monkeypatch, sync_channel):
-    sync_channel._base_channel_args.comms_ansi = True
-
     def _read(cls):
         return b"login:"
 
@@ -266,8 +254,6 @@ def test_channel_authenticate_telnet_fail_login(monkeypatch, sync_channel):
 
 
 def test_channel_authenticate_telnet_fail_password(monkeypatch, sync_channel):
-    sync_channel._base_channel_args.comms_ansi = True
-
     def _read(cls):
         return b"password:"
 
@@ -327,7 +313,6 @@ def test_channel_authenticate_telnet_send_return(monkeypatch, sync_channel):
     monkeypatch.setattr("scrapli.transport.base.sync_transport.Transport.read", _read)
     monkeypatch.setattr("scrapli.transport.base.sync_transport.Transport.write", _write)
 
-    sync_channel._base_channel_args.comms_ansi = True
     sync_channel._base_channel_args.comms_prompt_pattern = "scrapli>"
     sync_channel._base_channel_args.timeout_ops = 3
     sync_channel.transport.username_prompt = "login:"
@@ -355,7 +340,6 @@ def test_get_prompt(monkeypatch, sync_channel):
     monkeypatch.setattr("scrapli.transport.base.sync_transport.Transport.read", _read)
     monkeypatch.setattr("scrapli.transport.base.sync_transport.Transport.write", _write)
 
-    sync_channel._base_channel_args.comms_ansi = True
     sync_channel._base_channel_args.comms_prompt_pattern = "scrapli>"
 
     assert sync_channel.get_prompt() == "scrapli>"

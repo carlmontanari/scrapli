@@ -1,0 +1,1094 @@
+events:
+  exec:
+    pre_on_open:
+      terminal width 512:
+        channel_output: csr1000v>
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      terminal length 0:
+        channel_output: csr1000v>
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit:
+        channel_output: __CLOSES_CONNECTION__
+        result_privilege_level: privilege_exec
+        returns_prompt: false
+        closes_connection: true
+        type: standard
+      configure terminal:
+        channel_output: "            ^\n% Invalid input detected at '^' marker.\n\n\
+          csr1000v>"
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      tclsh:
+        channel_output: "% Bad IP address or host name% Unknown command or computer\
+          \ name, or unable to find computer address\ncsr1000v>"
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      disable:
+        channel_output: csr1000v>
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      end:
+        channel_output: "% Bad IP address or host name% Unknown command or computer\
+          \ name, or unable to find computer address\ncsr1000v>"
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      tclquit:
+        channel_output: csr1000v>
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      enable:
+        result_privilege_level: privilege_exec
+        event_steps:
+          - channel_input: enable
+            channel_output: 'Password: '
+            hidden_input: false
+            returns_prompt: true
+          - channel_input: __AUTH_SECONDARY__
+            channel_output: csr1000v#
+            hidden_input: true
+            returns_prompt: true
+        type: interactive
+      show version:
+        channel_output: "Cisco IOS XE Software, Version 16.12.03\nCisco IOS Software\
+          \ [Gibraltar], Virtual XE Software (X86_64_LINUX_IOSD-UNIVERSALK9-M), Version\
+          \ 16.12.3, RELEASE SOFTWARE (fc5)\nTechnical Support: http://www.cisco.com/techsupport\n\
+          Copyright (c) 1986-2020 by Cisco Systems, Inc.\nCompiled Mon 09-Mar-20 21:50\
+          \ by mcpre\n\n\nCisco IOS-XE software, Copyright (c) 2005-2020 by cisco\
+          \ Systems, Inc.\nAll rights reserved.  Certain components of Cisco IOS-XE\
+          \ software are\nlicensed under the GNU General Public License (\"GPL\")\
+          \ Version 2.0.  The\nsoftware code licensed under GPL Version 2.0 is free\
+          \ software that comes\nwith ABSOLUTELY NO WARRANTY.  You can redistribute\
+          \ and/or modify such\nGPL code under the terms of GPL Version 2.0.  For\
+          \ more details, see the\ndocumentation or \"License Notice\" file accompanying\
+          \ the IOS-XE software,\nor the applicable URL provided on the flyer accompanying\
+          \ the IOS-XE\nsoftware.\n\n\nROM: IOS-XE ROMMON\n\ncsr1000v uptime is 2\
+          \ hours, 17 minutes\nUptime for this control processor is 2 hours, 18 minutes\n\
+          \ --More-- "
+        result_privilege_level: exec
+        returns_prompt: false
+        closes_connection: false
+        type: standard
+      show run:
+        channel_output: "               ^\n% Invalid input detected at '^' marker.\n\
+          \ncsr1000v>"
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      clear logg:
+        result_privilege_level: exec
+        event_steps:
+          - channel_input: clear logg
+            channel_output: "                ^\n% Invalid input detected at '^' marker.\n\
+              \ncsr1000v>"
+            hidden_input: false
+            returns_prompt: true
+        type: interactive
+    post_on_open:
+      terminal width 512:
+        channel_output: csr1000v>
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      terminal length 0:
+        channel_output: csr1000v>
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit:
+        channel_output: __CLOSES_CONNECTION__
+        result_privilege_level: privilege_exec
+        returns_prompt: false
+        closes_connection: true
+        type: standard
+      configure terminal:
+        channel_output: "            ^\n% Invalid input detected at '^' marker.\n\n\
+          csr1000v>"
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      tclsh:
+        channel_output: "% Bad IP address or host name% Unknown command or computer\
+          \ name, or unable to find computer address\ncsr1000v>"
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      disable:
+        channel_output: csr1000v>
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      end:
+        channel_output: "% Bad IP address or host name% Unknown command or computer\
+          \ name, or unable to find computer address\ncsr1000v>"
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      tclquit:
+        channel_output: csr1000v>
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      enable:
+        result_privilege_level: privilege_exec
+        event_steps:
+          - channel_input: enable
+            channel_output: 'Password: '
+            hidden_input: false
+            returns_prompt: true
+          - channel_input: __AUTH_SECONDARY__
+            channel_output: csr1000v#
+            hidden_input: true
+            returns_prompt: true
+        type: interactive
+      show version:
+        channel_output: "Cisco IOS XE Software, Version 16.12.03\nCisco IOS Software\
+          \ [Gibraltar], Virtual XE Software (X86_64_LINUX_IOSD-UNIVERSALK9-M), Version\
+          \ 16.12.3, RELEASE SOFTWARE (fc5)\nTechnical Support: http://www.cisco.com/techsupport\n\
+          Copyright (c) 1986-2020 by Cisco Systems, Inc.\nCompiled Mon 09-Mar-20 21:50\
+          \ by mcpre\n\n\nCisco IOS-XE software, Copyright (c) 2005-2020 by cisco\
+          \ Systems, Inc.\nAll rights reserved.  Certain components of Cisco IOS-XE\
+          \ software are\nlicensed under the GNU General Public License (\"GPL\")\
+          \ Version 2.0.  The\nsoftware code licensed under GPL Version 2.0 is free\
+          \ software that comes\nwith ABSOLUTELY NO WARRANTY.  You can redistribute\
+          \ and/or modify such\nGPL code under the terms of GPL Version 2.0.  For\
+          \ more details, see the\ndocumentation or \"License Notice\" file accompanying\
+          \ the IOS-XE software,\nor the applicable URL provided on the flyer accompanying\
+          \ the IOS-XE\nsoftware.\n\n\nROM: IOS-XE ROMMON\n\ncsr1000v uptime is 2\
+          \ hours, 17 minutes\nUptime for this control processor is 2 hours, 18 minutes\n\
+          System returned to ROM by reload\nSystem image file is \"bootflash:packages.conf\"\
+          \nLast reload reason: reload\n\n\n\nThis product contains cryptographic\
+          \ features and is subject to United\nStates and local country laws governing\
+          \ import, export, transfer and\nuse. Delivery of Cisco cryptographic products\
+          \ does not imply\nthird-party authority to import, export, distribute or\
+          \ use encryption.\nImporters, exporters, distributors and users are responsible\
+          \ for\ncompliance with U.S. and local country laws. By using this product\
+          \ you\nagree to comply with applicable laws and regulations. If you are\
+          \ unable\nto comply with U.S. and local laws, return this product immediately.\n\
+          \nA summary of U.S. laws governing Cisco cryptographic products may be found\
+          \ at:\nhttp://www.cisco.com/wwl/export/crypto/tool/stqrg.html\n\nIf you\
+          \ require further assistance please contact us by sending email to\nexport@cisco.com.\n\
+          \nLicense Level: ax\nLicense Type: N/A(Smart License Enabled)\nNext reload\
+          \ license Level: ax\n\n\nSmart Licensing Status: UNREGISTERED/No Licenses\
+          \ in Use\n\ncisco CSR1000V (VXE) processor (revision VXE) with 2080230K/3075K\
+          \ bytes of memory.\nProcessor board ID 9IB2R42M6QG\n10 Gigabit Ethernet\
+          \ interfaces\n32768K bytes of non-volatile configuration memory.\n3978344K\
+          \ bytes of physical memory.\n6188032K bytes of virtual hard disk at bootflash:.\n\
+          0K bytes of WebUI ODM Files at webui:.\n\nConfiguration register is 0x2102\n\
+          \ncsr1000v>"
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      show run:
+        channel_output: "               ^\n% Invalid input detected at '^' marker.\n\
+          \ncsr1000v>"
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      clear logg:
+        result_privilege_level: exec
+        event_steps:
+          - channel_input: clear logg
+            channel_output: "                ^\n% Invalid input detected at '^' marker.\n\
+              \ncsr1000v>"
+            hidden_input: false
+            returns_prompt: true
+        type: interactive
+  privilege_exec:
+    pre_on_open:
+      terminal width 512:
+        channel_output: csr1000v#
+        result_privilege_level: privilege_exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      terminal length 0:
+        channel_output: csr1000v#
+        result_privilege_level: privilege_exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit:
+        channel_output: __CLOSES_CONNECTION__
+        result_privilege_level: privilege_exec
+        returns_prompt: false
+        closes_connection: true
+        type: standard
+      configure terminal:
+        channel_output: "Enter configuration commands, one per line.  End with CNTL/Z.\n\
+          csr1000v(config)#"
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      tclsh:
+        channel_output: csr1000v(tcl)#
+        result_privilege_level: tclsh
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      disable:
+        channel_output: csr1000v>
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      end:
+        channel_output: "% Bad IP address or host name% Unknown command or computer\
+          \ name, or unable to find computer address\ncsr1000v#"
+        result_privilege_level: privilege_exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      tclquit:
+        channel_output: csr1000v#
+        result_privilege_level: privilege_exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      enable:
+        result_privilege_level: privilege_exec
+        event_steps:
+          - channel_input: enable
+            channel_output: csr1000v#
+            hidden_input: false
+            returns_prompt: true
+        type: interactive
+      show version:
+        channel_output: "Cisco IOS XE Software, Version 16.12.03\nCisco IOS Software\
+          \ [Gibraltar], Virtual XE Software (X86_64_LINUX_IOSD-UNIVERSALK9-M), Version\
+          \ 16.12.3, RELEASE SOFTWARE (fc5)\nTechnical Support: http://www.cisco.com/techsupport\n\
+          Copyright (c) 1986-2020 by Cisco Systems, Inc.\nCompiled Mon 09-Mar-20 21:50\
+          \ by mcpre\n\n\nCisco IOS-XE software, Copyright (c) 2005-2020 by cisco\
+          \ Systems, Inc.\nAll rights reserved.  Certain components of Cisco IOS-XE\
+          \ software are\nlicensed under the GNU General Public License (\"GPL\")\
+          \ Version 2.0.  The\nsoftware code licensed under GPL Version 2.0 is free\
+          \ software that comes\nwith ABSOLUTELY NO WARRANTY.  You can redistribute\
+          \ and/or modify such\nGPL code under the terms of GPL Version 2.0.  For\
+          \ more details, see the\ndocumentation or \"License Notice\" file accompanying\
+          \ the IOS-XE software,\nor the applicable URL provided on the flyer accompanying\
+          \ the IOS-XE\nsoftware.\n\n\nROM: IOS-XE ROMMON\n\ncsr1000v uptime is 2\
+          \ hours, 17 minutes\nUptime for this control processor is 2 hours, 18 minutes\n\
+          \ --More-- "
+        result_privilege_level: privilege_exec
+        returns_prompt: false
+        closes_connection: false
+        type: standard
+      show run:
+        channel_output: "Building configuration...\n\nCurrent configuration : 7033\
+          \ bytes\n!\n! Last configuration change at 22:14:18 UTC Fri May 28 2021\
+          \ by boxen\n!\nversion 16.12\nservice timestamps debug datetime msec\nservice\
+          \ timestamps log datetime msec\nservice call-home\nplatform qfp utilization\
+          \ monitor load 80\nplatform punt-keepalive disable-kernel-core\nplatform\
+          \ console serial\n!\nhostname csr1000v\n!\nboot-start-marker\nboot-end-marker\n\
+          !\n!\nenable secret 9 $9$xvWnx8Fe35f8xE$E9ijp7GM/V48P5y1Uz3IEPtotXgwkJKYJmN0q3q2E92\n\
+          !\nno aaa new-model\ncall-home\n --More-- "
+        result_privilege_level: privilege_exec
+        returns_prompt: false
+        closes_connection: false
+        type: standard
+      clear logg:
+        result_privilege_level: privilege_exec
+        event_steps:
+          - channel_input: clear logg
+            channel_output: Clear logging buffer [confirm]
+            hidden_input: false
+            returns_prompt: true
+          - channel_input: "\n"
+            channel_output: csr1000v#
+            hidden_input: false
+            returns_prompt: true
+        type: interactive
+    post_on_open:
+      terminal width 512:
+        channel_output: csr1000v#
+        result_privilege_level: privilege_exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      terminal length 0:
+        channel_output: csr1000v#
+        result_privilege_level: privilege_exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit:
+        channel_output: __CLOSES_CONNECTION__
+        result_privilege_level: privilege_exec
+        returns_prompt: false
+        closes_connection: true
+        type: standard
+      configure terminal:
+        channel_output: "Enter configuration commands, one per line.  End with CNTL/Z.\n\
+          csr1000v(config)#"
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      tclsh:
+        channel_output: csr1000v(tcl)#
+        result_privilege_level: tclsh
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      disable:
+        channel_output: csr1000v>
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      end:
+        channel_output: "% Bad IP address or host name% Unknown command or computer\
+          \ name, or unable to find computer address\ncsr1000v#"
+        result_privilege_level: privilege_exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      tclquit:
+        channel_output: csr1000v#
+        result_privilege_level: privilege_exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      enable:
+        result_privilege_level: privilege_exec
+        event_steps:
+          - channel_input: enable
+            channel_output: csr1000v#
+            hidden_input: false
+            returns_prompt: true
+        type: interactive
+      show version:
+        channel_output: "Cisco IOS XE Software, Version 16.12.03\nCisco IOS Software\
+          \ [Gibraltar], Virtual XE Software (X86_64_LINUX_IOSD-UNIVERSALK9-M), Version\
+          \ 16.12.3, RELEASE SOFTWARE (fc5)\nTechnical Support: http://www.cisco.com/techsupport\n\
+          Copyright (c) 1986-2020 by Cisco Systems, Inc.\nCompiled Mon 09-Mar-20 21:50\
+          \ by mcpre\n\n\nCisco IOS-XE software, Copyright (c) 2005-2020 by cisco\
+          \ Systems, Inc.\nAll rights reserved.  Certain components of Cisco IOS-XE\
+          \ software are\nlicensed under the GNU General Public License (\"GPL\")\
+          \ Version 2.0.  The\nsoftware code licensed under GPL Version 2.0 is free\
+          \ software that comes\nwith ABSOLUTELY NO WARRANTY.  You can redistribute\
+          \ and/or modify such\nGPL code under the terms of GPL Version 2.0.  For\
+          \ more details, see the\ndocumentation or \"License Notice\" file accompanying\
+          \ the IOS-XE software,\nor the applicable URL provided on the flyer accompanying\
+          \ the IOS-XE\nsoftware.\n\n\nROM: IOS-XE ROMMON\n\ncsr1000v uptime is 2\
+          \ hours, 17 minutes\nUptime for this control processor is 2 hours, 18 minutes\n\
+          System returned to ROM by reload\nSystem image file is \"bootflash:packages.conf\"\
+          \nLast reload reason: reload\n\n\n\nThis product contains cryptographic\
+          \ features and is subject to United\nStates and local country laws governing\
+          \ import, export, transfer and\nuse. Delivery of Cisco cryptographic products\
+          \ does not imply\nthird-party authority to import, export, distribute or\
+          \ use encryption.\nImporters, exporters, distributors and users are responsible\
+          \ for\ncompliance with U.S. and local country laws. By using this product\
+          \ you\nagree to comply with applicable laws and regulations. If you are\
+          \ unable\nto comply with U.S. and local laws, return this product immediately.\n\
+          \nA summary of U.S. laws governing Cisco cryptographic products may be found\
+          \ at:\nhttp://www.cisco.com/wwl/export/crypto/tool/stqrg.html\n\nIf you\
+          \ require further assistance please contact us by sending email to\nexport@cisco.com.\n\
+          \nLicense Level: ax\nLicense Type: N/A(Smart License Enabled)\nNext reload\
+          \ license Level: ax\n\n\nSmart Licensing Status: UNREGISTERED/No Licenses\
+          \ in Use\n\ncisco CSR1000V (VXE) processor (revision VXE) with 2080230K/3075K\
+          \ bytes of memory.\nProcessor board ID 9IB2R42M6QG\n10 Gigabit Ethernet\
+          \ interfaces\n32768K bytes of non-volatile configuration memory.\n3978344K\
+          \ bytes of physical memory.\n6188032K bytes of virtual hard disk at bootflash:.\n\
+          0K bytes of WebUI ODM Files at webui:.\n\nConfiguration register is 0x2102\n\
+          \ncsr1000v#"
+        result_privilege_level: privilege_exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      show run:
+        channel_output: "Building configuration...\n\nCurrent configuration : 7033\
+          \ bytes\n!\n! Last configuration change at 22:14:23 UTC Fri May 28 2021\
+          \ by boxen\n!\nversion 16.12\nservice timestamps debug datetime msec\nservice\
+          \ timestamps log datetime msec\nservice call-home\nplatform qfp utilization\
+          \ monitor load 80\nplatform punt-keepalive disable-kernel-core\nplatform\
+          \ console serial\n!\nhostname csr1000v\n!\nboot-start-marker\nboot-end-marker\n\
+          !\n!\nenable secret 9 $9$xvWnx8Fe35f8xE$E9ijp7GM/V48P5y1Uz3IEPtotXgwkJKYJmN0q3q2E92\n\
+          !\nno aaa new-model\ncall-home\n ! If contact email address in call-home\
+          \ is configured as sch-smart-licensing@cisco.com\n ! the email address configured\
+          \ in Cisco Smart License Portal will be used as contact email address to\
+          \ send SCH notifications.\n contact-email-addr sch-smart-licensing@cisco.com\n\
+          \ profile \"CiscoTAC-1\"\n  active\n  destination transport-method http\n\
+          \  no destination transport-method email\n!\n!\n!\n!\n!\n!\n!\nno ip domain\
+          \ lookup\nip domain name example.com\n!\n!\n!\nlogin on-success log\n!\n\
+          !\n!\n!\n!\n!\n!\nsubscriber templating\n! \n! \n! \n! \n!\n!\nmultilink\
+          \ bundle-name authenticated\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n\
+          !\ncrypto pki trustpoint TP-self-signed-971124804\n enrollment selfsigned\n\
+          \ subject-name cn=IOS-Self-Signed-Certificate-971124804\n revocation-check\
+          \ none\n rsakeypair TP-self-signed-971124804\n!\ncrypto pki trustpoint SLA-TrustPoint\n\
+          \ enrollment pkcs12\n revocation-check crl\n!\n!\ncrypto pki certificate\
+          \ chain TP-self-signed-971124804\n certificate self-signed 01\n  3082032E\
+          \ 30820216 A0030201 02020101 300D0609 2A864886 F70D0101 05050030 \n  30312E30\
+          \ 2C060355 04031325 494F532D 53656C66 2D536967 6E65642D 43657274 \n  69666963\
+          \ 6174652D 39373131 32343830 34301E17 0D323130 35323831 39323031 \n  315A170D\
+          \ 33303031 30313030 30303030 5A303031 2E302C06 03550403 1325494F \n  532D5365\
+          \ 6C662D53 69676E65 642D4365 72746966 69636174 652D3937 31313234 \n  38303430\
+          \ 82012230 0D06092A 864886F7 0D010101 05000382 010F0030 82010A02 \n  82010100\
+          \ 9A5AFB47 FBB29463 C3B0E15E 881CAD52 5C652FC8 498B8FE2 BD025CA6 \n  9E98FB34\
+          \ 036B5B87 DC88A835 3B3A40DE 84ED8365 7CDA56F0 80630520 CCCE14A6 \n  9512C259\
+          \ 8D1E30E9 446A45EF 72464059 C0AB9279 F11AC3F6 71DFC173 95B99AE4 \n  3E4E32C6\
+          \ 00584C6C 7CE8A0FB 2DAEAC90 14516A4B C8B28D8C 444E9DDA 831DA497 \n  735818E4\
+          \ 5D7253C5 0FEE261A 0B9E9014 49AAAD3E E44AF3B1 351A19DC 7B78BE07 \n  D452B6CC\
+          \ 4032AC79 33D3EC32 178FA55D B4F30EF6 B4AFF847 FB1677B6 A8969B6A \n  AB7D7019\
+          \ 4436A67B 98CC2808 62136E03 CE3CBE98 D32EF392 85406D04 7CAF3BE7 \n  C2E34EAC\
+          \ 5F69E38A 6CC4E8B9 A00B76EC 79577B9B E5BBAA35 37D6B900 79D5EC0F \n  5837E09B\
+          \ 02030100 01A35330 51300F06 03551D13 0101FF04 05300301 01FF301F \n  0603551D\
+          \ 23041830 1680143A A780D0ED 95DFA1D7 42E88EBC DFCAA823 CFB03D30 \n  1D060355\
+          \ 1D0E0416 04143AA7 80D0ED95 DFA1D742 E88EBCDF CAA823CF B03D300D \n  06092A86\
+          \ 4886F70D 01010505 00038201 010026D4 17358B20 82C17EC6 33F7ED1D \n  8F6A52D0\
+          \ 67A557A0 46461293 D77EE377 1DB715B4 97C4C112 3FE955A9 99D17602 \n  AA6F0DC8\
+          \ A17F55D1 DDD335BF 4296E3C7 30974AA6 A260D83C EF127FE8 33ABF964 \n  C45FF04C\
+          \ 9E271FD8 B6F4986F F2AA4ED9 AA940143 45F7B6BD 0973946F 35F66CBF \n  5A7916D3\
+          \ AC478064 7C69FE20 C57F7538 4AD5CF79 671270D0 4F779ABE D62485C4 \n  8979887C\
+          \ 79AA9B8C C6A6036C E2AA78E2 4D4331FC 9C5F5BF8 78E6D796 31697E35 \n  54C0AA53\
+          \ E52EECD8 8ECF24E7 8A01A8D9 C33D8353 D9C34F93 CF41336A 02CD7F15 \n  22C3BF05\
+          \ 23579F26 EFF63502 3ED320ED 67E61168 9E25D8F0 B0FB882C 81E111FD \n  FC38A6E7\
+          \ 2DC02DC7 4DE9C66E 617E07DA 883A\n  \tquit\ncrypto pki certificate chain\
+          \ SLA-TrustPoint\n certificate ca 01\n  30820321 30820209 A0030201 02020101\
+          \ 300D0609 2A864886 F70D0101 0B050030 \n  32310E30 0C060355 040A1305 43697363\
+          \ 6F312030 1E060355 04031317 43697363 \n  6F204C69 63656E73 696E6720 526F6F74\
+          \ 20434130 1E170D31 33303533 30313934 \n  3834375A 170D3338 30353330 31393438\
+          \ 34375A30 32310E30 0C060355 040A1305 \n  43697363 6F312030 1E060355 04031317\
+          \ 43697363 6F204C69 63656E73 696E6720 \n  526F6F74 20434130 82012230 0D06092A\
+          \ 864886F7 0D010101 05000382 010F0030 \n  82010A02 82010100 A6BCBD96 131E05F7\
+          \ 145EA72C 2CD686E6 17222EA1 F1EFF64D \n  CBB4C798 212AA147 C655D8D7 9471380D\
+          \ 8711441E 1AAF071A 9CAE6388 8A38E520 \n  1C394D78 462EF239 C659F715 B98C0A59\
+          \ 5BBB5CBD 0CFEBEA3 700A8BF7 D8F256EE \n  4AA4E80D DB6FD1C9 60B1FD18 FFC69C96\
+          \ 6FA68957 A2617DE7 104FDC5F EA2956AC \n  7390A3EB 2B5436AD C847A2C5 DAB553EB\
+          \ 69A9A535 58E9F3E3 C0BD23CF 58BD7188 \n  68E69491 20F320E7 948E71D7 AE3BCC84\
+          \ F10684C7 4BC8E00F 539BA42B 42C68BB7 \n  C7479096 B4CB2D62 EA2F505D C7B062A4\
+          \ 6811D95B E8250FC4 5D5D5FB8 8F27D191 \n  C55F0D76 61F9A4CD 3D992327 A8BB03BD\
+          \ 4E6D7069 7CBADF8B DF5F4368 95135E44 \n  DFC7C6CF 04DD7FD1 02030100 01A34230\
+          \ 40300E06 03551D0F 0101FF04 04030201 \n  06300F06 03551D13 0101FF04 05300301\
+          \ 01FF301D 0603551D 0E041604 1449DC85 \n  4B3D31E5 1B3E6A17 606AF333 3D3B4C73\
+          \ E8300D06 092A8648 86F70D01 010B0500 \n  03820101 00507F24 D3932A66 86025D9F\
+          \ E838AE5C 6D4DF6B0 49631C78 240DA905 \n  604EDCDE FF4FED2B 77FC460E CD636FDB\
+          \ DD44681E 3A5673AB 9093D3B1 6C9E3D8B \n  D98987BF E40CBD9E 1AECA0C2 2189BB5C\
+          \ 8FA85686 CD98B646 5575B146 8DFC66A8 \n  467A3DF4 4D565700 6ADF0F0D CF835015\
+          \ 3C04FF7C 21E878AC 11BA9CD2 55A9232C \n  7CA7B7E6 C1AF74F6 152E99B7 B1FCF9BB\
+          \ E973DE7F 5BDDEB86 C71E3B49 1765308B \n  5FB0DA06 B92AFE7F 494E8A9E 07B85737\
+          \ F3A58BE1 1A48A229 C37C1E69 39F08678 \n  80DDCD16 D6BACECA EEBC7CF9 8428787B\
+          \ 35202CDC 60E4616A B623CDBD 230E3AFB \n  418616A9 4093E049 4D10AB75 27E86F73\
+          \ 932E35B5 8862FDAE 0275156F 719BB2F0 \n  D697DF7F 28\n  \tquit\n!\nlicense\
+          \ udi pid CSR1000V sn 9IB2R42M6QG\ndiagnostic bootup level minimal\narchive\n\
+          \ log config\n  logging enable\n path bootflash:\nmemory free low-watermark\
+          \ processor 72329\n!\n!\nspanning-tree extend system-id\n!\nusername boxen\
+          \ privilege 15 password 0 b0x3N-b0x3N\n!\nredundancy\n!\n!\n!\n!\n!\n!\n\
+          ! \n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n! \n! \n!\n!\ninterface GigabitEthernet1\n\
+          \ ip address 10.0.0.15 255.255.255.0\n negotiation auto\n no mop enabled\n\
+          \ no mop sysid\n!\ninterface GigabitEthernet2\n no ip address\n shutdown\n\
+          \ negotiation auto\n no mop enabled\n no mop sysid\n!\ninterface GigabitEthernet3\n\
+          \ no ip address\n shutdown\n negotiation auto\n no mop enabled\n no mop\
+          \ sysid\n!\ninterface GigabitEthernet4\n no ip address\n shutdown\n negotiation\
+          \ auto\n no mop enabled\n no mop sysid\n!\ninterface GigabitEthernet5\n\
+          \ no ip address\n shutdown\n negotiation auto\n no mop enabled\n no mop\
+          \ sysid\n!\ninterface GigabitEthernet6\n no ip address\n shutdown\n negotiation\
+          \ auto\n no mop enabled\n no mop sysid\n!\ninterface GigabitEthernet7\n\
+          \ no ip address\n shutdown\n negotiation auto\n no mop enabled\n no mop\
+          \ sysid\n!\ninterface GigabitEthernet8\n no ip address\n shutdown\n negotiation\
+          \ auto\n no mop enabled\n no mop sysid\n!\ninterface GigabitEthernet9\n\
+          \ no ip address\n shutdown\n negotiation auto\n no mop enabled\n no mop\
+          \ sysid\n!\ninterface GigabitEthernet10\n no ip address\n shutdown\n negotiation\
+          \ auto\n no mop enabled\n no mop sysid\n!\n!\nvirtual-service csr_mgmt\n\
+          !\nip forward-protocol nd\nno ip http server\nno ip http secure-server\n\
+          !\nip ssh pubkey-chain\n  username boxen\n   key-hash ssh-rsa 5CC74A68B18B026A1709FB09D1F44E2F\
+          \ \nip scp server enable\n!\n!\n!\n!\n!\n!\n!\ncontrol-plane\n!\n!\n!\n\
+          !\n!\n!\nline con 0\n stopbits 1\nline vty 0 4\n login local\n transport\
+          \ input all\nline vty 5 15\n login local\n transport input all\n!\nnetconf\
+          \ ssh\n!\n!\n!\n!\n!\nnetconf-yang\nend\n\ncsr1000v#"
+        result_privilege_level: privilege_exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      clear logg:
+        result_privilege_level: privilege_exec
+        event_steps:
+          - channel_input: clear logg
+            channel_output: Clear logging buffer [confirm]
+            hidden_input: false
+            returns_prompt: true
+          - channel_input: "\n"
+            channel_output: csr1000v#
+            hidden_input: false
+            returns_prompt: true
+        type: interactive
+  configuration:
+    pre_on_open:
+      terminal width 512:
+        channel_output: "                          ^\n% Invalid input detected at\
+          \ '^' marker.\n\ncsr1000v(config)#"
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      terminal length 0:
+        channel_output: "                          ^\n% Invalid input detected at\
+          \ '^' marker.\n\ncsr1000v(config)#"
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit:
+        channel_output: csr1000v#
+        result_privilege_level: privilege_exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure terminal:
+        channel_output: "                         ^\n% Invalid input detected at '^'\
+          \ marker.\n\ncsr1000v(config)#"
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      tclsh:
+        channel_output: "                  ^\n% Invalid input detected at '^' marker.\n\
+          \ncsr1000v(config)#"
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      disable:
+        channel_output: "                   ^\n% Invalid input detected at '^' marker.\n\
+          \ncsr1000v(config)#"
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      end:
+        channel_output: csr1000v#
+        result_privilege_level: privilege_exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      tclquit:
+        channel_output: "                  ^\n% Invalid input detected at '^' marker.\n\
+          \ncsr1000v(config)#"
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      enable:
+        result_privilege_level: configuration
+        event_steps:
+          - channel_input: enable
+            channel_output: "% Incomplete command.\n\ncsr1000v(config)#"
+            hidden_input: false
+            returns_prompt: true
+        type: interactive
+      show version:
+        channel_output: "                   ^\n% Invalid input detected at '^' marker.\n\
+          \ncsr1000v(config)#"
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      show run:
+        channel_output: "                   ^\n% Invalid input detected at '^' marker.\n\
+          \ncsr1000v(config)#"
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      clear logg:
+        result_privilege_level: configuration
+        event_steps:
+          - channel_input: clear logg
+            channel_output: "                   ^\n% Invalid input detected at '^'\
+              \ marker.\n\ncsr1000v(config)#"
+            hidden_input: false
+            returns_prompt: true
+        type: interactive
+    post_on_open:
+      terminal width 512:
+        channel_output: "                          ^\n% Invalid input detected at\
+          \ '^' marker.\n\ncsr1000v(config)#"
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      terminal length 0:
+        channel_output: "                          ^\n% Invalid input detected at\
+          \ '^' marker.\n\ncsr1000v(config)#"
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit:
+        channel_output: csr1000v#
+        result_privilege_level: privilege_exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure terminal:
+        channel_output: "                         ^\n% Invalid input detected at '^'\
+          \ marker.\n\ncsr1000v(config)#"
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      tclsh:
+        channel_output: "                  ^\n% Invalid input detected at '^' marker.\n\
+          \ncsr1000v(config)#"
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      disable:
+        channel_output: "                   ^\n% Invalid input detected at '^' marker.\n\
+          \ncsr1000v(config)#"
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      end:
+        channel_output: csr1000v#
+        result_privilege_level: privilege_exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      tclquit:
+        channel_output: "                  ^\n% Invalid input detected at '^' marker.\n\
+          \ncsr1000v(config)#"
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      enable:
+        result_privilege_level: configuration
+        event_steps:
+          - channel_input: enable
+            channel_output: "% Incomplete command.\n\ncsr1000v(config)#"
+            hidden_input: false
+            returns_prompt: true
+        type: interactive
+      show version:
+        channel_output: "                   ^\n% Invalid input detected at '^' marker.\n\
+          \ncsr1000v(config)#"
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      show run:
+        channel_output: "                   ^\n% Invalid input detected at '^' marker.\n\
+          \ncsr1000v(config)#"
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      clear logg:
+        result_privilege_level: configuration
+        event_steps:
+          - channel_input: clear logg
+            channel_output: "                   ^\n% Invalid input detected at '^'\
+              \ marker.\n\ncsr1000v(config)#"
+            hidden_input: false
+            returns_prompt: true
+        type: interactive
+  tclsh:
+    pre_on_open:
+      terminal width 512:
+        channel_output: csr1000v(tcl)#
+        result_privilege_level: tclsh
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      terminal length 0:
+        channel_output: csr1000v(tcl)#
+        result_privilege_level: tclsh
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit:
+        channel_output: csr1000v#
+        result_privilege_level: privilege_exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure terminal:
+        channel_output: "% Configuration not allowed from TCL shell.Use 'ios_config'\
+          \ instead\ncsr1000v(tcl)#"
+        result_privilege_level: tclsh
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      tclsh:
+        channel_output: csr1000v(tcl)#
+        result_privilege_level: tclsh
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      disable:
+        channel_output: csr1000v(tcl)>
+        result_privilege_level: tclsh
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      end:
+        channel_output: "invalid command name \"end\"                ^\n% Invalid\
+          \ input detected at '^' marker.\n\ncsr1000v(tcl)#"
+        result_privilege_level: tclsh
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      tclquit:
+        channel_output: csr1000v#
+        result_privilege_level: privilege_exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      enable:
+        result_privilege_level: tclsh
+        event_steps:
+          - channel_input: enable
+            channel_output: csr1000v(tcl)#
+            hidden_input: false
+            returns_prompt: true
+        type: interactive
+      show version:
+        channel_output: "Cisco IOS XE Software, Version 16.12.03\nCisco IOS Software\
+          \ [Gibraltar], Virtual XE Software (X86_64_LINUX_IOSD-UNIVERSALK9-M), Version\
+          \ 16.12.3, RELEASE SOFTWARE (fc5)\nTechnical Support: http://www.cisco.com/techsupport\n\
+          Copyright (c) 1986-2020 by Cisco Systems, Inc.\nCompiled Mon 09-Mar-20 21:50\
+          \ by mcpre\n\n\nCisco IOS-XE software, Copyright (c) 2005-2020 by cisco\
+          \ Systems, Inc.\nAll rights reserved.  Certain components of Cisco IOS-XE\
+          \ software are\nlicensed under the GNU General Public License (\"GPL\")\
+          \ Version 2.0.  The\nsoftware code licensed under GPL Version 2.0 is free\
+          \ software that comes\nwith ABSOLUTELY NO WARRANTY.  You can redistribute\
+          \ and/or modify such\nGPL code under the terms of GPL Version 2.0.  For\
+          \ more details, see the\ndocumentation or \"License Notice\" file accompanying\
+          \ the IOS-XE software,\nor the applicable URL provided on the flyer accompanying\
+          \ the IOS-XE\nsoftware.\n\n\nROM: IOS-XE ROMMON\n\ncsr1000v uptime is 2\
+          \ hours, 17 minutes\nUptime for this control processor is 2 hours, 18 minutes\n\
+          \ --More-- "
+        result_privilege_level: tclsh
+        returns_prompt: false
+        closes_connection: false
+        type: standard
+      show run:
+        channel_output: "Building configuration...\n\nCurrent configuration : 7033\
+          \ bytes\n!\n! Last configuration change at 22:14:19 UTC Fri May 28 2021\
+          \ by boxen\n!\nversion 16.12\nservice timestamps debug datetime msec\nservice\
+          \ timestamps log datetime msec\nservice call-home\nplatform qfp utilization\
+          \ monitor load 80\nplatform punt-keepalive disable-kernel-core\nplatform\
+          \ console serial\n!\nhostname csr1000v\n!\nboot-start-marker\nboot-end-marker\n\
+          !\n!\nenable secret 9 $9$xvWnx8Fe35f8xE$E9ijp7GM/V48P5y1Uz3IEPtotXgwkJKYJmN0q3q2E92\n\
+          !\nno aaa new-model\ncall-home\n --More-- "
+        result_privilege_level: tclsh
+        returns_prompt: false
+        closes_connection: false
+        type: standard
+      clear logg:
+        result_privilege_level: tclsh
+        event_steps:
+          - channel_input: clear logg
+            channel_output: Clear logging buffer [confirm]
+            hidden_input: false
+            returns_prompt: true
+          - channel_input: "\n"
+            channel_output: csr1000v(tcl)#
+            hidden_input: false
+            returns_prompt: true
+        type: interactive
+    post_on_open:
+      terminal width 512:
+        channel_output: csr1000v(tcl)#
+        result_privilege_level: tclsh
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      terminal length 0:
+        channel_output: csr1000v(tcl)#
+        result_privilege_level: tclsh
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit:
+        channel_output: csr1000v#
+        result_privilege_level: privilege_exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure terminal:
+        channel_output: "% Configuration not allowed from TCL shell.Use 'ios_config'\
+          \ instead\ncsr1000v(tcl)#"
+        result_privilege_level: tclsh
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      tclsh:
+        channel_output: csr1000v(tcl)#
+        result_privilege_level: tclsh
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      disable:
+        channel_output: csr1000v(tcl)>
+        result_privilege_level: tclsh
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      end:
+        channel_output: "invalid command name \"end\"                ^\n% Invalid\
+          \ input detected at '^' marker.\n\ncsr1000v(tcl)#"
+        result_privilege_level: tclsh
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      tclquit:
+        channel_output: csr1000v#
+        result_privilege_level: privilege_exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      enable:
+        result_privilege_level: tclsh
+        event_steps:
+          - channel_input: enable
+            channel_output: csr1000v(tcl)#
+            hidden_input: false
+            returns_prompt: true
+        type: interactive
+      show version:
+        channel_output: "Cisco IOS XE Software, Version 16.12.03\nCisco IOS Software\
+          \ [Gibraltar], Virtual XE Software (X86_64_LINUX_IOSD-UNIVERSALK9-M), Version\
+          \ 16.12.3, RELEASE SOFTWARE (fc5)\nTechnical Support: http://www.cisco.com/techsupport\n\
+          Copyright (c) 1986-2020 by Cisco Systems, Inc.\nCompiled Mon 09-Mar-20 21:50\
+          \ by mcpre\n\n\nCisco IOS-XE software, Copyright (c) 2005-2020 by cisco\
+          \ Systems, Inc.\nAll rights reserved.  Certain components of Cisco IOS-XE\
+          \ software are\nlicensed under the GNU General Public License (\"GPL\")\
+          \ Version 2.0.  The\nsoftware code licensed under GPL Version 2.0 is free\
+          \ software that comes\nwith ABSOLUTELY NO WARRANTY.  You can redistribute\
+          \ and/or modify such\nGPL code under the terms of GPL Version 2.0.  For\
+          \ more details, see the\ndocumentation or \"License Notice\" file accompanying\
+          \ the IOS-XE software,\nor the applicable URL provided on the flyer accompanying\
+          \ the IOS-XE\nsoftware.\n\n\nROM: IOS-XE ROMMON\n\ncsr1000v uptime is 2\
+          \ hours, 17 minutes\nUptime for this control processor is 2 hours, 18 minutes\n\
+          System returned to ROM by reload\nSystem image file is \"bootflash:packages.conf\"\
+          \nLast reload reason: reload\n\n\n\nThis product contains cryptographic\
+          \ features and is subject to United\nStates and local country laws governing\
+          \ import, export, transfer and\nuse. Delivery of Cisco cryptographic products\
+          \ does not imply\nthird-party authority to import, export, distribute or\
+          \ use encryption.\nImporters, exporters, distributors and users are responsible\
+          \ for\ncompliance with U.S. and local country laws. By using this product\
+          \ you\nagree to comply with applicable laws and regulations. If you are\
+          \ unable\nto comply with U.S. and local laws, return this product immediately.\n\
+          \nA summary of U.S. laws governing Cisco cryptographic products may be found\
+          \ at:\nhttp://www.cisco.com/wwl/export/crypto/tool/stqrg.html\n\nIf you\
+          \ require further assistance please contact us by sending email to\nexport@cisco.com.\n\
+          \nLicense Level: ax\nLicense Type: N/A(Smart License Enabled)\nNext reload\
+          \ license Level: ax\n\n\nSmart Licensing Status: UNREGISTERED/No Licenses\
+          \ in Use\n\ncisco CSR1000V (VXE) processor (revision VXE) with 2080230K/3075K\
+          \ bytes of memory.\nProcessor board ID 9IB2R42M6QG\n10 Gigabit Ethernet\
+          \ interfaces\n32768K bytes of non-volatile configuration memory.\n3978344K\
+          \ bytes of physical memory.\n6188032K bytes of virtual hard disk at bootflash:.\n\
+          0K bytes of WebUI ODM Files at webui:.\n\nConfiguration register is 0x2102\n\
+          \ncsr1000v(tcl)#"
+        result_privilege_level: tclsh
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      show run:
+        channel_output: "Building configuration...\n\nCurrent configuration : 7033\
+          \ bytes\n!\n! Last configuration change at 22:14:23 UTC Fri May 28 2021\
+          \ by boxen\n!\nversion 16.12\nservice timestamps debug datetime msec\nservice\
+          \ timestamps log datetime msec\nservice call-home\nplatform qfp utilization\
+          \ monitor load 80\nplatform punt-keepalive disable-kernel-core\nplatform\
+          \ console serial\n!\nhostname csr1000v\n!\nboot-start-marker\nboot-end-marker\n\
+          !\n!\nenable secret 9 $9$xvWnx8Fe35f8xE$E9ijp7GM/V48P5y1Uz3IEPtotXgwkJKYJmN0q3q2E92\n\
+          !\nno aaa new-model\ncall-home\n ! If contact email address in call-home\
+          \ is configured as sch-smart-licensing@cisco.com\n ! the email address configured\
+          \ in Cisco Smart License Portal will be used as contact email address to\
+          \ send SCH notifications.\n contact-email-addr sch-smart-licensing@cisco.com\n\
+          \ profile \"CiscoTAC-1\"\n  active\n  destination transport-method http\n\
+          \  no destination transport-method email\n!\n!\n!\n!\n!\n!\n!\nno ip domain\
+          \ lookup\nip domain name example.com\n!\n!\n!\nlogin on-success log\n!\n\
+          !\n!\n!\n!\n!\n!\nsubscriber templating\n! \n! \n! \n! \n!\n!\nmultilink\
+          \ bundle-name authenticated\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n\
+          !\ncrypto pki trustpoint TP-self-signed-971124804\n enrollment selfsigned\n\
+          \ subject-name cn=IOS-Self-Signed-Certificate-971124804\n revocation-check\
+          \ none\n rsakeypair TP-self-signed-971124804\n!\ncrypto pki trustpoint SLA-TrustPoint\n\
+          \ enrollment pkcs12\n revocation-check crl\n!\n!\ncrypto pki certificate\
+          \ chain TP-self-signed-971124804\n certificate self-signed 01\n  3082032E\
+          \ 30820216 A0030201 02020101 300D0609 2A864886 F70D0101 05050030 \n  30312E30\
+          \ 2C060355 04031325 494F532D 53656C66 2D536967 6E65642D 43657274 \n  69666963\
+          \ 6174652D 39373131 32343830 34301E17 0D323130 35323831 39323031 \n  315A170D\
+          \ 33303031 30313030 30303030 5A303031 2E302C06 03550403 1325494F \n  532D5365\
+          \ 6C662D53 69676E65 642D4365 72746966 69636174 652D3937 31313234 \n  38303430\
+          \ 82012230 0D06092A 864886F7 0D010101 05000382 010F0030 82010A02 \n  82010100\
+          \ 9A5AFB47 FBB29463 C3B0E15E 881CAD52 5C652FC8 498B8FE2 BD025CA6 \n  9E98FB34\
+          \ 036B5B87 DC88A835 3B3A40DE 84ED8365 7CDA56F0 80630520 CCCE14A6 \n  9512C259\
+          \ 8D1E30E9 446A45EF 72464059 C0AB9279 F11AC3F6 71DFC173 95B99AE4 \n  3E4E32C6\
+          \ 00584C6C 7CE8A0FB 2DAEAC90 14516A4B C8B28D8C 444E9DDA 831DA497 \n  735818E4\
+          \ 5D7253C5 0FEE261A 0B9E9014 49AAAD3E E44AF3B1 351A19DC 7B78BE07 \n  D452B6CC\
+          \ 4032AC79 33D3EC32 178FA55D B4F30EF6 B4AFF847 FB1677B6 A8969B6A \n  AB7D7019\
+          \ 4436A67B 98CC2808 62136E03 CE3CBE98 D32EF392 85406D04 7CAF3BE7 \n  C2E34EAC\
+          \ 5F69E38A 6CC4E8B9 A00B76EC 79577B9B E5BBAA35 37D6B900 79D5EC0F \n  5837E09B\
+          \ 02030100 01A35330 51300F06 03551D13 0101FF04 05300301 01FF301F \n  0603551D\
+          \ 23041830 1680143A A780D0ED 95DFA1D7 42E88EBC DFCAA823 CFB03D30 \n  1D060355\
+          \ 1D0E0416 04143AA7 80D0ED95 DFA1D742 E88EBCDF CAA823CF B03D300D \n  06092A86\
+          \ 4886F70D 01010505 00038201 010026D4 17358B20 82C17EC6 33F7ED1D \n  8F6A52D0\
+          \ 67A557A0 46461293 D77EE377 1DB715B4 97C4C112 3FE955A9 99D17602 \n  AA6F0DC8\
+          \ A17F55D1 DDD335BF 4296E3C7 30974AA6 A260D83C EF127FE8 33ABF964 \n  C45FF04C\
+          \ 9E271FD8 B6F4986F F2AA4ED9 AA940143 45F7B6BD 0973946F 35F66CBF \n  5A7916D3\
+          \ AC478064 7C69FE20 C57F7538 4AD5CF79 671270D0 4F779ABE D62485C4 \n  8979887C\
+          \ 79AA9B8C C6A6036C E2AA78E2 4D4331FC 9C5F5BF8 78E6D796 31697E35 \n  54C0AA53\
+          \ E52EECD8 8ECF24E7 8A01A8D9 C33D8353 D9C34F93 CF41336A 02CD7F15 \n  22C3BF05\
+          \ 23579F26 EFF63502 3ED320ED 67E61168 9E25D8F0 B0FB882C 81E111FD \n  FC38A6E7\
+          \ 2DC02DC7 4DE9C66E 617E07DA 883A\n  \tquit\ncrypto pki certificate chain\
+          \ SLA-TrustPoint\n certificate ca 01\n  30820321 30820209 A0030201 02020101\
+          \ 300D0609 2A864886 F70D0101 0B050030 \n  32310E30 0C060355 040A1305 43697363\
+          \ 6F312030 1E060355 04031317 43697363 \n  6F204C69 63656E73 696E6720 526F6F74\
+          \ 20434130 1E170D31 33303533 30313934 \n  3834375A 170D3338 30353330 31393438\
+          \ 34375A30 32310E30 0C060355 040A1305 \n  43697363 6F312030 1E060355 04031317\
+          \ 43697363 6F204C69 63656E73 696E6720 \n  526F6F74 20434130 82012230 0D06092A\
+          \ 864886F7 0D010101 05000382 010F0030 \n  82010A02 82010100 A6BCBD96 131E05F7\
+          \ 145EA72C 2CD686E6 17222EA1 F1EFF64D \n  CBB4C798 212AA147 C655D8D7 9471380D\
+          \ 8711441E 1AAF071A 9CAE6388 8A38E520 \n  1C394D78 462EF239 C659F715 B98C0A59\
+          \ 5BBB5CBD 0CFEBEA3 700A8BF7 D8F256EE \n  4AA4E80D DB6FD1C9 60B1FD18 FFC69C96\
+          \ 6FA68957 A2617DE7 104FDC5F EA2956AC \n  7390A3EB 2B5436AD C847A2C5 DAB553EB\
+          \ 69A9A535 58E9F3E3 C0BD23CF 58BD7188 \n  68E69491 20F320E7 948E71D7 AE3BCC84\
+          \ F10684C7 4BC8E00F 539BA42B 42C68BB7 \n  C7479096 B4CB2D62 EA2F505D C7B062A4\
+          \ 6811D95B E8250FC4 5D5D5FB8 8F27D191 \n  C55F0D76 61F9A4CD 3D992327 A8BB03BD\
+          \ 4E6D7069 7CBADF8B DF5F4368 95135E44 \n  DFC7C6CF 04DD7FD1 02030100 01A34230\
+          \ 40300E06 03551D0F 0101FF04 04030201 \n  06300F06 03551D13 0101FF04 05300301\
+          \ 01FF301D 0603551D 0E041604 1449DC85 \n  4B3D31E5 1B3E6A17 606AF333 3D3B4C73\
+          \ E8300D06 092A8648 86F70D01 010B0500 \n  03820101 00507F24 D3932A66 86025D9F\
+          \ E838AE5C 6D4DF6B0 49631C78 240DA905 \n  604EDCDE FF4FED2B 77FC460E CD636FDB\
+          \ DD44681E 3A5673AB 9093D3B1 6C9E3D8B \n  D98987BF E40CBD9E 1AECA0C2 2189BB5C\
+          \ 8FA85686 CD98B646 5575B146 8DFC66A8 \n  467A3DF4 4D565700 6ADF0F0D CF835015\
+          \ 3C04FF7C 21E878AC 11BA9CD2 55A9232C \n  7CA7B7E6 C1AF74F6 152E99B7 B1FCF9BB\
+          \ E973DE7F 5BDDEB86 C71E3B49 1765308B \n  5FB0DA06 B92AFE7F 494E8A9E 07B85737\
+          \ F3A58BE1 1A48A229 C37C1E69 39F08678 \n  80DDCD16 D6BACECA EEBC7CF9 8428787B\
+          \ 35202CDC 60E4616A B623CDBD 230E3AFB \n  418616A9 4093E049 4D10AB75 27E86F73\
+          \ 932E35B5 8862FDAE 0275156F 719BB2F0 \n  D697DF7F 28\n  \tquit\n!\nlicense\
+          \ udi pid CSR1000V sn 9IB2R42M6QG\ndiagnostic bootup level minimal\narchive\n\
+          \ log config\n  logging enable\n path bootflash:\nmemory free low-watermark\
+          \ processor 72329\n!\n!\nspanning-tree extend system-id\n!\nusername boxen\
+          \ privilege 15 password 0 b0x3N-b0x3N\n!\nredundancy\n!\n!\n!\n!\n!\n!\n\
+          ! \n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n!\n! \n! \n!\n!\ninterface GigabitEthernet1\n\
+          \ ip address 10.0.0.15 255.255.255.0\n negotiation auto\n no mop enabled\n\
+          \ no mop sysid\n!\ninterface GigabitEthernet2\n no ip address\n shutdown\n\
+          \ negotiation auto\n no mop enabled\n no mop sysid\n!\ninterface GigabitEthernet3\n\
+          \ no ip address\n shutdown\n negotiation auto\n no mop enabled\n no mop\
+          \ sysid\n!\ninterface GigabitEthernet4\n no ip address\n shutdown\n negotiation\
+          \ auto\n no mop enabled\n no mop sysid\n!\ninterface GigabitEthernet5\n\
+          \ no ip address\n shutdown\n negotiation auto\n no mop enabled\n no mop\
+          \ sysid\n!\ninterface GigabitEthernet6\n no ip address\n shutdown\n negotiation\
+          \ auto\n no mop enabled\n no mop sysid\n!\ninterface GigabitEthernet7\n\
+          \ no ip address\n shutdown\n negotiation auto\n no mop enabled\n no mop\
+          \ sysid\n!\ninterface GigabitEthernet8\n no ip address\n shutdown\n negotiation\
+          \ auto\n no mop enabled\n no mop sysid\n!\ninterface GigabitEthernet9\n\
+          \ no ip address\n shutdown\n negotiation auto\n no mop enabled\n no mop\
+          \ sysid\n!\ninterface GigabitEthernet10\n no ip address\n shutdown\n negotiation\
+          \ auto\n no mop enabled\n no mop sysid\n!\n!\nvirtual-service csr_mgmt\n\
+          !\nip forward-protocol nd\nno ip http server\nno ip http secure-server\n\
+          !\nip ssh pubkey-chain\n  username boxen\n   key-hash ssh-rsa 5CC74A68B18B026A1709FB09D1F44E2F\
+          \ \nip scp server enable\n!\n!\n!\n!\n!\n!\n!\ncontrol-plane\n!\n!\n!\n\
+          !\n!\n!\nline con 0\n stopbits 1\nline vty 0 4\n login local\n transport\
+          \ input all\nline vty 5 15\n login local\n transport input all\n!\nnetconf\
+          \ ssh\n!\n!\n!\n!\n!\nnetconf-yang\nend\n\ncsr1000v(tcl)#"
+        result_privilege_level: tclsh
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      clear logg:
+        result_privilege_level: tclsh
+        event_steps:
+          - channel_input: clear logg
+            channel_output: Clear logging buffer [confirm]
+            hidden_input: false
+            returns_prompt: true
+          - channel_input: "\n"
+            channel_output: csr1000v(tcl)#
+            hidden_input: false
+            returns_prompt: true
+        type: interactive
+unknown_events:
+  exec:
+    pre_on_open:
+      channel_output: "% Bad IP address or host name% Unknown command or computer\
+        \ name, or unable to find computer address\ncsr1000v>"
+      result_privilege_level: exec
+      returns_prompt: true
+      closes_connection: false
+    post_on_open:
+      channel_output: "% Bad IP address or host name% Unknown command or computer\
+        \ name, or unable to find computer address\ncsr1000v>"
+      result_privilege_level: exec
+      returns_prompt: true
+      closes_connection: false
+  privilege_exec:
+    pre_on_open:
+      channel_output: "% Bad IP address or host name% Unknown command or computer\
+        \ name, or unable to find computer address\ncsr1000v#"
+      result_privilege_level: privilege_exec
+      returns_prompt: true
+      closes_connection: false
+    post_on_open:
+      channel_output: "% Bad IP address or host name% Unknown command or computer\
+        \ name, or unable to find computer address\ncsr1000v#"
+      result_privilege_level: privilege_exec
+      returns_prompt: true
+      closes_connection: false
+  configuration:
+    pre_on_open:
+      channel_output: "                 ^\n% Invalid input detected at '^' marker.\n\
+        \ncsr1000v(config)#"
+      result_privilege_level: configuration
+      returns_prompt: true
+      closes_connection: false
+    post_on_open:
+      channel_output: "                 ^\n% Invalid input detected at '^' marker.\n\
+        \ncsr1000v(config)#"
+      result_privilege_level: configuration
+      returns_prompt: true
+      closes_connection: false
+  tclsh:
+    pre_on_open:
+      channel_output: "invalid command name \"__UNKNOWN_INPUT__\"              ^\n\
+        % Invalid input detected at '^' marker.\n\ncsr1000v(tcl)#"
+      result_privilege_level: tclsh
+      returns_prompt: true
+      closes_connection: false
+    post_on_open:
+      channel_output: "invalid command name \"__UNKNOWN_INPUT__\"              ^\n\
+        % Invalid input detected at '^' marker.\n\ncsr1000v(tcl)#"
+      result_privilege_level: tclsh
+      returns_prompt: true
+      closes_connection: false
+initial_privilege_level: privilege_exec
+privilege_level_prompts:
+  exec: csr1000v>
+  privilege_exec: csr1000v#
+  configuration: csr1000v(config)#
+  tclsh: csr1000v(tcl)#
+on_open_inputs:
+  - terminal width 512
+  - terminal length 0

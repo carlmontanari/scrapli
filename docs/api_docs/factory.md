@@ -422,8 +422,8 @@ class Scrapli(NetworkDriver):
             timeout_transport: timeout for ssh|telnet transport in seconds
             timeout_ops: timeout for ssh channel operations
             comms_return_char: character to use to send returns to host
-            comms_ansi: True/False strip comms_ansi characters from output, generally the default
-                value of False should be fine
+            comms_ansi: *DEPRECATED* True/False strip comms_ansi characters from output, generally
+                the default value of False should be fine
             ssh_config_file: string to path for ssh config file, True to use default ssh config file
                 or False to ignore default ssh config file
             ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
@@ -717,8 +717,8 @@ class AsyncScrapli(AsyncNetworkDriver):
             timeout_transport: timeout for ssh|telnet transport in seconds
             timeout_ops: timeout for ssh channel operations
             comms_return_char: character to use to send returns to host
-            comms_ansi: True/False strip comms_ansi characters from output, generally the default
-                value of False should be fine
+            comms_ansi: *DEPRECATED* True/False strip comms_ansi characters from output, generally
+                the default value of False should be fine
             ssh_config_file: string to path for ssh config file, True to use default ssh config file
                 or False to ignore default ssh config file
             ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
@@ -883,8 +883,6 @@ Args:
         should be mostly sorted for you if using network drivers (i.e. `IOSXEDriver`).
         Lastly, the case insensitive is just a convenience factor so i can be lazy.
     comms_return_char: character to use to send returns to host
-    comms_ansi: True/False strip comms_ansi characters from output, generally the default
-        value of False should be fine
     ssh_config_file: string to path for ssh config file, True to use default ssh config file
         or False to ignore default ssh config file
     ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
@@ -1112,8 +1110,8 @@ class AsyncScrapli(AsyncNetworkDriver):
             timeout_transport: timeout for ssh|telnet transport in seconds
             timeout_ops: timeout for ssh channel operations
             comms_return_char: character to use to send returns to host
-            comms_ansi: True/False strip comms_ansi characters from output, generally the default
-                value of False should be fine
+            comms_ansi: *DEPRECATED* True/False strip comms_ansi characters from output, generally
+                the default value of False should be fine
             ssh_config_file: string to path for ssh config file, True to use default ssh config file
                 or False to ignore default ssh config file
             ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
@@ -1333,8 +1331,6 @@ Args:
         should be mostly sorted for you if using network drivers (i.e. `IOSXEDriver`).
         Lastly, the case insensitive is just a convenience factor so i can be lazy.
     comms_return_char: character to use to send returns to host
-    comms_ansi: True/False strip comms_ansi characters from output, generally the default
-        value of False should be fine
     ssh_config_file: string to path for ssh config file, True to use default ssh config file
         or False to ignore default ssh config file
     ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
@@ -1562,8 +1558,8 @@ class Scrapli(NetworkDriver):
             timeout_transport: timeout for ssh|telnet transport in seconds
             timeout_ops: timeout for ssh channel operations
             comms_return_char: character to use to send returns to host
-            comms_ansi: True/False strip comms_ansi characters from output, generally the default
-                value of False should be fine
+            comms_ansi: *DEPRECATED* True/False strip comms_ansi characters from output, generally
+                the default value of False should be fine
             ssh_config_file: string to path for ssh config file, True to use default ssh config file
                 or False to ignore default ssh config file
             ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known

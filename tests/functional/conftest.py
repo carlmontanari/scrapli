@@ -2,8 +2,6 @@ import pytest
 
 from scrapli.driver import GenericDriver
 
-from .test_data.devices import DEVICES
-
 TIMEOUT_SOCKET = 10
 TIMEOUT_TRANSPORT = 10
 TIMEOUT_OPS = 30
@@ -11,6 +9,16 @@ TELNET_TRANSPORTS = (
     "telnet",
     "asynctelnet",
 )
+
+
+@pytest.fixture(scope="session")
+def real_invalid_ssh_key_path(test_data_path):
+    return f"{test_data_path}/files/invalid_key"
+
+
+@pytest.fixture(scope="session")
+def real_valid_ssh_key_path(test_data_path):
+    return f"{test_data_path}/files/scrapli_key"
 
 
 @pytest.fixture(
@@ -32,11 +40,11 @@ def async_transport(request):
 
 
 @pytest.fixture(scope="class")
-def nix_conn(transport):
+def nix_conn(test_devices_dict, transport):
     if transport in TELNET_TRANSPORTS:
         pytest.skip("skipping telnet for linux hosts")
 
-    device = DEVICES["linux"].copy()
+    device = test_devices_dict["linux"].copy()
     driver = device.pop("driver")
     device.pop("async_driver")
 
@@ -49,11 +57,11 @@ def nix_conn(transport):
 
 
 @pytest.fixture(scope="class")
-def nix_conn_generic(transport):
+def nix_conn_generic(test_devices_dict, transport):
     if transport in TELNET_TRANSPORTS:
         pytest.skip("skipping telnet for linux hosts")
 
-    device = DEVICES["linux"].copy()
+    device = test_devices_dict["linux"].copy()
     device.pop("driver")
     device.pop("async_driver")
 
@@ -66,8 +74,8 @@ def nix_conn_generic(transport):
 
 
 @pytest.fixture(scope="class")
-def conn(device_type, transport):
-    device = DEVICES[device_type].copy()
+def conn(test_devices_dict, device_type, transport):
+    device = test_devices_dict[device_type].copy()
     driver = device.pop("driver")
     device.pop("base_config")
     device.pop("async_driver")
@@ -90,8 +98,8 @@ def conn(device_type, transport):
 
 # scoping to function is probably dumb but dont have to screw around with which event loop is what this way
 @pytest.fixture(scope="function")
-async def async_conn(device_type, async_transport):
-    device = DEVICES[device_type].copy()
+async def async_conn(test_devices_dict, device_type, async_transport):
+    device = test_devices_dict[device_type].copy()
     driver = device.pop("async_driver")
     device.pop("base_config")
     device.pop("driver")
@@ -116,8 +124,8 @@ async def async_conn(device_type, async_transport):
 
 
 @pytest.fixture(scope="class")
-def iosxe_conn(transport):
-    device = DEVICES["cisco_iosxe"].copy()
+def iosxe_conn(test_devices_dict, transport):
+    device = test_devices_dict["cisco_iosxe"].copy()
     driver = device.pop("driver")
     device.pop("base_config")
     device.pop("async_driver")
@@ -137,8 +145,8 @@ def iosxe_conn(transport):
 
 
 @pytest.fixture(scope="class")
-def iosxr_conn(transport):
-    device = DEVICES["cisco_iosxr"].copy()
+def iosxr_conn(test_devices_dict, transport):
+    device = test_devices_dict["cisco_iosxr"].copy()
     driver = device.pop("driver")
     device.pop("base_config")
     device.pop("async_driver")
@@ -160,8 +168,8 @@ def iosxr_conn(transport):
 
 
 @pytest.fixture(scope="class")
-def junos_conn(transport):
-    device = DEVICES["juniper_junos"].copy()
+def junos_conn(test_devices_dict, transport):
+    device = test_devices_dict["juniper_junos"].copy()
     driver = device.pop("driver")
     device.pop("base_config")
     device.pop("async_driver")
@@ -183,8 +191,8 @@ def junos_conn(transport):
 
 
 @pytest.fixture(scope="class")
-def eos_conn(transport):
-    device = DEVICES["arista_eos"].copy()
+def eos_conn(test_devices_dict, transport):
+    device = test_devices_dict["arista_eos"].copy()
     driver = device.pop("driver")
     device.pop("base_config")
     device.pop("async_driver")
@@ -204,8 +212,8 @@ def eos_conn(transport):
 
 
 @pytest.fixture(scope="class")
-def nxos_conn(transport):
-    device = DEVICES["cisco_nxos"].copy()
+def nxos_conn(test_devices_dict, transport):
+    device = test_devices_dict["cisco_nxos"].copy()
     driver = device.pop("driver")
     device.pop("base_config")
     device.pop("async_driver")

@@ -6,7 +6,6 @@ on:
     - cron: '0 10 * * 0'
   workflow_dispatch:
 
-# in the future make this just call the commit workflow, but right now looks a little hacky to do in actions
 jobs:
   darglint:
     runs-on: ${{ matrix.os }}
@@ -32,10 +31,10 @@ jobs:
   build_posix:
     runs-on: ${{ matrix.os }}
     strategy:
-      max-parallel: 9
+      max-parallel: 12
       matrix:
         os: [ubuntu-latest, macos-latest]
-        version: [3.6, 3.7, 3.8, 3.9]
+        version: [3.6, 3.7, 3.8, 3.9, 3.10.0-beta.1]
     steps:
       - uses: actions/checkout@v2
       - name: set up python ${{ matrix.version }}
@@ -47,11 +46,6 @@ jobs:
         # version we are targeting with nox, while still having versions like 3.9.0a4
         run: |
           echo "FRIENDLY_PYTHON_VERSION=$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")" >> $GITHUB_ENV
-      - name: install libxml2 and libxslt seems to only be needed for 3.9 image for some reason
-        if: matrix.os == 'ubuntu-latest' && matrix.version == '3.9'
-        run: |
-          sudo apt install libxml2-dev
-          sudo apt install libxslt-dev
       - name: setup test env
         run: |
           python -m pip install --upgrade pip

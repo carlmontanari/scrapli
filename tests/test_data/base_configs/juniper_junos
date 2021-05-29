@@ -1,0 +1,114 @@
+## Last commit: 2020-03-20 20:32:38 UTC by root
+version 17.3R2.10;
+system {
+    root-authentication {
+        encrypted-password "$6$RhR81Jm4$DEXKIbZNGjv.agJvM.FlIZWtFqX/966PZk0r4/Ps3LlS.OQZn9fHoVGuYJ7Q.hj2OQLyPJO6Mq7aQ3xLQiNrx/"; ## SECRET-DATA
+    }
+    login {
+        user boxen {
+            uid 2000;
+            class super-user;
+            authentication {
+                encrypted-password "$6$iYt26fU9$gkt6bgxPs.VqHgCoLuSD6Kxv1JUHJLQzXJgzAEUIxobvxWwRErtpaOFvBOjIHr3KMI7sEo.V/7xLXzr0Ok20h0"; ## SECRET-DATA
+            }
+        }
+    }
+    services {
+        ssh {
+            protocol-version v2;
+        }
+        telnet;
+        netconf {
+            ssh;
+        }
+        web-management {
+            http {
+                interface fxp0.0;
+            }
+        }
+    }
+    syslog {
+        user * {
+            any emergency;
+        }
+        file messages {
+            any any;
+            authorization info;
+        }
+        file interactive-commands {
+            interactive-commands any;
+        }
+    }
+    license {
+        autoupdate {
+            url https://ae1.juniper.net/junos/key_retrieval;
+        }
+    }
+}
+security {
+    screen {
+        ids-option untrust-screen {
+            icmp {
+                ping-death;
+            }
+            ip {
+                source-route-option;
+                tear-drop;
+            }
+            tcp {
+                syn-flood {
+                    alarm-threshold 1024;
+                    attack-threshold 200;
+                    source-threshold 1024;
+                    destination-threshold 2048;
+                    queue-size 2000; ## Warning: 'queue-size' is deprecated
+                    timeout 20;
+                }
+                land;
+            }
+        }
+    }
+    policies {
+        from-zone trust to-zone trust {
+            policy default-permit {
+                match {
+                    source-address any;
+                    destination-address any;
+                    application any;
+                }
+                then {
+                    permit;
+                }
+            }
+        }
+        from-zone trust to-zone untrust {
+            policy default-permit {
+                match {
+                    source-address any;
+                    destination-address any;
+                    application any;
+                }
+                then {
+                    permit;
+                }
+            }
+        }
+    }
+    zones {
+        security-zone trust {
+            tcp-rst;
+        }
+        security-zone untrust {
+            screen untrust-screen;
+        }
+    }
+}
+interfaces {
+    fxp0 {
+        unit 0 {
+            family inet {
+                address 10.0.0.15/24;
+            }
+        }
+    }
+}

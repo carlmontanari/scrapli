@@ -5,8 +5,8 @@ from scrapli.driver.core import AsyncIOSXEDriver, AsyncNXOSDriver
 
 IOSXE_DEVICE = {
     "host": "172.18.0.11",
-    "auth_username": "vrnetlab",
-    "auth_password": "VR-netlab9",
+    "auth_username": "scrapli",
+    "auth_password": "scrapli",
     "auth_strict_key": False,
     "transport": "asyncssh",
     "driver": AsyncIOSXEDriver,
@@ -14,8 +14,8 @@ IOSXE_DEVICE = {
 
 NXOS_DEVICE = {
     "host": "172.18.0.12",
-    "auth_username": "vrnetlab",
-    "auth_password": "VR-netlab9",
+    "auth_username": "scrapli",
+    "auth_password": "scrapli",
     "auth_strict_key": False,
     "transport": "asyncssh",
     "driver": AsyncNXOSDriver,

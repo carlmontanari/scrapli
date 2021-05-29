@@ -1,3 +1,5 @@
+<p align=center><a href=""><img src=scrapli.svg?sanitize=true/></a></p>
+
 [![Supported Versions](https://img.shields.io/pypi/pyversions/scrapli.svg)](https://pypi.org/project/scrapli)
 [![PyPI version](https://badge.fury.io/py/scrapli.svg)](https://badge.fury.io/py/scrapli)
 [![Weekly Build](https://github.com/carlmontanari/scrapli/workflows/Weekly%20Build/badge.svg)](https://github.com/carlmontanari/scrapli/actions?query=workflow%3A%22Weekly+Build%22)
@@ -71,8 +73,8 @@ from scrapli import Scrapli
 
 device = {
    "host": "172.18.0.11",
-   "auth_username": "vrnetlab",
-   "auth_password": "VR-netlab9",
+   "auth_username": "scrapli",
+   "auth_password": "scrapli",
    "auth_strict_key": False,
    "platform": "cisco_iosxe"
 }
@@ -81,3 +83,7 @@ conn = Scrapli(**device)
 conn.open()
 print(conn.get_prompt())
 ```
+
+<small>* Bunny artwork by Caroline Montanari, inspired by [@egonelbre](https://github.com/egonelbre/gophers). 
+The bunny/rabbit is a nod to/inspired by the white rabbit in `Monty Python and the Holy Grail`, because there 
+are enough snake logos already!</small>

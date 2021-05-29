@@ -25,7 +25,7 @@ class GenericDriver(Driver, BaseGenericDriver):
         timeout_ops: float = 30.0,
         comms_prompt_pattern: str = r"^\S{0,48}[#>$~@:\]]\s*$",
         comms_return_char: str = "\n",
-        comms_ansi: bool = False,
+        comms_ansi: Optional[bool] = None,
         ssh_config_file: Union[str, bool] = False,
         ssh_known_hosts_file: Union[str, bool] = False,
         on_init: Optional[Callable[..., Any]] = None,
