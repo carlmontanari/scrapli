@@ -53,7 +53,7 @@ def test_send_commands(monkeypatch, sync_generic_driver):
     assert actual_response[0].raw_result == b"raw"
 
 
-@pytest.mark.skipif(sys.version_info > (3, 9), reason="skipping pending pyfakefs 3.10 support")
+@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping pending pyfakefs 3.10 support")
 def test_send_commands_from_file(fs, monkeypatch, real_ssh_commands_file_path, sync_generic_driver):
     fs.add_real_file(source_path=real_ssh_commands_file_path, target_path="/commands")
     monkeypatch.setattr(

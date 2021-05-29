@@ -43,7 +43,7 @@ def test_pre_send_commands(base_generic_driver):
     assert isinstance(actual_responses, MultiResponse)
 
 
-@pytest.mark.skipif(sys.version_info > (3, 9), reason="skipping pending pyfakefs 3.10 support")
+@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping pending pyfakefs 3.10 support")
 def test_pre_send_from_file(fs, real_ssh_config_file_path, base_generic_driver):
     fs.add_real_file(source_path=real_ssh_config_file_path, target_path="/scrapli/mycommands")
     commands = base_generic_driver._pre_send_from_file(

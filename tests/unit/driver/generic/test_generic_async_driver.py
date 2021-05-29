@@ -61,7 +61,7 @@ async def test_send_commands(monkeypatch, async_generic_driver):
     assert actual_response[0].raw_result == b"raw"
 
 
-@pytest.mark.skipif(sys.version_info > (3, 9), reason="skipping pending pyfakefs 3.10 support")
+@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping pending pyfakefs 3.10 support")
 @pytest.mark.asyncio
 async def test_send_commands_from_file(
     fs, monkeypatch, real_ssh_commands_file_path, async_generic_driver

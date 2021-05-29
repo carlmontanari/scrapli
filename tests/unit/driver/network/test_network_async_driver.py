@@ -207,7 +207,7 @@ async def test_send_commands(monkeypatch, async_network_driver):
 
 
 @pytest.mark.asyncio
-@pytest.mark.skipif(sys.version_info > (3, 9), reason="skipping pending pyfakefs 3.10 support")
+@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping pending pyfakefs 3.10 support")
 async def test_send_commands_from_file(
     fs, monkeypatch, real_ssh_commands_file_path, async_network_driver
 ):
@@ -345,7 +345,7 @@ async def test_send_config(monkeypatch, async_network_driver):
 
 
 @pytest.mark.asyncio
-@pytest.mark.skipif(sys.version_info > (3, 9), reason="skipping pending pyfakefs 3.10 support")
+@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping pending pyfakefs 3.10 support")
 async def test_send_configs_from_file(
     fs, monkeypatch, real_ssh_commands_file_path, async_network_driver
 ):
