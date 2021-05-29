@@ -330,11 +330,6 @@ class AsyncChannel(BaseChannel):
             while True:
                 buf = await self.read()
 
-                # telnet auth *probably* wont have ansi chars, but strip them if they do exist so
-                # we can at least get past auth
-                if b"\x1B" in buf:
-                    buf = self._strip_ansi(buf=buf)
-
                 if not buf:
                     current_iteration_time = datetime.now().timestamp()
                     if (current_iteration_time - auth_start_time) > (
