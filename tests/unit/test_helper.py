@@ -111,6 +111,9 @@ def test_textfsm_parse_failed_to_parse():
     assert result == []
 
 
+@pytest.mark.skipif(
+    sys.version_info.minor > 9, reason="genie not currently available for python 3.10"
+)
 def test_genie_parser():
     result = genie_parse("iosxe", "show ip arp", IOS_ARP)
     assert isinstance(result, dict)
@@ -119,6 +122,9 @@ def test_genie_parser():
     )
 
 
+@pytest.mark.skipif(
+    sys.version_info.minor > 9, reason="genie not currently available for python 3.10"
+)
 def test_genie_parse_failure():
     result = genie_parse("iosxe", "show ip arp", "not really arp data")
     assert result == []
@@ -204,6 +210,7 @@ def test_ttp_no_ttp_installed(monkeypatch):
     assert output == []
 
 
+@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping pending pyfakefs 3.10 support")
 def test_resolve_file(fs, real_ssh_config_file_path):
     # pyfakefs so this is not host dependent
     _ = fs
@@ -211,6 +218,7 @@ def test_resolve_file(fs, real_ssh_config_file_path):
     assert resolve_file(file="/some/neat/path/myfile") == "/some/neat/path/myfile"
 
 
+@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping pending pyfakefs 3.10 support")
 def test_resolve_file_expanduser(fs, real_ssh_config_file_path):
     # pyfakefs so this is not host dependent
     _ = fs

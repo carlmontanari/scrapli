@@ -21,9 +21,6 @@ cov:
 
 test_unit:
 	python -m pytest \
-	--cov=scrapli \
-	--cov-report html \
-	--cov-report term \
 	tests/unit/
 
 cov_unit:
@@ -35,9 +32,6 @@ cov_unit:
 
 test_integration:
 	python -m pytest \
-	--cov=scrapli \
-	--cov-report html \
-	--cov-report term \
 	tests/integration/
 
 cov_integration:
@@ -49,9 +43,6 @@ cov_integration:
 
 test_functional:
 	python -m pytest \
-	--cov=scrapli \
-	--cov-report html \
-	--cov-report term \
 	tests/functional/
 
 cov_functional:
@@ -110,19 +101,19 @@ stop_dev_env:
 	${DOCKER_COMPOSE} \
 
 prepare_dev_env:
-	python tests/functional/prepare_devices.py cisco_iosxe,cisco_nxos,cisco_iosxr,arista_eos,juniper_junos
+	python tests/prepare_devices.py cisco_iosxe,cisco_nxos,cisco_iosxr,arista_eos,juniper_junos
 
 prepare_dev_env_iosxe:
-	python tests/functional/prepare_devices.py cisco_iosxe
+	python tests/prepare_devices.py cisco_iosxe
 
 prepare_dev_env_nxos:
-	python tests/functional/prepare_devices.py cisco_nxos
+	python tests/prepare_devices.py cisco_nxos
 
 prepare_dev_env_iosxr:
-	python tests/functional/prepare_devices.py cisco_iosxr
+	python tests/prepare_devices.py cisco_iosxr
 
 prepare_dev_env_eos:
-	python tests/functional/prepare_devices.py arista_eos
+	python tests/prepare_devices.py arista_eos
 
 prepare_dev_env_junos:
-	python tests/functional/prepare_devices.py juniper_junos
+	python tests/prepare_devices.py juniper_junos

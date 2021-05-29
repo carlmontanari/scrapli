@@ -8,7 +8,13 @@ import scrapli
 
 TEST_DATA_DIR = f"{Path(scrapli.__file__).parents[1]}/tests/test_data"
 
-SERVERS = [("iosxe", 2221), ("nxos", 2222), ("iosxr", 2223), ("eos", 2224), ("junos", 2225)]
+SERVERS = [
+    ("cisco_iosxe", 2221),
+    ("cisco_nxos", 2222),
+    ("cisco_iosxr", 2223),
+    ("arista_eos", 2224),
+    ("juniper_junos", 2225),
+]
 
 
 async def run_servers() -> None:

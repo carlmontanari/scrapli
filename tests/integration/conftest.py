@@ -3,6 +3,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest
+from run import sync_run_servers
 
 from scrapli.driver.core import (
     AsyncEOSDriver,
@@ -16,8 +17,6 @@ from scrapli.driver.core import (
     JunosDriver,
     NXOSDriver,
 )
-
-from .run import sync_run_servers
 
 DEVICES = {
     "common": {
@@ -97,4 +96,10 @@ def sync_conn(device_type, transport):
     )
     conn.open()
     yield conn
-    conn.close()
+
+    try:
+        conn.close()
+    except EOFError:
+        # sometimes paramiko has a fit and raises EOF... havent been able to tell why, but tired of
+        # builds failing for this one tiny issue
+        pass

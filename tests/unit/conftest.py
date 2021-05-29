@@ -1,9 +1,8 @@
+import sys
 from copy import deepcopy
-from pathlib import Path
 
 import pytest
 
-import scrapli
 from scrapli.channel.async_channel import AsyncChannel
 from scrapli.channel.base_channel import BaseChannel, BaseChannelArgs
 from scrapli.channel.sync_channel import Channel
@@ -47,8 +46,6 @@ from scrapli.transport.plugins.paramiko.transport import ParamikoTransport
 from scrapli.transport.plugins.paramiko.transport import (
     PluginTransportArgs as ParamikoPluginTransportArgs,
 )
-from scrapli.transport.plugins.ssh2.transport import PluginTransportArgs as Ssh2PluginTransportArgs
-from scrapli.transport.plugins.ssh2.transport import Ssh2Transport
 from scrapli.transport.plugins.system.transport import (
     PluginTransportArgs as SystemPluginTransportArgs,
 )
@@ -62,24 +59,18 @@ from scrapli.transport.plugins.telnet.transport import TelnetTransport
 
 
 @pytest.fixture(scope="session")
-def unit_test_data_path():
-    """Fixture to provide path to unit test data files"""
-    return f"{Path(scrapli.__file__).parents[1]}/tests/test_data"
+def real_ssh_config_file_path(test_data_path):
+    return f"{test_data_path}/files/_ssh_config"
 
 
 @pytest.fixture(scope="session")
-def real_ssh_config_file_path(unit_test_data_path):
-    return f"{unit_test_data_path}/files/_ssh_config"
+def real_ssh_known_hosts_file_path(test_data_path):
+    return f"{test_data_path}/files/_ssh_known_hosts"
 
 
 @pytest.fixture(scope="session")
-def real_ssh_known_hosts_file_path(unit_test_data_path):
-    return f"{unit_test_data_path}/files/_ssh_known_hosts"
-
-
-@pytest.fixture(scope="session")
-def real_ssh_commands_file_path(unit_test_data_path):
-    return f"{unit_test_data_path}/files/cisco_iosxe_commands"
+def real_ssh_commands_file_path(test_data_path):
+    return f"{test_data_path}/files/cisco_iosxe_commands"
 
 
 # transport fixtures
@@ -211,16 +202,24 @@ def paramiko_transport(base_transport_args, paramiko_transport_plugin_args):
     return paramiko_transport
 
 
+@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping ssh2 on 3.10")
 @pytest.fixture(scope="function")
 def ssh2_transport_plugin_args():
     """Fixture to provide ssh2 transport plugin args instance"""
+    from scrapli.transport.plugins.ssh2.transport import (
+        PluginTransportArgs as Ssh2PluginTransportArgs,
+    )
+
     plugin_args = Ssh2PluginTransportArgs(auth_username="scrapli", auth_password="scrapli")
     return plugin_args
 
 
+@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping ssh2 on 3.10")
 @pytest.fixture(scope="function")
 def ssh2_transport(base_transport_args, ssh2_transport_plugin_args):
     """Fixture to provide ssh2 transport instance"""
+    from scrapli.transport.plugins.ssh2.transport import Ssh2Transport
+
     ssh2_transport = Ssh2Transport(
         base_transport_args=base_transport_args,
         plugin_transport_args=ssh2_transport_plugin_args,

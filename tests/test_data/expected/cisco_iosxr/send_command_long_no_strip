@@ -1,0 +1,416 @@
+TIME_STAMP_REPLACED
+Building configuration...
+!! IOS XR Configuration version = 6.5.3
+!! Last configuration change at TIME_STAMP_REPLACED
+!
+telnet vrf default ipv4 server max-servers 10
+username boxen
+ group root-lr
+ group cisco-support
+CRYPTO_REPLACED
+!
+call-home
+ service active
+ contact smart-licensing
+ profile CiscoTAC-1
+  active
+  destination transport-method http
+ !
+!
+interface MgmtEth0/RP0/CPU0/0
+ ipv4 address 10.0.0.15 255.255.255.0
+!
+interface GigabitEthernet0/0/0/0
+ shutdown
+!
+interface GigabitEthernet0/0/0/1
+ shutdown
+!
+interface GigabitEthernet0/0/0/2
+ shutdown
+!
+interface GigabitEthernet0/0/0/3
+ shutdown
+!
+interface GigabitEthernet0/0/0/4
+ shutdown
+!
+interface GigabitEthernet0/0/0/5
+ shutdown
+!
+interface GigabitEthernet0/0/0/6
+ shutdown
+!
+interface GigabitEthernet0/0/0/7
+ shutdown
+!
+interface GigabitEthernet0/0/0/8
+ shutdown
+!
+interface GigabitEthernet0/0/0/9
+ shutdown
+!
+interface GigabitEthernet0/0/0/10
+ shutdown
+!
+interface GigabitEthernet0/0/0/11
+ shutdown
+!
+interface GigabitEthernet0/0/0/12
+ shutdown
+!
+interface GigabitEthernet0/0/0/13
+ shutdown
+!
+interface GigabitEthernet0/0/0/14
+ shutdown
+!
+interface GigabitEthernet0/0/0/15
+ shutdown
+!
+interface GigabitEthernet0/0/0/16
+ shutdown
+!
+interface GigabitEthernet0/0/0/17
+ shutdown
+!
+interface GigabitEthernet0/0/0/18
+ shutdown
+!
+interface GigabitEthernet0/0/0/19
+ shutdown
+!
+interface GigabitEthernet0/0/0/20
+ shutdown
+!
+interface GigabitEthernet0/0/0/21
+ shutdown
+!
+interface GigabitEthernet0/0/0/22
+ shutdown
+!
+interface GigabitEthernet0/0/0/23
+ shutdown
+!
+interface GigabitEthernet0/0/0/24
+ shutdown
+!
+interface GigabitEthernet0/0/0/25
+ shutdown
+!
+interface GigabitEthernet0/0/0/26
+ shutdown
+!
+interface GigabitEthernet0/0/0/27
+ shutdown
+!
+interface GigabitEthernet0/0/0/28
+ shutdown
+!
+interface GigabitEthernet0/0/0/29
+ shutdown
+!
+interface GigabitEthernet0/0/0/30
+ shutdown
+!
+interface GigabitEthernet0/0/0/31
+ shutdown
+!
+interface GigabitEthernet0/0/0/32
+ shutdown
+!
+interface GigabitEthernet0/0/0/33
+ shutdown
+!
+interface GigabitEthernet0/0/0/34
+ shutdown
+!
+interface GigabitEthernet0/0/0/35
+ shutdown
+!
+interface GigabitEthernet0/0/0/36
+ shutdown
+!
+interface GigabitEthernet0/0/0/37
+ shutdown
+!
+interface GigabitEthernet0/0/0/38
+ shutdown
+!
+interface GigabitEthernet0/0/0/39
+ shutdown
+!
+interface GigabitEthernet0/0/0/40
+ shutdown
+!
+interface GigabitEthernet0/0/0/41
+ shutdown
+!
+interface GigabitEthernet0/0/0/42
+ shutdown
+!
+interface GigabitEthernet0/0/0/43
+ shutdown
+!
+interface GigabitEthernet0/0/0/44
+ shutdown
+!
+interface GigabitEthernet0/0/0/45
+ shutdown
+!
+interface GigabitEthernet0/0/0/46
+ shutdown
+!
+interface GigabitEthernet0/0/0/47
+ shutdown
+!
+interface GigabitEthernet0/0/0/48
+ shutdown
+!
+interface GigabitEthernet0/0/0/49
+ shutdown
+!
+interface GigabitEthernet0/0/0/50
+ shutdown
+!
+interface GigabitEthernet0/0/0/51
+ shutdown
+!
+interface GigabitEthernet0/0/0/52
+ shutdown
+!
+interface GigabitEthernet0/0/0/53
+ shutdown
+!
+interface GigabitEthernet0/0/0/54
+ shutdown
+!
+interface GigabitEthernet0/0/0/55
+ shutdown
+!
+interface GigabitEthernet0/0/0/56
+ shutdown
+!
+interface GigabitEthernet0/0/0/57
+ shutdown
+!
+interface GigabitEthernet0/0/0/58
+ shutdown
+!
+interface GigabitEthernet0/0/0/59
+ shutdown
+!
+interface GigabitEthernet0/0/0/60
+ shutdown
+!
+interface GigabitEthernet0/0/0/61
+ shutdown
+!
+interface GigabitEthernet0/0/0/62
+ shutdown
+!
+interface GigabitEthernet0/0/0/63
+ shutdown
+!
+interface GigabitEthernet0/0/0/64
+ shutdown
+!
+interface GigabitEthernet0/0/0/65
+ shutdown
+!
+interface GigabitEthernet0/0/0/66
+ shutdown
+!
+interface GigabitEthernet0/0/0/67
+ shutdown
+!
+interface GigabitEthernet0/0/0/68
+ shutdown
+!
+interface GigabitEthernet0/0/0/69
+ shutdown
+!
+interface GigabitEthernet0/0/0/70
+ shutdown
+!
+interface GigabitEthernet0/0/0/71
+ shutdown
+!
+interface GigabitEthernet0/0/0/72
+ shutdown
+!
+interface GigabitEthernet0/0/0/73
+ shutdown
+!
+interface GigabitEthernet0/0/0/74
+ shutdown
+!
+interface GigabitEthernet0/0/0/75
+ shutdown
+!
+interface GigabitEthernet0/0/0/76
+ shutdown
+!
+interface GigabitEthernet0/0/0/77
+ shutdown
+!
+interface GigabitEthernet0/0/0/78
+ shutdown
+!
+interface GigabitEthernet0/0/0/79
+ shutdown
+!
+interface GigabitEthernet0/0/0/80
+ shutdown
+!
+interface GigabitEthernet0/0/0/81
+ shutdown
+!
+interface GigabitEthernet0/0/0/82
+ shutdown
+!
+interface GigabitEthernet0/0/0/83
+ shutdown
+!
+interface GigabitEthernet0/0/0/84
+ shutdown
+!
+interface GigabitEthernet0/0/0/85
+ shutdown
+!
+interface GigabitEthernet0/0/0/86
+ shutdown
+!
+interface GigabitEthernet0/0/0/87
+ shutdown
+!
+interface GigabitEthernet0/0/0/88
+ shutdown
+!
+interface GigabitEthernet0/0/0/89
+ shutdown
+!
+interface GigabitEthernet0/0/0/90
+ shutdown
+!
+interface GigabitEthernet0/0/0/91
+ shutdown
+!
+interface GigabitEthernet0/0/0/92
+ shutdown
+!
+interface GigabitEthernet0/0/0/93
+ shutdown
+!
+interface GigabitEthernet0/0/0/94
+ shutdown
+!
+interface GigabitEthernet0/0/0/95
+ shutdown
+!
+interface GigabitEthernet0/0/0/96
+ shutdown
+!
+interface GigabitEthernet0/0/0/97
+ shutdown
+!
+interface GigabitEthernet0/0/0/98
+ shutdown
+!
+interface GigabitEthernet0/0/0/99
+ shutdown
+!
+interface GigabitEthernet0/0/0/100
+ shutdown
+!
+interface GigabitEthernet0/0/0/101
+ shutdown
+!
+interface GigabitEthernet0/0/0/102
+ shutdown
+!
+interface GigabitEthernet0/0/0/103
+ shutdown
+!
+interface GigabitEthernet0/0/0/104
+ shutdown
+!
+interface GigabitEthernet0/0/0/105
+ shutdown
+!
+interface GigabitEthernet0/0/0/106
+ shutdown
+!
+interface GigabitEthernet0/0/0/107
+ shutdown
+!
+interface GigabitEthernet0/0/0/108
+ shutdown
+!
+interface GigabitEthernet0/0/0/109
+ shutdown
+!
+interface GigabitEthernet0/0/0/110
+ shutdown
+!
+interface GigabitEthernet0/0/0/111
+ shutdown
+!
+interface GigabitEthernet0/0/0/112
+ shutdown
+!
+interface GigabitEthernet0/0/0/113
+ shutdown
+!
+interface GigabitEthernet0/0/0/114
+ shutdown
+!
+interface GigabitEthernet0/0/0/115
+ shutdown
+!
+interface GigabitEthernet0/0/0/116
+ shutdown
+!
+interface GigabitEthernet0/0/0/117
+ shutdown
+!
+interface GigabitEthernet0/0/0/118
+ shutdown
+!
+interface GigabitEthernet0/0/0/119
+ shutdown
+!
+interface GigabitEthernet0/0/0/120
+ shutdown
+!
+interface GigabitEthernet0/0/0/121
+ shutdown
+!
+interface GigabitEthernet0/0/0/122
+ shutdown
+!
+interface GigabitEthernet0/0/0/123
+ shutdown
+!
+interface GigabitEthernet0/0/0/124
+ shutdown
+!
+interface GigabitEthernet0/0/0/125
+ shutdown
+!
+interface GigabitEthernet0/0/0/126
+ shutdown
+!
+interface GigabitEthernet0/0/0/127
+ shutdown
+!
+xml agent tty
+!
+netconf-yang agent
+ ssh
+!
+ssh server v2
+ssh server netconf vrf default
+end
+
+RP/0/RP0/CPU0:ios#

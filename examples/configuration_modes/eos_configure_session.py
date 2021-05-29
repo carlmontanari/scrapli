@@ -1,10 +1,10 @@
-"""examples.basic_usage.iosxe_driver"""
+"""examples.configuration_modes.eos_configure_session"""
 from scrapli.driver.core import EOSDriver
 
 MY_DEVICE = {
     "host": "172.18.0.14",
-    "auth_username": "vrnetlab",
-    "auth_password": "VR-netlab9",
+    "auth_username": "scrapli",
+    "auth_password": "scrapli",
     "auth_secondary": "VR-netlab9",
     "auth_strict_key": False,
 }

@@ -1,0 +1,676 @@
+events:
+  exec:
+    pre_on_open:
+      terminal width 32767:
+        channel_output: "Width set to 32767 columns.\nlocalhost>"
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      terminal length 0:
+        channel_output: "Pagination disabled.\nlocalhost>"
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit:
+        channel_output: __CLOSES_CONNECTION__
+        result_privilege_level: exec
+        returns_prompt: false
+        closes_connection: true
+        type: standard
+      configure terminal:
+        channel_output: "% Invalid input (privileged mode required)\nlocalhost>"
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      disable:
+        channel_output: localhost>
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      end:
+        channel_output: "% Invalid input\nlocalhost>"
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      enable:
+        result_privilege_level: privilege_exec
+        event_steps:
+          - channel_input: enable
+            channel_output: 'Password: '
+            hidden_input: false
+            returns_prompt: true
+          - channel_input: __AUTH_SECONDARY__
+            channel_output: localhost#
+            hidden_input: true
+            returns_prompt: true
+        type: interactive
+      show version:
+        channel_output: " vEOS\nHardware version:    \nSerial number:       \nSystem\
+          \ MAC address:  5254.001f.e379\n\nSoftware image version: 4.22.1F\nArchitecture:\
+          \           i686\nInternal build version: 4.22.1F-13062802.4221F\nInternal\
+          \ build ID:      bb097f5d-d38c-4c32-898b-c20f6e18b00a\n\nUptime:       \
+          \          0 weeks, 0 days, 4 hours and 6 minutes\nTotal memory:       \
+          \    4008840 kB\nFree memory:            3233440 kB\n\nlocalhost>"
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      show run:
+        channel_output: "% Invalid input (privileged mode required)\nlocalhost>"
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      clear logg:
+        result_privilege_level: exec
+        event_steps:
+          - channel_input: clear logg
+            channel_output: "% Invalid input (privileged mode required)\nlocalhost>"
+            hidden_input: false
+            returns_prompt: true
+        type: interactive
+    post_on_open:
+      terminal width 32767:
+        channel_output: "Width set to 32767 columns.\nlocalhost>"
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      terminal length 0:
+        channel_output: "Pagination disabled.\nlocalhost>"
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit:
+        channel_output: __CLOSES_CONNECTION__
+        result_privilege_level: privilege_exec
+        returns_prompt: false
+        closes_connection: true
+        type: standard
+      configure terminal:
+        channel_output: "% Invalid input (privileged mode required)\nlocalhost>"
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      disable:
+        channel_output: localhost>
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      end:
+        channel_output: "% Invalid input\nlocalhost>"
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      enable:
+        result_privilege_level: privilege_exec
+        event_steps:
+          - channel_input: enable
+            channel_output: 'Password: '
+            hidden_input: false
+            returns_prompt: true
+          - channel_input: __AUTH_SECONDARY__
+            channel_output: localhost#
+            hidden_input: true
+            returns_prompt: true
+        type: interactive
+      show version:
+        channel_output: " vEOS\nHardware version:    \nSerial number:       \nSystem\
+          \ MAC address:  5254.001f.e379\n\nSoftware image version: 4.22.1F\nArchitecture:\
+          \           i686\nInternal build version: 4.22.1F-13062802.4221F\nInternal\
+          \ build ID:      bb097f5d-d38c-4c32-898b-c20f6e18b00a\n\nUptime:       \
+          \          0 weeks, 0 days, 4 hours and 6 minutes\nTotal memory:       \
+          \    4008840 kB\nFree memory:            3234984 kB\n\nlocalhost>"
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      show run:
+        channel_output: "% Invalid input (privileged mode required)\nlocalhost>"
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      clear logg:
+        result_privilege_level: exec
+        event_steps:
+          - channel_input: clear logg
+            channel_output: "% Invalid input (privileged mode required)\nlocalhost>"
+            hidden_input: false
+            returns_prompt: true
+        type: interactive
+  privilege_exec:
+    pre_on_open:
+      terminal width 32767:
+        channel_output: "Width set to 32767 columns.\nlocalhost#"
+        result_privilege_level: privilege_exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      terminal length 0:
+        channel_output: "Pagination disabled.\nlocalhost#"
+        result_privilege_level: privilege_exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit:
+        channel_output: __CLOSES_CONNECTION__
+        result_privilege_level: exec
+        returns_prompt: false
+        closes_connection: true
+        type: standard
+      configure terminal:
+        channel_output: localhost(config)#
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      disable:
+        channel_output: localhost>
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      end:
+        channel_output: "% Invalid input\nlocalhost#"
+        result_privilege_level: privilege_exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      enable:
+        result_privilege_level: privilege_exec
+        event_steps:
+          - channel_input: enable
+            channel_output: localhost#
+            hidden_input: false
+            returns_prompt: true
+        type: interactive
+      show version:
+        channel_output: " vEOS\nHardware version:    \nSerial number:       \nSystem\
+          \ MAC address:  5254.001f.e379\n\nSoftware image version: 4.22.1F\nArchitecture:\
+          \           i686\nInternal build version: 4.22.1F-13062802.4221F\nInternal\
+          \ build ID:      bb097f5d-d38c-4c32-898b-c20f6e18b00a\n\nUptime:       \
+          \          0 weeks, 0 days, 4 hours and 6 minutes\nTotal memory:       \
+          \    4008840 kB\nFree memory:            3233460 kB\n\nlocalhost#"
+        result_privilege_level: privilege_exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      show run:
+        channel_output: "! Command: show running-config\n! device: localhost (vEOS,\
+          \ EOS-4.22.1F)\n!\n! boot system flash:/vEOS-lab.swi\n!\nterminal length\
+          \ 0\nterminal width 32767\n!\nswitchport default mode routed\n!\ntransceiver\
+          \ qsfp default-mode 4x10G\n!\nlogging console informational\n!\nlogging\
+          \ level AAA errors\nlogging level ACCOUNTING errors\nlogging level ACL errors\n\
+          logging level AGENT errors\nlogging level ALE errors\nlogging level ARP\
+          \ errors\nlogging level BFD errors\nlogging level BGP errors\nlogging level\
+          \ BMP errors\n --More-- "
+        result_privilege_level: privilege_exec
+        returns_prompt: false
+        closes_connection: false
+        type: standard
+      clear logg:
+        result_privilege_level: privilege_exec
+        event_steps:
+          - channel_input: clear logg
+            channel_output: localhost#
+            hidden_input: false
+            returns_prompt: true
+        type: interactive
+    post_on_open:
+      terminal width 32767:
+        channel_output: "Width set to 32767 columns.\nlocalhost#"
+        result_privilege_level: privilege_exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      terminal length 0:
+        channel_output: "Pagination disabled.\nlocalhost#"
+        result_privilege_level: privilege_exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit:
+        channel_output: __CLOSES_CONNECTION__
+        result_privilege_level: privilege_exec
+        returns_prompt: false
+        closes_connection: true
+        type: standard
+      configure terminal:
+        channel_output: localhost(config)#
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      disable:
+        channel_output: localhost>
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      end:
+        channel_output: "% Invalid input\nlocalhost#"
+        result_privilege_level: privilege_exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      enable:
+        result_privilege_level: privilege_exec
+        event_steps:
+          - channel_input: enable
+            channel_output: localhost#
+            hidden_input: false
+            returns_prompt: true
+        type: interactive
+      show version:
+        channel_output: " vEOS\nHardware version:    \nSerial number:       \nSystem\
+          \ MAC address:  5254.001f.e379\n\nSoftware image version: 4.22.1F\nArchitecture:\
+          \           i686\nInternal build version: 4.22.1F-13062802.4221F\nInternal\
+          \ build ID:      bb097f5d-d38c-4c32-898b-c20f6e18b00a\n\nUptime:       \
+          \          0 weeks, 0 days, 4 hours and 6 minutes\nTotal memory:       \
+          \    4008840 kB\nFree memory:            3234988 kB\n\nlocalhost#"
+        result_privilege_level: privilege_exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      show run:
+        channel_output: "! Command: show running-config\n! device: localhost (vEOS,\
+          \ EOS-4.22.1F)\n!\n! boot system flash:/vEOS-lab.swi\n!\nterminal length\
+          \ 0\nterminal width 32767\n!\nswitchport default mode routed\n!\ntransceiver\
+          \ qsfp default-mode 4x10G\n!\nlogging console informational\n!\nlogging\
+          \ level AAA errors\nlogging level ACCOUNTING errors\nlogging level ACL errors\n\
+          logging level AGENT errors\nlogging level ALE errors\nlogging level ARP\
+          \ errors\nlogging level BFD errors\nlogging level BGP errors\nlogging level\
+          \ BMP errors\nlogging level CAPACITY errors\nlogging level CAPI errors\n\
+          logging level CLEAR errors\nlogging level CVX errors\nlogging level DATAPLANE\
+          \ errors\nlogging level DHCP errors\nlogging level DOT1X errors\nlogging\
+          \ level DSCP errors\nlogging level ENVMON errors\nlogging level ETH errors\n\
+          logging level EVENTMON errors\nlogging level EXTENSION errors\nlogging level\
+          \ FHRP errors\nlogging level FLOW errors\nlogging level FORWARDING errors\n\
+          logging level FRU errors\nlogging level FWK errors\nlogging level GMP errors\n\
+          logging level HARDWARE errors\nlogging level HEALTH errors\nlogging level\
+          \ HTTPSERVICE errors\nlogging level IGMP errors\nlogging level IGMPSNOOPING\
+          \ errors\nlogging level INT errors\nlogging level INTF errors\nlogging level\
+          \ IP6ROUTING errors\nlogging level IPRIB errors\nlogging level IRA errors\n\
+          logging level ISIS errors\nlogging level KERNELFIB errors\nlogging level\
+          \ LACP errors\nlogging level LAG errors\nlogging level LAUNCHER errors\n\
+          logging level LDP errors\nlogging level LICENSE errors\nlogging level LINEPROTO\
+          \ errors\nlogging level LLDP errors\nlogging level LOGMGR errors\nlogging\
+          \ level LOOPBACK errors\nlogging level LOOPPROTECT errors\nlogging level\
+          \ MAPREDUCEMONITOR errors\nlogging level MIRRORING errors\nlogging level\
+          \ MKA errors\nlogging level MLAG errors\nlogging level MMODE errors\nlogging\
+          \ level MROUTE errors\nlogging level MRP errors\nlogging level MSDP errors\n\
+          logging level MSRP errors\nlogging level MSSPOLICYMONITOR errors\nlogging\
+          \ level MVRP errors\nlogging level NAT errors\nlogging level OPENCONFIG\
+          \ errors\nlogging level OPENFLOW errors\nlogging level OSPF errors\nlogging\
+          \ level OSPF3 errors\nlogging level PACKAGE errors\nlogging level PFC errors\n\
+          logging level PIMBSR errors\nlogging level PORTSECURITY errors\nlogging\
+          \ level PTP errors\nlogging level PWRMGMT errors\nlogging level QOS errors\n\
+          logging level QUEUEMONITOR errors\nlogging level REDUNDANCY errors\nlogging\
+          \ level RIB errors\nlogging level ROUTING errors\nlogging level SECURITY\
+          \ errors\nlogging level SERVERMONITOR errors\nlogging level SPANTREE errors\n\
+          logging level SSO errors\nlogging level STAGEMGR errors\nlogging level SYS\
+          \ errors\nlogging level SYSDB errors\nlogging level TAPAGG errors\nlogging\
+          \ level TCP errors\nlogging level TRANSCEIVER errors\nlogging level TUNNEL\
+          \ errors\nlogging level TUNNELINTF errors\nlogging level VMTRACERSESS errors\n\
+          logging level VMWAREVI errors\nlogging level VMWAREVS errors\nlogging level\
+          \ VRF errors\nlogging level VRRP errors\nlogging level VXLAN errors\nlogging\
+          \ level XMPP errors\nlogging level ZTP informational\n!\nspanning-tree mode\
+          \ mstp\n!\nenable secret sha512 $6$TVJ6KgdC0qsGkKfb$LjGGPd6W3S1iJQVQ.Vvo3Bca4Yt1R3y4nOjWAaaTCsk1NuIoqB/gOMseoigt/HQVFDTvDAJ3IPmsF9sWfxi1V/\n\
+          no aaa root\n!\nusername boxen role network-admin secret sha512 $6$1ex07TzYfKx23A9z$c02oeDxnr4J7HMgj0PcabYvACZfjdiu3zp4IAgjJQ51IBtkstpvOjm0FYbxSSBhsl.mytIr9Y4PaERp4MDXJM/\n\
+          !\ninterface Ethernet1\n   speed forced 10000full\n   no switchport\n  \
+          \ ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet2\n   speed forced 10000full\n   no switchport\n  \
+          \ ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet3\n   speed forced 10000full\n   no switchport\n  \
+          \ ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet4\n   speed forced 10000full\n   no switchport\n  \
+          \ ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet5\n   speed forced 10000full\n   no switchport\n  \
+          \ ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet6\n   speed forced 10000full\n   no switchport\n  \
+          \ ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet7\n   speed forced 10000full\n   no switchport\n  \
+          \ ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet8\n   speed forced 10000full\n   no switchport\n  \
+          \ ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet9\n   speed forced 10000full\n   no switchport\n  \
+          \ ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet10\n   speed forced 10000full\n   no switchport\n \
+          \  ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet11\n   speed forced 10000full\n   no switchport\n \
+          \  ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet12\n   speed forced 10000full\n   no switchport\n \
+          \  ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet13\n   speed forced 10000full\n   no switchport\n \
+          \  ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet14\n   speed forced 10000full\n   no switchport\n \
+          \  ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet15\n   speed forced 10000full\n   no switchport\n \
+          \  ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet16\n   speed forced 10000full\n   no switchport\n \
+          \  ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet17\n   speed forced 10000full\n   no switchport\n \
+          \  ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet18\n   speed forced 10000full\n   no switchport\n \
+          \  ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet19\n   speed forced 10000full\n   no switchport\n \
+          \  ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Management1\n   ip address 10.0.0.15/24\n   ipv6 enable\n \
+          \  ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n!\n\
+          no ip routing\n!\ncontrol-plane\n   no service-policy input copp-system-policy\n\
+          !\nbanner login\nNo startup-config was found.\nThe device is in Zero Touch\
+          \ Provisioning mode and is attempting to\ndownload the startup-config from\
+          \ a remote system. The device will not\nbe fully functional until either\
+          \ a valid startup-config is downloaded\nfrom a remote system or Zero Touch\
+          \ Provisioning is cancelled.\nTo cancel Zero Touch Provisioning, login as\
+          \ admin and type\n'zerotouch cancel' at the CLI. Alternatively, to disable\
+          \ Zero Touch\nProvisioning permanently, type 'zerotouch disable' at the\
+          \ CLI.\nNote: The device will reload when these commands are issued.\nEOF\n\
+          !\nmanagement api http-commands\n   protocol unix-socket\n   no shutdown\n\
+          !\nmanagement telnet\n   no shutdown\n!\nend\nlocalhost#"
+        result_privilege_level: privilege_exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      clear logg:
+        result_privilege_level: privilege_exec
+        event_steps:
+          - channel_input: clear logg
+            channel_output: localhost#
+            hidden_input: false
+            returns_prompt: true
+        type: interactive
+  configuration:
+    pre_on_open:
+      terminal width 32767:
+        channel_output: "Width set to 32767 columns.\nlocalhost(config)#"
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      terminal length 0:
+        channel_output: "Pagination disabled.\nlocalhost(config)#"
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit:
+        channel_output: localhost#
+        result_privilege_level: privilege_exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure terminal:
+        channel_output: localhost(config)#
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      disable:
+        channel_output: localhost>
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      end:
+        channel_output: localhost#
+        result_privilege_level: privilege_exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      enable:
+        result_privilege_level: configuration
+        event_steps:
+          - channel_input: enable
+            channel_output: "% Incomplete command\nlocalhost(config)#"
+            hidden_input: false
+            returns_prompt: true
+        type: interactive
+      show version:
+        channel_output: " vEOS\nHardware version:    \nSerial number:       \nSystem\
+          \ MAC address:  5254.001f.e379\n\nSoftware image version: 4.22.1F\nArchitecture:\
+          \           i686\nInternal build version: 4.22.1F-13062802.4221F\nInternal\
+          \ build ID:      bb097f5d-d38c-4c32-898b-c20f6e18b00a\n\nUptime:       \
+          \          0 weeks, 0 days, 4 hours and 6 minutes\nTotal memory:       \
+          \    4008840 kB\nFree memory:            3231952 kB\n\nlocalhost(config)#"
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      show run:
+        channel_output: "! Command: show running-config\n! device: localhost (vEOS,\
+          \ EOS-4.22.1F)\n!\n! boot system flash:/vEOS-lab.swi\n!\nterminal length\
+          \ 0\nterminal width 32767\n!\nswitchport default mode routed\n!\ntransceiver\
+          \ qsfp default-mode 4x10G\n!\nlogging console informational\n!\nlogging\
+          \ level AAA errors\nlogging level ACCOUNTING errors\nlogging level ACL errors\n\
+          logging level AGENT errors\nlogging level ALE errors\nlogging level ARP\
+          \ errors\nlogging level BFD errors\nlogging level BGP errors\nlogging level\
+          \ BMP errors\n --More-- "
+        result_privilege_level: configuration
+        returns_prompt: false
+        closes_connection: false
+        type: standard
+      clear logg:
+        result_privilege_level: configuration
+        event_steps:
+          - channel_input: clear logg
+            channel_output: localhost(config)#
+            hidden_input: false
+            returns_prompt: true
+        type: interactive
+    post_on_open:
+      terminal width 32767:
+        channel_output: "Width set to 32767 columns.\nlocalhost(config)#"
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      terminal length 0:
+        channel_output: "Pagination disabled.\nlocalhost(config)#"
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit:
+        channel_output: localhost#
+        result_privilege_level: privilege_exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure terminal:
+        channel_output: localhost(config)#
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      disable:
+        channel_output: localhost>
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      end:
+        channel_output: localhost#
+        result_privilege_level: privilege_exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      enable:
+        result_privilege_level: configuration
+        event_steps:
+          - channel_input: enable
+            channel_output: "% Incomplete command\nlocalhost(config)#"
+            hidden_input: false
+            returns_prompt: true
+        type: interactive
+      show version:
+        channel_output: " vEOS\nHardware version:    \nSerial number:       \nSystem\
+          \ MAC address:  5254.001f.e379\n\nSoftware image version: 4.22.1F\nArchitecture:\
+          \           i686\nInternal build version: 4.22.1F-13062802.4221F\nInternal\
+          \ build ID:      bb097f5d-d38c-4c32-898b-c20f6e18b00a\n\nUptime:       \
+          \          0 weeks, 0 days, 4 hours and 6 minutes\nTotal memory:       \
+          \    4008840 kB\nFree memory:            3234988 kB\n\nlocalhost(config)#"
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      show run:
+        channel_output: "! Command: show running-config\n! device: localhost (vEOS,\
+          \ EOS-4.22.1F)\n!\n! boot system flash:/vEOS-lab.swi\n!\nterminal length\
+          \ 0\nterminal width 32767\n!\nswitchport default mode routed\n!\ntransceiver\
+          \ qsfp default-mode 4x10G\n!\nlogging console informational\n!\nlogging\
+          \ level AAA errors\nlogging level ACCOUNTING errors\nlogging level ACL errors\n\
+          logging level AGENT errors\nlogging level ALE errors\nlogging level ARP\
+          \ errors\nlogging level BFD errors\nlogging level BGP errors\nlogging level\
+          \ BMP errors\nlogging level CAPACITY errors\nlogging level CAPI errors\n\
+          logging level CLEAR errors\nlogging level CVX errors\nlogging level DATAPLANE\
+          \ errors\nlogging level DHCP errors\nlogging level DOT1X errors\nlogging\
+          \ level DSCP errors\nlogging level ENVMON errors\nlogging level ETH errors\n\
+          logging level EVENTMON errors\nlogging level EXTENSION errors\nlogging level\
+          \ FHRP errors\nlogging level FLOW errors\nlogging level FORWARDING errors\n\
+          logging level FRU errors\nlogging level FWK errors\nlogging level GMP errors\n\
+          logging level HARDWARE errors\nlogging level HEALTH errors\nlogging level\
+          \ HTTPSERVICE errors\nlogging level IGMP errors\nlogging level IGMPSNOOPING\
+          \ errors\nlogging level INT errors\nlogging level INTF errors\nlogging level\
+          \ IP6ROUTING errors\nlogging level IPRIB errors\nlogging level IRA errors\n\
+          logging level ISIS errors\nlogging level KERNELFIB errors\nlogging level\
+          \ LACP errors\nlogging level LAG errors\nlogging level LAUNCHER errors\n\
+          logging level LDP errors\nlogging level LICENSE errors\nlogging level LINEPROTO\
+          \ errors\nlogging level LLDP errors\nlogging level LOGMGR errors\nlogging\
+          \ level LOOPBACK errors\nlogging level LOOPPROTECT errors\nlogging level\
+          \ MAPREDUCEMONITOR errors\nlogging level MIRRORING errors\nlogging level\
+          \ MKA errors\nlogging level MLAG errors\nlogging level MMODE errors\nlogging\
+          \ level MROUTE errors\nlogging level MRP errors\nlogging level MSDP errors\n\
+          logging level MSRP errors\nlogging level MSSPOLICYMONITOR errors\nlogging\
+          \ level MVRP errors\nlogging level NAT errors\nlogging level OPENCONFIG\
+          \ errors\nlogging level OPENFLOW errors\nlogging level OSPF errors\nlogging\
+          \ level OSPF3 errors\nlogging level PACKAGE errors\nlogging level PFC errors\n\
+          logging level PIMBSR errors\nlogging level PORTSECURITY errors\nlogging\
+          \ level PTP errors\nlogging level PWRMGMT errors\nlogging level QOS errors\n\
+          logging level QUEUEMONITOR errors\nlogging level REDUNDANCY errors\nlogging\
+          \ level RIB errors\nlogging level ROUTING errors\nlogging level SECURITY\
+          \ errors\nlogging level SERVERMONITOR errors\nlogging level SPANTREE errors\n\
+          logging level SSO errors\nlogging level STAGEMGR errors\nlogging level SYS\
+          \ errors\nlogging level SYSDB errors\nlogging level TAPAGG errors\nlogging\
+          \ level TCP errors\nlogging level TRANSCEIVER errors\nlogging level TUNNEL\
+          \ errors\nlogging level TUNNELINTF errors\nlogging level VMTRACERSESS errors\n\
+          logging level VMWAREVI errors\nlogging level VMWAREVS errors\nlogging level\
+          \ VRF errors\nlogging level VRRP errors\nlogging level VXLAN errors\nlogging\
+          \ level XMPP errors\nlogging level ZTP informational\n!\nspanning-tree mode\
+          \ mstp\n!\nenable secret sha512 $6$TVJ6KgdC0qsGkKfb$LjGGPd6W3S1iJQVQ.Vvo3Bca4Yt1R3y4nOjWAaaTCsk1NuIoqB/gOMseoigt/HQVFDTvDAJ3IPmsF9sWfxi1V/\n\
+          no aaa root\n!\nusername boxen role network-admin secret sha512 $6$1ex07TzYfKx23A9z$c02oeDxnr4J7HMgj0PcabYvACZfjdiu3zp4IAgjJQ51IBtkstpvOjm0FYbxSSBhsl.mytIr9Y4PaERp4MDXJM/\n\
+          !\ninterface Ethernet1\n   speed forced 10000full\n   no switchport\n  \
+          \ ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet2\n   speed forced 10000full\n   no switchport\n  \
+          \ ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet3\n   speed forced 10000full\n   no switchport\n  \
+          \ ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet4\n   speed forced 10000full\n   no switchport\n  \
+          \ ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet5\n   speed forced 10000full\n   no switchport\n  \
+          \ ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet6\n   speed forced 10000full\n   no switchport\n  \
+          \ ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet7\n   speed forced 10000full\n   no switchport\n  \
+          \ ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet8\n   speed forced 10000full\n   no switchport\n  \
+          \ ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet9\n   speed forced 10000full\n   no switchport\n  \
+          \ ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet10\n   speed forced 10000full\n   no switchport\n \
+          \  ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet11\n   speed forced 10000full\n   no switchport\n \
+          \  ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet12\n   speed forced 10000full\n   no switchport\n \
+          \  ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet13\n   speed forced 10000full\n   no switchport\n \
+          \  ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet14\n   speed forced 10000full\n   no switchport\n \
+          \  ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet15\n   speed forced 10000full\n   no switchport\n \
+          \  ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet16\n   speed forced 10000full\n   no switchport\n \
+          \  ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet17\n   speed forced 10000full\n   no switchport\n \
+          \  ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet18\n   speed forced 10000full\n   no switchport\n \
+          \  ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Ethernet19\n   speed forced 10000full\n   no switchport\n \
+          \  ipv6 enable\n   ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n\
+          !\ninterface Management1\n   ip address 10.0.0.15/24\n   ipv6 enable\n \
+          \  ipv6 address auto-config\n   ipv6 nd ra rx accept default-route\n!\n\
+          no ip routing\n!\ncontrol-plane\n   no service-policy input copp-system-policy\n\
+          !\nbanner login\nNo startup-config was found.\nThe device is in Zero Touch\
+          \ Provisioning mode and is attempting to\ndownload the startup-config from\
+          \ a remote system. The device will not\nbe fully functional until either\
+          \ a valid startup-config is downloaded\nfrom a remote system or Zero Touch\
+          \ Provisioning is cancelled.\nTo cancel Zero Touch Provisioning, login as\
+          \ admin and type\n'zerotouch cancel' at the CLI. Alternatively, to disable\
+          \ Zero Touch\nProvisioning permanently, type 'zerotouch disable' at the\
+          \ CLI.\nNote: The device will reload when these commands are issued.\nEOF\n\
+          !\nmanagement api http-commands\n   protocol unix-socket\n   no shutdown\n\
+          !\nmanagement telnet\n   no shutdown\n!\nend\nlocalhost(config)#"
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      clear logg:
+        result_privilege_level: configuration
+        event_steps:
+          - channel_input: clear logg
+            channel_output: localhost(config)#
+            hidden_input: false
+            returns_prompt: true
+        type: interactive
+unknown_events:
+  exec:
+    pre_on_open:
+      channel_output: "% Invalid input\nlocalhost>"
+      result_privilege_level: exec
+      returns_prompt: true
+      closes_connection: false
+    post_on_open:
+      channel_output: "% Invalid input\nlocalhost>"
+      result_privilege_level: exec
+      returns_prompt: true
+      closes_connection: false
+  privilege_exec:
+    pre_on_open:
+      channel_output: "% Invalid input\nlocalhost#"
+      result_privilege_level: privilege_exec
+      returns_prompt: true
+      closes_connection: false
+    post_on_open:
+      channel_output: "% Invalid input\nlocalhost#"
+      result_privilege_level: privilege_exec
+      returns_prompt: true
+      closes_connection: false
+  configuration:
+    pre_on_open:
+      channel_output: "% Invalid input\nlocalhost(config)#"
+      result_privilege_level: configuration
+      returns_prompt: true
+      closes_connection: false
+    post_on_open:
+      channel_output: "% Invalid input\nlocalhost(config)#"
+      result_privilege_level: configuration
+      returns_prompt: true
+      closes_connection: false
+initial_privilege_level: exec
+privilege_level_prompts:
+  exec: localhost>
+  privilege_exec: localhost#
+  configuration: localhost(config)#
+on_open_inputs:
+  - terminal width 32767
+  - terminal length 0

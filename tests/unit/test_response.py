@@ -89,7 +89,6 @@ drwxr-xr-x  12 carl  staff    384 Jan 27 19:13 .git/"""
     assert response.failed is False
 
 
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting textfsm on windows")
 @pytest.mark.parametrize(
     "parse_type",
     [
@@ -123,7 +122,6 @@ Internet  172.31.254.2            -   c800.84b2.e9c2  ARPA   Vlan254
     assert response.textfsm_parse_output(to_dict=to_dict)[0] == expected_result
 
 
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting textfsm on windows")
 def test_response_parse_textfsm_fail():
     response = Response("localhost", channel_input="show ip arp", textfsm_platform="cisco_ios")
     response_bytes = b""
@@ -131,7 +129,6 @@ def test_response_parse_textfsm_fail():
     assert response.textfsm_parse_output() == []
 
 
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting textfsm on windows")
 def test_response_parse_textfsm_no_template():
     response = Response("localhost", channel_input="show ip arp", textfsm_platform="potato")
     response_bytes = b""
@@ -139,7 +136,9 @@ def test_response_parse_textfsm_no_template():
     assert response.textfsm_parse_output() == []
 
 
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting genie on windows")
+@pytest.mark.skipif(
+    sys.version_info.minor > 9, reason="genie not currently available for python 3.10"
+)
 def test_response_parse_genie():
     response = Response("localhost", channel_input="show ip arp", genie_platform="iosxe")
     response_bytes = b"""Protocol  Address          Age (min)  Hardware Addr   Type   Interface
@@ -153,7 +152,9 @@ Internet  172.31.254.2            -   c800.84b2.e9c2  ARPA   Vlan254
     )
 
 
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="not supporting genie on windows")
+@pytest.mark.skipif(
+    sys.version_info.minor > 9, reason="genie not currently available for python 3.10"
+)
 def test_response_parse_genie_fail():
     response = Response("localhost", channel_input="show ip arp", genie_platform="iosxe")
     response_bytes = b""

@@ -1,0 +1,800 @@
+events:
+  exec:
+    pre_on_open:
+      set cli complete-on-space off:
+        channel_output: " \nDisabling complete-on-space\n\nboxen> "
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      set cli screen-width 511:
+        channel_output: " \nScreen width set to 511\n\nboxen> "
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      set cli screen-length 0:
+        channel_output: " \nScreen length set to 0\n\nboxen> "
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit:
+        channel_output: __CLOSES_CONNECTION__
+        result_privilege_level: exec
+        returns_prompt: false
+        closes_connection: true
+        type: standard
+      configure:
+        channel_output: " \nEntering configuration mode\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure exclusive:
+        channel_output: " \nwarning: uncommitted changes will be discarded on exit\n\
+          Entering configuration mode\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure private:
+        channel_output: " \nwarning: uncommitted changes will be discarded on exit\n\
+          Entering configuration mode\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      start shell:
+        channel_output: " \n% "
+        result_privilege_level: shell
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit configuration-mode:
+        channel_output: "            ^\nsyntax error, expecting <command>.\n\nboxen> "
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      show version:
+        channel_output: " \nModel: srx4100\nJunos: 17.3R2.10\nJUNOS Software Release\
+          \ [17.3R2.10]\n\nboxen> "
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      show configuration:
+        channel_output: " \n## Last commit: 2021-05-28 22:43:53 UTC by boxen\nversion\
+          \ 17.3R2.10;\nsystem {\n    root-authentication {\n        encrypted-password\
+          \ \"$6$RhR81Jm4$DEXKIbZNGjv.agJvM.FlIZWtFqX/966PZk0r4/Ps3LlS.OQZn9fHoVGuYJ7Q.hj2OQLyPJO6Mq7aQ3xLQiNrx/\"\
+          ; ## SECRET-DATA\n    }\n    login {\n        user boxen {\n           \
+          \ uid 2000;\n            class super-user;\n            authentication {\n\
+          \                encrypted-password \"$6$iYt26fU9$gkt6bgxPs.VqHgCoLuSD6Kxv1JUHJLQzXJgzAEUIxobvxWwRErtpaOFvBOjIHr3KMI7sEo.V/7xLXzr0Ok20h0\"\
+          ; ## SECRET-DATA\n            }\n        }\n    }\n    services {\n    \
+          \    ssh {\n            protocol-version v2;\n        }\n        telnet;\n\
+          \        netconf {\n---(more)---"
+        result_privilege_level: exec
+        returns_prompt: false
+        closes_connection: false
+        type: standard
+    post_on_open:
+      set cli complete-on-space off:
+        channel_output: " \nDisabling complete-on-space\n\nboxen> "
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      set cli screen-width 511:
+        channel_output: " \nScreen width set to 511\n\nboxen> "
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      set cli screen-length 0:
+        channel_output: " \nScreen length set to 0\n\nboxen> "
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit:
+        channel_output: __CLOSES_CONNECTION__
+        result_privilege_level: exec
+        returns_prompt: false
+        closes_connection: true
+        type: standard
+      configure:
+        channel_output: " \nEntering configuration mode\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure exclusive:
+        channel_output: " \nwarning: uncommitted changes will be discarded on exit\n\
+          Entering configuration mode\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure private:
+        channel_output: " \nwarning: uncommitted changes will be discarded on exit\n\
+          Entering configuration mode\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      start shell:
+        channel_output: " \n% "
+        result_privilege_level: shell
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit configuration-mode:
+        channel_output: "            ^\nsyntax error, expecting <command>.\n\nboxen> "
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      show version:
+        channel_output: " \nModel: srx4100\nJunos: 17.3R2.10\nJUNOS Software Release\
+          \ [17.3R2.10]\n\nboxen> "
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      show configuration:
+        channel_output: " \n## Last commit: 2021-05-28 22:43:53 UTC by boxen\nversion\
+          \ 17.3R2.10;\nsystem {\n    root-authentication {\n        encrypted-password\
+          \ \"$6$RhR81Jm4$DEXKIbZNGjv.agJvM.FlIZWtFqX/966PZk0r4/Ps3LlS.OQZn9fHoVGuYJ7Q.hj2OQLyPJO6Mq7aQ3xLQiNrx/\"\
+          ; ## SECRET-DATA\n    }\n    login {\n        user boxen {\n           \
+          \ uid 2000;\n            class super-user;\n            authentication {\n\
+          \                encrypted-password \"$6$iYt26fU9$gkt6bgxPs.VqHgCoLuSD6Kxv1JUHJLQzXJgzAEUIxobvxWwRErtpaOFvBOjIHr3KMI7sEo.V/7xLXzr0Ok20h0\"\
+          ; ## SECRET-DATA\n            }\n        }\n    }\n    services {\n    \
+          \    ssh {\n            protocol-version v2;\n        }\n        telnet;\n\
+          \        netconf {\n            ssh;\n        }\n        web-management\
+          \ {\n            http {\n                interface fxp0.0;\n           \
+          \ }\n        }\n    }\n    syslog {\n        user * {\n            any emergency;\n\
+          \        }\n        file messages {\n            any any;\n            authorization\
+          \ info;\n        }\n        file interactive-commands {\n            interactive-commands\
+          \ any;\n        }\n    }\n    license {\n        autoupdate {\n        \
+          \    url https://ae1.juniper.net/junos/key_retrieval;\n        }\n    }\n\
+          }\nsecurity {\n    screen {\n        ids-option untrust-screen {\n     \
+          \       icmp {\n                ping-death;\n            }\n           \
+          \ ip {\n                source-route-option;\n                tear-drop;\n\
+          \            }\n            tcp {\n                syn-flood {\n       \
+          \             alarm-threshold 1024;\n                    attack-threshold\
+          \ 200;\n                    source-threshold 1024;\n                   \
+          \ destination-threshold 2048;\n                    queue-size 2000; ## Warning:\
+          \ 'queue-size' is deprecated\n                    timeout 20;\n        \
+          \        }\n                land;\n            }\n        }\n    }\n   \
+          \ policies {\n        from-zone trust to-zone trust {\n            policy\
+          \ default-permit {\n                match {\n                    source-address\
+          \ any;\n                    destination-address any;\n                 \
+          \   application any;\n                }\n                then {\n      \
+          \              permit;\n                }\n            }\n        }\n  \
+          \      from-zone trust to-zone untrust {\n            policy default-permit\
+          \ {\n                match {\n                    source-address any;\n\
+          \                    destination-address any;\n                    application\
+          \ any;\n                }\n                then {\n                    permit;\n\
+          \                }\n            }\n        }\n    }\n    zones {\n     \
+          \   security-zone trust {\n            tcp-rst;\n        }\n        security-zone\
+          \ untrust {\n            screen untrust-screen;\n        }\n    }\n}\ninterfaces\
+          \ {\n    fxp0 {\n        unit 0 {\n            family inet {\n         \
+          \       address 10.0.0.15/24;\n            }\n        }\n    }\n}\n\nboxen> "
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+  configuration:
+    pre_on_open:
+      set cli complete-on-space off:
+        channel_output: "           ^\nsyntax error.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      set cli screen-width 511:
+        channel_output: "           ^\nsyntax error.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      set cli screen-length 0:
+        channel_output: "           ^\nsyntax error.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit:
+        channel_output: " \nExiting configuration mode\n\nboxen> "
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure:
+        channel_output: "       ^\nunknown command.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure exclusive:
+        channel_output: "       ^\nunknown command.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure private:
+        channel_output: "       ^\nunknown command.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      start shell:
+        channel_output: "       ^\nunknown command.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit configuration-mode:
+        channel_output: " \nExiting configuration mode\n\nboxen> "
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      show version:
+        channel_output: " \n## Last changed: 2021-05-28 22:43:56 UTC\nversion 17.3R2.10;\n\
+          \n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      show configuration:
+        channel_output: "            ^\nsyntax error.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+    post_on_open:
+      set cli complete-on-space off:
+        channel_output: "           ^\nsyntax error.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      set cli screen-width 511:
+        channel_output: "           ^\nsyntax error.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      set cli screen-length 0:
+        channel_output: "           ^\nsyntax error.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit:
+        channel_output: " \nExiting configuration mode\n\nboxen> "
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure:
+        channel_output: "       ^\nunknown command.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure exclusive:
+        channel_output: "       ^\nunknown command.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure private:
+        channel_output: "       ^\nunknown command.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      start shell:
+        channel_output: "       ^\nunknown command.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit configuration-mode:
+        channel_output: " \nExiting configuration mode\n\nboxen> "
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      show version:
+        channel_output: " \n## Last changed: 2021-05-28 22:43:56 UTC\nversion 17.3R2.10;\n\
+          \n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      show configuration:
+        channel_output: "            ^\nsyntax error.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+  configuration_exclusive:
+    pre_on_open:
+      set cli complete-on-space off:
+        channel_output: "           ^\nsyntax error.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      set cli screen-width 511:
+        channel_output: "           ^\nsyntax error.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      set cli screen-length 0:
+        channel_output: "           ^\nsyntax error.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit:
+        channel_output: " \nExiting configuration mode\n\nboxen> "
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure:
+        channel_output: "       ^\nunknown command.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure exclusive:
+        channel_output: "       ^\nunknown command.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure private:
+        channel_output: "       ^\nunknown command.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      start shell:
+        channel_output: "       ^\nunknown command.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit configuration-mode:
+        channel_output: " \nExiting configuration mode\n\nboxen> "
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      show version:
+        channel_output: " \n## Last changed: 2021-05-28 22:43:56 UTC\nversion 17.3R2.10;\n\
+          \n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      show configuration:
+        channel_output: "            ^\nsyntax error.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+    post_on_open:
+      set cli complete-on-space off:
+        channel_output: "           ^\nsyntax error.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      set cli screen-width 511:
+        channel_output: "           ^\nsyntax error.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      set cli screen-length 0:
+        channel_output: "           ^\nsyntax error.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit:
+        channel_output: " \nExiting configuration mode\n\nboxen> "
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure:
+        channel_output: "       ^\nunknown command.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure exclusive:
+        channel_output: "       ^\nunknown command.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure private:
+        channel_output: "       ^\nunknown command.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      start shell:
+        channel_output: "       ^\nunknown command.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit configuration-mode:
+        channel_output: " \nExiting configuration mode\n\nboxen> "
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      show version:
+        channel_output: " \n## Last changed: 2021-05-28 22:43:56 UTC\nversion 17.3R2.10;\n\
+          \n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      show configuration:
+        channel_output: "            ^\nsyntax error.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+  configuration_private:
+    pre_on_open:
+      set cli complete-on-space off:
+        channel_output: "           ^\nsyntax error.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      set cli screen-width 511:
+        channel_output: "           ^\nsyntax error.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      set cli screen-length 0:
+        channel_output: "           ^\nsyntax error.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit:
+        channel_output: " \nExiting configuration mode\n\nboxen> "
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure:
+        channel_output: "       ^\nunknown command.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure exclusive:
+        channel_output: "       ^\nunknown command.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure private:
+        channel_output: "       ^\nunknown command.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      start shell:
+        channel_output: "       ^\nunknown command.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit configuration-mode:
+        channel_output: " \nExiting configuration mode\n\nboxen> "
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      show version:
+        channel_output: " \n## Last changed: 2021-05-28 22:43:40 UTC\nversion 17.3R2.10;\n\
+          \n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      show configuration:
+        channel_output: "            ^\nsyntax error.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+    post_on_open:
+      set cli complete-on-space off:
+        channel_output: "           ^\nsyntax error.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      set cli screen-width 511:
+        channel_output: "           ^\nsyntax error.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      set cli screen-length 0:
+        channel_output: "           ^\nsyntax error.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit:
+        channel_output: " \nExiting configuration mode\n\nboxen> "
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure:
+        channel_output: "       ^\nunknown command.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure exclusive:
+        channel_output: "       ^\nunknown command.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure private:
+        channel_output: "       ^\nunknown command.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      start shell:
+        channel_output: "       ^\nunknown command.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit configuration-mode:
+        channel_output: " \nExiting configuration mode\n\nboxen> "
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      show version:
+        channel_output: " \n## Last changed: 2021-05-28 22:43:40 UTC\nversion 17.3R2.10;\n\
+          \n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      show configuration:
+        channel_output: "            ^\nsyntax error.\n\n[edit]\nboxen# "
+        result_privilege_level: configuration
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+  shell:
+    pre_on_open:
+      set cli complete-on-space off:
+        channel_output: "set: Syntax Error.\n% "
+        result_privilege_level: shell
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      set cli screen-width 511:
+        channel_output: "set: Syntax Error.\n% "
+        result_privilege_level: shell
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      set cli screen-length 0:
+        channel_output: "set: Syntax Error.\n% "
+        result_privilege_level: shell
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit:
+        channel_output: "exit\n\nboxen> "
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure:
+        channel_output: "configure: Command not found.\n% "
+        result_privilege_level: shell
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure exclusive:
+        channel_output: "configure: Command not found.\n% "
+        result_privilege_level: shell
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure private:
+        channel_output: "configure: Command not found.\n% "
+        result_privilege_level: shell
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      start shell:
+        channel_output: "start: Command not found.\n% "
+        result_privilege_level: shell
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit configuration-mode:
+        channel_output: "exit: Expression Syntax.\n% "
+        result_privilege_level: shell
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      show version:
+        channel_output: "show: Command not found.\n% "
+        result_privilege_level: shell
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      show configuration:
+        channel_output: "show: Command not found.\n% "
+        result_privilege_level: shell
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+    post_on_open:
+      set cli complete-on-space off:
+        channel_output: "set: Syntax Error.\n% "
+        result_privilege_level: shell
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      set cli screen-width 511:
+        channel_output: "set: Syntax Error.\n% "
+        result_privilege_level: shell
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      set cli screen-length 0:
+        channel_output: "set: Syntax Error.\n% "
+        result_privilege_level: shell
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit:
+        channel_output: "exit\n\nboxen> "
+        result_privilege_level: exec
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure:
+        channel_output: "configure: Command not found.\n% "
+        result_privilege_level: shell
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure exclusive:
+        channel_output: "configure: Command not found.\n% "
+        result_privilege_level: shell
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      configure private:
+        channel_output: "configure: Command not found.\n% "
+        result_privilege_level: shell
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      start shell:
+        channel_output: "start: Command not found.\n% "
+        result_privilege_level: shell
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      exit configuration-mode:
+        channel_output: "exit: Expression Syntax.\n% "
+        result_privilege_level: shell
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      show version:
+        channel_output: "show: Command not found.\n% "
+        result_privilege_level: shell
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+      show configuration:
+        channel_output: "show: Command not found.\n% "
+        result_privilege_level: shell
+        returns_prompt: true
+        closes_connection: false
+        type: standard
+unknown_events:
+  exec:
+    pre_on_open:
+      channel_output: "       ^\nunknown command.\n\nboxen> "
+      result_privilege_level: exec
+      returns_prompt: true
+      closes_connection: false
+    post_on_open:
+      channel_output: "       ^\nunknown command.\n\nboxen> "
+      result_privilege_level: exec
+      returns_prompt: true
+      closes_connection: false
+  configuration:
+    pre_on_open:
+      channel_output: "       ^\nunknown command.\n\n[edit]\nboxen# "
+      result_privilege_level: configuration
+      returns_prompt: true
+      closes_connection: false
+    post_on_open:
+      channel_output: "       ^\nunknown command.\n\n[edit]\nboxen# "
+      result_privilege_level: configuration
+      returns_prompt: true
+      closes_connection: false
+  configuration_exclusive:
+    pre_on_open:
+      channel_output: "       ^\nunknown command.\n\n[edit]\nboxen# "
+      result_privilege_level: configuration
+      returns_prompt: true
+      closes_connection: false
+    post_on_open:
+      channel_output: "       ^\nunknown command.\n\n[edit]\nboxen# "
+      result_privilege_level: configuration
+      returns_prompt: true
+      closes_connection: false
+  configuration_private:
+    pre_on_open:
+      channel_output: "       ^\nunknown command.\n\n[edit]\nboxen# "
+      result_privilege_level: configuration
+      returns_prompt: true
+      closes_connection: false
+    post_on_open:
+      channel_output: "       ^\nunknown command.\n\n[edit]\nboxen# "
+      result_privilege_level: configuration
+      returns_prompt: true
+      closes_connection: false
+  shell:
+    pre_on_open:
+      channel_output: "__UNKNOWN_INPUT__: Command not found.\n% "
+      result_privilege_level: shell
+      returns_prompt: true
+      closes_connection: false
+    post_on_open:
+      channel_output: "__UNKNOWN_INPUT__: Command not found.\n% "
+      result_privilege_level: shell
+      returns_prompt: true
+      closes_connection: false
+initial_privilege_level: exec
+privilege_level_prompts:
+  exec: boxen>
+  configuration: boxen#
+  configuration_exclusive: boxen#
+  configuration_private: boxen#
+  shell: '%'
+on_open_inputs:
+  - set cli complete-on-space off
+  - set cli screen-width 511
+  - set cli screen-length 0

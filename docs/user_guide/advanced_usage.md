@@ -6,9 +6,9 @@
 The basic usage section outlined the most commonly used driver arguments, please see the following pages to see all 
 supported driver arguments:
 
-- [Base `Driver` Arguments](/api_docs/driver/base_driver) 
-- [`GenericDriver` Arguments](/api_docs/driver/generic_driver) 
-- [`NetworkDriver` Arguments](/api_docs/driver/network_driver) 
+- [Base `Driver` Arguments](https://carlmontanari.github.io/scrapli/api_docs/driver/base_driver/) 
+- [`GenericDriver` Arguments](https://carlmontanari.github.io/scrapli/api_docs/driver/generic_driver/) 
+- [`NetworkDriver` Arguments](https://carlmontanari.github.io/scrapli/api_docs/driver/network_driver/) 
 
 Most of these attributes actually get passed from the `Driver` (or sub-class such as `NXOSDriver`) into the
  `Transport` and `Channel` classes, so if you need to modify any of these values after instantiation you should do so
@@ -76,8 +76,8 @@ def iosxe_disable_paging(conn):
 
 my_device = {
     "host": "172.18.0.11",
-    "auth_username": "vrnetlab",
-    "auth_password": "VR-netlab9",
+    "auth_username": "scrapli",
+    "auth_password": "scrapli",
     "auth_strict_key": False,
     "on_open": iosxe_disable_paging
 }
@@ -167,8 +167,8 @@ from scrapli.driver.core import IOSXEDriver
 
 my_device = {
     "host": "172.18.0.11",
-    "auth_username": "vrnetlab",
-    "auth_password": "VR-netlab9",
+    "auth_username": "scrapli",
+    "auth_password": "scrapli",
     "auth_strict_key": False,
 }
 with IOSXEDriver(**my_device) as conn:
@@ -187,8 +187,8 @@ from scrapli.driver.core import IOSXRDriver
 
 my_device = {
     "host": "172.18.0.11",
-    "auth_username": "vrnetlab",
-    "auth_password": "VR-netlab9",
+    "auth_username": "scrapli",
+    "auth_password": "scrapli",
     "auth_strict_key": False,
 }
 with IOSXRDriver(**my_device) as conn:
@@ -202,8 +202,8 @@ from scrapli.driver.core import IOSXRDriver
 
 my_device = {
     "host": "172.18.0.11",
-    "auth_username": "vrnetlab",
-    "auth_password": "VR-netlab9",
+    "auth_username": "scrapli",
+    "auth_password": "scrapli",
     "auth_strict_key": False,
 }
 with IOSXRDriver(**my_device) as conn:
@@ -229,8 +229,8 @@ from scrapli.driver.core import EOSDriver
 
 my_device = {
     "host": "172.18.0.14",
-    "auth_username": "vrnetlab",
-    "auth_password": "VR-netlab9",
+    "auth_username": "scrapli",
+    "auth_password": "scrapli",
     "auth_secondary": "VR-netlab9",
     "auth_strict_key": False,
 }
@@ -273,8 +273,8 @@ from scrapli import Driver
 
 my_device = {
     "host": "172.18.0.11",
-    "auth_username": "vrnetlab",
-    "auth_password": "VR-netlab9",
+    "auth_username": "scrapli",
+    "auth_password": "scrapli",
     "auth_strict_key": False,
 }
 
@@ -303,8 +303,8 @@ from scrapli.driver import GenericDriver
 
 my_device = {
     "host": "172.18.0.11",
-    "auth_username": "vrnetlab",
-    "auth_password": "VR-netlab9",
+    "auth_username": "scrapli",
+    "auth_password": "scrapli",
     "auth_strict_key": False,
 }
 
@@ -338,8 +338,8 @@ from scrapli.driver.core import IOSXEDriver
 
 my_device = {
     "host": "172.18.0.11",
-    "auth_username": "vrnetlab",
-    "auth_password": "VR-netlab9",
+    "auth_username": "scrapli",
+    "auth_password": "scrapli",
     "auth_strict_key": False,
     "transport": "paramiko"
 }
@@ -388,8 +388,8 @@ from scrapli.driver.core import IOSXEDriver
 
 my_device = {
     "host": "172.18.0.11",
-    "auth_username": "vrnetlab",
-    "auth_password": "VR-netlab9",
+    "auth_username": "scrapli",
+    "auth_password": "scrapli",
     "auth_strict_key": False,
 }
 
