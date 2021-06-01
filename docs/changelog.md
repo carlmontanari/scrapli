@@ -41,6 +41,8 @@ Changelog
 - Simplify the `collect` bits for integration tests... this is still not used heavily but hopefully will be soon!
 - Replace vrnetlab creds in examples with scrapli (felt confusing to have vrnetlab creds everywhere, plus functional 
   testing is moving away from (but still supporting) vrnetlab test environment)
+- Crank up the rows/cols for system transport -> 80 rows, 256 cols -- this to align with scrapligo and to make it 
+  less common that users need to modify these values.
 
 
 ## 2021.01.30
