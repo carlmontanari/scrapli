@@ -58,7 +58,6 @@ def test_init_ssh_config_file_explicit(real_ssh_config_file_path):
     assert ssh_conf.ssh_config == ssh_config_file
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping pending pyfakefs 3.10 support")
 def test_init_ssh_config_file_no_config_file(fs):
     ssh_conf = SSHConfig("")
     # should only have a single splat host w/ all values set to None/empty
@@ -166,7 +165,6 @@ def test_init_ssh_known_hosts_file_explicit(real_ssh_known_hosts_file_path):
     assert known_hosts.ssh_known_hosts == ssh_known_hosts
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping pending pyfakefs 3.10 support")
 def test_init_ssh_known_hosts_file_no_config_file(fs):
     known_hosts = SSHKnownHosts("")
     assert known_hosts.hosts == {}

@@ -32,7 +32,6 @@ def test_channel_lock_context_manager_no_channel_lock(base_transport_no_abc):
         assert True
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping pending pyfakefs 3.10 support")
 def test_channel_read(fs, caplog, monkeypatch, sync_transport_no_abc):
     # fs needed to mock filesystem for asserting log location
     _ = fs

@@ -178,7 +178,6 @@ def test_send_commands(monkeypatch, sync_network_driver):
     assert actual_response[0].raw_result == b"raw"
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping pending pyfakefs 3.10 support")
 def test_send_commands_from_file(fs, monkeypatch, real_ssh_commands_file_path, sync_network_driver):
     fs.add_real_file(source_path=real_ssh_commands_file_path, target_path="/commands")
 
@@ -300,7 +299,6 @@ def test_send_config(monkeypatch, sync_network_driver):
     assert actual_response.raw_result == b""
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping pending pyfakefs 3.10 support")
 def test_send_configs_from_file(fs, monkeypatch, real_ssh_commands_file_path, sync_network_driver):
     fs.add_real_file(source_path=real_ssh_commands_file_path, target_path="/configs")
 
