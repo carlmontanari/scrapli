@@ -2,7 +2,7 @@ black==21.5b2
 darglint==1.8.0
 isort==5.8.0
 mypy==0.812
-nox==2020.12.31
+nox==2021.6.6
 pycodestyle==2.7.0
 pydocstyle==6.1.1
 pyfakefs==4.5.0
