@@ -472,3 +472,36 @@ class SSHKnownHosts:
                 known_hosts[individual_host]["public_key"] = public_key
 
         return known_hosts
+
+
+_LOADED_SSH_CONFIG_OBJECTS: Dict[str, SSHConfig] = {}
+
+
+def ssh_config_factory(ssh_config_file: str) -> SSHConfig:
+    """
+    Sorta kinda make a singleton out of SSHConfig
+
+    Not exactly a singleton in that its more like a singleton *per ssh config file path* since a
+    user may elect to use different ssh config files for different things! The only place this
+    should ever be called from is the base driver which has already resolved the ssh config file
+    path -- so we should get only fully qualified paths. We then use this path as the key in the
+    `_LOADED_SSH_CONFIG_OBJECTS` dict, storing the actual object we instantiate as the value. This
+    allows us to only ever create one instance of SSHConfig for each provided ssh config file!
+
+    Args:
+        ssh_config_file: fully qualified string path to ssh config file
+
+    Returns:
+        SSHConfig: instantiated SSHConfig object
+
+    Raises:
+        N/A
+
+    """
+    if ssh_config_file in _LOADED_SSH_CONFIG_OBJECTS:
+        return _LOADED_SSH_CONFIG_OBJECTS[ssh_config_file]
+
+    ssh_config = SSHConfig(ssh_config_file=ssh_config_file)
+
+    _LOADED_SSH_CONFIG_OBJECTS[ssh_config_file] = ssh_config
+    return ssh_config
