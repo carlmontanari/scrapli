@@ -229,6 +229,8 @@ def mypy(session):
     """
     session.install(".")
     session.install(f"mypy{DEV_REQUIREMENTS['mypy']}")
+    session.install(f"types-paramiko{DEV_REQUIREMENTS['types-paramiko']}")
+    session.install(f"types-pkg-resources{DEV_REQUIREMENTS['types-pkg-resources']}")
     session.run("python", "-m", "mypy", "--strict", "scrapli/")
 
 
