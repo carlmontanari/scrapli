@@ -1,7 +1,7 @@
 black==21.5b2
 darglint==1.8.0
 isort==5.8.0
-mypy==0.812
+mypy==0.901
 nox==2021.6.6
 pycodestyle==2.7.0
 pydocstyle==6.1.1
@@ -13,6 +13,8 @@ pytest-cov==2.12.1
 pytest==6.2.4
 scrapli-cfg==2021.7.30a9
 scrapli-replay==2021.7.30a5
+types-paramiko==0.1.4
+types-pkg-resources==0.1.2
 -r requirements-asyncssh.txt
 -r requirements-community.txt
 -r requirements-genie.txt
