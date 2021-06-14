@@ -285,7 +285,7 @@ class AsyncChannel(BaseChannel):
                     return
 
     @ChannelTimeout(message="timed out during in channel telnet authentication")
-    async def channel_authenticate_telnet(
+    async def channel_authenticate_telnet(  # noqa: C901
         self, auth_username: str = "", auth_password: str = ""
     ) -> None:
         """
@@ -323,12 +323,16 @@ class AsyncChannel(BaseChannel):
         # there is no output on the channel. we do this because sometimes telnet needs a kick to get
         # it to prompt for auth -- particularity when connecting to terminal server/console port
         auth_start_time = datetime.now().timestamp()
+        read_interval = self._base_channel_args.timeout_ops / 20
         return_interval = self._base_channel_args.timeout_ops / 10
         return_attempts = 1
 
         async with self._channel_lock():
             while True:
-                buf = await self.read()
+                try:
+                    buf = await asyncio.wait_for(self.read(), timeout=read_interval)
+                except asyncio.TimeoutError:
+                    buf = b""
 
                 if not buf:
                     current_iteration_time = datetime.now().timestamp()
