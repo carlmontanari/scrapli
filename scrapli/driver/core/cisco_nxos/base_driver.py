@@ -18,13 +18,14 @@ PRIVS = {
     ),
     "privilege_exec": (
         PrivilegeLevel(
-            pattern=r"^((?!\-tcl)[a-z0-9.\-_@/:]){1,63}#\s?$",
+            pattern=r"[a-z0-9.\-_@/:]{1,63}#\s?$",
             name="privilege_exec",
             previous_priv="exec",
             deescalate="disable",
             escalate="enable",
             escalate_auth=True,
             escalate_prompt=r"^[pP]assword:\s?$",
+            not_contains=["-tcl"],
         )
     ),
     "configuration": (

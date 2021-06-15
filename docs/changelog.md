@@ -43,6 +43,10 @@ Changelog
   testing is moving away from (but still supporting) vrnetlab test environment)
 - Crank up the rows/cols for system transport -> 80 rows, 256 cols -- this to align with scrapligo and to make it 
   less common that users need to modify these values.
+- BUGFIX: fixed blocking read in async channel telnet authentication (thank you Dmitry Figol!)
+- Added `not_contains` field to privilege levels... this will help greatly simplify the necessary regex patterns, as 
+  well as allow us to ditch look arounds which go does not support... step one to a standardized community platform 
+  that works with python -or- go!
 
 
 ## 2021.01.30

@@ -14,9 +14,17 @@ from scrapli.driver.core.cisco_iosxr.base_driver import PRIVS
     ],
     ids=["privilege_exec", "configuration", "privilege_exec_underscore"],
 )
-def test_prompt_patterns(priv_pattern):
+def test_prompt_patterns(priv_pattern, sync_iosxr_driver):
     priv_level_name = priv_pattern[0]
     prompt = priv_pattern[1]
     prompt_pattern = PRIVS.get(priv_level_name).pattern
     match = re.search(pattern=prompt_pattern, string=prompt, flags=re.M | re.I)
     assert match
+
+    current_priv_guesses = sync_iosxr_driver._determine_current_priv(current_prompt=prompt)
+    if priv_level_name == "configuration":
+        # config and config exclusive are same prompt so cant tell them apart and thus we return
+        # a list of possible priv levels
+        assert len(current_priv_guesses) == 2
+    else:
+        assert len(current_priv_guesses) == 1

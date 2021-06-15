@@ -21,6 +21,7 @@ class PrivilegeLevel:
         "escalate",
         "escalate_auth",
         "escalate_prompt",
+        "not_contains",
     )
 
     def __init__(
@@ -32,6 +33,7 @@ class PrivilegeLevel:
         escalate: str,
         escalate_auth: bool,
         escalate_prompt: str,
+        not_contains: Optional[List[str]] = None,
     ):
         """
         PrivilegeLevel Object
@@ -44,6 +46,8 @@ class PrivilegeLevel:
             escalate: how to escalate *to* this privilege level (from the lower/previous priv)
             escalate_auth: True/False escalation requires authentication
             escalate_prompt: prompt pattern to search for during escalation if escalate auth is True
+            not_contains: list of substrings that should *not* be seen in a prompt for this
+                privilege level
 
         Returns:
             None
@@ -59,6 +63,7 @@ class PrivilegeLevel:
         self.escalate = escalate
         self.escalate_auth = escalate_auth
         self.escalate_prompt = escalate_prompt
+        self.not_contains: List[str] = not_contains or list()
 
 
 DUMMY_PRIV_LEVEL = PrivilegeLevel("", "DUMMY", "", "", "", False, "")
@@ -119,11 +124,20 @@ class BaseNetworkDriver:
         """
         matching_priv_levels = []
         for priv_level in self.privilege_levels.values():
+            if priv_level.not_contains:
+                # starting at 2021.07.30 the `not_contains` field was added to privilege levels
+                # (defaulting to an empty tuple) -- this helps us to simplify the priv patterns
+                # greatly, as well as have no reliance on look arounds which makes the "normal"
+                # scrapli privilege levels more go friendly -- useful for scrapligo!
+                if any(not_contains in current_prompt for not_contains in priv_level.not_contains):
+                    continue
+
             search_result = re.search(
                 pattern=priv_level.pattern, string=current_prompt, flags=re.M | re.I
             )
             if not search_result:
                 continue
+
             matching_priv_levels.append(priv_level.name)
         if not matching_priv_levels:
             msg = f"could not determine privilege level from provided prompt: '{current_prompt}'"
@@ -131,6 +145,7 @@ class BaseNetworkDriver:
             raise ScrapliPrivilegeError(msg)
 
         self.logger.debug(f"determined current privilege level is one of '{matching_priv_levels}'")
+
         return matching_priv_levels
 
     def _build_priv_graph(self) -> None:
