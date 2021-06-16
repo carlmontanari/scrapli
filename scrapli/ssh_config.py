@@ -122,12 +122,7 @@ class SSHConfig:
 
         """
         class_dict = self.__dict__.copy()
-
-        try:
-            del class_dict["ssh_config"]
-        except KeyError:
-            pass
-
+        del class_dict["ssh_config"]
         return f"SSHConfig {class_dict}"
 
     def __bool__(self) -> bool:

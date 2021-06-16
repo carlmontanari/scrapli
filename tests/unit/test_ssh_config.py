@@ -177,7 +177,6 @@ def test_init_ssh_known_hosts_file_no_hosts(test_data_path):
 def test_ssh_config_factory(real_ssh_config_file_path):
     # *probably* the ssh config file is already in the loaded dict, so we'll empty it before testing
     SSHConfig._config_files = {}
-
     assert not SSHConfig._config_files
     _ = ssh_config_factory(ssh_config_file=real_ssh_config_file_path)
     assert real_ssh_config_file_path in SSHConfig._config_files
