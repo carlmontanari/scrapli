@@ -35,7 +35,7 @@ PRIVS = {
     ),
     "configuration": (
         PrivilegeLevel(
-            pattern=r"^[a-z0-9.\-@()/: ]{1,63}\(config(?!\-s\-)[a-z0-9_.\-@/:]{0,32}\)#\s?$",
+            pattern=r"^[a-z0-9.\-@()/: ]{1,63}\(config(?!\-s\-)[A-Za-z0-9_.\-@/:+]{0,96}\)#\s?$",
             name="configuration",
             previous_priv="privilege_exec",
             deescalate="end",
