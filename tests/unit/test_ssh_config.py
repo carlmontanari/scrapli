@@ -1,10 +1,9 @@
 import os
-import sys
 
 import pytest
 
 from scrapli.exceptions import ScrapliTypeError
-from scrapli.ssh_config import Host, SSHConfig, SSHKnownHosts
+from scrapli.ssh_config import Host, SSHConfig, SSHKnownHosts, ssh_config_factory
 
 
 def test_str(real_ssh_config_file_path):
@@ -173,3 +172,11 @@ def test_init_ssh_known_hosts_file_no_config_file(fs):
 def test_init_ssh_known_hosts_file_no_hosts(test_data_path):
     known_hosts = SSHKnownHosts(f"{test_data_path}/files/__init__.py")
     assert known_hosts.hosts == {}
+
+
+def test_ssh_config_factory(real_ssh_config_file_path):
+    # *probably* the ssh config file is already in the loaded dict, so we'll empty it before testing
+    SSHConfig._config_files = {}
+    assert not SSHConfig._config_files
+    _ = ssh_config_factory(ssh_config_file=real_ssh_config_file_path)
+    assert real_ssh_config_file_path in SSHConfig._config_files
