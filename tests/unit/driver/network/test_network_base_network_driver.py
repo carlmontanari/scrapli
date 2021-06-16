@@ -13,7 +13,7 @@ def test_generate_comms_prompt_pattern(base_network_driver):
     assert (
         base_network_driver.comms_prompt_pattern
         == r"(^[a-z0-9.\-_@()/:]{1,63}>$)|(^[a-z0-9.\-_@/:]{1,63}#$)|(^["
-        r"a-z0-9.\-_@/:]{1,63}\((?!tcl)[a-z0-9.\-@/:\+]{0,32}\)#$)|(("
+        r"a-z0-9.\-_@/:]{1,63}\([a-z0-9.\-@/:\+]{0,32}\)#$)|(("
         r"^[a-z0-9.\-_@/:]{1,63}\(tcl\)#$)|(^\+>$))"
     )
 
@@ -80,13 +80,13 @@ def test_update_privilege_levels(base_network_driver):
     assert (
         base_network_driver.comms_prompt_pattern
         == r"(^[a-z0-9.\-_@()/:]{1,63}>$)|(^[a-z0-9.\-_@/:]{1,63}#$)|(^["
-        r"a-z0-9.\-_@/:]{1,63}\((?!tcl)[a-z0-9.\-@/:\+]{0,32}\)#$)|(("
+        r"a-z0-9.\-_@/:]{1,63}\([a-z0-9.\-@/:\+]{0,32}\)#$)|(("
         r"^[a-z0-9.\-_@/:]{1,63}\(tcl\)#$)|(^\+>$))"
     )
     assert (
         base_network_driver.channel.comms_prompt_pattern
         == r"(^[a-z0-9.\-_@()/:]{1,63}>$)|(^[a-z0-9.\-_@/:]{1,63}#$)|(^["
-        r"a-z0-9.\-_@/:]{1,63}\((?!tcl)[a-z0-9.\-@/:\+]{0,32}\)#$)|(("
+        r"a-z0-9.\-_@/:]{1,63}\([a-z0-9.\-@/:\+]{0,32}\)#$)|(("
         r"^[a-z0-9.\-_@/:]{1,63}\(tcl\)#$)|(^\+>$))"
     )
     assert dict(base_network_driver._priv_graph) == {

@@ -348,13 +348,14 @@ PRIVS = {
     ),
     "configuration": (
         PrivilegeLevel(
-            pattern=r"^[a-z0-9.\-_@/:]{1,63}\((?!tcl)[a-z0-9.\-@/:\+]{0,32}\)#$",
+            pattern=r"^[a-z0-9.\-_@/:]{1,63}\([a-z0-9.\-@/:\+]{0,32}\)#$",
             name="configuration",
             previous_priv="privilege_exec",
             deescalate="end",
             escalate="configure terminal",
             escalate_auth=False,
             escalate_prompt="",
+            not_contains=["tcl"],
         )
     ),
     "tclsh": (
