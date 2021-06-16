@@ -18,6 +18,10 @@ from scrapli.exceptions import ScrapliValueError
         ("exec", "localhost(some thing)>"),
         ("privilege_exec", "localhost(some thing)#"),
         ("configuration", "localhost(some thing)(config)#"),
+        (
+            "configuration",
+            "localhost(config-sg-tacacs+-Yes-EOS_Allows_This_1-Silly_Is_It_Not-And_Yes_It_Can_Be_This_Long)#",
+        ),
     ],
     ids=[
         "exec",
@@ -29,6 +33,7 @@ from scrapli.exceptions import ScrapliValueError
         "exec_with_space",
         "privilege_exec_with_space",
         "config_with_space",
+        "config_mixed_case_special_chars_very_long",
     ],
 )
 def test_prompt_patterns(priv_pattern):
