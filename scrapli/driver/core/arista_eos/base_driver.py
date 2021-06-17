@@ -8,7 +8,7 @@ from scrapli.exceptions import ScrapliValueError
 PRIVS = {
     "exec": (
         PrivilegeLevel(
-            pattern=r"^[a-z0-9.\-@()/: ]{1,63}>\s?$",
+            pattern=r"^[\w.\-@()/: ]{1,63}>\s?$",
             name="exec",
             previous_priv="",
             deescalate="",
@@ -19,7 +19,7 @@ PRIVS = {
     ),
     "privilege_exec": (
         PrivilegeLevel(
-            pattern=r"^[a-z0-9.\-@()/: ]{1,63}#\s?$",
+            pattern=r"^[\w.\-@()/: ]{1,63}#\s?$",
             name="privilege_exec",
             previous_priv="exec",
             deescalate="disable",
@@ -31,7 +31,7 @@ PRIVS = {
     ),
     "configuration": (
         PrivilegeLevel(
-            pattern=r"^[a-z0-9.\-@()/: ]{1,63}\(config[a-z0-9_.\-@/:]{0,32}\)#\s?$",
+            pattern=r"^[\w.\-@()/: ]{1,63}\(config[\w.\-@/:]{0,32}\)#\s?$",
             name="configuration",
             previous_priv="privilege_exec",
             deescalate="end",

@@ -47,6 +47,7 @@ Changelog
 - Added `not_contains` field to privilege levels... this will help greatly simplify the necessary regex patterns, as 
   well as allow us to ditch look arounds which go does not support... step one to a standardized community platform 
   that works with python -or- go!
+- Simplified (at least a little... more would be good) patterns for privilege levels for core platforms.
 
 
 ## 2021.01.30
