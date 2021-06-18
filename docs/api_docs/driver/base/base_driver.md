@@ -41,7 +41,7 @@ from scrapli.decorators import DeprecateCommsAnsi
 from scrapli.exceptions import ScrapliTransportPluginError, ScrapliTypeError, ScrapliValueError
 from scrapli.helper import format_user_warning, resolve_file
 from scrapli.logging import get_instance_logger
-from scrapli.ssh_config import SSHConfig
+from scrapli.ssh_config import ssh_config_factory
 from scrapli.transport import CORE_TRANSPORTS
 from scrapli.transport.base import BasePluginTransportArgs, BaseTransportArgs
 
@@ -409,8 +409,8 @@ class BaseDriver:
             N/A
 
         """
-        ssh = SSHConfig(self.ssh_config_file)
-        host_config = ssh.lookup(self.host)
+        ssh = ssh_config_factory(ssh_config_file=self.ssh_config_file)
+        host_config = ssh.lookup(host=self.host)
 
         if host_config.port:
             self.logger.info(
@@ -1403,8 +1403,8 @@ class BaseDriver:
             N/A
 
         """
-        ssh = SSHConfig(self.ssh_config_file)
-        host_config = ssh.lookup(self.host)
+        ssh = ssh_config_factory(ssh_config_file=self.ssh_config_file)
+        host_config = ssh.lookup(host=self.host)
 
         if host_config.port:
             self.logger.info(
