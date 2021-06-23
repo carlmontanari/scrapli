@@ -169,7 +169,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         timeout_ops: Optional[float] = None,
-        ignore_privelege_level: bool = False,
+        ignore_privilege_level: bool = False,
     ) -> Response:
         """
         Send a command
@@ -183,8 +183,8 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
             timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
                 the duration of the operation, value is reset to initial value after operation is
                 completed
-            ignore_privelege_level: if ignore_privelege_level is True we will not acquire any
-            specific privilege level. The current privilege level will be used.
+            ignore_privilege_level: if ignore_privilege_level is True we will not acquire any
+                specific privilege level. The current privilege level will be used.
         Returns:
             Response: Scrapli Response object
 
@@ -192,7 +192,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
             N/A
 
         """
-        if not ignore_privelege_level:
+        if not ignore_privilege_level:
             if self._current_priv_level.name != self.default_desired_privilege_level:
                 self.acquire_priv(desired_priv=self.default_desired_privilege_level)
 
@@ -218,7 +218,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
         stop_on_failed: bool = False,
         eager: bool = False,
         timeout_ops: Optional[float] = None,
-        ignore_privelege_level: bool = False,
+        ignore_privilege_level: bool = False,
     ) -> MultiResponse:
         """
         Send multiple commands
@@ -238,8 +238,8 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER COMMAND sent, not for the total
                 of the commands being sent!
-            ignore_privelege_level: if ignore_privelege_level is True we will not acquire any
-            specific privilege level. The current privilege level will be used.
+            ignore_privilege_level: if ignore_privilege_level is True we will not acquire any
+                specific privilege level. The current privilege level will be used.
 
         Returns:
             MultiResponse: Scrapli MultiResponse object
@@ -249,7 +249,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
 
         """
 
-        if not ignore_privelege_level:
+        if not ignore_privilege_level:
             if self._current_priv_level.name != self.default_desired_privilege_level:
                 self.acquire_priv(desired_priv=self.default_desired_privilege_level)
 
@@ -279,7 +279,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
         stop_on_failed: bool = False,
         eager: bool = False,
         timeout_ops: Optional[float] = None,
-        ignore_privelege_level: bool = False,
+        ignore_privilege_level: bool = False,
     ) -> MultiResponse:
         """
         Send command(s) from file
@@ -297,8 +297,8 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER COMMAND sent, not for the total
                 of the commands being sent!
-            ignore_privelege_level: if ignore_privelege_level is True we will not acquire any
-            specific privilege level. The current privilege level will be used.
+            ignore_privilege_level: if ignore_privilege_level is True we will not acquire any
+                specific privilege level. The current privilege level will be used.
 
         Returns:
             MultiResponse: Scrapli MultiResponse object
@@ -307,7 +307,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
             N/A
 
         """
-        if not ignore_privelege_level:
+        if not ignore_privilege_level:
             if self._current_priv_level.name != self.default_desired_privilege_level:
                 self.acquire_priv(desired_priv=self.default_desired_privilege_level)
 
