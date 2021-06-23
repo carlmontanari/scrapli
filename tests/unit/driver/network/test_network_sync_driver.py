@@ -2,8 +2,9 @@ import sys
 
 import pytest
 
+from unittest.mock import patch
 from scrapli.exceptions import ScrapliPrivilegeError
-
+from scrapli.driver.network import NetworkDriver
 
 def test_escalate(monkeypatch, sync_network_driver):
     def _send_input(cls, channel_input, **kwargs):
@@ -143,6 +144,29 @@ def test_send_command(monkeypatch, sync_network_driver):
     assert actual_response.failed is False
     assert actual_response.result == "processed"
     assert actual_response.raw_result == b"raw"
+
+
+def test_send_command_ignore_privilege_level(monkeypatch, sync_network_driver):
+
+    def _send_input(cls, channel_input, **kwargs):
+        assert channel_input == "show version"
+        return b"raw", b"processed"
+
+    monkeypatch.setattr("scrapli.channel.sync_channel.Channel.send_input", _send_input)
+
+    sync_network_driver._current_priv_level = sync_network_driver.privilege_levels["privilege_exec"]
+    sync_network_driver.default_desired_privilege_level = "exec"
+
+    with patch.object(target=NetworkDriver, attribute="acquire_priv") as mocked_method:
+        sync_network_driver.send_command(command="show version",
+                                         ignore_privilege_level=True,
+                                         )
+        mocked_method.assert_not_called()
+
+        sync_network_driver.send_command(command="show version",
+                                         ignore_privilege_level=False,
+                                         )
+        mocked_method.assert_called()
 
 
 def test_send_commands(monkeypatch, sync_network_driver):
