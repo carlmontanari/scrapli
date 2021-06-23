@@ -279,6 +279,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
         stop_on_failed: bool = False,
         eager: bool = False,
         timeout_ops: Optional[float] = None,
+        ignore_privelege_level: bool = False,
     ) -> MultiResponse:
         """
         Send command(s) from file
@@ -296,6 +297,8 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER COMMAND sent, not for the total
                 of the commands being sent!
+            ignore_privelege_level: if ignore_privelege_level is True we will not acquire any
+            specific privilege level. The current privilege level will be used.
 
         Returns:
             MultiResponse: Scrapli MultiResponse object
@@ -304,8 +307,9 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
             N/A
 
         """
-        if self._current_priv_level.name != self.default_desired_privilege_level:
-            self.acquire_priv(desired_priv=self.default_desired_privilege_level)
+        if not ignore_privelege_level:
+            if self._current_priv_level.name != self.default_desired_privilege_level:
+                    self.acquire_priv(desired_priv=self.default_desired_privilege_level)
 
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains
