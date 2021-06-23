@@ -215,6 +215,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
         stop_on_failed: bool = False,
         eager: bool = False,
         timeout_ops: Optional[float] = None,
+        ignore_privelege_level: bool = False
     ) -> MultiResponse:
         """
         Send multiple commands
@@ -242,8 +243,10 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
             N/A
 
         """
-        if self._current_priv_level.name != self.default_desired_privilege_level:
-            self.acquire_priv(desired_priv=self.default_desired_privilege_level)
+
+        if ignore_privelege_level:
+            if self._current_priv_level.name != self.default_desired_privilege_level:
+                self.acquire_priv(desired_priv=self.default_desired_privilege_level)
 
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains
