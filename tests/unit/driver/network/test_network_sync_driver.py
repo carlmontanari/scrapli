@@ -202,6 +202,26 @@ def test_send_commands(monkeypatch, sync_network_driver):
     assert actual_response[0].raw_result == b"raw"
 
 
+def test_send_commands_ignore_privilege_level(monkeypatch, sync_network_driver):
+
+    _command_counter = 0
+
+    def _send_input(cls, channel_input, **kwargs):
+        return b"raw", b"processed"
+
+    monkeypatch.setattr("scrapli.channel.sync_channel.Channel.send_input", _send_input)
+
+    sync_network_driver._current_priv_level = sync_network_driver.privilege_levels["privilege_exec"]
+    sync_network_driver.default_desired_privilege_level = "exec"
+
+    with patch.object(target=NetworkDriver, attribute="acquire_priv") as mocked_method:
+        sync_network_driver.send_commands(commands=["show version", "show run"], ignore_privilege_level=True)
+        mocked_method.assert_not_called()
+
+        sync_network_driver.send_commands(commands=["show version", "show run"], ignore_privilege_level=False)
+        mocked_method.assert_called()
+
+
 @pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping pending pyfakefs 3.10 support")
 def test_send_commands_from_file(fs, monkeypatch, real_ssh_commands_file_path, sync_network_driver):
     fs.add_real_file(source_path=real_ssh_commands_file_path, target_path="/commands")
