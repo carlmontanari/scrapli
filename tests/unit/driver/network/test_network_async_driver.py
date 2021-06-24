@@ -2,8 +2,9 @@ import sys
 
 import pytest
 
+from unittest.mock import patch
 from scrapli.exceptions import ScrapliPrivilegeError
-
+from scrapli.driver.network import AsyncNetworkDriver
 
 @pytest.mark.asyncio
 async def test_escalate(monkeypatch, async_network_driver):
@@ -166,6 +167,26 @@ async def test_send_command(monkeypatch, async_network_driver):
     assert actual_response.failed is False
     assert actual_response.result == "processed"
     assert actual_response.raw_result == b"raw"
+
+
+@pytest.mark.asyncio
+async def test_send_command_ignore_privilege_level(monkeypatch, async_network_driver):
+
+    async def _send_input(cls, channel_input, **kwargs):
+        assert channel_input == "show version"
+        return b"raw", b"processed"
+
+    monkeypatch.setattr("scrapli.channel.async_channel.AsyncChannel.send_input", _send_input)
+
+    async_network_driver._current_priv_level = async_network_driver.privilege_levels[
+        "privilege_exec"
+    ]
+    async_network_driver.default_desired_privilege_level = "exec"
+    with patch.object(target=AsyncNetworkDriver, attribute="acquire_priv") as mocked_method:
+        await async_network_driver.send_command(command="show version", ignore_privilege_level=True)
+        mocked_method.assert_not_called()
+        await async_network_driver.send_command(command="show version", ignore_privilege_level=False)
+        mocked_method.assert_called()
 
 
 @pytest.mark.asyncio
