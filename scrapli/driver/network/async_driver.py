@@ -193,8 +193,9 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
             N/A
 
         """
-        if self._current_priv_level.name != self.default_desired_privilege_level:
-            await self.acquire_priv(desired_priv=self.default_desired_privilege_level)
+        if not ignore_privilege_level:
+            if self._current_priv_level.name != self.default_desired_privilege_level:
+                await self.acquire_priv(desired_priv=self.default_desired_privilege_level)
 
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains
@@ -247,8 +248,9 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
             N/A
 
         """
-        if self._current_priv_level.name != self.default_desired_privilege_level:
-            await self.acquire_priv(desired_priv=self.default_desired_privilege_level)
+        if not ignore_privilege_level:
+            if self._current_priv_level.name != self.default_desired_privilege_level:
+                await self.acquire_priv(desired_priv=self.default_desired_privilege_level)
 
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains
@@ -303,8 +305,9 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
             N/A
 
         """
-        if self._current_priv_level.name != self.default_desired_privilege_level:
-            await self.acquire_priv(desired_priv=self.default_desired_privilege_level)
+        if not ignore_privilege_level:
+            if self._current_priv_level.name != self.default_desired_privilege_level:
+                await self.acquire_priv(desired_priv=self.default_desired_privilege_level)
 
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains
