@@ -269,9 +269,6 @@ def test_send_commands_from_file_ignore_privilege_level(fs, monkeypatch, real_ss
         mocked_method.assert_called()
 
 
-
-
-
 def test_send_interactive(monkeypatch, sync_network_driver):
     def _acquire_priv(cls, **kwargs):
         return
