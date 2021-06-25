@@ -1,10 +1,11 @@
 import sys
+from unittest.mock import patch
 
 import pytest
 
-from unittest.mock import patch
-from scrapli.exceptions import ScrapliPrivilegeError
 from scrapli.driver.network import NetworkDriver
+from scrapli.exceptions import ScrapliPrivilegeError
+
 
 def test_escalate(monkeypatch, sync_network_driver):
     def _send_input(cls, channel_input, **kwargs):
@@ -147,7 +148,6 @@ def test_send_command(monkeypatch, sync_network_driver):
 
 
 def test_send_command_ignore_privilege_level(monkeypatch, sync_network_driver):
-
     def _send_input(cls, channel_input, **kwargs):
         assert channel_input == "show version"
         return b"raw", b"processed"
@@ -158,14 +158,16 @@ def test_send_command_ignore_privilege_level(monkeypatch, sync_network_driver):
     sync_network_driver.default_desired_privilege_level = "exec"
 
     with patch.object(target=NetworkDriver, attribute="acquire_priv") as mocked_method:
-        sync_network_driver.send_command(command="show version",
-                                         ignore_privilege_level=True,
-                                         )
+        sync_network_driver.send_command(
+            command="show version",
+            ignore_privilege_level=True,
+        )
         mocked_method.assert_not_called()
 
-        sync_network_driver.send_command(command="show version",
-                                         ignore_privilege_level=False,
-                                         )
+        sync_network_driver.send_command(
+            command="show version",
+            ignore_privilege_level=False,
+        )
         mocked_method.assert_called()
 
 
@@ -215,10 +217,14 @@ def test_send_commands_ignore_privilege_level(monkeypatch, sync_network_driver):
     sync_network_driver.default_desired_privilege_level = "exec"
 
     with patch.object(target=NetworkDriver, attribute="acquire_priv") as mocked_method:
-        sync_network_driver.send_commands(commands=["show version", "show run"], ignore_privilege_level=True)
+        sync_network_driver.send_commands(
+            commands=["show version", "show run"], ignore_privilege_level=True
+        )
         mocked_method.assert_not_called()
 
-        sync_network_driver.send_commands(commands=["show version", "show run"], ignore_privilege_level=False)
+        sync_network_driver.send_commands(
+            commands=["show version", "show run"], ignore_privilege_level=False
+        )
         mocked_method.assert_called()
 
 
@@ -251,7 +257,9 @@ def test_send_commands_from_file(fs, monkeypatch, real_ssh_commands_file_path, s
 
 
 @pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping pending pyfakefs 3.10 support")
-def test_send_commands_from_file_ignore_privilege_level(fs, monkeypatch, real_ssh_commands_file_path, sync_network_driver):
+def test_send_commands_from_file_ignore_privilege_level(
+    fs, monkeypatch, real_ssh_commands_file_path, sync_network_driver
+):
     fs.add_real_file(source_path=real_ssh_commands_file_path, target_path="/commands")
 
     def _send_input(cls, channel_input, **kwargs):

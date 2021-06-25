@@ -1,10 +1,11 @@
 import sys
+from unittest.mock import patch
 
 import pytest
 
-from unittest.mock import patch
-from scrapli.exceptions import ScrapliPrivilegeError
 from scrapli.driver.network import AsyncNetworkDriver
+from scrapli.exceptions import ScrapliPrivilegeError
+
 
 @pytest.mark.asyncio
 async def test_escalate(monkeypatch, async_network_driver):
@@ -171,7 +172,6 @@ async def test_send_command(monkeypatch, async_network_driver):
 
 @pytest.mark.asyncio
 async def test_send_command_ignore_privilege_level(monkeypatch, async_network_driver):
-
     async def _send_input(cls, channel_input, **kwargs):
         return b"raw", b"processed"
 
@@ -185,7 +185,9 @@ async def test_send_command_ignore_privilege_level(monkeypatch, async_network_dr
     with patch.object(target=AsyncNetworkDriver, attribute="acquire_priv") as mocked_method:
         await async_network_driver.send_command(command="show version", ignore_privilege_level=True)
         mocked_method.assert_not_called()
-        await async_network_driver.send_command(command="show version", ignore_privilege_level=False)
+        await async_network_driver.send_command(
+            command="show version", ignore_privilege_level=False
+        )
         mocked_method.assert_called()
 
 
@@ -241,9 +243,13 @@ async def test_send_commands_ignore_privilege_level(monkeypatch, async_network_d
     ]
     async_network_driver.default_desired_privilege_level = "exec"
     with patch.object(target=AsyncNetworkDriver, attribute="acquire_priv") as mocked_method:
-        await async_network_driver.send_commands(commands=["show version", "show run"], ignore_privilege_level=True)
+        await async_network_driver.send_commands(
+            commands=["show version", "show run"], ignore_privilege_level=True
+        )
         mocked_method.assert_not_called()
-        await async_network_driver.send_commands(commands=["show version", "show run"], ignore_privilege_level=False)
+        await async_network_driver.send_commands(
+            commands=["show version", "show run"], ignore_privilege_level=False
+        )
         mocked_method.assert_called()
 
 
@@ -283,7 +289,7 @@ async def test_send_commands_from_file(
 @pytest.mark.asyncio
 @pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping pending pyfakefs 3.10 support")
 async def test_send_commands_from_file_ignore_privilege_level(
-        fs, monkeypatch, real_ssh_commands_file_path, async_network_driver
+    fs, monkeypatch, real_ssh_commands_file_path, async_network_driver
 ):
     fs.add_real_file(source_path=real_ssh_commands_file_path, target_path="/commands")
 
@@ -297,9 +303,13 @@ async def test_send_commands_from_file_ignore_privilege_level(
     ]
     async_network_driver.default_desired_privilege_level = "exec"
     with patch.object(target=AsyncNetworkDriver, attribute="acquire_priv") as mocked_method:
-        await async_network_driver.send_commands_from_file(file="commands", ignore_privilege_level=True)
+        await async_network_driver.send_commands_from_file(
+            file="commands", ignore_privilege_level=True
+        )
         mocked_method.assert_not_called()
-        await async_network_driver.send_commands_from_file(file="commands", ignore_privilege_level=False)
+        await async_network_driver.send_commands_from_file(
+            file="commands", ignore_privilege_level=False
+        )
         mocked_method.assert_called()
 
 

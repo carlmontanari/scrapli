@@ -315,13 +315,13 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
         commands = self._pre_send_from_file(file=file, caller="send_commands_from_file")
 
         return await self.send_commands(
-                commands=commands,
-                strip_prompt=strip_prompt,
-                failed_when_contains=failed_when_contains,
-                stop_on_failed=stop_on_failed,
-                eager=eager,
-                timeout_ops=timeout_ops,
-                ignore_privilege_level=ignore_privilege_level,
+            commands=commands,
+            strip_prompt=strip_prompt,
+            failed_when_contains=failed_when_contains,
+            stop_on_failed=stop_on_failed,
+            eager=eager,
+            timeout_ops=timeout_ops,
+            ignore_privilege_level=ignore_privilege_level,
         )
 
     async def send_interactive(
