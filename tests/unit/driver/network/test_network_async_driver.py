@@ -300,7 +300,7 @@ async def test_send_commands_from_file_ignore_privilege_level(
         await async_network_driver.send_commands_from_file(file="commands", ignore_privilege_level=True)
         mocked_method.assert_not_called()
         await async_network_driver.send_commands_from_file(file="commands", ignore_privilege_level=False)
-        mocked_method.assert_not_called()
+        mocked_method.assert_called()
 
 
 @pytest.mark.asyncio
