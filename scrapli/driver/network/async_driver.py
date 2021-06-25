@@ -312,13 +312,16 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains
 
-        return await super().send_commands_from_file(
-            file=file,
-            strip_prompt=strip_prompt,
-            failed_when_contains=failed_when_contains,
-            stop_on_failed=stop_on_failed,
-            eager=eager,
-            timeout_ops=timeout_ops,
+        commands = self._pre_send_from_file(file=file, caller="send_commands_from_file")
+
+        return await self.send_commands(
+                commands=commands,
+                strip_prompt=strip_prompt,
+                failed_when_contains=failed_when_contains,
+                stop_on_failed=stop_on_failed,
+                eager=eager,
+                timeout_ops=timeout_ops,
+                ignore_privilege_level=ignore_privilege_level,
         )
 
     async def send_interactive(
