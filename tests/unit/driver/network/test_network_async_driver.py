@@ -326,6 +326,19 @@ async def test_send_commands_from_file(
 async def test_send_commands_from_file_ignore_privilege_level(
     fs, monkeypatch, real_ssh_commands_file_path, async_network_driver
 ):
+    _acquire_priv_called = False
+
+    async def _acquire_priv(cls, **kwargs):
+        nonlocal _acquire_priv_called
+        _acquire_priv_called = True
+        return
+
+        # patching acquire priv so we know its called but dont have to worry about that actually
+        # trying to happen
+    monkeypatch.setattr(
+            "scrapli.driver.network.async_driver.AsyncNetworkDriver.acquire_priv", _acquire_priv
+    )
+
     fs.add_real_file(source_path=real_ssh_commands_file_path, target_path="/commands")
 
     async def _send_input(cls, channel_input, **kwargs):
@@ -337,15 +350,19 @@ async def test_send_commands_from_file_ignore_privilege_level(
         "privilege_exec"
     ]
     async_network_driver.default_desired_privilege_level = "exec"
-    with patch.object(target=AsyncNetworkDriver, attribute="acquire_priv") as mocked_method:
-        await async_network_driver.send_commands_from_file(
-            file="commands", ignore_privilege_level=True
-        )
-        mocked_method.assert_not_called()
-        await async_network_driver.send_commands_from_file(
-            file="commands", ignore_privilege_level=False
-        )
-        mocked_method.assert_called()
+
+    async_network_driver.ignore_privilege_level = False
+    await async_network_driver.send_commands_from_file(
+        file="commands"
+    )
+    assert _acquire_priv_called
+    _acquire_priv_called = False
+
+    async_network_driver.ignore_privilege_level = True
+    await async_network_driver.send_commands_from_file(
+        file="commands"
+    )
+    assert not _acquire_priv_called
 
 
 @pytest.mark.asyncio
