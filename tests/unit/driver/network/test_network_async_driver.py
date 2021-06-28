@@ -397,6 +397,47 @@ async def test_send_interactive(monkeypatch, async_network_driver):
 
 
 @pytest.mark.asyncio
+async def test_send_interactive_ignore_privilege_level(monkeypatch, async_network_driver):
+    _acquire_priv_called = False
+
+    async def _acquire_priv(cls, **kwargs):
+        nonlocal _acquire_priv_called
+        _acquire_priv_called = True
+        return
+
+    # patching acquire priv so we know its called but dont have to worry about that actually
+    # trying to happen
+    monkeypatch.setattr(
+            "scrapli.driver.network.async_driver.AsyncNetworkDriver.acquire_priv", _acquire_priv
+    )
+
+    async def _send_inputs_interact(cls, **kwargs):
+        return b"raw", b"processed"
+
+    monkeypatch.setattr(
+            "scrapli.channel.async_channel.AsyncChannel.send_inputs_interact", _send_inputs_interact
+    )
+
+    async_network_driver._current_priv_level = async_network_driver.privilege_levels[
+        "privilege_exec"
+    ]
+    async_network_driver.default_desired_privilege_level = "exec"
+
+    async_network_driver.ignore_privilege_level = False
+    await async_network_driver.send_interactive(
+            interact_events=[("nada", "scrapli>")]
+    )
+    assert _acquire_priv_called
+    _acquire_priv_called = False
+
+    async_network_driver.ignore_privilege_level = True
+    await async_network_driver.send_interactive(
+            interact_events=[("nada", "scrapli>")]
+    )
+    assert not _acquire_priv_called
+
+
+@pytest.mark.asyncio
 async def test_send_configs(monkeypatch, async_network_driver):
     async def _acquire_priv(cls, **kwargs):
         return
