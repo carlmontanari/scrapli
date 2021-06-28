@@ -182,11 +182,11 @@ async def test_send_command_ignore_privilege_level(monkeypatch, async_network_dr
     # patching acquire priv so we know its called but dont have to worry about that actually
     # trying to happen
     monkeypatch.setattr(
-            "scrapli.driver.network.async_driver.AsyncNetworkDriver.acquire_priv", _acquire_priv
+        "scrapli.driver.network.async_driver.AsyncNetworkDriver.acquire_priv", _acquire_priv
     )
 
     async def _send_input(cls, channel_input, **kwargs):
-            return b"raw", b"processed"
+        return b"raw", b"processed"
 
     monkeypatch.setattr("scrapli.channel.async_channel.AsyncChannel.send_input", _send_input)
 
@@ -202,9 +202,7 @@ async def test_send_command_ignore_privilege_level(monkeypatch, async_network_dr
     _acquire_priv_called = False
 
     async_network_driver.ignore_privilege_level = True
-    await async_network_driver.send_command(
-        command="show version"
-    )
+    await async_network_driver.send_command(command="show version")
     assert not _acquire_priv_called
 
 
@@ -257,8 +255,9 @@ async def test_send_commands_ignore_privilege_level(monkeypatch, async_network_d
 
         # patching acquire priv so we know its called but dont have to worry about that actually
         # trying to happen
+
     monkeypatch.setattr(
-            "scrapli.driver.network.async_driver.AsyncNetworkDriver.acquire_priv", _acquire_priv
+        "scrapli.driver.network.async_driver.AsyncNetworkDriver.acquire_priv", _acquire_priv
     )
 
     _command_counter = 0
@@ -274,18 +273,13 @@ async def test_send_commands_ignore_privilege_level(monkeypatch, async_network_d
     async_network_driver.default_desired_privilege_level = "exec"
 
     async_network_driver.ignore_privilege_level = False
-    await async_network_driver.send_commands(
-        commands=["show version", "show run"]
-    )
+    await async_network_driver.send_commands(commands=["show version", "show run"])
     assert _acquire_priv_called
     _acquire_priv_called = False
 
     async_network_driver.ignore_privilege_level = True
-    await async_network_driver.send_commands(
-        commands=["show version", "show run"]
-    )
+    await async_network_driver.send_commands(commands=["show version", "show run"])
     assert not _acquire_priv_called
-
 
 
 @pytest.mark.asyncio
@@ -335,8 +329,9 @@ async def test_send_commands_from_file_ignore_privilege_level(
 
         # patching acquire priv so we know its called but dont have to worry about that actually
         # trying to happen
+
     monkeypatch.setattr(
-            "scrapli.driver.network.async_driver.AsyncNetworkDriver.acquire_priv", _acquire_priv
+        "scrapli.driver.network.async_driver.AsyncNetworkDriver.acquire_priv", _acquire_priv
     )
 
     fs.add_real_file(source_path=real_ssh_commands_file_path, target_path="/commands")
@@ -352,16 +347,12 @@ async def test_send_commands_from_file_ignore_privilege_level(
     async_network_driver.default_desired_privilege_level = "exec"
 
     async_network_driver.ignore_privilege_level = False
-    await async_network_driver.send_commands_from_file(
-        file="commands"
-    )
+    await async_network_driver.send_commands_from_file(file="commands")
     assert _acquire_priv_called
     _acquire_priv_called = False
 
     async_network_driver.ignore_privilege_level = True
-    await async_network_driver.send_commands_from_file(
-        file="commands"
-    )
+    await async_network_driver.send_commands_from_file(file="commands")
     assert not _acquire_priv_called
 
 
@@ -408,14 +399,14 @@ async def test_send_interactive_ignore_privilege_level(monkeypatch, async_networ
     # patching acquire priv so we know its called but dont have to worry about that actually
     # trying to happen
     monkeypatch.setattr(
-            "scrapli.driver.network.async_driver.AsyncNetworkDriver.acquire_priv", _acquire_priv
+        "scrapli.driver.network.async_driver.AsyncNetworkDriver.acquire_priv", _acquire_priv
     )
 
     async def _send_inputs_interact(cls, **kwargs):
         return b"raw", b"processed"
 
     monkeypatch.setattr(
-            "scrapli.channel.async_channel.AsyncChannel.send_inputs_interact", _send_inputs_interact
+        "scrapli.channel.async_channel.AsyncChannel.send_inputs_interact", _send_inputs_interact
     )
 
     async_network_driver._current_priv_level = async_network_driver.privilege_levels[
@@ -424,16 +415,12 @@ async def test_send_interactive_ignore_privilege_level(monkeypatch, async_networ
     async_network_driver.default_desired_privilege_level = "exec"
 
     async_network_driver.ignore_privilege_level = False
-    await async_network_driver.send_interactive(
-            interact_events=[("nada", "scrapli>")]
-    )
+    await async_network_driver.send_interactive(interact_events=[("nada", "scrapli>")])
     assert _acquire_priv_called
     _acquire_priv_called = False
 
     async_network_driver.ignore_privilege_level = True
-    await async_network_driver.send_interactive(
-            interact_events=[("nada", "scrapli>")]
-    )
+    await async_network_driver.send_interactive(interact_events=[("nada", "scrapli>")])
     assert not _acquire_priv_called
 
 
@@ -482,10 +469,11 @@ async def test_send_configs_ignore_privilege_level(monkeypatch, async_network_dr
         nonlocal _acquire_priv_called
         _acquire_priv_called = True
         return
+
     # patching acquire priv so we know its called but dont have to worry about that actually
     # trying to happen
     monkeypatch.setattr(
-            "scrapli.driver.network.async_driver.AsyncNetworkDriver.acquire_priv", _acquire_priv
+        "scrapli.driver.network.async_driver.AsyncNetworkDriver.acquire_priv", _acquire_priv
     )
 
     _command_counter = 0
@@ -500,14 +488,14 @@ async def test_send_configs_ignore_privilege_level(monkeypatch, async_network_dr
     ]
     async_network_driver.ignore_privilege_level = False
     await async_network_driver.send_configs(
-            configs=["interface loopback123", "description tests are boring"]
+        configs=["interface loopback123", "description tests are boring"]
     )
     assert _acquire_priv_called
     _acquire_priv_called = False
 
     async_network_driver.ignore_privilege_level = True
     await async_network_driver.send_configs(
-            configs=["interface loopback123", "description tests are boring"]
+        configs=["interface loopback123", "description tests are boring"]
     )
     assert not _acquire_priv_called
 

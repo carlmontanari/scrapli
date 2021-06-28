@@ -6,6 +6,7 @@ import pytest
 from scrapli.driver.network import NetworkDriver
 from scrapli.exceptions import ScrapliPrivilegeError
 
+
 def test_escalate(monkeypatch, sync_network_driver):
     def _send_input(cls, channel_input, **kwargs):
         assert channel_input == "configure terminal"
@@ -157,7 +158,7 @@ def test_send_command_ignore_privilege_level(monkeypatch, sync_network_driver):
     # patching acquire priv so we know its called but dont have to worry about that actually
     # trying to happen
     monkeypatch.setattr(
-            "scrapli.driver.network.sync_driver.NetworkDriver.acquire_priv", _acquire_priv
+        "scrapli.driver.network.sync_driver.NetworkDriver.acquire_priv", _acquire_priv
     )
 
     def _send_input(cls, channel_input, **kwargs):
@@ -175,7 +176,7 @@ def test_send_command_ignore_privilege_level(monkeypatch, sync_network_driver):
     assert _acquire_priv_called
     _acquire_priv_called = False
 
-    sync_network_driver.ignore_privilege_level= True
+    sync_network_driver.ignore_privilege_level = True
     sync_network_driver.send_command(
         command="show version",
     )
@@ -226,7 +227,7 @@ def test_send_commands_ignore_privilege_level(monkeypatch, sync_network_driver):
     # patching acquire priv so we know its called but dont have to worry about that actually
     # trying to happen
     monkeypatch.setattr(
-            "scrapli.driver.network.sync_driver.NetworkDriver.acquire_priv", _acquire_priv
+        "scrapli.driver.network.sync_driver.NetworkDriver.acquire_priv", _acquire_priv
     )
 
     _command_counter = 0
@@ -239,17 +240,13 @@ def test_send_commands_ignore_privilege_level(monkeypatch, sync_network_driver):
     sync_network_driver._current_priv_level = sync_network_driver.privilege_levels["privilege_exec"]
     sync_network_driver.default_desired_privilege_level = "exec"
 
-    sync_network_driver.ignore_privilege_level= False
-    sync_network_driver.send_commands(
-        commands=["show version", "show run"]
-    )
+    sync_network_driver.ignore_privilege_level = False
+    sync_network_driver.send_commands(commands=["show version", "show run"])
     assert _acquire_priv_called
     _acquire_priv_called = False
 
-    sync_network_driver.ignore_privilege_level= True
-    sync_network_driver.send_commands(
-        commands=["show version", "show run"]
-    )
+    sync_network_driver.ignore_privilege_level = True
+    sync_network_driver.send_commands(commands=["show version", "show run"])
     assert not _acquire_priv_called
 
 
@@ -295,7 +292,7 @@ def test_send_commands_from_file_ignore_privilege_level(
     # patching acquire priv so we know its called but dont have to worry about that actually
     # trying to happen
     monkeypatch.setattr(
-            "scrapli.driver.network.sync_driver.NetworkDriver.acquire_priv", _acquire_priv
+        "scrapli.driver.network.sync_driver.NetworkDriver.acquire_priv", _acquire_priv
     )
 
     fs.add_real_file(source_path=real_ssh_commands_file_path, target_path="/commands")
@@ -308,12 +305,12 @@ def test_send_commands_from_file_ignore_privilege_level(
     sync_network_driver._current_priv_level = sync_network_driver.privilege_levels["privilege_exec"]
     sync_network_driver.default_desired_privilege_level = "exec"
 
-    sync_network_driver.ignore_privilege_level= False
+    sync_network_driver.ignore_privilege_level = False
     sync_network_driver.send_commands_from_file(file="commands")
     assert _acquire_priv_called
     _acquire_priv_called = False
 
-    sync_network_driver.ignore_privilege_level= True
+    sync_network_driver.ignore_privilege_level = True
     sync_network_driver.send_commands_from_file(file="commands")
     assert not _acquire_priv_called
 
@@ -355,14 +352,14 @@ def test_send_interactive_ignore_privilege_level(monkeypatch, sync_network_drive
     # patching acquire priv so we know its called but dont have to worry about that actually
     # trying to happen
     monkeypatch.setattr(
-            "scrapli.driver.network.sync_driver.NetworkDriver.acquire_priv", _acquire_priv
+        "scrapli.driver.network.sync_driver.NetworkDriver.acquire_priv", _acquire_priv
     )
 
     def _send_inputs_interact(cls, **kwargs):
         return b"raw", b"processed"
 
     monkeypatch.setattr(
-            "scrapli.channel.sync_channel.Channel.send_inputs_interact", _send_inputs_interact
+        "scrapli.channel.sync_channel.Channel.send_inputs_interact", _send_inputs_interact
     )
 
     sync_network_driver._current_priv_level = sync_network_driver.privilege_levels["privilege_exec"]
@@ -423,7 +420,7 @@ def test_send_configs_ignore_privilege_level(monkeypatch, sync_network_driver):
     # patching acquire priv so we know its called but dont have to worry about that actually
     # trying to happen
     monkeypatch.setattr(
-            "scrapli.driver.network.sync_driver.NetworkDriver.acquire_priv", _acquire_priv
+        "scrapli.driver.network.sync_driver.NetworkDriver.acquire_priv", _acquire_priv
     )
 
     _command_counter = 0
@@ -437,7 +434,7 @@ def test_send_configs_ignore_privilege_level(monkeypatch, sync_network_driver):
 
     sync_network_driver.ignore_privilege_level = False
     sync_network_driver.send_configs(
-            configs=["interface loopback123", "description tests are boring"]
+        configs=["interface loopback123", "description tests are boring"]
     )
     assert _acquire_priv_called
     _acquire_priv_called = False
@@ -445,10 +442,9 @@ def test_send_configs_ignore_privilege_level(monkeypatch, sync_network_driver):
     sync_network_driver.ignore_privilege_level = True
 
     sync_network_driver.send_configs(
-            configs=["interface loopback123", "description tests are boring"]
+        configs=["interface loopback123", "description tests are boring"]
     )
     assert not _acquire_priv_called
-
 
 
 def test_send_config(monkeypatch, sync_network_driver):
