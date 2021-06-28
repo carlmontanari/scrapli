@@ -172,8 +172,21 @@ async def test_send_command(monkeypatch, async_network_driver):
 
 @pytest.mark.asyncio
 async def test_send_command_ignore_privilege_level(monkeypatch, async_network_driver):
+    _acquire_priv_called = False
+
+    async def _acquire_priv(cls, **kwargs):
+        nonlocal _acquire_priv_called
+        _acquire_priv_called = True
+        return
+
+    # patching acquire priv so we know its called but dont have to worry about that actually
+    # trying to happen
+    monkeypatch.setattr(
+            "scrapli.driver.network.async_driver.AsyncNetworkDriver.acquire_priv", _acquire_priv
+    )
+
     async def _send_input(cls, channel_input, **kwargs):
-        return b"raw", b"processed"
+            return b"raw", b"processed"
 
     monkeypatch.setattr("scrapli.channel.async_channel.AsyncChannel.send_input", _send_input)
 
@@ -182,13 +195,17 @@ async def test_send_command_ignore_privilege_level(monkeypatch, async_network_dr
     ]
     async_network_driver.default_desired_privilege_level = "exec"
 
-    with patch.object(target=AsyncNetworkDriver, attribute="acquire_priv") as mocked_method:
-        await async_network_driver.send_command(command="show version", ignore_privilege_level=True)
-        mocked_method.assert_not_called()
-        await async_network_driver.send_command(
-            command="show version", ignore_privilege_level=False
-        )
-        mocked_method.assert_called()
+    async_network_driver.ignore_privilege_level = False
+    await async_network_driver.send_command(command="show version")
+
+    assert _acquire_priv_called
+    _acquire_priv_called = False
+
+    async_network_driver.ignore_privilege_level = True
+    await async_network_driver.send_command(
+        command="show version"
+    )
+    assert not _acquire_priv_called
 
 
 @pytest.mark.asyncio

@@ -168,7 +168,7 @@ def test_send_command_ignore_privilege_level(monkeypatch, sync_network_driver):
     sync_network_driver._current_priv_level = sync_network_driver.privilege_levels["privilege_exec"]
     sync_network_driver.default_desired_privilege_level = "exec"
 
-    sync_network_driver.ignore_privilege_level= False
+    sync_network_driver.ignore_privilege_level = False
     sync_network_driver.send_command(
         command="show version",
     )
