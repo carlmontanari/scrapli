@@ -216,6 +216,18 @@ def test_send_commands(monkeypatch, sync_network_driver):
 
 
 def test_send_commands_ignore_privilege_level(monkeypatch, sync_network_driver):
+    _acquire_priv_called = False
+
+    def _acquire_priv(cls, **kwargs):
+        nonlocal _acquire_priv_called
+        _acquire_priv_called = True
+        return
+
+    # patching acquire priv so we know its called but dont have to worry about that actually
+    # trying to happen
+    monkeypatch.setattr(
+            "scrapli.driver.network.sync_driver.NetworkDriver.acquire_priv", _acquire_priv
+    )
 
     _command_counter = 0
 
@@ -227,16 +239,18 @@ def test_send_commands_ignore_privilege_level(monkeypatch, sync_network_driver):
     sync_network_driver._current_priv_level = sync_network_driver.privilege_levels["privilege_exec"]
     sync_network_driver.default_desired_privilege_level = "exec"
 
-    with patch.object(target=NetworkDriver, attribute="acquire_priv") as mocked_method:
-        sync_network_driver.send_commands(
-            commands=["show version", "show run"], ignore_privilege_level=True
-        )
-        mocked_method.assert_not_called()
+    sync_network_driver.ignore_privilege_level= False
+    sync_network_driver.send_commands(
+        commands=["show version", "show run"]
+    )
+    assert _acquire_priv_called
+    _acquire_priv_called = False
 
-        sync_network_driver.send_commands(
-            commands=["show version", "show run"], ignore_privilege_level=False
-        )
-        mocked_method.assert_called()
+    sync_network_driver.ignore_privilege_level= True
+    sync_network_driver.send_commands(
+        commands=["show version", "show run"]
+    )
+    assert not _acquire_priv_called
 
 
 @pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping pending pyfakefs 3.10 support")
