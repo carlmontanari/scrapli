@@ -37,7 +37,8 @@ PRIVS = {
             escalate="configure terminal",
             escalate_auth=False,
             escalate_prompt="",
-            not_contains=["config-tcl", "config-s"],
+            not_equals=["config-s"],
+            not_contains=["config-tcl"],
         )
     ),
     "tclsh": (

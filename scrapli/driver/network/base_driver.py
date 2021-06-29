@@ -21,6 +21,7 @@ class PrivilegeLevel:
         "escalate",
         "escalate_auth",
         "escalate_prompt",
+        "not_equals",
         "not_contains",
     )
 
@@ -33,6 +34,7 @@ class PrivilegeLevel:
         escalate: str,
         escalate_auth: bool,
         escalate_prompt: str,
+        not_equals: Optional[List[str]] = None,
         not_contains: Optional[List[str]] = None,
     ):
         """
@@ -46,8 +48,10 @@ class PrivilegeLevel:
             escalate: how to escalate *to* this privilege level (from the lower/previous priv)
             escalate_auth: True/False escalation requires authentication
             escalate_prompt: prompt pattern to search for during escalation if escalate auth is True
-            not_contains: list of substrings that should *not* be seen in a prompt for this
-                privilege level
+            not_equals: list of substrings that a prompt for this privilege level that should *not*
+                be equal to
+            not_contains: list of substrings that a prompt for this privilege level should *not*
+                contain anywhere in the prompt
 
         Returns:
             None
@@ -63,6 +67,7 @@ class PrivilegeLevel:
         self.escalate = escalate
         self.escalate_auth = escalate_auth
         self.escalate_prompt = escalate_prompt
+        self.not_equals: List[str] = not_equals or list()
         self.not_contains: List[str] = not_contains or list()
 
 
@@ -124,11 +129,14 @@ class BaseNetworkDriver:
         """
         matching_priv_levels = []
         for priv_level in self.privilege_levels.values():
+            # starting at 2021.07.30 the `not_contains` and `not_equals` fields were added to
+            # privilege levels (defaulting to an empty tuple) -- this helps us to simplify the priv
+            # patterns greatly, as well as have no reliance on look arounds which makes the
+            # "normal" scrapli privilege levels more go friendly -- useful for scrapligo!
+            if priv_level.not_equals:
+                if any(not_equals == current_prompt for not_equals in priv_level.not_equals):
+                    continue
             if priv_level.not_contains:
-                # starting at 2021.07.30 the `not_contains` field was added to privilege levels
-                # (defaulting to an empty tuple) -- this helps us to simplify the priv patterns
-                # greatly, as well as have no reliance on look arounds which makes the "normal"
-                # scrapli privilege levels more go friendly -- useful for scrapligo!
                 if any(not_contains in current_prompt for not_contains in priv_level.not_contains):
                     continue
 
