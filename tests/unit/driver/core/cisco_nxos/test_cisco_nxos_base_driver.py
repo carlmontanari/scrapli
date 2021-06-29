@@ -11,6 +11,11 @@ from scrapli.exceptions import ScrapliValueError
     [
         ("exec", "switch>"),
         ("privilege_exec", "switch# "),
+        ("configuration", "switch(config)# "),
+        ("configuration", "switch(config-if)# "),
+        ("configuration", "switch(config-subif)# "),
+        ("configuration", "switch(config-vpc-domain)# "),
+        ("configuration", "switch(config-router)# "),
         ("privilege_exec", "swi_tch# "),
         ("configuration", "switch(config)# "),
         ("tclsh", "switch-tcl# "),
@@ -19,6 +24,11 @@ from scrapli.exceptions import ScrapliValueError
     ids=[
         "exec",
         "privilege_exec",
+        "configuration",
+        "configuration_interface",
+        "configuration_subinterface",
+        "configuration_vpc_domain",
+        "configuration_routing_protocol",
         "underscore_privilege_exec",
         "configuration",
         "tclsh",
