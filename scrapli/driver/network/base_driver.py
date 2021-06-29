@@ -22,6 +22,7 @@ class PrivilegeLevel:
         "escalate_auth",
         "escalate_prompt",
         "not_contains",
+        "not_contains_override",
     )
 
     def __init__(
@@ -34,6 +35,7 @@ class PrivilegeLevel:
         escalate_auth: bool,
         escalate_prompt: str,
         not_contains: Optional[List[str]] = None,
+        not_contains_override: Optional[List[str]] = None,
     ):
         """
         PrivilegeLevel Object
@@ -48,6 +50,8 @@ class PrivilegeLevel:
             escalate_prompt: prompt pattern to search for during escalation if escalate auth is True
             not_contains: list of substrings that should *not* be seen in a prompt for this
                 privilege level
+            not_contains_override: list of substrings that are allowed to be in a prompt for this
+                privilege level if a substring in `not_contains` is matched.
 
         Returns:
             None
@@ -64,6 +68,7 @@ class PrivilegeLevel:
         self.escalate_auth = escalate_auth
         self.escalate_prompt = escalate_prompt
         self.not_contains: List[str] = not_contains or list()
+        self.not_contains_override: List[str] = not_contains_override or list()
 
 
 DUMMY_PRIV_LEVEL = PrivilegeLevel("", "DUMMY", "", "", "", False, "")
@@ -125,12 +130,20 @@ class BaseNetworkDriver:
         matching_priv_levels = []
         for priv_level in self.privilege_levels.values():
             if priv_level.not_contains:
-                # starting at 2021.07.30 the `not_contains` field was added to privilege levels
-                # (defaulting to an empty tuple) -- this helps us to simplify the priv patterns
-                # greatly, as well as have no reliance on look arounds which makes the "normal"
-                # scrapli privilege levels more go friendly -- useful for scrapligo!
+                # starting at 2021.07.30 the `not_contains` and `not_contains_override` fields were
+                # added to privilege levels (defaulting to empty tuples) -- this helps us to
+                # simplify the priv patterns greatly, as well as have no reliance on look arounds
+                # which makes the "normal" scrapli privilege levels more go friendly -- useful for
+                # scrapligo!
                 if any(not_contains in current_prompt for not_contains in priv_level.not_contains):
-                    continue
+                    if not (
+                        priv_level.not_contains_override
+                        and any(
+                            override in current_prompt
+                            for override in priv_level.not_contains_override
+                        )
+                    ):
+                        continue
 
             search_result = re.search(
                 pattern=priv_level.pattern, string=current_prompt, flags=re.M | re.I

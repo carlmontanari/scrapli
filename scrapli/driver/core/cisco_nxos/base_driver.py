@@ -38,6 +38,7 @@ PRIVS = {
             escalate_auth=False,
             escalate_prompt="",
             not_contains=["config-tcl", "config-s"],
+            not_contains_override=["config-subif"],
         )
     ),
     "tclsh": (
