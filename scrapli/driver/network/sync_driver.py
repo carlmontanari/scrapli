@@ -162,6 +162,35 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
                 msg = f"Failed to acquire requested privilege level {desired_priv}"
                 raise ScrapliPrivilegeError(msg)
 
+    def _acquire_appropriate_privilege_level(self, privilege_level: str = "") -> None:
+        """
+        Acquire the appropriate priv level
+
+        Acquires the "right" priv level based on generic_driver_mode, provided privilege level,
+        and default desired privilege level. If
+
+        Args:
+            privilege_level: optional name of privilege level to acquire
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        """
+        if not privilege_level and self._generic_driver_mode is True:
+            return
+
+        if privilege_level:
+            self._validate_privilege_level_name(privilege_level_name=privilege_level)
+            resolved_privilege_level = privilege_level
+        else:
+            resolved_privilege_level = self.default_desired_privilege_level
+
+        if self._current_priv_level.name != resolved_privilege_level:
+            self.acquire_priv(desired_priv=resolved_privilege_level)
+
     def send_command(
         self,
         command: str,
@@ -190,8 +219,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
             N/A
 
         """
-        if self._current_priv_level.name != self.default_desired_privilege_level:
-            self.acquire_priv(desired_priv=self.default_desired_privilege_level)
+        self._acquire_appropriate_privilege_level()
 
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains
@@ -242,8 +270,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
             N/A
 
         """
-        if self._current_priv_level.name != self.default_desired_privilege_level:
-            self.acquire_priv(desired_priv=self.default_desired_privilege_level)
+        self._acquire_appropriate_privilege_level()
 
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains
@@ -296,8 +323,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
             N/A
 
         """
-        if self._current_priv_level.name != self.default_desired_privilege_level:
-            self.acquire_priv(desired_priv=self.default_desired_privilege_level)
+        self._acquire_appropriate_privilege_level()
 
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains
@@ -385,14 +411,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
             N/A
 
         """
-        if privilege_level:
-            self._validate_privilege_level_name(privilege_level_name=privilege_level)
-            resolved_privilege_level = privilege_level
-        else:
-            resolved_privilege_level = self.default_desired_privilege_level
-
-        if self._current_priv_level.name != resolved_privilege_level:
-            self.acquire_priv(desired_priv=resolved_privilege_level)
+        self._acquire_appropriate_privilege_level(privilege_level=privilege_level)
 
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains
