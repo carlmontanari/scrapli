@@ -1,5 +1,3 @@
-import sys
-
 import pytest
 
 from scrapli.exceptions import ScrapliPrivilegeError
