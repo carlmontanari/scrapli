@@ -128,8 +128,9 @@ def test_acquire_appropriate_privilege_level(monkeypatch, sync_network_driver):
 
         # patching acquire priv so we know its called but dont have to worry about that actually
         # trying to happen
+
     monkeypatch.setattr(
-            "scrapli.driver.network.sync_driver.NetworkDriver.acquire_priv", _acquire_priv
+        "scrapli.driver.network.sync_driver.NetworkDriver.acquire_priv", _acquire_priv
     )
 
     _validate_privilege_level_name_called = False
@@ -140,7 +141,8 @@ def test_acquire_appropriate_privilege_level(monkeypatch, sync_network_driver):
         return
 
     monkeypatch.setattr(
-            "scrapli.driver.network.sync_driver.NetworkDriver._validate_privilege_level_name", _validate_privilege_level_name
+        "scrapli.driver.network.sync_driver.NetworkDriver._validate_privilege_level_name",
+        _validate_privilege_level_name,
     )
 
     def _reset_called_flags():
@@ -156,7 +158,9 @@ def test_acquire_appropriate_privilege_level(monkeypatch, sync_network_driver):
 
     # Test the privilege_level is the same as the sync_network_driver._current_priv_level.name
     _reset_called_flags()
-    sync_network_driver._acquire_appropriate_privilege_level(sync_network_driver._current_priv_level.name)
+    sync_network_driver._acquire_appropriate_privilege_level(
+        sync_network_driver._current_priv_level.name
+    )
     assert _validate_privilege_level_name_called is True
     assert _acquire_priv_called is False
 
@@ -183,7 +187,9 @@ def test_acquire_appropriate_privilege_level(monkeypatch, sync_network_driver):
     # Test when _generic_driver_mode = True and privilege_level is same as _current_priv_level
     _reset_called_flags()
     sync_network_driver._generic_driver_mode = True
-    sync_network_driver._acquire_appropriate_privilege_level(sync_network_driver._current_priv_level.name)
+    sync_network_driver._acquire_appropriate_privilege_level(
+        sync_network_driver._current_priv_level.name
+    )
     assert _validate_privilege_level_name_called is True
     assert _acquire_priv_called is False
 
@@ -193,7 +199,8 @@ def test_send_command(monkeypatch, sync_network_driver):
         return
 
     monkeypatch.setattr(
-        "scrapli.driver.network.sync_driver.NetworkDriver._acquire_appropriate_privilege_level", _acquire_appropriate_privilege_level
+        "scrapli.driver.network.sync_driver.NetworkDriver._acquire_appropriate_privilege_level",
+        _acquire_appropriate_privilege_level,
     )
 
     def _send_input(cls, channel_input, **kwargs):
@@ -214,7 +221,8 @@ def test_send_commands(monkeypatch, sync_network_driver):
         return
 
     monkeypatch.setattr(
-            "scrapli.driver.network.sync_driver.NetworkDriver._acquire_appropriate_privilege_level", _acquire_appropriate_privilege_level
+        "scrapli.driver.network.sync_driver.NetworkDriver._acquire_appropriate_privilege_level",
+        _acquire_appropriate_privilege_level,
     )
 
     _command_counter = 0
@@ -245,9 +253,9 @@ def test_send_commands_from_file(fs, monkeypatch, real_ssh_commands_file_path, s
         return
 
     monkeypatch.setattr(
-            "scrapli.driver.network.sync_driver.NetworkDriver._acquire_appropriate_privilege_level", _acquire_appropriate_privilege_level
+        "scrapli.driver.network.sync_driver.NetworkDriver._acquire_appropriate_privilege_level",
+        _acquire_appropriate_privilege_level,
     )
-
 
     def _send_input(cls, channel_input, **kwargs):
         assert channel_input == "show version"
@@ -267,7 +275,8 @@ def test_send_interactive(monkeypatch, sync_network_driver):
         return
 
     monkeypatch.setattr(
-            "scrapli.driver.network.sync_driver.NetworkDriver._acquire_appropriate_privilege_level", _acquire_appropriate_privilege_level
+        "scrapli.driver.network.sync_driver.NetworkDriver._acquire_appropriate_privilege_level",
+        _acquire_appropriate_privilege_level,
     )
 
     def _send_inputs_interact(cls, **kwargs):
@@ -289,7 +298,8 @@ def test_send_configs(monkeypatch, sync_network_driver):
         return
 
     monkeypatch.setattr(
-            "scrapli.driver.network.sync_driver.NetworkDriver._acquire_appropriate_privilege_level", _acquire_appropriate_privilege_level
+        "scrapli.driver.network.sync_driver.NetworkDriver._acquire_appropriate_privilege_level",
+        _acquire_appropriate_privilege_level,
     )
 
     _command_counter = 0

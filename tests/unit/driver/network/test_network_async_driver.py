@@ -151,8 +151,9 @@ async def test_acquire_appropriate_privilege_level(monkeypatch, async_network_dr
 
         # patching acquire priv so we know its called but dont have to worry about that actually
         # trying to happen
+
     monkeypatch.setattr(
-            "scrapli.driver.network.async_driver.AsyncNetworkDriver.acquire_priv", _acquire_priv
+        "scrapli.driver.network.async_driver.AsyncNetworkDriver.acquire_priv", _acquire_priv
     )
 
     _validate_privilege_level_name_called = False
@@ -163,7 +164,8 @@ async def test_acquire_appropriate_privilege_level(monkeypatch, async_network_dr
         return
 
     monkeypatch.setattr(
-            "scrapli.driver.network.async_driver.AsyncNetworkDriver._validate_privilege_level_name", _validate_privilege_level_name
+        "scrapli.driver.network.async_driver.AsyncNetworkDriver._validate_privilege_level_name",
+        _validate_privilege_level_name,
     )
 
     async def _reset_called_flags():
@@ -179,7 +181,9 @@ async def test_acquire_appropriate_privilege_level(monkeypatch, async_network_dr
 
     # Test the privilege_level is the same as the async_network_driver._current_priv_level.name
     await _reset_called_flags()
-    await async_network_driver._acquire_appropriate_privilege_level(async_network_driver._current_priv_level.name)
+    await async_network_driver._acquire_appropriate_privilege_level(
+        async_network_driver._current_priv_level.name
+    )
     assert _validate_privilege_level_name_called is True
     assert _acquire_priv_called is False
 
@@ -206,7 +210,9 @@ async def test_acquire_appropriate_privilege_level(monkeypatch, async_network_dr
     # Test when _generic_driver_mode = True and privilege_level is same as _current_priv_level
     await _reset_called_flags()
     async_network_driver._generic_driver_mode = True
-    await async_network_driver._acquire_appropriate_privilege_level(async_network_driver._current_priv_level.name)
+    await async_network_driver._acquire_appropriate_privilege_level(
+        async_network_driver._current_priv_level.name
+    )
     assert _validate_privilege_level_name_called is True
     assert _acquire_priv_called is False
 
@@ -217,7 +223,8 @@ async def test_send_command(monkeypatch, async_network_driver):
         return
 
     monkeypatch.setattr(
-            "scrapli.driver.network.async_driver.AsyncNetworkDriver._acquire_appropriate_privilege_level", _acquire_appropriate_privilege_level
+        "scrapli.driver.network.async_driver.AsyncNetworkDriver._acquire_appropriate_privilege_level",
+        _acquire_appropriate_privilege_level,
     )
 
     async def _send_input(cls, channel_input, **kwargs):
@@ -239,7 +246,8 @@ async def test_send_commands(monkeypatch, async_network_driver):
         return
 
     monkeypatch.setattr(
-            "scrapli.driver.network.async_driver.AsyncNetworkDriver._acquire_appropriate_privilege_level", _acquire_appropriate_privilege_level
+        "scrapli.driver.network.async_driver.AsyncNetworkDriver._acquire_appropriate_privilege_level",
+        _acquire_appropriate_privilege_level,
     )
 
     _command_counter = 0
@@ -275,7 +283,8 @@ async def test_send_commands_from_file(
         return
 
     monkeypatch.setattr(
-            "scrapli.driver.network.async_driver.AsyncNetworkDriver._acquire_appropriate_privilege_level", _acquire_appropriate_privilege_level
+        "scrapli.driver.network.async_driver.AsyncNetworkDriver._acquire_appropriate_privilege_level",
+        _acquire_appropriate_privilege_level,
     )
 
     async def _send_input(cls, channel_input, **kwargs):
@@ -297,7 +306,8 @@ async def test_send_interactive(monkeypatch, async_network_driver):
         return
 
     monkeypatch.setattr(
-            "scrapli.driver.network.async_driver.AsyncNetworkDriver._acquire_appropriate_privilege_level", _acquire_appropriate_privilege_level
+        "scrapli.driver.network.async_driver.AsyncNetworkDriver._acquire_appropriate_privilege_level",
+        _acquire_appropriate_privilege_level,
     )
 
     async def _send_inputs_interact(cls, **kwargs):

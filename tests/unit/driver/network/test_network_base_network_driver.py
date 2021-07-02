@@ -1,6 +1,6 @@
 import pytest
 
-from scrapli.driver.network.base_driver import PrivilegeAction, DUMMY_PRIV_LEVEL
+from scrapli.driver.network.base_driver import DUMMY_PRIV_LEVEL, PrivilegeAction
 from scrapli.exceptions import ScrapliPrivilegeError, ScrapliTypeError
 from scrapli.response import Response
 
@@ -130,6 +130,7 @@ def test_process_acquire_priv(base_network_driver, test_data):
 
     assert actual_action == expected_action
     assert current_priv.name == action_priv
+
 
 def test_generic_driver_mode(base_network_driver):
     assert base_network_driver._generic_driver_mode is False
