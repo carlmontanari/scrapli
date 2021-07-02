@@ -141,6 +141,77 @@ async def test_acquire_priv_failure(monkeypatch, async_network_driver):
 
 
 @pytest.mark.asyncio
+async def test_acquire_appropriate_privilege_level(monkeypatch, async_network_driver):
+    _acquire_priv_called = False
+
+    async def _acquire_priv(cls, **kwargs):
+        nonlocal _acquire_priv_called
+        _acquire_priv_called = True
+        return
+
+        # patching acquire priv so we know its called but dont have to worry about that actually
+        # trying to happen
+    monkeypatch.setattr(
+            "scrapli.driver.network.async_driver.AsyncNetworkDriver.acquire_priv", _acquire_priv
+    )
+
+    _validate_privilege_level_name_called = False
+
+    def _validate_privilege_level_name(cls, **kwargs):
+        nonlocal _validate_privilege_level_name_called
+        _validate_privilege_level_name_called = True
+        return
+
+    monkeypatch.setattr(
+            "scrapli.driver.network.async_driver.AsyncNetworkDriver._validate_privilege_level_name", _validate_privilege_level_name
+    )
+
+    async def _reset_called_flags():
+        nonlocal _acquire_priv_called, _validate_privilege_level_name_called
+        _acquire_priv_called = False
+        _validate_privilege_level_name_called = False
+
+    # Test default_desired_privilege_level
+    await _reset_called_flags()
+    await async_network_driver._acquire_appropriate_privilege_level()
+    assert _validate_privilege_level_name_called is False
+    assert _acquire_priv_called is True
+
+    # Test the privilege_level is the same as the async_network_driver._current_priv_level.name
+    await _reset_called_flags()
+    await async_network_driver._acquire_appropriate_privilege_level(async_network_driver._current_priv_level.name)
+    assert _validate_privilege_level_name_called is True
+    assert _acquire_priv_called is False
+
+    # Test privilege_level is different that async_network_driver._current_priv_level.name
+    await _reset_called_flags()
+    await async_network_driver._acquire_appropriate_privilege_level("configuration")
+    assert _validate_privilege_level_name_called is True
+    assert _acquire_priv_called is True
+
+    # Test when _generic_driver_mode = True
+    await _reset_called_flags()
+    async_network_driver._generic_driver_mode = True
+    await async_network_driver._acquire_appropriate_privilege_level()
+    assert _validate_privilege_level_name_called is False
+    assert _acquire_priv_called is False
+
+    # Test when _generic_driver_mode = True and privilege_level is different than _current_priv_level
+    await _reset_called_flags()
+    async_network_driver._generic_driver_mode = True
+    await async_network_driver._acquire_appropriate_privilege_level("configuration")
+    assert _validate_privilege_level_name_called is True
+    assert _acquire_priv_called is True
+
+    # Test when _generic_driver_mode = True and privilege_level is same as _current_priv_level
+    await _reset_called_flags()
+    async_network_driver._generic_driver_mode = True
+    await async_network_driver._acquire_appropriate_privilege_level(async_network_driver._current_priv_level.name)
+    assert _validate_privilege_level_name_called is True
+    assert _acquire_priv_called is False
+
+
+@pytest.mark.asyncio
 async def test_send_command(monkeypatch, async_network_driver):
     async def _acquire_priv(cls, **kwargs):
         return
