@@ -186,6 +186,10 @@ def test_pre_send_configs(base_network_driver):
     )
     assert actual_resolved_privilege_level == "exec"
 
+    base_network_driver._generic_driver_mode = True
+    with pytest.raises(ScrapliPrivilegeError):
+        base_network_driver._pre_send_configs(configs=["some config"], privilege_level="exec")
+
 
 def test_pre_send_configs_list_failed_when_contains(base_network_driver):
     _, final_failed_when_contains = base_network_driver._pre_send_configs(
