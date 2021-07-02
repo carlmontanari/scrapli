@@ -213,13 +213,11 @@ async def test_acquire_appropriate_privilege_level(monkeypatch, async_network_dr
 
 @pytest.mark.asyncio
 async def test_send_command(monkeypatch, async_network_driver):
-    async def _acquire_priv(cls, **kwargs):
+    async def _acquire_appropriate_privilege_level(cls, **kwargs):
         return
 
-    # patching acquire priv so we know its called but dont have to worry about that actually
-    # trying to happen
     monkeypatch.setattr(
-        "scrapli.driver.network.async_driver.AsyncNetworkDriver.acquire_priv", _acquire_priv
+            "scrapli.driver.network.async_driver.AsyncNetworkDriver._acquire_appropriate_privilege_level", _acquire_appropriate_privilege_level
     )
 
     async def _send_input(cls, channel_input, **kwargs):
@@ -228,10 +226,6 @@ async def test_send_command(monkeypatch, async_network_driver):
 
     monkeypatch.setattr("scrapli.channel.async_channel.AsyncChannel.send_input", _send_input)
 
-    async_network_driver._current_priv_level = async_network_driver.privilege_levels[
-        "privilege_exec"
-    ]
-    async_network_driver.default_desired_privilege_level = "exec"
     actual_response = await async_network_driver.send_command(command="show version")
 
     assert actual_response.failed is False
@@ -241,13 +235,11 @@ async def test_send_command(monkeypatch, async_network_driver):
 
 @pytest.mark.asyncio
 async def test_send_commands(monkeypatch, async_network_driver):
-    async def _acquire_priv(cls, **kwargs):
+    async def _acquire_appropriate_privilege_level(cls, **kwargs):
         return
 
-    # patching acquire priv so we know its called but dont have to worry about that actually
-    # trying to happen
     monkeypatch.setattr(
-        "scrapli.driver.network.async_driver.AsyncNetworkDriver.acquire_priv", _acquire_priv
+            "scrapli.driver.network.async_driver.AsyncNetworkDriver._acquire_appropriate_privilege_level", _acquire_appropriate_privilege_level
     )
 
     _command_counter = 0
@@ -264,10 +256,6 @@ async def test_send_commands(monkeypatch, async_network_driver):
 
     monkeypatch.setattr("scrapli.channel.async_channel.AsyncChannel.send_input", _send_input)
 
-    async_network_driver._current_priv_level = async_network_driver.privilege_levels[
-        "privilege_exec"
-    ]
-    async_network_driver.default_desired_privilege_level = "exec"
     actual_response = await async_network_driver.send_commands(
         commands=["show version", "show run"]
     )
@@ -283,13 +271,11 @@ async def test_send_commands_from_file(
 ):
     fs.add_real_file(source_path=real_ssh_commands_file_path, target_path="/commands")
 
-    async def _acquire_priv(cls, **kwargs):
+    async def _acquire_appropriate_privilege_level(cls, **kwargs):
         return
 
-    # patching acquire priv so we know its called but dont have to worry about that actually
-    # trying to happen
     monkeypatch.setattr(
-        "scrapli.driver.network.async_driver.AsyncNetworkDriver.acquire_priv", _acquire_priv
+            "scrapli.driver.network.async_driver.AsyncNetworkDriver._acquire_appropriate_privilege_level", _acquire_appropriate_privilege_level
     )
 
     async def _send_input(cls, channel_input, **kwargs):
@@ -298,10 +284,6 @@ async def test_send_commands_from_file(
 
     monkeypatch.setattr("scrapli.channel.async_channel.AsyncChannel.send_input", _send_input)
 
-    async_network_driver._current_priv_level = async_network_driver.privilege_levels[
-        "privilege_exec"
-    ]
-    async_network_driver.default_desired_privilege_level = "exec"
     actual_response = await async_network_driver.send_commands_from_file(file="commands")
 
     assert actual_response.failed is False
@@ -311,13 +293,11 @@ async def test_send_commands_from_file(
 
 @pytest.mark.asyncio
 async def test_send_interactive(monkeypatch, async_network_driver):
-    async def _acquire_priv(cls, **kwargs):
+    async def _acquire_appropriate_privilege_level(cls, **kwargs):
         return
 
-    # patching acquire priv so we know its called but dont have to worry about that actually
-    # trying to happen
     monkeypatch.setattr(
-        "scrapli.driver.network.async_driver.AsyncNetworkDriver.acquire_priv", _acquire_priv
+            "scrapli.driver.network.async_driver.AsyncNetworkDriver._acquire_appropriate_privilege_level", _acquire_appropriate_privilege_level
     )
 
     async def _send_inputs_interact(cls, **kwargs):
@@ -330,7 +310,6 @@ async def test_send_interactive(monkeypatch, async_network_driver):
     async_network_driver._current_priv_level = async_network_driver.privilege_levels[
         "privilege_exec"
     ]
-    async_network_driver.default_desired_privilege_level = "exec"
     actual_response = await async_network_driver.send_interactive(
         interact_events=[("nada", "scrapli>")]
     )
