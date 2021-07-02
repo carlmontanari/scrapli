@@ -490,8 +490,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
             privilege_level=privilege_level,
         )
 
-        if self._current_priv_level.name != resolved_privilege_level:
-            self.acquire_priv(desired_priv=resolved_privilege_level)
+        self._acquire_appropriate_privilege_level()
 
         responses = super().send_commands(
             commands=configs,
