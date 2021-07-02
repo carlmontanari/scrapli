@@ -1,6 +1,6 @@
 import pytest
 
-from scrapli.driver.network.base_driver import PrivilegeAction
+from scrapli.driver.network.base_driver import PrivilegeAction, DUMMY_PRIV_LEVEL
 from scrapli.exceptions import ScrapliPrivilegeError, ScrapliTypeError
 from scrapli.response import Response
 
@@ -130,6 +130,21 @@ def test_process_acquire_priv(base_network_driver, test_data):
 
     assert actual_action == expected_action
     assert current_priv.name == action_priv
+
+def test_generic_driver_mode(base_network_driver):
+    assert base_network_driver._generic_driver_mode is False
+    start_priv_level = base_network_driver._current_priv_level
+
+    base_network_driver._generic_driver_mode = True
+    assert base_network_driver._generic_driver_mode is True
+    assert base_network_driver._current_priv_level == DUMMY_PRIV_LEVEL
+
+    base_network_driver._generic_driver_mode = False
+    assert base_network_driver._generic_driver_mode is False
+    assert base_network_driver._current_priv_level == start_priv_level
+
+    with pytest.raises(ScrapliTypeError):
+        base_network_driver._generic_driver_mode = "Wrong"
 
 
 def test_update_response(base_network_driver):
