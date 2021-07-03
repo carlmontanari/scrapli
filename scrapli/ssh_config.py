@@ -252,7 +252,7 @@ class SSHConfig:
             N/A
 
         """
-        for host in self.hosts:
+        for host in self.hosts:  # pylint: disable=C0206
             _current_hosts = deepcopy(self.hosts)
             while True:
                 fuzzy_match = self._lookup_fuzzy_match(host=host, hosts=_current_hosts)
@@ -343,10 +343,10 @@ class SSHConfig:
         if host in self.hosts.keys():
             return self.hosts[host]
         # return match if given host is an exact match for a host entry
-        for host_entry in self.hosts:
-            host_list = host_entry.split()
+        for host_line, host_entry in self.hosts.items():
+            host_list = host_line.split()
             if host in host_list:
-                return self.hosts[host_entry]
+                return host_entry
         # otherwise need to select the most correct host entry
         fuzzy_match = self._lookup_fuzzy_match(host)
         return self.hosts[fuzzy_match]
