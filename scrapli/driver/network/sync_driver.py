@@ -167,7 +167,13 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
         Acquire the appropriate priv level
 
         Acquires the "right" priv level based on generic_driver_mode, provided privilege level,
-        and default desired privilege level. If
+        and default desired privilege level. If in "generic_driver_mode" and no priv level is
+        provided, we simply return as we are already at the "right" priv level (since we don't care
+        about priv levels in this mode). If we are in "generic_driver_mode" and we are provided a
+        priv level (this is only applicable in `send_interactive`) we will try to acquire that
+        provided priv level. If a priv name is passed we try to resolve it and use that as the
+        privilege level to acquire, otherwise if no priv leve is provided we will acquire the
+        default_desired_privilege_level.
 
         Args:
             privilege_level: optional name of privilege level to acquire

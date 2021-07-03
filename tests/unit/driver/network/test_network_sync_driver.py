@@ -126,9 +126,8 @@ def test_acquire_appropriate_privilege_level(monkeypatch, sync_network_driver):
         _acquire_priv_called = True
         return
 
-        # patching acquire priv so we know its called but dont have to worry about that actually
-        # trying to happen
-
+    # patching acquire priv so we know its called but dont have to worry about that actually
+    # trying to happen
     monkeypatch.setattr(
         "scrapli.driver.network.sync_driver.NetworkDriver.acquire_priv", _acquire_priv
     )
@@ -294,12 +293,13 @@ def test_send_interactive(monkeypatch, sync_network_driver):
 
 
 def test_send_configs(monkeypatch, sync_network_driver):
-    def _acquire_appropriate_privilege_level(cls, **kwargs):
+    def _acquire_priv(cls, **kwargs):
         return
 
+    # patching acquire priv so we know its called but dont have to worry about that actually
+    # trying to happen
     monkeypatch.setattr(
-        "scrapli.driver.network.sync_driver.NetworkDriver._acquire_appropriate_privilege_level",
-        _acquire_appropriate_privilege_level,
+        "scrapli.driver.network.sync_driver.NetworkDriver.acquire_priv", _acquire_priv
     )
 
     _command_counter = 0

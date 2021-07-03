@@ -149,9 +149,8 @@ async def test_acquire_appropriate_privilege_level(monkeypatch, async_network_dr
         _acquire_priv_called = True
         return
 
-        # patching acquire priv so we know its called but dont have to worry about that actually
-        # trying to happen
-
+    # patching acquire priv so we know its called but dont have to worry about that actually
+    # trying to happen
     monkeypatch.setattr(
         "scrapli.driver.network.async_driver.AsyncNetworkDriver.acquire_priv", _acquire_priv
     )
