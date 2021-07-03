@@ -36,6 +36,7 @@ class AsyncGenericDriver(AsyncDriver, BaseGenericDriver):
         channel_log: Union[str, bool, BytesIO] = False,
         channel_lock: bool = False,
         logging_uid: str = "",
+        max_auth_return_retry: int = 10,
     ) -> None:
         super().__init__(
             host=host,
@@ -62,6 +63,7 @@ class AsyncGenericDriver(AsyncDriver, BaseGenericDriver):
             channel_log=channel_log,
             channel_lock=channel_lock,
             logging_uid=logging_uid,
+            max_auth_return_retry=max_auth_return_retry,
         )
 
     async def get_prompt(self) -> str:

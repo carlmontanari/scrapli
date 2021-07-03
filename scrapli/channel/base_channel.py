@@ -31,6 +31,8 @@ class BaseChannelArgs:
         channel_log_mode: "write"|"append", all other values will raise ValueError,
             does what it sounds like it should by setting the channel log to the provided mode
         channel_lock: bool indicated if channel lock should be used for all read/write operations
+        max_auth_return_retry: maximum number of retries for sending return key to server when
+            trying to authenticate
 
     Returns:
         None
@@ -47,6 +49,7 @@ class BaseChannelArgs:
     channel_log: Union[str, bool, BytesIO] = False
     channel_log_mode: str = "write"
     channel_lock: bool = False
+    max_auth_return_retry: int = 10
 
     def __post_init__(self) -> None:
         """

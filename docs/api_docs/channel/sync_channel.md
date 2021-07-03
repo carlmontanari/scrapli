@@ -336,6 +336,7 @@ class Channel(BaseChannel):
         search_pattern = self._get_prompt_pattern(
             class_pattern=self._base_channel_args.comms_prompt_pattern
         )
+        max_auth_return_retry = self._base_channel_args.max_auth_return_retry
 
         # capture the start time of the authentication event; we also set a "return_interval" which
         # is 1/10 the timout_ops value, we will send a return character at roughly this interval if
@@ -350,6 +351,12 @@ class Channel(BaseChannel):
                 buf = self.read()
 
                 if not buf:
+                    if return_attempts >= max_auth_return_retry:
+                        msg = "nothing returned from server after " + \
+                            str(return_attempts) + \
+                            " retries, assuming auth failed"
+                        self.logger.critical(msg)
+                        raise ScrapliAuthenticationFailed(msg)
                     current_iteration_time = datetime.now().timestamp()
                     if (current_iteration_time - auth_start_time) > (
                         return_interval * return_attempts
@@ -953,6 +960,7 @@ class Channel(BaseChannel):
         search_pattern = self._get_prompt_pattern(
             class_pattern=self._base_channel_args.comms_prompt_pattern
         )
+        max_auth_return_retry = self._base_channel_args.max_auth_return_retry
 
         # capture the start time of the authentication event; we also set a "return_interval" which
         # is 1/10 the timout_ops value, we will send a return character at roughly this interval if
@@ -967,6 +975,12 @@ class Channel(BaseChannel):
                 buf = self.read()
 
                 if not buf:
+                    if return_attempts >= max_auth_return_retry:
+                        msg = "nothing returned from server after " + \
+                            str(return_attempts) + \
+                            " retries, assuming auth failed"
+                        self.logger.critical(msg)
+                        raise ScrapliAuthenticationFailed(msg)
                     current_iteration_time = datetime.now().timestamp()
                     if (current_iteration_time - auth_start_time) > (
                         return_interval * return_attempts

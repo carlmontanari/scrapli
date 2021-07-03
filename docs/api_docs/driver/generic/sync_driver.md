@@ -66,6 +66,7 @@ class GenericDriver(Driver, BaseGenericDriver):
         channel_log: Union[str, bool, BytesIO] = False,
         channel_lock: bool = False,
         logging_uid: str = "",
+        max_auth_return_retry: int = 10,
     ) -> None:
         super().__init__(
             host=host,
@@ -92,6 +93,7 @@ class GenericDriver(Driver, BaseGenericDriver):
             channel_log=channel_log,
             channel_lock=channel_lock,
             logging_uid=logging_uid,
+            max_auth_return_retry=max_auth_return_retry,
         )
 
     def get_prompt(self) -> str:
@@ -547,6 +549,8 @@ Args:
     logging_uid: unique identifier (string) to associate to log messages; useful if you have
         multiple connections to the same device (i.e. one console, one ssh, or one to each
         supervisor module, etc.)
+    max_auth_return_retry: maximum number of retries for sending return key to server when
+        trying to authenticate
 
 Returns:
     None
@@ -588,6 +592,7 @@ class GenericDriver(Driver, BaseGenericDriver):
         channel_log: Union[str, bool, BytesIO] = False,
         channel_lock: bool = False,
         logging_uid: str = "",
+        max_auth_return_retry: int = 10,
     ) -> None:
         super().__init__(
             host=host,
@@ -614,6 +619,7 @@ class GenericDriver(Driver, BaseGenericDriver):
             channel_log=channel_log,
             channel_lock=channel_lock,
             logging_uid=logging_uid,
+            max_auth_return_retry=max_auth_return_retry,
         )
 
     def get_prompt(self) -> str:

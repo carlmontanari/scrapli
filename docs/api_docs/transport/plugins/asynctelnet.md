@@ -157,6 +157,8 @@ class AsynctelnetTransport(AsyncTransport):
         while True:
             try:
                 c = await asyncio.wait_for(self.stdout.read(1), timeout=char_read_timeout)
+                if not c:
+                    break
             except asyncio.TimeoutError:
                 return
             char_read_timeout = self._base_transport_args.timeout_socket / 10
@@ -372,6 +374,8 @@ class AsynctelnetTransport(AsyncTransport):
         while True:
             try:
                 c = await asyncio.wait_for(self.stdout.read(1), timeout=char_read_timeout)
+                if not c:
+                    break
             except asyncio.TimeoutError:
                 return
             char_read_timeout = self._base_transport_args.timeout_socket / 10

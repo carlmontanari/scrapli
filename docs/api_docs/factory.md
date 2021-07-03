@@ -926,6 +926,8 @@ Args:
     logging_uid: unique identifier (string) to associate to log messages; useful if you have
         multiple connections to the same device (i.e. one console, one ssh, or one to each
         supervisor module, etc.)
+    max_auth_return_retry: maximum number of retries for sending return key to server when
+        trying to authenticate
 
 Returns:
     None
@@ -1374,6 +1376,8 @@ Args:
     logging_uid: unique identifier (string) to associate to log messages; useful if you have
         multiple connections to the same device (i.e. one console, one ssh, or one to each
         supervisor module, etc.)
+    max_auth_return_retry: maximum number of retries for sending return key to server when
+        trying to authenticate
 
 Returns:
     None

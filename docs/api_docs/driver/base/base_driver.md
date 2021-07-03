@@ -74,6 +74,7 @@ class BaseDriver:
         channel_log_mode: str = "write",
         channel_lock: bool = False,
         logging_uid: str = "",
+        max_auth_return_retry: int = 10,
     ) -> None:
         r"""
         BaseDriver Object
@@ -149,6 +150,8 @@ class BaseDriver:
             logging_uid: unique identifier (string) to associate to log messages; useful if you have
                 multiple connections to the same device (i.e. one console, one ssh, or one to each
                 supervisor module, etc.)
+            max_auth_return_retry: maximum number of retries for sending return key to server when
+                trying to authenticate
 
         Returns:
             None
@@ -168,6 +171,7 @@ class BaseDriver:
             channel_log=channel_log,
             channel_log_mode=channel_log_mode,
             channel_lock=channel_lock,
+            max_auth_return_retry=max_auth_return_retry,
         )
 
         # transport options is unused in most transport plugins, but when used will be a dict of
@@ -276,6 +280,7 @@ class BaseDriver:
             f"transport_options={self._base_transport_args.transport_options!r})"
             f"channel_log={self._base_channel_args.channel_log!r}, "
             f"channel_lock={self._base_channel_args.channel_lock!r})"
+            f"max_auth_return_retry={self._base_channel_args.max_auth_return_retry!r}, "
         )
 
     @staticmethod
@@ -885,6 +890,45 @@ class BaseDriver:
             self.logger.debug("'timeout_ops' value is 0, this will disable timeout decorator")
 
         self._base_channel_args.timeout_ops = value
+
+    @property
+    def max_auth_return_retry(self) -> str:
+        """
+        Getter for `max_auth_return_retry` attribute
+
+        Args:
+            N/A
+
+        Returns:
+            int: max_auth_return_retry integer
+
+        Raises:
+            N/A
+
+        """
+        return self._base_channel_args.max_auth_return_retry
+
+    @max_auth_return_retry.setter
+    def max_auth_return_retry(self, value: str) -> None:
+        """
+        Setter for `max_auth_return_retry` attribute
+
+        Args:
+            value: int value for max_auth_return_retry
+
+        Returns:
+            None
+
+        Raises:
+            ScrapliTypeError: if value is not of type str
+
+        """
+        self.logger.debug(f"setting 'max_auth_return_retry' value to '{value}'")
+
+        if not isinstance(value, str):
+            raise ScrapliTypeError
+
+        self._base_channel_args.max_auth_return_retry = value
 
     def isalive(self) -> bool:
         """
@@ -1026,6 +1070,8 @@ Args:
     logging_uid: unique identifier (string) to associate to log messages; useful if you have
         multiple connections to the same device (i.e. one console, one ssh, or one to each
         supervisor module, etc.)
+    max_auth_return_retry: maximum number of retries for sending return key to server when
+        trying to authenticate
 
 Returns:
     None
@@ -1068,6 +1114,7 @@ class BaseDriver:
         channel_log_mode: str = "write",
         channel_lock: bool = False,
         logging_uid: str = "",
+        max_auth_return_retry: int = 10,
     ) -> None:
         r"""
         BaseDriver Object
@@ -1143,6 +1190,8 @@ class BaseDriver:
             logging_uid: unique identifier (string) to associate to log messages; useful if you have
                 multiple connections to the same device (i.e. one console, one ssh, or one to each
                 supervisor module, etc.)
+            max_auth_return_retry: maximum number of retries for sending return key to server when
+                trying to authenticate
 
         Returns:
             None
@@ -1162,6 +1211,7 @@ class BaseDriver:
             channel_log=channel_log,
             channel_log_mode=channel_log_mode,
             channel_lock=channel_lock,
+            max_auth_return_retry=max_auth_return_retry,
         )
 
         # transport options is unused in most transport plugins, but when used will be a dict of
@@ -1270,6 +1320,7 @@ class BaseDriver:
             f"transport_options={self._base_transport_args.transport_options!r})"
             f"channel_log={self._base_channel_args.channel_log!r}, "
             f"channel_lock={self._base_channel_args.channel_lock!r})"
+            f"max_auth_return_retry={self._base_channel_args.max_auth_return_retry!r}, "
         )
 
     @staticmethod
@@ -1880,6 +1931,45 @@ class BaseDriver:
 
         self._base_channel_args.timeout_ops = value
 
+    @property
+    def max_auth_return_retry(self) -> str:
+        """
+        Getter for `max_auth_return_retry` attribute
+
+        Args:
+            N/A
+
+        Returns:
+            int: max_auth_return_retry integer
+
+        Raises:
+            N/A
+
+        """
+        return self._base_channel_args.max_auth_return_retry
+
+    @max_auth_return_retry.setter
+    def max_auth_return_retry(self, value: str) -> None:
+        """
+        Setter for `max_auth_return_retry` attribute
+
+        Args:
+            value: int value for max_auth_return_retry
+
+        Returns:
+            None
+
+        Raises:
+            ScrapliTypeError: if value is not of type str
+
+        """
+        self.logger.debug(f"setting 'max_auth_return_retry' value to '{value}'")
+
+        if not isinstance(value, str):
+            raise ScrapliTypeError
+
+        self._base_channel_args.max_auth_return_retry = value
+
     def isalive(self) -> bool:
         """
         Check if underlying transport is "alive"
@@ -1973,6 +2063,24 @@ Args:
 
 Returns:
     str: comms_return_char string
+
+Raises:
+    N/A
+```
+
+
+
+    
+`max_auth_return_retry: str`
+
+```text
+Getter for `max_auth_return_retry` attribute
+
+Args:
+    N/A
+
+Returns:
+    int: max_auth_return_retry integer
 
 Raises:
     N/A
