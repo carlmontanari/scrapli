@@ -107,6 +107,8 @@ class AsynctelnetTransport(AsyncTransport):
 
         Raises:
             ScrapliConnectionNotOpened: if connection is not opened for some reason
+            ScrapliConnectionNotOpened: if we read an empty byte string from the reader -- this
+                indicates the server sent an EOF -- see #142
 
         """
         if not self.stdout:
@@ -127,6 +129,8 @@ class AsynctelnetTransport(AsyncTransport):
         while True:
             try:
                 c = await asyncio.wait_for(self.stdout.read(1), timeout=char_read_timeout)
+                if not c:
+                    raise ScrapliConnectionNotOpened("server returned EOF, connection not opened")
             except asyncio.TimeoutError:
                 return
             char_read_timeout = self._base_transport_args.timeout_socket / 10
