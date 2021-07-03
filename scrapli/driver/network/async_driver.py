@@ -162,6 +162,41 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
                 msg = f"Failed to acquire requested privilege level {desired_priv}"
                 raise ScrapliPrivilegeError(msg)
 
+    async def _acquire_appropriate_privilege_level(self, privilege_level: str = "") -> None:
+        """
+        Acquire the appropriate priv level
+
+        Acquires the "right" priv level based on generic_driver_mode, provided privilege level,
+        and default desired privilege level. If in "generic_driver_mode" and no priv level is
+        provided, we simply return as we are already at the "right" priv level (since we don't care
+        about priv levels in this mode). If we are in "generic_driver_mode" and we are provided a
+        priv level (this is only applicable in `send_interactive`) we will try to acquire that
+        provided priv level. If a priv name is passed we try to resolve it and use that as the
+        privilege level to acquire, otherwise if no priv leve is provided we will acquire the
+        default_desired_privilege_level.
+
+        Args:
+            privilege_level: optional name of privilege level to acquire
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        """
+        if not privilege_level and self._generic_driver_mode is True:
+            return
+
+        if privilege_level:
+            self._validate_privilege_level_name(privilege_level_name=privilege_level)
+            resolved_privilege_level = privilege_level
+        else:
+            resolved_privilege_level = self.default_desired_privilege_level
+
+        if self._current_priv_level.name != resolved_privilege_level:
+            await self.acquire_priv(desired_priv=resolved_privilege_level)
+
     async def send_command(
         self,
         command: str,
@@ -190,8 +225,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
             N/A
 
         """
-        if self._current_priv_level.name != self.default_desired_privilege_level:
-            await self.acquire_priv(desired_priv=self.default_desired_privilege_level)
+        await self._acquire_appropriate_privilege_level()
 
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains
@@ -242,8 +276,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
             N/A
 
         """
-        if self._current_priv_level.name != self.default_desired_privilege_level:
-            await self.acquire_priv(desired_priv=self.default_desired_privilege_level)
+        await self._acquire_appropriate_privilege_level()
 
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains
@@ -296,8 +329,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
             N/A
 
         """
-        if self._current_priv_level.name != self.default_desired_privilege_level:
-            await self.acquire_priv(desired_priv=self.default_desired_privilege_level)
+        await self._acquire_appropriate_privilege_level()
 
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains
@@ -385,14 +417,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
             N/A
 
         """
-        if privilege_level:
-            self._validate_privilege_level_name(privilege_level_name=privilege_level)
-            resolved_privilege_level = privilege_level
-        else:
-            resolved_privilege_level = self.default_desired_privilege_level
-
-        if self._current_priv_level.name != resolved_privilege_level:
-            await self.acquire_priv(desired_priv=resolved_privilege_level)
+        await self._acquire_appropriate_privilege_level(privilege_level=privilege_level)
 
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains

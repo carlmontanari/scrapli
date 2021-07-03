@@ -141,8 +141,12 @@ async def test_acquire_priv_failure(monkeypatch, async_network_driver):
 
 
 @pytest.mark.asyncio
-async def test_send_command(monkeypatch, async_network_driver):
+async def test_acquire_appropriate_privilege_level(monkeypatch, async_network_driver):
+    _acquire_priv_called = False
+
     async def _acquire_priv(cls, **kwargs):
+        nonlocal _acquire_priv_called
+        _acquire_priv_called = True
         return
 
     # patching acquire priv so we know its called but dont have to worry about that actually
@@ -151,16 +155,83 @@ async def test_send_command(monkeypatch, async_network_driver):
         "scrapli.driver.network.async_driver.AsyncNetworkDriver.acquire_priv", _acquire_priv
     )
 
+    _validate_privilege_level_name_called = False
+
+    def _validate_privilege_level_name(cls, **kwargs):
+        nonlocal _validate_privilege_level_name_called
+        _validate_privilege_level_name_called = True
+        return
+
+    monkeypatch.setattr(
+        "scrapli.driver.network.async_driver.AsyncNetworkDriver._validate_privilege_level_name",
+        _validate_privilege_level_name,
+    )
+
+    async def _reset_called_flags():
+        nonlocal _acquire_priv_called, _validate_privilege_level_name_called
+        _acquire_priv_called = False
+        _validate_privilege_level_name_called = False
+
+    # Test default_desired_privilege_level
+    await _reset_called_flags()
+    await async_network_driver._acquire_appropriate_privilege_level()
+    assert _validate_privilege_level_name_called is False
+    assert _acquire_priv_called is True
+
+    # Test the privilege_level is the same as the async_network_driver._current_priv_level.name
+    await _reset_called_flags()
+    await async_network_driver._acquire_appropriate_privilege_level(
+        async_network_driver._current_priv_level.name
+    )
+    assert _validate_privilege_level_name_called is True
+    assert _acquire_priv_called is False
+
+    # Test privilege_level is different that async_network_driver._current_priv_level.name
+    await _reset_called_flags()
+    await async_network_driver._acquire_appropriate_privilege_level("configuration")
+    assert _validate_privilege_level_name_called is True
+    assert _acquire_priv_called is True
+
+    # Test when _generic_driver_mode = True
+    await _reset_called_flags()
+    async_network_driver._generic_driver_mode = True
+    await async_network_driver._acquire_appropriate_privilege_level()
+    assert _validate_privilege_level_name_called is False
+    assert _acquire_priv_called is False
+
+    # Test when _generic_driver_mode = True and privilege_level is different than _current_priv_level
+    await _reset_called_flags()
+    async_network_driver._generic_driver_mode = True
+    await async_network_driver._acquire_appropriate_privilege_level("configuration")
+    assert _validate_privilege_level_name_called is True
+    assert _acquire_priv_called is True
+
+    # Test when _generic_driver_mode = True and privilege_level is same as _current_priv_level
+    await _reset_called_flags()
+    async_network_driver._generic_driver_mode = True
+    await async_network_driver._acquire_appropriate_privilege_level(
+        async_network_driver._current_priv_level.name
+    )
+    assert _validate_privilege_level_name_called is True
+    assert _acquire_priv_called is False
+
+
+@pytest.mark.asyncio
+async def test_send_command(monkeypatch, async_network_driver):
+    async def _acquire_appropriate_privilege_level(cls, **kwargs):
+        return
+
+    monkeypatch.setattr(
+        "scrapli.driver.network.async_driver.AsyncNetworkDriver._acquire_appropriate_privilege_level",
+        _acquire_appropriate_privilege_level,
+    )
+
     async def _send_input(cls, channel_input, **kwargs):
         assert channel_input == "show version"
         return b"raw", b"processed"
 
     monkeypatch.setattr("scrapli.channel.async_channel.AsyncChannel.send_input", _send_input)
 
-    async_network_driver._current_priv_level = async_network_driver.privilege_levels[
-        "privilege_exec"
-    ]
-    async_network_driver.default_desired_privilege_level = "exec"
     actual_response = await async_network_driver.send_command(command="show version")
 
     assert actual_response.failed is False
@@ -170,13 +241,12 @@ async def test_send_command(monkeypatch, async_network_driver):
 
 @pytest.mark.asyncio
 async def test_send_commands(monkeypatch, async_network_driver):
-    async def _acquire_priv(cls, **kwargs):
+    async def _acquire_appropriate_privilege_level(cls, **kwargs):
         return
 
-    # patching acquire priv so we know its called but dont have to worry about that actually
-    # trying to happen
     monkeypatch.setattr(
-        "scrapli.driver.network.async_driver.AsyncNetworkDriver.acquire_priv", _acquire_priv
+        "scrapli.driver.network.async_driver.AsyncNetworkDriver._acquire_appropriate_privilege_level",
+        _acquire_appropriate_privilege_level,
     )
 
     _command_counter = 0
@@ -193,10 +263,6 @@ async def test_send_commands(monkeypatch, async_network_driver):
 
     monkeypatch.setattr("scrapli.channel.async_channel.AsyncChannel.send_input", _send_input)
 
-    async_network_driver._current_priv_level = async_network_driver.privilege_levels[
-        "privilege_exec"
-    ]
-    async_network_driver.default_desired_privilege_level = "exec"
     actual_response = await async_network_driver.send_commands(
         commands=["show version", "show run"]
     )
@@ -212,13 +278,12 @@ async def test_send_commands_from_file(
 ):
     fs.add_real_file(source_path=real_ssh_commands_file_path, target_path="/commands")
 
-    async def _acquire_priv(cls, **kwargs):
+    async def _acquire_appropriate_privilege_level(cls, **kwargs):
         return
 
-    # patching acquire priv so we know its called but dont have to worry about that actually
-    # trying to happen
     monkeypatch.setattr(
-        "scrapli.driver.network.async_driver.AsyncNetworkDriver.acquire_priv", _acquire_priv
+        "scrapli.driver.network.async_driver.AsyncNetworkDriver._acquire_appropriate_privilege_level",
+        _acquire_appropriate_privilege_level,
     )
 
     async def _send_input(cls, channel_input, **kwargs):
@@ -227,10 +292,6 @@ async def test_send_commands_from_file(
 
     monkeypatch.setattr("scrapli.channel.async_channel.AsyncChannel.send_input", _send_input)
 
-    async_network_driver._current_priv_level = async_network_driver.privilege_levels[
-        "privilege_exec"
-    ]
-    async_network_driver.default_desired_privilege_level = "exec"
     actual_response = await async_network_driver.send_commands_from_file(file="commands")
 
     assert actual_response.failed is False
@@ -240,13 +301,12 @@ async def test_send_commands_from_file(
 
 @pytest.mark.asyncio
 async def test_send_interactive(monkeypatch, async_network_driver):
-    async def _acquire_priv(cls, **kwargs):
+    async def _acquire_appropriate_privilege_level(cls, **kwargs):
         return
 
-    # patching acquire priv so we know its called but dont have to worry about that actually
-    # trying to happen
     monkeypatch.setattr(
-        "scrapli.driver.network.async_driver.AsyncNetworkDriver.acquire_priv", _acquire_priv
+        "scrapli.driver.network.async_driver.AsyncNetworkDriver._acquire_appropriate_privilege_level",
+        _acquire_appropriate_privilege_level,
     )
 
     async def _send_inputs_interact(cls, **kwargs):
@@ -259,7 +319,6 @@ async def test_send_interactive(monkeypatch, async_network_driver):
     async_network_driver._current_priv_level = async_network_driver.privilege_levels[
         "privilege_exec"
     ]
-    async_network_driver.default_desired_privilege_level = "exec"
     actual_response = await async_network_driver.send_interactive(
         interact_events=[("nada", "scrapli>")]
     )
