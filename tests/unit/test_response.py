@@ -29,7 +29,9 @@ def test_multi_response():
     host = "localhost"
     response1 = Response(host, "ls -al")
     response2 = Response(host, "ls -al")
-    multi_response = MultiResponse([response1, response2])
+    multi_response = MultiResponse()
+    assert multi_response.host == ""
+    multi_response.extend([response1, response2])
     assert len(multi_response) == 2
     assert multi_response.failed is True
     assert (

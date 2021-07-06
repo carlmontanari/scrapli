@@ -1,7 +1,6 @@
 """scrapli.response"""
 from collections import UserList
 from datetime import datetime
-from functools import cached_property
 from io import TextIOWrapper
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
@@ -246,7 +245,7 @@ class MultiResponse(ScrapliMultiResponse):
             f"Response Elements: {len(self.data)}>"
         )
 
-    @cached_property
+    @property
     def host(self) -> str:
         """
         Return the host of the multiresponse
@@ -265,7 +264,6 @@ class MultiResponse(ScrapliMultiResponse):
             response = self.data[0]
         except IndexError:
             return ""
-
         host = response.host
         return host
 
