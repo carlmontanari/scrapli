@@ -248,22 +248,27 @@ class MultiResponse(ScrapliMultiResponse):
         )
 
     @cached_property
-    def hosts(self) -> Set[str]:
+    def host(self) -> str:
         """
-        Return set of hosts that were in the responses
+        Return the host of the multiresponse
 
         Args:
             N/A
 
         Returns:
-            Set: of hosts that are associated with the responses
+            str: The host of the associated responses
 
         Raises:
             N/A
 
         """
-        hosts = set(response.host for response in self.data)
-        return hosts
+        try:
+            response = self.data[0]
+        except IndexError:
+            return ""
+
+        host = response.host
+        return host
 
     @property
     def failed(self) -> bool:

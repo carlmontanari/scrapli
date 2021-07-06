@@ -43,7 +43,7 @@ def test_multi_response():
     multi_response[1].failed = False
     assert multi_response.failed is False
     assert multi_response.raise_for_status() is None
-    assert multi_response.hosts == {host}
+    assert multi_response.host == host
     assert (
         repr(multi_response)
         == "[Response(host='localhost',channel_input='ls -al',textfsm_platform='',genie_platform='',failed_when_contains=None), Response(host='localhost',channel_input='ls -al',textfsm_platform='',genie_platform='',failed_when_contains=None)]"
