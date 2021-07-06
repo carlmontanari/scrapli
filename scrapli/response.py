@@ -1,8 +1,9 @@
 """scrapli.response"""
 from collections import UserList
 from datetime import datetime
+from functools import cached_property
 from io import TextIOWrapper
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
 
 from scrapli.exceptions import ScrapliCommandFailure
 from scrapli.helper import _textfsm_get_template, genie_parse, textfsm_parse, ttp_parse
@@ -84,7 +85,16 @@ class Response:
             N/A
 
         """
-        return f"Response <Success: {str(not self.failed)}>"
+        # return f"{self.__class__} <Success: {str(not self.failed)}>"
+        return (
+            f"{self.__class__.__name__}("
+            f"host={self.host!r},"
+            f"channel_input={self.channel_input!r},"
+            f"textfsm_platform={self.textfsm_platform!r},"
+            f"genie_platform={self.genie_platform!r},"
+            f"failed_when_contains={self.failed_when_contains!r}"
+            f")"
+        )
 
     def __str__(self) -> str:
         """
@@ -100,7 +110,7 @@ class Response:
             N/A
 
         """
-        return f"Response <Success: {str(not self.failed)}>"
+        return f"{self.__class__.__name__} <Success: {str(not self.failed)}>"
 
     def record_response(self, result: bytes) -> None:
         """
@@ -218,25 +228,6 @@ else:
 
 
 class MultiResponse(ScrapliMultiResponse):
-    def __repr__(self) -> str:
-        """
-        Magic repr method for MultiResponse class
-
-        Args:
-            N/A
-
-        Returns:
-            str: repr for class object
-
-        Raises:
-            N/A
-
-        """
-        return (
-            f"MultiResponse <Success: {str(not self.failed)}; "
-            f"Response Elements: {len(self.data)}>"
-        )
-
     def __str__(self) -> str:
         """
         Magic str method for MultiResponse class
@@ -252,9 +243,27 @@ class MultiResponse(ScrapliMultiResponse):
 
         """
         return (
-            f"MultiResponse <Success: {str(not self.failed)}; "
+            f"{self.__class__.__name__} <Success: {str(not self.failed)}; "
             f"Response Elements: {len(self.data)}>"
         )
+
+    @cached_property
+    def hosts(self) -> Set[str]:
+        """
+        Return set of hosts that were in the responses
+
+        Args:
+            N/A
+
+        Returns:
+            Set: of hosts that are associated with the responses
+
+        Raises:
+            N/A
+
+        """
+        hosts = set(response.host for response in self.data)
+        return hosts
 
     @property
     def failed(self) -> bool:
