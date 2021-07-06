@@ -85,7 +85,6 @@ class Response:
             N/A
 
         """
-        # return f"{self.__class__} <Success: {str(not self.failed)}>"
         return (
             f"{self.__class__.__name__}("
             f"host={self.host!r},"
