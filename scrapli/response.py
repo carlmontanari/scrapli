@@ -1,5 +1,6 @@
 """scrapli.response"""
 from collections import UserList
+from functools import cached_property
 from datetime import datetime
 from io import TextIOWrapper
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
@@ -84,7 +85,14 @@ class Response:
             N/A
 
         """
-        return f"Response <Success: {str(not self.failed)}>"
+        # return f"{self.__class__} <Success: {str(not self.failed)}>"
+        return (f"{self.__class__.__name__}("
+                f"host={self.host!r},"
+                f"channel_input={self.channel_input!r},"
+                f"textfsm_platform={self.textfsm_platform!r},"
+                f"genie_platform={self.genie_platform!r},"
+                f"failed_when_contains={self.failed_when_contains!r}"
+                f")")
 
     def __str__(self) -> str:
         """
@@ -100,7 +108,7 @@ class Response:
             N/A
 
         """
-        return f"Response <Success: {str(not self.failed)}>"
+        return f"{self.__class__.__name__} <Success: {str(not self.failed)}>"
 
     def record_response(self, result: bytes) -> None:
         """
@@ -218,24 +226,7 @@ else:
 
 
 class MultiResponse(ScrapliMultiResponse):
-    def __repr__(self) -> str:
-        """
-        Magic repr method for MultiResponse class
 
-        Args:
-            N/A
-
-        Returns:
-            str: repr for class object
-
-        Raises:
-            N/A
-
-        """
-        return (
-            f"MultiResponse <Success: {str(not self.failed)}; "
-            f"Response Elements: {len(self.data)}>"
-        )
 
     def __str__(self) -> str:
         """
@@ -252,20 +243,15 @@ class MultiResponse(ScrapliMultiResponse):
 
         """
         return (
-            f"MultiResponse <Success: {str(not self.failed)}; "
+            f"{self.__class__.__name__} <Success: {str(not self.failed)}; "
             f"Response Elements: {len(self.data)}>"
         )
 
-    @property
-    def host(self) -> str:
-        host = ""
-        try:
-            first_multi_response = self.data[0]
-        except IndexError:
-            return host
+    @cached_property
+    def hosts(self) -> set:
+        hosts = set(response.host for response in self.data)
+        return hosts
 
-        host = first_multi_response.host
-        return host
 
     @property
     def failed(self) -> bool:
