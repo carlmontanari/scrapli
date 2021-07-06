@@ -15,7 +15,10 @@ def test_response_init():
     assert str(response.start_time)[:-7] == response_start_time
     assert response.failed is True
     assert bool(response) is True
-    assert repr(response) == "Response(host='localhost',channel_input='ls -al',textfsm_platform='',genie_platform='',failed_when_contains=['tacocat'])"
+    assert (
+        repr(response)
+        == "Response(host='localhost',channel_input='ls -al',textfsm_platform='',genie_platform='',failed_when_contains=['tacocat'])"
+    )
     assert str(response) == "Response <Success: False>"
     assert response.failed_when_contains == ["tacocat"]
     with pytest.raises(ScrapliCommandFailure):
@@ -29,7 +32,10 @@ def test_multi_response():
     multi_response = MultiResponse([response1, response2])
     assert len(multi_response) == 2
     assert multi_response.failed is True
-    assert repr(multi_response) == "[Response(host='localhost',channel_input='ls -al',textfsm_platform='',genie_platform='',failed_when_contains=None), Response(host='localhost',channel_input='ls -al',textfsm_platform='',genie_platform='',failed_when_contains=None)]"
+    assert (
+        repr(multi_response)
+        == "[Response(host='localhost',channel_input='ls -al',textfsm_platform='',genie_platform='',failed_when_contains=None), Response(host='localhost',channel_input='ls -al',textfsm_platform='',genie_platform='',failed_when_contains=None)]"
+    )
     assert str(multi_response) == "MultiResponse <Success: False; Response Elements: 2>"
     with pytest.raises(ScrapliCommandFailure):
         multi_response.raise_for_status()
@@ -38,7 +44,10 @@ def test_multi_response():
     assert multi_response.failed is False
     assert multi_response.raise_for_status() is None
     assert multi_response.hosts == {host}
-    assert repr(multi_response) == "[Response(host='localhost',channel_input='ls -al',textfsm_platform='',genie_platform='',failed_when_contains=None), Response(host='localhost',channel_input='ls -al',textfsm_platform='',genie_platform='',failed_when_contains=None)]"
+    assert (
+        repr(multi_response)
+        == "[Response(host='localhost',channel_input='ls -al',textfsm_platform='',genie_platform='',failed_when_contains=None), Response(host='localhost',channel_input='ls -al',textfsm_platform='',genie_platform='',failed_when_contains=None)]"
+    )
     assert str(multi_response) == "MultiResponse <Success: True; Response Elements: 2>"
     assert multi_response.result == "ls -al\nls -al\n"
 
