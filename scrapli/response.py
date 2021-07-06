@@ -3,7 +3,7 @@ from collections import UserList
 from datetime import datetime
 from functools import cached_property
 from io import TextIOWrapper
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from scrapli.exceptions import ScrapliCommandFailure
 from scrapli.helper import _textfsm_get_template, genie_parse, textfsm_parse, ttp_parse
