@@ -84,7 +84,15 @@ class Response:
             N/A
 
         """
-        return f"Response <Success: {str(not self.failed)}>"
+        return (
+            f"{self.__class__.__name__}("
+            f"host={self.host!r},"
+            f"channel_input={self.channel_input!r},"
+            f"textfsm_platform={self.textfsm_platform!r},"
+            f"genie_platform={self.genie_platform!r},"
+            f"failed_when_contains={self.failed_when_contains!r}"
+            f")"
+        )
 
     def __str__(self) -> str:
         """
@@ -100,7 +108,7 @@ class Response:
             N/A
 
         """
-        return f"Response <Success: {str(not self.failed)}>"
+        return f"{self.__class__.__name__} <Success: {str(not self.failed)}>"
 
     def record_response(self, result: bytes) -> None:
         """
@@ -218,25 +226,6 @@ else:
 
 
 class MultiResponse(ScrapliMultiResponse):
-    def __repr__(self) -> str:
-        """
-        Magic repr method for MultiResponse class
-
-        Args:
-            N/A
-
-        Returns:
-            str: repr for class object
-
-        Raises:
-            N/A
-
-        """
-        return (
-            f"MultiResponse <Success: {str(not self.failed)}; "
-            f"Response Elements: {len(self.data)}>"
-        )
-
     def __str__(self) -> str:
         """
         Magic str method for MultiResponse class
@@ -252,9 +241,31 @@ class MultiResponse(ScrapliMultiResponse):
 
         """
         return (
-            f"MultiResponse <Success: {str(not self.failed)}; "
+            f"{self.__class__.__name__} <Success: {str(not self.failed)}; "
             f"Response Elements: {len(self.data)}>"
         )
+
+    @property
+    def host(self) -> str:
+        """
+        Return the host of the multiresponse
+
+        Args:
+            N/A
+
+        Returns:
+            str: The host of the associated responses
+
+        Raises:
+            N/A
+
+        """
+        try:
+            response = self.data[0]
+        except IndexError:
+            return ""
+        host = response.host
+        return host
 
     @property
     def failed(self) -> bool:
