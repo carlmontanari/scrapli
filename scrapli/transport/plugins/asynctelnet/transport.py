@@ -86,8 +86,12 @@ class AsynctelnetTransport(AsyncTransport):
             if cmd in (DO, DONT):
                 # if server says do/dont we always say wont for that option
                 self.stdin.write(IAC + WONT + c)
-            elif cmd in (WILL, WONT):
-                # if server says will/wont we always say dont for that option
+            elif cmd in WILL:
+                # if server says will we always say do for that option
+                # see also: #147 thank you to @davaeron!
+                self.stdin.write(IAC + DO + c)
+            elif cmd in WONT:
+                # if server says wont we always say dont for that option
                 self.stdin.write(IAC + DONT + c)
 
         return control_buf

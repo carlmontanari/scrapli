@@ -90,8 +90,7 @@ class Response:
             f"channel_input={self.channel_input!r},"
             f"textfsm_platform={self.textfsm_platform!r},"
             f"genie_platform={self.genie_platform!r},"
-            f"failed_when_contains={self.failed_when_contains!r}"
-            f")"
+            f"failed_when_contains={self.failed_when_contains!r})"
         )
 
     def __str__(self) -> str:

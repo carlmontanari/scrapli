@@ -48,6 +48,11 @@ Changelog
   well as allow us to ditch look arounds which go does not support... step one to a standardized community platform 
   that works with python -or- go!
 - Simplified (at least a little... more would be good) patterns for privilege levels for core platforms.
+- Added `_generic_driver_mode` to  the `NetworkDriver` classes -- this is a private mode as it should probably be used
+   cautiously -- the idea here is that you can send any strings you want and scrapli will not care about privilege
+  levels at all. See the discussion about this [here](https://github.com/carlmontanari/scrapli/discussions/128).
+- BUGFIX: fixed asynctelnet issue with control character handling, thank you to [@davaeron](https://github.com/davaeron) 
+  -- see #147
 
 
 ## 2021.01.30

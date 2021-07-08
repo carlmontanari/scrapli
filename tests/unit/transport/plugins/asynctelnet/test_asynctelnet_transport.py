@@ -33,7 +33,9 @@ def test_handle_control_characters_response_second_char(asynctelnet_transport):
 
 
 @pytest.mark.parametrize(
-    "test_data", ((253, 252), (251, 254)), ids=("do-return-wont", "will-return-dont")
+    "test_data",
+    ((253, 252), (251, 253), (252, 254)),
+    ids=("do-return-wont", "will-return-do", "wont-return-dont"),
 )
 def test_handle_control_characters_response_third_char(asynctelnet_transport, test_data):
     control_buf_input, expected_output = test_data
