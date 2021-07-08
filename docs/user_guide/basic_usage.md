@@ -440,6 +440,24 @@ scrapli supports telnet as a transport driver via the standard library module `t
    following attributes of the `Scrape` object:
   - `username_prompt`
   - `password_prompt`
+
+  `username_prompt` and `password_prompt` are regular expressions in string type. This was done to avoid breaking
+  compatibility with older versions of `scrapli`.  
+  Example:
+  ```python
+  device = {
+      "host": "172.18.0.11",
+      "auth_username": "scrapli",
+      "auth_password": "scrapli",
+      "transport": "asynctelnet",
+      "port": 23,
+  }
+  conn = AsyncGenericDriver(**device)
+  conn.transport.username_prompt = "sername:|ogin:"
+  conn.transport.password_prompt = "assword:"
+  conn.open()
+  ```
+
 - When using telnet you may need to set the `comms_return_char` to `\r\n` the tests against the core platforms pass
  without this, however it seems that some console server type devices are looking for this `\r\n` pattern instead of
   the default `\n` pattern.

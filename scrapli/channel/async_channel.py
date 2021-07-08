@@ -11,12 +11,14 @@ except ImportError:  # pragma: nocover
     from async_generator import asynccontextmanager  # type: ignore  # pragma: nocover
 
 from datetime import datetime
-from typing import AsyncIterator, List, Optional, Tuple
+from typing import AsyncIterator, List, Optional, Tuple, Union, cast
 
 from scrapli.channel.base_channel import BaseChannel, BaseChannelArgs
 from scrapli.decorators import ChannelTimeout
 from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliTimeout
 from scrapli.transport.base import AsyncTransport
+from scrapli.transport.plugins.asynctelnet.transport import AsynctelnetTransport
+from scrapli.transport.plugins.telnet.transport import TelnetTransport
 
 
 class AsyncChannel(BaseChannel):
@@ -284,8 +286,8 @@ class AsyncChannel(BaseChannel):
                 if channel_match:
                     return
 
-    @ChannelTimeout(message="timed out during in channel telnet authentication")
-    async def channel_authenticate_telnet(  # noqa: C901
+    @ChannelTimeout(message="timed out during in channel telnet authentication")  # noqa: C901
+    async def channel_authenticate_telnet(
         self, auth_username: str = "", auth_password: str = ""
     ) -> None:
         """
@@ -309,10 +311,12 @@ class AsyncChannel(BaseChannel):
         password_count = 0
         authenticate_buf = b""
 
-        # ignoring type here out of laziness mostly, telnet is kind of special and this should be
-        # the only real one off type thing hopefully
-        bytes_username_prompt = self.transport.username_prompt.encode()  # type: ignore
-        bytes_password_prompt = self.transport.password_prompt.encode()  # type: ignore
+        username_prompt_pattern = cast(
+            Union[AsynctelnetTransport, TelnetTransport], self.transport
+        ).username_prompt.encode("unicode-escape")
+        password_prompt_pattern = cast(
+            Union[AsynctelnetTransport, TelnetTransport], self.transport
+        ).password_prompt.encode("unicode-escape")
 
         search_pattern = self._get_prompt_pattern(
             class_pattern=self._base_channel_args.comms_prompt_pattern
@@ -344,7 +348,11 @@ class AsyncChannel(BaseChannel):
 
                 authenticate_buf += buf.lower()
 
-                if bytes_username_prompt in authenticate_buf:
+                username_prompt_match = re.search(
+                    pattern=username_prompt_pattern,
+                    string=authenticate_buf,
+                )
+                if username_prompt_match:
                     # clear the authentication buffer so we don't re-read the username prompt
                     authenticate_buf = b""
                     username_count += 1
@@ -355,7 +363,11 @@ class AsyncChannel(BaseChannel):
                     self.write(channel_input=auth_username)
                     self.send_return()
 
-                if bytes_password_prompt in authenticate_buf:
+                password_prompt_match = re.search(
+                    pattern=password_prompt_pattern,
+                    string=authenticate_buf,
+                )
+                if password_prompt_match:
                     # clear the authentication buffer so we don't re-read the password prompt
                     authenticate_buf = b""
                     password_count += 1

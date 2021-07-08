@@ -43,8 +43,8 @@ class TelnetTransport(Transport):
         super().__init__(base_transport_args=base_transport_args)
         self.plugin_transport_args = plugin_transport_args
 
-        self.username_prompt: str = "username:"
-        self.password_prompt: str = "password:"
+        self.username_prompt: str = "sername:|ogin:"
+        self.password_prompt: str = "assword:"
 
         self.session: Optional[ScrapliTelnet] = None
 
