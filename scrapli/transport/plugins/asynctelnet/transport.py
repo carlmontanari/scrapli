@@ -32,9 +32,6 @@ class AsynctelnetTransport(AsyncTransport):
         super().__init__(base_transport_args=base_transport_args)
         self.plugin_transport_args = plugin_transport_args
 
-        self.username_prompt: str = "sername:"
-        self.password_prompt: str = "assword:"
-
         self.stdout: Optional[asyncio.StreamReader] = None
         self.stdin: Optional[asyncio.StreamWriter] = None
 

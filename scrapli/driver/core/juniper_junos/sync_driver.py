@@ -157,9 +157,6 @@ class JunosDriver(NetworkDriver):
             genie_platform=genie_platform,
         )
 
-        if "telnet" in self.transport_name:
-            self.transport.username_prompt = "login:"
-
     def _abort_config(self) -> None:
         """
         Abort Junos configuration session

@@ -159,9 +159,6 @@ class AsyncNXOSDriver(AsyncNetworkDriver, NXOSDriverBase):
             genie_platform=genie_platform,
         )
 
-        if "telnet" in self.transport_name:
-            self.transport.username_prompt = "login:"
-
     async def _abort_config(self) -> None:
         """
         Abort NXOS configuration session (if using a config session!)
