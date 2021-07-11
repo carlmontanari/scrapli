@@ -13,7 +13,7 @@ class AsyncGenericDriver(AsyncDriver, BaseGenericDriver):
     def __init__(
         self,
         host: str,
-        port: int = 22,
+        port: Optional[int] = None,
         auth_username: str = "",
         auth_password: str = "",
         auth_private_key: str = "",

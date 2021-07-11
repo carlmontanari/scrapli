@@ -53,7 +53,7 @@ class JunosDriver(NetworkDriver):
         host: str,
         privilege_levels: Optional[Dict[str, PrivilegeLevel]] = None,
         default_desired_privilege_level: str = "exec",
-        port: int = 22,
+        port: Optional[int] = None,
         auth_username: str = "",
         auth_password: str = "",
         auth_private_key: str = "",
