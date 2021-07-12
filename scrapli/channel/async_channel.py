@@ -309,22 +309,15 @@ class AsyncChannel(BaseChannel):
         password_count = 0
         authenticate_buf = b""
 
-        # ignoring type here out of laziness mostly, telnet is kind of special and this should be
-        # the only real one off type thing hopefully
-        bytes_username_prompt = self.transport.username_prompt.encode()  # type: ignore
-        bytes_password_prompt = self.transport.password_prompt.encode()  # type: ignore
+        (
+            username_pattern,
+            password_pattern,
+            prompt_pattern,
+            auth_start_time,
+            return_interval,
+        ) = self._pre_channel_authenticate_telnet()
 
-        search_pattern = self._get_prompt_pattern(
-            class_pattern=self._base_channel_args.comms_prompt_pattern
-        )
-
-        # capture the start time of the authentication event; we also set a "return_interval" which
-        # is 1/10 the timout_ops value, we will send a return character at roughly this interval if
-        # there is no output on the channel. we do this because sometimes telnet needs a kick to get
-        # it to prompt for auth -- particularity when connecting to terminal server/console port
-        auth_start_time = datetime.now().timestamp()
         read_interval = self._base_channel_args.timeout_ops / 20
-        return_interval = self._base_channel_args.timeout_ops / 10
         return_attempts = 1
 
         async with self._channel_lock():
@@ -344,7 +337,10 @@ class AsyncChannel(BaseChannel):
 
                 authenticate_buf += buf.lower()
 
-                if bytes_username_prompt in authenticate_buf:
+                if re.search(
+                    pattern=username_pattern,
+                    string=authenticate_buf,
+                ):
                     # clear the authentication buffer so we don't re-read the username prompt
                     authenticate_buf = b""
                     username_count += 1
@@ -355,7 +351,10 @@ class AsyncChannel(BaseChannel):
                     self.write(channel_input=auth_username)
                     self.send_return()
 
-                if bytes_password_prompt in authenticate_buf:
+                if re.search(
+                    pattern=password_pattern,
+                    string=authenticate_buf,
+                ):
                     # clear the authentication buffer so we don't re-read the password prompt
                     authenticate_buf = b""
                     password_count += 1
@@ -367,7 +366,7 @@ class AsyncChannel(BaseChannel):
                     self.send_return()
 
                 channel_match = re.search(
-                    pattern=search_pattern,
+                    pattern=prompt_pattern,
                     string=authenticate_buf,
                 )
 

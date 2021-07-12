@@ -53,6 +53,10 @@ Changelog
   levels at all. See the discussion about this [here](https://github.com/carlmontanari/scrapli/discussions/128).
 - BUGFIX: fixed asynctelnet issue with control character handling, thank you to [@davaeron](https://github.com/davaeron) 
   -- see #147
+- *BREAKING CHANGE* removed the `transport.username_prompt` and `transport.password_prompt` attributes of the telnet 
+  transports. All authentication has been moved into the channel, so it made no sense to leave these attributes on 
+  the transports. This may cause an issue for users that had explicitly set their prompts to something non-standard.
+- Finally added logic to auto set port to 23 for telnet :)
 
 
 ## 2021.01.30

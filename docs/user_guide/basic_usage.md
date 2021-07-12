@@ -429,17 +429,23 @@ with IOSXEDriver(**my_device) as conn:
 
 ## Telnet
 
-scrapli supports telnet as a transport driver via the standard library module `telnetlib`. Telnet is a bit of a
- special case for scrapli, here are the things you need to know if you wish to use Telnet:
+scrapli supports telnet as a transport driver via the standard library module `telnetlib` or with a custom-built 
+async telnet transport (creatively called "asynctelnet") built on the standard library `asycnio`.
  
-- Currently, you *must* set the port number. At the moment scrapli assumes SSH and defaults to port 22, even if you
- specify the telnet driver. This could obviously change in the future but for now, specify your telnet port!
+A few things worth noting:
+
 - You can set the username and password prompt expect string after your connection object instantiation
  and before calling the `open` method -- this means if you have non-default prompts you cannot use scrapli with a
   context manager and Telnet (because the context manager calls open for you). You can set the prompts using the
-   following attributes of the `Scrape` object:
-  - `username_prompt`
-  - `password_prompt`
+   following attributes of the `Channel` (or `AsyncChannel`) object:
+  - `telnet_username_prompt`
+  - `telnet_password_prompt`
+ You can set these values like: `conn.channel.telnet_username_prompt`. The default values are:
+  - `^(.*username:)|(.*login:)\s?$`
+  - `^password:\s?$`
+ If you wish to provide custom values you can provide a string to look for "in" the output from the device, or a 
+    regular expression pattern that starts with `^` and ends with `$` -- if you don't use the line anchors the 
+    pattern will be `re.escape`'d.
 - When using telnet you may need to set the `comms_return_char` to `\r\n` the tests against the core platforms pass
  without this, however it seems that some console server type devices are looking for this `\r\n` pattern instead of
   the default `\n` pattern.

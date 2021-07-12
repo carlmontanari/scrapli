@@ -15,7 +15,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
         host: str,
         privilege_levels: Dict[str, PrivilegeLevel],
         default_desired_privilege_level: str,
-        port: int = 22,
+        port: Optional[int] = None,
         auth_username: str = "",
         auth_password: str = "",
         auth_private_key: str = "",

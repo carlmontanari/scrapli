@@ -229,8 +229,6 @@ def test_channel_authenticate_telnet(monkeypatch, sync_channel):
     monkeypatch.setattr("scrapli.transport.base.sync_transport.Transport.write", _write)
 
     sync_channel._base_channel_args.comms_prompt_pattern = "scrapli>"
-    sync_channel.transport.username_prompt = "login:"
-    sync_channel.transport.password_prompt = "password:"
     sync_channel.channel_authenticate_telnet(auth_username="scrapli", auth_password="scrapli")
 
 
@@ -244,9 +242,6 @@ def test_channel_authenticate_telnet_fail_login(monkeypatch, sync_channel):
 
     monkeypatch.setattr("scrapli.transport.base.sync_transport.Transport.read", _read)
     monkeypatch.setattr("scrapli.transport.base.sync_transport.Transport.write", _write)
-
-    sync_channel.transport.username_prompt = "login:"
-    sync_channel.transport.password_prompt = "password:"
 
     with pytest.raises(ScrapliAuthenticationFailed):
         sync_channel.channel_authenticate_telnet(auth_username="scrapli", auth_password="scrapli")
@@ -262,9 +257,6 @@ def test_channel_authenticate_telnet_fail_password(monkeypatch, sync_channel):
 
     monkeypatch.setattr("scrapli.transport.base.sync_transport.Transport.read", _read)
     monkeypatch.setattr("scrapli.transport.base.sync_transport.Transport.write", _write)
-
-    sync_channel.transport.username_prompt = "login:"
-    sync_channel.transport.password_prompt = "password:"
 
     with pytest.raises(ScrapliAuthenticationFailed):
         sync_channel.channel_authenticate_telnet(auth_username="scrapli", auth_password="scrapli")
@@ -314,9 +306,6 @@ def test_channel_authenticate_telnet_send_return(monkeypatch, sync_channel):
 
     sync_channel._base_channel_args.comms_prompt_pattern = "scrapli>"
     sync_channel._base_channel_args.timeout_ops = 3
-    sync_channel.transport.username_prompt = "login:"
-    sync_channel.transport.password_prompt = "password:"
-
     sync_channel.channel_authenticate_telnet(auth_username="scrapli", auth_password="scrapli")
 
 
