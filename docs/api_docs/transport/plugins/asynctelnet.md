@@ -62,9 +62,6 @@ class AsynctelnetTransport(AsyncTransport):
         super().__init__(base_transport_args=base_transport_args)
         self.plugin_transport_args = plugin_transport_args
 
-        self.username_prompt: str = "sername:"
-        self.password_prompt: str = "assword:"
-
         self.stdout: Optional[asyncio.StreamReader] = None
         self.stdin: Optional[asyncio.StreamWriter] = None
 
@@ -116,8 +113,12 @@ class AsynctelnetTransport(AsyncTransport):
             if cmd in (DO, DONT):
                 # if server says do/dont we always say wont for that option
                 self.stdin.write(IAC + WONT + c)
-            elif cmd in (WILL, WONT):
-                # if server says will/wont we always say dont for that option
+            elif cmd in WILL:
+                # if server says will we always say do for that option
+                # see also: #147 thank you to @davaeron!
+                self.stdin.write(IAC + DO + c)
+            elif cmd in WONT:
+                # if server says wont we always say dont for that option
                 self.stdin.write(IAC + DONT + c)
 
         return control_buf
@@ -137,6 +138,8 @@ class AsynctelnetTransport(AsyncTransport):
 
         Raises:
             ScrapliConnectionNotOpened: if connection is not opened for some reason
+            ScrapliConnectionNotOpened: if we read an empty byte string from the reader -- this
+                indicates the server sent an EOF -- see #142
 
         """
         if not self.stdout:
@@ -157,6 +160,8 @@ class AsynctelnetTransport(AsyncTransport):
         while True:
             try:
                 c = await asyncio.wait_for(self.stdout.read(1), timeout=char_read_timeout)
+                if not c:
+                    raise ScrapliConnectionNotOpened("server returned EOF, connection not opened")
             except asyncio.TimeoutError:
                 return
             char_read_timeout = self._base_transport_args.timeout_socket / 10
@@ -277,9 +282,6 @@ class AsynctelnetTransport(AsyncTransport):
         super().__init__(base_transport_args=base_transport_args)
         self.plugin_transport_args = plugin_transport_args
 
-        self.username_prompt: str = "sername:"
-        self.password_prompt: str = "assword:"
-
         self.stdout: Optional[asyncio.StreamReader] = None
         self.stdin: Optional[asyncio.StreamWriter] = None
 
@@ -331,8 +333,12 @@ class AsynctelnetTransport(AsyncTransport):
             if cmd in (DO, DONT):
                 # if server says do/dont we always say wont for that option
                 self.stdin.write(IAC + WONT + c)
-            elif cmd in (WILL, WONT):
-                # if server says will/wont we always say dont for that option
+            elif cmd in WILL:
+                # if server says will we always say do for that option
+                # see also: #147 thank you to @davaeron!
+                self.stdin.write(IAC + DO + c)
+            elif cmd in WONT:
+                # if server says wont we always say dont for that option
                 self.stdin.write(IAC + DONT + c)
 
         return control_buf
@@ -352,6 +358,8 @@ class AsynctelnetTransport(AsyncTransport):
 
         Raises:
             ScrapliConnectionNotOpened: if connection is not opened for some reason
+            ScrapliConnectionNotOpened: if we read an empty byte string from the reader -- this
+                indicates the server sent an EOF -- see #142
 
         """
         if not self.stdout:
@@ -372,6 +380,8 @@ class AsynctelnetTransport(AsyncTransport):
         while True:
             try:
                 c = await asyncio.wait_for(self.stdout.read(1), timeout=char_read_timeout)
+                if not c:
+                    raise ScrapliConnectionNotOpened("server returned EOF, connection not opened")
             except asyncio.TimeoutError:
                 return
             char_read_timeout = self._base_transport_args.timeout_socket / 10

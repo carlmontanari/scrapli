@@ -51,7 +51,7 @@ class BaseDriver:
     def __init__(
         self,
         host: str,
-        port: int = 22,
+        port: Optional[int] = None,
         auth_username: str = "",
         auth_password: str = "",
         auth_private_key: str = "",
@@ -157,6 +157,11 @@ class BaseDriver:
             N/A
 
         """
+        if port is None:
+            port = 22
+            if "telnet" in transport:
+                port = 23
+
         self.logger = get_instance_logger(
             instance_name="scrapli.driver", host=host, port=port, uid=logging_uid
         )
@@ -1045,7 +1050,7 @@ class BaseDriver:
     def __init__(
         self,
         host: str,
-        port: int = 22,
+        port: Optional[int] = None,
         auth_username: str = "",
         auth_password: str = "",
         auth_private_key: str = "",
@@ -1151,6 +1156,11 @@ class BaseDriver:
             N/A
 
         """
+        if port is None:
+            port = 22
+            if "telnet" in transport:
+                port = 23
+
         self.logger = get_instance_logger(
             instance_name="scrapli.driver", host=host, port=port, uid=logging_uid
         )

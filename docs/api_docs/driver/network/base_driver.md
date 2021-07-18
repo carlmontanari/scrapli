@@ -392,6 +392,55 @@ class BaseNetworkDriver:
         self.logger.debug("determined privilege escalation necessary")
         return PrivilegeAction.ESCALATE, self.privilege_levels[map_to_destination_priv[1]]
 
+    @property
+    def _generic_driver_mode(self) -> bool:
+        """
+        Getter for `_generic_driver_mode` attribute
+
+        Args:
+            N/A
+
+        Returns:
+            bool: _generic_driver_mode value
+
+        Raises:
+            N/A
+
+        """
+        try:
+            return self.__generic_driver_mode
+        except AttributeError:
+            return False
+
+    @_generic_driver_mode.setter
+    def _generic_driver_mode(self, value: bool) -> None:
+        """
+        Setter for `_generic_driver_mode` attribute
+
+        Args:
+            value: bool value for _generic_driver_mode
+
+        Returns:
+            None
+
+        Raises:
+            ScrapliTypeError: if value is not of type bool
+
+        """
+        self.logger.debug(f"setting '_generic_driver_mode' value to '{value}'")
+
+        if not isinstance(value, bool):
+            raise ScrapliTypeError
+
+        if value is True:
+            # if we are setting ingore priv level we reset current priv to the dummy priv so that
+            # once (if) a user turns ignore priv back off we know we need to reset/reacquire priv
+            # as the user coulda done pretty much anything and we could end up at who knows what
+            # priv level
+            self._current_priv_level = DUMMY_PRIV_LEVEL
+
+        self.__generic_driver_mode = value
+
     def _update_response(self, response: Response) -> None:
         """
         Update response with network driver specific data
@@ -479,7 +528,7 @@ class BaseNetworkDriver:
         response.result = "\n".join(response.result for response in multi_response)
         response.failed = False
 
-        if any(response.failed for response in multi_response):
+        if any(r.failed for r in multi_response):
             response.failed = True
         self._update_response(response=response)
 
@@ -510,12 +559,21 @@ class BaseNetworkDriver:
 
         Raises:
             ScrapliTypeError: if configs is anything but a list
+            ScrapliPrivilegeError: if connection is in 'generic_driver_mode' -- this should be a
+                non-standard use case so there is no reason to complicate the config(s) methods
+                with supporting generic driver mode (plus if there was config modes in generic
+                driver mode that wouldn't be very generic driver like, would it!)
 
         """
         if not isinstance(configs, list):
             raise ScrapliTypeError(
                 f"'send_configs' expects a list of strings, got {type(configs)}, "
                 "to send a single configuration line/string use the 'send_config' method instead."
+            )
+
+        if self._generic_driver_mode is True:
+            raise ScrapliPrivilegeError(
+                "connection is in 'generic_driver_mode', send config(s|s_from_file) is disabled"
             )
 
         if failed_when_contains is None:
@@ -856,6 +914,55 @@ class BaseNetworkDriver:
         self.logger.debug("determined privilege escalation necessary")
         return PrivilegeAction.ESCALATE, self.privilege_levels[map_to_destination_priv[1]]
 
+    @property
+    def _generic_driver_mode(self) -> bool:
+        """
+        Getter for `_generic_driver_mode` attribute
+
+        Args:
+            N/A
+
+        Returns:
+            bool: _generic_driver_mode value
+
+        Raises:
+            N/A
+
+        """
+        try:
+            return self.__generic_driver_mode
+        except AttributeError:
+            return False
+
+    @_generic_driver_mode.setter
+    def _generic_driver_mode(self, value: bool) -> None:
+        """
+        Setter for `_generic_driver_mode` attribute
+
+        Args:
+            value: bool value for _generic_driver_mode
+
+        Returns:
+            None
+
+        Raises:
+            ScrapliTypeError: if value is not of type bool
+
+        """
+        self.logger.debug(f"setting '_generic_driver_mode' value to '{value}'")
+
+        if not isinstance(value, bool):
+            raise ScrapliTypeError
+
+        if value is True:
+            # if we are setting ingore priv level we reset current priv to the dummy priv so that
+            # once (if) a user turns ignore priv back off we know we need to reset/reacquire priv
+            # as the user coulda done pretty much anything and we could end up at who knows what
+            # priv level
+            self._current_priv_level = DUMMY_PRIV_LEVEL
+
+        self.__generic_driver_mode = value
+
     def _update_response(self, response: Response) -> None:
         """
         Update response with network driver specific data
@@ -943,7 +1050,7 @@ class BaseNetworkDriver:
         response.result = "\n".join(response.result for response in multi_response)
         response.failed = False
 
-        if any(response.failed for response in multi_response):
+        if any(r.failed for r in multi_response):
             response.failed = True
         self._update_response(response=response)
 
@@ -974,12 +1081,21 @@ class BaseNetworkDriver:
 
         Raises:
             ScrapliTypeError: if configs is anything but a list
+            ScrapliPrivilegeError: if connection is in 'generic_driver_mode' -- this should be a
+                non-standard use case so there is no reason to complicate the config(s) methods
+                with supporting generic driver mode (plus if there was config modes in generic
+                driver mode that wouldn't be very generic driver like, would it!)
 
         """
         if not isinstance(configs, list):
             raise ScrapliTypeError(
                 f"'send_configs' expects a list of strings, got {type(configs)}, "
                 "to send a single configuration line/string use the 'send_config' method instead."
+            )
+
+        if self._generic_driver_mode is True:
+            raise ScrapliPrivilegeError(
+                "connection is in 'generic_driver_mode', send config(s|s_from_file) is disabled"
             )
 
         if failed_when_contains is None:

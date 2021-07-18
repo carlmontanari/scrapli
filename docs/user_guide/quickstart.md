@@ -77,3 +77,5 @@ Other scrapli related docs/blogs/videos/info:
 - [Scrapli on Dmitry Figol's Network Automation Channel](https://www.youtube.com/watch?v=OJa2typq7yI)
 - [Scrapli Intro on Wim Wauter's blog](https://blog.wimwauters.com/networkprogrammability/2020-04-09_scrapli_introduction/)
 - [Scrapli on the Packet Pushers Heavy Networking Podcast](https://packetpushers.net/podcast/heavy-networking-532-scrapli-is-a-netmiko-alternative/)
+- [IPvZero's Network Automation Course (including scrapli!) on CBT Nuggets (paid resource)](https://www.cbtnuggets.com/it-training/networking/network-automation-cisco-python?utm_source=trainer&utm_medium=trainer&utm_campaign=john-mcgovern)
+- [Rick Donato's Scrapli Course (paid resource)](https://www.packetcoders.io/network-configuration-with-scrapli/)
