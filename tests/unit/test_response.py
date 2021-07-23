@@ -206,3 +206,11 @@ def test_response_parse_ttp_fail():
     response_bytes = b""
     response.record_response(response_bytes)
     assert response.ttp_parse_output(template="blah") == [{}]
+
+
+def test_record_response_unicodedecodeerror():
+    # this test validates that we catch unicdedecodeerror when decoding raw result
+    response = Response("localhost", channel_input="show ip arp", genie_platform="iosxe")
+    response_bytes = b"Manufacturer name :p\xb67\x038\x93\xa5\x03\x10\n"
+    response.record_response(response_bytes)
+    assert repr(response.result) == "'Manufacturer name :p¶7\\x038\\x93¥\\x03\\x10\\n'"
