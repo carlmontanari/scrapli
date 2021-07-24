@@ -97,15 +97,13 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
         """
         self._pre_escalate(escalate_priv=escalate_priv)
 
-        if escalate_priv.escalate_auth is True and self.auth_secondary:
-            super().send_interactive(
-                interact_events=[
-                    (escalate_priv.escalate, escalate_priv.escalate_prompt, False),
-                    (self.auth_secondary, escalate_priv.pattern, True),
-                ],
-            )
-        else:
-            self.channel.send_input(channel_input=escalate_priv.escalate)
+        super().send_interactive(
+            interact_events=[
+                (escalate_priv.escalate, escalate_priv.escalate_prompt, False),
+                (self.auth_secondary, escalate_priv.pattern, True),
+            ],
+            interaction_complete_patterns=[escalate_priv.pattern],
+        )
 
     def _deescalate(self, current_priv: PrivilegeLevel) -> None:
         """
@@ -350,6 +348,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         privilege_level: str = "",
         timeout_ops: Optional[float] = None,
+        interaction_complete_patterns: Optional[List[str]] = None,
     ) -> Response:
         """
         Interact with a device with changing prompts per input.
@@ -409,6 +408,8 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER COMMAND sent, not for the total
                 of the commands being sent!
+            interaction_complete_patterns: list of patterns, that if seen, indicate the interactive
+                "session" has ended and we should exit the interactive session.
 
         Returns:
             Response: scrapli Response object
@@ -428,6 +429,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
             interact_events=interact_events,
             failed_when_contains=failed_when_contains,
             timeout_ops=timeout_ops,
+            interaction_complete_patterns=interaction_complete_patterns,
         )
         self._update_response(response=response)
 

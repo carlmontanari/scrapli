@@ -344,6 +344,7 @@ class GenericDriver(Driver, BaseGenericDriver):
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         privilege_level: str = "",
         timeout_ops: Optional[float] = None,
+        interaction_complete_patterns: Optional[List[str]] = None,
     ) -> Response:
         """
         Interact with a device with changing prompts per input.
@@ -403,6 +404,8 @@ class GenericDriver(Driver, BaseGenericDriver):
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER COMMAND sent, not for the total
                 of the commands being sent!
+            interaction_complete_patterns: list of patterns, that if seen, indicate the interactive
+                "session" has ended and we should exit the interactive session.
 
         Returns:
             Response: scrapli Response object
@@ -426,7 +429,8 @@ class GenericDriver(Driver, BaseGenericDriver):
             failed_when_contains=failed_when_contains,
         )
         raw_response, processed_response = self.channel.send_inputs_interact(
-            interact_events=interact_events
+            interact_events=interact_events,
+            interaction_complete_patterns=interaction_complete_patterns,
         )
         return self._post_send_command(
             raw_response=raw_response, processed_response=processed_response, response=response

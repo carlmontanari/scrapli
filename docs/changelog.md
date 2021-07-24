@@ -60,6 +60,12 @@ Changelog
 - BUGFIX: fixed a rare issue where decoding bytes received from the channel (in the response object) would raise a 
   `UnicodedecodEerror`; we now catch this exception and decode with `ISO-8859-1` encoding which seems to be much 
   less picky about what it decodes. Thanks to Alex Lardschneider for yet another good catch and fix!
+- Added `interaction_complete_patterns` to all "interactive" methods -- this argument accepts a list of 
+  strings/patterns; will be re-escape'd if each string does *not* start with and end with "^" and "$" (line anchors),
+  otherwise will be compiled with the standard scrapli case-insensitive and multiline flags. If the interactive 
+  event finds any of these pattenrs during the course of the interacting it will terminate the interactive session. 
+  Note that this is entirely optional and is a keyword only argument so no changes are necessary to any existing 
+  scrapli programs.
 
 
 ## 2021.01.30
