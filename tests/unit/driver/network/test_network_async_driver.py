@@ -7,11 +7,13 @@ from scrapli.exceptions import ScrapliPrivilegeError
 
 @pytest.mark.asyncio
 async def test_escalate(monkeypatch, async_network_driver):
-    async def _send_input(cls, channel_input, **kwargs):
-        assert channel_input == "configure terminal"
+    async def _send_inputs_interact(cls, interact_events, **kwargs):
+        assert interact_events[0][0] == "configure terminal"
         return b"raw", b"processed"
 
-    monkeypatch.setattr("scrapli.channel.async_channel.AsyncChannel.send_input", _send_input)
+    monkeypatch.setattr(
+        "scrapli.channel.async_channel.AsyncChannel.send_inputs_interact", _send_inputs_interact
+    )
 
     async_network_driver._current_priv_level = async_network_driver.privilege_levels[
         "privilege_exec"
@@ -81,12 +83,14 @@ async def test_acquire_priv_escalate(monkeypatch, async_network_driver):
         _prompt_counter += 1
         return prompt
 
-    async def _send_input(cls, channel_input, **kwargs):
-        assert channel_input == "configure terminal"
+    async def _send_inputs_interact(cls, interact_events, **kwargs):
+        assert interact_events[0][0] == "configure terminal"
         return b"scrapli(config)#", b"scrapli(config)#"
 
     monkeypatch.setattr("scrapli.channel.async_channel.AsyncChannel.get_prompt", _get_prompt)
-    monkeypatch.setattr("scrapli.channel.async_channel.AsyncChannel.send_input", _send_input)
+    monkeypatch.setattr(
+        "scrapli.channel.async_channel.AsyncChannel.send_inputs_interact", _send_inputs_interact
+    )
 
     async_network_driver._current_priv_level = async_network_driver.privilege_levels[
         "privilege_exec"

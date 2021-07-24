@@ -57,6 +57,12 @@ Changelog
   transports. All authentication has been moved into the channel, so it made no sense to leave these attributes on 
   the transports. This may cause an issue for users that had explicitly set their prompts to something non-standard.
 - Finally added logic to auto set port to 23 for telnet :)
+- Added `interaction_complete_patterns` to all "interactive" methods -- this argument accepts a list of 
+  strings/patterns; will be re-escape'd if each string does *not* start with and end with "^" and "$" (line anchors),
+  otherwise will be compiled with the standard scrapli case-insensitive and multiline flags. If the interactive 
+  event finds any of these pattenrs during the course of the interacting it will terminate the interactive session. 
+  Note that this is entirely optional and is a keyword only argument so no changes are necessary to any existing 
+  scrapli programs.
 
 
 ## 2021.01.30

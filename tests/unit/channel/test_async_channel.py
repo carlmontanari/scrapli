@@ -127,6 +127,26 @@ async def test_channel_read_until_prompt(monkeypatch, async_channel):
     assert actual_read_output == expected_read_output
 
 
+@pytest.mark.asyncio
+async def test_channel_read_until_explicit_prompt(monkeypatch, async_channel):
+    expected_read_output = b"read_data\nscrapli>"
+    _read_counter = 0
+
+    async def _read(cls):
+        nonlocal _read_counter
+
+        if _read_counter == 0:
+            _read_counter += 1
+            return b"read_data\x1b[0;0m\n"
+
+        return b"scrapli>"
+
+    monkeypatch.setattr("scrapli.transport.base.async_transport.AsyncTransport.read", _read)
+
+    actual_read_output = await async_channel._read_until_explicit_prompt(prompts=["scrapli>"])
+
+    assert actual_read_output == expected_read_output
+
 # TODO read until prompt/time
 
 
@@ -468,7 +488,7 @@ async def test_send_inputs_interact(monkeypatch, async_channel):
     async_channel._base_channel_args.comms_prompt_pattern = "scrapli>"
 
     actual_buf, actual_processed_buf = await async_channel.send_inputs_interact(
-        interact_events=interact_events
+        interact_events=interact_events, interaction_complete_patterns=[]
     )
     assert actual_buf == expected_buf
     assert actual_processed_buf == expected_buf
