@@ -344,6 +344,7 @@ class GenericDriver(Driver, BaseGenericDriver):
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         privilege_level: str = "",
         timeout_ops: Optional[float] = None,
+        exit_pattern: Optional[str] = None,
     ) -> Response:
         """
         Interact with a device with changing prompts per input.
@@ -426,7 +427,7 @@ class GenericDriver(Driver, BaseGenericDriver):
             failed_when_contains=failed_when_contains,
         )
         raw_response, processed_response = self.channel.send_inputs_interact(
-            interact_events=interact_events
+            interact_events=interact_events, exit_pattern=exit_pattern
         )
         return self._post_send_command(
             raw_response=raw_response, processed_response=processed_response, response=response

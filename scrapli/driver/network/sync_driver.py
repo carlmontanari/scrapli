@@ -350,6 +350,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         privilege_level: str = "",
         timeout_ops: Optional[float] = None,
+        exit_pattern: Optional[str] = None,
     ) -> Response:
         """
         Interact with a device with changing prompts per input.
@@ -428,6 +429,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
             interact_events=interact_events,
             failed_when_contains=failed_when_contains,
             timeout_ops=timeout_ops,
+            exit_pattern=exit_pattern,
         )
         self._update_response(response=response)
 
