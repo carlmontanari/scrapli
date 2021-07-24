@@ -57,6 +57,9 @@ Changelog
   transports. All authentication has been moved into the channel, so it made no sense to leave these attributes on 
   the transports. This may cause an issue for users that had explicitly set their prompts to something non-standard.
 - Finally added logic to auto set port to 23 for telnet :)
+- BUGFIX: fixed a rare issue where decoding bytes received from the channel (in the response object) would raise a 
+  `UnicodedecodEerror`; we now catch this exception and decode with `ISO-8859-1` encoding which seems to be much 
+  less picky about what it decodes. Thanks to Alex Lardschneider for yet another good catch and fix!
 - Added `interaction_complete_patterns` to all "interactive" methods -- this argument accepts a list of 
   strings/patterns; will be re-escape'd if each string does *not* start with and end with "^" and "$" (line anchors),
   otherwise will be compiled with the standard scrapli case-insensitive and multiline flags. If the interactive 

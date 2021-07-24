@@ -438,19 +438,17 @@ A few things worth noting:
  and before calling the `open` method -- this means if you have non-default prompts you cannot use scrapli with a
   context manager and Telnet (because the context manager calls open for you). You can set the prompts using the
    following attributes of the `Channel` (or `AsyncChannel`) object:
-  - `telnet_username_prompt`
-  - `telnet_password_prompt`
- You can set these values like: `conn.channel.telnet_username_prompt`. The default values are:
-  - `^(.*username:)|(.*login:)\s?$`
-  - `^password:\s?$`
- If you wish to provide custom values you can provide a string to look for "in" the output from the device, or a 
-    regular expression pattern that starts with `^` and ends with `$` -- if you don't use the line anchors the 
+    - `telnet_username_prompt` which defaults to `^(.*username:)|(.*login:)\s?$`
+    - `telnet_password_prompt` which defaults to `^password:\s?$`
+ 
+    You can set these values by updating the appropriate attribute, for example: `conn.channel.telnet_username_prompt = "somethingneat"`. 
+  
+- If you wish to provide custom prompt values you can provide a string to look for "in" the output from the device, 
+  or a regular expression pattern that starts with `^` and ends with `$` -- if you don't use the line anchors the 
     pattern will be `re.escape`'d.
 - When using telnet you may need to set the `comms_return_char` to `\r\n` the tests against the core platforms pass
  without this, however it seems that some console server type devices are looking for this `\r\n` pattern instead of
   the default `\n` pattern.
-
-If telnet for some reason becomes an important use case, the telnet Transport layer can be improved/augmented.
 
 
 ## SSH Config Support

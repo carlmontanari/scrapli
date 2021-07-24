@@ -126,7 +126,15 @@ class Response:
         self.finish_time = datetime.now()
         self.elapsed_time = (self.finish_time - self.start_time).total_seconds()
         self.raw_result = result
-        self.result = result.decode()
+
+        try:
+            self.result = result.decode()
+        except UnicodeDecodeError:
+            # sometimes we get some "garbage" characters, the iso encoding seems to handle these
+            # better but unclear what the other impact is so we'll just catch exceptions and try
+            # this encoding
+            self.result = result.decode(encoding="ISO-8859-1")
+
         if not self.failed_when_contains:
             self.failed = False
         elif not any(err in self.result for err in self.failed_when_contains):
