@@ -97,13 +97,16 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
         """
         self._pre_escalate(escalate_priv=escalate_priv)
 
-        await super().send_interactive(
-            interact_events=[
-                (escalate_priv.escalate, escalate_priv.escalate_prompt, False),
-                (self.auth_secondary, escalate_priv.pattern, True),
-            ],
-            interaction_complete_patterns=[escalate_priv.pattern],
-        )
+        if escalate_priv.escalate_auth is False:
+            await self.channel.send_input(channel_input=escalate_priv.escalate)
+        else:
+            await super().send_interactive(
+                interact_events=[
+                    (escalate_priv.escalate, escalate_priv.escalate_prompt, False),
+                    (self.auth_secondary, escalate_priv.pattern, True),
+                ],
+                interaction_complete_patterns=[escalate_priv.pattern],
+            )
 
     async def _deescalate(self, current_priv: PrivilegeLevel) -> None:
         """

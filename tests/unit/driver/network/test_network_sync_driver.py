@@ -4,12 +4,12 @@ from scrapli.exceptions import ScrapliPrivilegeError
 
 
 def test_escalate(monkeypatch, sync_network_driver):
-    def _send_inputs_interact(cls, interact_events, **kwargs):
-        assert interact_events[0][0] == "configure terminal"
+    def _send_input(cls, channel_input, **kwargs):
+        assert channel_input == "configure terminal"
         return b"raw", b"processed"
 
     monkeypatch.setattr(
-        "scrapli.channel.sync_channel.Channel.send_inputs_interact", _send_inputs_interact
+        "scrapli.channel.sync_channel.Channel.send_input", _send_input
     )
 
     sync_network_driver._current_priv_level = sync_network_driver.privilege_levels["privilege_exec"]
@@ -69,13 +69,13 @@ def test_acquire_priv_escalate(monkeypatch, sync_network_driver):
         _prompt_counter += 1
         return prompt
 
-    def _send_inputs_interact(cls, interact_events, **kwargs):
-        assert interact_events[0][0] == "configure terminal"
-        return b"scrapli(config)#", b"scrapli(config)#"
+    def _send_input(cls, channel_input, **kwargs):
+        assert channel_input == "configure terminal"
+        return b"raw", b"processed"
 
     monkeypatch.setattr("scrapli.channel.sync_channel.Channel.get_prompt", _get_prompt)
     monkeypatch.setattr(
-        "scrapli.channel.sync_channel.Channel.send_inputs_interact", _send_inputs_interact
+        "scrapli.channel.sync_channel.Channel.send_input", _send_input
     )
 
     sync_network_driver._current_priv_level = sync_network_driver.privilege_levels["privilege_exec"]
