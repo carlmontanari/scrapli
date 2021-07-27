@@ -11,9 +11,7 @@ async def test_escalate(monkeypatch, async_network_driver):
         assert channel_input == "configure terminal"
         return b"raw", b"processed"
 
-    monkeypatch.setattr(
-        "scrapli.channel.async_channel.AsyncChannel.send_input", _send_input
-    )
+    monkeypatch.setattr("scrapli.channel.async_channel.AsyncChannel.send_input", _send_input)
 
     async_network_driver._current_priv_level = async_network_driver.privilege_levels[
         "privilege_exec"
@@ -88,9 +86,7 @@ async def test_acquire_priv_escalate(monkeypatch, async_network_driver):
         return b"raw", b"processed"
 
     monkeypatch.setattr("scrapli.channel.async_channel.AsyncChannel.get_prompt", _get_prompt)
-    monkeypatch.setattr(
-        "scrapli.channel.async_channel.AsyncChannel.send_input", _send_input
-    )
+    monkeypatch.setattr("scrapli.channel.async_channel.AsyncChannel.send_input", _send_input)
 
     async_network_driver._current_priv_level = async_network_driver.privilege_levels[
         "privilege_exec"

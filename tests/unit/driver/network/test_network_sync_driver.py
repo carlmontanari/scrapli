@@ -8,9 +8,7 @@ def test_escalate(monkeypatch, sync_network_driver):
         assert channel_input == "configure terminal"
         return b"raw", b"processed"
 
-    monkeypatch.setattr(
-        "scrapli.channel.sync_channel.Channel.send_input", _send_input
-    )
+    monkeypatch.setattr("scrapli.channel.sync_channel.Channel.send_input", _send_input)
 
     sync_network_driver._current_priv_level = sync_network_driver.privilege_levels["privilege_exec"]
     sync_network_driver._escalate(
@@ -74,9 +72,7 @@ def test_acquire_priv_escalate(monkeypatch, sync_network_driver):
         return b"raw", b"processed"
 
     monkeypatch.setattr("scrapli.channel.sync_channel.Channel.get_prompt", _get_prompt)
-    monkeypatch.setattr(
-        "scrapli.channel.sync_channel.Channel.send_input", _send_input
-    )
+    monkeypatch.setattr("scrapli.channel.sync_channel.Channel.send_input", _send_input)
 
     sync_network_driver._current_priv_level = sync_network_driver.privilege_levels["privilege_exec"]
     sync_network_driver.acquire_priv(desired_priv="configuration")
