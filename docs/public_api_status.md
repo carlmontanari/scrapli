@@ -32,7 +32,7 @@ Note that all public methods, unless otherwise noted, are available in sync and 
 | send_command                  | 2020.03.29  | 2020.08.09  | added `timeout_ops` keyword argument to modify timeout       |
 | send_commands                 | 2020.03.29  | 2020.12.31  | added `eager` keyword argument                               |
 | send_commands_from_file       | 2020.04.30  | 2020.12.31  | added `eager` keyword argument                               |
-| send_interactive              | 2020.03.29  | 2020.12.31  | added `timeout_ops` keyword argument                         |
+| send_interactive              | 2020.03.29  | 2021.01.30  | added `interaction_complete_patterns` keyword argument       |
 | send_and_read                 | 2020.08.28  |             |                                                              |
 
 
@@ -44,7 +44,7 @@ Note that all public methods, unless otherwise noted, are available in sync and 
 | send_command                  | 2020.06.06  | 2020.08.09  | added `timeout_ops` keyword argument to modify timeout       |
 | send_commands                 | 2020.06.06  | 2020.12.31  | added `eager` keyword argument                               |
 | send_commands_from_file       | 2020.06.06  | 2020.12.31  | added `eager` keyword argument                               |
-| send_interactive              | 2020.06.06  | 2020.12.31  | added `timeout_ops` keyword argument                         |
+| send_interactive              | 2020.06.06  | 2021.01.30  | added `interaction_complete_patterns` keyword argument       |
 | send_and_read                 | 2020.08.28  |             |                                                              |
 
 
@@ -58,7 +58,7 @@ Note that all public methods, unless otherwise noted, are available in sync and 
 | send_config                   | 2020.05.09  | 2020.12.31  | added `eager` keyword argument                               |
 | send_configs                  | 2020.03.29  | 2020.12.31  | added `eager` keyword argument                               |
 | send_configs_from_file        | 2020.04.30  | 2020.12.31  | added `eager` keyword argument                               |
-| send_interactive              | 2020.03.29  | 2020.12.31  | added `timeout_ops` keyword argument                         |
+| send_interactive              | 2020.03.29  | 2021.01.30  | added `interaction_complete_patterns` keyword argument       |
 
 
 ### AsyncNetworkDriver (and Platform driver sub-classes unless overridden)
@@ -71,7 +71,7 @@ Note that all public methods, unless otherwise noted, are available in sync and 
 | send_config                   | 2020.06.06  | 2020.12.31  | added `eager` keyword argument                               |
 | send_configs                  | 2020.06.06  | 2020.12.31  | added `eager` keyword argument                               |
 | send_configs_from_file        | 2020.06.06  | 2020.12.31  | added `eager` keyword argument                               |
-| send_interactive              | 2020.06.06  | 2020.12.31  | added `timeout_ops` keyword argument                         |
+| send_interactive              | 2020.06.06  | 2021.01.30  | added `interaction_complete_patterns` keyword argument       |
 
 
 ## Channel
