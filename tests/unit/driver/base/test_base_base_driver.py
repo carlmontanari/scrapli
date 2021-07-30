@@ -90,7 +90,6 @@ def test_setup_ssh_file_args_telnet_transport(caplog, base_driver, test_data):
     assert logging.DEBUG == log_record.levelno
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping pending pyfakefs 3.10 support")
 def test_update_ssh_args_from_ssh_config(fs, real_ssh_config_file_path, base_driver):
     fs.add_real_file(source_path=real_ssh_config_file_path, target_path="ssh_config")
     base_driver.ssh_config_file = "ssh_config"
@@ -106,7 +105,6 @@ def test_update_ssh_args_from_ssh_config(fs, real_ssh_config_file_path, base_dri
     assert base_driver.auth_private_key == str(Path("~/.ssh/mysshkey").expanduser())
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping pending pyfakefs 3.10 support")
 @pytest.mark.parametrize(
     "test_data",
     (
@@ -227,7 +225,6 @@ def test_load_non_core_transport_plugin_exception(monkeypatch):
 # TODO test load core and non core transport plugins
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping pending pyfakefs 3.10 support")
 @pytest.mark.parametrize(
     "test_data",
     [
@@ -252,7 +249,6 @@ def test_resolve_ssh_config(fs, real_ssh_config_file_path, base_driver, test_dat
     assert actual_output == expected_output
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping pending pyfakefs 3.10 support")
 @pytest.mark.parametrize(
     "test_data",
     [

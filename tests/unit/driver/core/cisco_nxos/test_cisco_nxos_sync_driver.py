@@ -1,20 +1,3 @@
-from scrapli.driver.core.cisco_nxos.base_driver import PRIVS
-from scrapli.driver.core.cisco_nxos.sync_driver import NXOSDriver
-
-
-def test_base_telnet_prompt():
-    sync_nxos_driver = NXOSDriver(
-        host="localhost",
-        privilege_levels=PRIVS,
-        auth_secondary="scrapli",
-        default_desired_privilege_level="privilege_exec",
-        transport="telnet",
-        port=23,
-    )
-
-    assert sync_nxos_driver.transport.username_prompt == "login:"
-
-
 def test_on_open(monkeypatch, sync_nxos_driver):
     _input_counter = 0
 

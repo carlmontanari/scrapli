@@ -95,8 +95,8 @@ class SystemTransport(Transport):
 
         self.session = PtyProcess.spawn(
             self.open_cmd,
-            rows=self._base_transport_args.transport_options.get("ptyprocess", {}).get("rows", 24),
-            cols=self._base_transport_args.transport_options.get("ptyprocess", {}).get("cols", 80),
+            rows=self._base_transport_args.transport_options.get("ptyprocess", {}).get("rows", 80),
+            cols=self._base_transport_args.transport_options.get("ptyprocess", {}).get("cols", 256),
         )
 
         self._post_open_closing_log(closing=False)

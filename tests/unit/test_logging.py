@@ -61,7 +61,6 @@ def test_scrapli_filehandler():
     pass
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping pending pyfakefs 3.10 support")
 def test_enable_basic_logging(fs):
     assert Path("scrapli.log").is_file() is False
     enable_basic_logging(file=True, level="debug")
@@ -79,7 +78,6 @@ def test_enable_basic_logging(fs):
     del logger.handlers[1]
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping pending pyfakefs 3.10 support")
 def test_enable_basic_logging_no_buffer(fs):
     assert Path("mylog.log").is_file() is False
 

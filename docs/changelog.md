@@ -1,7 +1,7 @@
 Changelog
 =========
 
-## (in development) 2021.07.30
+## 2021.07.30
 
 - Added "% Unavailable command" to EOS `failed_when_contains`
 - Moved core platform `failed_when_contains` to base to not have to duplicate them in sync and async platforms
@@ -41,6 +41,31 @@ Changelog
 - Simplify the `collect` bits for integration tests... this is still not used heavily but hopefully will be soon!
 - Replace vrnetlab creds in examples with scrapli (felt confusing to have vrnetlab creds everywhere, plus functional 
   testing is moving away from (but still supporting) vrnetlab test environment)
+- Crank up the rows/cols for system transport -> 80 rows, 256 cols -- this to align with scrapligo and to make it 
+  less common that users need to modify these values.
+- BUGFIX: fixed blocking read in async channel telnet authentication (thank you Dmitry Figol!)
+- Added `not_contains` field to privilege levels... this will help greatly simplify the necessary regex patterns, as 
+  well as allow us to ditch look arounds which go does not support... step one to a standardized community platform 
+  that works with python -or- go!
+- Simplified (at least a little... more would be good) patterns for privilege levels for core platforms.
+- Added `_generic_driver_mode` to  the `NetworkDriver` classes -- this is a private mode as it should probably be used
+   cautiously -- the idea here is that you can send any strings you want and scrapli will not care about privilege
+  levels at all. See the discussion about this [here](https://github.com/carlmontanari/scrapli/discussions/128).
+- BUGFIX: fixed asynctelnet issue with control character handling, thank you to [@davaeron](https://github.com/davaeron) 
+  -- see #147
+- *BREAKING CHANGE* removed the `transport.username_prompt` and `transport.password_prompt` attributes of the telnet 
+  transports. All authentication has been moved into the channel, so it made no sense to leave these attributes on 
+  the transports. This may cause an issue for users that had explicitly set their prompts to something non-standard.
+- Finally added logic to auto set port to 23 for telnet :)
+- BUGFIX: fixed a rare issue where decoding bytes received from the channel (in the response object) would raise a 
+  `UnicodedecodEerror`; we now catch this exception and decode with `ISO-8859-1` encoding which seems to be much 
+  less picky about what it decodes. Thanks to Alex Lardschneider for yet another good catch and fix!
+- Added `interaction_complete_patterns` to all "interactive" methods -- this argument accepts a list of 
+  strings/patterns; will be re-escape'd if each string does *not* start with and end with "^" and "$" (line anchors),
+  otherwise will be compiled with the standard scrapli case-insensitive and multiline flags. If the interactive 
+  event finds any of these pattenrs during the course of the interacting it will terminate the interactive session. 
+  Note that this is entirely optional and is a keyword only argument so no changes are necessary to any existing 
+  scrapli programs.
 
 
 ## 2021.01.30

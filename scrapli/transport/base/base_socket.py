@@ -81,7 +81,7 @@ class Socket:
                 self.sock.connect((self.host, self.port))
             except ConnectionRefusedError as exc:
                 msg = (
-                    f"connection refused trying to open socket to {self.host} on port {self.port}"
+                    f"connection refused trying to open socket to {self.host} on port {self.port} "
                     f"for address family {address_family.name}"
                 )
                 self.logger.warning(msg)

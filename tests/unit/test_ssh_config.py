@@ -1,10 +1,9 @@
 import os
-import sys
 
 import pytest
 
 from scrapli.exceptions import ScrapliTypeError
-from scrapli.ssh_config import Host, SSHConfig, SSHKnownHosts
+from scrapli.ssh_config import Host, SSHConfig, SSHKnownHosts, ssh_config_factory
 
 
 def test_str(real_ssh_config_file_path):
@@ -58,7 +57,6 @@ def test_init_ssh_config_file_explicit(real_ssh_config_file_path):
     assert ssh_conf.ssh_config == ssh_config_file
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping pending pyfakefs 3.10 support")
 def test_init_ssh_config_file_no_config_file(fs):
     ssh_conf = SSHConfig("")
     # should only have a single splat host w/ all values set to None/empty
@@ -166,7 +164,6 @@ def test_init_ssh_known_hosts_file_explicit(real_ssh_known_hosts_file_path):
     assert known_hosts.ssh_known_hosts == ssh_known_hosts
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping pending pyfakefs 3.10 support")
 def test_init_ssh_known_hosts_file_no_config_file(fs):
     known_hosts = SSHKnownHosts("")
     assert known_hosts.hosts == {}
@@ -175,3 +172,11 @@ def test_init_ssh_known_hosts_file_no_config_file(fs):
 def test_init_ssh_known_hosts_file_no_hosts(test_data_path):
     known_hosts = SSHKnownHosts(f"{test_data_path}/files/__init__.py")
     assert known_hosts.hosts == {}
+
+
+def test_ssh_config_factory(real_ssh_config_file_path):
+    # *probably* the ssh config file is already in the loaded dict, so we'll empty it before testing
+    SSHConfig._config_files = {}
+    assert not SSHConfig._config_files
+    _ = ssh_config_factory(ssh_config_file=real_ssh_config_file_path)
+    assert real_ssh_config_file_path in SSHConfig._config_files

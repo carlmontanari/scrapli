@@ -246,6 +246,13 @@ interface Ethernet19
    ipv6 address auto-config
    ipv6 nd ra rx accept default-route
 !
+interface Ethernet20
+   speed forced 10000full
+   no switchport
+   ipv6 enable
+   ipv6 address auto-config
+   ipv6 nd ra rx accept default-route
+!
 interface Management1
    ip address 10.0.0.15/24
    ipv6 enable

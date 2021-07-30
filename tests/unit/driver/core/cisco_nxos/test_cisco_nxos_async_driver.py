@@ -1,21 +1,5 @@
 import pytest
 
-from scrapli.driver.core.cisco_nxos.async_driver import AsyncNXOSDriver
-from scrapli.driver.core.cisco_nxos.base_driver import PRIVS
-
-
-def test_base_telnet_prompt():
-    async_nxos_driver = AsyncNXOSDriver(
-        host="localhost",
-        privilege_levels=PRIVS,
-        auth_secondary="scrapli",
-        default_desired_privilege_level="privilege_exec",
-        transport="asynctelnet",
-        port=23,
-    )
-
-    assert async_nxos_driver.transport.username_prompt == "login:"
-
 
 @pytest.mark.asyncio
 async def test_on_open(monkeypatch, async_nxos_driver):
