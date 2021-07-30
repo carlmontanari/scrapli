@@ -10,7 +10,6 @@ from scrapli.channel.base_channel import BaseChannel, BaseChannelArgs
 from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliTypeError, ScrapliValueError
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping pending pyfakefs 3.10 support")
 def test_channel_log_append(fs, base_transport_no_abc):
     fs.create_file(
         "scrapli_channel.log",
@@ -31,7 +30,6 @@ def test_channel_log_invalid_mode(base_transport_no_abc):
         BaseChannelArgs(channel_log=True, channel_log_mode="not valid")
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping pending pyfakefs 3.10 support")
 def test_channel_log(fs, base_transport_no_abc):
     # fs needed to mock filesystem for asserting log location
     _ = fs
@@ -41,7 +39,6 @@ def test_channel_log(fs, base_transport_no_abc):
     assert Path("/scrapli_channel.log").is_file()
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping pending pyfakefs 3.10 support")
 def test_channel_log_user_defined(fs, base_transport_no_abc):
     # fs needed to mock filesystem for asserting log location
     _ = fs

@@ -12,7 +12,12 @@ from scrapli.exceptions import ScrapliValueError
         ("exec", "switch>"),
         ("privilege_exec", "switch# "),
         ("configuration", "switch(config)# "),
+        ("configuration", "switch(config-if)# "),
+        ("configuration", "switch(config-subif)# "),
+        ("configuration", "switch(config-vpc-domain)# "),
+        ("configuration", "switch(config-router)# "),
         ("privilege_exec", "swi_tch# "),
+        ("configuration", "switch(config)# "),
         ("tclsh", "switch-tcl# "),
         ("tclsh", "> "),
     ],
@@ -20,17 +25,25 @@ from scrapli.exceptions import ScrapliValueError
         "exec",
         "privilege_exec",
         "configuration",
+        "configuration_interface",
+        "configuration_subinterface",
+        "configuration_vpc_domain",
+        "configuration_routing_protocol",
         "underscore_privilege_exec",
+        "configuration",
         "tclsh",
         "tclsh_command_mode",
     ],
 )
-def test_prompt_patterns(priv_pattern):
+def test_prompt_patterns(priv_pattern, sync_nxos_driver):
     priv_level_name = priv_pattern[0]
     prompt = priv_pattern[1]
     prompt_pattern = PRIVS.get(priv_level_name).pattern
     match = re.search(pattern=prompt_pattern, string=prompt, flags=re.M | re.I)
     assert match
+
+    current_priv_guesses = sync_nxos_driver._determine_current_priv(current_prompt=prompt)
+    assert len(current_priv_guesses) == 1
 
 
 def test_create_configuration_session(sync_nxos_driver):

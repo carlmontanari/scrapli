@@ -60,10 +60,7 @@ def parse_requirements(dev: bool = True) -> Dict[str, str]:
 REQUIREMENTS: Dict[str, str] = parse_requirements(dev=False)
 DEV_REQUIREMENTS: Dict[str, str] = parse_requirements(dev=True)
 PLATFORM: str = sys.platform
-SKIP_LIST: List[str] = [
-    "unit_tests-darwin-3.10",
-    "integration_tests-darwin-3.10",
-]
+SKIP_LIST: List[str] = []
 
 
 @nox.session(python=["3.6", "3.7", "3.8", "3.9", "3.10"])
@@ -232,6 +229,8 @@ def mypy(session):
     """
     session.install(".")
     session.install(f"mypy{DEV_REQUIREMENTS['mypy']}")
+    session.install(f"types-paramiko{DEV_REQUIREMENTS['types-paramiko']}")
+    session.install(f"types-pkg-resources{DEV_REQUIREMENTS['types-pkg-resources']}")
     session.run("python", "-m", "mypy", "--strict", "scrapli/")
 
 

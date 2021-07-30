@@ -21,6 +21,7 @@ class PrivilegeLevel:
         "escalate",
         "escalate_auth",
         "escalate_prompt",
+        "not_contains",
     )
 
     def __init__(
@@ -32,6 +33,7 @@ class PrivilegeLevel:
         escalate: str,
         escalate_auth: bool,
         escalate_prompt: str,
+        not_contains: Optional[List[str]] = None,
     ):
         """
         PrivilegeLevel Object
@@ -44,6 +46,8 @@ class PrivilegeLevel:
             escalate: how to escalate *to* this privilege level (from the lower/previous priv)
             escalate_auth: True/False escalation requires authentication
             escalate_prompt: prompt pattern to search for during escalation if escalate auth is True
+            not_contains: list of substrings that should *not* be seen in a prompt for this
+                privilege level
 
         Returns:
             None
@@ -59,6 +63,7 @@ class PrivilegeLevel:
         self.escalate = escalate
         self.escalate_auth = escalate_auth
         self.escalate_prompt = escalate_prompt
+        self.not_contains: List[str] = not_contains or list()
 
 
 DUMMY_PRIV_LEVEL = PrivilegeLevel("", "DUMMY", "", "", "", False, "")
@@ -119,11 +124,20 @@ class BaseNetworkDriver:
         """
         matching_priv_levels = []
         for priv_level in self.privilege_levels.values():
+            if priv_level.not_contains:
+                # starting at 2021.07.30 the `not_contains` field was added to privilege levels
+                # (defaulting to an empty tuple) -- this helps us to simplify the priv patterns
+                # greatly, as well as have no reliance on look arounds which makes the "normal"
+                # scrapli privilege levels more go friendly -- useful for scrapligo!
+                if any(not_contains in current_prompt for not_contains in priv_level.not_contains):
+                    continue
+
             search_result = re.search(
                 pattern=priv_level.pattern, string=current_prompt, flags=re.M | re.I
             )
             if not search_result:
                 continue
+
             matching_priv_levels.append(priv_level.name)
         if not matching_priv_levels:
             msg = f"could not determine privilege level from provided prompt: '{current_prompt}'"
@@ -131,6 +145,7 @@ class BaseNetworkDriver:
             raise ScrapliPrivilegeError(msg)
 
         self.logger.debug(f"determined current privilege level is one of '{matching_priv_levels}'")
+
         return matching_priv_levels
 
     def _build_priv_graph(self) -> None:
@@ -347,6 +362,55 @@ class BaseNetworkDriver:
         self.logger.debug("determined privilege escalation necessary")
         return PrivilegeAction.ESCALATE, self.privilege_levels[map_to_destination_priv[1]]
 
+    @property
+    def _generic_driver_mode(self) -> bool:
+        """
+        Getter for `_generic_driver_mode` attribute
+
+        Args:
+            N/A
+
+        Returns:
+            bool: _generic_driver_mode value
+
+        Raises:
+            N/A
+
+        """
+        try:
+            return self.__generic_driver_mode
+        except AttributeError:
+            return False
+
+    @_generic_driver_mode.setter
+    def _generic_driver_mode(self, value: bool) -> None:
+        """
+        Setter for `_generic_driver_mode` attribute
+
+        Args:
+            value: bool value for _generic_driver_mode
+
+        Returns:
+            None
+
+        Raises:
+            ScrapliTypeError: if value is not of type bool
+
+        """
+        self.logger.debug(f"setting '_generic_driver_mode' value to '{value}'")
+
+        if not isinstance(value, bool):
+            raise ScrapliTypeError
+
+        if value is True:
+            # if we are setting ingore priv level we reset current priv to the dummy priv so that
+            # once (if) a user turns ignore priv back off we know we need to reset/reacquire priv
+            # as the user coulda done pretty much anything and we could end up at who knows what
+            # priv level
+            self._current_priv_level = DUMMY_PRIV_LEVEL
+
+        self.__generic_driver_mode = value
+
     def _update_response(self, response: Response) -> None:
         """
         Update response with network driver specific data
@@ -434,7 +498,7 @@ class BaseNetworkDriver:
         response.result = "\n".join(response.result for response in multi_response)
         response.failed = False
 
-        if any(response.failed for response in multi_response):
+        if any(r.failed for r in multi_response):
             response.failed = True
         self._update_response(response=response)
 
@@ -465,12 +529,21 @@ class BaseNetworkDriver:
 
         Raises:
             ScrapliTypeError: if configs is anything but a list
+            ScrapliPrivilegeError: if connection is in 'generic_driver_mode' -- this should be a
+                non-standard use case so there is no reason to complicate the config(s) methods
+                with supporting generic driver mode (plus if there was config modes in generic
+                driver mode that wouldn't be very generic driver like, would it!)
 
         """
         if not isinstance(configs, list):
             raise ScrapliTypeError(
                 f"'send_configs' expects a list of strings, got {type(configs)}, "
                 "to send a single configuration line/string use the 'send_config' method instead."
+            )
+
+        if self._generic_driver_mode is True:
+            raise ScrapliPrivilegeError(
+                "connection is in 'generic_driver_mode', send config(s|s_from_file) is disabled"
             )
 
         if failed_when_contains is None:

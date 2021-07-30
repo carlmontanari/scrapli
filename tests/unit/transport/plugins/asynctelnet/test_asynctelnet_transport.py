@@ -33,7 +33,9 @@ def test_handle_control_characters_response_second_char(asynctelnet_transport):
 
 
 @pytest.mark.parametrize(
-    "test_data", ((253, 252), (251, 254)), ids=("do-return-wont", "will-return-dont")
+    "test_data",
+    ((253, 252), (251, 253), (252, 254)),
+    ids=("do-return-wont", "will-return-do", "wont-return-dont"),
 )
 def test_handle_control_characters_response_third_char(asynctelnet_transport, test_data):
     control_buf_input, expected_output = test_data
@@ -87,6 +89,38 @@ async def test_handle_control_characters(monkeypatch, asynctelnet_transport):
 
 @pytest.mark.asyncio
 async def test_handle_control_characters_exception(asynctelnet_transport):
+    with pytest.raises(ScrapliConnectionNotOpened):
+        await asynctelnet_transport._handle_control_chars()
+
+
+@pytest.mark.asyncio
+async def test_handle_control_characters_exception_eof(asynctelnet_transport, monkeypatch):
+    # if the server closes the connection/EOF we will read an empty byte string, see #141
+    _read_called = 0
+
+    async def _read(cls, _):
+        nonlocal _read_called
+
+        if _read_called == 0:
+            _read_called += 1
+            return b""
+
+        await asyncio.sleep(0.5)
+
+    monkeypatch.setattr(
+        "asyncio.StreamReader.read",
+        _read,
+    )
+
+    monkeypatch.setattr(
+        "scrapli.transport.plugins.asynctelnet.transport.AsynctelnetTransport._handle_control_chars_response",
+        lambda cls, **kwargs: None,
+    )
+
+    # lie like connection is open
+    asynctelnet_transport.stdout = asyncio.StreamReader()
+    asynctelnet_transport._base_transport_args.timeout_socket = 0.4
+
     with pytest.raises(ScrapliConnectionNotOpened):
         await asynctelnet_transport._handle_control_chars()
 

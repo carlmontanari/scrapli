@@ -83,7 +83,7 @@ class JunosDriver(NetworkDriver):
         host: str,
         privilege_levels: Optional[Dict[str, PrivilegeLevel]] = None,
         default_desired_privilege_level: str = "exec",
-        port: int = 22,
+        port: Optional[int] = None,
         auth_username: str = "",
         auth_password: str = "",
         auth_private_key: str = "",
@@ -186,9 +186,6 @@ class JunosDriver(NetworkDriver):
             textfsm_platform=textfsm_platform,
             genie_platform=genie_platform,
         )
-
-        if "telnet" in self.transport_name:
-            self.transport.username_prompt = "login:"
 
     def _abort_config(self) -> None:
         """
@@ -307,7 +304,7 @@ class JunosDriver(NetworkDriver):
         host: str,
         privilege_levels: Optional[Dict[str, PrivilegeLevel]] = None,
         default_desired_privilege_level: str = "exec",
-        port: int = 22,
+        port: Optional[int] = None,
         auth_username: str = "",
         auth_password: str = "",
         auth_private_key: str = "",
@@ -410,9 +407,6 @@ class JunosDriver(NetworkDriver):
             textfsm_platform=textfsm_platform,
             genie_platform=genie_platform,
         )
-
-        if "telnet" in self.transport_name:
-            self.transport.username_prompt = "login:"
 
     def _abort_config(self) -> None:
         """

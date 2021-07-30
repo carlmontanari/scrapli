@@ -1,4 +1,4 @@
-<p align=center><a href=""><img src=scrapli.svg?sanitize=true/></a></p>
+<p align=center><a href=""><img src=https://github.com/carlmontanari/scrapli/blob/master/scrapli.svg?sanitize=true/></a></p>
 
 [![Supported Versions](https://img.shields.io/pypi/pyversions/scrapli.svg)](https://pypi.org/project/scrapli)
 [![PyPI version](https://badge.fury.io/py/scrapli.svg)](https://badge.fury.io/py/scrapli)
@@ -41,6 +41,8 @@ scrapli -- scrap(e c)li --  is a python 3.6+ library focused on connecting to de
 - __Concurrency on Easy Mode__: [Nornir's](https://github.com/nornir-automation/nornir) 
   [scrapli plugin](https://github.com/scrapli/nornir_scrapli) gives you all the normal benefits of scrapli __plus__ 
   all the great features of Nornir.
+- __Sounds great, but I am a Gopher__: For our Go loving friends out there, check out 
+  [scrapligo](https://github.com/scrapli/scrapligo) for a similar experience, but in Go!
 
 
 ## Requirements
