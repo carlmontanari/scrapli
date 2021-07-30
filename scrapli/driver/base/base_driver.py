@@ -11,7 +11,7 @@ from scrapli.decorators import DeprecateCommsAnsi
 from scrapli.exceptions import ScrapliTransportPluginError, ScrapliTypeError, ScrapliValueError
 from scrapli.helper import format_user_warning, resolve_file
 from scrapli.logging import get_instance_logger
-from scrapli.ssh_config import SSHConfig
+from scrapli.ssh_config import ssh_config_factory
 from scrapli.transport import CORE_TRANSPORTS
 from scrapli.transport.base import BasePluginTransportArgs, BaseTransportArgs
 
@@ -21,7 +21,7 @@ class BaseDriver:
     def __init__(
         self,
         host: str,
-        port: int = 22,
+        port: Optional[int] = None,
         auth_username: str = "",
         auth_password: str = "",
         auth_private_key: str = "",
@@ -127,6 +127,11 @@ class BaseDriver:
             N/A
 
         """
+        if port is None:
+            port = 22
+            if "telnet" in transport:
+                port = 23
+
         self.logger = get_instance_logger(
             instance_name="scrapli.driver", host=host, port=port, uid=logging_uid
         )
@@ -379,8 +384,8 @@ class BaseDriver:
             N/A
 
         """
-        ssh = SSHConfig(self.ssh_config_file)
-        host_config = ssh.lookup(self.host)
+        ssh = ssh_config_factory(ssh_config_file=self.ssh_config_file)
+        host_config = ssh.lookup(host=self.host)
 
         if host_config.port:
             self.logger.info(

@@ -2,6 +2,7 @@
 site_name: Scrapli
 site_description: Fast, flexible, sync/async, Python 3.6+ screen scraping client specifically for network devices
 site_author: Carl Montanari
+site_url: https://carlmontanari.github.io/
 
 repo_name: carlmontanari/scrapli
 repo_url: https://github.com/carlmontanari/scrapli
@@ -82,13 +83,13 @@ nav:
         - SSH2: api_docs/transport/plugins/ssh2.md
         - System: api_docs/transport/plugins/system.md
         - Telnet: api_docs/transport/plugins/telnet.md
-  - Decorators: api_docs/decorators.md
-  - Exceptions: api_docs/exceptions.md
-  - Factory: api_docs/factory.md
-  - Helper: api_docs/helper.md
-  - Logging: api_docs/logging.md
-  - Response: api_docs/response.md
-  - SSH Config: api_docs/ssh_config.md
+    - Decorators: api_docs/decorators.md
+    - Exceptions: api_docs/exceptions.md
+    - Factory: api_docs/factory.md
+    - Helper: api_docs/helper.md
+    - Logging: api_docs/logging.md
+    - Response: api_docs/response.md
+    - SSH Config: api_docs/ssh_config.md
   - Changelog: changelog.md
   - More Scrapli:
     - Scrapli Netconf: more_scrapli/scrapli_netconf.md

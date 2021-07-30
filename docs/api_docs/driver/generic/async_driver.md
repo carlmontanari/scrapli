@@ -43,7 +43,7 @@ class AsyncGenericDriver(AsyncDriver, BaseGenericDriver):
     def __init__(
         self,
         host: str,
-        port: int = 22,
+        port: Optional[int] = None,
         auth_username: str = "",
         auth_password: str = "",
         auth_private_key: str = "",
@@ -373,6 +373,7 @@ class AsyncGenericDriver(AsyncDriver, BaseGenericDriver):
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         privilege_level: str = "",
         timeout_ops: Optional[float] = None,
+        interaction_complete_patterns: Optional[List[str]] = None,
     ) -> Response:
         """
         Interact with a device with changing prompts per input.
@@ -432,6 +433,8 @@ class AsyncGenericDriver(AsyncDriver, BaseGenericDriver):
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER COMMAND sent, not for the total
                 of the commands being sent!
+            interaction_complete_patterns: list of patterns, that if seen, indicate the interactive
+                "session" has ended and we should exit the interactive session.
 
         Returns:
             Response: scrapli Response object
@@ -455,7 +458,8 @@ class AsyncGenericDriver(AsyncDriver, BaseGenericDriver):
             failed_when_contains=failed_when_contains,
         )
         raw_response, processed_response = await self.channel.send_inputs_interact(
-            interact_events=interact_events
+            interact_events=interact_events,
+            interaction_complete_patterns=interaction_complete_patterns,
         )
         return self._post_send_command(
             raw_response=raw_response, processed_response=processed_response, response=response
@@ -564,7 +568,7 @@ class AsyncGenericDriver(AsyncDriver, BaseGenericDriver):
     def __init__(
         self,
         host: str,
-        port: int = 22,
+        port: Optional[int] = None,
         auth_username: str = "",
         auth_password: str = "",
         auth_private_key: str = "",
@@ -894,6 +898,7 @@ class AsyncGenericDriver(AsyncDriver, BaseGenericDriver):
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         privilege_level: str = "",
         timeout_ops: Optional[float] = None,
+        interaction_complete_patterns: Optional[List[str]] = None,
     ) -> Response:
         """
         Interact with a device with changing prompts per input.
@@ -953,6 +958,8 @@ class AsyncGenericDriver(AsyncDriver, BaseGenericDriver):
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER COMMAND sent, not for the total
                 of the commands being sent!
+            interaction_complete_patterns: list of patterns, that if seen, indicate the interactive
+                "session" has ended and we should exit the interactive session.
 
         Returns:
             Response: scrapli Response object
@@ -976,7 +983,8 @@ class AsyncGenericDriver(AsyncDriver, BaseGenericDriver):
             failed_when_contains=failed_when_contains,
         )
         raw_response, processed_response = await self.channel.send_inputs_interact(
-            interact_events=interact_events
+            interact_events=interact_events,
+            interaction_complete_patterns=interaction_complete_patterns,
         )
         return self._post_send_command(
             raw_response=raw_response, processed_response=processed_response, response=response
@@ -1138,7 +1146,7 @@ Raises:
     
 
 ##### send_interactive
-`send_interactive(self, interact_events: Union[List[Tuple[str, str]], List[Tuple[str, str, bool]]], *, failed_when_contains: Union[str, List[str], NoneType] = None, privilege_level: str = '', timeout_ops: Optional[float] = None) ‑> scrapli.response.Response`
+`send_interactive(self, interact_events: Union[List[Tuple[str, str]], List[Tuple[str, str, bool]]], *, failed_when_contains: Union[str, List[str], NoneType] = None, privilege_level: str = '', timeout_ops: Optional[float] = None, interaction_complete_patterns: Optional[List[str]] = None) ‑> scrapli.response.Response`
 
 ```text
 Interact with a device with changing prompts per input.
@@ -1198,6 +1206,8 @@ Args:
         the duration of the operation, value is reset to initial value after operation is
         completed. Note that this is the timeout value PER COMMAND sent, not for the total
         of the commands being sent!
+    interaction_complete_patterns: list of patterns, that if seen, indicate the interactive
+        "session" has ended and we should exit the interactive session.
 
 Returns:
     Response: scrapli Response object

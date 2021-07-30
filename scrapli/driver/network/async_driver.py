@@ -15,7 +15,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
         host: str,
         privilege_levels: Dict[str, PrivilegeLevel],
         default_desired_privilege_level: str,
-        port: int = 22,
+        port: Optional[int] = None,
         auth_username: str = "",
         auth_password: str = "",
         auth_private_key: str = "",
@@ -97,15 +97,16 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
         """
         self._pre_escalate(escalate_priv=escalate_priv)
 
-        if escalate_priv.escalate_auth is True and self.auth_secondary:
+        if escalate_priv.escalate_auth is False:
+            await self.channel.send_input(channel_input=escalate_priv.escalate)
+        else:
             await super().send_interactive(
                 interact_events=[
                     (escalate_priv.escalate, escalate_priv.escalate_prompt, False),
                     (self.auth_secondary, escalate_priv.pattern, True),
                 ],
+                interaction_complete_patterns=[escalate_priv.pattern],
             )
-        else:
-            await self.channel.send_input(channel_input=escalate_priv.escalate)
 
     async def _deescalate(self, current_priv: PrivilegeLevel) -> None:
         """
@@ -162,6 +163,41 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
                 msg = f"Failed to acquire requested privilege level {desired_priv}"
                 raise ScrapliPrivilegeError(msg)
 
+    async def _acquire_appropriate_privilege_level(self, privilege_level: str = "") -> None:
+        """
+        Acquire the appropriate priv level
+
+        Acquires the "right" priv level based on generic_driver_mode, provided privilege level,
+        and default desired privilege level. If in "generic_driver_mode" and no priv level is
+        provided, we simply return as we are already at the "right" priv level (since we don't care
+        about priv levels in this mode). If we are in "generic_driver_mode" and we are provided a
+        priv level (this is only applicable in `send_interactive`) we will try to acquire that
+        provided priv level. If a priv name is passed we try to resolve it and use that as the
+        privilege level to acquire, otherwise if no priv leve is provided we will acquire the
+        default_desired_privilege_level.
+
+        Args:
+            privilege_level: optional name of privilege level to acquire
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        """
+        if not privilege_level and self._generic_driver_mode is True:
+            return
+
+        if privilege_level:
+            self._validate_privilege_level_name(privilege_level_name=privilege_level)
+            resolved_privilege_level = privilege_level
+        else:
+            resolved_privilege_level = self.default_desired_privilege_level
+
+        if self._current_priv_level.name != resolved_privilege_level:
+            await self.acquire_priv(desired_priv=resolved_privilege_level)
+
     async def send_command(
         self,
         command: str,
@@ -190,8 +226,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
             N/A
 
         """
-        if self._current_priv_level.name != self.default_desired_privilege_level:
-            await self.acquire_priv(desired_priv=self.default_desired_privilege_level)
+        await self._acquire_appropriate_privilege_level()
 
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains
@@ -242,8 +277,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
             N/A
 
         """
-        if self._current_priv_level.name != self.default_desired_privilege_level:
-            await self.acquire_priv(desired_priv=self.default_desired_privilege_level)
+        await self._acquire_appropriate_privilege_level()
 
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains
@@ -296,8 +330,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
             N/A
 
         """
-        if self._current_priv_level.name != self.default_desired_privilege_level:
-            await self.acquire_priv(desired_priv=self.default_desired_privilege_level)
+        await self._acquire_appropriate_privilege_level()
 
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains
@@ -318,6 +351,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         privilege_level: str = "",
         timeout_ops: Optional[float] = None,
+        interaction_complete_patterns: Optional[List[str]] = None,
     ) -> Response:
         """
         Interact with a device with changing prompts per input.
@@ -377,6 +411,8 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER COMMAND sent, not for the total
                 of the commands being sent!
+            interaction_complete_patterns: list of patterns, that if seen, indicate the interactive
+                "session" has ended and we should exit the interactive session.
 
         Returns:
             Response: scrapli Response object
@@ -385,14 +421,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
             N/A
 
         """
-        if privilege_level:
-            self._validate_privilege_level_name(privilege_level_name=privilege_level)
-            resolved_privilege_level = privilege_level
-        else:
-            resolved_privilege_level = self.default_desired_privilege_level
-
-        if self._current_priv_level.name != resolved_privilege_level:
-            await self.acquire_priv(desired_priv=resolved_privilege_level)
+        await self._acquire_appropriate_privilege_level(privilege_level=privilege_level)
 
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains
@@ -403,6 +432,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
             interact_events=interact_events,
             failed_when_contains=failed_when_contains,
             timeout_ops=timeout_ops,
+            interaction_complete_patterns=interaction_complete_patterns,
         )
         self._update_response(response=response)
 

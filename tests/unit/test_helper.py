@@ -210,7 +210,6 @@ def test_ttp_no_ttp_installed(monkeypatch):
     assert output == []
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping pending pyfakefs 3.10 support")
 def test_resolve_file(fs, real_ssh_config_file_path):
     # pyfakefs so this is not host dependent
     _ = fs
@@ -218,7 +217,6 @@ def test_resolve_file(fs, real_ssh_config_file_path):
     assert resolve_file(file="/some/neat/path/myfile") == "/some/neat/path/myfile"
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping pending pyfakefs 3.10 support")
 def test_resolve_file_expanduser(fs, real_ssh_config_file_path):
     # pyfakefs so this is not host dependent
     _ = fs

@@ -31,6 +31,7 @@ scrapli.channel.base_channel
 """scrapli.channel.base_channel"""
 import re
 from dataclasses import dataclass
+from datetime import datetime
 from functools import lru_cache
 from io import BytesIO
 from typing import BinaryIO, List, Optional, Pattern, Tuple, Union
@@ -138,6 +139,11 @@ class BaseChannel:
         )
 
         self.channel_log: Optional[BinaryIO] = None
+
+        # prompt needs to be broad enough to match ansi and any other junk that shows up prior to
+        # the username/login prompt showing up
+        self.telnet_username_prompt = r"^(.*username:)|(.*login:)\s?$"
+        self.telnet_password_prompt = r"^password:\s?$"
 
     def open(self) -> None:
         """
@@ -331,6 +337,41 @@ class BaseChannel:
         if bytes_pattern.startswith(b"^") and bytes_pattern.endswith(b"$"):
             return re.compile(bytes_pattern, flags=re.M | re.I)
         return re.compile(re.escape(bytes_pattern))
+
+    def _pre_channel_authenticate_telnet(
+        self,
+    ) -> Tuple[Pattern[bytes], Pattern[bytes], Pattern[bytes], float, float]:
+        """
+        Handle pre telnet authentication work for parity between sync and sync versions.
+
+        Args:
+            N/A
+
+        Returns:
+            tuple: tuple of user/pass/prompt patterns, start timestamp and return interval
+
+        Raises:
+            N/A
+
+        """
+        username_pattern = self._get_prompt_pattern(
+            class_pattern="", pattern=self.telnet_username_prompt
+        )
+        password_pattern = self._get_prompt_pattern(
+            class_pattern="", pattern=self.telnet_password_prompt
+        )
+        prompt_pattern = self._get_prompt_pattern(
+            class_pattern=self._base_channel_args.comms_prompt_pattern
+        )
+
+        # capture the start time of the authentication event; we also set a "return_interval" which
+        # is 1/10 the timout_ops value, we will send a return character at roughly this interval if
+        # there is no output on the channel. we do this because sometimes telnet needs a kick to get
+        # it to prompt for auth -- particularity when connecting to terminal server/console port
+        auth_start_time = datetime.now().timestamp()
+        return_interval = self._base_channel_args.timeout_ops / 10
+
+        return username_pattern, password_pattern, prompt_pattern, auth_start_time, return_interval
 
     def _process_output(self, buf: bytes, strip_prompt: bool) -> bytes:
         """
@@ -479,6 +520,11 @@ class BaseChannel:
 
         self.channel_log: Optional[BinaryIO] = None
 
+        # prompt needs to be broad enough to match ansi and any other junk that shows up prior to
+        # the username/login prompt showing up
+        self.telnet_username_prompt = r"^(.*username:)|(.*login:)\s?$"
+        self.telnet_password_prompt = r"^password:\s?$"
+
     def open(self) -> None:
         """
         Channel open method
@@ -671,6 +717,41 @@ class BaseChannel:
         if bytes_pattern.startswith(b"^") and bytes_pattern.endswith(b"$"):
             return re.compile(bytes_pattern, flags=re.M | re.I)
         return re.compile(re.escape(bytes_pattern))
+
+    def _pre_channel_authenticate_telnet(
+        self,
+    ) -> Tuple[Pattern[bytes], Pattern[bytes], Pattern[bytes], float, float]:
+        """
+        Handle pre telnet authentication work for parity between sync and sync versions.
+
+        Args:
+            N/A
+
+        Returns:
+            tuple: tuple of user/pass/prompt patterns, start timestamp and return interval
+
+        Raises:
+            N/A
+
+        """
+        username_pattern = self._get_prompt_pattern(
+            class_pattern="", pattern=self.telnet_username_prompt
+        )
+        password_pattern = self._get_prompt_pattern(
+            class_pattern="", pattern=self.telnet_password_prompt
+        )
+        prompt_pattern = self._get_prompt_pattern(
+            class_pattern=self._base_channel_args.comms_prompt_pattern
+        )
+
+        # capture the start time of the authentication event; we also set a "return_interval" which
+        # is 1/10 the timout_ops value, we will send a return character at roughly this interval if
+        # there is no output on the channel. we do this because sometimes telnet needs a kick to get
+        # it to prompt for auth -- particularity when connecting to terminal server/console port
+        auth_start_time = datetime.now().timestamp()
+        return_interval = self._base_channel_args.timeout_ops / 10
+
+        return username_pattern, password_pattern, prompt_pattern, auth_start_time, return_interval
 
     def _process_output(self, buf: bytes, strip_prompt: bool) -> bytes:
         """

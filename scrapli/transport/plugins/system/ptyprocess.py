@@ -169,7 +169,7 @@ class PtyProcess:
 
     @classmethod
     def spawn(
-        cls: Type[PtyProcessType], spawn_command: List[str], rows: int = 24, cols: int = 80
+        cls: Type[PtyProcessType], spawn_command: List[str], rows: int = 80, cols: int = 256
     ) -> PtyProcessType:
         """
         Start the given command in a child process in a pseudo terminal.

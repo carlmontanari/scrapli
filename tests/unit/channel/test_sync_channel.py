@@ -32,7 +32,6 @@ def test_channel_lock_context_manager_no_channel_lock(base_transport_no_abc):
         assert True
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping pending pyfakefs 3.10 support")
 def test_channel_read(fs, caplog, monkeypatch, sync_transport_no_abc):
     # fs needed to mock filesystem for asserting log location
     _ = fs
@@ -110,6 +109,26 @@ def test_channel_read_until_prompt(monkeypatch, sync_channel):
     monkeypatch.setattr("scrapli.transport.base.sync_transport.Transport.read", _read)
 
     actual_read_output = sync_channel._read_until_prompt()
+
+    assert actual_read_output == expected_read_output
+
+
+def test_channel_read_until_explicit_prompt(monkeypatch, sync_channel):
+    expected_read_output = b"read_data\nscrapli>"
+    _read_counter = 0
+
+    def _read(cls):
+        nonlocal _read_counter
+
+        if _read_counter == 0:
+            _read_counter += 1
+            return b"read_data\x1b[0;0m\n"
+
+        return b"scrapli>"
+
+    monkeypatch.setattr("scrapli.transport.base.sync_transport.Transport.read", _read)
+
+    actual_read_output = sync_channel._read_until_explicit_prompt(prompts=["scrapli>"])
 
     assert actual_read_output == expected_read_output
 
@@ -230,8 +249,6 @@ def test_channel_authenticate_telnet(monkeypatch, sync_channel):
     monkeypatch.setattr("scrapli.transport.base.sync_transport.Transport.write", _write)
 
     sync_channel._base_channel_args.comms_prompt_pattern = "scrapli>"
-    sync_channel.transport.username_prompt = "login:"
-    sync_channel.transport.password_prompt = "password:"
     sync_channel.channel_authenticate_telnet(auth_username="scrapli", auth_password="scrapli")
 
 
@@ -245,9 +262,6 @@ def test_channel_authenticate_telnet_fail_login(monkeypatch, sync_channel):
 
     monkeypatch.setattr("scrapli.transport.base.sync_transport.Transport.read", _read)
     monkeypatch.setattr("scrapli.transport.base.sync_transport.Transport.write", _write)
-
-    sync_channel.transport.username_prompt = "login:"
-    sync_channel.transport.password_prompt = "password:"
 
     with pytest.raises(ScrapliAuthenticationFailed):
         sync_channel.channel_authenticate_telnet(auth_username="scrapli", auth_password="scrapli")
@@ -263,9 +277,6 @@ def test_channel_authenticate_telnet_fail_password(monkeypatch, sync_channel):
 
     monkeypatch.setattr("scrapli.transport.base.sync_transport.Transport.read", _read)
     monkeypatch.setattr("scrapli.transport.base.sync_transport.Transport.write", _write)
-
-    sync_channel.transport.username_prompt = "login:"
-    sync_channel.transport.password_prompt = "password:"
 
     with pytest.raises(ScrapliAuthenticationFailed):
         sync_channel.channel_authenticate_telnet(auth_username="scrapli", auth_password="scrapli")
@@ -315,9 +326,6 @@ def test_channel_authenticate_telnet_send_return(monkeypatch, sync_channel):
 
     sync_channel._base_channel_args.comms_prompt_pattern = "scrapli>"
     sync_channel._base_channel_args.timeout_ops = 3
-    sync_channel.transport.username_prompt = "login:"
-    sync_channel.transport.password_prompt = "password:"
-
     sync_channel.channel_authenticate_telnet(auth_username="scrapli", auth_password="scrapli")
 
 
@@ -445,7 +453,7 @@ def test_send_inputs_interact(monkeypatch, sync_channel):
     sync_channel._base_channel_args.comms_prompt_pattern = "scrapli>"
 
     actual_buf, actual_processed_buf = sync_channel.send_inputs_interact(
-        interact_events=interact_events
+        interact_events=interact_events, interaction_complete_patterns=[]
     )
     assert actual_buf == expected_buf
     assert actual_processed_buf == expected_buf

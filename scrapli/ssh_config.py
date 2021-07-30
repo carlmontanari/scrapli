@@ -28,6 +28,8 @@ HOST_ATTRS = (
 
 
 class SSHConfig:
+    _config_files: Dict[str, "SSHConfig"] = {}
+
     def __init__(self, ssh_config_file: str) -> None:
         """
         Initialize SSHConfig Object
@@ -250,7 +252,7 @@ class SSHConfig:
             N/A
 
         """
-        for host in self.hosts:
+        for host in self.hosts:  # pylint: disable=C0206
             _current_hosts = deepcopy(self.hosts)
             while True:
                 fuzzy_match = self._lookup_fuzzy_match(host=host, hosts=_current_hosts)
@@ -341,10 +343,10 @@ class SSHConfig:
         if host in self.hosts.keys():
             return self.hosts[host]
         # return match if given host is an exact match for a host entry
-        for host_entry in self.hosts:
-            host_list = host_entry.split()
+        for host_line, host_entry in self.hosts.items():
+            host_list = host_line.split()
             if host in host_list:
-                return self.hosts[host_entry]
+                return host_entry
         # otherwise need to select the most correct host entry
         fuzzy_match = self._lookup_fuzzy_match(host)
         return self.hosts[fuzzy_match]
@@ -472,3 +474,35 @@ class SSHKnownHosts:
                 known_hosts[individual_host]["public_key"] = public_key
 
         return known_hosts
+
+
+def ssh_config_factory(ssh_config_file: str) -> SSHConfig:
+    """
+    Sorta kinda make a singleton out of SSHConfig
+
+    Not exactly a singleton in that its more like a singleton *per ssh config file path* since a
+    user may elect to use different ssh config files for different things! The only place this
+    should ever be called from is the base driver which has already resolved the ssh config file
+    path -- so we should get only fully qualified paths. We then use this path as the key in the
+    `_config_files` dict of the SSHConfig object, storing the actual object we instantiate as the
+    value. This allows us to only ever create one instance of SSHConfig for each provided ssh
+    config file!
+
+    Args:
+        ssh_config_file: fully qualified string path to ssh config file
+
+    Returns:
+        SSHConfig: instantiated SSHConfig object
+
+    Raises:
+        N/A
+
+    """
+    config_files = SSHConfig._config_files  # pylint: disable=W0212
+
+    if ssh_config_file in config_files:
+        return config_files[ssh_config_file]
+
+    ssh_config = SSHConfig(ssh_config_file=ssh_config_file)
+    config_files[ssh_config_file] = ssh_config
+    return ssh_config
