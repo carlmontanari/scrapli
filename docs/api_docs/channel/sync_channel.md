@@ -139,13 +139,16 @@ class Channel(BaseChannel):
             if processed_channel_input in b"".join(buf.lower().replace(b"\x08", b"").split()):
                 return buf
 
-    def _read_until_prompt(self, buf: bytes = b"", prompt: str = "") -> bytes:
+    def _read_until_prompt(self, buf: bytes = b"") -> bytes:
         """
-        Read until expected prompt is seen
+        Read until expected prompt is seen.
+
+        This reads until the "normal" `_base_channel_args.comms_prompt_pattern` is seen. The
+        `_read_until_explicit_prompt` method can be used to read until some pattern in an arbitrary
+        list of patterns is seen.
 
         Args:
-            buf: output from previous reads if needed (used in scrapli netconf)
-            prompt: prompt to look for if not looking for base prompt (comms_prompt_pattern)
+            buf: output from previous reads if needed (used by scrapli netconf)
 
         Returns:
             bytes: output read from channel
@@ -155,7 +158,7 @@ class Channel(BaseChannel):
 
         """
         search_pattern = self._get_prompt_pattern(
-            class_pattern=self._base_channel_args.comms_prompt_pattern, pattern=prompt
+            class_pattern=self._base_channel_args.comms_prompt_pattern
         )
 
         read_buf = BytesIO(buf)
@@ -174,6 +177,48 @@ class Channel(BaseChannel):
             if channel_match:
                 return read_buf.getvalue()
 
+    def _read_until_explicit_prompt(self, prompts: List[str]) -> bytes:
+        """
+        Read until expected prompt is seen.
+
+        This method is for *explicit* prompt patterns instead of the "standard" prompt patterns
+        contained in the `_base_channel_args.comms_prompt_pattern` attribute. Generally this is
+        only used for `send_interactive` though it could be used elsewhere as well.
+
+        Args:
+            prompts: list of prompt patterns to look for, will return upon seeing any match
+
+        Returns:
+            bytes: output read from channel
+
+        Raises:
+            N/A
+
+        """
+        search_patterns = [
+            self._get_prompt_pattern(
+                class_pattern=self._base_channel_args.comms_prompt_pattern, pattern=prompt
+            )
+            for prompt in prompts
+        ]
+
+        read_buf = BytesIO(b"")
+
+        while True:
+            read_buf.write(self.read())
+
+            read_buf.seek(-self._base_channel_args.comms_prompt_search_depth, SEEK_END)
+            search_buf = read_buf.read()
+
+            for search_pattern in search_patterns:
+                channel_match = re.search(
+                    pattern=search_pattern,
+                    string=search_buf,
+                )
+
+                if channel_match:
+                    return read_buf.getvalue()
+
     def _read_until_prompt_or_time(
         self,
         buf: bytes = b"",
@@ -181,7 +226,7 @@ class Channel(BaseChannel):
         read_duration: Optional[float] = None,
     ) -> bytes:
         """
-        Read until expected prompt is seen, outputs are seen, or for duration, whichever comes first
+        Read until expected prompt is seen, outputs are seen, for duration, whichever comes first.
 
         As transport reading may block, transport timeout is temporarily set to the read_duration
         and any `ScrapliTimeout` that is raised while reading is ignored.
@@ -529,7 +574,10 @@ class Channel(BaseChannel):
 
     @ChannelTimeout(message="timed out sending interactive input to device")
     def send_inputs_interact(
-        self, interact_events: List[Tuple[str, str, Optional[bool]]]
+        self,
+        interact_events: List[Tuple[str, str, Optional[bool]]],
+        *,
+        interaction_complete_patterns: Optional[List[str]] = None,
     ) -> Tuple[bytes, bytes]:
         """
         Interact with a device with changing prompts per input.
@@ -582,6 +630,8 @@ class Channel(BaseChannel):
                 optional bool for the third and final element -- the optional bool specifies if the
                 input that is sent to the device is "hidden" (ex: password), if the hidden param is
                 not provided it is assumed the input is "normal" (not hidden)
+            interaction_complete_patterns: list of patterns, that if seen, indicate the interactive
+                "session" has ended and we should exit the interactive session.
 
         Returns:
             Tuple[bytes, bytes]: output read from the channel with no whitespace trimming/cleaning,
@@ -601,6 +651,11 @@ class Channel(BaseChannel):
                 channel_input = interact_event[0]
                 bytes_channel_input = channel_input.encode()
                 channel_response = interact_event[1]
+                prompts = [channel_response]
+
+                if interaction_complete_patterns is not None:
+                    prompts.extend(interaction_complete_patterns)
+
                 try:
                     hidden_input = interact_event[2]
                 except IndexError:
@@ -619,7 +674,7 @@ class Channel(BaseChannel):
                 else:
                     buf += self._read_until_input(channel_input=bytes_channel_input)
                     self.send_return()
-                buf += self._read_until_prompt(prompt=channel_response)
+                buf += self._read_until_explicit_prompt(prompts=prompts)
 
         processed_buf += self._process_output(
             buf=buf,
@@ -755,13 +810,16 @@ class Channel(BaseChannel):
             if processed_channel_input in b"".join(buf.lower().replace(b"\x08", b"").split()):
                 return buf
 
-    def _read_until_prompt(self, buf: bytes = b"", prompt: str = "") -> bytes:
+    def _read_until_prompt(self, buf: bytes = b"") -> bytes:
         """
-        Read until expected prompt is seen
+        Read until expected prompt is seen.
+
+        This reads until the "normal" `_base_channel_args.comms_prompt_pattern` is seen. The
+        `_read_until_explicit_prompt` method can be used to read until some pattern in an arbitrary
+        list of patterns is seen.
 
         Args:
-            buf: output from previous reads if needed (used in scrapli netconf)
-            prompt: prompt to look for if not looking for base prompt (comms_prompt_pattern)
+            buf: output from previous reads if needed (used by scrapli netconf)
 
         Returns:
             bytes: output read from channel
@@ -771,7 +829,7 @@ class Channel(BaseChannel):
 
         """
         search_pattern = self._get_prompt_pattern(
-            class_pattern=self._base_channel_args.comms_prompt_pattern, pattern=prompt
+            class_pattern=self._base_channel_args.comms_prompt_pattern
         )
 
         read_buf = BytesIO(buf)
@@ -790,6 +848,48 @@ class Channel(BaseChannel):
             if channel_match:
                 return read_buf.getvalue()
 
+    def _read_until_explicit_prompt(self, prompts: List[str]) -> bytes:
+        """
+        Read until expected prompt is seen.
+
+        This method is for *explicit* prompt patterns instead of the "standard" prompt patterns
+        contained in the `_base_channel_args.comms_prompt_pattern` attribute. Generally this is
+        only used for `send_interactive` though it could be used elsewhere as well.
+
+        Args:
+            prompts: list of prompt patterns to look for, will return upon seeing any match
+
+        Returns:
+            bytes: output read from channel
+
+        Raises:
+            N/A
+
+        """
+        search_patterns = [
+            self._get_prompt_pattern(
+                class_pattern=self._base_channel_args.comms_prompt_pattern, pattern=prompt
+            )
+            for prompt in prompts
+        ]
+
+        read_buf = BytesIO(b"")
+
+        while True:
+            read_buf.write(self.read())
+
+            read_buf.seek(-self._base_channel_args.comms_prompt_search_depth, SEEK_END)
+            search_buf = read_buf.read()
+
+            for search_pattern in search_patterns:
+                channel_match = re.search(
+                    pattern=search_pattern,
+                    string=search_buf,
+                )
+
+                if channel_match:
+                    return read_buf.getvalue()
+
     def _read_until_prompt_or_time(
         self,
         buf: bytes = b"",
@@ -797,7 +897,7 @@ class Channel(BaseChannel):
         read_duration: Optional[float] = None,
     ) -> bytes:
         """
-        Read until expected prompt is seen, outputs are seen, or for duration, whichever comes first
+        Read until expected prompt is seen, outputs are seen, for duration, whichever comes first.
 
         As transport reading may block, transport timeout is temporarily set to the read_duration
         and any `ScrapliTimeout` that is raised while reading is ignored.
@@ -1145,7 +1245,10 @@ class Channel(BaseChannel):
 
     @ChannelTimeout(message="timed out sending interactive input to device")
     def send_inputs_interact(
-        self, interact_events: List[Tuple[str, str, Optional[bool]]]
+        self,
+        interact_events: List[Tuple[str, str, Optional[bool]]],
+        *,
+        interaction_complete_patterns: Optional[List[str]] = None,
     ) -> Tuple[bytes, bytes]:
         """
         Interact with a device with changing prompts per input.
@@ -1198,6 +1301,8 @@ class Channel(BaseChannel):
                 optional bool for the third and final element -- the optional bool specifies if the
                 input that is sent to the device is "hidden" (ex: password), if the hidden param is
                 not provided it is assumed the input is "normal" (not hidden)
+            interaction_complete_patterns: list of patterns, that if seen, indicate the interactive
+                "session" has ended and we should exit the interactive session.
 
         Returns:
             Tuple[bytes, bytes]: output read from the channel with no whitespace trimming/cleaning,
@@ -1217,6 +1322,11 @@ class Channel(BaseChannel):
                 channel_input = interact_event[0]
                 bytes_channel_input = channel_input.encode()
                 channel_response = interact_event[1]
+                prompts = [channel_response]
+
+                if interaction_complete_patterns is not None:
+                    prompts.extend(interaction_complete_patterns)
+
                 try:
                     hidden_input = interact_event[2]
                 except IndexError:
@@ -1235,7 +1345,7 @@ class Channel(BaseChannel):
                 else:
                     buf += self._read_until_input(channel_input=bytes_channel_input)
                     self.send_return()
-                buf += self._read_until_prompt(prompt=channel_response)
+                buf += self._read_until_explicit_prompt(prompts=prompts)
 
         processed_buf += self._process_output(
             buf=buf,
@@ -1389,7 +1499,7 @@ Raises:
     
 
 ##### send_inputs_interact
-`send_inputs_interact(self, interact_events: List[Tuple[str, str, Optional[bool]]]) ‑> Tuple[bytes, bytes]`
+`send_inputs_interact(self, interact_events: List[Tuple[str, str, Optional[bool]]], *, interaction_complete_patterns: Optional[List[str]] = None) ‑> Tuple[bytes, bytes]`
 
 ```text
 Interact with a device with changing prompts per input.
@@ -1442,6 +1552,8 @@ Args:
         optional bool for the third and final element -- the optional bool specifies if the
         input that is sent to the device is "hidden" (ex: password), if the hidden param is
         not provided it is assumed the input is "normal" (not hidden)
+    interaction_complete_patterns: list of patterns, that if seen, indicate the interactive
+        "session" has ended and we should exit the interactive session.
 
 Returns:
     Tuple[bytes, bytes]: output read from the channel with no whitespace trimming/cleaning,

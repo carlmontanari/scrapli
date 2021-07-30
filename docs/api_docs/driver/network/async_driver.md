@@ -127,15 +127,16 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
         """
         self._pre_escalate(escalate_priv=escalate_priv)
 
-        if escalate_priv.escalate_auth is True and self.auth_secondary:
+        if escalate_priv.escalate_auth is False:
+            await self.channel.send_input(channel_input=escalate_priv.escalate)
+        else:
             await super().send_interactive(
                 interact_events=[
                     (escalate_priv.escalate, escalate_priv.escalate_prompt, False),
                     (self.auth_secondary, escalate_priv.pattern, True),
                 ],
+                interaction_complete_patterns=[escalate_priv.pattern],
             )
-        else:
-            await self.channel.send_input(channel_input=escalate_priv.escalate)
 
     async def _deescalate(self, current_priv: PrivilegeLevel) -> None:
         """
@@ -380,6 +381,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         privilege_level: str = "",
         timeout_ops: Optional[float] = None,
+        interaction_complete_patterns: Optional[List[str]] = None,
     ) -> Response:
         """
         Interact with a device with changing prompts per input.
@@ -439,6 +441,8 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER COMMAND sent, not for the total
                 of the commands being sent!
+            interaction_complete_patterns: list of patterns, that if seen, indicate the interactive
+                "session" has ended and we should exit the interactive session.
 
         Returns:
             Response: scrapli Response object
@@ -458,6 +462,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
             interact_events=interact_events,
             failed_when_contains=failed_when_contains,
             timeout_ops=timeout_ops,
+            interaction_complete_patterns=interaction_complete_patterns,
         )
         self._update_response(response=response)
 
@@ -840,15 +845,16 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
         """
         self._pre_escalate(escalate_priv=escalate_priv)
 
-        if escalate_priv.escalate_auth is True and self.auth_secondary:
+        if escalate_priv.escalate_auth is False:
+            await self.channel.send_input(channel_input=escalate_priv.escalate)
+        else:
             await super().send_interactive(
                 interact_events=[
                     (escalate_priv.escalate, escalate_priv.escalate_prompt, False),
                     (self.auth_secondary, escalate_priv.pattern, True),
                 ],
+                interaction_complete_patterns=[escalate_priv.pattern],
             )
-        else:
-            await self.channel.send_input(channel_input=escalate_priv.escalate)
 
     async def _deescalate(self, current_priv: PrivilegeLevel) -> None:
         """
@@ -1093,6 +1099,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         privilege_level: str = "",
         timeout_ops: Optional[float] = None,
+        interaction_complete_patterns: Optional[List[str]] = None,
     ) -> Response:
         """
         Interact with a device with changing prompts per input.
@@ -1152,6 +1159,8 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER COMMAND sent, not for the total
                 of the commands being sent!
+            interaction_complete_patterns: list of patterns, that if seen, indicate the interactive
+                "session" has ended and we should exit the interactive session.
 
         Returns:
             Response: scrapli Response object
@@ -1171,6 +1180,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
             interact_events=interact_events,
             failed_when_contains=failed_when_contains,
             timeout_ops=timeout_ops,
+            interaction_complete_patterns=interaction_complete_patterns,
         )
         self._update_response(response=response)
 
@@ -1620,7 +1630,7 @@ Raises:
     
 
 ##### send_interactive
-`send_interactive(self, interact_events: Union[List[Tuple[str, str]], List[Tuple[str, str, bool]]], *, failed_when_contains: Union[str, List[str], NoneType] = None, privilege_level: str = '', timeout_ops: Optional[float] = None) ‑> scrapli.response.Response`
+`send_interactive(self, interact_events: Union[List[Tuple[str, str]], List[Tuple[str, str, bool]]], *, failed_when_contains: Union[str, List[str], NoneType] = None, privilege_level: str = '', timeout_ops: Optional[float] = None, interaction_complete_patterns: Optional[List[str]] = None) ‑> scrapli.response.Response`
 
 ```text
 Interact with a device with changing prompts per input.
@@ -1680,6 +1690,8 @@ Args:
         the duration of the operation, value is reset to initial value after operation is
         completed. Note that this is the timeout value PER COMMAND sent, not for the total
         of the commands being sent!
+    interaction_complete_patterns: list of patterns, that if seen, indicate the interactive
+        "session" has ended and we should exit the interactive session.
 
 Returns:
     Response: scrapli Response object

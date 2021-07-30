@@ -48,6 +48,8 @@ DONT = bytes([254])
 DO = bytes([253])
 WONT = bytes([252])
 WILL = bytes([251])
+TERM_TYPE = bytes([24])
+SUPPRESS_GO_AHEAD = bytes([3])
 
 
 @dataclass()
@@ -110,14 +112,16 @@ class AsynctelnetTransport(AsyncTransport):
             cmd = control_buf[1:2]
             control_buf = b""
 
-            if cmd in (DO, DONT):
+            if (cmd == DO) and (c == SUPPRESS_GO_AHEAD):
+                # if server says do suppress go ahead we say will for that option
+                self.stdin.write(IAC + WILL + c)
+            elif cmd in (DO, DONT):
                 # if server says do/dont we always say wont for that option
                 self.stdin.write(IAC + WONT + c)
-            elif cmd in WILL:
+            elif cmd == WILL:
                 # if server says will we always say do for that option
-                # see also: #147 thank you to @davaeron!
                 self.stdin.write(IAC + DO + c)
-            elif cmd in WONT:
+            elif cmd == WONT:
                 # if server says wont we always say dont for that option
                 self.stdin.write(IAC + DONT + c)
 
@@ -330,14 +334,16 @@ class AsynctelnetTransport(AsyncTransport):
             cmd = control_buf[1:2]
             control_buf = b""
 
-            if cmd in (DO, DONT):
+            if (cmd == DO) and (c == SUPPRESS_GO_AHEAD):
+                # if server says do suppress go ahead we say will for that option
+                self.stdin.write(IAC + WILL + c)
+            elif cmd in (DO, DONT):
                 # if server says do/dont we always say wont for that option
                 self.stdin.write(IAC + WONT + c)
-            elif cmd in WILL:
+            elif cmd == WILL:
                 # if server says will we always say do for that option
-                # see also: #147 thank you to @davaeron!
                 self.stdin.write(IAC + DO + c)
-            elif cmd in WONT:
+            elif cmd == WONT:
                 # if server says wont we always say dont for that option
                 self.stdin.write(IAC + DONT + c)
 

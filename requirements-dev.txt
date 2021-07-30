@@ -1,13 +1,13 @@
 black==21.7b0
 darglint==1.8.0
-isort==5.9.2
+isort==5.9.3
 mypy==0.910
 nox==2021.6.12
 pycodestyle==2.7.0
 pydocstyle==6.1.1
 pyfakefs==4.5.0
 pylama==7.7.1
-pylint==2.9.5
+pylint==2.9.6
 pytest-asyncio==0.15.1
 pytest-cov==2.12.1
 pytest==6.2.4
