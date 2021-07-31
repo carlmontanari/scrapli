@@ -74,7 +74,6 @@ def _build_provided_kwargs_dict(  # pylint: disable=R0914
     timeout_transport: Optional[float],
     timeout_ops: Optional[float],
     comms_return_char: Optional[str],
-    comms_ansi: Optional[bool],
     ssh_config_file: Optional[Union[str, bool]],
     ssh_known_hosts_file: Optional[Union[str, bool]],
     on_init: Optional[Callable[..., Any]],
@@ -128,7 +127,6 @@ def _build_provided_kwargs_dict(  # pylint: disable=R0914
         "timeout_transport": timeout_transport,
         "timeout_ops": timeout_ops,
         "comms_return_char": comms_return_char,
-        "comms_ansi": comms_ansi,
         "ssh_config_file": ssh_config_file,
         "ssh_known_hosts_file": ssh_known_hosts_file,
         "on_init": on_init,
@@ -384,7 +382,6 @@ class Scrapli(NetworkDriver):
         timeout_transport: Optional[float] = None,
         timeout_ops: Optional[float] = None,
         comms_return_char: Optional[str] = None,
-        comms_ansi: Optional[bool] = None,
         ssh_config_file: Optional[Union[str, bool]] = None,
         ssh_known_hosts_file: Optional[Union[str, bool]] = None,
         on_init: Optional[Callable[..., Any]] = None,
@@ -422,8 +419,6 @@ class Scrapli(NetworkDriver):
             timeout_transport: timeout for ssh|telnet transport in seconds
             timeout_ops: timeout for ssh channel operations
             comms_return_char: character to use to send returns to host
-            comms_ansi: *DEPRECATED* True/False strip comms_ansi characters from output, generally
-                the default value of False should be fine
             ssh_config_file: string to path for ssh config file, True to use default ssh config file
                 or False to ignore default ssh config file
             ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
@@ -510,7 +505,6 @@ class Scrapli(NetworkDriver):
             timeout_transport=timeout_transport,
             timeout_ops=timeout_ops,
             comms_return_char=comms_return_char,
-            comms_ansi=comms_ansi,
             ssh_config_file=ssh_config_file,
             ssh_known_hosts_file=ssh_known_hosts_file,
             on_init=on_init,
@@ -679,7 +673,6 @@ class AsyncScrapli(AsyncNetworkDriver):
         timeout_transport: Optional[float] = None,
         timeout_ops: Optional[float] = None,
         comms_return_char: Optional[str] = None,
-        comms_ansi: Optional[bool] = None,
         ssh_config_file: Optional[Union[str, bool]] = None,
         ssh_known_hosts_file: Optional[Union[str, bool]] = None,
         on_init: Optional[Callable[..., Any]] = None,
@@ -717,8 +710,6 @@ class AsyncScrapli(AsyncNetworkDriver):
             timeout_transport: timeout for ssh|telnet transport in seconds
             timeout_ops: timeout for ssh channel operations
             comms_return_char: character to use to send returns to host
-            comms_ansi: *DEPRECATED* True/False strip comms_ansi characters from output, generally
-                the default value of False should be fine
             ssh_config_file: string to path for ssh config file, True to use default ssh config file
                 or False to ignore default ssh config file
             ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
@@ -805,7 +796,6 @@ class AsyncScrapli(AsyncNetworkDriver):
             timeout_transport=timeout_transport,
             timeout_ops=timeout_ops,
             comms_return_char=comms_return_char,
-            comms_ansi=comms_ansi,
             ssh_config_file=ssh_config_file,
             ssh_known_hosts_file=ssh_known_hosts_file,
             on_init=on_init,
@@ -1072,7 +1062,6 @@ class AsyncScrapli(AsyncNetworkDriver):
         timeout_transport: Optional[float] = None,
         timeout_ops: Optional[float] = None,
         comms_return_char: Optional[str] = None,
-        comms_ansi: Optional[bool] = None,
         ssh_config_file: Optional[Union[str, bool]] = None,
         ssh_known_hosts_file: Optional[Union[str, bool]] = None,
         on_init: Optional[Callable[..., Any]] = None,
@@ -1110,8 +1099,6 @@ class AsyncScrapli(AsyncNetworkDriver):
             timeout_transport: timeout for ssh|telnet transport in seconds
             timeout_ops: timeout for ssh channel operations
             comms_return_char: character to use to send returns to host
-            comms_ansi: *DEPRECATED* True/False strip comms_ansi characters from output, generally
-                the default value of False should be fine
             ssh_config_file: string to path for ssh config file, True to use default ssh config file
                 or False to ignore default ssh config file
             ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
@@ -1198,7 +1185,6 @@ class AsyncScrapli(AsyncNetworkDriver):
             timeout_transport=timeout_transport,
             timeout_ops=timeout_ops,
             comms_return_char=comms_return_char,
-            comms_ansi=comms_ansi,
             ssh_config_file=ssh_config_file,
             ssh_known_hosts_file=ssh_known_hosts_file,
             on_init=on_init,
@@ -1520,7 +1506,6 @@ class Scrapli(NetworkDriver):
         timeout_transport: Optional[float] = None,
         timeout_ops: Optional[float] = None,
         comms_return_char: Optional[str] = None,
-        comms_ansi: Optional[bool] = None,
         ssh_config_file: Optional[Union[str, bool]] = None,
         ssh_known_hosts_file: Optional[Union[str, bool]] = None,
         on_init: Optional[Callable[..., Any]] = None,
@@ -1558,8 +1543,6 @@ class Scrapli(NetworkDriver):
             timeout_transport: timeout for ssh|telnet transport in seconds
             timeout_ops: timeout for ssh channel operations
             comms_return_char: character to use to send returns to host
-            comms_ansi: *DEPRECATED* True/False strip comms_ansi characters from output, generally
-                the default value of False should be fine
             ssh_config_file: string to path for ssh config file, True to use default ssh config file
                 or False to ignore default ssh config file
             ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
@@ -1646,7 +1629,6 @@ class Scrapli(NetworkDriver):
             timeout_transport=timeout_transport,
             timeout_ops=timeout_ops,
             comms_return_char=comms_return_char,
-            comms_ansi=comms_ansi,
             ssh_config_file=ssh_config_file,
             ssh_known_hosts_file=ssh_known_hosts_file,
             on_init=on_init,
