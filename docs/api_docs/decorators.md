@@ -37,7 +37,6 @@ from concurrent.futures import ThreadPoolExecutor, wait
 from functools import update_wrapper
 from logging import LoggerAdapter
 from typing import TYPE_CHECKING, Any, Callable
-from warnings import warn
 
 from scrapli.exceptions import ScrapliTimeout
 
