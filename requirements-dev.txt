@@ -11,8 +11,8 @@ pylint==2.9.6
 pytest-asyncio==0.15.1
 pytest-cov==2.12.1
 pytest==6.2.4
-scrapli-cfg==2021.7.30a9
-scrapli-replay==2021.7.30a5
+scrapli-cfg==2021.7.30
+scrapli-replay==2021.7.30
 types-paramiko==0.1.7
 types-pkg-resources==0.1.3
 -r requirements-asyncssh.txt
