@@ -1,6 +1,11 @@
 Changelog
 =========
 
+## (in development) 2021.01.30
+
+- Removed deprecated `comms_ansi` argument
+
+
 ## 2021.07.30
 
 - Added "% Unavailable command" to EOS `failed_when_contains`
