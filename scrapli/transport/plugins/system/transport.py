@@ -26,6 +26,33 @@ class SystemTransport(Transport):
     def __init__(
         self, base_transport_args: BaseTransportArgs, plugin_transport_args: PluginTransportArgs
     ):
+        """
+        System (i.e. /bin/ssh) transport plugin.
+
+        This transport supports some additional `transport_options` to control behavior --
+
+        `ptyprocess` is a dictionary that has the following options:
+            rows: integer number of rows for ptyprocess "window"
+            cols: integer number of cols for ptyprocess "window"
+            echo: defaults to `True`, passing `False` disables echo in the ptyprocess; should only
+                be used with scrapli-netconf, will break scrapli!
+
+        `netconf_force_pty` is a scrapli-netconf only argument. This setting defaults to `True` and
+            allows you to *not* force a pty. This setting seems to only be necessary when connecting
+            to juniper devices on port 830 as junos decides to not allocate a pty on that port for
+            some reason!
+
+        Args:
+            base_transport_args: scrapli base transport plugin arguments
+            plugin_transport_args: system ssh specific transport plugin arguments
+
+        Returns:
+            N/A
+
+        Raises:
+            ScrapliUnsupportedPlatform: if system is windows
+
+        """
         super().__init__(base_transport_args=base_transport_args)
         self.plugin_transport_args = plugin_transport_args
 
