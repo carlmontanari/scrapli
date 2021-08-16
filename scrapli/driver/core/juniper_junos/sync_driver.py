@@ -78,7 +78,7 @@ class JunosDriver(NetworkDriver):
         auth_secondary: str = "",
         failed_when_contains: Optional[List[str]] = None,
         textfsm_platform: str = "juniper_junos",
-        genie_platform: str = "",
+        genie_platform: str = "junos",
     ):
         """
         JunosDriver Object
@@ -104,7 +104,7 @@ class JunosDriver(NetworkDriver):
                 Common use cases for this callable would be to save configurations prior to exiting,
                 or to logout properly to free up vtys or similar.
             textfsm_platform: string name of textfsm parser platform
-            genie_platform: string name of cisco genie parser platform
+            genie_platform: string name of cisco genie parser platform.  If left blank will default to `junos`
             failed_when_contains: List of strings that indicate a command/config has failed
 
         Returns:
