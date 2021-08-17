@@ -33,7 +33,6 @@ class SystemTransport(Transport):
             raise ScrapliUnsupportedPlatform("system transport is not supported on windows devices")
 
         self.open_cmd: List[str] = []
-        self._build_open_cmd()
         self.session: Optional[PtyProcess] = None
 
     def _build_open_cmd(self) -> None:
@@ -92,6 +91,9 @@ class SystemTransport(Transport):
 
     def open(self) -> None:
         self._pre_open_closing_log(closing=False)
+
+        if not self.open_cmd:
+            self._build_open_cmd()
 
         self.session = PtyProcess.spawn(
             self.open_cmd,
