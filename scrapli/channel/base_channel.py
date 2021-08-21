@@ -146,6 +146,7 @@ class BaseChannel:
                 self.channel_log = open(  # pylint: disable=R1732
                     channel_log_destination,
                     mode=f"{self._base_channel_args.channel_log_mode}b",  # type: ignore
+                    encoding="utf-8",
                 )
 
     def close(self) -> None:

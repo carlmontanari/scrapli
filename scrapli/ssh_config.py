@@ -74,7 +74,7 @@ class SSHConfig:
 
         self.ssh_config_file = os.path.expanduser(ssh_config_file)
         if self.ssh_config_file:
-            with open(self.ssh_config_file, "r") as f:
+            with open(self.ssh_config_file, "r", encoding="utf-8") as f:
                 self.ssh_config = f.read()
             self.hosts = self._parse()
             if not self.hosts:
@@ -435,7 +435,7 @@ class SSHKnownHosts:
 
         self.ssh_known_hosts_file = os.path.expanduser(ssh_known_hosts_file)
         if self.ssh_known_hosts_file:
-            with open(self.ssh_known_hosts_file, "r") as f:
+            with open(self.ssh_known_hosts_file, "r", encoding="utf-8") as f:
                 self.ssh_known_hosts = f.read()
             self.hosts = self._parse()
             if not self.hosts:
