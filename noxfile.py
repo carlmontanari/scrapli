@@ -28,7 +28,7 @@ def parse_requirements(dev: bool = True) -> Dict[str, str]:
     requirements = {}
     requirements_file = "requirements.txt" if dev is False else "requirements-dev.txt"
 
-    with open(requirements_file, "r") as f:
+    with open(requirements_file, "r", encoding="utf-8") as f:
         requirements_file_lines = f.readlines()
 
     requirements_lines: List[str] = [
