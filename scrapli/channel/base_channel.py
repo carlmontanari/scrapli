@@ -110,10 +110,129 @@ class BaseChannel:
 
         self.channel_log: Optional[BinaryIO] = None
 
-        # prompt needs to be broad enough to match ansi and any other junk that shows up prior to
-        # the username/login prompt showing up
-        self.telnet_username_prompt = r"^(.*username:)|(.*login:)\s?$"
-        self.telnet_password_prompt = r"^password:\s?$"
+        self._auth_telnet_login_pattern = r"^(.*username:)|(.*login:)\s?$"
+        self._auth_password_pattern = r"^password:\s?$"
+        self._auth_passphrase_pattern = r"enter passphrase for key"
+
+    @property
+    def auth_telnet_login_pattern(self) -> re.Pattern[bytes]:
+        """
+        Getter for `auth_telnet_login_pattern` attribute
+
+        Args:
+            N/A
+
+        Returns:
+            re.Pattern: compiled pattern of the set auth_telnet_login_pattern value
+
+        Raises:
+            N/A
+
+        """
+        return re.compile(self._auth_telnet_login_pattern.encode(), flags=re.I | re.M)
+
+    @auth_telnet_login_pattern.setter
+    def auth_telnet_login_pattern(self, value: str) -> None:
+        """
+        Setter for `auth_telnet_login_pattern` attribute
+
+        Args:
+            value: str value for auth_telnet_login_pattern; this value will be compiled withe re.I
+                and re.M flags when the getter is called.
+
+        Returns:
+            None
+
+        Raises:
+            ScrapliTypeError: if value is not of type str
+
+        """
+        self.logger.debug(f"setting 'auth_telnet_login_pattern' value to '{value}'")
+
+        if not isinstance(value, str):
+            raise ScrapliTypeError
+
+        self._auth_telnet_login_pattern = value
+
+    @property
+    def auth_password_pattern(self) -> re.Pattern[bytes]:
+        """
+        Getter for `auth_password_pattern` attribute
+
+        Args:
+            N/A
+
+        Returns:
+            re.Pattern: compiled pattern of the set auth_password_pattern value
+
+        Raises:
+            N/A
+
+        """
+        return re.compile(self._auth_password_pattern.encode(), flags=re.I | re.M)
+
+    @auth_password_pattern.setter
+    def auth_password_pattern(self, value: str) -> None:
+        """
+        Setter for `auth_password_pattern` attribute
+
+        Args:
+            value: str value for auth_password_pattern; this value will be compiled withe re.I
+                and re.M flags when the getter is called.
+
+        Returns:
+            None
+
+        Raises:
+            ScrapliTypeError: if value is not of type str
+
+        """
+        self.logger.debug(f"setting 'auth_password_pattern' value to '{value}'")
+
+        if not isinstance(value, str):
+            raise ScrapliTypeError
+
+        self._auth_password_pattern = value
+
+    @property
+    def auth_passphrase_pattern(self) -> re.Pattern[bytes]:
+        """
+        Getter for `auth_passphrase_pattern` attribute
+
+        Args:
+            N/A
+
+        Returns:
+            re.Pattern: compiled pattern of the set auth_passphrase_pattern value
+
+        Raises:
+            N/A
+
+        """
+        return re.compile(self._auth_passphrase_pattern.encode(), flags=re.I | re.M)
+
+    @auth_passphrase_pattern.setter
+    def auth_passphrase_pattern(self, value: str) -> None:
+        """
+        Setter for `auth_passphrase_pattern` attribute
+
+        Args:
+            value: str value for auth_passphrase_pattern; this value will be compiled withe re.I
+                and re.M flags when the getter is called.
+
+        Returns:
+            None
+
+        Raises:
+            ScrapliTypeError: if value is not of type str
+
+        """
+        self.logger.debug(f"setting '_auth_passphrase_pattern' value to '{value}'")
+
+        if not isinstance(value, str):
+            raise ScrapliTypeError
+
+        self._auth_passphrase_pattern = value
 
     def open(self) -> None:
         """
@@ -309,6 +428,28 @@ class BaseChannel:
             return re.compile(bytes_pattern, flags=re.M | re.I)
         return re.compile(re.escape(bytes_pattern))
 
+    def _pre_channel_authenticate_ssh(
+        self,
+    ) -> Tuple[Pattern[bytes], Pattern[bytes], Pattern[bytes]]:
+        """
+        Handle pre ssh authentication work for parity between sync and sync versions.
+
+        Args:
+            N/A
+
+        Returns:
+            tuple: tuple of pass/passphrase/prompt patterns
+
+        Raises:
+            N/A
+
+        """
+        prompt_pattern = self._get_prompt_pattern(
+            class_pattern=self._base_channel_args.comms_prompt_pattern
+        )
+
+        return self.auth_password_pattern, self.auth_passphrase_pattern, prompt_pattern
+
     def _pre_channel_authenticate_telnet(
         self,
     ) -> Tuple[Pattern[bytes], Pattern[bytes], Pattern[bytes], float, float]:
@@ -325,12 +466,6 @@ class BaseChannel:
             N/A
 
         """
-        username_pattern = self._get_prompt_pattern(
-            class_pattern="", pattern=self.telnet_username_prompt
-        )
-        password_pattern = self._get_prompt_pattern(
-            class_pattern="", pattern=self.telnet_password_prompt
-        )
         prompt_pattern = self._get_prompt_pattern(
             class_pattern=self._base_channel_args.comms_prompt_pattern
         )
@@ -342,7 +477,13 @@ class BaseChannel:
         auth_start_time = datetime.now().timestamp()
         return_interval = self._base_channel_args.timeout_ops / 10
 
-        return username_pattern, password_pattern, prompt_pattern, auth_start_time, return_interval
+        return (
+            self.auth_telnet_login_pattern,
+            self.auth_password_pattern,
+            prompt_pattern,
+            auth_start_time,
+            return_interval,
+        )
 
     def _process_output(self, buf: bytes, strip_prompt: bool) -> bytes:
         """
