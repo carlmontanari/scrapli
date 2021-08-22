@@ -1,6 +1,5 @@
 import logging
 import re
-import sys
 from io import BytesIO
 from pathlib import Path
 
@@ -8,6 +7,44 @@ import pytest
 
 from scrapli.channel.base_channel import BaseChannel, BaseChannelArgs
 from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliTypeError, ScrapliValueError
+
+
+@pytest.mark.parametrize(
+    "test_data",
+    (
+        (
+            "auth_telnet_login_pattern",
+            "^(.*username:)|(.*login:)\s?$",
+        ),
+        (
+            "auth_password_pattern",
+            "^password:\s?$",
+        ),
+        (
+            "auth_passphrase_pattern",
+            "enter passphrase for key",
+        ),
+    ),
+    ids=(
+        "auth_telnet_login_pattern",
+        "auth_password_pattern",
+        "auth_passphrase_pattern",
+    ),
+)
+def test_channel_auth_properties(test_data, base_channel):
+    """
+    Asserts that channel auth properties properly encode and compile their set values
+    """
+    property_name, default_value = test_data
+
+    compiled_value = re.compile(default_value.encode(), flags=re.I | re.M)
+    assert getattr(base_channel, property_name) == compiled_value
+
+    new_value = "somepattern"
+    setattr(base_channel, property_name, new_value)
+
+    compiled_new_value = re.compile(new_value.encode(), flags=re.I | re.M)
+    assert getattr(base_channel, property_name) == compiled_new_value
 
 
 def test_channel_log_append(fs, base_transport_no_abc):

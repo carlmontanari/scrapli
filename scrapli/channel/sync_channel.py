@@ -279,9 +279,11 @@ class Channel(BaseChannel):
         passphrase_count = 0
         authenticate_buf = b""
 
-        search_pattern = self._get_prompt_pattern(
-            class_pattern=self._base_channel_args.comms_prompt_pattern
-        )
+        (
+            password_pattern,
+            passphrase_pattern,
+            prompt_pattern,
+        ) = self._pre_channel_authenticate_ssh()
 
         with self._channel_lock():
             while True:
@@ -290,7 +292,10 @@ class Channel(BaseChannel):
 
                 self._ssh_message_handler(output=authenticate_buf)
 
-                if b"password" in authenticate_buf:
+                if re.search(
+                    pattern=password_pattern,
+                    string=authenticate_buf,
+                ):
                     # clear the authentication buffer so we don't re-read the password prompt
                     authenticate_buf = b""
                     password_count += 1
@@ -301,7 +306,10 @@ class Channel(BaseChannel):
                     self.write(channel_input=auth_password, redacted=True)
                     self.send_return()
 
-                if b"enter passphrase for key" in authenticate_buf:
+                if re.search(
+                    pattern=passphrase_pattern,
+                    string=authenticate_buf,
+                ):
                     # clear the authentication buffer so we don't re-read the passphrase prompt
                     authenticate_buf = b""
                     passphrase_count += 1
@@ -312,12 +320,10 @@ class Channel(BaseChannel):
                     self.write(channel_input=auth_private_key_passphrase, redacted=True)
                     self.send_return()
 
-                channel_match = re.search(
-                    pattern=search_pattern,
+                if re.search(
+                    pattern=prompt_pattern,
                     string=authenticate_buf,
-                )
-
-                if channel_match:
+                ):
                     return
 
     @ChannelTimeout(message="timed out during in channel telnet authentication")
@@ -395,12 +401,10 @@ class Channel(BaseChannel):
                     self.write(channel_input=auth_password, redacted=True)
                     self.send_return()
 
-                channel_match = re.search(
+                if re.search(
                     pattern=prompt_pattern,
                     string=authenticate_buf,
-                )
-
-                if channel_match:
+                ):
                     return
 
     @ChannelTimeout(message="timed out getting prompt")
