@@ -115,7 +115,7 @@ class BaseChannel:
         self._auth_passphrase_pattern = r"enter passphrase for key"
 
     @property
-    def auth_telnet_login_pattern(self) -> re.Pattern[bytes]:
+    def auth_telnet_login_pattern(self) -> Pattern[bytes]:
         """
         Getter for `auth_telnet_login_pattern` attribute
 
@@ -123,7 +123,7 @@ class BaseChannel:
             N/A
 
         Returns:
-            re.Pattern: compiled pattern of the set auth_telnet_login_pattern value
+            Pattern: compiled pattern of the set auth_telnet_login_pattern value
 
         Raises:
             N/A
@@ -155,7 +155,7 @@ class BaseChannel:
         self._auth_telnet_login_pattern = value
 
     @property
-    def auth_password_pattern(self) -> re.Pattern[bytes]:
+    def auth_password_pattern(self) -> Pattern[bytes]:
         """
         Getter for `auth_password_pattern` attribute
 
@@ -163,7 +163,7 @@ class BaseChannel:
             N/A
 
         Returns:
-            re.Pattern: compiled pattern of the set auth_password_pattern value
+            Pattern: compiled pattern of the set auth_password_pattern value
 
         Raises:
             N/A
@@ -195,7 +195,7 @@ class BaseChannel:
         self._auth_password_pattern = value
 
     @property
-    def auth_passphrase_pattern(self) -> re.Pattern[bytes]:
+    def auth_passphrase_pattern(self) -> Pattern[bytes]:
         """
         Getter for `auth_passphrase_pattern` attribute
 
@@ -203,7 +203,7 @@ class BaseChannel:
             N/A
 
         Returns:
-            re.Pattern: compiled pattern of the set auth_passphrase_pattern value
+            Pattern: compiled pattern of the set auth_passphrase_pattern value
 
         Raises:
             N/A
