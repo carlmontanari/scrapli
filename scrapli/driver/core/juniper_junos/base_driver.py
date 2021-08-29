@@ -48,13 +48,25 @@ PRIVS = {
     ),
     "shell": (
         PrivilegeLevel(
-            pattern=r"^%\s?$",
+            pattern=r"^.*[%\$]\s?$",
+            not_contains=["root"],
             name="shell",
             previous_priv="exec",
             deescalate="exit",
             escalate="start shell",
             escalate_auth=False,
             escalate_prompt="",
+        )
+    ),
+    "root_shell": (
+        PrivilegeLevel(
+            pattern=r"^.*root@(?:\S*:\S*\s?)?[%\#]\s?$",
+            name="root_shell",
+            previous_priv="exec",
+            deescalate="exit",
+            escalate="start shell user root",
+            escalate_auth=True,
+            escalate_prompt=r"^[pP]assword:\s?$",
         )
     ),
 }
