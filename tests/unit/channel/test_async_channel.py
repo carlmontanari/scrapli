@@ -197,7 +197,7 @@ async def test_channel_authenticate_ssh(monkeypatch, async_channel):
 @pytest.mark.asyncio
 async def test_channel_authenticate_ssh_fail_password(monkeypatch, async_channel):
     async def _read(cls):
-        return b"password"
+        return b"password:"
 
     def _write(cls, channel_input):
         # just making this a non-op
