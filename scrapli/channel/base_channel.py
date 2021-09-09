@@ -395,6 +395,8 @@ class BaseChannel:
             msg = "Permissions for private key are too open, authentication failed!"
         elif b"could not resolve hostname" in output.lower():
             msg = "Could not resolve address for host"
+        elif b"permission denied" in output.lower():
+            msg = str(output)
         if msg:
             self.logger.critical(msg)
             raise ScrapliAuthenticationFailed(msg)

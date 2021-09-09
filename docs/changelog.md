@@ -1,9 +1,11 @@
 Changelog
 =========
 
-## (in development) 2021.01.30
+## (in development) 2022.01.30
 
 - Removed deprecated `comms_ansi` argument
+- Improved error handling/error message for insufficient permissions when opening ssh config/known hosts file 
+  (system transport)
 
 
 ## 2021.07.30
