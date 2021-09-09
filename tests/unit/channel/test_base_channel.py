@@ -194,8 +194,8 @@ def test_channel_send_return(monkeypatch, base_channel):
         ),
         (
             b"Can't open user config file /etc/ssh/ssh_config: Permission denied",
-            "Can't open user config file /etc/ssh/ssh_config: Permission denied"
-        )
+            "Can't open user config file /etc/ssh/ssh_config: Permission denied",
+        ),
     ),
     ids=(
         "host key verification",
@@ -209,7 +209,7 @@ def test_channel_send_return(monkeypatch, base_channel):
         "bad configuration option",
         "unprotected key",
         "could not resolve host",
-        "bad permissions"
+        "bad permissions",
     ),
 )
 def test_ssh_message_handler(base_channel, test_data):
