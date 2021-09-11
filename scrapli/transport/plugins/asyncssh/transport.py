@@ -32,6 +32,33 @@ class AsyncsshTransport(AsyncTransport):
     def __init__(
         self, base_transport_args: BaseTransportArgs, plugin_transport_args: PluginTransportArgs
     ) -> None:
+        """
+        Asyncssh transport plugin.
+
+        Important note: some ssh servers may refuse connections if too many ssh host key algorithms
+        are passed to it during the connection opening -- Asyncssh sends a bunch by default! If you
+        encounter this issue, you can simply update your SSH config file to set a smaller (or one)
+        number of ssh host key algorithms to work around this like so:
+
+        ```
+        Host *
+            HostKeyAlgorithms ssh-rsa
+        ```
+
+        Thank you to @davaeron [https://github.com/davaeron] for reporting this in #173, see also
+        asyncssh #323 here: https://github.com/ronf/asyncssh/issues/323.
+
+        Args:
+            base_transport_args: scrapli base transport plugin arguments
+            plugin_transport_args: asyncssh ssh specific transport plugin arguments
+
+        Returns:
+            N/A
+
+        Raises:
+            N/A
+
+        """
         super().__init__(base_transport_args=base_transport_args)
         self.plugin_transport_args = plugin_transport_args
 
