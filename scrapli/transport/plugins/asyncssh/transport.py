@@ -109,6 +109,9 @@ class AsyncsshTransport(AsyncTransport):
             "agent_path": None,
             "config": self.plugin_transport_args.ssh_config_file,
         }
+        
+        if hasattr(self._base_transport_args, "transport_options"):
+            common_args.update(self._base_transport_args.transport_options)
 
         try:
             self.session = await asyncio.wait_for(
