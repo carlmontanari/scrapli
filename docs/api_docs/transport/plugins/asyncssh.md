@@ -62,6 +62,33 @@ class AsyncsshTransport(AsyncTransport):
     def __init__(
         self, base_transport_args: BaseTransportArgs, plugin_transport_args: PluginTransportArgs
     ) -> None:
+        """
+        Asyncssh transport plugin.
+
+        Important note: some ssh servers may refuse connections if too many ssh host key algorithms
+        are passed to it during the connection opening -- Asyncssh sends a bunch by default! If you
+        encounter this issue, you can simply update your SSH config file to set a smaller (or one)
+        number of ssh host key algorithms to work around this like so:
+
+        ```
+        Host *
+            HostKeyAlgorithms ssh-rsa
+        ```
+
+        Thank you to @davaeron [https://github.com/davaeron] for reporting this in #173, see also
+        asyncssh #323 here: https://github.com/ronf/asyncssh/issues/323.
+
+        Args:
+            base_transport_args: scrapli base transport plugin arguments
+            plugin_transport_args: asyncssh ssh specific transport plugin arguments
+
+        Returns:
+            N/A
+
+        Raises:
+            N/A
+
+        """
         super().__init__(base_transport_args=base_transport_args)
         self.plugin_transport_args = plugin_transport_args
 
@@ -84,8 +111,9 @@ class AsyncsshTransport(AsyncTransport):
 
         """
         known_hosts = SSHKnownHosts(self.plugin_transport_args.ssh_known_hosts_file)
+        known_host_public_key = known_hosts.lookup(self._base_transport_args.host)
 
-        if self._base_transport_args.host not in known_hosts.hosts.keys():
+        if not known_host_public_key:
             raise ScrapliAuthenticationFailed(
                 f"{self._base_transport_args.host} not in known_hosts!"
             )
@@ -109,11 +137,12 @@ class AsyncsshTransport(AsyncTransport):
             raise ScrapliConnectionNotOpened
 
         known_hosts = SSHKnownHosts(self.plugin_transport_args.ssh_known_hosts_file)
+        known_host_public_key = known_hosts.lookup(self._base_transport_args.host)
 
         remote_server_key = self.session.get_server_host_key()
         remote_public_key = remote_server_key.export_public_key().split()[1].decode()
 
-        if known_hosts.hosts[self._base_transport_args.host]["public_key"] != remote_public_key:
+        if known_host_public_key["public_key"] != remote_public_key:
             raise ScrapliAuthenticationFailed(
                 f"{self._base_transport_args.host} in known_hosts but public key does not match!"
             )
@@ -252,6 +281,31 @@ class AsyncsshTransport(AsyncTransport):
 ```text
 Helper class that provides a standard way to create an ABC using
 inheritance.
+
+Asyncssh transport plugin.
+
+Important note: some ssh servers may refuse connections if too many ssh host key algorithms
+are passed to it during the connection opening -- Asyncssh sends a bunch by default! If you
+encounter this issue, you can simply update your SSH config file to set a smaller (or one)
+number of ssh host key algorithms to work around this like so:
+
+```
+Host *
+    HostKeyAlgorithms ssh-rsa
+```
+
+Thank you to @davaeron [https://github.com/davaeron] for reporting this in #173, see also
+asyncssh #323 here: https://github.com/ronf/asyncssh/issues/323.
+
+Args:
+    base_transport_args: scrapli base transport plugin arguments
+    plugin_transport_args: asyncssh ssh specific transport plugin arguments
+
+Returns:
+    N/A
+
+Raises:
+    N/A
 ```
 
 <details class="source">
@@ -264,6 +318,33 @@ class AsyncsshTransport(AsyncTransport):
     def __init__(
         self, base_transport_args: BaseTransportArgs, plugin_transport_args: PluginTransportArgs
     ) -> None:
+        """
+        Asyncssh transport plugin.
+
+        Important note: some ssh servers may refuse connections if too many ssh host key algorithms
+        are passed to it during the connection opening -- Asyncssh sends a bunch by default! If you
+        encounter this issue, you can simply update your SSH config file to set a smaller (or one)
+        number of ssh host key algorithms to work around this like so:
+
+        ```
+        Host *
+            HostKeyAlgorithms ssh-rsa
+        ```
+
+        Thank you to @davaeron [https://github.com/davaeron] for reporting this in #173, see also
+        asyncssh #323 here: https://github.com/ronf/asyncssh/issues/323.
+
+        Args:
+            base_transport_args: scrapli base transport plugin arguments
+            plugin_transport_args: asyncssh ssh specific transport plugin arguments
+
+        Returns:
+            N/A
+
+        Raises:
+            N/A
+
+        """
         super().__init__(base_transport_args=base_transport_args)
         self.plugin_transport_args = plugin_transport_args
 
@@ -286,8 +367,9 @@ class AsyncsshTransport(AsyncTransport):
 
         """
         known_hosts = SSHKnownHosts(self.plugin_transport_args.ssh_known_hosts_file)
+        known_host_public_key = known_hosts.lookup(self._base_transport_args.host)
 
-        if self._base_transport_args.host not in known_hosts.hosts.keys():
+        if not known_host_public_key:
             raise ScrapliAuthenticationFailed(
                 f"{self._base_transport_args.host} not in known_hosts!"
             )
@@ -311,11 +393,12 @@ class AsyncsshTransport(AsyncTransport):
             raise ScrapliConnectionNotOpened
 
         known_hosts = SSHKnownHosts(self.plugin_transport_args.ssh_known_hosts_file)
+        known_host_public_key = known_hosts.lookup(self._base_transport_args.host)
 
         remote_server_key = self.session.get_server_host_key()
         remote_public_key = remote_server_key.export_public_key().split()[1].decode()
 
-        if known_hosts.hosts[self._base_transport_args.host]["public_key"] != remote_public_key:
+        if known_host_public_key["public_key"] != remote_public_key:
             raise ScrapliAuthenticationFailed(
                 f"{self._base_transport_args.host} in known_hosts but public key does not match!"
             )

@@ -354,7 +354,7 @@ logger.addHandler(NullHandler())
     
 
 #### enable_basic_logging
-`enable_basic_logging(file: Union[str, bool] = False, level: str = 'info', caller_info: bool = False, buffer_log: bool = True, mode: str = 'write') ‑> NoneType`
+`enable_basic_logging(file: Union[str, bool] = False, level: str = 'info', caller_info: bool = False, buffer_log: bool = True, mode: str = 'write') ‑> None`
 
 ```text
 Enable opinionated logging for scrapli
@@ -539,7 +539,7 @@ class ScrapliFileHandler(FileHandler):
     
 
 ##### emit
-`emit(self, record: logging.LogRecord) ‑> NoneType`
+`emit(self, record: logging.LogRecord) ‑> None`
 
 ```text
 Override standard library FileHandler.emit to "buffer" subsequent read messages
@@ -559,7 +559,7 @@ Raises:
     
 
 ##### emit_buffered
-`emit_buffered(self) ‑> NoneType`
+`emit_buffered(self) ‑> None`
 
 ```text
 Emit a buffered read message to the FileHandler

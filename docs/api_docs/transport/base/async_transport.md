@@ -137,7 +137,7 @@ class AsyncTransport(BaseTransport, ABC):
     
 
 ##### open
-`open(self) ‑> NoneType`
+`open(self) ‑> None`
 
 ```text
 Open the transport session

@@ -6,6 +6,7 @@ Changelog
 - Removed deprecated `comms_ansi` argument
 - Improved error handling/error message for insufficient permissions when opening ssh config/known hosts file 
   (system transport)
+- Added support for hashed entries in known hosts file thanks to @kangtastic work in #174
 
 
 ## 2021.07.30

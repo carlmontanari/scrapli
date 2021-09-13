@@ -213,7 +213,7 @@ class IOSXRDriver(NetworkDriver):
     
 
 #### iosxr_on_close
-`iosxr_on_close(conn: scrapli.driver.network.sync_driver.NetworkDriver) ‑> NoneType`
+`iosxr_on_close(conn: scrapli.driver.network.sync_driver.NetworkDriver) ‑> None`
 
 ```text
 IOSXRDriver default on_close callable
@@ -234,7 +234,7 @@ Raises:
     
 
 #### iosxr_on_open
-`iosxr_on_open(conn: scrapli.driver.network.sync_driver.NetworkDriver) ‑> NoneType`
+`iosxr_on_open(conn: scrapli.driver.network.sync_driver.NetworkDriver) ‑> None`
 
 ```text
 IOSXRDriver default on_open callable

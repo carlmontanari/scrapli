@@ -212,7 +212,7 @@ class AsyncJunosDriver(AsyncNetworkDriver):
     
 
 #### junos_on_close
-`junos_on_close(conn: scrapli.driver.network.async_driver.AsyncNetworkDriver) ‑> NoneType`
+`junos_on_close(conn: scrapli.driver.network.async_driver.AsyncNetworkDriver) ‑> None`
 
 ```text
 JunosDriver default on_close callable
@@ -233,7 +233,7 @@ Raises:
     
 
 #### junos_on_open
-`junos_on_open(conn: scrapli.driver.network.async_driver.AsyncNetworkDriver) ‑> NoneType`
+`junos_on_open(conn: scrapli.driver.network.async_driver.AsyncNetworkDriver) ‑> None`
 
 ```text
 JunosDriver default on_open callable

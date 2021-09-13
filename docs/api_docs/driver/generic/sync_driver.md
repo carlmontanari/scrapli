@@ -1023,7 +1023,7 @@ Raises:
     
 
 ##### send_and_read
-`send_and_read(self, channel_input: str, *, expected_outputs: Optional[List[str]] = None, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, timeout_ops: Optional[float] = None, read_duration: float = 2.5) ‑> scrapli.response.Response`
+`send_and_read(self, channel_input: str, *, expected_outputs: Optional[List[str]] = None, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], ForwardRef(None)] = None, timeout_ops: Optional[float] = None, read_duration: float = 2.5) ‑> scrapli.response.Response`
 
 ```text
 Send an input and read outputs.
@@ -1057,7 +1057,7 @@ Raises:
     
 
 ##### send_command
-`send_command(self, command: str, *, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, timeout_ops: Optional[float] = None) ‑> scrapli.response.Response`
+`send_command(self, command: str, *, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], ForwardRef(None)] = None, timeout_ops: Optional[float] = None) ‑> scrapli.response.Response`
 
 ```text
 Send a command
@@ -1082,7 +1082,7 @@ Raises:
     
 
 ##### send_commands
-`send_commands(self, commands: List[str], *, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, eager: bool = False, timeout_ops: Optional[float] = None) ‑> scrapli.response.MultiResponse`
+`send_commands(self, commands: List[str], *, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], ForwardRef(None)] = None, stop_on_failed: bool = False, eager: bool = False, timeout_ops: Optional[float] = None) ‑> scrapli.response.MultiResponse`
 
 ```text
 Send multiple commands
@@ -1113,7 +1113,7 @@ Raises:
     
 
 ##### send_commands_from_file
-`send_commands_from_file(self, file: str, *, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], NoneType] = None, stop_on_failed: bool = False, eager: bool = False, timeout_ops: Optional[float] = None) ‑> scrapli.response.MultiResponse`
+`send_commands_from_file(self, file: str, *, strip_prompt: bool = True, failed_when_contains: Union[str, List[str], ForwardRef(None)] = None, stop_on_failed: bool = False, eager: bool = False, timeout_ops: Optional[float] = None) ‑> scrapli.response.MultiResponse`
 
 ```text
 Send command(s) from file
@@ -1144,7 +1144,7 @@ Raises:
     
 
 ##### send_interactive
-`send_interactive(self, interact_events: Union[List[Tuple[str, str]], List[Tuple[str, str, bool]]], *, failed_when_contains: Union[str, List[str], NoneType] = None, privilege_level: str = '', timeout_ops: Optional[float] = None, interaction_complete_patterns: Optional[List[str]] = None) ‑> scrapli.response.Response`
+`send_interactive(self, interact_events: Union[List[Tuple[str, str]], List[Tuple[str, str, bool]]], *, failed_when_contains: Union[str, List[str], ForwardRef(None)] = None, privilege_level: str = '', timeout_ops: Optional[float] = None, interaction_complete_patterns: Optional[List[str]] = None) ‑> scrapli.response.Response`
 
 ```text
 Interact with a device with changing prompts per input.
