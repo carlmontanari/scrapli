@@ -502,7 +502,7 @@ class SSHKnownHosts:
                 _, _, encoded_salt, encoded_hashed_host = host_id.split("|")
                 raw_salt = base64.b64decode(encoded_salt)
                 raw_hashed_host = base64.b64decode(encoded_hashed_host)
-                if hmac.digest(raw_salt, raw_host, "sha1") == raw_hashed_host:
+                if hmac.HMAC(raw_salt, raw_host, "sha1").digest() == raw_hashed_host:
                     return host_public_key
         # otherwise return empty dict
         return {}
