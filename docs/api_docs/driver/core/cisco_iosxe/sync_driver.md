@@ -194,7 +194,7 @@ class IOSXEDriver(NetworkDriver):
     
 
 #### iosxe_on_close
-`iosxe_on_close(conn: scrapli.driver.network.sync_driver.NetworkDriver) ‑> NoneType`
+`iosxe_on_close(conn: scrapli.driver.network.sync_driver.NetworkDriver) ‑> None`
 
 ```text
 IOSXEDriver default on_close callable
@@ -215,7 +215,7 @@ Raises:
     
 
 #### iosxe_on_open
-`iosxe_on_open(conn: scrapli.driver.network.sync_driver.NetworkDriver) ‑> NoneType`
+`iosxe_on_open(conn: scrapli.driver.network.sync_driver.NetworkDriver) ‑> None`
 
 ```text
 IOSXEDriver default on_open callable

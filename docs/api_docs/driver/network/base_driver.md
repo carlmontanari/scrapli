@@ -93,7 +93,7 @@ class PrivilegeLevel:
         self.escalate = escalate
         self.escalate_auth = escalate_auth
         self.escalate_prompt = escalate_prompt
-        self.not_contains: List[str] = not_contains or list()
+        self.not_contains: List[str] = not_contains or []
 
 
 DUMMY_PRIV_LEVEL = PrivilegeLevel("", "DUMMY", "", "", "", False, "")
@@ -1187,7 +1187,7 @@ class BaseNetworkDriver:
     
 
 ##### update_privilege_levels
-`update_privilege_levels(self) ‑> NoneType`
+`update_privilege_levels(self) ‑> None`
 
 ```text
 Re-generate the privilege graph, and update the comms prompt pattern
@@ -1333,7 +1333,7 @@ class PrivilegeLevel:
         self.escalate = escalate
         self.escalate_auth = escalate_auth
         self.escalate_prompt = escalate_prompt
-        self.not_contains: List[str] = not_contains or list()
+        self.not_contains: List[str] = not_contains or []
         </code>
     </pre>
 </details>

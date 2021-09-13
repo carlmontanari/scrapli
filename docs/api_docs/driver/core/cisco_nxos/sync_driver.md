@@ -233,7 +233,7 @@ class NXOSDriver(NetworkDriver, NXOSDriverBase):
     
 
 #### nxos_on_close
-`nxos_on_close(conn: scrapli.driver.network.sync_driver.NetworkDriver) ‑> NoneType`
+`nxos_on_close(conn: scrapli.driver.network.sync_driver.NetworkDriver) ‑> None`
 
 ```text
 NXOSDriver default on_close callable
@@ -254,7 +254,7 @@ Raises:
     
 
 #### nxos_on_open
-`nxos_on_open(conn: scrapli.driver.network.sync_driver.NetworkDriver) ‑> NoneType`
+`nxos_on_open(conn: scrapli.driver.network.sync_driver.NetworkDriver) ‑> None`
 
 ```text
 NXOSDriver default on_open callable
@@ -518,7 +518,7 @@ class NXOSDriver(NetworkDriver, NXOSDriverBase):
     
 
 ##### register_configuration_session
-`register_configuration_session(self, session_name: str) ‑> NoneType`
+`register_configuration_session(self, session_name: str) ‑> None`
 
 ```text
 NXOS specific implementation of register_configuration_session

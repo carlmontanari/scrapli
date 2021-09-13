@@ -233,7 +233,7 @@ class AsyncNXOSDriver(AsyncNetworkDriver, NXOSDriverBase):
     
 
 #### nxos_on_close
-`nxos_on_close(conn: scrapli.driver.network.async_driver.AsyncNetworkDriver) ‑> NoneType`
+`nxos_on_close(conn: scrapli.driver.network.async_driver.AsyncNetworkDriver) ‑> None`
 
 ```text
 AsyncNXOSDriver default on_close callable
@@ -254,7 +254,7 @@ Raises:
     
 
 #### nxos_on_open
-`nxos_on_open(conn: scrapli.driver.network.async_driver.AsyncNetworkDriver) ‑> NoneType`
+`nxos_on_open(conn: scrapli.driver.network.async_driver.AsyncNetworkDriver) ‑> None`
 
 ```text
 AsyncNXOSDriver default on_open callable
@@ -518,7 +518,7 @@ class AsyncNXOSDriver(AsyncNetworkDriver, NXOSDriverBase):
     
 
 ##### register_configuration_session
-`register_configuration_session(self, session_name: str) ‑> NoneType`
+`register_configuration_session(self, session_name: str) ‑> None`
 
 ```text
 NXOS specific implementation of register_configuration_session

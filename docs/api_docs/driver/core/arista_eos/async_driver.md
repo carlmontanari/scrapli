@@ -233,7 +233,7 @@ class AsyncEOSDriver(AsyncNetworkDriver, EOSDriverBase):
     
 
 #### eos_on_close
-`eos_on_close(conn: scrapli.driver.network.async_driver.AsyncNetworkDriver) ‑> NoneType`
+`eos_on_close(conn: scrapli.driver.network.async_driver.AsyncNetworkDriver) ‑> None`
 
 ```text
 AsyncEOSDriver default on_close callable
@@ -254,7 +254,7 @@ Raises:
     
 
 #### eos_on_open
-`eos_on_open(conn: scrapli.driver.network.async_driver.AsyncNetworkDriver) ‑> NoneType`
+`eos_on_open(conn: scrapli.driver.network.async_driver.AsyncNetworkDriver) ‑> None`
 
 ```text
 AsyncEOSDriver default on_open callable
@@ -518,7 +518,7 @@ class AsyncEOSDriver(AsyncNetworkDriver, EOSDriverBase):
     
 
 ##### register_configuration_session
-`register_configuration_session(self, session_name: str) ‑> NoneType`
+`register_configuration_session(self, session_name: str) ‑> None`
 
 ```text
 Register EOS configuration session
