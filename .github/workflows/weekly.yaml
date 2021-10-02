@@ -34,7 +34,7 @@ jobs:
       max-parallel: 12
       matrix:
         os: [ubuntu-latest, macos-latest]
-        version: [3.6, 3.7, 3.8, 3.9, 3.10.0-rc.1]
+        version: [3.6, 3.7, 3.8, 3.9, 3.10.0-rc.2]
     steps:
       - uses: actions/checkout@v2
       - name: set up python ${{ matrix.version }}
@@ -46,6 +46,11 @@ jobs:
         # version we are targeting with nox, while still having versions like 3.9.0a4
         run: |
           echo "FRIENDLY_PYTHON_VERSION=$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")" >> $GITHUB_ENV
+      - name: ensure openssl installed for macos
+        # openssl missing/being linked incorrectly causes ssh2-python install failures
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew install openssl
       - name: setup test env
         run: |
           python -m pip install --upgrade pip
