@@ -80,7 +80,7 @@ The final piece of scrapli is the actual "driver" -- or the component that binds
           system.
 
 It should be noted that this is a bit of an oversimplification of the architecture of scrapli, but it is accurate
-. Scrapli has "base", "sync", and "async" versions of the core components. The "base" portion is made up fo mixin
+. Scrapli has "base", "sync", and "async" versions of the core components. The "base" portion is made up of mixin
  classes that get "mixed in" to the sync or async versions of the component. For example there is a
   `NetworkDriverBase` class that is "mixed in" to the `NetworkDriver` and `AsyncNetworkDriver` classes. The mixin
    provides consistent helper like functions (sync functions) that can be used by the two driver classes -- this

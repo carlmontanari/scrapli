@@ -63,7 +63,7 @@ class PrivilegeLevel:
         self.escalate = escalate
         self.escalate_auth = escalate_auth
         self.escalate_prompt = escalate_prompt
-        self.not_contains: List[str] = not_contains or list()
+        self.not_contains: List[str] = not_contains or []
 
 
 DUMMY_PRIV_LEVEL = PrivilegeLevel("", "DUMMY", "", "", "", False, "")

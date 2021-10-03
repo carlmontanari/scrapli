@@ -93,7 +93,6 @@ class AsyncIOSXEDriver(AsyncNetworkDriver):
         timeout_transport: float = 30.0,
         timeout_ops: float = 30.0,
         comms_return_char: str = "\n",
-        comms_ansi: Optional[bool] = None,
         ssh_config_file: Union[str, bool] = False,
         ssh_known_hosts_file: Union[str, bool] = False,
         on_init: Optional[Callable[..., Any]] = None,
@@ -167,7 +166,6 @@ class AsyncIOSXEDriver(AsyncNetworkDriver):
             timeout_transport=timeout_transport,
             timeout_ops=timeout_ops,
             comms_return_char=comms_return_char,
-            comms_ansi=comms_ansi,
             ssh_config_file=ssh_config_file,
             ssh_known_hosts_file=ssh_known_hosts_file,
             on_init=on_init,
@@ -196,7 +194,7 @@ class AsyncIOSXEDriver(AsyncNetworkDriver):
     
 
 #### iosxe_on_close
-`iosxe_on_close(conn: scrapli.driver.network.async_driver.AsyncNetworkDriver) ‑> NoneType`
+`iosxe_on_close(conn: scrapli.driver.network.async_driver.AsyncNetworkDriver) ‑> None`
 
 ```text
 AsyncIOSXEDriver default on_close callable
@@ -217,7 +215,7 @@ Raises:
     
 
 #### iosxe_on_open
-`iosxe_on_open(conn: scrapli.driver.network.async_driver.AsyncNetworkDriver) ‑> NoneType`
+`iosxe_on_open(conn: scrapli.driver.network.async_driver.AsyncNetworkDriver) ‑> None`
 
 ```text
 AsyncIOSXEDriver default on_open callable
@@ -297,7 +295,6 @@ class AsyncIOSXEDriver(AsyncNetworkDriver):
         timeout_transport: float = 30.0,
         timeout_ops: float = 30.0,
         comms_return_char: str = "\n",
-        comms_ansi: Optional[bool] = None,
         ssh_config_file: Union[str, bool] = False,
         ssh_known_hosts_file: Union[str, bool] = False,
         on_init: Optional[Callable[..., Any]] = None,
@@ -371,7 +368,6 @@ class AsyncIOSXEDriver(AsyncNetworkDriver):
             timeout_transport=timeout_transport,
             timeout_ops=timeout_ops,
             comms_return_char=comms_return_char,
-            comms_ansi=comms_ansi,
             ssh_config_file=ssh_config_file,
             ssh_known_hosts_file=ssh_known_hosts_file,
             on_init=on_init,

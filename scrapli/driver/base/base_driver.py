@@ -7,7 +7,6 @@ from types import ModuleType
 from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
 
 from scrapli.channel.base_channel import BaseChannelArgs
-from scrapli.decorators import DeprecateCommsAnsi
 from scrapli.exceptions import ScrapliTransportPluginError, ScrapliTypeError, ScrapliValueError
 from scrapli.helper import format_user_warning, resolve_file
 from scrapli.logging import get_instance_logger
@@ -17,7 +16,6 @@ from scrapli.transport.base import BasePluginTransportArgs, BaseTransportArgs
 
 
 class BaseDriver:
-    @DeprecateCommsAnsi()
     def __init__(
         self,
         host: str,

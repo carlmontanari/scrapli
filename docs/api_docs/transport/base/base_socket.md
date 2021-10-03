@@ -429,7 +429,7 @@ class Socket:
     
 
 ##### close
-`close(self) ‑> NoneType`
+`close(self) ‑> None`
 
 ```text
 Close socket
@@ -469,7 +469,7 @@ Raises:
     
 
 ##### open
-`open(self) ‑> NoneType`
+`open(self) ‑> None`
 
 ```text
 Open underlying socket
