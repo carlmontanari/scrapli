@@ -372,7 +372,7 @@ class SSHConfig:
 
         """
         # return exact 1:1 match if exists
-        if host in self.hosts.keys():
+        if host in self.hosts:
             return self.hosts[host]
         # return match if given host is an exact match for a host entry
         for host_line, host_entry in self.hosts.items():
@@ -523,7 +523,7 @@ class SSHKnownHosts:
 
         """
         # return exact 1:1 match if exists
-        if host in self.hosts.keys():
+        if host in self.hosts:
             return self.hosts[host]
         # return match if given host is an exact match for a hashed host entry
         raw_host = host.encode(encoding="utf-8")
@@ -1042,7 +1042,7 @@ class SSHConfig:
 
         """
         # return exact 1:1 match if exists
-        if host in self.hosts.keys():
+        if host in self.hosts:
             return self.hosts[host]
         # return match if given host is an exact match for a host entry
         for host_line, host_entry in self.hosts.items():
@@ -1195,7 +1195,7 @@ class SSHKnownHosts:
 
         """
         # return exact 1:1 match if exists
-        if host in self.hosts.keys():
+        if host in self.hosts:
             return self.hosts[host]
         # return match if given host is an exact match for a hashed host entry
         raw_host = host.encode(encoding="utf-8")
