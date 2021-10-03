@@ -1,6 +1,22 @@
 Changelog
 =========
 
+## (in development) 2022.01.30
+
+- Removed deprecated `comms_ansi` argument
+- Improved error handling/error message for insufficient permissions when opening ssh config/known hosts file 
+  (system transport)
+- Added support for hashed entries in known hosts file thanks to @kangtastic work in #174
+- Improved "in channel" SSH and Telnet authentication handling; better consistency between sync and async, patterns 
+  are now compiled only if/when needed
+- Added option to *enable* echo in PTYProcess (was originally removed from vendor'd code) -- should only be 
+  useful/necessary with netconf #165
+- Allow users to build their own `open_cmd` for system transport -- users can override this to do things like 
+  `kubectl exec -it args args args` or `docker exec -it args args args` to connect to containers in k8s/docker #166
+- Updated/fixed(?) Juniper shell patterns for "normal" and root shells #170
+- Support transport options being passed to asyncssh transport thanks to @cuong-nguyenduy work in #178 and #183
+
+
 ## 2021.07.30
 
 - Added "% Unavailable command" to EOS `failed_when_contains`

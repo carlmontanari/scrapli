@@ -94,8 +94,9 @@ class Ssh2Transport(Transport):
             raise ScrapliConnectionNotOpened
 
         known_hosts = SSHKnownHosts(self.plugin_transport_args.ssh_known_hosts_file)
+        known_host_public_key = known_hosts.lookup(self._base_transport_args.host)
 
-        if self._base_transport_args.host not in known_hosts.hosts.keys():
+        if not known_host_public_key:
             raise ScrapliAuthenticationFailed(
                 f"{self._base_transport_args.host} not in known_hosts!"
             )
@@ -105,7 +106,7 @@ class Ssh2Transport(Transport):
         raw_remote_public_key = base64.encodebytes(encoded_remote_server_key)
         remote_public_key = raw_remote_public_key.replace(b"\n", b"").decode()
 
-        if known_hosts.hosts[self._base_transport_args.host]["public_key"] != remote_public_key:
+        if known_host_public_key["public_key"] != remote_public_key:
             raise ScrapliAuthenticationFailed(
                 f"{self._base_transport_args.host} in known_hosts but public key does not match!"
             )

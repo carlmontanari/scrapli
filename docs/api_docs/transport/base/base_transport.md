@@ -320,7 +320,7 @@ class BaseTransport(ABC):
     
 
 ##### close
-`close(self) ‑> NoneType`
+`close(self) ‑> None`
 
 ```text
 Close the transport session
@@ -360,7 +360,7 @@ Raises:
     
 
 ##### write
-`write(self, channel_input: bytes) ‑> NoneType`
+`write(self, channel_input: bytes) ‑> None`
 
 ```text
 Write bytes into the transport session

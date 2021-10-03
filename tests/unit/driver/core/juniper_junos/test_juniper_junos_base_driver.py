@@ -7,8 +7,26 @@ from scrapli.driver.core.juniper_junos.base_driver import PRIVS
 
 @pytest.mark.parametrize(
     "priv_pattern",
-    [("exec", "boxen> "), ("configuration", "boxen# "), ("exec", "box_en> ")],
-    ids=["exec", "configuration", "exec_underscore"],
+    [
+        ("exec", "boxen> "),
+        ("configuration", "boxen# "),
+        ("exec", "box_en> "),
+        ("shell", "asdfklsdjlf\n%"),
+        ("shell", "[vrf:foo] regress@EVOvFOOBAR_RE0-re0:~$"),
+        ("root_shell", "root@%"),
+        ("root_shell", "root@vMX1_RE:/var/home/regress #"),
+        ("root_shell", "[vrf:foo] root@EVOvFOOBAR_RE0-re0:~#"),
+    ],
+    ids=[
+        "exec",
+        "configuration",
+        "exec_underscore",
+        "shell",
+        "shell-re0",
+        "root",
+        "root-re",
+        "root-re-vrf",
+    ],
 )
 def test_prompt_patterns(priv_pattern, sync_junos_driver):
     priv_level_name = priv_pattern[0]

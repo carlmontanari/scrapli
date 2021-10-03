@@ -80,7 +80,7 @@ def _textfsm_get_template(platform: str, command: str) -> Optional[TextIO]:
         )
         return None
     template_name = cli_table.index.index[template_index]["Template"]
-    template = open(f"{template_dir}/{template_name}")  # pylint: disable=R1732
+    template = open(f"{template_dir}/{template_name}", encoding="utf-8")  # pylint: disable=R1732
     return template
 
 
@@ -129,7 +129,7 @@ def textfsm_parse(
     import textfsm  # pylint: disable=C0415
 
     if not isinstance(template, TextIOWrapper):
-        template_file = open(template)  # pylint: disable=R1732
+        template_file = open(template, encoding="utf-8")  # pylint: disable=R1732
     else:
         template_file = template
     re_table = textfsm.TextFSM(template_file)
@@ -441,7 +441,7 @@ Raises:
     
 
 #### user_warning
-`user_warning(title: str, message: str) ‑> NoneType`
+`user_warning(title: str, message: str) ‑> None`
 
 ```text
 Nicely raise warning messages for users

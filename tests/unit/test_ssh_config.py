@@ -174,6 +174,23 @@ def test_init_ssh_known_hosts_file_no_hosts(test_data_path):
     assert known_hosts.hosts == {}
 
 
+def test_known_host_lookup_exact_host(real_ssh_known_hosts_file_path):
+    known_hosts = SSHKnownHosts(real_ssh_known_hosts_file_path)
+    assert known_hosts.lookup("172.18.0.11") != {}
+
+
+def test_known_host_lookup_exact_host_hashed(real_ssh_known_hosts_file_path):
+    known_hosts = SSHKnownHosts(real_ssh_known_hosts_file_path)
+    # remove the non-hashed known host entry in the loaded dict, leaving only the hashed entry
+    del known_hosts.hosts["172.18.0.11"]
+    assert known_hosts.lookup("172.18.0.11") != {}
+
+
+def test_known_host_lookup_bad_host(real_ssh_known_hosts_file_path):
+    known_hosts = SSHKnownHosts(real_ssh_known_hosts_file_path)
+    assert known_hosts.lookup("bad.host") == {}
+
+
 def test_ssh_config_factory(real_ssh_config_file_path):
     # *probably* the ssh config file is already in the loaded dict, so we'll empty it before testing
     SSHConfig._config_files = {}

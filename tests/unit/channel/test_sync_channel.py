@@ -180,7 +180,7 @@ def test_channel_authenticate_ssh(monkeypatch, sync_channel):
 
 def test_channel_authenticate_ssh_fail_password(monkeypatch, sync_channel):
     def _read(cls):
-        return b"password"
+        return b"password:"
 
     def _write(cls, channel_input):
         # just making this a non-op

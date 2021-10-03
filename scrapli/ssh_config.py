@@ -1,4 +1,6 @@
 """scrapli.ssh_config"""
+import base64
+import hmac
 import os
 import re
 import shlex
@@ -74,7 +76,7 @@ class SSHConfig:
 
         self.ssh_config_file = os.path.expanduser(ssh_config_file)
         if self.ssh_config_file:
-            with open(self.ssh_config_file, "r") as f:
+            with open(self.ssh_config_file, "r", encoding="utf-8") as f:
                 self.ssh_config = f.read()
             self.hosts = self._parse()
             if not self.hosts:
@@ -340,7 +342,7 @@ class SSHConfig:
 
         """
         # return exact 1:1 match if exists
-        if host in self.hosts.keys():
+        if host in self.hosts:
             return self.hosts[host]
         # return match if given host is an exact match for a host entry
         for host_line, host_entry in self.hosts.items():
@@ -435,7 +437,7 @@ class SSHKnownHosts:
 
         self.ssh_known_hosts_file = os.path.expanduser(ssh_known_hosts_file)
         if self.ssh_known_hosts_file:
-            with open(self.ssh_known_hosts_file, "r") as f:
+            with open(self.ssh_known_hosts_file, "r", encoding="utf-8") as f:
                 self.ssh_known_hosts = f.read()
             self.hosts = self._parse()
             if not self.hosts:
@@ -445,13 +447,13 @@ class SSHKnownHosts:
 
     def _parse(self) -> Dict[str, Dict[str, str]]:
         """
-        Parse SSH configuration file
+        Parse OpenSSH known hosts file
 
         Args:
             N/A
 
         Returns:
-            discovered_hosts: dict of host objects discovered in known hosts file
+            known_hosts: dict of host public keys discovered in known hosts file
 
         Raises:
             N/A
@@ -474,6 +476,36 @@ class SSHKnownHosts:
                 known_hosts[individual_host]["public_key"] = public_key
 
         return known_hosts
+
+    def lookup(self, host: str) -> Dict[str, str]:
+        """
+        Lookup a given host's public key
+
+        Args:
+            host: host to lookup in known_hosts dict
+
+        Returns:
+            host_public_key: matched host public key from parsed ssh known hosts file,
+                empty dict if not found
+
+        Raises:
+            N/A
+
+        """
+        # return exact 1:1 match if exists
+        if host in self.hosts:
+            return self.hosts[host]
+        # return match if given host is an exact match for a hashed host entry
+        raw_host = host.encode(encoding="utf-8")
+        for host_id, host_public_key in self.hosts.items():
+            if host_id.startswith("|1|"):
+                _, _, encoded_salt, encoded_hashed_host = host_id.split("|")
+                raw_salt = base64.b64decode(encoded_salt)
+                raw_hashed_host = base64.b64decode(encoded_hashed_host)
+                if hmac.HMAC(raw_salt, raw_host, "sha1").digest() == raw_hashed_host:
+                    return host_public_key
+        # otherwise return empty dict
+        return {}
 
 
 def ssh_config_factory(ssh_config_file: str) -> SSHConfig:

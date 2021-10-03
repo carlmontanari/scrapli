@@ -490,7 +490,7 @@ class Driver(BaseDriver):
     
 
 ##### close
-`close(self) ‑> NoneType`
+`close(self) ‑> None`
 
 ```text
 Close the scrapli connection
@@ -510,7 +510,7 @@ Raises:
     
 
 ##### commandeer
-`commandeer(self, conn: Driver, execute_on_open: bool = True) ‑> NoneType`
+`commandeer(self, conn: Driver, execute_on_open: bool = True) ‑> None`
 
 ```text
 Commandeer an existing connection
@@ -546,7 +546,7 @@ Raises:
     
 
 ##### open
-`open(self) ‑> NoneType`
+`open(self) ‑> None`
 
 ```text
 Open the scrapli connection

@@ -138,7 +138,7 @@ class BaseGenericDriver:
             raise ScrapliTypeError(f"`{caller}` expects a string path to a file, got {type(file)}")
         resolved_file = resolve_file(file)
 
-        with open(resolved_file, "r") as f:
+        with open(resolved_file, "r", encoding="utf-8") as f:
             commands = f.read().splitlines()
 
         return commands
@@ -294,7 +294,7 @@ class BaseGenericDriver:
             raise ScrapliTypeError(f"`{caller}` expects a string path to a file, got {type(file)}")
         resolved_file = resolve_file(file)
 
-        with open(resolved_file, "r") as f:
+        with open(resolved_file, "r", encoding="utf-8") as f:
             commands = f.read().splitlines()
 
         return commands

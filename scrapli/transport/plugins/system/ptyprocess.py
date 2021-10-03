@@ -128,6 +128,52 @@ def _setwinsize(fd: int, rows: int, cols: int) -> None:
     fcntl.ioctl(fd, TIOCSWINSZ, s)
 
 
+def _setecho(fd: int, state: bool) -> None:
+    """
+    Set terminal echo.
+
+    Args:
+        fd: file descriptor
+        state: state of the echo -- True/False echo is "on"
+
+    Returns:
+        None
+
+    Raises:
+        IOError: if termios raises an exception getting the fd
+        termios.error: also if termios rasies an exception gettign fd... unclear why the two errors!
+        IOError: if termios raises an exception setting the echo state on the fd
+
+    """
+    import termios
+
+    errmsg = (
+        "_setecho() may not be called on this platform (it may still be possible to enable"
+        "/disable echo when spawning the child process)"
+    )
+
+    try:
+        attr = termios.tcgetattr(fd)
+    except termios.error as err:
+        if err.args[0] == errno.EINVAL:
+            raise IOError(err.args[0], "%s: %s." % (err.args[1], errmsg))
+        raise
+
+    if state:
+        attr[3] = attr[3] | termios.ECHO
+    else:
+        attr[3] = attr[3] & ~termios.ECHO
+
+    try:
+        # I tried TCSADRAIN and TCSAFLUSH, but these were inconsistent and
+        # blocked on some platforms. TCSADRAIN would probably be ideal.
+        termios.tcsetattr(fd, termios.TCSANOW, attr)
+    except IOError as err:
+        if err.args[0] == errno.EINVAL:
+            raise IOError(err.args[0], "%s: %s." % (err.args[1], errmsg))
+        raise
+
+
 class PtyProcess:
     def __init__(self, pid: int, fd: int) -> None:
         """
@@ -169,7 +215,11 @@ class PtyProcess:
 
     @classmethod
     def spawn(
-        cls: Type[PtyProcessType], spawn_command: List[str], rows: int = 80, cols: int = 256
+        cls: Type[PtyProcessType],
+        spawn_command: List[str],
+        echo: bool = True,
+        rows: int = 80,
+        cols: int = 256,
     ) -> PtyProcessType:
         """
         Start the given command in a child process in a pseudo terminal.
@@ -181,6 +231,8 @@ class PtyProcess:
 
         Args:
             spawn_command: command to execute with arguments (if applicable), as a list
+            echo: enable/disable echo -- defaults to True, should be left as True for "normal"
+                scrapli operations, optionally disable for scrapli_netconf operations.
             rows: integer number of rows for ptyprocess "window"
             cols: integer number of cols for ptyprocess "window"
 
@@ -206,6 +258,7 @@ class PtyProcess:
         import fcntl
         import pty
         import resource
+        import termios
         from pty import CHILD, STDIN_FILENO
 
         spawn_executable = which(spawn_command[0])
@@ -232,6 +285,14 @@ class PtyProcess:
             except IOError as err:
                 if err.args[0] not in (errno.EINVAL, errno.ENOTTY):
                     raise
+
+            # disable echo if requested
+            if echo is False:
+                try:
+                    _setecho(STDIN_FILENO, False)
+                except (IOError, termios.error) as err:
+                    if err.args[0] not in (errno.EINVAL, errno.ENOTTY):
+                        raise
 
             # [issue #119] 3. The child closes the reading end and sets the
             # close-on-exec flag for the writing end.

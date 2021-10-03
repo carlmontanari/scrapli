@@ -94,7 +94,6 @@ class AsyncJunosDriver(AsyncNetworkDriver):
         timeout_transport: float = 30.0,
         timeout_ops: float = 30.0,
         comms_return_char: str = "\n",
-        comms_ansi: Optional[bool] = None,
         ssh_config_file: Union[str, bool] = False,
         ssh_known_hosts_file: Union[str, bool] = False,
         on_init: Optional[Callable[..., Any]] = None,
@@ -168,7 +167,6 @@ class AsyncJunosDriver(AsyncNetworkDriver):
             timeout_transport=timeout_transport,
             timeout_ops=timeout_ops,
             comms_return_char=comms_return_char,
-            comms_ansi=comms_ansi,
             ssh_config_file=ssh_config_file,
             ssh_known_hosts_file=ssh_known_hosts_file,
             on_init=on_init,
@@ -214,7 +212,7 @@ class AsyncJunosDriver(AsyncNetworkDriver):
     
 
 #### junos_on_close
-`junos_on_close(conn: scrapli.driver.network.async_driver.AsyncNetworkDriver) ‑> NoneType`
+`junos_on_close(conn: scrapli.driver.network.async_driver.AsyncNetworkDriver) ‑> None`
 
 ```text
 JunosDriver default on_close callable
@@ -235,7 +233,7 @@ Raises:
     
 
 #### junos_on_open
-`junos_on_open(conn: scrapli.driver.network.async_driver.AsyncNetworkDriver) ‑> NoneType`
+`junos_on_open(conn: scrapli.driver.network.async_driver.AsyncNetworkDriver) ‑> None`
 
 ```text
 JunosDriver default on_open callable
@@ -315,7 +313,6 @@ class AsyncJunosDriver(AsyncNetworkDriver):
         timeout_transport: float = 30.0,
         timeout_ops: float = 30.0,
         comms_return_char: str = "\n",
-        comms_ansi: Optional[bool] = None,
         ssh_config_file: Union[str, bool] = False,
         ssh_known_hosts_file: Union[str, bool] = False,
         on_init: Optional[Callable[..., Any]] = None,
@@ -389,7 +386,6 @@ class AsyncJunosDriver(AsyncNetworkDriver):
             timeout_transport=timeout_transport,
             timeout_ops=timeout_ops,
             comms_return_char=comms_return_char,
-            comms_ansi=comms_ansi,
             ssh_config_file=ssh_config_file,
             ssh_known_hosts_file=ssh_known_hosts_file,
             on_init=on_init,

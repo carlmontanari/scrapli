@@ -93,7 +93,6 @@ class NXOSDriver(NetworkDriver, NXOSDriverBase):
         timeout_transport: float = 30.0,
         timeout_ops: float = 30.0,
         comms_return_char: str = "\n",
-        comms_ansi: Optional[bool] = None,
         ssh_config_file: Union[str, bool] = False,
         ssh_known_hosts_file: Union[str, bool] = False,
         on_init: Optional[Callable[..., Any]] = None,
@@ -170,7 +169,6 @@ class NXOSDriver(NetworkDriver, NXOSDriverBase):
             timeout_transport=timeout_transport,
             timeout_ops=timeout_ops,
             comms_return_char=comms_return_char,
-            comms_ansi=comms_ansi,
             ssh_config_file=ssh_config_file,
             ssh_known_hosts_file=ssh_known_hosts_file,
             on_init=on_init,
@@ -235,7 +233,7 @@ class NXOSDriver(NetworkDriver, NXOSDriverBase):
     
 
 #### nxos_on_close
-`nxos_on_close(conn: scrapli.driver.network.sync_driver.NetworkDriver) ‑> NoneType`
+`nxos_on_close(conn: scrapli.driver.network.sync_driver.NetworkDriver) ‑> None`
 
 ```text
 NXOSDriver default on_close callable
@@ -256,7 +254,7 @@ Raises:
     
 
 #### nxos_on_open
-`nxos_on_open(conn: scrapli.driver.network.sync_driver.NetworkDriver) ‑> NoneType`
+`nxos_on_open(conn: scrapli.driver.network.sync_driver.NetworkDriver) ‑> None`
 
 ```text
 NXOSDriver default on_open callable
@@ -336,7 +334,6 @@ class NXOSDriver(NetworkDriver, NXOSDriverBase):
         timeout_transport: float = 30.0,
         timeout_ops: float = 30.0,
         comms_return_char: str = "\n",
-        comms_ansi: Optional[bool] = None,
         ssh_config_file: Union[str, bool] = False,
         ssh_known_hosts_file: Union[str, bool] = False,
         on_init: Optional[Callable[..., Any]] = None,
@@ -413,7 +410,6 @@ class NXOSDriver(NetworkDriver, NXOSDriverBase):
             timeout_transport=timeout_transport,
             timeout_ops=timeout_ops,
             comms_return_char=comms_return_char,
-            comms_ansi=comms_ansi,
             ssh_config_file=ssh_config_file,
             ssh_known_hosts_file=ssh_known_hosts_file,
             on_init=on_init,
@@ -522,7 +518,7 @@ class NXOSDriver(NetworkDriver, NXOSDriverBase):
     
 
 ##### register_configuration_session
-`register_configuration_session(self, session_name: str) ‑> NoneType`
+`register_configuration_session(self, session_name: str) ‑> None`
 
 ```text
 NXOS specific implementation of register_configuration_session
