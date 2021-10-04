@@ -323,8 +323,8 @@ scrapli is built to be very flexible, including being flexible enough to use dif
   dependencies as it just relies on what is available on the machine running the scrapli script.
 
 In the spirit of being highly flexible, scrapli allows users to swap out this "system" transport with another
- transport mechanism. The other supported transport plugins are `paramiko`, `ssh2-python` and `telnetlib
- `, `paramiko`, `ssh2-python`, and `asynctelnet`. The transport selection can be made  when instantiating the 
+ transport mechanism. The other supported transport plugins are `paramiko`, `ssh2-python`, `telnetlib
+ `, `asyncssh`, and `asynctelnet`. The transport selection can be made  when instantiating the 
 scrapli connection object by passing in `paramiko`, `ssh2`, `telnet`, `asyncssh`, or `asynctelnet` to force  scrapli 
 to use the corresponding transport mechanism. If you are using one of the async transports you must use an async driver!
   
