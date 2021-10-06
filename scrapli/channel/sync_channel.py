@@ -643,11 +643,9 @@ class Channel(BaseChannel):
                 )
 
                 self.write(channel_input=channel_input, redacted=bool(hidden_input))
-                if not channel_response or hidden_input is True:
-                    self.send_return()
-                else:
+                if channel_response and hidden_input is not True:
                     buf += self._read_until_input(channel_input=bytes_channel_input)
-                    self.send_return()
+                self.send_return()
                 buf += self._read_until_explicit_prompt(prompts=prompts)
 
         processed_buf += self._process_output(
