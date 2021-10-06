@@ -32,13 +32,11 @@ class BaseGenericDriver:
                 "to send a list of commands use the `send_commands` method instead."
             )
 
-        response = Response(
+        return Response(
             host=host,
             channel_input=command,
             failed_when_contains=failed_when_contains,
         )
-
-        return response
 
     @staticmethod
     def _post_send_command(
@@ -84,9 +82,7 @@ class BaseGenericDriver:
                 "to send a single command use the `send_command` method instead."
             )
 
-        responses = MultiResponse()
-
-        return responses
+        return MultiResponse()
 
     @staticmethod
     def _pre_send_from_file(file: str, caller: str) -> List[str]:
@@ -139,7 +135,7 @@ class BaseGenericDriver:
             N/A
 
         """
-        joined_input = ", ".join([event[0] for event in interact_events])
+        joined_input = ", ".join(event[0] for event in interact_events)
         return cls._pre_send_command(
             host=host, command=joined_input, failed_when_contains=failed_when_contains
         )
