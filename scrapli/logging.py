@@ -92,15 +92,11 @@ class ScrapliFormatter(Formatter):
         else:
             _host_port = f"{record.host}:{record.port}"
 
-        if not hasattr(record, "uid"):
-            # maybe this name changes... but a uid in the event you have multiple connections to a
-            # single host... w/ this you can assign the uid so you know which is which
-            _uid = ""
-        else:
-            # add colon to the uid so the log messages are pretty
-            _uid = f"{record.uid}:"
-
+        _uid = "" if not hasattr(record, "uid") else f"{record.uid}:"
+        # maybe this name changes... but a uid in the event you have multiple connections to a
+        # single host... w/ this you can assign the uid so you know which is which
         record.target = f"{_uid}{_host_port}"
+        # add colon to the uid so the log messages are pretty
         record.target = (
             record.target[:25] if len(record.target) <= 25 else f"{record.target[:22]}..."
         )
@@ -294,11 +290,7 @@ def enable_basic_logging(
     file_mode = "a" if mode.lower() == "append" else "w"
 
     if file:
-        if isinstance(file, bool):
-            filename = "scrapli.log"
-        else:
-            filename = file
-
+        filename = "scrapli.log" if isinstance(file, bool) else file
         if not buffer_log:
             fh = FileHandler(filename=filename, mode=file_mode)
         else:
