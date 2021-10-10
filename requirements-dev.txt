@@ -9,7 +9,7 @@ pyfakefs==4.5.1
 pylama==7.7.1
 pylint==2.11.1
 pytest-asyncio==0.15.1
-pytest-cov==2.12.1
+pytest-cov==3.0.0
 pytest==6.2.5
 scrapli-cfg==2021.7.30
 scrapli-replay==2021.7.30
