@@ -210,7 +210,7 @@ class AsyncGenericDriver(AsyncDriver, BaseGenericDriver):
                 eager=eager,
             )
             responses.append(response)
-            if stop_on_failed is True and response.failed is True:
+            if stop_on_failed and response.failed is True:
                 # should we find the prompt here w/ get_prompt?? or just let subsequent operations
                 # deal w/ finding that? future us problem? :)
                 break

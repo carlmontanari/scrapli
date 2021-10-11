@@ -2,7 +2,7 @@
 from collections import UserList
 from datetime import datetime
 from io import TextIOWrapper
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Union
 
 from scrapli.exceptions import ScrapliCommandFailure
 from scrapli.helper import _textfsm_get_template, genie_parse, textfsm_parse, ttp_parse
@@ -224,10 +224,18 @@ class Response:
             raise ScrapliCommandFailure()
 
 
-ScrapliMultiResponse = UserList[Response] if TYPE_CHECKING else UserList
+if TYPE_CHECKING:
+    ScrapliMultiResponse = UserList[Response]  # pylint:  disable=E1136; # pragma:  no cover
+else:
+    ScrapliMultiResponse = UserList
 
 
 class MultiResponse(ScrapliMultiResponse):
+    def __init__(self, initlist: Optional[Iterable[Any]] = None) -> None:
+        super().__init__(initlist=initlist)
+
+        self.data: List[Response]
+
     def __str__(self) -> str:
         """
         Magic str method for MultiResponse class
