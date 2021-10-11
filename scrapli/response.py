@@ -232,6 +232,14 @@ else:
 
 class MultiResponse(ScrapliMultiResponse):
     def __init__(self, initlist: Optional[Iterable[Any]] = None) -> None:
+        """
+        Initialize list of responses
+
+        Keyword Arguments:
+        argument -- initial list of responses
+        Return: None
+
+        """
         super().__init__(initlist=initlist)
 
         self.data: List[Response]
