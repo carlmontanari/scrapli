@@ -235,9 +235,14 @@ class MultiResponse(ScrapliMultiResponse):
         """
         Initialize list of responses
 
-        Keyword Arguments:
-        argument -- initial list of responses
-        Return: None
+        Args:
+            initlist: initial list seed data, if any
+
+        Returns:
+            None
+
+        Raises:
+            N/A
 
         """
         super().__init__(initlist=initlist)
