@@ -1,8 +1,50 @@
 import pytest
 
+from scrapli import AsyncScrapli
 from scrapli.driver.network.base_driver import DUMMY_PRIV_LEVEL, PrivilegeAction
 from scrapli.exceptions import ScrapliPrivilegeError, ScrapliTypeError
 from scrapli.response import Response
+
+COMMON_NETWORK_DRIVER_KWARGS = {
+    "host": "localhost",
+    "port": 1234,
+    "auth_username": "tacocat",
+    "auth_password": "tacocat",
+    "auth_secondary": "tacocat",
+    "auth_strict_key": False,
+    "auth_bypass": True,
+    "timeout_socket": 999,
+    "timeout_ops": 1234,
+    "timeout_transport": 5678,
+    "channel_log": "somefile",
+    "channel_log_mode": "append",
+    "channel_lock": True,
+}
+
+
+def test_common_driver_args(factory, device_type):
+    # test to validate that common driver args are passed all the way down to the base driver,
+    # since we don't use **kwargs it is easy to miss adding things, hence this test!
+    if factory is AsyncScrapli:
+        conn = factory(
+            **COMMON_NETWORK_DRIVER_KWARGS, platform=device_type, transport="asynctelnet"
+        )
+    else:
+        conn = factory(**COMMON_NETWORK_DRIVER_KWARGS, platform=device_type)
+
+    assert conn.host == "localhost"
+    assert conn.port == 1234
+    assert conn.auth_username == "tacocat"
+    assert conn.auth_password == "tacocat"
+    assert conn.auth_secondary == "tacocat"
+    assert conn.auth_strict_key is False
+    assert conn.auth_bypass is True
+    assert conn.timeout_socket == 999
+    assert conn.timeout_ops == 1234
+    assert conn.timeout_transport == 5678
+    assert conn._base_channel_args.channel_log == "somefile"
+    assert conn._base_channel_args.channel_log_mode == "a"
+    assert conn._base_channel_args.channel_lock is True
 
 
 def test_generate_comms_prompt_pattern(base_network_driver):

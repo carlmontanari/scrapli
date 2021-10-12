@@ -33,6 +33,7 @@ class AsyncGenericDriver(AsyncDriver, BaseGenericDriver):
         transport: str = "system",
         transport_options: Optional[Dict[str, Any]] = None,
         channel_log: Union[str, bool, BytesIO] = False,
+        channel_log_mode: str = "write",
         channel_lock: bool = False,
         logging_uid: str = "",
     ) -> None:
@@ -58,6 +59,7 @@ class AsyncGenericDriver(AsyncDriver, BaseGenericDriver):
             transport=transport,
             transport_options=transport_options,
             channel_log=channel_log,
+            channel_log_mode=channel_log_mode,
             channel_lock=channel_lock,
             logging_uid=logging_uid,
         )
