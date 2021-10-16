@@ -3,6 +3,7 @@ from copy import deepcopy
 
 import pytest
 
+from scrapli import AsyncScrapli, Scrapli
 from scrapli.channel.async_channel import AsyncChannel
 from scrapli.channel.base_channel import BaseChannel, BaseChannelArgs
 from scrapli.channel.sync_channel import Channel
@@ -568,3 +569,22 @@ def async_junos_driver():
     async_junos_driver.textfsm_platform = "juniper_junos"
     async_junos_driver.genie_platform = ""
     return async_junos_driver
+
+
+@pytest.fixture(
+    scope="class",
+    params=["cisco_iosxe", "cisco_nxos", "cisco_iosxr", "arista_eos", "juniper_junos"],
+)
+def device_type(request):
+    yield request.param
+
+
+@pytest.fixture(
+    scope="class",
+    params=["sync", "async"],
+)
+def factory(request):
+    if request.param == "sync":
+        yield Scrapli
+    else:
+        yield AsyncScrapli
