@@ -16,6 +16,7 @@ Changelog
 - Updated/fixed(?) Juniper shell patterns for "normal" and root shells #170
 - Support transport options being passed to asyncssh transport thanks to @cuong-nguyenduy work in #178 and #183
 - A handful of nice readability/simplicity improvements throughout the codebase thanks to @yezz123 in #188
+- Fix (add) missing kwarg for `channel_log_mode` in the driver layers "above" base driver
 - Update NXOS config pattern to include "+" to not break when entering TACACS config mode
 
 
