@@ -1,5 +1,5 @@
 black==21.9b0
-darglint==1.8.0
+darglint==1.8.1
 isort==5.9.3
 mypy==0.910
 nox==2021.10.1
