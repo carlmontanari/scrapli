@@ -422,8 +422,8 @@ def test_send_inputs_interact(monkeypatch, sync_channel):
     _read_counter = 0
     _event_counter = 0
 
-    interact_events = [("clear logg", "[confirm]\n"), ("", "scrapli>")]
-    expected_buf = b"clear logg[confirm]\nscrapli>"
+    interact_events = [("clear logg", "[confirm]"), ("", "scrapli>")]
+    expected_buf = b"clear logg[confirm]scrapli>"
 
     def _read(cls):
         nonlocal _read_counter
