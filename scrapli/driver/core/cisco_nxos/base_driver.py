@@ -63,6 +63,7 @@ FAILED_WHEN_CONTAINS = [
     "% Incomplete command",
     "% Invalid input detected",
     "% Invalid command at",
+    "% Invalid parameter",
 ]
 
 
