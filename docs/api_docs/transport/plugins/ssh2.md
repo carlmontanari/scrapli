@@ -333,7 +333,7 @@ class Ssh2Transport(Transport):
 
 
 ```text
-PluginTransportArgs(auth_username: str, auth_password: str = '', auth_private_key: str = '', auth_private_key_passphrase: str = '',auth_strict_key: bool = True, ssh_config_file: str = '', ssh_known_hosts_file: str = '')
+PluginTransportArgs(auth_username: str, auth_password: str = '', auth_private_key: str = '', auth_private_key_passphrase: str = '', auth_strict_key: bool = True, ssh_config_file: str = '', ssh_known_hosts_file: str = '')
 ```
 
 <details class="source">
