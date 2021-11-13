@@ -111,7 +111,7 @@ class BaseChannel:
         self.channel_log: Optional[BinaryIO] = None
 
         self._auth_telnet_login_pattern = r"^(.*username:)|(.*login:)\s?$"
-        self._auth_password_pattern = r"^password:\s?$"
+        self._auth_password_pattern = r"^(.*@.*)?password:\s?$"
         self._auth_passphrase_pattern = r"enter passphrase for key"
 
     @property
