@@ -18,7 +18,7 @@ from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliTypeError, Sc
         ),
         (
             "auth_password_pattern",
-            "^password:\s?$",
+            "^(.*@.*)?password:\s?$",
         ),
         (
             "auth_passphrase_pattern",
