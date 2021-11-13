@@ -18,6 +18,8 @@ Changelog
 - A handful of nice readability/simplicity improvements throughout the codebase thanks to @yezz123 in #188
 - Fix (add) missing kwarg for `channel_log_mode` in the driver layers "above" base driver
 - Update NXOS config pattern to include "+" to not break when entering TACACS config mode
+- Added support for encrypted SSH keys with ssh2 transprot in #192 thanks to @shnurty
+- Fix/improve in channel SSH auth password prompt pattern to match scrapligo (which handles user@host password: strings)
 
 
 ## 2021.07.30
