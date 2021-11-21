@@ -3,7 +3,7 @@ import re
 import time
 from contextlib import contextmanager
 from datetime import datetime
-from io import SEEK_END, BytesIO
+from io import BytesIO
 from threading import Lock
 from typing import Iterator, List, Optional, Tuple
 
@@ -136,8 +136,7 @@ class Channel(BaseChannel):
         while True:
             read_buf.write(self.read())
 
-            read_buf.seek(-self._base_channel_args.comms_prompt_search_depth, SEEK_END)
-            search_buf = read_buf.read()
+            search_buf = self._process_read_buf(read_buf=read_buf)
 
             channel_match = re.search(
                 pattern=search_pattern,
@@ -177,8 +176,7 @@ class Channel(BaseChannel):
         while True:
             read_buf.write(self.read())
 
-            read_buf.seek(-self._base_channel_args.comms_prompt_search_depth, SEEK_END)
-            search_buf = read_buf.read()
+            search_buf = self._process_read_buf(read_buf=read_buf)
 
             for search_pattern in search_patterns:
                 channel_match = re.search(
@@ -238,8 +236,7 @@ class Channel(BaseChannel):
             except ScrapliTimeout:
                 pass
 
-            read_buf.seek(-self._base_channel_args.comms_prompt_search_depth, SEEK_END)
-            search_buf = read_buf.read()
+            search_buf = self._process_read_buf(read_buf=read_buf)
 
             if (time.time() - start) > read_duration:
                 break

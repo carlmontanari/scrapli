@@ -2,7 +2,7 @@
 import asyncio
 import re
 import time
-from io import SEEK_END, BytesIO
+from io import BytesIO
 
 try:
     from contextlib import asynccontextmanager
@@ -143,8 +143,7 @@ class AsyncChannel(BaseChannel):
             b = await self.read()
             read_buf.write(b)
 
-            read_buf.seek(-self._base_channel_args.comms_prompt_search_depth, SEEK_END)
-            search_buf = read_buf.read()
+            search_buf = self._process_read_buf(read_buf=read_buf)
 
             channel_match = re.search(
                 pattern=search_pattern,
@@ -185,8 +184,7 @@ class AsyncChannel(BaseChannel):
             b = await self.read()
             read_buf.write(b)
 
-            read_buf.seek(-self._base_channel_args.comms_prompt_search_depth, SEEK_END)
-            search_buf = read_buf.read()
+            search_buf = self._process_read_buf(read_buf=read_buf)
 
             for search_pattern in search_patterns:
                 channel_match = re.search(
@@ -247,8 +245,7 @@ class AsyncChannel(BaseChannel):
             except ScrapliTimeout:
                 pass
 
-            read_buf.seek(-self._base_channel_args.comms_prompt_search_depth, SEEK_END)
-            search_buf = read_buf.read()
+            search_buf = self._process_read_buf(read_buf=read_buf)
 
             if (time.time() - start) > read_duration:
                 break
