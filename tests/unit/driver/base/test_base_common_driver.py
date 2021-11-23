@@ -78,7 +78,6 @@ def test_timeout_properties_transport(base_drivers, test_data):
     assert getattr(base_drivers.transport._base_transport_args, attribute) == new_value
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping ssh2 on 3.10")
 def test_timeout_properties_transport_plugin_set_timeout(monkeypatch):
     """
     Assert sync driver properly sets transport related timeout values
