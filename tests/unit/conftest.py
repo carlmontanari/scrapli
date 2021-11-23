@@ -203,7 +203,6 @@ def paramiko_transport(base_transport_args, paramiko_transport_plugin_args):
     return paramiko_transport
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping ssh2 on 3.10")
 @pytest.fixture(scope="function")
 def ssh2_transport_plugin_args():
     """Fixture to provide ssh2 transport plugin args instance"""
@@ -215,7 +214,6 @@ def ssh2_transport_plugin_args():
     return plugin_args
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping ssh2 on 3.10")
 @pytest.fixture(scope="function")
 def ssh2_transport(base_transport_args, ssh2_transport_plugin_args):
     """Fixture to provide ssh2 transport instance"""

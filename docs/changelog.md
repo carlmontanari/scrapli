@@ -20,6 +20,7 @@ Changelog
 - Update NXOS config pattern to include "+" to not break when entering TACACS config mode
 - Added support for encrypted SSH keys with ssh2 transprot in #192 thanks to @shnurty
 - Fix/improve in channel SSH auth password prompt pattern to match scrapligo (which handles user@host password: strings)
+- Update ssh2-python requirements now that 3.10/Darwin release is available
 
 
 ## 2021.07.30
