@@ -4,7 +4,7 @@ DirectoryPath: ./site
 IgnoreURLs:
   - fonts.gstatic.com
   - linkedin.com
-  - github.com/carlmontanari/scrapli/issues/
+  - github.com/carlmontanari/scrapli/issues/ # stops getting 429s for too many links on the thank you page i guess
 IgnoreDirectoryMissingTrailingSlash: true
 IgnoreAltMissing: true
 IgnoreSSLVerify: true
