@@ -5,7 +5,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from scrapli.driver.generic import AsyncGenericDriver
 from scrapli.driver.network.base_driver import BaseNetworkDriver, PrivilegeAction, PrivilegeLevel
-from scrapli.exceptions import ScrapliPrivilegeError
+from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliPrivilegeError, ScrapliTimeout
 from scrapli.response import MultiResponse, Response
 
 
@@ -100,13 +100,19 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
         if escalate_priv.escalate_auth is False:
             await self.channel.send_input(channel_input=escalate_priv.escalate)
         else:
-            await super().send_interactive(
-                interact_events=[
-                    (escalate_priv.escalate, escalate_priv.escalate_prompt, False),
-                    (self.auth_secondary, escalate_priv.pattern, True),
-                ],
-                interaction_complete_patterns=[escalate_priv.pattern],
-            )
+            try:
+                await super().send_interactive(
+                    interact_events=[
+                        (escalate_priv.escalate, escalate_priv.escalate_prompt, False),
+                        (self.auth_secondary, escalate_priv.pattern, True),
+                    ],
+                    interaction_complete_patterns=[escalate_priv.pattern],
+                )
+            except ScrapliTimeout as exc:
+                raise ScrapliAuthenticationFailed(
+                    f"failed escalating privilege from '{escalate_priv.previous_priv}' to "
+                    f"'{escalate_priv.name}'. do you need to set an 'auth_secondary' password?"
+                ) from exc
 
     async def _deescalate(self, current_priv: PrivilegeLevel) -> None:
         """
