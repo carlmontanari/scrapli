@@ -18,9 +18,12 @@ Changelog
 - A handful of nice readability/simplicity improvements throughout the codebase thanks to @yezz123 in #188
 - Fix (add) missing kwarg for `channel_log_mode` in the driver layers "above" base driver
 - Update NXOS config pattern to include "+" to not break when entering TACACS config mode
-- Added support for encrypted SSH keys with ssh2 transprot in #192 thanks to @shnurty
+- Added support for encrypted SSH keys with ssh2 transport in #192 thanks to @shnurty
 - Fix/improve in channel SSH auth password prompt pattern to match scrapligo (which handles user@host password: strings)
 - Update ssh2-python requirements now that 3.10/Darwin release is available
+- Better exception/exception message for auth failures escalating privilege (network drivers)
+- Added a global `Settings` object -- for now only has an attribute for "SUPPRESS_USER_WARNINGS" to... suppress user 
+  warnings
 
 
 ## 2021.07.30
