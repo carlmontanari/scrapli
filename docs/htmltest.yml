@@ -4,14 +4,13 @@ DirectoryPath: ./site
 IgnoreURLs:
   - fonts.gstatic.com
   - linkedin.com
+  - github.com/carlmontanari/scrapli/issues/
 IgnoreDirectoryMissingTrailingSlash: true
 IgnoreAltMissing: true
 IgnoreSSLVerify: true
 IgnoreDirs:
   - overrides
 IgnoreInternalEmptyHash: true
-IgnoreInternalURLs:
-  - about/thank_you/index.html
 ExternalTimeout: 60
 HTTPHeaders:
   "Range": "bytes=0-10"
