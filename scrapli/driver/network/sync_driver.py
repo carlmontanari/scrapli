@@ -92,7 +92,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
             None
 
         Raises:
-            N/A
+            ScrapliAuthenticationFailed: if auth escalation timeout
 
         """
         self._pre_escalate(escalate_priv=escalate_priv)
