@@ -88,7 +88,18 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: docker run -v $(pwd):/docs --entrypoint "" squidfunk/mkdocs-material:latest ash -c 'pip install mdx_gh_links && mkdocs build --clean --strict'
+      - name: Cache htmltest external links
+        uses: actions/cache@v2
+        with:
+          path: tmp/.htmltest
+          # key will contain hash of all md files to check if files have changed
+          # when files are changed, a new key name is formed, and thus a new cache will be saved
+          key: htmltest-${{ hashFiles('docs/**/*.md') }}
+          # the restore key will fetch any previously saved cache even if there is no match on key
+          # this allows to use cache from prev runs and update it
+          restore-keys: |
+            htmltest-
       - name: htmltest
-        run: |
-          curl https://htmltest.wjdp.uk | bash
-          ./bin/htmltest -c docs/htmltest.yml
+        uses: wjdp/htmltest-action@v0.13.0-rc1
+        with:
+          config: docs/htmltest.yml

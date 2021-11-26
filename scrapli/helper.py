@@ -10,6 +10,7 @@ import pkg_resources  # pylint: disable=C0411
 
 from scrapli.exceptions import ScrapliValueError
 from scrapli.logging import logger
+from scrapli.settings import Settings
 
 
 def _textfsm_get_template(platform: str, command: str) -> Optional[TextIO]:
@@ -284,4 +285,6 @@ def user_warning(title: str, message: str) -> None:
     """
     warning_message = format_user_warning(title=title, message=message)
     logger.warning(warning_message)
-    warn(warning_message)
+
+    if Settings.SUPPRESS_USER_WARNINGS is False:
+        warn(warning_message)
