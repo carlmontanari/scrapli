@@ -81,7 +81,7 @@ class SSHConfig:
             self.hosts = self._parse()
             if not self.hosts:
                 self.hosts = {}
-            if "*" not in self.hosts.keys():
+            if "*" not in self.hosts:
                 self.hosts["*"] = Host()
                 self.hosts["*"].hosts = "*"
         else:
