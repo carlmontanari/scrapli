@@ -4,7 +4,7 @@ from collections import defaultdict
 from datetime import datetime
 from enum import Enum
 from functools import lru_cache
-from logging import LoggerAdapter
+from logging import Logger, LoggerAdapter
 from typing import DefaultDict, Dict, List, Optional, Set, Tuple, Union
 
 from scrapli.exceptions import ScrapliPrivilegeError, ScrapliTypeError
@@ -78,7 +78,7 @@ class PrivilegeAction(Enum):
 
 class BaseNetworkDriver:
     # BaseNetworkDriver Mixin vars for typing/linting purposes
-    logger: LoggerAdapter
+    logger: LoggerAdapter[Logger]
     auth_secondary: str
     failed_when_contains: List[str]
     textfsm_platform: str

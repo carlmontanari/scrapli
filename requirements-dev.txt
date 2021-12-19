@@ -1,13 +1,13 @@
 black==21.12b0
 darglint==1.8.1
 isort==5.10.1
-mypy==0.910
+mypy==0.920
 nox==2021.10.1
 pycodestyle==2.8.0
 pydocstyle==6.1.1
 pyfakefs==4.5.3
 pylama==7.7.1 ; python_version < "3.7"
-pylama==8.3.3 ; python_version >= "3.7"
+pylama==8.3.6 ; python_version >= "3.7"
 pylint==2.12.2
 pytest-asyncio==0.16.0
 pytest-cov==3.0.0
