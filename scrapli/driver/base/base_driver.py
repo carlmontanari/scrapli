@@ -467,9 +467,7 @@ class BaseDriver:
 
         # ignore type as we are typing it as the base class to make life simple, because of this
         # mypy thinks we are passing too many args
-        plugin_transport_args = _plugin_transport_args_class(
-            **_plugin_transport_args
-        )
+        plugin_transport_args = _plugin_transport_args_class(**_plugin_transport_args)
 
         return transport_class, plugin_transport_args
 

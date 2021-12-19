@@ -15,6 +15,11 @@ if TYPE_CHECKING:
     from scrapli.driver import AsyncGenericDriver, GenericDriver  # pragma:  no cover
     from scrapli.transport.base.base_transport import BaseTransport  # pragma:  no cover
 
+if TYPE_CHECKING:
+    LoggerAdapterT = LoggerAdapter[Logger]  # pylint:disable=E1136
+else:
+    LoggerAdapterT = LoggerAdapter
+
 _IS_WINDOWS = sys.platform.startswith("win")
 
 
@@ -208,7 +213,7 @@ class ChannelTimeout:
         """
         self.message = message
         self.channel_timeout_ops = 0.0
-        self.channel_logger: LoggerAdapter[Logger]
+        self.channel_logger: LoggerAdapterT
         self.transport_instance: "BaseTransport"
 
     def __call__(self, wrapped_func: Callable[..., Any]) -> Callable[..., Any]:
