@@ -238,7 +238,7 @@ def get_instance_logger(
         uid: unique id for a logging instance
 
     Returns:
-        LoggerAdapter: adapter logger for the instance
+        LoggerAdapterT: adapter logger for the instance
 
     Raises:
         N/A
