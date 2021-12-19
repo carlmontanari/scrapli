@@ -5,7 +5,7 @@ import sys
 import threading
 from concurrent.futures import ThreadPoolExecutor, wait
 from functools import update_wrapper
-from logging import LoggerAdapter
+from logging import Logger, LoggerAdapter
 from typing import TYPE_CHECKING, Any, Callable
 
 from scrapli.exceptions import ScrapliTimeout
@@ -208,7 +208,7 @@ class ChannelTimeout:
         """
         self.message = message
         self.channel_timeout_ops = 0.0
-        self.channel_logger: LoggerAdapter
+        self.channel_logger: LoggerAdapter[Logger]
         self.transport_instance: "BaseTransport"
 
     def __call__(self, wrapped_func: Callable[..., Any]) -> Callable[..., Any]:
