@@ -1,9 +1,14 @@
 """scrapli.logging"""
 from ast import literal_eval
-from logging import FileHandler, Formatter, LoggerAdapter, Logger, LogRecord, NullHandler, getLogger
-from typing import Optional, Union, cast
+from logging import FileHandler, Formatter, Logger, LoggerAdapter, LogRecord, NullHandler, getLogger
+from typing import TYPE_CHECKING, Optional, Union, cast
 
 from scrapli.exceptions import ScrapliException
+
+if TYPE_CHECKING:
+    LoggerAdapterT = LoggerAdapter[Logger]  # pylint:disable=E1136
+else:
+    LoggerAdapterT = LoggerAdapter
 
 
 class ScrapliLogRecord(LogRecord):
@@ -222,7 +227,7 @@ class ScrapliFileHandler(FileHandler):
 
 def get_instance_logger(
     instance_name: str, host: str = "", port: int = 0, uid: str = ""
-) -> LoggerAdapter[Logger]:
+) -> LoggerAdapterT:
     """
     Get an adapted logger instance for a given instance (driver/channel/transport)
 
