@@ -7,8 +7,8 @@ from scrapli.helper import resolve_file
 from scrapli.response import MultiResponse, Response
 
 if TYPE_CHECKING:
-    from scrapli.driver.generic.async_driver import AsyncGenericDriver
-    from scrapli.driver.generic.sync_driver import GenericDriver
+    from scrapli.driver.generic.async_driver import AsyncGenericDriver  # pragma:  no cover
+    from scrapli.driver.generic.sync_driver import GenericDriver  # pragma:  no cover
 
 
 class ReadCallback:
