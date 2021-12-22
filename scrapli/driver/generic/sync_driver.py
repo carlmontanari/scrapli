@@ -1,12 +1,16 @@
 """scrapli.driver.generic.sync_driver"""
+import time
 from io import BytesIO
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Union
 
 from scrapli.decorators import TimeoutOpsModifier
 from scrapli.driver import Driver
 from scrapli.driver.generic.base_driver import BaseGenericDriver
 from scrapli.exceptions import ScrapliValueError
 from scrapli.response import MultiResponse, Response
+
+if TYPE_CHECKING:
+    from scrapli.driver.generic.base_driver import ReadCallback, ReadCallbackReturnable
 
 
 class GenericDriver(Driver, BaseGenericDriver):
@@ -435,3 +439,127 @@ class GenericDriver(Driver, BaseGenericDriver):
         return self._post_send_command(
             raw_response=raw_response, processed_response=processed_response, response=response
         )
+
+    def read_callback(
+        self,
+        callbacks: List["ReadCallback"],
+        initial_input: Optional[str] = None,
+        read_output: bytes = b"",
+        read_delay: float = 0.1,
+    ) -> "ReadCallbackReturnable":
+        r"""
+        Read from a channel and react to the output with some callback.
+
+        This method is kind of like an "advanced" send_interactive -- the idea is simple: send some
+        "stuff" to the channel (optionally), and then read from the channel. Based on the output
+        do something. The callbacks is a list of `ReadCallback` which is an object containing the
+        actual callback to execute, some info about when to trigger that callback (also when *not*
+        to trigger that callback), as well as some attributes to control the next (if desired)
+        iteration of read_callback. You could in theory do basically everything with this method by
+        chaining callbacks forever, but you probably don't want to do that for real!
+
+        Example usage:
+
+        ```
+        from scrapli.driver.core import IOSXEDriver
+        from scrapli.driver.generic.base_driver import ReadCallback
+        from scrapli.driver.generic.sync_driver import GenericDriver
+
+        device = {
+            "host": "rtr1",
+            "auth_strict_key": False,
+            "ssh_config_file": True,
+        }
+
+        def callback_one(cls: GenericDriver, read_output: str):
+            cls.acquire_priv("configuration")
+            cls.channel.send_return()
+
+
+        def callback_two(cls: GenericDriver, read_output: str):
+            print(f"previous read output : {read_output}")
+
+            r = cls.send_command("show run | i hostname")
+            print(f"result: {r.result}")
+
+
+        with IOSXEDriver(**device) as conn:
+            callbacks = [
+                ReadCallback(
+                    contains="rtr1#",
+                    callback=callback_one,
+                    name="call1",
+                    case_insensitive=False
+                ),
+                ReadCallback(
+                    contains_re=r"^rtr1\(config\)#",
+                    callback=callback_two,
+                    complete=True,
+                )
+            ]
+            conn.read_callback(callbacks=callbacks, initial_input="show run | i hostname")
+        ```
+
+        Args:
+            callbacks: a list of ReadCallback objects
+            initial_input: optional string to send to "kick off" the read_callback method
+            read_output: optional bytes to append any new reads to
+            read_delay: sleep interval between reads
+
+        Returns:
+            ReadCallbackReturnable: either None or call to read_callback again
+
+        Raises:
+            N/A
+
+        """
+        if initial_input is not None:
+            self.channel.write(channel_input=f"{initial_input}{self.comms_return_char}")
+            return self.read_callback(callbacks=callbacks, initial_input=None)
+
+        original_transport_timeout = self.timeout_transport
+        self.timeout_transport = 0
+
+        _read_delay = 0.1
+        if read_delay > 0:
+            _read_delay = read_delay
+
+        while True:
+            read_output += self.channel.read()
+
+            for callback in callbacks:
+                _run_callback = callback.check(read_output=read_output)
+
+                if (
+                    callback.only_once is True
+                    and callback._triggered is True  # pylint: disable=W0212
+                ):
+                    self.logger.warning(
+                        f"callback {callback.name} matches but is set to 'only_once', "
+                        "skipping this callback"
+                    )
+
+                    continue
+
+                if _run_callback is True:
+                    self.logger.info(f"callback {callback.name} matched, executing")
+
+                    self.timeout_transport = original_transport_timeout
+
+                    callback.run(driver=self)
+
+                    if callback.complete:
+                        self.logger.debug("callback complete is true, done with read_callback")
+                        return None
+
+                    if callback.reset_output:
+                        read_output = b""
+
+                    return self.read_callback(
+                        callbacks=callbacks,
+                        initial_input=None,
+                        read_output=read_output,
+                        read_delay=callback.next_delay,
+                    )
+
+            time.sleep(_read_delay)
