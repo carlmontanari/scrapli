@@ -177,7 +177,7 @@ class ReadCallback:
             read_output: bytes read from the device
 
         Returns:
-            Response: Scrapli Response object
+            bool: True/False indicating if the callback "matches" the output
 
         Raises:
             N/A
@@ -216,7 +216,7 @@ class ReadCallback:
             driver: driver object to pass to the callback function
 
         Returns:
-            callable: return the result of the callable if sync or the future
+            Union[None, Awaitable[Any]]: return the result of the callable if sync or the future
 
         Raises:
             N/A
