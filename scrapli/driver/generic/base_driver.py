@@ -1,6 +1,17 @@
 """scrapli.driver.generic.base_driver"""
 import re
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, Coroutine, List, Optional, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Awaitable,
+    Callable,
+    Coroutine,
+    List,
+    Optional,
+    Pattern,
+    Tuple,
+    Union,
+)
 
 from scrapli.exceptions import ScrapliTypeError
 from scrapli.helper import resolve_file
@@ -74,7 +85,7 @@ class ReadCallback:
         self._not_contains_bytes = b""
 
         self.contains_re = contains_re
-        self._contains_re_bytes: Optional[re.Pattern[bytes]] = None
+        self._contains_re_bytes: Optional[Pattern[bytes]] = None
 
         self.case_insensitive = case_insensitive
         self.multiline = multiline
@@ -130,7 +141,7 @@ class ReadCallback:
         return self._not_contains_bytes
 
     @property
-    def contains_re_bytes(self) -> re.Pattern[bytes]:
+    def contains_re_bytes(self) -> Pattern[bytes]:
         """
         Property to encode provided regex contains if requested
 
