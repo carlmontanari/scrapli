@@ -25,7 +25,11 @@ EXTRAS_REQUIRE = {
 
 for extra in EXTRAS_REQUIRE:
     with open(f"requirements-{extra}.txt", "r", encoding="utf-8") as f:
-        EXTRAS_REQUIRE[extra] = f.read().splitlines()
+        # drops the version cap on pins but lets us keep it in the extras requirements files
+        # such that CI can be more deterministic and dependabot notifications are more useful
+        pins = [pin.partition(",<")[0] if ",<" in pin else pin for pin in f.read().splitlines()]
+
+        EXTRAS_REQUIRE[extra] = pins
 
 full_requirements = [requirement for extra in EXTRAS_REQUIRE.values() for requirement in extra]
 EXTRAS_REQUIRE["full"] = full_requirements
