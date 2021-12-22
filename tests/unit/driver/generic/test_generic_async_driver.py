@@ -1,7 +1,6 @@
-import sys
-
 import pytest
 
+from scrapli.driver.generic.base_driver import ReadCallback
 from scrapli.exceptions import ScrapliValueError
 
 
@@ -120,3 +119,48 @@ async def test_send_interact_no_base_transport_args(async_generic_driver):
     async_generic_driver._base_transport_args = None
     with pytest.raises(ScrapliValueError):
         await async_generic_driver.send_interactive(interact_events=[])
+
+
+@pytest.mark.asyncio
+async def test_readcallback_basic(monkeypatch, async_generic_driver):
+    async def _read(cls):
+        return b"rtr1#"
+
+    def _write(cls, channel_input, redacted=False):
+        return
+
+    monkeypatch.setattr("scrapli.channel.async_channel.AsyncChannel.read", _read)
+    monkeypatch.setattr("scrapli.channel.async_channel.AsyncChannel.write", _write)
+
+    callback_one_counter = 0
+    callback_two_counter = 0
+
+    async def callback_one(cls, read_output):
+        nonlocal callback_one_counter
+
+        callback_one_counter += 1
+
+    async def callback_two(cls, read_output):
+        nonlocal callback_two_counter
+
+        callback_two_counter += 1
+
+    callbacks = [
+        ReadCallback(
+            contains="rtr1#",
+            callback=callback_one,
+            name="call1",
+            case_insensitive=False,
+            only_once=True,
+        ),
+        ReadCallback(
+            contains_re=r"^rtr1#",
+            callback=callback_two,
+            complete=True,
+        ),
+    ]
+
+    await async_generic_driver.read_callback(callbacks=callbacks, initial_input="nada")
+
+    assert callback_one_counter == 1
+    assert callback_two_counter == 1

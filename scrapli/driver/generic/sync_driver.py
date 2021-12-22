@@ -10,7 +10,10 @@ from scrapli.exceptions import ScrapliValueError
 from scrapli.response import MultiResponse, Response
 
 if TYPE_CHECKING:
-    from scrapli.driver.generic.base_driver import ReadCallback, ReadCallbackReturnable
+    from scrapli.driver.generic.base_driver import (  # pragma:  no cover
+        ReadCallback,
+        ReadCallbackReturnable,
+    )
 
 
 class GenericDriver(Driver, BaseGenericDriver):
