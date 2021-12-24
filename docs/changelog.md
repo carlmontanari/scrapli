@@ -24,6 +24,9 @@ Changelog
 - Better exception/exception message for auth failures escalating privilege (network drivers)
 - Added a global `Settings` object -- for now only has an attribute for "SUPPRESS_USER_WARNINGS" to... suppress user 
   warnings
+- Added `read_callback` method to `GenericDriver`/`AsyncGenericDriver` -- basically this is a fancier version of 
+  send interactive that lets you assign callbacks to things that scrapli reads rather than having to follow prompts 
+  in a linear fashion.
 
 
 ## 2021.07.30
