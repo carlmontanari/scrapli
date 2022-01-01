@@ -32,7 +32,7 @@ scrapli.response
 from collections import UserList
 from datetime import datetime
 from io import TextIOWrapper
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Union
 
 from scrapli.exceptions import ScrapliCommandFailure
 from scrapli.helper import _textfsm_get_template, genie_parse, textfsm_parse, ttp_parse
@@ -137,7 +137,7 @@ class Response:
             N/A
 
         """
-        return f"{self.__class__.__name__} <Success: {str(not self.failed)}>"
+        return f"{self.__class__.__name__} <Success: {not self.failed}>"
 
     def record_response(self, result: bytes) -> None:
         """
@@ -167,7 +167,7 @@ class Response:
 
         if not self.failed_when_contains:
             self.failed = False
-        elif not any(err in self.result for err in self.failed_when_contains):
+        elif all(err not in self.result for err in self.failed_when_contains):
             self.failed = False
 
     def textfsm_parse_output(self, to_dict: bool = True) -> Union[Dict[str, Any], List[Any]]:
@@ -188,13 +188,11 @@ class Response:
 
         """
         template = _textfsm_get_template(platform=self.textfsm_platform, command=self.channel_input)
-        if isinstance(template, TextIOWrapper):
-            structured_result = (
-                textfsm_parse(template=template, output=self.result, to_dict=to_dict) or []
-            )
-        else:
-            structured_result = []
-        return structured_result
+        return (
+            (textfsm_parse(template=template, output=self.result, to_dict=to_dict) or [])
+            if isinstance(template, TextIOWrapper)
+            else []
+        )
 
     def genie_parse_output(self) -> Union[Dict[str, Any], List[Any]]:
         """
@@ -212,10 +210,11 @@ class Response:
             N/A
 
         """
-        structured_result = genie_parse(
-            platform=self.genie_platform, command=self.channel_input, output=self.result
+        return genie_parse(
+            platform=self.genie_platform,
+            command=self.channel_input,
+            output=self.result,
         )
-        return structured_result
 
     def ttp_parse_output(
         self, template: Union[str, TextIOWrapper]
@@ -235,8 +234,7 @@ class Response:
             N/A
 
         """
-        structured_result = ttp_parse(template=template, output=self.result) or []
-        return structured_result
+        return ttp_parse(template=template, output=self.result) or []
 
     def raise_for_status(self) -> None:
         """
@@ -263,6 +261,24 @@ else:
 
 
 class MultiResponse(ScrapliMultiResponse):
+    def __init__(self, initlist: Optional[Iterable[Any]] = None) -> None:
+        """
+        Initialize list of responses
+
+        Args:
+            initlist: initial list seed data, if any
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        """
+        super().__init__(initlist=initlist)
+
+        self.data: List[Response]
+
     def __str__(self) -> str:
         """
         Magic str method for MultiResponse class
@@ -301,8 +317,7 @@ class MultiResponse(ScrapliMultiResponse):
             response = self.data[0]
         except IndexError:
             return ""
-        host = response.host
-        return host
+        return response.host
 
     @property
     def failed(self) -> bool:
@@ -319,9 +334,7 @@ class MultiResponse(ScrapliMultiResponse):
             N/A
 
         """
-        if any(response.failed for response in self.data):
-            return True
-        return False
+        return any(response.failed for response in self.data)
 
     @property
     def result(self) -> str:
@@ -338,10 +351,9 @@ class MultiResponse(ScrapliMultiResponse):
             N/A
 
         """
-        result = ""
-        for response in self.data:
-            result += "\n".join([response.channel_input, response.result])
-        return result
+        return "".join(
+            "\n".join([response.channel_input, response.result]) for response in self.data
+        )
 
     def raise_for_status(self) -> None:
         """
@@ -373,6 +385,17 @@ class MultiResponse(ScrapliMultiResponse):
 
 ```text
 A more or less complete user-defined wrapper around list objects.
+
+Initialize list of responses
+
+Args:
+    initlist: initial list seed data, if any
+
+Returns:
+    None
+
+Raises:
+    N/A
 ```
 
 <details class="source">
@@ -382,6 +405,24 @@ A more or less complete user-defined wrapper around list objects.
     <pre>
         <code class="python">
 class MultiResponse(ScrapliMultiResponse):
+    def __init__(self, initlist: Optional[Iterable[Any]] = None) -> None:
+        """
+        Initialize list of responses
+
+        Args:
+            initlist: initial list seed data, if any
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        """
+        super().__init__(initlist=initlist)
+
+        self.data: List[Response]
+
     def __str__(self) -> str:
         """
         Magic str method for MultiResponse class
@@ -420,8 +461,7 @@ class MultiResponse(ScrapliMultiResponse):
             response = self.data[0]
         except IndexError:
             return ""
-        host = response.host
-        return host
+        return response.host
 
     @property
     def failed(self) -> bool:
@@ -438,9 +478,7 @@ class MultiResponse(ScrapliMultiResponse):
             N/A
 
         """
-        if any(response.failed for response in self.data):
-            return True
-        return False
+        return any(response.failed for response in self.data)
 
     @property
     def result(self) -> str:
@@ -457,10 +495,9 @@ class MultiResponse(ScrapliMultiResponse):
             N/A
 
         """
-        result = ""
-        for response in self.data:
-            result += "\n".join([response.channel_input, response.result])
-        return result
+        return "".join(
+            "\n".join([response.channel_input, response.result]) for response in self.data
+        )
 
     def raise_for_status(self) -> None:
         """
@@ -700,7 +737,7 @@ class Response:
             N/A
 
         """
-        return f"{self.__class__.__name__} <Success: {str(not self.failed)}>"
+        return f"{self.__class__.__name__} <Success: {not self.failed}>"
 
     def record_response(self, result: bytes) -> None:
         """
@@ -730,7 +767,7 @@ class Response:
 
         if not self.failed_when_contains:
             self.failed = False
-        elif not any(err in self.result for err in self.failed_when_contains):
+        elif all(err not in self.result for err in self.failed_when_contains):
             self.failed = False
 
     def textfsm_parse_output(self, to_dict: bool = True) -> Union[Dict[str, Any], List[Any]]:
@@ -751,13 +788,11 @@ class Response:
 
         """
         template = _textfsm_get_template(platform=self.textfsm_platform, command=self.channel_input)
-        if isinstance(template, TextIOWrapper):
-            structured_result = (
-                textfsm_parse(template=template, output=self.result, to_dict=to_dict) or []
-            )
-        else:
-            structured_result = []
-        return structured_result
+        return (
+            (textfsm_parse(template=template, output=self.result, to_dict=to_dict) or [])
+            if isinstance(template, TextIOWrapper)
+            else []
+        )
 
     def genie_parse_output(self) -> Union[Dict[str, Any], List[Any]]:
         """
@@ -775,10 +810,11 @@ class Response:
             N/A
 
         """
-        structured_result = genie_parse(
-            platform=self.genie_platform, command=self.channel_input, output=self.result
+        return genie_parse(
+            platform=self.genie_platform,
+            command=self.channel_input,
+            output=self.result,
         )
-        return structured_result
 
     def ttp_parse_output(
         self, template: Union[str, TextIOWrapper]
@@ -798,8 +834,7 @@ class Response:
             N/A
 
         """
-        structured_result = ttp_parse(template=template, output=self.result) or []
-        return structured_result
+        return ttp_parse(template=template, output=self.result) or []
 
     def raise_for_status(self) -> None:
         """

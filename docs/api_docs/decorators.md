@@ -35,7 +35,7 @@ import sys
 import threading
 from concurrent.futures import ThreadPoolExecutor, wait
 from functools import update_wrapper
-from logging import LoggerAdapter
+from logging import Logger, LoggerAdapter
 from typing import TYPE_CHECKING, Any, Callable
 
 from scrapli.exceptions import ScrapliTimeout
@@ -44,6 +44,11 @@ if TYPE_CHECKING:
     from scrapli.channel import Channel  # pragma:  no cover
     from scrapli.driver import AsyncGenericDriver, GenericDriver  # pragma:  no cover
     from scrapli.transport.base.base_transport import BaseTransport  # pragma:  no cover
+
+if TYPE_CHECKING:
+    LoggerAdapterT = LoggerAdapter[Logger]  # pylint:disable=E1136
+else:
+    LoggerAdapterT = LoggerAdapter
 
 _IS_WINDOWS = sys.platform.startswith("win")
 
@@ -238,7 +243,7 @@ class ChannelTimeout:
         """
         self.message = message
         self.channel_timeout_ops = 0.0
-        self.channel_logger: LoggerAdapter
+        self.channel_logger: LoggerAdapterT
         self.transport_instance: "BaseTransport"
 
     def __call__(self, wrapped_func: Callable[..., Any]) -> Callable[..., Any]:
@@ -501,7 +506,7 @@ class ChannelTimeout:
         """
         self.message = message
         self.channel_timeout_ops = 0.0
-        self.channel_logger: LoggerAdapter
+        self.channel_logger: LoggerAdapterT
         self.transport_instance: "BaseTransport"
 
     def __call__(self, wrapped_func: Callable[..., Any]) -> Callable[..., Any]:

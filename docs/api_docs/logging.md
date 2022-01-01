@@ -30,10 +30,15 @@ scrapli.logging
         <code class="python">
 """scrapli.logging"""
 from ast import literal_eval
-from logging import FileHandler, Formatter, LoggerAdapter, LogRecord, NullHandler, getLogger
-from typing import Optional, Union, cast
+from logging import FileHandler, Formatter, Logger, LoggerAdapter, LogRecord, NullHandler, getLogger
+from typing import TYPE_CHECKING, Optional, Union, cast
 
 from scrapli.exceptions import ScrapliException
+
+if TYPE_CHECKING:
+    LoggerAdapterT = LoggerAdapter[Logger]  # pylint:disable=E1136
+else:
+    LoggerAdapterT = LoggerAdapter
 
 
 class ScrapliLogRecord(LogRecord):
@@ -122,15 +127,11 @@ class ScrapliFormatter(Formatter):
         else:
             _host_port = f"{record.host}:{record.port}"
 
-        if not hasattr(record, "uid"):
-            # maybe this name changes... but a uid in the event you have multiple connections to a
-            # single host... w/ this you can assign the uid so you know which is which
-            _uid = ""
-        else:
-            # add colon to the uid so the log messages are pretty
-            _uid = f"{record.uid}:"
-
+        _uid = "" if not hasattr(record, "uid") else f"{record.uid}:"
+        # maybe this name changes... but a uid in the event you have multiple connections to a
+        # single host... w/ this you can assign the uid so you know which is which
         record.target = f"{_uid}{_host_port}"
+        # add colon to the uid so the log messages are pretty
         record.target = (
             record.target[:25] if len(record.target) <= 25 else f"{record.target[:22]}..."
         )
@@ -256,7 +257,7 @@ class ScrapliFileHandler(FileHandler):
 
 def get_instance_logger(
     instance_name: str, host: str = "", port: int = 0, uid: str = ""
-) -> LoggerAdapter:
+) -> LoggerAdapterT:
     """
     Get an adapted logger instance for a given instance (driver/channel/transport)
 
@@ -267,7 +268,7 @@ def get_instance_logger(
         uid: unique id for a logging instance
 
     Returns:
-        LoggerAdapter: adapter logger for the instance
+        LoggerAdapterT: adapter logger for the instance
 
     Raises:
         N/A
@@ -324,11 +325,7 @@ def enable_basic_logging(
     file_mode = "a" if mode.lower() == "append" else "w"
 
     if file:
-        if isinstance(file, bool):
-            filename = "scrapli.log"
-        else:
-            filename = file
-
+        filename = "scrapli.log" if isinstance(file, bool) else file
         if not buffer_log:
             fh = FileHandler(filename=filename, mode=file_mode)
         else:
@@ -392,7 +389,7 @@ Args:
     uid: unique id for a logging instance
 
 Returns:
-    LoggerAdapter: adapter logger for the instance
+    LoggerAdapterT: adapter logger for the instance
 
 Raises:
     N/A
@@ -722,15 +719,11 @@ class ScrapliFormatter(Formatter):
         else:
             _host_port = f"{record.host}:{record.port}"
 
-        if not hasattr(record, "uid"):
-            # maybe this name changes... but a uid in the event you have multiple connections to a
-            # single host... w/ this you can assign the uid so you know which is which
-            _uid = ""
-        else:
-            # add colon to the uid so the log messages are pretty
-            _uid = f"{record.uid}:"
-
+        _uid = "" if not hasattr(record, "uid") else f"{record.uid}:"
+        # maybe this name changes... but a uid in the event you have multiple connections to a
+        # single host... w/ this you can assign the uid so you know which is which
         record.target = f"{_uid}{_host_port}"
+        # add colon to the uid so the log messages are pretty
         record.target = (
             record.target[:25] if len(record.target) <= 25 else f"{record.target[:22]}..."
         )

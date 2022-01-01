@@ -33,7 +33,7 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 from functools import lru_cache
-from io import BytesIO
+from io import SEEK_END, BytesIO
 from typing import BinaryIO, List, Optional, Pattern, Tuple, Union
 
 from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliTypeError, ScrapliValueError
@@ -141,7 +141,7 @@ class BaseChannel:
         self.channel_log: Optional[BinaryIO] = None
 
         self._auth_telnet_login_pattern = r"^(.*username:)|(.*login:)\s?$"
-        self._auth_password_pattern = r"^password:\s?$"
+        self._auth_password_pattern = r"^(.*@.*)?password:\s?$"
         self._auth_passphrase_pattern = r"enter passphrase for key"
 
     @property
@@ -292,10 +292,11 @@ class BaseChannel:
                 # if you change the mode --> "wb" or "ab" it works as you would hope/expect; those
                 # are the only values it can possibly be at this point though so we can safely
                 # ignore here
-                self.channel_log = open(  # pylint: disable=R1732
+                # note that this will *always* be binary mode, so there doesn't need to be any
+                # encoding, hence ignoring that pylint message!
+                self.channel_log = open(  # pylint: disable=W1514,R1732
                     channel_log_destination,
                     mode=f"{self._base_channel_args.channel_log_mode}b",  # type: ignore
-                    encoding="utf-8",
                 )
 
     def close(self) -> None:
@@ -314,6 +315,35 @@ class BaseChannel:
         """
         if self.channel_log:
             self.channel_log.close()
+
+    def _process_read_buf(self, read_buf: BytesIO) -> bytes:
+        """
+        Process the read buffer
+
+        Seeks backwards up to search depth then partitions on newlines. Partition is to ensure that
+        the resulting search_buf does not end up with partial lines in the output which can cause
+        prompt patterns to match places they should not match!
+
+        Args:
+            read_buf: bytesio object read from the transport
+
+        Returns:
+            bytes: cleaned up search buffer
+
+        Raises:
+            N/A
+
+        """
+        read_buf.seek(-self._base_channel_args.comms_prompt_search_depth, SEEK_END)
+        search_buf = read_buf.read()
+
+        before, _, search_buf = search_buf.partition(b"\n")
+
+        if not search_buf:
+            # didn't split on anything or nothing after partition
+            search_buf = before
+
+        return search_buf
 
     def write(self, channel_input: str, redacted: bool = False) -> None:
         """
@@ -665,7 +695,7 @@ class BaseChannel:
         self.channel_log: Optional[BinaryIO] = None
 
         self._auth_telnet_login_pattern = r"^(.*username:)|(.*login:)\s?$"
-        self._auth_password_pattern = r"^password:\s?$"
+        self._auth_password_pattern = r"^(.*@.*)?password:\s?$"
         self._auth_passphrase_pattern = r"enter passphrase for key"
 
     @property
@@ -816,10 +846,11 @@ class BaseChannel:
                 # if you change the mode --> "wb" or "ab" it works as you would hope/expect; those
                 # are the only values it can possibly be at this point though so we can safely
                 # ignore here
-                self.channel_log = open(  # pylint: disable=R1732
+                # note that this will *always* be binary mode, so there doesn't need to be any
+                # encoding, hence ignoring that pylint message!
+                self.channel_log = open(  # pylint: disable=W1514,R1732
                     channel_log_destination,
                     mode=f"{self._base_channel_args.channel_log_mode}b",  # type: ignore
-                    encoding="utf-8",
                 )
 
     def close(self) -> None:
@@ -838,6 +869,35 @@ class BaseChannel:
         """
         if self.channel_log:
             self.channel_log.close()
+
+    def _process_read_buf(self, read_buf: BytesIO) -> bytes:
+        """
+        Process the read buffer
+
+        Seeks backwards up to search depth then partitions on newlines. Partition is to ensure that
+        the resulting search_buf does not end up with partial lines in the output which can cause
+        prompt patterns to match places they should not match!
+
+        Args:
+            read_buf: bytesio object read from the transport
+
+        Returns:
+            bytes: cleaned up search buffer
+
+        Raises:
+            N/A
+
+        """
+        read_buf.seek(-self._base_channel_args.comms_prompt_search_depth, SEEK_END)
+        search_buf = read_buf.read()
+
+        before, _, search_buf = search_buf.partition(b"\n")
+
+        if not search_buf:
+            # didn't split on anything or nothing after partition
+            search_buf = before
+
+        return search_buf
 
     def write(self, channel_input: str, redacted: bool = False) -> None:
         """

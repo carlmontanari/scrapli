@@ -319,6 +319,17 @@ class ParamikoTransport(Transport):
 ```text
 Helper class that provides a standard way to create an ABC using
 inheritance.
+
+Scrapli's transport base class
+
+Args:
+    base_transport_args: base transport args dataclass
+
+Returns:
+    None
+
+Raises:
+    N/A
 ```
 
 <details class="source">

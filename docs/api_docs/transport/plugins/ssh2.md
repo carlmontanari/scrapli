@@ -360,43 +360,43 @@ class PluginTransportArgs(BasePluginTransportArgs):
 - scrapli.transport.base.base_transport.BasePluginTransportArgs
 #### Class variables
 
-
+    
 `auth_password: str`
 
 
 
 
-
+    
 `auth_private_key: str`
 
 
 
 
-
+    
 `auth_private_key_passphrase: str`
 
 
 
 
-
+    
 `auth_strict_key: bool`
 
 
 
 
-
+    
 `auth_username: str`
 
 
 
 
-
+    
 `ssh_config_file: str`
 
 
 
 
-
+    
 `ssh_known_hosts_file: str`
 
 
@@ -410,6 +410,17 @@ class PluginTransportArgs(BasePluginTransportArgs):
 ```text
 Helper class that provides a standard way to create an ABC using
 inheritance.
+
+Scrapli's transport base class
+
+Args:
+    base_transport_args: base transport args dataclass
+
+Returns:
+    None
+
+Raises:
+    N/A
 ```
 
 <details class="source">
