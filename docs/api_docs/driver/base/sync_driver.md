@@ -205,7 +205,7 @@ class Driver(BaseDriver):
             # the new connection is closed this will also close the channel log; see docstring.
             self.channel.channel_log = original_channel_channel_log
 
-        if execute_on_open is True and self.on_open is not None:
+        if execute_on_open and self.on_open is not None:
             self.on_open(self)
         </code>
     </pre>
@@ -474,7 +474,7 @@ class Driver(BaseDriver):
             # the new connection is closed this will also close the channel log; see docstring.
             self.channel.channel_log = original_channel_channel_log
 
-        if execute_on_open is True and self.on_open is not None:
+        if execute_on_open and self.on_open is not None:
             self.on_open(self)
         </code>
     </pre>

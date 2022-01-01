@@ -34,12 +34,17 @@ from collections import defaultdict
 from datetime import datetime
 from enum import Enum
 from functools import lru_cache
-from logging import LoggerAdapter
-from typing import DefaultDict, Dict, List, Optional, Set, Tuple, Union
+from logging import Logger, LoggerAdapter
+from typing import TYPE_CHECKING, DefaultDict, Dict, List, Optional, Set, Tuple, Union
 
 from scrapli.exceptions import ScrapliPrivilegeError, ScrapliTypeError
 from scrapli.helper import user_warning
 from scrapli.response import MultiResponse, Response
+
+if TYPE_CHECKING:
+    LoggerAdapterT = LoggerAdapter[Logger]  # pylint:disable=E1136
+else:
+    LoggerAdapterT = LoggerAdapter
 
 
 class PrivilegeLevel:
@@ -108,7 +113,7 @@ class PrivilegeAction(Enum):
 
 class BaseNetworkDriver:
     # BaseNetworkDriver Mixin vars for typing/linting purposes
-    logger: LoggerAdapter
+    logger: LoggerAdapterT
     auth_secondary: str
     failed_when_contains: List[str]
     textfsm_platform: str
@@ -630,7 +635,7 @@ class BaseNetworkDriver:
         <code class="python">
 class BaseNetworkDriver:
     # BaseNetworkDriver Mixin vars for typing/linting purposes
-    logger: LoggerAdapter
+    logger: LoggerAdapterT
     auth_secondary: str
     failed_when_contains: List[str]
     textfsm_platform: str

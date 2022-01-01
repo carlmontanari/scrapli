@@ -148,8 +148,7 @@ def _build_provided_kwargs_dict(  # pylint: disable=R0914
     _provided_args = {key: value for key, value in _provided_args.items() if value is not None}
 
     # merge in any kwargs that maybe need to get passed down
-    all_provided_args = {**_provided_args, **kwargs}
-    return all_provided_args
+    return {**_provided_args, **kwargs}
 
 
 def _get_community_platform_details(community_platform_name: str) -> Dict[str, Any]:
