@@ -1,7 +1,7 @@
 black==21.12b0
 darglint==1.8.1
 isort==5.10.1
-mypy==0.930
+mypy==0.931
 nox==2022.01.07
 pycodestyle==2.8.0
 pydocstyle==6.1.1
