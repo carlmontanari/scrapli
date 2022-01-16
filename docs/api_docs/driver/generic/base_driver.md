@@ -67,6 +67,7 @@ class ReadCallback:
         reset_output: bool = True,
         only_once: bool = False,
         next_delay: float = -1.0,
+        next_timeout: float = -1.0,
         complete: bool = False,
         name: str = "",
     ):
@@ -79,7 +80,7 @@ class ReadCallback:
 
         Args:
             callback: callback function to execute, callback function must accept instance of the
-                class as first argument, and the  "read_output" as second.
+                class as first argument, and the  "read_output" as second
             contains: string of text that, if in the read output, indicates to execute this callback
             not_contains: string of text that should *not* be contained in the output
             contains_re: string of a regex pattern that will be compiled and used to match the
@@ -89,9 +90,12 @@ class ReadCallback:
             reset_output: bool indicating to reset (clear) the output or to pass the output along
                 to the next iteration. Sometimes you may want to clear the output to not
                 accidentally continue matching on one callback over and over again. You could also
-                use `only_once` to help with that.
+                use `only_once` to help with that
             only_once: bool indicating if this callback should only ever be executed one time
             next_delay: optional sleep between reads for next callback check
+            next_timeout: optionally set the transport timeout (to timeout the read operation) for
+                the subsequent callback checks -- the default value of -1.0 will tell scrapli to use
+                the "normal" transport timeout for the operation
             complete: bool indicating if this is the "last" callback to execute
             name: friendly name to give the callback, will be function name if not provided
 
@@ -125,6 +129,7 @@ class ReadCallback:
         self._triggered = False
 
         self.next_delay = next_delay
+        self.next_timeout = next_timeout
 
         self.complete = complete
 
@@ -572,7 +577,7 @@ may get some IDE/mypy complaints!
 
 Args:
     callback: callback function to execute, callback function must accept instance of the
-        class as first argument, and the  "read_output" as second.
+        class as first argument, and the  "read_output" as second
     contains: string of text that, if in the read output, indicates to execute this callback
     not_contains: string of text that should *not* be contained in the output
     contains_re: string of a regex pattern that will be compiled and used to match the
@@ -582,9 +587,12 @@ Args:
     reset_output: bool indicating to reset (clear) the output or to pass the output along
         to the next iteration. Sometimes you may want to clear the output to not
         accidentally continue matching on one callback over and over again. You could also
-        use `only_once` to help with that.
+        use `only_once` to help with that
     only_once: bool indicating if this callback should only ever be executed one time
     next_delay: optional sleep between reads for next callback check
+    next_timeout: optionally set the transport timeout (to timeout the read operation) for
+        the subsequent callback checks -- the default value of -1.0 will tell scrapli to use
+        the "normal" transport timeout for the operation
     complete: bool indicating if this is the "last" callback to execute
     name: friendly name to give the callback, will be function name if not provided
 
@@ -616,6 +624,7 @@ class ReadCallback:
         reset_output: bool = True,
         only_once: bool = False,
         next_delay: float = -1.0,
+        next_timeout: float = -1.0,
         complete: bool = False,
         name: str = "",
     ):
@@ -628,7 +637,7 @@ class ReadCallback:
 
         Args:
             callback: callback function to execute, callback function must accept instance of the
-                class as first argument, and the  "read_output" as second.
+                class as first argument, and the  "read_output" as second
             contains: string of text that, if in the read output, indicates to execute this callback
             not_contains: string of text that should *not* be contained in the output
             contains_re: string of a regex pattern that will be compiled and used to match the
@@ -638,9 +647,12 @@ class ReadCallback:
             reset_output: bool indicating to reset (clear) the output or to pass the output along
                 to the next iteration. Sometimes you may want to clear the output to not
                 accidentally continue matching on one callback over and over again. You could also
-                use `only_once` to help with that.
+                use `only_once` to help with that
             only_once: bool indicating if this callback should only ever be executed one time
             next_delay: optional sleep between reads for next callback check
+            next_timeout: optionally set the transport timeout (to timeout the read operation) for
+                the subsequent callback checks -- the default value of -1.0 will tell scrapli to use
+                the "normal" transport timeout for the operation
             complete: bool indicating if this is the "last" callback to execute
             name: friendly name to give the callback, will be function name if not provided
 
@@ -674,6 +686,7 @@ class ReadCallback:
         self._triggered = False
 
         self.next_delay = next_delay
+        self.next_timeout = next_timeout
 
         self.complete = complete
 

@@ -75,11 +75,11 @@ class TransportTimeout:
 
     def __call__(self, wrapped_func: Callable[..., Any]) -> Callable[..., Any]:
         """
-        Decorate an "operation" to modify the timeout_ops value for duration of that operation
+        Decorate an "operation" to modify the timeout_transport value for duration of that operation
 
-        This decorator wraps send command/config ops and is used to allow users to set a
-        `timeout_ops` value for the duration of a single method call -- this makes it so users don't
-        need to manually set/reset the value
+        This decorator wraps a transport read operation and is used to allow users to control the
+        transport timeout via the `timeout_transport` attribute. This decorator should be applied to
+        any transport "read" operations.
 
         Args:
             wrapped_func: function being decorated
@@ -788,11 +788,11 @@ class TransportTimeout:
 
     def __call__(self, wrapped_func: Callable[..., Any]) -> Callable[..., Any]:
         """
-        Decorate an "operation" to modify the timeout_ops value for duration of that operation
+        Decorate an "operation" to modify the timeout_transport value for duration of that operation
 
-        This decorator wraps send command/config ops and is used to allow users to set a
-        `timeout_ops` value for the duration of a single method call -- this makes it so users don't
-        need to manually set/reset the value
+        This decorator wraps a transport read operation and is used to allow users to control the
+        transport timeout via the `timeout_transport` attribute. This decorator should be applied to
+        any transport "read" operations.
 
         Args:
             wrapped_func: function being decorated

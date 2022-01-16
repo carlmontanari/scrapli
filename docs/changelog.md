@@ -27,6 +27,8 @@ Changelog
 - Added `read_callback` method to `GenericDriver`/`AsyncGenericDriver` -- basically this is a fancier version of 
   send interactive that lets you assign callbacks to things that scrapli reads rather than having to follow prompts 
   in a linear fashion.
+- Dropped Python3.6 support as it is now EOL! Of course, scrapli probably still works just fine with 3.6 (if you 
+  install the old 3.6 requirements), but we won't test/support it anymore.
 
 
 ## 2021.07.30

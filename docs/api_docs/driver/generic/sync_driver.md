@@ -36,7 +36,7 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Un
 from scrapli.decorators import TimeoutOpsModifier
 from scrapli.driver import Driver
 from scrapli.driver.generic.base_driver import BaseGenericDriver
-from scrapli.exceptions import ScrapliValueError
+from scrapli.exceptions import ScrapliTimeout, ScrapliValueError
 from scrapli.response import MultiResponse, Response
 
 if TYPE_CHECKING:
@@ -479,6 +479,7 @@ class GenericDriver(Driver, BaseGenericDriver):
         initial_input: Optional[str] = None,
         read_output: bytes = b"",
         read_delay: float = 0.1,
+        read_timeout: float = -1.0,
     ) -> "ReadCallbackReturnable":
         r"""
         Read from a channel and react to the output with some callback.
@@ -538,12 +539,18 @@ class GenericDriver(Driver, BaseGenericDriver):
             initial_input: optional string to send to "kick off" the read_callback method
             read_output: optional bytes to append any new reads to
             read_delay: sleep interval between reads
+            read_timeout: value to set the `transport_timeout` to for the duration of the reading
+                portion of this method. If left default (-1.0) or set to anything below 0, the
+                transport timeout value will be left alone (whatever the timeout_transport value is)
+                otherwise, the provided value will be temporarily set as the timeout_transport for
+                duration of the reading.
 
         Returns:
             ReadCallbackReturnable: either None or call to read_callback again
 
         Raises:
-            N/A
+            ScrapliTimeout: if the read operation times out (base don the read_timeout value) during
+                the read callback check.
 
         """
         if initial_input is not None:
@@ -551,14 +558,20 @@ class GenericDriver(Driver, BaseGenericDriver):
             return self.read_callback(callbacks=callbacks, initial_input=None)
 
         original_transport_timeout = self.timeout_transport
-        self.timeout_transport = 0
 
-        _read_delay = 0.1
-        if read_delay > 0:
-            _read_delay = read_delay
+        # if the read_timeout value is -1.0 or just less than 0, that indicates we should use
+        # the "normal" transport timeout and not modify anything
+        self.timeout_transport = read_timeout if read_timeout >= 0 else self.timeout_transport
+
+        _read_delay = 0.1 if read_delay <= 0 else read_delay
 
         while True:
-            read_output += self.channel.read()
+            try:
+                read_output += self.channel.read()
+            except ScrapliTimeout as exc:
+                self.timeout_transport = original_transport_timeout
+
+                raise ScrapliTimeout("timeout during read in read_callback operation") from exc
 
             for callback in callbacks:
                 _run_callback = callback.check(read_output=read_output)
@@ -593,6 +606,7 @@ class GenericDriver(Driver, BaseGenericDriver):
                         initial_input=None,
                         read_output=read_output,
                         read_delay=callback.next_delay,
+                        read_timeout=callback.next_timeout,
                     )
 
             time.sleep(_read_delay)
@@ -1129,6 +1143,7 @@ class GenericDriver(Driver, BaseGenericDriver):
         initial_input: Optional[str] = None,
         read_output: bytes = b"",
         read_delay: float = 0.1,
+        read_timeout: float = -1.0,
     ) -> "ReadCallbackReturnable":
         r"""
         Read from a channel and react to the output with some callback.
@@ -1188,12 +1203,18 @@ class GenericDriver(Driver, BaseGenericDriver):
             initial_input: optional string to send to "kick off" the read_callback method
             read_output: optional bytes to append any new reads to
             read_delay: sleep interval between reads
+            read_timeout: value to set the `transport_timeout` to for the duration of the reading
+                portion of this method. If left default (-1.0) or set to anything below 0, the
+                transport timeout value will be left alone (whatever the timeout_transport value is)
+                otherwise, the provided value will be temporarily set as the timeout_transport for
+                duration of the reading.
 
         Returns:
             ReadCallbackReturnable: either None or call to read_callback again
 
         Raises:
-            N/A
+            ScrapliTimeout: if the read operation times out (base don the read_timeout value) during
+                the read callback check.
 
         """
         if initial_input is not None:
@@ -1201,14 +1222,20 @@ class GenericDriver(Driver, BaseGenericDriver):
             return self.read_callback(callbacks=callbacks, initial_input=None)
 
         original_transport_timeout = self.timeout_transport
-        self.timeout_transport = 0
 
-        _read_delay = 0.1
-        if read_delay > 0:
-            _read_delay = read_delay
+        # if the read_timeout value is -1.0 or just less than 0, that indicates we should use
+        # the "normal" transport timeout and not modify anything
+        self.timeout_transport = read_timeout if read_timeout >= 0 else self.timeout_transport
+
+        _read_delay = 0.1 if read_delay <= 0 else read_delay
 
         while True:
-            read_output += self.channel.read()
+            try:
+                read_output += self.channel.read()
+            except ScrapliTimeout as exc:
+                self.timeout_transport = original_transport_timeout
+
+                raise ScrapliTimeout("timeout during read in read_callback operation") from exc
 
             for callback in callbacks:
                 _run_callback = callback.check(read_output=read_output)
@@ -1243,6 +1270,7 @@ class GenericDriver(Driver, BaseGenericDriver):
                         initial_input=None,
                         read_output=read_output,
                         read_delay=callback.next_delay,
+                        read_timeout=callback.next_timeout,
                     )
 
             time.sleep(_read_delay)
@@ -1282,7 +1310,7 @@ Raises:
     
 
 ##### read_callback
-`read_callback(self, callbacks: List[ForwardRef('ReadCallback')], initial_input: Optional[str] = None, read_output: bytes = b'', read_delay: float = 0.1) ‑> ReadCallbackReturnable`
+`read_callback(self, callbacks: List[ForwardRef('ReadCallback')], initial_input: Optional[str] = None, read_output: bytes = b'', read_delay: float = 0.1, read_timeout: float = -1.0) ‑> ReadCallbackReturnable`
 
 ```text
 Read from a channel and react to the output with some callback.
@@ -1342,12 +1370,18 @@ Args:
     initial_input: optional string to send to "kick off" the read_callback method
     read_output: optional bytes to append any new reads to
     read_delay: sleep interval between reads
+    read_timeout: value to set the `transport_timeout` to for the duration of the reading
+        portion of this method. If left default (-1.0) or set to anything below 0, the
+        transport timeout value will be left alone (whatever the timeout_transport value is)
+        otherwise, the provided value will be temporarily set as the timeout_transport for
+        duration of the reading.
 
 Returns:
     ReadCallbackReturnable: either None or call to read_callback again
 
 Raises:
-    N/A
+    ScrapliTimeout: if the read operation times out (base don the read_timeout value) during
+        the read callback check.
 ```
 
 
