@@ -93,7 +93,6 @@ def test_readcallback_run_sync():
     assert read_callback._triggered is True
 
 
-@pytest.mark.asyncio
 async def test_readcallback_run_async():
     callback_executed = False
 

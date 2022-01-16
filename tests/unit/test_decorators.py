@@ -85,7 +85,6 @@ def test_transport_timeout_sync_timed_out_multiprocessing(monkeypatch, sync_tran
         sync_transport_no_abc.open()
 
 
-@pytest.mark.asyncio
 async def test_transport_timeout_async_timed_out(monkeypatch, async_transport_no_abc):
     async_transport_no_abc._base_transport_args.timeout_transport = 0.1
 
@@ -100,7 +99,6 @@ async def test_transport_timeout_async_timed_out(monkeypatch, async_transport_no
         await async_transport_no_abc.open()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "test_data",
     (
@@ -203,7 +201,6 @@ def test_channel_timeout_sync_timed_out_multiprocessing(monkeypatch, sync_channe
         sync_channel.send_input()
 
 
-@pytest.mark.asyncio
 async def test_channel_timeout_async_timed_out(monkeypatch, async_channel):
     async_channel._base_channel_args.timeout_ops = 0.1
 
@@ -218,7 +215,6 @@ async def test_channel_timeout_async_timed_out(monkeypatch, async_channel):
         await async_channel.send_input()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "test_data",
     (
@@ -267,7 +263,6 @@ def test_timeout_modifier(monkeypatch, sync_driver, test_data):
     assert sync_driver.timeout_ops == 30
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "test_data",
     (

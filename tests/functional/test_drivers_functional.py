@@ -311,7 +311,6 @@ class TestNetworkDevice:
         assert conn.isalive() is False
 
 
-@pytest.mark.asyncio
 class TestAsyncNetworkDevice:
     @pytest.fixture(autouse=True)
     def __setup(self, test_cases):

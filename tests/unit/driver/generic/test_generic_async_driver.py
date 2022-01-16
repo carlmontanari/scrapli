@@ -4,7 +4,6 @@ from scrapli.driver.generic.base_driver import ReadCallback
 from scrapli.exceptions import ScrapliValueError
 
 
-@pytest.mark.asyncio
 async def test_get_prompt(monkeypatch, async_generic_driver):
     async def _get_prompt(cls):
         return "scrapli>"
@@ -15,7 +14,6 @@ async def test_get_prompt(monkeypatch, async_generic_driver):
     assert await async_generic_driver.get_prompt() == "scrapli>"
 
 
-@pytest.mark.asyncio
 async def test__send_command(monkeypatch, async_generic_driver):
     async def _send_input(cls, **kwargs):
         return b"raw", b"processed"
@@ -27,14 +25,12 @@ async def test__send_command(monkeypatch, async_generic_driver):
     assert actual_response.raw_result == b"raw"
 
 
-@pytest.mark.asyncio
 async def test__send_command_no_base_transport_args(async_generic_driver):
     async_generic_driver._base_transport_args = None
     with pytest.raises(ScrapliValueError):
         await async_generic_driver._send_command(command="nada")
 
 
-@pytest.mark.asyncio
 async def test_send_command(monkeypatch, async_generic_driver):
     async def _send_input(cls, **kwargs):
         return b"raw", b"processed"
@@ -46,7 +42,6 @@ async def test_send_command(monkeypatch, async_generic_driver):
     assert actual_response.raw_result == b"raw"
 
 
-@pytest.mark.asyncio
 async def test_send_commands(monkeypatch, async_generic_driver):
     async def _send_input(cls, **kwargs):
         return b"raw", b"processed"
@@ -60,7 +55,6 @@ async def test_send_commands(monkeypatch, async_generic_driver):
     assert actual_response[0].raw_result == b"raw"
 
 
-@pytest.mark.asyncio
 async def test_send_commands_from_file(
     fs, monkeypatch, real_ssh_commands_file_path, async_generic_driver
 ):
@@ -76,7 +70,6 @@ async def test_send_commands_from_file(
     assert actual_response[0].raw_result == b"raw"
 
 
-@pytest.mark.asyncio
 async def test_send_and_read(monkeypatch, async_generic_driver):
     async def _send_input_and_read(cls, **kwargs):
         return b"raw", b"processed"
@@ -90,14 +83,12 @@ async def test_send_and_read(monkeypatch, async_generic_driver):
     assert actual_response.raw_result == b"raw"
 
 
-@pytest.mark.asyncio
 async def test_send_and_read_no_base_transport_args(async_generic_driver):
     async_generic_driver._base_transport_args = None
     with pytest.raises(ScrapliValueError):
         await async_generic_driver.send_and_read(channel_input="nada")
 
 
-@pytest.mark.asyncio
 async def test_send_interactive(monkeypatch, async_generic_driver):
     async def _send_inputs_interact(cls, **kwargs):
         return b"raw", b"processed"
@@ -114,14 +105,12 @@ async def test_send_interactive(monkeypatch, async_generic_driver):
     assert actual_response.raw_result == b"raw"
 
 
-@pytest.mark.asyncio
 async def test_send_interact_no_base_transport_args(async_generic_driver):
     async_generic_driver._base_transport_args = None
     with pytest.raises(ScrapliValueError):
         await async_generic_driver.send_interactive(interact_events=[])
 
 
-@pytest.mark.asyncio
 async def test_readcallback_basic(monkeypatch, async_generic_driver):
     async def _read(cls):
         return b"rtr1#"
