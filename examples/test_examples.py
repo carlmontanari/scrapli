@@ -11,7 +11,6 @@ from .structured_data import structured_data_genie
 # simply making sure the examples don't blow up!
 
 
-@pytest.mark.asyncio
 async def test_async_usage():
     await async_iosxe_driver.main()
 

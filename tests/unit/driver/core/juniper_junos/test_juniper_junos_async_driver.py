@@ -1,7 +1,3 @@
-import pytest
-
-
-@pytest.mark.asyncio
 async def test_on_open(monkeypatch, async_junos_driver):
     _input_counter = 0
 
@@ -29,7 +25,6 @@ async def test_on_open(monkeypatch, async_junos_driver):
     await async_junos_driver.on_open(async_junos_driver)
 
 
-@pytest.mark.asyncio
 async def test_on_close(monkeypatch, async_junos_driver):
     async def _get_prompt(cls):
         return "scrapli>"

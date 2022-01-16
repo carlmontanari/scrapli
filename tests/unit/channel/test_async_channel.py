@@ -18,7 +18,6 @@ def test_channel_lock(async_transport_no_abc):
     assert async_channel.channel_lock
 
 
-@pytest.mark.asyncio
 async def test_channel_lock_context_manager(async_transport_no_abc):
     base_channel_args = BaseChannelArgs(channel_lock=True)
     async_channel = AsyncChannel(
@@ -30,7 +29,6 @@ async def test_channel_lock_context_manager(async_transport_no_abc):
     assert async_channel.channel_lock.locked() is False
 
 
-@pytest.mark.asyncio
 async def test_channel_lock_context_manager_no_channel_lock(async_transport_no_abc):
     base_channel_args = BaseChannelArgs(channel_lock=False)
     async_channel = AsyncChannel(
@@ -40,7 +38,6 @@ async def test_channel_lock_context_manager_no_channel_lock(async_transport_no_a
         assert True
 
 
-@pytest.mark.asyncio
 async def test_channel_read(fs, caplog, monkeypatch, async_transport_no_abc):
     # fs needed to mock filesystem for asserting log location
     _ = fs
@@ -80,7 +77,6 @@ async def test_channel_read(fs, caplog, monkeypatch, async_transport_no_abc):
         assert actual_channel_log.readline() == "read_data"
 
 
-@pytest.mark.asyncio
 async def test_channel_read_until_input(monkeypatch, async_channel):
     expected_read_output = b"read_data\nthisismyinput"
     _read_counter = 0
@@ -101,12 +97,10 @@ async def test_channel_read_until_input(monkeypatch, async_channel):
     assert actual_read_output == expected_read_output
 
 
-@pytest.mark.asyncio
 async def test_channel_read_until_input_no_input(async_channel):
     assert await async_channel._read_until_input(channel_input=b"") == b""
 
 
-@pytest.mark.asyncio
 async def test_channel_read_until_prompt(monkeypatch, async_channel):
     expected_read_output = b"read_data\nscrapli>"
     _read_counter = 0
@@ -127,7 +121,6 @@ async def test_channel_read_until_prompt(monkeypatch, async_channel):
     assert actual_read_output == expected_read_output
 
 
-@pytest.mark.asyncio
 async def test_channel_read_until_explicit_prompt(monkeypatch, async_channel):
     expected_read_output = b"read_data\nscrapli>"
     _read_counter = 0
@@ -151,7 +144,6 @@ async def test_channel_read_until_explicit_prompt(monkeypatch, async_channel):
 # TODO read until prompt/time
 
 
-@pytest.mark.asyncio
 async def test_channel_authenticate_ssh(monkeypatch, async_channel):
     _read_counter = 0
     _write_counter = 0
@@ -194,7 +186,6 @@ async def test_channel_authenticate_ssh(monkeypatch, async_channel):
     )
 
 
-@pytest.mark.asyncio
 async def test_channel_authenticate_ssh_fail_password(monkeypatch, async_channel):
     async def _read(cls):
         return b"password:"
@@ -212,7 +203,6 @@ async def test_channel_authenticate_ssh_fail_password(monkeypatch, async_channel
         )
 
 
-@pytest.mark.asyncio
 async def test_channel_authenticate_ssh_fail_passphrase(monkeypatch, async_channel):
     async def _read(cls):
         return b"enter passphrase for key"
@@ -230,7 +220,6 @@ async def test_channel_authenticate_ssh_fail_passphrase(monkeypatch, async_chann
         )
 
 
-@pytest.mark.asyncio
 async def test_channel_authenticate_telnet(monkeypatch, async_channel):
     _read_counter = 0
     _write_counter = 0
@@ -274,7 +263,6 @@ async def test_channel_authenticate_telnet(monkeypatch, async_channel):
     )
 
 
-@pytest.mark.asyncio
 async def test_channel_authenticate_telnet_fail_login(monkeypatch, async_channel):
     async def _read(cls):
         return b"login:"
@@ -292,7 +280,6 @@ async def test_channel_authenticate_telnet_fail_login(monkeypatch, async_channel
         )
 
 
-@pytest.mark.asyncio
 async def test_channel_authenticate_telnet_fail_password(monkeypatch, async_channel):
     async def _read(cls):
         return b"password:"
@@ -310,7 +297,6 @@ async def test_channel_authenticate_telnet_fail_password(monkeypatch, async_chan
         )
 
 
-@pytest.mark.asyncio
 async def test_channel_authenticate_telnet_send_return(monkeypatch, async_channel):
     _read_counter = 0
     _write_counter = 0
@@ -361,7 +347,6 @@ async def test_channel_authenticate_telnet_send_return(monkeypatch, async_channe
     )
 
 
-@pytest.mark.asyncio
 async def test_get_prompt(monkeypatch, async_channel):
     _read_counter = 0
 
@@ -386,7 +371,6 @@ async def test_get_prompt(monkeypatch, async_channel):
     assert await async_channel.get_prompt() == "scrapli>"
 
 
-@pytest.mark.asyncio
 async def test_send_input(monkeypatch, async_channel):
     _read_counter = 0
 
@@ -419,7 +403,6 @@ async def test_send_input(monkeypatch, async_channel):
     assert actual_processed_buf == expected_processed_buf
 
 
-@pytest.mark.asyncio
 async def test_send_input_and_read(monkeypatch, async_channel):
     _read_counter = 0
 
@@ -453,7 +436,6 @@ async def test_send_input_and_read(monkeypatch, async_channel):
     assert actual_processed_buf == expected_buf
 
 
-@pytest.mark.asyncio
 async def test_send_inputs_interact(monkeypatch, async_channel):
     _read_counter = 0
     _event_counter = 0
@@ -495,7 +477,6 @@ async def test_send_inputs_interact(monkeypatch, async_channel):
     assert actual_processed_buf == expected_buf
 
 
-@pytest.mark.asyncio
 async def test_send_inputs_interact_hidden_input(monkeypatch, async_channel):
     _read_counter = 0
     _event_counter = 0
