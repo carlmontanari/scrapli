@@ -20,7 +20,7 @@ scrapli
 
 ---
 
-scrapli -- scrap(e c)li --  is a python 3.6+ library focused on connecting to devices, specifically network devices
+scrapli -- scrap(e c)li --  is a python 3.7+ library focused on connecting to devices, specifically network devices
  (routers/switches/firewalls/etc.) via Telnet or SSH.
 
 #### Key Features:
@@ -54,8 +54,8 @@ scrapli "core" has no requirements other than the Python standard library<sup>2<
 
 <sup>1</sup> Although many parts of scrapli *do* run on Windows, Windows is not officially supported
 
-<sup>2</sup> Python 3.6 requires the `dataclass` backport as well as third party `async_generator` library, Python 3.
-7+ has no external dependencies for scrapli "core"
+<sup>2</sup> While Python 3.6 has been dropped, it *probably* still works, but requires the `dataclass` 
+backport as well as third party `async_generator` library, Python 3.7+ has no external dependencies for scrapli "core"
 
 
 ## Installation

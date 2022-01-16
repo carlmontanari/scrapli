@@ -45,7 +45,7 @@ setuptools.setup(
     version=__version__,
     author=__author__,
     author_email="carl.r.montanari@gmail.com",
-    description="Fast, flexible, sync/async, Python 3.6+ screen scraping client specifically for "
+    description="Fast, flexible, sync/async, Python 3.7+ screen scraping client specifically for "
     "network devices",
     long_description=README,
     long_description_content_type="text/markdown",
@@ -67,7 +67,6 @@ setuptools.setup(
         "Operating System :: POSIX :: Linux",
         "Operating System :: MacOS",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
@@ -75,7 +74,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3 :: Only",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     # zip_safe False for mypy
     # https://mypy.readthedocs.io/en/stable/installed_packages.html
     zip_safe=False,
