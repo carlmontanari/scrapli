@@ -3,7 +3,7 @@ import asyncio
 from dataclasses import dataclass
 from typing import Optional
 
-from asyncssh import connect
+from asyncssh import connect  # type: ignore
 from asyncssh.connection import SSHClientConnection
 from asyncssh.misc import ConnectionLost, PermissionDenied
 from asyncssh.stream import SSHReader, SSHWriter
@@ -84,8 +84,8 @@ class AsyncsshTransport(AsyncTransport):
         self.plugin_transport_args = plugin_transport_args
 
         self.session: Optional[SSHClientConnection] = None
-        self.stdout: Optional[SSHReader] = None
-        self.stdin: Optional[SSHWriter] = None
+        self.stdout: Optional[SSHReader] = None  # type: ignore
+        self.stdin: Optional[SSHWriter] = None  # type: ignore
 
     def _verify_key(self) -> None:
         """
@@ -121,7 +121,8 @@ class AsyncsshTransport(AsyncTransport):
 
         Raises:
             ScrapliConnectionNotOpened: if session is unopened/None
-            ScrapliAuthenticationFailed: if host is in known hosts but public key does not match
+            ScrapliAuthenticationFailed: if host is in known hosts but public key does not match or
+                cannot glean remote server key from session.
 
         """
         if not self.session:
@@ -131,6 +132,11 @@ class AsyncsshTransport(AsyncTransport):
         known_host_public_key = known_hosts.lookup(self._base_transport_args.host)
 
         remote_server_key = self.session.get_server_host_key()
+        if remote_server_key is None:
+            raise ScrapliAuthenticationFailed(
+                f"failed gleaning remote server ssh key for host {self._base_transport_args.host}"
+            )
+
         remote_public_key = remote_server_key.export_public_key().split()[1].decode()
 
         if known_host_public_key["public_key"] != remote_public_key:
@@ -232,6 +238,7 @@ class AsyncsshTransport(AsyncTransport):
         try:
             if (
                 self.session._auth_complete  # pylint:  disable=W0212
+                and self.session._transport is not None  # pylint:  disable=W0212
                 and self.session._transport.is_closing() is False  # pylint:  disable=W0212
             ):
                 return True
