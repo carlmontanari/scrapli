@@ -53,6 +53,19 @@ class BasePluginTransportArgs:
 
 class BaseTransport(ABC):
     def __init__(self, base_transport_args: BaseTransportArgs) -> None:
+        """
+        Scrapli's transport base class
+
+        Args:
+            base_transport_args: base transport args dataclass
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        """
         self._base_transport_args = base_transport_args
 
         self.logger = get_instance_logger(
@@ -197,6 +210,17 @@ class BasePluginTransportArgs:
 ```text
 Helper class that provides a standard way to create an ABC using
 inheritance.
+
+Scrapli's transport base class
+
+Args:
+    base_transport_args: base transport args dataclass
+
+Returns:
+    None
+
+Raises:
+    N/A
 ```
 
 <details class="source">
@@ -207,6 +231,19 @@ inheritance.
         <code class="python">
 class BaseTransport(ABC):
     def __init__(self, base_transport_args: BaseTransportArgs) -> None:
+        """
+        Scrapli's transport base class
+
+        Args:
+            base_transport_args: base transport args dataclass
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        """
         self._base_transport_args = base_transport_args
 
         self.logger = get_instance_logger(

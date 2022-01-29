@@ -1,9 +1,114 @@
-import sys
+import re
 
 import pytest
 
+from scrapli.driver.generic.base_driver import ReadCallback
 from scrapli.exceptions import ScrapliTypeError
 from scrapli.response import MultiResponse, Response
+
+
+def test_readcallback_contains_bytes_property():
+    read_callback = ReadCallback(callback=lambda _: None, name="testing", contains="contains")
+
+    assert read_callback.name == "testing"
+    assert read_callback.contains_bytes == b"contains"
+
+
+def test_readcallback_not_contains_bytes_property():
+    read_callback = ReadCallback(callback=lambda _: None, name="testing", not_contains="contains")
+
+    assert read_callback.name == "testing"
+    assert read_callback.not_contains_bytes == b"contains"
+
+
+def test_readcallback_contains_re_bytes_property():
+    read_callback = ReadCallback(callback=lambda x: x + 1, name="testing", contains_re="contains")
+
+    assert read_callback.name == "testing"
+    assert read_callback.contains_re_bytes == re.compile(b"contains", re.IGNORECASE | re.MULTILINE)
+
+
+def test_readcallback_contains_re_bytes_property_sensitive():
+    read_callback = ReadCallback(
+        callback=lambda _: None, name="testing", contains_re="contains", case_insensitive=False
+    )
+
+    assert read_callback.name == "testing"
+    assert read_callback.contains_re_bytes == re.compile(b"contains", re.MULTILINE)
+
+
+def test_readcallback_contains_re_bytes_property_nomultiline():
+    read_callback = ReadCallback(
+        callback=lambda _: None, name="testing", contains_re="contains", multiline=False
+    )
+
+    assert read_callback.name == "testing"
+    assert read_callback.contains_re_bytes == re.compile(b"contains", re.IGNORECASE)
+
+
+def test_readcallback_check_contains():
+    read_callback = ReadCallback(
+        callback=lambda _: None, name="testing", contains="contains", case_insensitive=False
+    )
+
+    assert read_callback.name == "testing"
+    assert read_callback.check(b"this contains some stuff") is True
+
+
+def test_readcallback_check_re_contains():
+    read_callback = ReadCallback(callback=lambda _: None, name="testing", contains_re="contains")
+
+    assert read_callback.name == "testing"
+    assert read_callback.check(b"this contains some stuff") is True
+
+
+def test_readcallback_check_fail():
+    read_callback = ReadCallback(callback=lambda _: None, name="testing", contains_re="contains")
+
+    assert read_callback.name == "testing"
+    assert read_callback.check(b"nope, not here") is False
+
+
+def test_readcallback_run_sync():
+    callback_executed = False
+
+    def callback(driver, read_output):
+        nonlocal callback_executed
+        callback_executed = True
+
+    read_callback = ReadCallback(
+        callback=callback,
+        name="testing",
+        contains_re="contains",
+        case_insensitive=False,
+        only_once=True,
+    )
+
+    assert read_callback.name == "testing"
+
+    assert read_callback._triggered is False
+    read_callback.run(None)
+
+    assert callback_executed is True
+    assert read_callback._triggered is True
+
+
+async def test_readcallback_run_async():
+    callback_executed = False
+
+    async def callback(driver, read_output):
+        nonlocal callback_executed
+        callback_executed = True
+
+    read_callback = ReadCallback(callback=callback, contains_re="contains", only_once=True)
+
+    assert read_callback.name == "callback"
+
+    assert read_callback._triggered is False
+    await read_callback.run(None)
+
+    assert callback_executed is True
+    assert read_callback._triggered is True
 
 
 def test_pre_send_command(base_generic_driver):

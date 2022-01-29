@@ -1,5 +1,5 @@
-mdx-gh-links==0.2
-mkdocs==1.2.2
-mkdocs-material==7.3.1
-mkdocs-material-extensions==1.0.3
-pdoc3==0.10.0 ; sys_platform != "win32"
+mdx-gh-links>=0.2,<1.0
+mkdocs>=1.2.3,<2.0.0
+mkdocs-material>=8.1.6,<9.0.0
+mkdocs-material-extensions>=1.0.3,<2.0.0
+pdoc3>=0.10.0,<1.0.0 ; sys_platform != "win32"

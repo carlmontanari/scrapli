@@ -26,4 +26,7 @@
          scrapli, the difference between `ssh2` and `system` transports in limited testing is very small, and the
           benefits of using system transport (native ssh config file support!!) probably should outweigh the speed of
            ssh2 -- especially if you have control persist and can take advantage of that with system transport!
+* Hey does this thing do SCP?
+     - Nope! But the very cool @viktorkertesz has created [scrapli_scp](https://github.com/viktorkertesz/scrapli_scp)
+       which you should defo check out if you wanna do SCP things!
 * Other questions? Ask away!

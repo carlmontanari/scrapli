@@ -1,6 +1,6 @@
 ---
 site_name: Scrapli
-site_description: Fast, flexible, sync/async, Python 3.6+ screen scraping client specifically for network devices
+site_description: Fast, flexible, sync/async, Python 3.7+ screen scraping client specifically for network devices
 site_author: Carl Montanari
 site_url: https://carlmontanari.github.io/
 

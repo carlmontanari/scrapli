@@ -87,7 +87,6 @@ def test_isalive_attribute_error(asyncssh_transport):
     assert asyncssh_transport.isalive() is False
 
 
-@pytest.mark.asyncio
 async def test_read(monkeypatch, asyncssh_transport):
     async def _read(cls, _):
         return b"somebytes"
@@ -103,13 +102,11 @@ async def test_read(monkeypatch, asyncssh_transport):
     assert await asyncssh_transport.read() == b"somebytes"
 
 
-@pytest.mark.asyncio
 async def test_read_exception_not_open(asyncssh_transport):
     with pytest.raises(ScrapliConnectionNotOpened):
         await asyncssh_transport.read()
 
 
-@pytest.mark.asyncio
 async def test_read_exception_timeout(monkeypatch, asyncssh_transport):
     async def _read(cls, _):
         await asyncio.sleep(0.5)

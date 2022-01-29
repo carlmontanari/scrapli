@@ -52,6 +52,7 @@ class PluginTransportArgs(BasePluginTransportArgs):
     auth_username: str
     auth_password: str = ""
     auth_private_key: str = ""
+    auth_private_key_passphrase: str = ""
     auth_strict_key: bool = True
     ssh_config_file: str = ""
     ssh_known_hosts_file: str = ""
@@ -197,6 +198,7 @@ class Ssh2Transport(Transport):
             self.session.userauth_publickey_fromfile(
                 self.plugin_transport_args.auth_username,
                 self.plugin_transport_args.auth_private_key.encode(),
+                self.plugin_transport_args.auth_private_key_passphrase,
             )
         except (AuthenticationError, SSH2Error):
             pass
@@ -331,7 +333,7 @@ class Ssh2Transport(Transport):
 
 
 ```text
-PluginTransportArgs(auth_username: str, auth_password: str = '', auth_private_key: str = '', auth_strict_key: bool = True, ssh_config_file: str = '', ssh_known_hosts_file: str = '')
+PluginTransportArgs(auth_username: str, auth_password: str = '', auth_private_key: str = '', auth_private_key_passphrase: str = '', auth_strict_key: bool = True, ssh_config_file: str = '', ssh_known_hosts_file: str = '')
 ```
 
 <details class="source">
@@ -345,6 +347,7 @@ class PluginTransportArgs(BasePluginTransportArgs):
     auth_username: str
     auth_password: str = ""
     auth_private_key: str = ""
+    auth_private_key_passphrase: str = ""
     auth_strict_key: bool = True
     ssh_config_file: str = ""
     ssh_known_hosts_file: str = ""
@@ -365,6 +368,12 @@ class PluginTransportArgs(BasePluginTransportArgs):
 
     
 `auth_private_key: str`
+
+
+
+
+    
+`auth_private_key_passphrase: str`
 
 
 
@@ -401,6 +410,17 @@ class PluginTransportArgs(BasePluginTransportArgs):
 ```text
 Helper class that provides a standard way to create an ABC using
 inheritance.
+
+Scrapli's transport base class
+
+Args:
+    base_transport_args: base transport args dataclass
+
+Returns:
+    None
+
+Raises:
+    N/A
 ```
 
 <details class="source">
@@ -549,6 +569,7 @@ class Ssh2Transport(Transport):
             self.session.userauth_publickey_fromfile(
                 self.plugin_transport_args.auth_username,
                 self.plugin_transport_args.auth_private_key.encode(),
+                self.plugin_transport_args.auth_private_key_passphrase,
             )
         except (AuthenticationError, SSH2Error):
             pass

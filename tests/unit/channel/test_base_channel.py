@@ -18,7 +18,7 @@ from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliTypeError, Sc
         ),
         (
             "auth_password_pattern",
-            "^password:\s?$",
+            "^(.*@.*)?password:\s?$",
         ),
         (
             "auth_passphrase_pattern",
@@ -91,6 +91,35 @@ def test_channel_log_user_bytesio(base_transport_no_abc):
     chan = BaseChannel(transport=base_transport_no_abc, base_channel_args=base_channel_args)
     chan.open()
     assert chan.channel_log is bytes_log
+
+
+@pytest.mark.parametrize(
+    "test_data",
+    (
+        (
+            b"blah basic stuff>",
+            b"blah basic stuff>",
+        ),
+        (
+            b"\noper-status></physical-interface>\nsomeprompt>",
+            b"oper-status></physical-interface>\nsomeprompt>",
+        ),
+    ),
+    ids=("simple_buf", "xml_out"),
+)
+def test_process_read_buf(test_data, base_channel):
+    """
+    This asserts that the process read buf method always returns a search buf that is "roooted"
+    on newlines -- meaning we never scan backwards through the readbuf and return a line that gets
+    split up resulting in a section of the line being at the "start" of the search_buf that looks
+    exactly like a normal prompt we would match on
+    """
+    inbuf, expected_buf = test_data
+
+    read_buf = BytesIO(inbuf)
+    search_buf = base_channel._process_read_buf(read_buf=read_buf)
+
+    assert search_buf == expected_buf
 
 
 def test_channel_write(caplog, monkeypatch, base_channel):
