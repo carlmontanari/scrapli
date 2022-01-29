@@ -1,7 +1,7 @@
 Changelog
 =========
 
-## (in development) 2022.01.30
+## 2022.01.30
 
 - Removed deprecated `comms_ansi` argument
 - Improved error handling/error message for insufficient permissions when opening ssh config/known hosts file 
@@ -29,6 +29,9 @@ Changelog
   in a linear fashion.
 - Dropped Python3.6 support as it is now EOL! Of course, scrapli probably still works just fine with 3.6 (if you 
   install the old 3.6 requirements), but we won't test/support it anymore.
+- Added `enable_rsa2` setting to paramiko transport options -- basically 2.9.0+ paramiko enables rsa2 support by 
+  default which causes key auth to fail on the test network devices, so we disable that by default, but exposet his 
+  flag so users can enable it if desired!
 
 
 ## 2021.07.30

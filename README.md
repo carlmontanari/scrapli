@@ -47,7 +47,7 @@ scrapli -- scrap(e c)li --  is a python 3.7+ library focused on connecting to de
 
 ## Requirements
 
-MacOS or \*nix<sup>1</sup>, Python 3.6+
+MacOS or \*nix<sup>1</sup>, Python 3.7+
 
 scrapli "core" has no requirements other than the Python standard library<sup>2</sup>.
 
