@@ -1,11 +1,9 @@
-import sys
-
 import pytest
 
+from scrapli.driver.generic.base_driver import ReadCallback
 from scrapli.exceptions import ScrapliValueError
 
 
-@pytest.mark.asyncio
 async def test_get_prompt(monkeypatch, async_generic_driver):
     async def _get_prompt(cls):
         return "scrapli>"
@@ -16,7 +14,6 @@ async def test_get_prompt(monkeypatch, async_generic_driver):
     assert await async_generic_driver.get_prompt() == "scrapli>"
 
 
-@pytest.mark.asyncio
 async def test__send_command(monkeypatch, async_generic_driver):
     async def _send_input(cls, **kwargs):
         return b"raw", b"processed"
@@ -28,14 +25,12 @@ async def test__send_command(monkeypatch, async_generic_driver):
     assert actual_response.raw_result == b"raw"
 
 
-@pytest.mark.asyncio
 async def test__send_command_no_base_transport_args(async_generic_driver):
     async_generic_driver._base_transport_args = None
     with pytest.raises(ScrapliValueError):
         await async_generic_driver._send_command(command="nada")
 
 
-@pytest.mark.asyncio
 async def test_send_command(monkeypatch, async_generic_driver):
     async def _send_input(cls, **kwargs):
         return b"raw", b"processed"
@@ -47,7 +42,6 @@ async def test_send_command(monkeypatch, async_generic_driver):
     assert actual_response.raw_result == b"raw"
 
 
-@pytest.mark.asyncio
 async def test_send_commands(monkeypatch, async_generic_driver):
     async def _send_input(cls, **kwargs):
         return b"raw", b"processed"
@@ -61,7 +55,6 @@ async def test_send_commands(monkeypatch, async_generic_driver):
     assert actual_response[0].raw_result == b"raw"
 
 
-@pytest.mark.asyncio
 async def test_send_commands_from_file(
     fs, monkeypatch, real_ssh_commands_file_path, async_generic_driver
 ):
@@ -77,7 +70,6 @@ async def test_send_commands_from_file(
     assert actual_response[0].raw_result == b"raw"
 
 
-@pytest.mark.asyncio
 async def test_send_and_read(monkeypatch, async_generic_driver):
     async def _send_input_and_read(cls, **kwargs):
         return b"raw", b"processed"
@@ -91,14 +83,12 @@ async def test_send_and_read(monkeypatch, async_generic_driver):
     assert actual_response.raw_result == b"raw"
 
 
-@pytest.mark.asyncio
 async def test_send_and_read_no_base_transport_args(async_generic_driver):
     async_generic_driver._base_transport_args = None
     with pytest.raises(ScrapliValueError):
         await async_generic_driver.send_and_read(channel_input="nada")
 
 
-@pytest.mark.asyncio
 async def test_send_interactive(monkeypatch, async_generic_driver):
     async def _send_inputs_interact(cls, **kwargs):
         return b"raw", b"processed"
@@ -115,8 +105,51 @@ async def test_send_interactive(monkeypatch, async_generic_driver):
     assert actual_response.raw_result == b"raw"
 
 
-@pytest.mark.asyncio
 async def test_send_interact_no_base_transport_args(async_generic_driver):
     async_generic_driver._base_transport_args = None
     with pytest.raises(ScrapliValueError):
         await async_generic_driver.send_interactive(interact_events=[])
+
+
+async def test_readcallback_basic(monkeypatch, async_generic_driver):
+    async def _read(cls):
+        return b"rtr1#"
+
+    def _write(cls, channel_input, redacted=False):
+        return
+
+    monkeypatch.setattr("scrapli.channel.async_channel.AsyncChannel.read", _read)
+    monkeypatch.setattr("scrapli.channel.async_channel.AsyncChannel.write", _write)
+
+    callback_one_counter = 0
+    callback_two_counter = 0
+
+    async def callback_one(cls, read_output):
+        nonlocal callback_one_counter
+
+        callback_one_counter += 1
+
+    async def callback_two(cls, read_output):
+        nonlocal callback_two_counter
+
+        callback_two_counter += 1
+
+    callbacks = [
+        ReadCallback(
+            contains="rtr1#",
+            callback=callback_one,
+            name="call1",
+            case_insensitive=False,
+            only_once=True,
+        ),
+        ReadCallback(
+            contains_re=r"^rtr1#",
+            callback=callback_two,
+            complete=True,
+        ),
+    ]
+
+    await async_generic_driver.read_callback(callbacks=callbacks, initial_input="nada")
+
+    assert callback_one_counter == 1
+    assert callback_two_counter == 1

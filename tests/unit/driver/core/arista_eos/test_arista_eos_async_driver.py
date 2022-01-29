@@ -1,7 +1,3 @@
-import pytest
-
-
-@pytest.mark.asyncio
 async def test_on_open(monkeypatch, async_eos_driver):
     _input_counter = 0
 
@@ -27,7 +23,6 @@ async def test_on_open(monkeypatch, async_eos_driver):
     await async_eos_driver.on_open(async_eos_driver)
 
 
-@pytest.mark.asyncio
 async def test_on_close(monkeypatch, async_eos_driver):
     async def _get_prompt(cls):
         return "scrapli#"
@@ -46,7 +41,6 @@ async def test_on_close(monkeypatch, async_eos_driver):
     await async_eos_driver.on_close(async_eos_driver)
 
 
-@pytest.mark.asyncio
 async def test_register_and_abort_config(monkeypatch, async_eos_driver):
     async def _send_input(cls, channel_input, **kwargs):
         assert channel_input == "abort"

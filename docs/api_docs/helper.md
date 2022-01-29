@@ -40,6 +40,7 @@ import pkg_resources  # pylint: disable=C0411
 
 from scrapli.exceptions import ScrapliValueError
 from scrapli.logging import logger
+from scrapli.settings import Settings
 
 
 def _textfsm_get_template(platform: str, command: str) -> Optional[TextIO]:
@@ -80,8 +81,7 @@ def _textfsm_get_template(platform: str, command: str) -> Optional[TextIO]:
         )
         return None
     template_name = cli_table.index.index[template_index]["Template"]
-    template = open(f"{template_dir}/{template_name}", encoding="utf-8")  # pylint: disable=R1732
-    return template
+    return open(f"{template_dir}/{template_name}", encoding="utf-8")
 
 
 def _textfsm_to_dict(
@@ -287,7 +287,7 @@ def format_user_warning(title: str, message: str) -> str:
 
     warning_footer = warning_banner_char * terminal_width
 
-    warning_message = (
+    return (
         "\n\n"
         + warning_header
         + "\n"
@@ -296,8 +296,6 @@ def format_user_warning(title: str, message: str) -> str:
         + warning_footer
         + "\n"
     )
-
-    return warning_message
 
 
 def user_warning(title: str, message: str) -> None:
@@ -317,7 +315,9 @@ def user_warning(title: str, message: str) -> None:
     """
     warning_message = format_user_warning(title=title, message=message)
     logger.warning(warning_message)
-    warn(warning_message)
+
+    if Settings.SUPPRESS_USER_WARNINGS is False:
+        warn(warning_message)
         </code>
     </pre>
 </details>

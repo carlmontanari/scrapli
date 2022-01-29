@@ -31,6 +31,31 @@ class ParamikoTransport(Transport):
     def __init__(
         self, base_transport_args: BaseTransportArgs, plugin_transport_args: PluginTransportArgs
     ) -> None:
+        """
+        Paramiko transport plugin.
+
+        This transport supports some additional `transport_options` to control behavior --
+
+        `enable_rsa2` is bool defaulting to `False`. Please see the paramiko changelog entry for
+            version 2.9.0 here: https://www.paramiko.org/changelog.html. Basically, even though
+            scrapli *tries* to default to safe/sane/secure things where possible, it is also focused
+            on *network* devices which maybe sometimes are less up-to-date/safe/secure than we'd
+            all hope. In this case paramiko 2.9.0 defaults to supporting only RSA2based servers,
+            which, causes issues for the devices in the test suite, and likely for many other
+            network devices out there. So, by default, we'll *disable* this. If you wish to enable
+            this you can simply pass `True` to this transport option!
+
+        Args:
+            base_transport_args: scrapli base transport plugin arguments
+            plugin_transport_args: paramiko ssh specific transport plugin arguments
+
+        Returns:
+            N/A
+
+        Raises:
+            N/A
+
+        """
         super().__init__(base_transport_args=base_transport_args)
         self.plugin_transport_args = plugin_transport_args
 
@@ -159,6 +184,9 @@ class ParamikoTransport(Transport):
         """
         if not self.session:
             raise ScrapliConnectionNotOpened
+
+        if self._base_transport_args.transport_options.get("enable_rsa2", False) is False:
+            self.session.disabled_algorithms = {"keys": ["rsa-sha2-256", "rsa-sha2-512"]}
 
         try:
             paramiko_key = RSAKey(filename=self.plugin_transport_args.auth_private_key)

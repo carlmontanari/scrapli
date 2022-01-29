@@ -1,11 +1,8 @@
-import sys
-
 import pytest
 
 from scrapli.exceptions import ScrapliPrivilegeError
 
 
-@pytest.mark.asyncio
 async def test_escalate(monkeypatch, async_network_driver):
     async def _send_input(cls, channel_input, **kwargs):
         assert channel_input == "configure terminal"
@@ -21,7 +18,6 @@ async def test_escalate(monkeypatch, async_network_driver):
     )
 
 
-@pytest.mark.asyncio
 async def test_escalate_auth_secondary(monkeypatch, async_network_driver):
     async def _send_inputs_interact(cls, interact_events, **kwargs):
         assert interact_events[0][0] == "enable"
@@ -38,7 +34,6 @@ async def test_escalate_auth_secondary(monkeypatch, async_network_driver):
     )
 
 
-@pytest.mark.asyncio
 async def test_deescalate(monkeypatch, async_network_driver):
     async def _send_input(cls, channel_input, **kwargs):
         assert channel_input == "disable"
@@ -52,7 +47,6 @@ async def test_deescalate(monkeypatch, async_network_driver):
     )
 
 
-@pytest.mark.asyncio
 async def test_acquire_priv_no_action(monkeypatch, async_network_driver):
     async def _get_prompt(cls):
         return "scrapli#"
@@ -68,7 +62,6 @@ async def test_acquire_priv_no_action(monkeypatch, async_network_driver):
     await async_network_driver.acquire_priv(desired_priv="privilege_exec")
 
 
-@pytest.mark.asyncio
 async def test_acquire_priv_escalate(monkeypatch, async_network_driver):
     _prompt_counter = 0
 
@@ -94,7 +87,6 @@ async def test_acquire_priv_escalate(monkeypatch, async_network_driver):
     await async_network_driver.acquire_priv(desired_priv="configuration")
 
 
-@pytest.mark.asyncio
 async def test_acquire_priv_deescalate(monkeypatch, async_network_driver):
     _prompt_counter = 0
 
@@ -120,7 +112,6 @@ async def test_acquire_priv_deescalate(monkeypatch, async_network_driver):
     await async_network_driver.acquire_priv(desired_priv="privilege_exec")
 
 
-@pytest.mark.asyncio
 async def test_acquire_priv_failure(monkeypatch, async_network_driver):
     async def _get_prompt(cls):
         return "scrapli(config)#"
@@ -140,7 +131,6 @@ async def test_acquire_priv_failure(monkeypatch, async_network_driver):
         await async_network_driver.acquire_priv(desired_priv="privilege_exec")
 
 
-@pytest.mark.asyncio
 async def test_acquire_appropriate_privilege_level(monkeypatch, async_network_driver):
     _acquire_priv_called = False
 
@@ -216,7 +206,6 @@ async def test_acquire_appropriate_privilege_level(monkeypatch, async_network_dr
     assert _acquire_priv_called is False
 
 
-@pytest.mark.asyncio
 async def test_send_command(monkeypatch, async_network_driver):
     async def _acquire_appropriate_privilege_level(cls, **kwargs):
         return
@@ -239,7 +228,6 @@ async def test_send_command(monkeypatch, async_network_driver):
     assert actual_response.raw_result == b"raw"
 
 
-@pytest.mark.asyncio
 async def test_send_commands(monkeypatch, async_network_driver):
     async def _acquire_appropriate_privilege_level(cls, **kwargs):
         return
@@ -272,7 +260,6 @@ async def test_send_commands(monkeypatch, async_network_driver):
     assert actual_response[0].raw_result == b"raw"
 
 
-@pytest.mark.asyncio
 async def test_send_commands_from_file(
     fs, monkeypatch, real_ssh_commands_file_path, async_network_driver
 ):
@@ -299,7 +286,6 @@ async def test_send_commands_from_file(
     assert actual_response[0].raw_result == b"raw"
 
 
-@pytest.mark.asyncio
 async def test_send_interactive(monkeypatch, async_network_driver):
     async def _acquire_appropriate_privilege_level(cls, **kwargs):
         return
@@ -328,7 +314,6 @@ async def test_send_interactive(monkeypatch, async_network_driver):
     assert actual_response.raw_result == b"raw"
 
 
-@pytest.mark.asyncio
 async def test_send_configs(monkeypatch, async_network_driver):
     async def _acquire_priv(cls, **kwargs):
         return
@@ -365,7 +350,6 @@ async def test_send_configs(monkeypatch, async_network_driver):
     assert actual_response[0].raw_result == b"raw"
 
 
-@pytest.mark.asyncio
 async def test_send_config(monkeypatch, async_network_driver):
     async def _acquire_priv(cls, **kwargs):
         return
@@ -402,7 +386,6 @@ async def test_send_config(monkeypatch, async_network_driver):
     assert actual_response.raw_result == b""
 
 
-@pytest.mark.asyncio
 async def test_send_configs_from_file(
     fs, monkeypatch, real_ssh_commands_file_path, async_network_driver
 ):

@@ -3,6 +3,7 @@ from copy import deepcopy
 
 import pytest
 
+from scrapli import AsyncScrapli, Scrapli
 from scrapli.channel.async_channel import AsyncChannel
 from scrapli.channel.base_channel import BaseChannel, BaseChannelArgs
 from scrapli.channel.sync_channel import Channel
@@ -202,7 +203,6 @@ def paramiko_transport(base_transport_args, paramiko_transport_plugin_args):
     return paramiko_transport
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping ssh2 on 3.10")
 @pytest.fixture(scope="function")
 def ssh2_transport_plugin_args():
     """Fixture to provide ssh2 transport plugin args instance"""
@@ -214,7 +214,6 @@ def ssh2_transport_plugin_args():
     return plugin_args
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 10), reason="skipping ssh2 on 3.10")
 @pytest.fixture(scope="function")
 def ssh2_transport(base_transport_args, ssh2_transport_plugin_args):
     """Fixture to provide ssh2 transport instance"""
@@ -568,3 +567,22 @@ def async_junos_driver():
     async_junos_driver.textfsm_platform = "juniper_junos"
     async_junos_driver.genie_platform = ""
     return async_junos_driver
+
+
+@pytest.fixture(
+    scope="class",
+    params=["cisco_iosxe", "cisco_nxos", "cisco_iosxr", "arista_eos", "juniper_junos"],
+)
+def device_type(request):
+    yield request.param
+
+
+@pytest.fixture(
+    scope="class",
+    params=["sync", "async"],
+)
+def factory(request):
+    if request.param == "sync":
+        yield Scrapli
+    else:
+        yield AsyncScrapli

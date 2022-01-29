@@ -1,7 +1,7 @@
 Changelog
 =========
 
-## (in development) 2022.01.30
+## 2022.01.30
 
 - Removed deprecated `comms_ansi` argument
 - Improved error handling/error message for insufficient permissions when opening ssh config/known hosts file 
@@ -15,6 +15,23 @@ Changelog
   `kubectl exec -it args args args` or `docker exec -it args args args` to connect to containers in k8s/docker #166
 - Updated/fixed(?) Juniper shell patterns for "normal" and root shells #170
 - Support transport options being passed to asyncssh transport thanks to @cuong-nguyenduy work in #178 and #183
+- A handful of nice readability/simplicity improvements throughout the codebase thanks to @yezz123 in #188
+- Fix (add) missing kwarg for `channel_log_mode` in the driver layers "above" base driver
+- Update NXOS config pattern to include "+" to not break when entering TACACS config mode
+- Added support for encrypted SSH keys with ssh2 transport in #192 thanks to @shnurty
+- Fix/improve in channel SSH auth password prompt pattern to match scrapligo (which handles user@host password: strings)
+- Update ssh2-python requirements now that 3.10/Darwin release is available
+- Better exception/exception message for auth failures escalating privilege (network drivers)
+- Added a global `Settings` object -- for now only has an attribute for "SUPPRESS_USER_WARNINGS" to... suppress user 
+  warnings
+- Added `read_callback` method to `GenericDriver`/`AsyncGenericDriver` -- basically this is a fancier version of 
+  send interactive that lets you assign callbacks to things that scrapli reads rather than having to follow prompts 
+  in a linear fashion.
+- Dropped Python3.6 support as it is now EOL! Of course, scrapli probably still works just fine with 3.6 (if you 
+  install the old 3.6 requirements), but we won't test/support it anymore.
+- Added `enable_rsa2` setting to paramiko transport options -- basically 2.9.0+ paramiko enables rsa2 support by 
+  default which causes key auth to fail on the test network devices, so we disable that by default, but exposet his 
+  flag so users can enable it if desired!
 
 
 ## 2021.07.30
@@ -123,8 +140,9 @@ Changelog
   instance used to look like: "scrapli-channel-{{ HOST }}" which kinda was not really smart :). Loggers now look 
   like: "scrapli.{{ HOST }}:{{ PORT }}.channel" -- can be channel|driver|transport!
 - Changes to test environment:
-  - Support running devices on localhost w/ nat'd management ports -- in "vrouter" mode (poorly named) -- this is 
-    enabled with the `SCRAPLI_VROUTER` environment variable set to on/true/something
+  - ~~Support running devices on localhost w/ nat'd management ports -- in "vrouter" mode (poorly named) -- this is 
+    enabled with the `SCRAPLI_VROUTER` environment variable set to on/true/something~~ **Update 2022.01.30** - renamed 
+    to `SCRAPLI_BOXEN` but does the same thing!
   - Added bootvar into nxos base config -- when missing causes qemu nxosv to boot into loader prompt so thats no good
   - Replace resource settings in vdc in nxos to account for nxos instances with differing resources (memory/cpu)
   - Got rid of static license udi in iosxe config, replaced more certificate stuff so show run comparisons are 

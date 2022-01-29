@@ -81,7 +81,7 @@ class SSHConfig:
             self.hosts = self._parse()
             if not self.hosts:
                 self.hosts = {}
-            if "*" not in self.hosts.keys():
+            if "*" not in self.hosts:
                 self.hosts["*"] = Host()
                 self.hosts["*"].hosts = "*"
         else:
@@ -141,9 +141,7 @@ class SSHConfig:
             N/A
 
         """
-        if self.ssh_config:
-            return True
-        return False
+        return bool(self.ssh_config)
 
     @staticmethod
     def _strip_comments(line: str) -> str:
@@ -311,21 +309,19 @@ class SSHConfig:
             if current_match is None:
                 current_match = match
             # count how many chars were replaced to get regex to work
-            chars_replaced = 0
-            for start_char, end_char in match[0].regs[1:]:
-                chars_replaced += end_char - start_char
+            chars_replaced = sum(
+                end_char - start_char for start_char, end_char in match[0].regs[1:]
+            )
+
             # count how many chars were replaced to get regex to work on best match
-            best_match_chars_replaced = 0
-            for start_char, end_char in current_match[0].regs[1:]:
-                best_match_chars_replaced += end_char - start_char
+            best_match_chars_replaced = sum(
+                end_char - start_char for start_char, end_char in current_match[0].regs[1:]
+            )
+
             # if match replaced less chars than "best_match" we have a new best match
             if chars_replaced < best_match_chars_replaced:
                 current_match = match
-        if current_match is not None:
-            best_match = current_match[1]
-        else:
-            best_match = "*"
-        return best_match
+        return current_match[1] if current_match is not None else "*"
 
     def lookup(self, host: str) -> "Host":
         """
@@ -471,10 +467,7 @@ class SSHKnownHosts:
             # to simplify lookups down the line, split any list of hosts and just create a unique
             # entry per host
             for individual_host in host.split(","):
-                known_hosts[individual_host] = {}
-                known_hosts[individual_host]["key_type"] = key_type
-                known_hosts[individual_host]["public_key"] = public_key
-
+                known_hosts[individual_host] = {"key_type": key_type, "public_key": public_key}
         return known_hosts
 
     def lookup(self, host: str) -> Dict[str, str]:

@@ -22,6 +22,7 @@ class PluginTransportArgs(BasePluginTransportArgs):
     auth_username: str
     auth_password: str = ""
     auth_private_key: str = ""
+    auth_private_key_passphrase: str = ""
     auth_strict_key: bool = True
     ssh_config_file: str = ""
     ssh_known_hosts_file: str = ""
@@ -167,6 +168,7 @@ class Ssh2Transport(Transport):
             self.session.userauth_publickey_fromfile(
                 self.plugin_transport_args.auth_username,
                 self.plugin_transport_args.auth_private_key.encode(),
+                self.plugin_transport_args.auth_private_key_passphrase,
             )
         except (AuthenticationError, SSH2Error):
             pass

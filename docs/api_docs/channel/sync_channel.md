@@ -33,7 +33,7 @@ import re
 import time
 from contextlib import contextmanager
 from datetime import datetime
-from io import SEEK_END, BytesIO
+from io import BytesIO
 from threading import Lock
 from typing import Iterator, List, Optional, Tuple
 
@@ -166,8 +166,7 @@ class Channel(BaseChannel):
         while True:
             read_buf.write(self.read())
 
-            read_buf.seek(-self._base_channel_args.comms_prompt_search_depth, SEEK_END)
-            search_buf = read_buf.read()
+            search_buf = self._process_read_buf(read_buf=read_buf)
 
             channel_match = re.search(
                 pattern=search_pattern,
@@ -207,8 +206,7 @@ class Channel(BaseChannel):
         while True:
             read_buf.write(self.read())
 
-            read_buf.seek(-self._base_channel_args.comms_prompt_search_depth, SEEK_END)
-            search_buf = read_buf.read()
+            search_buf = self._process_read_buf(read_buf=read_buf)
 
             for search_pattern in search_patterns:
                 channel_match = re.search(
@@ -268,8 +266,7 @@ class Channel(BaseChannel):
             except ScrapliTimeout:
                 pass
 
-            read_buf.seek(-self._base_channel_args.comms_prompt_search_depth, SEEK_END)
-            search_buf = read_buf.read()
+            search_buf = self._process_read_buf(read_buf=read_buf)
 
             if (time.time() - start) > read_duration:
                 break
@@ -673,11 +670,9 @@ class Channel(BaseChannel):
                 )
 
                 self.write(channel_input=channel_input, redacted=bool(hidden_input))
-                if not channel_response or hidden_input is True:
-                    self.send_return()
-                else:
+                if channel_response and hidden_input is not True:
                     buf += self._read_until_input(channel_input=bytes_channel_input)
-                    self.send_return()
+                self.send_return()
                 buf += self._read_until_explicit_prompt(prompts=prompts)
 
         processed_buf += self._process_output(
@@ -841,8 +836,7 @@ class Channel(BaseChannel):
         while True:
             read_buf.write(self.read())
 
-            read_buf.seek(-self._base_channel_args.comms_prompt_search_depth, SEEK_END)
-            search_buf = read_buf.read()
+            search_buf = self._process_read_buf(read_buf=read_buf)
 
             channel_match = re.search(
                 pattern=search_pattern,
@@ -882,8 +876,7 @@ class Channel(BaseChannel):
         while True:
             read_buf.write(self.read())
 
-            read_buf.seek(-self._base_channel_args.comms_prompt_search_depth, SEEK_END)
-            search_buf = read_buf.read()
+            search_buf = self._process_read_buf(read_buf=read_buf)
 
             for search_pattern in search_patterns:
                 channel_match = re.search(
@@ -943,8 +936,7 @@ class Channel(BaseChannel):
             except ScrapliTimeout:
                 pass
 
-            read_buf.seek(-self._base_channel_args.comms_prompt_search_depth, SEEK_END)
-            search_buf = read_buf.read()
+            search_buf = self._process_read_buf(read_buf=read_buf)
 
             if (time.time() - start) > read_duration:
                 break
@@ -1348,11 +1340,9 @@ class Channel(BaseChannel):
                 )
 
                 self.write(channel_input=channel_input, redacted=bool(hidden_input))
-                if not channel_response or hidden_input is True:
-                    self.send_return()
-                else:
+                if channel_response and hidden_input is not True:
                     buf += self._read_until_input(channel_input=bytes_channel_input)
-                    self.send_return()
+                self.send_return()
                 buf += self._read_until_explicit_prompt(prompts=prompts)
 
         processed_buf += self._process_output(

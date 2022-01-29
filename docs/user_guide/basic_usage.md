@@ -112,7 +112,7 @@ conn.open()
 scrapli does *not* open the connection for you when creating your scrapli connection object in normal operations, you
  must manually call the `open` method prior to sending any commands to the device as shown below.
 
- ```python
+```python
 from scrapli.driver.core import IOSXRDriver
 
 my_device = {
@@ -157,7 +157,7 @@ When using any of the core network drivers (`JunosDriver`, `EOSDriver`, etc.) or
 ` and `send_commands` methods will respectively send a single command or list of commands to the device.
 
 When using the core network drivers, the command(s) will be sent at the `default_desired_privilege_level` level which is
- typically "privilege exec" (or equivalent) privilege level. Please see [Driver Privilege Levels](/user_guide/advanced_usage/#driver-privilege-levels)
+ typically "privilege exec" (or equivalent) privilege level. Please see [Driver Privilege Levels](https://carlmontanari.github.io/scrapli/user_guide/advanced_usage/#driver-privilege-levels)
   in the advanced usage section for more details on privilege levels. As the `GenericDriver` doesn't know or
   care about privilege levels you would need to manually handle acquiring the appropriate privilege level for you
    command yourself if using that driver.
@@ -253,7 +253,7 @@ with IOSXEDriver(**my_device) as conn:
 
 If you need to get into any kind of "special" configuration mode, such as "configure exclusive", "configure private
 ", or "configure session XYZ", you can pass the name of the corresponding privilege level via the `privilege_level
-` argument. Please see the [Driver Privilege Levels](/user_guide/advanced_usage/#driver-privilege-levels) section for more details!
+` argument. Please see the [Driver Privilege Levels](https://carlmontanari.github.io/scrapli/user_guide/advanced_usage/#driver-privilege-levels) section for more details!
 
 Lastly, note that scrapli does *not* exit configuration mode at completion of a "configuration" event -- this is
  because scrapli (with the Network drivers) will automatically acquire `default_desired_privilege_level` before

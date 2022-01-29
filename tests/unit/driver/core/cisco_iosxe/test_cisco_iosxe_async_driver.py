@@ -1,7 +1,3 @@
-import pytest
-
-
-@pytest.mark.asyncio
 async def test_on_open(monkeypatch, async_iosxe_driver):
     _input_counter = 0
 
@@ -27,7 +23,6 @@ async def test_on_open(monkeypatch, async_iosxe_driver):
     await async_iosxe_driver.on_open(async_iosxe_driver)
 
 
-@pytest.mark.asyncio
 async def test_on_close(monkeypatch, async_iosxe_driver):
     async def _get_prompt(cls):
         return "scrapli#"

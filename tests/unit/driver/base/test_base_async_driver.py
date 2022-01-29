@@ -13,7 +13,6 @@ def test_sync_transport_exception():
         AsyncDriver(host="localhost", transport="system")
 
 
-@pytest.mark.asyncio
 async def test_context_manager(monkeypatch):
     """Asserts context manager properly opens/closes"""
     channel_telnet_auth_called = False
@@ -39,7 +38,6 @@ async def test_context_manager(monkeypatch):
     assert channel_telnet_auth_called is True
 
 
-@pytest.mark.asyncio
 async def test_open_telnet_channel_auth(monkeypatch, async_driver):
     """Test patched telnet channel auth -- asserts methods get called where they should"""
     on_open_called = False
@@ -72,7 +70,6 @@ async def test_open_telnet_channel_auth(monkeypatch, async_driver):
     assert channel_telnet_auth_called is True
 
 
-@pytest.mark.asyncio
 async def test_close(async_driver):
     """
     Test unit-testable driver close
@@ -96,7 +93,6 @@ async def test_close(async_driver):
     assert async_driver.channel.channel_log.closed is True
 
 
-@pytest.mark.asyncio
 async def test_commandeer(async_driver):
     """
     Test commandeer works as expected
