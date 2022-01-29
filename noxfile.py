@@ -119,8 +119,8 @@ def integration_tests(session):
 
     session.install("-r", "requirements-dev.txt")
     session.install(".")
-    # setting scrapli vrouter -> 1 so that the saved scrapli replay sessions are "correctly"
-    # pointing to the vrouter dev env (i.e. port 21022 instead of 22 for iosxe, etc.)
+    # setting scrapli boxen -> 1 so that the saved scrapli replay sessions are "correctly"
+    # pointing to the boxen dev env (i.e. port 21022 instead of 22 for iosxe, etc.)
     session.run(
         "python",
         "-m",
@@ -132,7 +132,7 @@ def integration_tests(session):
         "term",
         "tests/integration",
         "-v",
-        env={"SCRAPLI_VROUTER": "1"},
+        env={"SCRAPLI_BOXEN": "1"},
     )
 
 
