@@ -137,8 +137,9 @@ Changelog
   instance used to look like: "scrapli-channel-{{ HOST }}" which kinda was not really smart :). Loggers now look 
   like: "scrapli.{{ HOST }}:{{ PORT }}.channel" -- can be channel|driver|transport!
 - Changes to test environment:
-  - Support running devices on localhost w/ nat'd management ports -- in "vrouter" mode (poorly named) -- this is 
-    enabled with the `SCRAPLI_VROUTER` environment variable set to on/true/something
+  - ~~Support running devices on localhost w/ nat'd management ports -- in "vrouter" mode (poorly named) -- this is 
+    enabled with the `SCRAPLI_VROUTER` environment variable set to on/true/something~~ **Update 2022.01.30** - renamed 
+    to `SCRAPLI_BOXEN` but does the same thing!
   - Added bootvar into nxos base config -- when missing causes qemu nxosv to boot into loader prompt so thats no good
   - Replace resource settings in vdc in nxos to account for nxos instances with differing resources (memory/cpu)
   - Got rid of static license udi in iosxe config, replaced more certificate stuff so show run comparisons are 
