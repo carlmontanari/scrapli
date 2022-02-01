@@ -11,7 +11,7 @@ pylint==2.12.2
 pytest-asyncio>=0.17.0,<1.0.0
 pytest-cov>=3.0.0,<4.0.0
 pytest>=6.2.5,<7.0.0
-scrapli-cfg==2021.7.30
+scrapli-cfg==2022.1.30
 scrapli-replay==2022.1.30
 types-paramiko>=2.8.6,<3.0.0
 types-pkg-resources>=0.1.3,<1.0.0
