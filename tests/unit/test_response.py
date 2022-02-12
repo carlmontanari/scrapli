@@ -137,7 +137,7 @@ Internet  172.31.254.2            -   c800.84b2.e9c2  ARPA   Vlan254
 
 
 def test_response_parse_textfsm_string_path():
-    template = _textfsm_get_template("cisco_ios", "show ip arp")
+    template = _textfsm_get_template("cisco_ios", "show ip arp").name
     response = Response("localhost", channel_input="show ip arp", textfsm_platform="cisco_ios")
     response_bytes = b"""Protocol  Address          Age (min)  Hardware Addr   Type   Interface
 Internet  172.31.254.1            -   0000.0c07.acfe  ARPA   Vlan254
