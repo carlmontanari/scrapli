@@ -287,7 +287,7 @@ with IOSXEDriver(**my_device) as conn:
 ```
 
 scrapli also supports passing in templates manually (meaning not using the pip installed ntc-templates directory to
- find templates) if desired. The `scrapli.helper.textfsm_parse` function accepts a string or loaded (TextIOWrapper
+ find templates) if desired. The `textfsm_parse_output` method and `scrapli.helper.textfsm_parse` function both accepts a string or loaded (TextIOWrapper
  ) template and output to parse. This can be useful if you have custom or one off templates or don't want to pip
   install ntc-templates.
   

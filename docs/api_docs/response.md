@@ -32,7 +32,7 @@ scrapli.response
 from collections import UserList
 from datetime import datetime
 from io import TextIOWrapper
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, TextIO, Union, cast
 
 from scrapli.exceptions import ScrapliCommandFailure
 from scrapli.helper import _textfsm_get_template, genie_parse, textfsm_parse, ttp_parse
@@ -170,13 +170,16 @@ class Response:
         elif all(err not in self.result for err in self.failed_when_contains):
             self.failed = False
 
-    def textfsm_parse_output(self, to_dict: bool = True) -> Union[Dict[str, Any], List[Any]]:
+    def textfsm_parse_output(
+        self, template: Union[str, TextIO, None] = None, to_dict: bool = True
+    ) -> Union[Dict[str, Any], List[Any]]:
         """
         Parse results with textfsm, always return structured data
 
         Returns an empty list if parsing fails!
 
         Args:
+            template: string path to textfsm template or opened textfsm template file
             to_dict: convert textfsm output from list of lists to list of dicts -- basically create
                 dict from header and row data so it is easier to read/parse the output
 
@@ -187,12 +190,16 @@ class Response:
             N/A
 
         """
-        template = _textfsm_get_template(platform=self.textfsm_platform, command=self.channel_input)
-        return (
-            (textfsm_parse(template=template, output=self.result, to_dict=to_dict) or [])
-            if isinstance(template, TextIOWrapper)
-            else []
-        )
+        if template is None:
+            template = _textfsm_get_template(
+                platform=self.textfsm_platform, command=self.channel_input
+            )
+
+        if template is None:
+            return []
+
+        template = cast(Union[str, TextIOWrapper], template)
+        return textfsm_parse(template=template, output=self.result, to_dict=to_dict) or []
 
     def genie_parse_output(self) -> Union[Dict[str, Any], List[Any]]:
         """
@@ -770,13 +777,16 @@ class Response:
         elif all(err not in self.result for err in self.failed_when_contains):
             self.failed = False
 
-    def textfsm_parse_output(self, to_dict: bool = True) -> Union[Dict[str, Any], List[Any]]:
+    def textfsm_parse_output(
+        self, template: Union[str, TextIO, None] = None, to_dict: bool = True
+    ) -> Union[Dict[str, Any], List[Any]]:
         """
         Parse results with textfsm, always return structured data
 
         Returns an empty list if parsing fails!
 
         Args:
+            template: string path to textfsm template or opened textfsm template file
             to_dict: convert textfsm output from list of lists to list of dicts -- basically create
                 dict from header and row data so it is easier to read/parse the output
 
@@ -787,12 +797,16 @@ class Response:
             N/A
 
         """
-        template = _textfsm_get_template(platform=self.textfsm_platform, command=self.channel_input)
-        return (
-            (textfsm_parse(template=template, output=self.result, to_dict=to_dict) or [])
-            if isinstance(template, TextIOWrapper)
-            else []
-        )
+        if template is None:
+            template = _textfsm_get_template(
+                platform=self.textfsm_platform, command=self.channel_input
+            )
+
+        if template is None:
+            return []
+
+        template = cast(Union[str, TextIOWrapper], template)
+        return textfsm_parse(template=template, output=self.result, to_dict=to_dict) or []
 
     def genie_parse_output(self) -> Union[Dict[str, Any], List[Any]]:
         """
@@ -924,7 +938,7 @@ Raises:
     
 
 ##### textfsm_parse_output
-`textfsm_parse_output(self, to_dict: bool = True) ‑> Union[List[Any], Dict[str, Any]]`
+`textfsm_parse_output(self, template: Union[str, TextIO, ForwardRef(None)] = None, to_dict: bool = True) ‑> Union[List[Any], Dict[str, Any]]`
 
 ```text
 Parse results with textfsm, always return structured data
@@ -932,6 +946,7 @@ Parse results with textfsm, always return structured data
 Returns an empty list if parsing fails!
 
 Args:
+    template: string path to textfsm template or opened textfsm template file
     to_dict: convert textfsm output from list of lists to list of dicts -- basically create
         dict from header and row data so it is easier to read/parse the output
 
