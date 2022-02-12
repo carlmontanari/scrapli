@@ -4,6 +4,7 @@ from datetime import datetime
 import pytest
 
 from scrapli.exceptions import ScrapliCommandFailure
+from scrapli.helper import _textfsm_get_template
 from scrapli.response import MultiResponse, Response
 
 
@@ -133,6 +134,18 @@ Internet  172.31.254.2            -   c800.84b2.e9c2  ARPA   Vlan254
 """
     response.record_response(response_bytes)
     assert response.textfsm_parse_output(to_dict=to_dict)[0] == expected_result
+
+
+def test_response_parse_textfsm_string_path():
+    template = _textfsm_get_template("cisco_ios", "show ip arp")
+    response = Response("localhost", channel_input="show ip arp", textfsm_platform="cisco_ios")
+    response_bytes = b"""Protocol  Address          Age (min)  Hardware Addr   Type   Interface
+Internet  172.31.254.1            -   0000.0c07.acfe  ARPA   Vlan254
+Internet  172.31.254.2            -   c800.84b2.e9c2  ARPA   Vlan254
+"""
+    response.record_response(response_bytes)
+    result = response.textfsm_parse_output(template=template)
+    assert result[0]["address"] == "172.31.254.1"
 
 
 def test_response_parse_textfsm_fail():
