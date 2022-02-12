@@ -1,6 +1,7 @@
 """scrapli.helper"""
 import importlib
-from io import TextIOWrapper
+import urllib.request
+from io import BytesIO, TextIOWrapper
 from pathlib import Path
 from shutil import get_terminal_size
 from typing import Any, Dict, List, Optional, TextIO, Union
@@ -84,7 +85,7 @@ def textfsm_parse(
     Parse output with TextFSM and ntc-templates, try to return structured output
 
     Args:
-        template: TextIOWrapper or string path to template to use to parse data
+        template: TextIOWrapper or string of URL or filesystem path to template to use to parse data
         output: unstructured output from device to parse
         to_dict: convert textfsm output from list of lists to list of dicts -- basically create dict
             from header and row data so it is easier to read/parse the output
@@ -99,7 +100,17 @@ def textfsm_parse(
     import textfsm  # pylint: disable=C0415
 
     if not isinstance(template, TextIOWrapper):
-        template_file = open(template, encoding="utf-8")  # pylint: disable=R1732
+        if template.startswith("http://") or template.startswith("https://"):
+            with urllib.request.urlopen(template) as response:
+                template_file = TextIOWrapper(
+                    BytesIO(response.read()),
+                    encoding=response.headers.get_content_charset(),
+                )
+        else:
+            template_file = TextIOWrapper(
+                open(template, "rb", encoding="utf-8"),
+                encoding="utf-8",
+            )  # pylint: disable=R1732
     else:
         template_file = template
     re_table = textfsm.TextFSM(template_file)
