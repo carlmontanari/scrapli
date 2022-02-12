@@ -107,10 +107,7 @@ def textfsm_parse(
                     encoding=response.headers.get_content_charset(),
                 )
         else:
-            template_file = TextIOWrapper(
-                open(template, "rb", encoding="utf-8"),
-                encoding="utf-8",
-            )  # pylint: disable=R1732
+            template_file = TextIOWrapper(open(template, mode="rb"))  # pylint: disable=R1732
     else:
         template_file = template
     re_table = textfsm.TextFSM(template_file)
