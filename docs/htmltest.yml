@@ -4,6 +4,8 @@ DirectoryPath: ./site
 IgnoreURLs:
   - fonts.gstatic.com
   - linkedin.com
+  # ignoring due to too many 429 even w/ concurrency set to 1
+  - github.com
 IgnoreDirectoryMissingTrailingSlash: true
 IgnoreAltMissing: true
 IgnoreSSLVerify: true
