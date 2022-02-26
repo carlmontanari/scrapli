@@ -28,7 +28,9 @@ def test_close(monkeypatch, asyncssh_transport):
 
     # lie and pretend the session is already assigned
     options = DumbContainer()
-    asyncssh_transport.session = SSHClientConnection(loop=asyncio.get_event_loop(), options=options)
+    asyncssh_transport.session = SSHClientConnection(
+        loop=asyncio.get_event_loop_policy().get_event_loop(), options=options
+    )
 
     asyncssh_transport.close()
 
@@ -48,7 +50,9 @@ def test_close_catch_brokenpipe(monkeypatch, asyncssh_transport):
 
     # lie and pretend the session is already assigned
     options = DumbContainer()
-    asyncssh_transport.session = SSHClientConnection(loop=asyncio.get_event_loop(), options=options)
+    asyncssh_transport.session = SSHClientConnection(
+        loop=asyncio.get_event_loop_policy().get_event_loop(), options=options
+    )
 
     asyncssh_transport.close()
 
@@ -64,7 +68,9 @@ def test_isalive_no_session(asyncssh_transport):
 def test_isalive(asyncssh_transport):
     # lie and pretend the session is already assigned
     options = DumbContainer()
-    asyncssh_transport.session = SSHClientConnection(loop=asyncio.get_event_loop(), options=options)
+    asyncssh_transport.session = SSHClientConnection(
+        loop=asyncio.get_event_loop_policy().get_event_loop(), options=options
+    )
 
     # lie and tell asyncssh auth is done
     asyncssh_transport.session._auth_complete = True
@@ -79,7 +85,9 @@ def test_isalive(asyncssh_transport):
 def test_isalive_attribute_error(asyncssh_transport):
     # lie and pretend the session is already assigned
     options = DumbContainer()
-    asyncssh_transport.session = SSHClientConnection(loop=asyncio.get_event_loop(), options=options)
+    asyncssh_transport.session = SSHClientConnection(
+        loop=asyncio.get_event_loop_policy().get_event_loop(), options=options
+    )
 
     # lie and tell asyncssh auth is done
     asyncssh_transport.session._auth_complete = True
