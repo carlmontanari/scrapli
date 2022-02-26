@@ -124,10 +124,12 @@ async def test_handle_control_characters_exception_eof(asynctelnet_transport, mo
 
 def test_close(asynctelnet_transport):
     # lie like connection is open
-    asynctelnet_transport.stdout = asyncio.StreamReader()
+    asynctelnet_transport.stdout = asyncio.StreamReader(
+        loop=asyncio.get_event_loop_policy().get_event_loop()
+    )
     # make a stupid streamwriter... just enough to instantiate a real one :)
     asynctelnet_transport.stdin = asyncio.StreamWriter(
-        BytesIO(), "", None, asyncio.get_event_loop()
+        BytesIO(), "", None, asyncio.get_event_loop_policy().get_event_loop()
     )
 
     asynctelnet_transport.close()
@@ -142,10 +144,12 @@ def test_isalive_no_session(asynctelnet_transport):
 
 def test_isalive(asynctelnet_transport):
     # lie like connection is open
-    asynctelnet_transport.stdout = asyncio.StreamReader()
+    asynctelnet_transport.stdout = asyncio.StreamReader(
+        loop=asyncio.get_event_loop_policy().get_event_loop()
+    )
     # make a stupid streamwriter... just enough to instantiate a real one :)
     asynctelnet_transport.stdin = asyncio.StreamWriter(
-        BytesIO(), "", None, asyncio.get_event_loop()
+        BytesIO(), "", None, asyncio.get_event_loop_policy().get_event_loop()
     )
     assert asynctelnet_transport.isalive() is True
 
