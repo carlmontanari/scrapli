@@ -14,11 +14,11 @@ from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliTypeError, Sc
     (
         (
             "auth_telnet_login_pattern",
-            "^(.*username:)|(.*login:)\s?$",
+            r"^(.*username:)|(.*login:)\s?$",
         ),
         (
             "auth_password_pattern",
-            "^(.*@.*)?password:\s?$",
+            r"(.*@.*)?password:\s?$",
         ),
         (
             "auth_passphrase_pattern",

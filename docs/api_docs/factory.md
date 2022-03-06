@@ -1244,42 +1244,6 @@ class AsyncScrapli(AsyncNetworkDriver):
 
 
 
-    
-`auth_secondary: str`
-
-
-
-
-    
-`failed_when_contains: List[str]`
-
-
-
-
-    
-`genie_platform: str`
-
-
-
-
-    
-`logger: logging.LoggerAdapter`
-
-
-
-
-    
-`privilege_levels: Dict[str, scrapli.driver.network.base_driver.PrivilegeLevel]`
-
-
-
-
-    
-`textfsm_platform: str`
-
-
-
-
 
 
 ### Scrapli
@@ -1684,39 +1648,3 @@ class Scrapli(NetworkDriver):
 
     
 `DRIVER_MAP`
-
-
-
-
-    
-`auth_secondary: str`
-
-
-
-
-    
-`failed_when_contains: List[str]`
-
-
-
-
-    
-`genie_platform: str`
-
-
-
-
-    
-`logger: logging.LoggerAdapter`
-
-
-
-
-    
-`privilege_levels: Dict[str, scrapli.driver.network.base_driver.PrivilegeLevel]`
-
-
-
-
-    
-`textfsm_platform: str`

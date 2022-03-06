@@ -21,6 +21,7 @@ IOS_ARP = """Protocol  Address          Age (min)  Hardware Addr   Type   Interf
 Internet  172.31.254.1            -   0000.0c07.acfe  ARPA   Vlan254
 Internet  172.31.254.2            -   c800.84b2.e9c2  ARPA   Vlan254
 """
+IOS_ARP_NTC_TEMPLATE_URL = "https://raw.githubusercontent.com/networktocode/ntc-templates/master/ntc_templates/templates/cisco_ios_show_ip_arp.textfsm"
 
 
 def test_textfsm_get_template():
@@ -101,6 +102,35 @@ def test_textfsm_parse_string_path(test_data):
     to_dict, expected_output = test_data
     template = _textfsm_get_template("cisco_ios", "show ip arp")
     result = textfsm_parse(template.name, IOS_ARP, to_dict=to_dict)
+    assert isinstance(result, list)
+    assert result[0] == expected_output
+
+
+@pytest.mark.parametrize(
+    "test_data",
+    [
+        (
+            False,
+            ["Internet", "172.31.254.1", "-", "0000.0c07.acfe", "ARPA", "Vlan254"],
+        ),
+        (
+            True,
+            {
+                "protocol": "Internet",
+                "address": "172.31.254.1",
+                "age": "-",
+                "mac": "0000.0c07.acfe",
+                "type": "ARPA",
+                "interface": "Vlan254",
+            },
+        ),
+    ],
+    ids=["to_dict_false", "to_dict_true"],
+)
+def test_textfsm_parse_url_path(test_data):
+    to_dict, expected_output = test_data
+    template = IOS_ARP_NTC_TEMPLATE_URL
+    result = textfsm_parse(template, IOS_ARP, to_dict=to_dict)
     assert isinstance(result, list)
     assert result[0] == expected_output
 
