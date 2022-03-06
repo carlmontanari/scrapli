@@ -1,6 +1,13 @@
 Changelog
 =========
 
+## 2022.01.30.post1
+
+- Remove newline anchor in in-channel auth password pattern. Felt like a good/smart idea but Cisco in their infinite 
+  wisdom have some awful banner on IOL (CML/VIRL) things that doesn't end with a newline and too many people will 
+  hit that.
+
+
 ## 2022.01.30
 
 - Removed deprecated `comms_ansi` argument
