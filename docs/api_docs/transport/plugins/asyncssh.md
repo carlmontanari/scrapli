@@ -31,10 +31,9 @@ scrapli.transport.plugins.asyncssh.transport
 """scrapli.transport.plugins.asyncssh.transport"""
 import asyncio
 from dataclasses import dataclass
-from typing import Optional
+from typing import Any, Optional
 
-from asyncssh import connect  # type: ignore
-from asyncssh.connection import SSHClientConnection
+from asyncssh.connection import SSHClientConnection, connect
 from asyncssh.misc import ConnectionLost, PermissionDenied
 from asyncssh.stream import SSHReader, SSHWriter
 
@@ -114,8 +113,8 @@ class AsyncsshTransport(AsyncTransport):
         self.plugin_transport_args = plugin_transport_args
 
         self.session: Optional[SSHClientConnection] = None
-        self.stdout: Optional[SSHReader] = None  # type: ignore
-        self.stdin: Optional[SSHWriter] = None  # type: ignore
+        self.stdout: Optional[SSHReader[Any]] = None
+        self.stdin: Optional[SSHWriter[Any]] = None
 
     def _verify_key(self) -> None:
         """
@@ -422,8 +421,8 @@ class AsyncsshTransport(AsyncTransport):
         self.plugin_transport_args = plugin_transport_args
 
         self.session: Optional[SSHClientConnection] = None
-        self.stdout: Optional[SSHReader] = None  # type: ignore
-        self.stdin: Optional[SSHWriter] = None  # type: ignore
+        self.stdout: Optional[SSHReader[Any]] = None
+        self.stdin: Optional[SSHWriter[Any]] = None
 
     def _verify_key(self) -> None:
         """
