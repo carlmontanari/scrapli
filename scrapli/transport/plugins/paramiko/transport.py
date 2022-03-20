@@ -77,7 +77,7 @@ class ParamikoTransport(Transport):
             self.socket.open()
 
         try:
-            self.session = _ParamikoTransport(self.socket.sock)  # type: ignore
+            self.session = _ParamikoTransport(self.socket.sock)
             self.session.start_client()
         except Exception as exc:
             self.logger.critical("failed to complete handshake with host")
