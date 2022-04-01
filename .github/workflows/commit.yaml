@@ -11,7 +11,7 @@ jobs:
         os: [ubuntu-latest]
         version: ["3.10"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: set up python ${{ matrix.version }}
         uses: actions/setup-python@v3
         with:
@@ -32,7 +32,7 @@ jobs:
         os: [ubuntu-latest]
         version: ["3.10"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: set up python ${{ matrix.version }}
         uses: actions/setup-python@v3
         with:
@@ -57,7 +57,7 @@ jobs:
         os: [ubuntu-latest, macos-latest]
         version: ["3.7", "3.8", "3.9", "3.10"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: set up python ${{ matrix.version }}
         uses: actions/setup-python@v3
         with:
@@ -86,10 +86,10 @@ jobs:
   docs-test:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: docker run -v $(pwd):/docs --entrypoint "" squidfunk/mkdocs-material:latest ash -c 'pip install mdx_gh_links && mkdocs build --clean --strict'
       - name: Cache htmltest external links
-        uses: actions/cache@v2
+        uses: actions/cache@v3.0.1
         with:
           path: tmp/.htmltest
           # key will contain hash of all md files to check if files have changed

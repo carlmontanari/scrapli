@@ -112,7 +112,7 @@ class BaseNetworkDriver:
             rf"({priv_level_data.pattern})" for priv_level_data in self.privilege_levels.values()
         )
 
-    @lru_cache()
+    @lru_cache(maxsize=64)
     def _determine_current_priv(self, current_prompt: str) -> List[str]:
         """
         Determine current privilege level from prompt string
