@@ -32,7 +32,7 @@ class AsynctelnetTransport(AsyncTransport):
         self._initial_buf = b""
 
     def _handle_control_chars_response(self, control_buf: bytes, c: bytes) -> bytes:
-        """ "
+        """
         Handle the actual response to control characters
 
         Broken up to be easier to test as well as to appease mr. mccabe
