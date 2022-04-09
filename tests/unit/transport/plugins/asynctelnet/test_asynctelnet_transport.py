@@ -85,6 +85,8 @@ async def test_handle_control_characters(monkeypatch, asynctelnet_transport):
 
     await asynctelnet_transport._handle_control_chars()
 
+    assert _read_called == 1
+
 
 async def test_handle_control_characters_exception(asynctelnet_transport):
     with pytest.raises(ScrapliConnectionNotOpened):
@@ -120,6 +122,8 @@ async def test_handle_control_characters_exception_eof(asynctelnet_transport, mo
 
     with pytest.raises(ScrapliConnectionNotOpened):
         await asynctelnet_transport._handle_control_chars()
+
+    assert _read_called == 1
 
 
 def test_close(asynctelnet_transport):
