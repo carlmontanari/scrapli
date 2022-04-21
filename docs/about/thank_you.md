@@ -22,7 +22,7 @@ Thank you to the following people who have made contributions other than (and ma
 - [Roman Dodin](https://github.com/hellt) for inspiration to make the docs much better and for adding the doc 
   testing to keep them looking good!
 
- 
+
 The following people have helped identify and report bugs in scrapli, thank you all!
 
 - [Kirill Pletnev](https://github.com/horseinthesky)
@@ -37,3 +37,13 @@ The following people have helped identify and report bugs in scrapli, thank you 
     - [Additional enable password prompt format IOSXE](https://github.com/carlmontanari/scrapli/issues/45)
 - [Natasha Samoylenko](https://github.com/natenka)
     - Missing open timeout on `asynctelnet` transport
+
+This list has not been kept up as well as it should, apologies for that! Thank you to everyone else who has 
+contributed in any way to scrapli!
+
+Last, but very much not least, a huge shoutout to JetBrains for building awesome tools and providing licenses for their 
+pro tools to open source developers (like me)! If you would like to use JetBrains awesome products, check out their 
+open source support page [here](https://jb.gg/OpenSourceSupport) for me info.
+
+<p center><a href=""><img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png" alt="JetBrains Logo (Main) logo." 
+width="400" height="400"/></a></p>
