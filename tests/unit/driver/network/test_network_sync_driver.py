@@ -1,6 +1,6 @@
 import pytest
 
-from scrapli.exceptions import ScrapliPrivilegeError
+from scrapli.exceptions import ScrapliPrivilegeError, ScrapliTimeout
 
 
 def test_escalate(monkeypatch, sync_network_driver):
@@ -98,6 +98,66 @@ def test_acquire_priv_deescalate(monkeypatch, sync_network_driver):
     monkeypatch.setattr("scrapli.channel.sync_channel.Channel.send_input", _send_input)
 
     sync_network_driver._current_priv_level = sync_network_driver.privilege_levels["configuration"]
+    sync_network_driver.acquire_priv(desired_priv="privilege_exec")
+
+
+def test_acquire_priv_escalate_not_ready_same_priv(monkeypatch, sync_network_driver):
+    """
+    This tests to make sure that if the device does something like ceos does like this:
+
+    ```
+    info::ceos::"sending channelInput: enable; stripPrompt: false; eager: false
+    write::ceos::write: enable
+    debug::ceos::read: enable
+    write::ceos::write:
+    debug::ceos::read:
+    debug::ceos::read: % Authorization denied for command 'enable': Default authorization provider rejects all commands
+    debug::ceos::read: ceos>
+    ```
+
+    we gracefully handle returning to the current priv level -- rather than only being okay with
+    seeing a password prompt and/or the *next* pirv level. Thank you @ntdvps/@hellt (Roman) for
+    helping find this issue!
+
+    """
+    _prompt_counter = 0
+
+    def _get_prompt(cls):
+        nonlocal _prompt_counter
+        if _prompt_counter == 0:
+            prompt = "scrapli>"
+        elif _prompt_counter == 1:
+            prompt = "scrapli>"
+        else:
+            prompt = "scrapli#"
+        _prompt_counter += 1
+        return prompt
+
+    def __read_until_input(cls, channel_input):
+        return channel_input
+
+    def __read_until_explicit_prompt(cls, prompts):
+        # we dont really care what we return here, just needs to be bytes. but we *do* care that
+        # in this case we are receiving *three* prompt patterns -- the password pattern, the
+        # escalate priv pattern, and the *current* priv pattern.
+        assert len(prompts) == 3
+
+        return b"scrapli>"
+
+    def _write(cls, channel_input, **kwargs):
+        return
+
+    monkeypatch.setattr("scrapli.channel.sync_channel.Channel.get_prompt", _get_prompt)
+    monkeypatch.setattr(
+        "scrapli.channel.sync_channel.Channel._read_until_input", __read_until_input
+    )
+    monkeypatch.setattr(
+        "scrapli.channel.sync_channel.Channel._read_until_explicit_prompt",
+        __read_until_explicit_prompt,
+    )
+    monkeypatch.setattr("scrapli.transport.plugins.system.transport.SystemTransport.write", _write)
+
+    sync_network_driver._current_priv_level = sync_network_driver.privilege_levels["exec"]
     sync_network_driver.acquire_priv(desired_priv="privilege_exec")
 
 
