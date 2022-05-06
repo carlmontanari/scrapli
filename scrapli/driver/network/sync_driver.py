@@ -106,7 +106,10 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
                         (escalate_priv.escalate, escalate_priv.escalate_prompt, False),
                         (self.auth_secondary, escalate_priv.pattern, True),
                     ],
-                    interaction_complete_patterns=[escalate_priv.pattern],
+                    interaction_complete_patterns=[
+                        self.privilege_levels[escalate_priv.previous_priv].pattern,
+                        escalate_priv.pattern,
+                    ],
                 )
             except ScrapliTimeout as exc:
                 raise ScrapliAuthenticationFailed(
