@@ -6,6 +6,10 @@ Changelog
 - Remove newline anchor in in-channel auth password pattern. Felt like a good/smart idea but Cisco in their infinite 
   wisdom have some awful banner on IOL (CML/VIRL) things that doesn't end with a newline and too many people will 
   hit that.
+- Modified `escalate_priv` methods to check for password prompt and desired prompt patterns *and* the current prompt
+  pattern. There was an issue in scrapligo/containerlab where a cEOS device would not let you auth past enable until
+  it is done "booting" up, and scrapli would just simply timeout as it didn't expect to see the exec prompt again. 
+  Thanks to @hellt for helping track this one down!
 
 
 ## 2022.01.30
