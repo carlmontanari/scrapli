@@ -52,10 +52,10 @@ jobs:
   build_posix:
     runs-on: ${{ matrix.os }}
     strategy:
-      max-parallel: 8
+      max-parallel: 10
       matrix:
         os: [ubuntu-latest, macos-latest]
-        version: ["3.7", "3.8", "3.9", "3.10"]
+        version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
     steps:
       - uses: actions/checkout@v3
       - name: set up python ${{ matrix.version }}
