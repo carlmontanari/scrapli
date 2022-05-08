@@ -85,11 +85,11 @@ def test_timeout_properties_transport_plugin_set_timeout(monkeypatch):
     Specifically for plugins with set_timeout method -- i.e. ssh2/paramiko
     """
     monkeypatch.setattr(
-        "scrapli.transport.plugins.ssh2.transport.Ssh2Transport._set_timeout",
+        "scrapli.transport.plugins.paramiko.transport.ParamikoTransport._set_timeout",
         lambda cls, value: None,
     )
 
-    driver = BaseDriver(host="localhost", transport="ssh2")
+    driver = BaseDriver(host="localhost", transport="paramiko")
     assert driver.timeout_transport == 30.0
     driver.timeout_transport = 999.99
     assert driver.timeout_transport == 999.99
