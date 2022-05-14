@@ -59,6 +59,9 @@ def _signal_raise_exception(
     Args:
         signum: singum from the singal handler, unused here
         frame: frame from the signal handler, unused here
+        transport: transport to close
+        logger: logger to write closing messages to
+        message: exception message
 
     Returns:
         None
@@ -84,12 +87,12 @@ def _multiprocessing_timeout(
     Return appropriate timeout message for the given function name
 
     Args:
-        transport:
-        logger:
-        timeout:
-        wrapped_func:
-        args:
-        kwargs:
+        transport: transport to close (if timeout occurs)
+        logger: logger to write closing message to
+        timeout: timeout in seconds
+        wrapped_func: function being decorated
+        args: function args
+        kwargs: function kwargs
 
     Returns:
         Any: result of the wrapped function
@@ -115,8 +118,9 @@ def _handle_timeout(transport: "BaseTransport", logger: LoggerAdapterT, message:
     Timeout handler method to close connections and raise ScrapliTimeout
 
     Args:
-        transport:
-        message:
+        transport: transport to close
+        logger: logger to write closing message to
+        message: message to pass to ScrapliTimeout exception
 
     Returns:
         None
@@ -125,7 +129,7 @@ def _handle_timeout(transport: "BaseTransport", logger: LoggerAdapterT, message:
         ScrapliTimeout: always, if we hit this method we have already timed out!
 
     """
-    logger.critical("operation timed out, closing transport")
+    logger.critical("operation timed out, closing connection")
     transport.close()
     raise ScrapliTimeout(message)
 
@@ -137,13 +141,14 @@ def _get_transport_logger_timeout(
     Fetch the transport, logger and timeout from the channel or transport object
 
     Args:
-        cls:
+        cls: Channel or Transport object (self from wrapped function) to grab transport/logger and
+            timeout values from
 
     Returns:
-        Tuple:
+        Tuple: transport, logger, and timeout value
 
     Raises:
-        ScrapliTimeout: always, if we hit this method we have already timed out!
+        N/A
 
     """
     if hasattr(cls, "transport"):
@@ -165,13 +170,13 @@ def timeout_wrapper(wrapped_func: Callable[..., Any]) -> Callable[..., Any]:
     Timeout wrapper for transports
 
     Args:
-        wrapped_func:
+        wrapped_func: function being wrapped -- must be a method of Channel or Transport
 
     Returns:
         Any: result of wrapped function
 
     Raises:
-        ScrapliTimeout: if the function does not complete in time
+        N/A
 
     """
     if asyncio.iscoroutinefunction(wrapped_func):
@@ -239,70 +244,69 @@ def timeout_wrapper(wrapped_func: Callable[..., Any]) -> Callable[..., Any]:
     return decorate
 
 
-class TimeoutOpsModifier:
-    def __call__(self, wrapped_func: Callable[..., Any]) -> Callable[..., Any]:
-        """
-        Decorate an "operation" to modify the timeout_ops value for duration of that operation
+def timeout_modifier(wrapped_func: Callable[..., Any]) -> Callable[..., Any]:
+    """
+    Decorate an "operation" to modify the timeout_ops value for duration of that operation
 
-        This decorator wraps send command/config ops and is used to allow users to set a
-        `timeout_ops` value for the duration of a single method call -- this makes it so users don't
-        need to manually set/reset the value
+    This decorator wraps send command/config ops and is used to allow users to set a
+    `timeout_ops` value for the duration of a single method call -- this makes it so users don't
+    need to manually set/reset the value
 
-        Args:
-            wrapped_func: function being decorated
+    Args:
+        wrapped_func: function being decorated
 
-        Returns:
-            decorate: decorated func
+    Returns:
+        decorate: decorated func
 
-        Raises:
-            N/A
+    Raises:
+        N/A
 
-        """
-        if asyncio.iscoroutinefunction(wrapped_func):
+    """
+    if asyncio.iscoroutinefunction(wrapped_func):
 
-            async def decorate(*args: Any, **kwargs: Any) -> Any:
-                driver_instance: "AsyncGenericDriver" = args[0]
-                driver_logger = driver_instance.logger
+        async def decorate(*args: Any, **kwargs: Any) -> Any:
+            driver_instance: "AsyncGenericDriver" = args[0]
+            driver_logger = driver_instance.logger
 
-                timeout_ops_kwarg = kwargs.get("timeout_ops", None)
+            timeout_ops_kwarg = kwargs.get("timeout_ops", None)
 
-                if timeout_ops_kwarg is None or timeout_ops_kwarg == driver_instance.timeout_ops:
-                    result = await wrapped_func(*args, **kwargs)
-                else:
-                    driver_logger.info(
-                        "modifying driver timeout for current operation, temporary timeout_ops "
-                        f"value: '{timeout_ops_kwarg}'"
-                    )
-                    base_timeout_ops = driver_instance.timeout_ops
-                    driver_instance.timeout_ops = kwargs["timeout_ops"]
-                    result = await wrapped_func(*args, **kwargs)
-                    driver_instance.timeout_ops = base_timeout_ops
-                return result
+            if timeout_ops_kwarg is None or timeout_ops_kwarg == driver_instance.timeout_ops:
+                result = await wrapped_func(*args, **kwargs)
+            else:
+                driver_logger.info(
+                    "modifying driver timeout for current operation, temporary timeout_ops "
+                    f"value: '{timeout_ops_kwarg}'"
+                )
+                base_timeout_ops = driver_instance.timeout_ops
+                driver_instance.timeout_ops = kwargs["timeout_ops"]
+                result = await wrapped_func(*args, **kwargs)
+                driver_instance.timeout_ops = base_timeout_ops
+            return result
 
-        else:
-            # ignoring type error:
-            # "All conditional function variants must have identical signatures"
-            # one is sync one is async so never going to be identical here!
-            def decorate(*args: Any, **kwargs: Any) -> Any:  # type: ignore
-                driver_instance: "GenericDriver" = args[0]
-                driver_logger = driver_instance.logger
+    else:
+        # ignoring type error:
+        # "All conditional function variants must have identical signatures"
+        # one is sync one is async so never going to be identical here!
+        def decorate(*args: Any, **kwargs: Any) -> Any:  # type: ignore
+            driver_instance: "GenericDriver" = args[0]
+            driver_logger = driver_instance.logger
 
-                timeout_ops_kwarg = kwargs.get("timeout_ops", None)
+            timeout_ops_kwarg = kwargs.get("timeout_ops", None)
 
-                if timeout_ops_kwarg is None or timeout_ops_kwarg == driver_instance.timeout_ops:
-                    result = wrapped_func(*args, **kwargs)
-                else:
-                    driver_logger.info(
-                        "modifying driver timeout for current operation, temporary timeout_ops "
-                        f"value: '{timeout_ops_kwarg}'"
-                    )
-                    base_timeout_ops = driver_instance.timeout_ops
-                    driver_instance.timeout_ops = kwargs["timeout_ops"]
-                    result = wrapped_func(*args, **kwargs)
-                    driver_instance.timeout_ops = base_timeout_ops
-                return result
+            if timeout_ops_kwarg is None or timeout_ops_kwarg == driver_instance.timeout_ops:
+                result = wrapped_func(*args, **kwargs)
+            else:
+                driver_logger.info(
+                    "modifying driver timeout for current operation, temporary timeout_ops "
+                    f"value: '{timeout_ops_kwarg}'"
+                )
+                base_timeout_ops = driver_instance.timeout_ops
+                driver_instance.timeout_ops = kwargs["timeout_ops"]
+                result = wrapped_func(*args, **kwargs)
+                driver_instance.timeout_ops = base_timeout_ops
+            return result
 
-        # ensures that the wrapped function is updated w/ the original functions docs/etc. --
-        # necessary for introspection for the auto gen docs to work!
-        update_wrapper(wrapper=decorate, wrapped=wrapped_func)
-        return decorate
+    # ensures that the wrapped function is updated w/ the original functions docs/etc. --
+    # necessary for introspection for the auto gen docs to work!
+    update_wrapper(wrapper=decorate, wrapped=wrapped_func)
+    return decorate

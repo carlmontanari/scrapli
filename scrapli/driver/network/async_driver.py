@@ -432,7 +432,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains
 
-        # type hint is due to the TimeoutModifier wrapper returning `Any` so that we dont anger the
+        # type hint is due to the timeout_modifier wrapper returning `Any` so that we dont anger the
         # asyncio parts (which will get an awaitable not a Response returned)
         response: Response = await super().send_interactive(
             interact_events=interact_events,
