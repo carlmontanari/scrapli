@@ -6,6 +6,7 @@ Changelog
 - Remove newline anchor in in-channel auth password pattern. Felt like a good/smart idea but Cisco in their infinite 
   wisdom have some awful banner on IOL (CML/VIRL) things that doesn't end with a newline and too many people will 
   hit that.
+- Move decorators back to function style -- fixes possible timeout issues as seen in #233
 
 
 ## 2022.01.30
