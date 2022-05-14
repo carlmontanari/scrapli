@@ -4,7 +4,7 @@ import socket
 from dataclasses import dataclass
 from typing import Optional
 
-from scrapli.decorators import TransportTimeout
+from scrapli.decorators import timeout_wrapper
 from scrapli.exceptions import (
     ScrapliAuthenticationFailed,
     ScrapliConnectionError,
@@ -197,7 +197,7 @@ class AsynctelnetTransport(AsyncTransport):
             return False
         return not self.stdout.at_eof()
 
-    @TransportTimeout("timed out reading from transport")
+    @timeout_wrapper
     async def read(self) -> bytes:
         if not self.stdout:
             raise ScrapliConnectionNotOpened
