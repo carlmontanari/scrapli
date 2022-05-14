@@ -14,7 +14,7 @@ from datetime import datetime
 from typing import AsyncIterator, List, Optional, Tuple
 
 from scrapli.channel.base_channel import BaseChannel, BaseChannelArgs
-from scrapli.decorators import ChannelTimeout
+from scrapli.decorators import timeout_wrapper
 from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliTimeout
 from scrapli.transport.base import AsyncTransport
 
@@ -260,7 +260,7 @@ class AsyncChannel(BaseChannel):
 
         return read_buf.getvalue()
 
-    @ChannelTimeout(message="timed out during in channel ssh authentication")
+    @timeout_wrapper
     async def channel_authenticate_ssh(
         self, auth_password: str, auth_private_key_passphrase: str
     ) -> None:
@@ -333,7 +333,7 @@ class AsyncChannel(BaseChannel):
                 ):
                     return
 
-    @ChannelTimeout(message="timed out during in channel telnet authentication")
+    @timeout_wrapper
     async def channel_authenticate_telnet(  # noqa: C901
         self, auth_username: str = "", auth_password: str = ""
     ) -> None:
@@ -420,7 +420,7 @@ class AsyncChannel(BaseChannel):
                 ):
                     return
 
-    @ChannelTimeout(message="timed out getting prompt")
+    @timeout_wrapper
     async def get_prompt(self) -> str:
         """
         Get current channel prompt
@@ -456,7 +456,7 @@ class AsyncChannel(BaseChannel):
                     current_prompt = channel_match.group(0)
                     return current_prompt.decode().strip()
 
-    @ChannelTimeout(message="timed out sending input to device")
+    @timeout_wrapper
     async def send_input(
         self,
         channel_input: str,
@@ -504,7 +504,7 @@ class AsyncChannel(BaseChannel):
         )
         return buf, processed_buf
 
-    @ChannelTimeout(message="timed out sending input to device")
+    @timeout_wrapper
     async def send_input_and_read(
         self,
         channel_input: str,
@@ -559,7 +559,7 @@ class AsyncChannel(BaseChannel):
 
         return buf, processed_buf
 
-    @ChannelTimeout(message="timed out sending interactive input to device")
+    @timeout_wrapper
     async def send_inputs_interact(
         self,
         interact_events: List[Tuple[str, str, Optional[bool]]],

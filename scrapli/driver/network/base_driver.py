@@ -12,7 +12,7 @@ from scrapli.helper import user_warning
 from scrapli.response import MultiResponse, Response
 
 if TYPE_CHECKING:
-    LoggerAdapterT = LoggerAdapter[Logger]  # pylint:disable=E1136
+    LoggerAdapterT = LoggerAdapter[Logger]  # pragma:  no cover # pylint:disable=E1136
 else:
     LoggerAdapterT = LoggerAdapter
 

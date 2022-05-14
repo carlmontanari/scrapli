@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from telnetlib import Telnet
 from typing import Optional
 
-from scrapli.decorators import TransportTimeout
+from scrapli.decorators import timeout_wrapper
 from scrapli.exceptions import ScrapliConnectionError, ScrapliConnectionNotOpened
 from scrapli.transport.base import BasePluginTransportArgs, BaseTransportArgs, Transport
 
@@ -82,7 +82,7 @@ class TelnetTransport(Transport):
             return False
         return not self.session.eof
 
-    @TransportTimeout("timed out reading from transport")
+    @timeout_wrapper
     def read(self) -> bytes:
         if not self.session:
             raise ScrapliConnectionNotOpened
