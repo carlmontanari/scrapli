@@ -2,15 +2,9 @@
 import asyncio
 import re
 import time
-from io import BytesIO
-
-try:
-    from contextlib import asynccontextmanager
-except ImportError:  # pragma: nocover
-    # needed for 3.6 support, no asynccontextmanager until 3.7
-    from async_generator import asynccontextmanager  # type: ignore  # pragma: nocover
-
+from contextlib import asynccontextmanager
 from datetime import datetime
+from io import BytesIO
 from typing import AsyncIterator, List, Optional, Tuple
 
 from scrapli.channel.base_channel import BaseChannel, BaseChannelArgs
