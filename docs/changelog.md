@@ -7,6 +7,12 @@ Changelog
   wisdom have some awful banner on IOL (CML/VIRL) things that doesn't end with a newline and too many people will 
   hit that.
 - Move decorators back to function style -- fixes possible timeout issues as seen in #233
+- Modified `escalate_priv` methods to check for password prompt and desired prompt patterns *and* the current prompt
+  pattern. There was an issue in scrapligo/containerlab where a cEOS device would not let you auth past enable until
+  it is done "booting" up, and scrapli would just simply timeout as it didn't expect to see the exec prompt again. 
+  Thanks to @hellt for helping track this one down!
+- Replaced standard library telnetlib transport with custom telnet transport (still no external requirements) in 
+  very early preparation for telnetlib's deprecation.
 
 
 ## 2022.01.30

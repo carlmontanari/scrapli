@@ -24,6 +24,7 @@ def prepare_device(test_devices):
             "auth_password": DEVICES[device]["auth_password"],
             "auth_secondary": DEVICES[device]["auth_secondary"],
             "auth_strict_key": DEVICES[device]["auth_strict_key"],
+            "transport_options": {"open_cmd": ["-o", "KexAlgorithms=+diffie-hellman-group14-sha1"]},
             "platform": device,
             # nxos on macos w/out acceleration is... slooooooooooow
             "timeout_ops": 120,
