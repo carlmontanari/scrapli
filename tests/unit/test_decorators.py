@@ -3,7 +3,7 @@ import time
 
 import pytest
 
-from scrapli.decorators import TimeoutOpsModifier, timeout_wrapper
+from scrapli.decorators import timeout_modifier, timeout_wrapper
 from scrapli.exceptions import ScrapliTimeout
 
 
@@ -251,7 +251,7 @@ def test_timeout_modifier(monkeypatch, sync_driver, test_data):
     timeout_ops = test_data
     assert sync_driver.timeout_ops == 30
 
-    @TimeoutOpsModifier()
+    @timeout_modifier
     def _test_timeout_modifier(cls, timeout_ops):
         return cls.timeout_ops
 
@@ -276,7 +276,7 @@ async def test_timeout_modifier_async(monkeypatch, async_driver, test_data):
     timeout_ops = test_data
     assert async_driver.timeout_ops == 30
 
-    @TimeoutOpsModifier()
+    @timeout_modifier
     async def _test_timeout_modifier(cls, timeout_ops):
         return cls.timeout_ops
 
