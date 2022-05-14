@@ -21,6 +21,7 @@ Thank you to the following people who have made contributions other than (and ma
 - [Marion](https://github.com/marionGh) for loads of testing hard to track down issues with the async transports!
 - [Roman Dodin](https://github.com/hellt) for inspiration to make the docs much better and for adding the doc 
   testing to keep them looking good!
+- [netixx](https://github.com/netixx) for helping unravel some particularly fun decorator timeout shenanigans!
 
 
 The following people have helped identify and report bugs in scrapli, thank you all!
