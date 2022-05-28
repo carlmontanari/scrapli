@@ -35,7 +35,12 @@ DEVICES = {
         "host": "localhost" if not CLAB_BRIDGE else "172.18.0.11",
         "port": 21022 if not CLAB_BRIDGE else 22,
         "base_config": f"{TEST_DATA_PATH}/base_configs/cisco_iosxe",
-        "transport_options": {"open_cmd": ["-o", "KexAlgorithms=+diffie-hellman-group14-sha1"]},
+        "transport_options": {
+            "open_cmd": [
+                "-o",
+                "KexAlgorithms=+diffie-hellman-group-exchange-sha1,diffie-hellman-group14-sha1",
+            ]
+        },
     },
     "cisco_nxos": {
         "driver": NXOSDriver,

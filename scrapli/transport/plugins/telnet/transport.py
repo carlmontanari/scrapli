@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from scrapli.decorators import TransportTimeout
+from scrapli.decorators import timeout_wrapper
 from scrapli.exceptions import ScrapliConnectionError, ScrapliConnectionNotOpened
 from scrapli.transport.base import BasePluginTransportArgs, BaseTransportArgs, Transport
 from scrapli.transport.base.base_socket import Socket
@@ -191,7 +191,7 @@ class TelnetTransport(Transport):
             raise ScrapliConnectionNotOpened
         return self.socket.sock.recv(n)
 
-    @TransportTimeout("timed out reading from transport")
+    @timeout_wrapper
     def read(self) -> bytes:
         if not self.socket:
             raise ScrapliConnectionNotOpened
