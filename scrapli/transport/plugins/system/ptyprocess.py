@@ -401,7 +401,7 @@ class PtyProcess:
             except Exception:
                 pass
 
-    def close(self, force: bool = True) -> None:
+    def close(self) -> None:
         """
         Close the instance
 
@@ -412,7 +412,7 @@ class PtyProcess:
         and SIGINT).
 
         Args:
-            force: bool
+            N/A
 
         Returns:
             None
@@ -422,8 +422,6 @@ class PtyProcess:
 
         """
         if not self.closed:
-            self.flush()
-
             # in the original ptyprocess vendor'd code the file object is "gracefully" closed,
             # however in some situations it seemed to hang forever on the close call... given that
             # as soon as this connection is closed it will need to be re-opened, and that will of
@@ -437,11 +435,11 @@ class PtyProcess:
             # Give kernel time to update process status.
             time.sleep(self.delayafterclose)
             if self.isalive():
-                if not self.terminate(force):
+                if not self.terminate(force=True):
                     raise PtyProcessError("Could not terminate the child.")
             self.fd = -1
             self.closed = True
-            # self.pid = None
+            self.pid = None
 
     def flush(self) -> None:
         """
