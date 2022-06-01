@@ -89,7 +89,7 @@ jobs:
       - uses: actions/checkout@v3
       - run: docker run -v $(pwd):/docs --entrypoint "" squidfunk/mkdocs-material:latest ash -c 'pip install mdx_gh_links && mkdocs build --clean --strict'
       - name: Cache htmltest external links
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.3
         with:
           path: tmp/.htmltest
           # key will contain hash of all md files to check if files have changed
