@@ -23,7 +23,7 @@ class AsyncDriver(BaseDriver):
             base_channel_args=self._base_channel_args,
         )
 
-    async def __aenter__(self) -> "AsyncDriver":
+    async def __aenter__(self):
         """
         Enter method for context manager
 
@@ -31,7 +31,7 @@ class AsyncDriver(BaseDriver):
             N/A
 
         Returns:
-            AsyncDriver: opened AsyncDriver object
+            AsyncDriver: a concrete implementation of the opened AsyncDriver object
 
         Raises:
             N/A
