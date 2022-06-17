@@ -23,7 +23,7 @@ class Driver(BaseDriver):
             base_channel_args=self._base_channel_args,
         )
 
-    def __enter__(self) -> "Driver":
+    def __enter__(self):
         """
         Enter method for context manager
 
@@ -31,7 +31,7 @@ class Driver(BaseDriver):
             N/A
 
         Returns:
-            Driver: opened Driver object
+            Driver: a concrete implementation of the opened Driver object
 
         Raises:
             N/A
