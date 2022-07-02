@@ -19,7 +19,7 @@ jobs:
         with:
           ref: develop
       - name: set up python ${{ matrix.version }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.version }}
       - name: setup test env
@@ -42,7 +42,7 @@ jobs:
         with:
           ref: develop
       - name: set up python ${{ matrix.version }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.version }}
       - name: get friendly (for nox) python version
