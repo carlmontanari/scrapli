@@ -1,0 +1,3 @@
+delete bootflash:virtual-instance.conf
+Do you want to delete "/virtual-instance.conf" ? (yes/no/abort)   [y] n
+vr-n9kv#

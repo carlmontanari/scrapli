@@ -6,5 +6,5 @@ def test_non_standard_default_desired_privilege_level(iosxe_conn):
     iosxe_conn.default_desired_privilege_level = "configuration"
     iosxe_conn.open()
     current_prompt = iosxe_conn.get_prompt()
-    assert current_prompt == "csr1000v(config)#"
+    assert current_prompt.endswith("vr-csr(config)#")
     iosxe_conn.close()
