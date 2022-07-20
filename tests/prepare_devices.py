@@ -28,13 +28,6 @@ def prepare_device(test_devices):
             "platform": device,
             # nxos on macos w/out acceleration is... slooooooooooow
             "timeout_ops": 120,
-            # for xe, but won't hurt anything else anyway
-            "transport_options": {
-                "open_cmd": [
-                    "-o",
-                    "KexAlgorithms=+diffie-hellman-group-exchange-sha1,diffie-hellman-group14-sha1",
-                ]
-            },
         }
 
         with Scrapli(**conn_dict) as conn:

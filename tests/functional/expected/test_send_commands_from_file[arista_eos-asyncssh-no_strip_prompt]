@@ -1,0 +1,3 @@
+show run | i ZTP
+ceos#show run | i ZTP
+ceos#

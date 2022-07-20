@@ -186,7 +186,11 @@ class ParamikoTransport(Transport):
             raise ScrapliConnectionNotOpened
 
         if self._base_transport_args.transport_options.get("enable_rsa2", False) is False:
-            self.session.disabled_algorithms = {"keys": ["rsa-sha2-256", "rsa-sha2-512"]}
+            # do this for "keys" and "pubkeys": https://github.com/paramiko/paramiko/issues/1984
+            self.session.disabled_algorithms = {
+                "keys": ["rsa-sha2-256", "rsa-sha2-512"],
+                "pubkeys": ["rsa-sha2-256", "rsa-sha2-512"],
+            }
 
         try:
             paramiko_key = RSAKey(filename=self.plugin_transport_args.auth_private_key)
