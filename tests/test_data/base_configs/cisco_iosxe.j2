@@ -7,13 +7,13 @@ platform qfp utilization monitor load 80
 platform punt-keepalive disable-kernel-core
 platform console serial
 !
-hostname csr1000v
+hostname vr-csr
 !
 boot-start-marker
 boot-end-marker
 !
 !
-enable secret 9 $9$xvWnx8Fe35f8xE$E9ijp7GM/V48P5y1Uz3IEPtotXgwkJKYJmN0q3q2E92
+enable secret 9 $9$iYHNnk9hB4ElFk$3JjDfWOwfPRJK5SJKUo8YGs7whG5fra4jK9i1UWeVPc
 !
 no aaa new-model
 call-home
@@ -31,7 +31,7 @@ call-home
 !
 !
 !
-ip domain name example.com
+ip domain name boxen.box
 !
 !
 !
@@ -69,23 +69,15 @@ multilink bundle-name authenticated
 {{ crypto_pki }}
 !
 diagnostic bootup level minimal
-archive
- log config
-  logging enable
- path bootflash:
 memory free low-watermark processor 72329
-file prompt quiet
 !
 !
 spanning-tree extend system-id
 !
-username boxen priv 15 pass 0 b0x3N-b0x3N
+username boxen privilege 15 password 0 b0x3N-b0x3N
+username admin privilege 15 password 0 admin
 !
 redundancy
-!
-!
-!
-!
 !
 !
 !
@@ -178,12 +170,9 @@ interface GigabitEthernet10
  no mop enabled
  no mop sysid
 !
-!
-virtual-service csr_mgmt
-!
 ip forward-protocol nd
 no ip http server
-no ip http secure-server
+ip http secure-server
 !
 ip scp server enable
 !
@@ -193,7 +182,7 @@ ip scp server enable
 !
 !
 ip ssh pubkey-chain
-  username boxen
+  username admin
    key-hash ssh-rsa 5CC74A68B18B026A1709FB09D1F44E2F
 control-plane
 !
@@ -206,21 +195,31 @@ control-plane
 !
 !
 !
+control-plane
+!
+!
+!
+!
+!
+!
 line con 0
  stopbits 1
-line vty 0 4
+line vty 0
  login local
- no length 0
  transport input all
-line vty 5 15
+line vty 1
+ login local
+ length 0
+ transport input all
+line vty 2 4
  login local
  transport input all
 !
-netconf ssh
 !
 !
 !
 !
 !
 netconf-yang
+restconf
 end

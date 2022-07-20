@@ -1,0 +1,2 @@
+show run | i ZTP
+show run | i ZTP

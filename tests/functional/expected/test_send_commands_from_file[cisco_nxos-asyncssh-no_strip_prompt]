@@ -1,0 +1,5 @@
+show run | i scp-server
+feature scp-server
+vr-n9kv#show run | i scp-server
+feature scp-server
+vr-n9kv#

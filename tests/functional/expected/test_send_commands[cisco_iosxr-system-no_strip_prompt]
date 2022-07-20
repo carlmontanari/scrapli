@@ -1,0 +1,94 @@
+show run | i MgmtEth0
+TIME_STAMP_REPLACED
+Building configuration...
+interface MgmtEth0/RP0/CPU0/0
+RP/0/RP0/CPU0:vr-xrv9k#show run
+TIME_STAMP_REPLACED
+Building configuration...
+!! IOS XR Configuration version = 6.5.3
+!! Last configuration change at TIME_STAMP_REPLACED
+!
+hostname vr-xrv9k
+telnet vrf default ipv4 server max-servers 10
+username boxen
+ group root-lr
+ group cisco-support
+CRYPTO_REPLACED
+!
+username clab
+ group root-lr
+ group cisco-support
+ password 7 1511070D060A7A767B
+!
+call-home
+ service active
+ contact smart-licensing
+ profile CiscoTAC-1
+  active
+  destination transport-method http
+ !
+!
+interface MgmtEth0/RP0/CPU0/0
+ ipv4 address 10.0.0.15 255.255.255.0
+!
+interface GigabitEthernet0/0/0/0
+ shutdown
+!
+interface GigabitEthernet0/0/0/1
+ shutdown
+!
+interface GigabitEthernet0/0/0/2
+ shutdown
+!
+interface GigabitEthernet0/0/0/3
+ shutdown
+!
+interface GigabitEthernet0/0/0/4
+ shutdown
+!
+interface GigabitEthernet0/0/0/5
+ shutdown
+!
+interface GigabitEthernet0/0/0/6
+ shutdown
+!
+interface GigabitEthernet0/0/0/7
+ shutdown
+!
+interface GigabitEthernet0/0/0/8
+ shutdown
+!
+interface GigabitEthernet0/0/0/9
+ shutdown
+!
+interface GigabitEthernet0/0/0/10
+ shutdown
+!
+interface GigabitEthernet0/0/0/11
+ shutdown
+!
+interface GigabitEthernet0/0/0/12
+ shutdown
+!
+interface GigabitEthernet0/0/0/13
+ shutdown
+!
+interface GigabitEthernet0/0/0/14
+ shutdown
+!
+interface GigabitEthernet0/0/0/15
+ shutdown
+!
+grpc
+ port 57400
+ no-tls
+!
+netconf-yang agent
+ ssh
+!
+ssh server rate-limit 600
+ssh server v2
+ssh server netconf vrf default
+end
+
+RP/0/RP0/CPU0:vr-xrv9k#
