@@ -33,7 +33,7 @@ class Driver(BaseDriver):
             N/A
 
         Returns:
-            Driver: a concrete implementation of the opened Driver object
+            _T: a concrete implementation of the opened Driver object
 
         Raises:
             N/A
