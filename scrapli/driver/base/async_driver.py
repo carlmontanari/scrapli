@@ -7,8 +7,7 @@ from scrapli.driver.base.base_driver import BaseDriver
 from scrapli.exceptions import ScrapliValueError
 from scrapli.transport import ASYNCIO_TRANSPORTS
 
-
-_T = TypeVar("_T")
+_T = TypeVar("_T", bound="AsyncDriver")
 
 
 class AsyncDriver(BaseDriver):
