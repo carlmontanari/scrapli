@@ -33,7 +33,7 @@ class AsyncDriver(BaseDriver):
             N/A
 
         Returns:
-            AsyncDriver: a concrete implementation of the opened AsyncDriver object
+            _T: a concrete implementation of the opened AsyncDriver object
 
         Raises:
             N/A
