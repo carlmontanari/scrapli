@@ -30,12 +30,14 @@ scrapli.driver.base.async_driver
         <code class="python">
 """scrapli.driver.base.async_driver"""
 from types import TracebackType
-from typing import Any, Optional, Type
+from typing import Any, Optional, Type, TypeVar
 
 from scrapli.channel import AsyncChannel
 from scrapli.driver.base.base_driver import BaseDriver
 from scrapli.exceptions import ScrapliValueError
 from scrapli.transport import ASYNCIO_TRANSPORTS
+
+_T = TypeVar("_T", bound="AsyncDriver")
 
 
 class AsyncDriver(BaseDriver):
@@ -53,7 +55,7 @@ class AsyncDriver(BaseDriver):
             base_channel_args=self._base_channel_args,
         )
 
-    async def __aenter__(self) -> "AsyncDriver":
+    async def __aenter__(self: _T) -> _T:
         """
         Enter method for context manager
 
@@ -61,7 +63,7 @@ class AsyncDriver(BaseDriver):
             N/A
 
         Returns:
-            AsyncDriver: opened AsyncDriver object
+            _T: a concrete implementation of the opened AsyncDriver object
 
         Raises:
             N/A
@@ -371,7 +373,7 @@ class AsyncDriver(BaseDriver):
             base_channel_args=self._base_channel_args,
         )
 
-    async def __aenter__(self) -> "AsyncDriver":
+    async def __aenter__(self: _T) -> _T:
         """
         Enter method for context manager
 
@@ -379,7 +381,7 @@ class AsyncDriver(BaseDriver):
             N/A
 
         Returns:
-            AsyncDriver: opened AsyncDriver object
+            _T: a concrete implementation of the opened AsyncDriver object
 
         Raises:
             N/A

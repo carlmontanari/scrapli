@@ -30,12 +30,14 @@ scrapli.driver.base.sync_driver
         <code class="python">
 """scrapli.driver.base.sync_driver"""
 from types import TracebackType
-from typing import Any, Optional, Type
+from typing import Any, Optional, Type, TypeVar
 
 from scrapli.channel import Channel
 from scrapli.driver.base.base_driver import BaseDriver
 from scrapli.exceptions import ScrapliValueError
 from scrapli.transport import ASYNCIO_TRANSPORTS
+
+_T = TypeVar("_T", bound="Driver")
 
 
 class Driver(BaseDriver):
@@ -53,7 +55,7 @@ class Driver(BaseDriver):
             base_channel_args=self._base_channel_args,
         )
 
-    def __enter__(self) -> "Driver":
+    def __enter__(self: _T) -> _T:
         """
         Enter method for context manager
 
@@ -61,7 +63,7 @@ class Driver(BaseDriver):
             N/A
 
         Returns:
-            Driver: opened Driver object
+            _T: a concrete implementation of the opened Driver object
 
         Raises:
             N/A
@@ -322,7 +324,7 @@ class Driver(BaseDriver):
             base_channel_args=self._base_channel_args,
         )
 
-    def __enter__(self) -> "Driver":
+    def __enter__(self: _T) -> _T:
         """
         Enter method for context manager
 
@@ -330,7 +332,7 @@ class Driver(BaseDriver):
             N/A
 
         Returns:
-            Driver: opened Driver object
+            _T: a concrete implementation of the opened Driver object
 
         Raises:
             N/A
