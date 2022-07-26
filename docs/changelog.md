@@ -1,6 +1,20 @@
 Changelog
 =========
 
+## 2022.07.30
+
+- Added MANIFEST.in to make sure requirements files are in source distribution see #216
+- Move weekly build to develop branch so weekly build doesn't fail for "stale" main branch reasons
+- `textfsm_parse` now supports passing in a file *or* URL to load as the template file -- thank you to @haccht for 
+  this one -- see #215
+- Fixed some mypy/typing challenges around the scrapli "factory" context manager -- thank you to @erwinkinn for 
+  working on this
+- With lots of help from @netixx tracked down some silliness with timeout decorators not behaving how they should -- 
+  check out #233 for details on this
+- Overhauled the functional testing to align more closely with scrapligo and to remove all the old unnecessary 
+  dockerfile bits, replacing that completely with containerlab
+
+
 ## 2022.01.30.post1
 
 - Remove newline anchor in in-channel auth password pattern. Felt like a good/smart idea but Cisco in their infinite 
