@@ -42,7 +42,7 @@ from scrapli.helper import user_warning
 from scrapli.response import MultiResponse, Response
 
 if TYPE_CHECKING:
-    LoggerAdapterT = LoggerAdapter[Logger]  # pylint:disable=E1136
+    LoggerAdapterT = LoggerAdapter[Logger]  # pragma:  no cover # pylint:disable=E1136
 else:
     LoggerAdapterT = LoggerAdapter
 
@@ -142,7 +142,7 @@ class BaseNetworkDriver:
             rf"({priv_level_data.pattern})" for priv_level_data in self.privilege_levels.values()
         )
 
-    @lru_cache()
+    @lru_cache(maxsize=64)
     def _determine_current_priv(self, current_prompt: str) -> List[str]:
         """
         Determine current privilege level from prompt string
@@ -664,7 +664,7 @@ class BaseNetworkDriver:
             rf"({priv_level_data.pattern})" for priv_level_data in self.privilege_levels.values()
         )
 
-    @lru_cache()
+    @lru_cache(maxsize=64)
     def _determine_current_priv(self, current_prompt: str) -> List[str]:
         """
         Determine current privilege level from prompt string
