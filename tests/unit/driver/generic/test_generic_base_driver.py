@@ -148,8 +148,8 @@ def test_pre_send_commands(base_generic_driver):
     assert isinstance(actual_responses, MultiResponse)
 
 
-def test_pre_send_from_file(fs, real_ssh_config_file_path, base_generic_driver):
-    fs.add_real_file(source_path=real_ssh_config_file_path, target_path="/scrapli/mycommands")
+def test_pre_send_from_file(fs_, real_ssh_config_file_path, base_generic_driver):
+    fs_.add_real_file(source_path=real_ssh_config_file_path, target_path="/scrapli/mycommands")
     commands = base_generic_driver._pre_send_from_file(
         file="/scrapli/mycommands", caller="commands"
     )

@@ -323,9 +323,9 @@ async def test_send_commands(monkeypatch, async_network_driver):
 
 
 async def test_send_commands_from_file(
-    fs, monkeypatch, real_ssh_commands_file_path, async_network_driver
+    fs_, monkeypatch, real_ssh_commands_file_path, async_network_driver
 ):
-    fs.add_real_file(source_path=real_ssh_commands_file_path, target_path="/commands")
+    fs_.add_real_file(source_path=real_ssh_commands_file_path, target_path="/commands")
 
     async def _acquire_appropriate_privilege_level(cls, **kwargs):
         return
@@ -449,9 +449,9 @@ async def test_send_config(monkeypatch, async_network_driver):
 
 
 async def test_send_configs_from_file(
-    fs, monkeypatch, real_ssh_commands_file_path, async_network_driver
+    fs_, monkeypatch, real_ssh_commands_file_path, async_network_driver
 ):
-    fs.add_real_file(source_path=real_ssh_commands_file_path, target_path="/configs")
+    fs_.add_real_file(source_path=real_ssh_commands_file_path, target_path="/configs")
 
     async def _acquire_priv(cls, **kwargs):
         return

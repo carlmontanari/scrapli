@@ -305,8 +305,10 @@ def test_send_commands(monkeypatch, sync_network_driver):
     assert actual_response[0].raw_result == b"raw"
 
 
-def test_send_commands_from_file(fs, monkeypatch, real_ssh_commands_file_path, sync_network_driver):
-    fs.add_real_file(source_path=real_ssh_commands_file_path, target_path="/commands")
+def test_send_commands_from_file(
+    fs_, monkeypatch, real_ssh_commands_file_path, sync_network_driver
+):
+    fs_.add_real_file(source_path=real_ssh_commands_file_path, target_path="/commands")
 
     def _acquire_appropriate_privilege_level(cls, **kwargs):
         return
@@ -419,8 +421,8 @@ def test_send_config(monkeypatch, sync_network_driver):
     assert actual_response.raw_result == b""
 
 
-def test_send_configs_from_file(fs, monkeypatch, real_ssh_commands_file_path, sync_network_driver):
-    fs.add_real_file(source_path=real_ssh_commands_file_path, target_path="/configs")
+def test_send_configs_from_file(fs_, monkeypatch, real_ssh_commands_file_path, sync_network_driver):
+    fs_.add_real_file(source_path=real_ssh_commands_file_path, target_path="/configs")
 
     def _acquire_priv(cls, **kwargs):
         return

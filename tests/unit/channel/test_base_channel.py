@@ -47,8 +47,8 @@ def test_channel_auth_properties(test_data, base_channel):
     assert getattr(base_channel, property_name) == compiled_new_value
 
 
-def test_channel_log_append(fs, base_transport_no_abc):
-    fs.create_file(
+def test_channel_log_append(fs_, base_transport_no_abc):
+    fs_.create_file(
         "scrapli_channel.log",
         contents="APPEND TO ME PLEASE!",
     )
@@ -67,18 +67,16 @@ def test_channel_log_invalid_mode(base_transport_no_abc):
         BaseChannelArgs(channel_log=True, channel_log_mode="not valid")
 
 
-def test_channel_log(fs, base_transport_no_abc):
+def test_channel_log(fs_, base_transport_no_abc):
     # fs needed to mock filesystem for asserting log location
-    _ = fs
     base_channel_args = BaseChannelArgs(channel_log=True)
     chan = BaseChannel(transport=base_transport_no_abc, base_channel_args=base_channel_args)
     chan.open()
     assert Path("/scrapli_channel.log").is_file()
 
 
-def test_channel_log_user_defined(fs, base_transport_no_abc):
+def test_channel_log_user_defined(fs_, base_transport_no_abc):
     # fs needed to mock filesystem for asserting log location
-    _ = fs
     base_channel_args = BaseChannelArgs(channel_log="/log.log")
     chan = BaseChannel(transport=base_transport_no_abc, base_channel_args=base_channel_args)
     chan.open()

@@ -90,8 +90,8 @@ def test_setup_ssh_file_args_telnet_transport(caplog, base_driver, test_data):
     assert logging.DEBUG == log_record.levelno
 
 
-def test_update_ssh_args_from_ssh_config(fs, real_ssh_config_file_path, base_driver):
-    fs.add_real_file(source_path=real_ssh_config_file_path, target_path="ssh_config")
+def test_update_ssh_args_from_ssh_config(fs_, real_ssh_config_file_path, base_driver):
+    fs_.add_real_file(source_path=real_ssh_config_file_path, target_path="ssh_config")
     base_driver.ssh_config_file = "ssh_config"
     base_driver.host = "1.2.3.4"
     base_driver.port = 0
@@ -119,7 +119,7 @@ def test_update_ssh_args_from_ssh_config(fs, real_ssh_config_file_path, base_dri
     ),
     ids=("true", "unresolvable_path"),
 )
-def test_setup_ssh_file_args_resolved(fs, base_driver, test_data):
+def test_setup_ssh_file_args_resolved(fs_, base_driver, test_data):
     """
     Assert we handle ssh config/known hosts inputs properly
 
@@ -127,8 +127,6 @@ def test_setup_ssh_file_args_resolved(fs, base_driver, test_data):
     that if given a non False bool or a string we properly try to resolve the ssh files
     """
     # using fakefs to ensure we dont resolve user/system config files
-    _ = fs
-
     ssh_config_file_input, ssh_known_hosts_file_input = test_data
 
     resolved_ssh_config_file, resolved_ssh_known_hosts_file = base_driver._setup_ssh_file_args(
@@ -240,11 +238,11 @@ def test_load_non_core_transport_plugin_exception(monkeypatch):
     ],
     ids=("auto_etc", "auto_user", "manual_location", "no_config"),
 )
-def test_resolve_ssh_config(fs, real_ssh_config_file_path, base_driver, test_data):
+def test_resolve_ssh_config(fs_, real_ssh_config_file_path, base_driver, test_data):
     input_data, expected_output, mount_real_file, fake_fs_destination = test_data
 
     if mount_real_file:
-        fs.add_real_file(source_path=real_ssh_config_file_path, target_path=fake_fs_destination)
+        fs_.add_real_file(source_path=real_ssh_config_file_path, target_path=fake_fs_destination)
     actual_output = base_driver._resolve_ssh_config(ssh_config_file=input_data)
     assert actual_output == expected_output
 
@@ -269,11 +267,11 @@ def test_resolve_ssh_config(fs, real_ssh_config_file_path, base_driver, test_dat
     ],
     ids=("auto_etc", "auto_user", "manual_location", "no_config"),
 )
-def test_resolve_ssh_known_hosts(fs, real_ssh_known_hosts_file_path, base_driver, test_data):
+def test_resolve_ssh_known_hosts(fs_, real_ssh_known_hosts_file_path, base_driver, test_data):
     input_data, expected_output, mount_real_file, fake_fs_destination = test_data
 
     if mount_real_file:
-        fs.add_real_file(
+        fs_.add_real_file(
             source_path=real_ssh_known_hosts_file_path, target_path=fake_fs_destination
         )
     actual_output = base_driver._resolve_ssh_known_hosts(ssh_known_hosts=input_data)
