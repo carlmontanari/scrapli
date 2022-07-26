@@ -61,7 +61,7 @@ def test_scrapli_filehandler():
     pass
 
 
-def test_enable_basic_logging(fs):
+def test_enable_basic_logging(fs_):
     assert Path("scrapli.log").is_file() is False
     enable_basic_logging(file=True, level="debug")
     scrapli_logger = logging.getLogger("scrapli")
@@ -78,7 +78,7 @@ def test_enable_basic_logging(fs):
     del logger.handlers[1]
 
 
-def test_enable_basic_logging_no_buffer(fs):
+def test_enable_basic_logging_no_buffer(fs_):
     assert Path("mylog.log").is_file() is False
 
     enable_basic_logging(file="mylog.log", level="debug", buffer_log=False, caller_info=True)

@@ -32,9 +32,8 @@ def test_channel_lock_context_manager_no_channel_lock(base_transport_no_abc):
         assert True
 
 
-def test_channel_read(fs, caplog, monkeypatch, sync_transport_no_abc):
+def test_channel_read(fs_, caplog, monkeypatch, sync_transport_no_abc):
     # fs needed to mock filesystem for asserting log location
-    _ = fs
     caplog.set_level(logging.DEBUG, logger="scrapli.channel")
 
     channel_read_called = False

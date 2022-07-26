@@ -9,10 +9,19 @@ from helper import (
     cisco_nxos_clean_response,
     juniper_junos_clean_response,
 )
+from pyfakefs.fake_filesystem_unittest import Patcher
 
 import scrapli
 
 TEST_DATA_PATH = f"{Path(scrapli.__file__).parents[1]}/tests/test_data"
+
+
+@pytest.fixture
+def fs_():
+    # replaces "fs" (pyfakefs) with patched one that does *not* use cache -- this is because
+    # pyats does something fucky with modules that breaks pyfakefs.
+    with Patcher(use_cache=False) as patcher:
+        yield patcher.fs
 
 
 @pytest.fixture(scope="session")

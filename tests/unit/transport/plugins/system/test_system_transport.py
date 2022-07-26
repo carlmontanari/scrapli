@@ -84,7 +84,7 @@ def test_build_open_cmd_alternate_options(system_transport):
     ]
 
 
-def test_close(fs, monkeypatch, system_transport):
+def test_close(fs_, monkeypatch, system_transport):
     def _close(cls):
         pass
 
@@ -95,7 +95,7 @@ def test_close(fs, monkeypatch, system_transport):
 
     # giving ptyprocess a "real" (but not like... real real) fd seemed like a good idea... dunno
     # if its really necessary, but it *does* need a fd of some sort so whatever
-    fs.create_file("dummy")
+    fs_.create_file("dummy")
     dummy_file = open("dummy")
     system_transport.session = PtyProcess(pid=0, fd=dummy_file.fileno())
     system_transport.close()
@@ -107,7 +107,7 @@ def test_isalive_no_session(system_transport):
     assert system_transport.isalive() is False
 
 
-def test_isalive(fs, system_transport):
+def test_isalive(fs_, system_transport):
     # lie and pretend the session is already assigned
     # giving ptyprocess a "real" (but not like... real real) fd seemed like a good idea... dunno
     # if its really necessary, but it *does* need a fd of some sort so whatever; also give it a
@@ -115,13 +115,13 @@ def test_isalive(fs, system_transport):
     # to work but we really only care that scrapli does the right thing... we have faith that
     # ptyprocess will be doing the right thing "below" scrapli
     dummy_pid, fd = pty.fork()
-    fs.create_file("dummy")
+    fs_.create_file("dummy")
     dummy_file = open("dummy")
     system_transport.session = PtyProcess(pid=dummy_pid, fd=dummy_file.fileno())
     assert system_transport.isalive() is True
 
 
-def test_read(fs, monkeypatch, system_transport):
+def test_read(fs_, monkeypatch, system_transport):
     def _read(cls, _):
         return b"somebytes"
 
@@ -134,7 +134,7 @@ def test_read(fs, monkeypatch, system_transport):
     # giving ptyprocess a "real" (but not like... real real) fd seemed like a good idea... dunno
     # if its really necessary, but it *does* need a fd of some sort so whatever
     dummy_pid, fd = pty.fork()
-    fs.create_file("dummy")
+    fs_.create_file("dummy")
     dummy_file = open("dummy")
     system_transport.session = PtyProcess(pid=dummy_pid, fd=dummy_file.fileno())
 
@@ -146,7 +146,7 @@ def test_read_exception_not_open(system_transport):
         system_transport.read()
 
 
-def test_read_exception_eof(fs, monkeypatch, system_transport):
+def test_read_exception_eof(fs_, monkeypatch, system_transport):
     def _read(cls, _):
         raise EOFError
 
@@ -158,7 +158,7 @@ def test_read_exception_eof(fs, monkeypatch, system_transport):
     # lie and pretend the session is already assigned
     # giving ptyprocess a "real" (but not like... real real) fd seemed like a good idea... dunno
     # if its really necessary, but it *does* need a fd of some sort so whatever
-    fs.create_file("dummy")
+    fs_.create_file("dummy")
     dummy_file = open("dummy")
     system_transport.session = PtyProcess(pid=0, fd=dummy_file.fileno())
 
