@@ -60,7 +60,7 @@ PRIVS = {
     ),
     "root_shell": (
         PrivilegeLevel(
-            pattern=r"^.*root@(?:\S*:\S*\s?)?[%\#]\s?$",
+            pattern=r"^.*root@(?:\S*:?\S*\s?)?[%\#]\s?$",
             name="root_shell",
             previous_priv="exec",
             deescalate="exit",

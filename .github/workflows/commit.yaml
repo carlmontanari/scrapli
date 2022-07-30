@@ -11,9 +11,9 @@ jobs:
         os: [ubuntu-latest]
         version: ["3.10"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: set up python ${{ matrix.version }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.version }}
       - name: setup test env
@@ -32,9 +32,9 @@ jobs:
         os: [ubuntu-latest]
         version: ["3.10"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: set up python ${{ matrix.version }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.version }}
       - name: setup test env
@@ -47,19 +47,19 @@ jobs:
           TERM: xterm
         run: python -m nox -s unit_tests
       - name: Upload coverage
-        uses: codecov/codecov-action@v2.1.0
+        uses: codecov/codecov-action@v3.1.0
 
   build_posix:
     runs-on: ${{ matrix.os }}
     strategy:
-      max-parallel: 8
+      max-parallel: 10
       matrix:
         os: [ubuntu-latest, macos-latest]
-        version: ["3.7", "3.8", "3.9", "3.10"]
+        version: ["3.7", "3.8", "3.9", "3.10", "3.11-dev"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: set up python ${{ matrix.version }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.version }}
       - name: get friendly (for nox) python version
@@ -83,23 +83,3 @@ jobs:
           TERM: xterm
         run: python -m nox -p $FRIENDLY_PYTHON_VERSION -k "not darglint"
 
-  docs-test:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - run: docker run -v $(pwd):/docs --entrypoint "" squidfunk/mkdocs-material:latest ash -c 'pip install mdx_gh_links && mkdocs build --clean --strict'
-      - name: Cache htmltest external links
-        uses: actions/cache@v2
-        with:
-          path: tmp/.htmltest
-          # key will contain hash of all md files to check if files have changed
-          # when files are changed, a new key name is formed, and thus a new cache will be saved
-          key: htmltest-${{ hashFiles('docs/**/*.md') }}
-          # the restore key will fetch any previously saved cache even if there is no match on key
-          # this allows to use cache from prev runs and update it
-          restore-keys: |
-            htmltest-
-      - name: htmltest
-        uses: wjdp/htmltest-action@v0.13.0-rc1
-        with:
-          config: docs/htmltest.yml

@@ -56,9 +56,9 @@ async def test_send_commands(monkeypatch, async_generic_driver):
 
 
 async def test_send_commands_from_file(
-    fs, monkeypatch, real_ssh_commands_file_path, async_generic_driver
+    fs_, monkeypatch, real_ssh_commands_file_path, async_generic_driver
 ):
-    fs.add_real_file(source_path=real_ssh_commands_file_path, target_path="/commands")
+    fs_.add_real_file(source_path=real_ssh_commands_file_path, target_path="/commands")
 
     async def _send_input(cls, **kwargs):
         return b"raw", b"processed"

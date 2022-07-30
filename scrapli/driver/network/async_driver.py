@@ -106,7 +106,10 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
                         (escalate_priv.escalate, escalate_priv.escalate_prompt, False),
                         (self.auth_secondary, escalate_priv.pattern, True),
                     ],
-                    interaction_complete_patterns=[escalate_priv.pattern],
+                    interaction_complete_patterns=[
+                        self.privilege_levels[escalate_priv.previous_priv].pattern,
+                        escalate_priv.pattern,
+                    ],
                 )
             except ScrapliTimeout as exc:
                 raise ScrapliAuthenticationFailed(
@@ -432,7 +435,7 @@ class AsyncNetworkDriver(AsyncGenericDriver, BaseNetworkDriver):
         if failed_when_contains is None:
             failed_when_contains = self.failed_when_contains
 
-        # type hint is due to the TimeoutModifier wrapper returning `Any` so that we dont anger the
+        # type hint is due to the timeout_modifier wrapper returning `Any` so that we dont anger the
         # asyncio parts (which will get an awaitable not a Response returned)
         response: Response = await super().send_interactive(
             interact_events=interact_events,

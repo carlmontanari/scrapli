@@ -3,7 +3,7 @@ import time
 
 import pytest
 
-from scrapli.decorators import ChannelTimeout, TimeoutOpsModifier, TransportTimeout
+from scrapli.decorators import timeout_modifier, timeout_wrapper
 from scrapli.exceptions import ScrapliTimeout
 
 
@@ -19,7 +19,7 @@ def test_transport_timeout_sync_signals(monkeypatch, sync_transport_no_abc, test
     timeout_transport = test_data
     sync_transport_no_abc._base_transport_args.timeout_transport = timeout_transport
 
-    @TransportTimeout()
+    @timeout_wrapper
     def _open(cls):
         return cls._base_transport_args.timeout_transport
 
@@ -42,7 +42,7 @@ def test_transport_timeout_sync_multiprocessing(monkeypatch, sync_transport_no_a
     timeout_transport = test_data
     sync_transport_no_abc._base_transport_args.timeout_transport = timeout_transport
 
-    @TransportTimeout()
+    @timeout_wrapper
     def _open(cls):
         return cls._base_transport_args.timeout_transport
 
@@ -58,7 +58,7 @@ def test_transport_timeout_sync_multiprocessing(monkeypatch, sync_transport_no_a
 def test_transport_timeout_sync_timed_out_signals(monkeypatch, sync_transport_no_abc):
     sync_transport_no_abc._base_transport_args.timeout_transport = 0.1
 
-    @TransportTimeout()
+    @timeout_wrapper
     def _open(cls):
         time.sleep(0.5)
 
@@ -72,7 +72,7 @@ def test_transport_timeout_sync_timed_out_signals(monkeypatch, sync_transport_no
 def test_transport_timeout_sync_timed_out_multiprocessing(monkeypatch, sync_transport_no_abc):
     sync_transport_no_abc._base_transport_args.timeout_transport = 0.1
 
-    @TransportTimeout()
+    @timeout_wrapper
     def _open(cls):
         time.sleep(0.5)
 
@@ -88,7 +88,7 @@ def test_transport_timeout_sync_timed_out_multiprocessing(monkeypatch, sync_tran
 async def test_transport_timeout_async_timed_out(monkeypatch, async_transport_no_abc):
     async_transport_no_abc._base_transport_args.timeout_transport = 0.1
 
-    @TransportTimeout()
+    @timeout_wrapper
     async def _open(cls):
         await asyncio.sleep(0.5)
 
@@ -111,7 +111,7 @@ async def test_transport_timeout_async(monkeypatch, async_transport_no_abc, test
     timeout_transport = test_data
     async_transport_no_abc._base_transport_args.timeout_transport = timeout_transport
 
-    @TransportTimeout()
+    @timeout_wrapper
     async def _open(cls):
         return cls._base_transport_args.timeout_transport
 
@@ -134,7 +134,7 @@ def test_channel_timeout_sync_signals(monkeypatch, sync_channel, test_data):
     timeout_ops = test_data
     sync_channel._base_channel_args.timeout_ops = timeout_ops
 
-    @ChannelTimeout()
+    @timeout_wrapper
     def _send_input(cls):
         return cls._base_channel_args.timeout_ops
 
@@ -157,7 +157,7 @@ def test_channel_timeout_sync_multiprocessing(monkeypatch, sync_channel, test_da
     timeout_ops = test_data
     sync_channel._base_channel_args.timeout_ops = timeout_ops
 
-    @ChannelTimeout()
+    @timeout_wrapper
     def _send_input(cls):
         return cls._base_channel_args.timeout_ops
 
@@ -173,7 +173,7 @@ def test_channel_timeout_sync_multiprocessing(monkeypatch, sync_channel, test_da
 def test_channel_timeout_sync_timed_out_signals(monkeypatch, sync_channel):
     sync_channel._base_channel_args.timeout_ops = 0.1
 
-    @ChannelTimeout()
+    @timeout_wrapper
     def _send_input(cls):
         time.sleep(0.5)
 
@@ -187,7 +187,7 @@ def test_channel_timeout_sync_timed_out_signals(monkeypatch, sync_channel):
 def test_channel_timeout_sync_timed_out_multiprocessing(monkeypatch, sync_channel):
     sync_channel._base_channel_args.timeout_ops = 0.1
 
-    @ChannelTimeout()
+    @timeout_wrapper
     def _send_input(cls):
         time.sleep(0.5)
 
@@ -204,7 +204,7 @@ def test_channel_timeout_sync_timed_out_multiprocessing(monkeypatch, sync_channe
 async def test_channel_timeout_async_timed_out(monkeypatch, async_channel):
     async_channel._base_channel_args.timeout_ops = 0.1
 
-    @ChannelTimeout()
+    @timeout_wrapper
     async def _send_input(cls):
         await asyncio.sleep(0.5)
 
@@ -227,7 +227,7 @@ async def test_channel_timeout_async(monkeypatch, async_channel, test_data):
     timeout_ops = test_data
     async_channel._base_channel_args.timeout_ops = timeout_ops
 
-    @ChannelTimeout()
+    @timeout_wrapper
     async def _send_input(cls):
         return cls._base_channel_args.timeout_ops
 
@@ -251,7 +251,7 @@ def test_timeout_modifier(monkeypatch, sync_driver, test_data):
     timeout_ops = test_data
     assert sync_driver.timeout_ops == 30
 
-    @TimeoutOpsModifier()
+    @timeout_modifier
     def _test_timeout_modifier(cls, timeout_ops):
         return cls.timeout_ops
 
@@ -276,7 +276,7 @@ async def test_timeout_modifier_async(monkeypatch, async_driver, test_data):
     timeout_ops = test_data
     assert async_driver.timeout_ops == 30
 
-    @TimeoutOpsModifier()
+    @timeout_modifier
     async def _test_timeout_modifier(cls, timeout_ops):
         return cls.timeout_ops
 

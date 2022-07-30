@@ -12,6 +12,7 @@ from .structured_data import structured_data_genie
 
 
 async def test_async_usage():
+    """Test async usage example"""
     await async_iosxe_driver.main()
 
 
@@ -21,6 +22,7 @@ async def test_async_usage():
     ids=["generic_driver", "iosxe_driver", "scrapli_driver", "scrapli_factory"],
 )
 def test_basic_usage(example_script):
+    """Test basic usage example"""
     example_script.main()
 
 
@@ -30,14 +32,17 @@ def test_basic_usage(example_script):
     ids=["iosxr_configure_exclusive", "eos_configure_session"],
 )
 def test_configuration_modes(example_script):
+    """Test configuration mode example"""
     example_script.main()
 
 
 def test_logging():
+    """Test logging example"""
     basic_logging.main()
 
 
 def test_ssh_keys():
+    """Test ssh keys example"""
     ssh_keys.main()
 
 
@@ -47,4 +52,5 @@ def test_ssh_keys():
     ids=["genie", "textfsm"],
 )
 def test_structured_data(example_script):
+    """Test structured data example"""
     example_script.main()

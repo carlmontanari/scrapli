@@ -3,7 +3,7 @@ import sys
 from dataclasses import dataclass
 from typing import List, Optional
 
-from scrapli.decorators import TransportTimeout
+from scrapli.decorators import timeout_wrapper
 from scrapli.exceptions import (
     ScrapliConnectionError,
     ScrapliConnectionNotOpened,
@@ -150,7 +150,7 @@ class SystemTransport(Transport):
             return True
         return False
 
-    @TransportTimeout("timed out reading from transport")
+    @timeout_wrapper
     def read(self) -> bytes:
         if not self.session:
             raise ScrapliConnectionNotOpened

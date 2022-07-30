@@ -33,7 +33,7 @@ import asyncio
 from io import BytesIO
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Union
 
-from scrapli.decorators import TimeoutOpsModifier
+from scrapli.decorators import timeout_modifier
 from scrapli.driver import AsyncDriver
 from scrapli.driver.generic.base_driver import BaseGenericDriver
 from scrapli.exceptions import ScrapliTimeout, ScrapliValueError
@@ -118,7 +118,7 @@ class AsyncGenericDriver(AsyncDriver, BaseGenericDriver):
         prompt: str = await self.channel.get_prompt()
         return prompt
 
-    @TimeoutOpsModifier()
+    @timeout_modifier
     async def _send_command(
         self,
         command: str,
@@ -312,7 +312,7 @@ class AsyncGenericDriver(AsyncDriver, BaseGenericDriver):
             timeout_ops=timeout_ops,
         )
 
-    @TimeoutOpsModifier()
+    @timeout_modifier
     async def send_and_read(
         self,
         channel_input: str,
@@ -372,7 +372,7 @@ class AsyncGenericDriver(AsyncDriver, BaseGenericDriver):
             raw_response=raw_response, processed_response=processed_response, response=response
         )
 
-    @TimeoutOpsModifier()
+    @timeout_modifier
     async def send_interactive(
         self,
         interact_events: Union[List[Tuple[str, str]], List[Tuple[str, str, bool]]],
@@ -784,7 +784,7 @@ class AsyncGenericDriver(AsyncDriver, BaseGenericDriver):
         prompt: str = await self.channel.get_prompt()
         return prompt
 
-    @TimeoutOpsModifier()
+    @timeout_modifier
     async def _send_command(
         self,
         command: str,
@@ -978,7 +978,7 @@ class AsyncGenericDriver(AsyncDriver, BaseGenericDriver):
             timeout_ops=timeout_ops,
         )
 
-    @TimeoutOpsModifier()
+    @timeout_modifier
     async def send_and_read(
         self,
         channel_input: str,
@@ -1038,7 +1038,7 @@ class AsyncGenericDriver(AsyncDriver, BaseGenericDriver):
             raw_response=raw_response, processed_response=processed_response, response=response
         )
 
-    @TimeoutOpsModifier()
+    @timeout_modifier
     async def send_interactive(
         self,
         interact_events: Union[List[Tuple[str, str]], List[Tuple[str, str, bool]]],
