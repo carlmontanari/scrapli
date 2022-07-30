@@ -6,11 +6,11 @@ updates:
       interval: "monthly"
       timezone: "PST8PDT"
       time: "03:00"
-    target-branch: "develop"
+    target-branch: "main"
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "monthly"
       timezone: "PST8PDT"
       time: "03:00"
-    target-branch: "develop"
+    target-branch: "main"
