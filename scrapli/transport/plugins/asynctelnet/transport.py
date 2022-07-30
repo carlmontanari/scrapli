@@ -4,22 +4,14 @@ import socket
 from dataclasses import dataclass
 from typing import Optional
 
-from scrapli.decorators import TransportTimeout
+from scrapli.decorators import timeout_wrapper
 from scrapli.exceptions import (
     ScrapliAuthenticationFailed,
     ScrapliConnectionError,
     ScrapliConnectionNotOpened,
 )
 from scrapli.transport.base import AsyncTransport, BasePluginTransportArgs, BaseTransportArgs
-
-# telnet control characters we care about
-IAC = bytes([255])
-DONT = bytes([254])
-DO = bytes([253])
-WONT = bytes([252])
-WILL = bytes([251])
-TERM_TYPE = bytes([24])
-SUPPRESS_GO_AHEAD = bytes([3])
+from scrapli.transport.base.telnet_common import DO, DONT, IAC, SUPPRESS_GO_AHEAD, WILL, WONT
 
 
 @dataclass()
@@ -38,10 +30,9 @@ class AsynctelnetTransport(AsyncTransport):
         self.stdin: Optional[asyncio.StreamWriter] = None
 
         self._initial_buf = b""
-        self._stdout_binary_transmission = False
 
     def _handle_control_chars_response(self, control_buf: bytes, c: bytes) -> bytes:
-        """ "
+        """
         Handle the actual response to control characters
 
         Broken up to be easier to test as well as to appease mr. mccabe
@@ -98,7 +89,7 @@ class AsynctelnetTransport(AsyncTransport):
         return control_buf
 
     async def _handle_control_chars(self) -> None:
-        """ "
+        """
         Handle control characters -- nearly identical to CPython telnetlib
 
         Basically we want to read and "decline" any and all control options that the server proposes
@@ -197,7 +188,7 @@ class AsynctelnetTransport(AsyncTransport):
             return False
         return not self.stdout.at_eof()
 
-    @TransportTimeout("timed out reading from transport")
+    @timeout_wrapper
     async def read(self) -> bytes:
         if not self.stdout:
             raise ScrapliConnectionNotOpened

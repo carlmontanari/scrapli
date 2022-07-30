@@ -24,4 +24,4 @@ def test_configuration_session_abort(eos_conn):
     # assert config session was aborted at first sign of failed config
     assert len(result) == 1
     # assert that session aborted and we are back at priv exec
-    assert current_prompt == "localhost#"
+    assert current_prompt == "ceos#"

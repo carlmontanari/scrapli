@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 """scrapli"""
+from copy import copy
 from pathlib import Path
 
 import setuptools
 
-__version__ = "2022.01.30.post1"
+__version__ = "2022.07.30"
 __author__ = "Carl Montanari"
 
 with open("README.md", "r", encoding="utf-8") as f:
@@ -23,7 +24,7 @@ EXTRAS_REQUIRE = {
     "community": [],
 }
 
-for extra in EXTRAS_REQUIRE:
+for extra in copy(EXTRAS_REQUIRE):
     with open(f"requirements-{extra}.txt", "r", encoding="utf-8") as f:
         # drops the version cap on pins but lets us keep it in the extras requirements files
         # such that CI can be more deterministic and dependabot notifications are more useful

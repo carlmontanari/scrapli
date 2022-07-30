@@ -1,14 +1,23 @@
 import pytest
 
-from scrapli.driver import GenericDriver
-
-TIMEOUT_SOCKET = 10
-TIMEOUT_TRANSPORT = 10
-TIMEOUT_OPS = 30
+TIMEOUT_SOCKET = 60
+TIMEOUT_TRANSPORT = 60
+TIMEOUT_OPS = 60
 TELNET_TRANSPORTS = (
     "telnet",
     "asynctelnet",
 )
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--update", action="store_true", default=False, help="pass to update test output"
+    )
+
+
+@pytest.fixture
+def update(request):
+    return request.config.getoption("--update")
 
 
 @pytest.fixture(scope="session")
@@ -37,40 +46,6 @@ def transport(request):
 @pytest.fixture(scope="function", params=["asyncssh", "asynctelnet"])
 def async_transport(request):
     yield request.param
-
-
-@pytest.fixture(scope="class")
-def nix_conn(test_devices_dict, transport):
-    if transport in TELNET_TRANSPORTS:
-        pytest.skip("skipping telnet for linux hosts")
-
-    device = test_devices_dict["linux"].copy()
-    driver = device.pop("driver")
-    device.pop("async_driver")
-
-    conn = driver(
-        **device,
-        transport=transport,
-    )
-    conn.open()
-    return conn
-
-
-@pytest.fixture(scope="class")
-def nix_conn_generic(test_devices_dict, transport):
-    if transport in TELNET_TRANSPORTS:
-        pytest.skip("skipping telnet for linux hosts")
-
-    device = test_devices_dict["linux"].copy()
-    device.pop("driver")
-    device.pop("async_driver")
-
-    conn = GenericDriver(
-        **device,
-        transport=transport,
-    )
-    conn.open()
-    return conn
 
 
 @pytest.fixture(scope="class")

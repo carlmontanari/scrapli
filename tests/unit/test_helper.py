@@ -142,7 +142,7 @@ def test_textfsm_parse_failed_to_parse():
 
 
 @pytest.mark.skipif(
-    sys.version_info.minor > 9, reason="genie not currently available for python 3.10"
+    sys.version_info.minor > 10, reason="genie not currently available for python 3.11"
 )
 def test_genie_parser():
     result = genie_parse("iosxe", "show ip arp", IOS_ARP)
@@ -153,13 +153,11 @@ def test_genie_parser():
 
 
 @pytest.mark.skipif(
-    sys.version_info.minor > 9, reason="genie not currently available for python 3.10"
+    sys.version_info.minor > 10, reason="genie not currently available for python 3.11"
 )
 def test_genie_parse_failure():
     result = genie_parse("iosxe", "show ip arp", "not really arp data")
     assert result == []
-    # w/out killing this module pyfakefs explodes. dont remember why/how i found that out...
-    del sys.modules["pyats.configuration"]
 
 
 def test_genie_no_genie_installed(monkeypatch):
@@ -240,17 +238,15 @@ def test_ttp_no_ttp_installed(monkeypatch):
     assert output == []
 
 
-def test_resolve_file(fs, real_ssh_config_file_path):
+def test_resolve_file(fs_, real_ssh_config_file_path):
     # pyfakefs so this is not host dependent
-    _ = fs
-    fs.add_real_file(source_path=real_ssh_config_file_path, target_path="/some/neat/path/myfile")
+    fs_.add_real_file(source_path=real_ssh_config_file_path, target_path="/some/neat/path/myfile")
     assert resolve_file(file="/some/neat/path/myfile") == "/some/neat/path/myfile"
 
 
-def test_resolve_file_expanduser(fs, real_ssh_config_file_path):
+def test_resolve_file_expanduser(fs_, real_ssh_config_file_path):
     # pyfakefs so this is not host dependent
-    _ = fs
-    fs.add_real_file(
+    fs_.add_real_file(
         source_path=real_ssh_config_file_path, target_path=Path("~/myfile").expanduser()
     )
     assert resolve_file(file="~/myfile") == str(Path("~/myfile").expanduser())

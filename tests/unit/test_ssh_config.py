@@ -57,7 +57,7 @@ def test_init_ssh_config_file_explicit(real_ssh_config_file_path):
     assert ssh_conf.ssh_config == ssh_config_file
 
 
-def test_init_ssh_config_file_no_config_file(fs):
+def test_init_ssh_config_file_no_config_file(fs_):
     ssh_conf = SSHConfig("")
     # should only have a single splat host w/ all values set to None/empty
     assert ["*"] == list(ssh_conf.hosts.keys())
@@ -164,7 +164,7 @@ def test_init_ssh_known_hosts_file_explicit(real_ssh_known_hosts_file_path):
     assert known_hosts.ssh_known_hosts == ssh_known_hosts
 
 
-def test_init_ssh_known_hosts_file_no_config_file(fs):
+def test_init_ssh_known_hosts_file_no_config_file(fs_):
     known_hosts = SSHKnownHosts("")
     assert known_hosts.hosts == {}
 

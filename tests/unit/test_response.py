@@ -163,7 +163,7 @@ def test_response_parse_textfsm_no_template():
 
 
 @pytest.mark.skipif(
-    sys.version_info.minor > 9, reason="genie not currently available for python 3.10"
+    sys.version_info.minor > 10, reason="genie not currently available for python 3.11"
 )
 def test_response_parse_genie():
     response = Response("localhost", channel_input="show ip arp", genie_platform="iosxe")
@@ -179,7 +179,7 @@ Internet  172.31.254.2            -   c800.84b2.e9c2  ARPA   Vlan254
 
 
 @pytest.mark.skipif(
-    sys.version_info.minor > 9, reason="genie not currently available for python 3.10"
+    sys.version_info.minor > 10, reason="genie not currently available for python 3.11"
 )
 def test_response_parse_genie_fail():
     response = Response("localhost", channel_input="show ip arp", genie_platform="iosxe")

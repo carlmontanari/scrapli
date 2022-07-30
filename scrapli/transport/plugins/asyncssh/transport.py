@@ -7,7 +7,7 @@ from asyncssh.connection import SSHClientConnection, connect
 from asyncssh.misc import ConnectionLost, PermissionDenied
 from asyncssh.stream import SSHReader, SSHWriter
 
-from scrapli.decorators import TransportTimeout
+from scrapli.decorators import timeout_wrapper
 from scrapli.exceptions import (
     ScrapliAuthenticationFailed,
     ScrapliConnectionError,
@@ -245,7 +245,7 @@ class AsyncsshTransport(AsyncTransport):
             pass
         return False
 
-    @TransportTimeout("timed out reading from transport")
+    @timeout_wrapper
     async def read(self) -> bytes:
         if not self.stdout:
             raise ScrapliConnectionNotOpened

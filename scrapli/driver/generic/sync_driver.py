@@ -3,7 +3,7 @@ import time
 from io import BytesIO
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Union
 
-from scrapli.decorators import TimeoutOpsModifier
+from scrapli.decorators import timeout_modifier
 from scrapli.driver import Driver
 from scrapli.driver.generic.base_driver import BaseGenericDriver
 from scrapli.exceptions import ScrapliTimeout, ScrapliValueError
@@ -89,7 +89,7 @@ class GenericDriver(Driver, BaseGenericDriver):
         prompt: str = self.channel.get_prompt()
         return prompt
 
-    @TimeoutOpsModifier()
+    @timeout_modifier
     def _send_command(
         self,
         command: str,
@@ -283,7 +283,7 @@ class GenericDriver(Driver, BaseGenericDriver):
             timeout_ops=timeout_ops,
         )
 
-    @TimeoutOpsModifier()
+    @timeout_modifier
     def send_and_read(
         self,
         channel_input: str,
@@ -343,7 +343,7 @@ class GenericDriver(Driver, BaseGenericDriver):
             raw_response=raw_response, processed_response=processed_response, response=response
         )
 
-    @TimeoutOpsModifier()
+    @timeout_modifier
     def send_interactive(
         self,
         interact_events: Union[List[Tuple[str, str]], List[Tuple[str, str, bool]]],
