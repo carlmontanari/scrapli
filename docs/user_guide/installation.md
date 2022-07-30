@@ -10,7 +10,7 @@ pip install scrapli
 ```
 
 
-## Installing current master branch
+## Installing current main branch
 
 To install from the source repositories master branch:
 
@@ -19,9 +19,9 @@ pip install git+https://github.com/carlmontanari/scrapli
 ```
 
 
-## Installing current develop branch
+## Installing a different branch
 
-To install from the source repositories develop branch:
+To install from a different branch of the source repository, for example from a branch named `develop`:
 
 ```
 pip install -e git+https://github.com/carlmontanari/scrapli.git@develop#egg=scrapli
