@@ -45,7 +45,7 @@ jobs:
       - name: run nox
         env:
           TERM: xterm
-        run: python -m nox -s unit_tests
+        run: python -m nox -s unit_tests-3.10
       - name: Upload coverage
         uses: codecov/codecov-action@v3.1.0
 
