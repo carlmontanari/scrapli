@@ -146,26 +146,25 @@ def test_read_exception_not_open(fs_, system_transport):
         system_transport.read()
 
 
-# def test_read_exception_eof(fs_, monkeypatch, system_transport):
-#     def _read(cls, _):
-#         raise EOFError
-#
-#     monkeypatch.setattr(
-#         "scrapli.transport.plugins.system.ptyprocess.PtyProcess.read",
-#         _read,
-#     )
-#
-#     # lie and pretend the session is already assigned
-#     # giving ptyprocess a "real" (but not like... real real) fd seemed like a good idea... dunno
-#     # if its really necessary, but it *does* need a fd of some sort so whatever
-#     fs_.create_file("dummy")
-#     dummy_file = open("dummy")
-#     system_transport.session = PtyProcess(pid=0, fd=dummy_file.fileno())
-#
-#     # TODO - temporary, testing why test fails in github actions but not locally
-#     return
-#     with pytest.raises(ScrapliConnectionError):
-#         system_transport.read()
+@pytest.mark.skipif(sys.platform == "darwin", reason="test seems to fail on darwin in github actions")
+def test_read_exception_eof(fs_, monkeypatch, system_transport):
+    def _read(cls, _):
+        raise EOFError
+
+    monkeypatch.setattr(
+        "scrapli.transport.plugins.system.ptyprocess.PtyProcess.read",
+        _read,
+    )
+
+    # lie and pretend the session is already assigned
+    # giving ptyprocess a "real" (but not like... real real) fd seemed like a good idea... dunno
+    # if its really necessary, but it *does* need a fd of some sort so whatever
+    fs_.create_file("dummy")
+    dummy_file = open("dummy")
+    system_transport.session = PtyProcess(pid=0, fd=dummy_file.fileno())
+
+    with pytest.raises(ScrapliConnectionError):
+        system_transport.read()
 
 
 def test_write(system_transport):
