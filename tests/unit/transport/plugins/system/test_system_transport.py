@@ -141,7 +141,8 @@ def test_read(fs_, monkeypatch, system_transport):
     assert system_transport.read() == b"somebytes"
 
 
-def test_read_exception_not_open(system_transport):
+def test_read_exception_not_open(fs_, system_transport):
+    system_transport.session = None
     with pytest.raises(ScrapliConnectionNotOpened):
         system_transport.read()
 
