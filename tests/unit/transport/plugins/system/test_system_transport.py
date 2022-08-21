@@ -146,7 +146,9 @@ def test_read_exception_not_open(fs_, system_transport):
         system_transport.read()
 
 
-@pytest.mark.skipif(sys.platform == "darwin", reason="test seems to fail on darwin in github actions")
+@pytest.mark.skipif(
+    sys.platform == "darwin", reason="test seems to fail on darwin in github actions"
+)
 def test_read_exception_eof(fs_, monkeypatch, system_transport):
     def _read(cls, _):
         raise EOFError
