@@ -117,6 +117,7 @@ def integration_tests(session):
     if f"integration_tests-{PLATFORM}-{session.python}" in SKIP_LIST:
         return
 
+    session.install("-U", "setuptools", "wheel", "pip")
     session.install("-r", "requirements-dev.txt")
     session.install(".")
     # setting scrapli boxen -> 1 so that the saved scrapli replay sessions are "correctly"
