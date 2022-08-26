@@ -22,7 +22,9 @@ class TelnetTransport(Transport):
         self.plugin_transport_args = plugin_transport_args
 
         self.socket: Optional[Socket] = None
-        self._initial_buf = b""
+        self._eof = False
+        self._raw_buf = b""
+        self._cooked_buf = b""
 
     def _set_socket_timeout(self, timeout: float) -> None:
         """
@@ -70,7 +72,7 @@ class TelnetTransport(Transport):
 
         if not control_buf:
             if c != IAC:
-                self._initial_buf += c
+                self._cooked_buf += c
             else:
                 control_buf += c
 
@@ -118,19 +120,14 @@ class TelnetTransport(Transport):
             raise ScrapliConnectionNotOpened
 
         control_buf = b""
-
-        original_socket_timeout = self._base_transport_args.timeout_socket
         self._set_socket_timeout(self._base_transport_args.timeout_socket / 4)
 
-        while True:
+        while self._raw_buf:
             try:
-                c = self._read(1)
+                c, self._raw_buf = self._raw_buf[:1], self._raw_buf[1:]
                 if not c:
                     raise ScrapliConnectionNotOpened("server returned EOF, connection not opened")
             except TimeoutError:
-                # shouldn't really matter/need to be reset back to "normal", but don't really want
-                # to leave it modified as that would be confusing!
-                self._base_transport_args.timeout_socket = original_socket_timeout
                 return
 
             self._set_socket_timeout(self._base_transport_args.timeout_socket / 10)
@@ -148,8 +145,6 @@ class TelnetTransport(Transport):
 
         if not self.socket.isalive():
             self.socket.open()
-
-        self._handle_control_chars()
 
         self._post_open_closing_log(closing=False)
 
@@ -170,9 +165,9 @@ class TelnetTransport(Transport):
             return False
         return True
 
-    def _read(self, n: int = 65535) -> bytes:
+    def _read(self, n: int = 65535) -> None:
         """
-        Read n bytes from the socket
+        Read n bytes from the socket and fill raw buffer
 
         Mostly this exists just to assert that socket and socket.sock are not None to appease mypy!
 
@@ -189,26 +184,29 @@ class TelnetTransport(Transport):
             raise ScrapliConnectionNotOpened
         if self.socket.sock is None:
             raise ScrapliConnectionNotOpened
-        return self.socket.sock.recv(n)
+        if not self._raw_buf:
+            try:
+                buf = self.socket.sock.recv(n)
+                self._eof = not buf
+                self._raw_buf += buf
+            except Exception as exc:
+                raise ScrapliConnectionError(
+                    "encountered EOF reading from transport; typically means the device closed the "
+                    "connection"
+                ) from exc
 
     @timeout_wrapper
     def read(self) -> bytes:
         if not self.socket:
             raise ScrapliConnectionNotOpened
 
-        if self._initial_buf:
-            buf = self._initial_buf
-            self._initial_buf = b""
-            return buf
+        self._handle_control_chars()
+        while not self._cooked_buf and not self._eof:
+            self._read()
+            self._handle_control_chars()
 
-        try:
-            buf = self._read()
-            buf = buf.replace(b"\x00", b"")
-        except Exception as exc:
-            raise ScrapliConnectionError(
-                "encountered EOF reading from transport; typically means the device closed the "
-                "connection"
-            ) from exc
+        buf = self._cooked_buf
+        self._cooked_buf = b""
         return buf
 
     def write(self, channel_input: bytes) -> None:
