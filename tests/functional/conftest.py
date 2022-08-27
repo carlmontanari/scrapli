@@ -188,6 +188,9 @@ def eos_conn(test_devices_dict, transport):
 
 @pytest.fixture(scope="class")
 def nxos_conn(test_devices_dict, transport):
+    if transport in TELNET_TRANSPORTS:
+        pytest.skip("skipping telnet for linux hosts")
+
     device = test_devices_dict["cisco_nxos"].copy()
     driver = device.pop("driver")
     device.pop("base_config")
