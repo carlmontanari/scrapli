@@ -26,6 +26,8 @@ class TelnetTransport(Transport):
         self._raw_buf = b""
         self._cooked_buf = b""
 
+        self._control_char_sent_counter = 0
+
     def _set_socket_timeout(self, timeout: float) -> None:
         """
         Set underlying socket timeout
@@ -46,6 +48,29 @@ class TelnetTransport(Transport):
         if self.socket.sock is None:
             raise ScrapliConnectionNotOpened
         self.socket.sock.settimeout(timeout)
+
+    def _handle_control_chars_socket_timeout_update(self) -> None:
+        """
+        Handle updating (if necessary) the socket timeout
+
+        Args:
+            N/A
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        """
+        self._control_char_sent_counter += 1
+
+        if self._control_char_sent_counter > 8:
+            # connection is opened, effectively ignore socket timeout at this point as we want
+            # the timeout socket to be "just" for opening the connection basically
+            # the number 8 is fairly arbitrary -- it looks like *most* platforms send around
+            # 8 - 12 control char/instructions on session opening, so we'll go with 8!
+            self._set_socket_timeout(600)
 
     def _handle_control_chars_response(self, control_buf: bytes, c: bytes) -> bytes:
         """
@@ -92,6 +117,8 @@ class TelnetTransport(Transport):
             elif cmd == WONT:
                 self.write(IAC + DONT + c)
 
+            self._handle_control_chars_socket_timeout_update()
+
         return control_buf
 
     def _handle_control_chars(self) -> None:
@@ -120,17 +147,12 @@ class TelnetTransport(Transport):
             raise ScrapliConnectionNotOpened
 
         control_buf = b""
-        self._set_socket_timeout(self._base_transport_args.timeout_socket / 4)
 
         while self._raw_buf:
-            try:
-                c, self._raw_buf = self._raw_buf[:1], self._raw_buf[1:]
-                if not c:
-                    raise ScrapliConnectionNotOpened("server returned EOF, connection not opened")
-            except TimeoutError:
-                return
+            c, self._raw_buf = self._raw_buf[:1], self._raw_buf[1:]
+            if not c:
+                raise ScrapliConnectionNotOpened("server returned EOF, connection not opened")
 
-            self._set_socket_timeout(self._base_transport_args.timeout_socket / 10)
             control_buf = self._handle_control_chars_response(control_buf=control_buf, c=c)
 
     def open(self) -> None:
@@ -179,6 +201,8 @@ class TelnetTransport(Transport):
 
         Raises:
             ScrapliConnectionNotOpened: if either socket or socket.sock are None
+            ScrapliConnectionError: if we fail to recv from the underlying socket
+
         """
         if self.socket is None:
             raise ScrapliConnectionNotOpened

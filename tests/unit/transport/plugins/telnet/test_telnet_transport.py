@@ -21,7 +21,7 @@ def test_handle_control_characters_response_not_iac(telnet_transport):
     telnet_transport.socket = 1
 
     actual_control_buf = telnet_transport._handle_control_chars_response(control_buf=b"", c=b"X")
-    assert telnet_transport._initial_buf == b"X"
+    assert telnet_transport._cooked_buf == b"X"
     assert actual_control_buf == b""
 
 
@@ -32,7 +32,7 @@ def test_handle_control_characters_response_second_char(telnet_transport):
     actual_control_buf = telnet_transport._handle_control_chars_response(
         control_buf=bytes([255]), c=bytes([253])
     )
-    assert telnet_transport._initial_buf == b""
+    assert telnet_transport._cooked_buf == b""
     assert actual_control_buf == bytes([255, 253])
 
 
@@ -61,7 +61,7 @@ def test_handle_control_characters_response_third_char(telnet_transport, test_da
     actual_control_buf = telnet_transport._handle_control_chars_response(
         control_buf=bytes([255, control_buf_input]), c=bytes([1])
     )
-    assert telnet_transport._initial_buf == b""
+    assert telnet_transport._cooked_buf == b""
     assert actual_control_buf == b""
 
     telnet_transport.socket.sock.buf.seek(0)
@@ -75,29 +75,6 @@ def test_handle_control_characters_response_exception(telnet_transport):
 
 
 def test_handle_control_characters(monkeypatch, telnet_transport):
-    _read_called = 0
-
-    def _read(cls, _):
-        nonlocal _read_called
-
-        if _read_called == 0:
-            _read_called += 1
-            return bytes([255])
-
-        # we expect to timeout reading control chars (in this case after just reading one to test
-        # the overall flow of things)
-        raise TimeoutError
-
-    monkeypatch.setattr(
-        "scrapli.transport.plugins.telnet.transport.TelnetTransport._read",
-        _read,
-    )
-
-    monkeypatch.setattr(
-        "scrapli.transport.plugins.telnet.transport.TelnetTransport._handle_control_chars_response",
-        lambda cls, **kwargs: None,
-    )
-
     # lie like connection is open
     class Dummy:
         ...
@@ -115,59 +92,15 @@ def test_handle_control_characters(monkeypatch, telnet_transport):
     telnet_transport.socket = Dummy()
     telnet_transport.socket.sock = DummySock()
 
+    telnet_transport._raw_buf = bytes([253])
     telnet_transport._handle_control_chars()
 
-    assert _read_called == 1
+    assert telnet_transport._cooked_buf == bytes([253])
 
 
 def test_handle_control_characters_exception(telnet_transport):
     with pytest.raises(ScrapliConnectionNotOpened):
         telnet_transport._handle_control_chars()
-
-
-def test_handle_control_characters_exception_eof(monkeypatch, telnet_transport):
-    # if the server closes the connection/EOF we will read an empty byte string, see #141
-    _read_called = 0
-
-    def _read(cls, _):
-        nonlocal _read_called
-
-        if _read_called == 0:
-            _read_called += 1
-            return b""
-
-    monkeypatch.setattr(
-        "scrapli.transport.plugins.telnet.transport.TelnetTransport._read",
-        _read,
-    )
-
-    monkeypatch.setattr(
-        "scrapli.transport.plugins.telnet.transport.TelnetTransport._handle_control_chars_response",
-        lambda cls, **kwargs: None,
-    )
-
-    # lie like connection is open
-    class Dummy:
-        ...
-
-    class DummySock:
-        def __init__(self):
-            self.buf = BytesIO()
-
-        def send(self, channel_input):
-            self.buf.write(channel_input)
-
-        def settimeout(self, t):
-            ...
-
-    telnet_transport.socket = Dummy()
-    telnet_transport.socket.sock = DummySock()
-    telnet_transport._base_transport_args.timeout_socket = 0.4
-
-    with pytest.raises(ScrapliConnectionNotOpened):
-        telnet_transport._handle_control_chars()
-
-    assert _read_called == 1
 
 
 def test_close(telnet_transport):
@@ -219,7 +152,7 @@ async def test_read(telnet_transport):
 
     telnet_transport.socket = Dummy()
     telnet_transport.socket.sock = DummySock()
-    telnet_transport.socket.sock.buf.write(b"somebytes\x00")
+    telnet_transport.socket.sock.buf.write(b"somebytes")
 
     assert telnet_transport.read() == b"somebytes"
 
@@ -240,6 +173,9 @@ def test_read_timeout(telnet_transport):
         def recv(self, n):
             time.sleep(1)
             return self.buf.read()
+
+        def settimeout(self, t):
+            ...
 
     telnet_transport.socket = Dummy()
     telnet_transport.socket.sock = DummySock()
@@ -265,6 +201,9 @@ def test_write(telnet_transport):
         def recv(self, n):
             time.sleep(1)
             return self.buf.read()
+
+        def settimeout(self, t):
+            ...
 
     telnet_transport.socket = Dummy()
     telnet_transport.socket.sock = DummySock()
