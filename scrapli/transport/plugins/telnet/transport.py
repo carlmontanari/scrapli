@@ -27,6 +27,7 @@ class TelnetTransport(Transport):
         self._cooked_buf = b""
 
         self._control_char_sent_counter = 0
+        self._control_char_sent_limit = 10
 
     def _set_socket_timeout(self, timeout: float) -> None:
         """
@@ -65,7 +66,7 @@ class TelnetTransport(Transport):
         """
         self._control_char_sent_counter += 1
 
-        if self._control_char_sent_counter > 8:
+        if self._control_char_sent_counter > self._control_char_sent_limit:
             # connection is opened, effectively ignore socket timeout at this point as we want
             # the timeout socket to be "just" for opening the connection basically
             # the number 8 is fairly arbitrary -- it looks like *most* platforms send around
@@ -212,7 +213,10 @@ class TelnetTransport(Transport):
             try:
                 buf = self.socket.sock.recv(n)
                 self._eof = not buf
-                self._raw_buf += buf
+                if self._control_char_sent_counter < self._control_char_sent_limit:
+                    self._raw_buf += buf
+                else:
+                    self._cooked_buf += buf
             except Exception as exc:
                 raise ScrapliConnectionError(
                     "encountered EOF reading from transport; typically means the device closed the "
@@ -224,10 +228,13 @@ class TelnetTransport(Transport):
         if not self.socket:
             raise ScrapliConnectionNotOpened
 
-        self._handle_control_chars()
+        if self._control_char_sent_counter < self._control_char_sent_limit:
+            self._handle_control_chars()
+
         while not self._cooked_buf and not self._eof:
             self._read()
-            self._handle_control_chars()
+            if self._control_char_sent_counter < self._control_char_sent_limit:
+                self._handle_control_chars()
 
         buf = self._cooked_buf
         self._cooked_buf = b""
