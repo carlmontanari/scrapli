@@ -19,7 +19,7 @@ def test_handle_control_characters_response_not_iac(asynctelnet_transport):
     actual_control_buf = asynctelnet_transport._handle_control_chars_response(
         control_buf=b"", c=b"X"
     )
-    assert asynctelnet_transport._initial_buf == b"X"
+    assert asynctelnet_transport._cooked_buf == b"X"
     assert actual_control_buf == b""
 
 
@@ -28,7 +28,7 @@ def test_handle_control_characters_response_second_char(asynctelnet_transport):
     actual_control_buf = asynctelnet_transport._handle_control_chars_response(
         control_buf=bytes([255]), c=bytes([253])
     )
-    assert asynctelnet_transport._initial_buf == b""
+    assert asynctelnet_transport._cooked_buf == b""
     assert actual_control_buf == bytes([255, 253])
 
 
@@ -44,7 +44,7 @@ def test_handle_control_characters_response_third_char(asynctelnet_transport, te
     actual_control_buf = asynctelnet_transport._handle_control_chars_response(
         control_buf=bytes([255, control_buf_input]), c=bytes([1])
     )
-    assert asynctelnet_transport._initial_buf == b""
+    assert asynctelnet_transport._cooked_buf == b""
     assert actual_control_buf == b""
 
     asynctelnet_transport.stdin.seek(0)
@@ -58,72 +58,20 @@ def test_handle_control_characters_response_exception(asynctelnet_transport):
 
 
 async def test_handle_control_characters(monkeypatch, asynctelnet_transport):
-    _read_called = 0
-
-    async def _read(cls, _):
-        nonlocal _read_called
-
-        if _read_called == 0:
-            _read_called += 1
-            return bytes([255])
-
-        await asyncio.sleep(0.5)
-
-    monkeypatch.setattr(
-        "asyncio.StreamReader.read",
-        _read,
-    )
-
-    monkeypatch.setattr(
-        "scrapli.transport.plugins.asynctelnet.transport.AsynctelnetTransport._handle_control_chars_response",
-        lambda cls, **kwargs: None,
-    )
-
     # lie like connection is open
+    asynctelnet_transport.stdin = BytesIO()
     asynctelnet_transport.stdout = asyncio.StreamReader()
     asynctelnet_transport._base_transport_args.timeout_socket = 0.4
 
-    await asynctelnet_transport._handle_control_chars()
+    asynctelnet_transport._raw_buf = bytes([253])
+    asynctelnet_transport._handle_control_chars()
 
-    assert _read_called == 1
+    assert asynctelnet_transport._cooked_buf == bytes([253])
 
 
 async def test_handle_control_characters_exception(asynctelnet_transport):
     with pytest.raises(ScrapliConnectionNotOpened):
         await asynctelnet_transport._handle_control_chars()
-
-
-async def test_handle_control_characters_exception_eof(asynctelnet_transport, monkeypatch):
-    # if the server closes the connection/EOF we will read an empty byte string, see #141
-    _read_called = 0
-
-    async def _read(cls, _):
-        nonlocal _read_called
-
-        if _read_called == 0:
-            _read_called += 1
-            return b""
-
-        await asyncio.sleep(0.5)
-
-    monkeypatch.setattr(
-        "asyncio.StreamReader.read",
-        _read,
-    )
-
-    monkeypatch.setattr(
-        "scrapli.transport.plugins.asynctelnet.transport.AsynctelnetTransport._handle_control_chars_response",
-        lambda cls, **kwargs: None,
-    )
-
-    # lie like connection is open
-    asynctelnet_transport.stdout = asyncio.StreamReader()
-    asynctelnet_transport._base_transport_args.timeout_socket = 0.4
-
-    with pytest.raises(ScrapliConnectionNotOpened):
-        await asynctelnet_transport._handle_control_chars()
-
-    assert _read_called == 1
 
 
 def test_close(asynctelnet_transport):
@@ -160,8 +108,9 @@ def test_isalive(asynctelnet_transport):
 
 async def test_read(asynctelnet_transport):
     # lie like connection is open
+    asynctelnet_transport.stdin = BytesIO()
     asynctelnet_transport.stdout = asyncio.StreamReader()
-    asynctelnet_transport.stdout.feed_data(b"somebytes\x00")
+    asynctelnet_transport.stdout.feed_data(b"somebytes")
 
     assert await asynctelnet_transport.read() == b"somebytes"
 
