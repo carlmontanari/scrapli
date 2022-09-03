@@ -59,7 +59,12 @@ class AsynctelnetTransport(AsyncTransport):
         self.stdout: Optional[asyncio.StreamReader] = None
         self.stdin: Optional[asyncio.StreamWriter] = None
 
-        self._initial_buf = b""
+        self._eof = False
+        self._raw_buf = b""
+        self._cooked_buf = b""
+
+        self._control_char_sent_counter = 0
+        self._control_char_sent_limit = 10
 
     def _handle_control_chars_response(self, control_buf: bytes, c: bytes) -> bytes:
         """
@@ -86,7 +91,7 @@ class AsynctelnetTransport(AsyncTransport):
             if c != IAC:
                 # add whatever character we read to the "normal" output buf so it gets sent off
                 # to the auth method later (username/show prompts may show up here)
-                self._initial_buf += c
+                self._cooked_buf += c
             else:
                 # we got a control character, put it into the control_buf
                 control_buf += c
@@ -118,7 +123,7 @@ class AsynctelnetTransport(AsyncTransport):
 
         return control_buf
 
-    async def _handle_control_chars(self) -> None:
+    def _handle_control_chars(self) -> None:
         """
         Handle control characters -- nearly identical to CPython telnetlib
 
@@ -145,21 +150,11 @@ class AsynctelnetTransport(AsyncTransport):
         # we are working on responding to
         control_buf = b""
 
-        # initial read timeout for control characters can be 1/4 of socket timeout, after reading a
-        # single byte we crank it way down; the next value used to be 0.1 but this was causing some
-        # issues for folks that had devices behaving very slowly... so hopefully 1/10 is a
-        # reasonable value for the follow up char read timeout... of course we will return early if
-        # we do get a char in the buffer so it should be all good!
-        char_read_timeout = self._base_transport_args.timeout_socket / 4
+        while self._raw_buf:
+            c, self._raw_buf = self._raw_buf[:1], self._raw_buf[1:]
+            if not c:
+                raise ScrapliConnectionNotOpened("server returned EOF, connection not opened")
 
-        while True:
-            try:
-                c = await asyncio.wait_for(self.stdout.read(1), timeout=char_read_timeout)
-                if not c:
-                    raise ScrapliConnectionNotOpened("server returned EOF, connection not opened")
-            except asyncio.TimeoutError:
-                return
-            char_read_timeout = self._base_transport_args.timeout_socket / 10
             control_buf = self._handle_control_chars_response(control_buf=control_buf, c=c)
 
     async def open(self) -> None:
@@ -191,8 +186,6 @@ class AsynctelnetTransport(AsyncTransport):
             self.logger.critical(msg)
             raise ScrapliAuthenticationFailed(msg) from exc
 
-        await self._handle_control_chars()
-
         self._post_open_closing_log(closing=False)
 
     def close(self) -> None:
@@ -218,29 +211,39 @@ class AsynctelnetTransport(AsyncTransport):
             return False
         return not self.stdout.at_eof()
 
+    async def _read(self, n: int = 65535) -> None:
+        if not self.stdout:
+            raise ScrapliConnectionNotOpened
+
+        if not self._raw_buf:
+            try:
+                buf = await self.stdout.read(n)
+                self._eof = not buf
+                if self._control_char_sent_counter < self._control_char_sent_limit:
+                    self._raw_buf += buf
+                else:
+                    self._cooked_buf += buf
+            except EOFError as exc:
+                raise ScrapliConnectionError(
+                    "encountered EOF reading from transport; typically means the device closed the "
+                    "connection"
+                ) from exc
+
     @timeout_wrapper
     async def read(self) -> bytes:
         if not self.stdout:
             raise ScrapliConnectionNotOpened
 
-        if self._initial_buf:
-            buf = self._initial_buf
-            self._initial_buf = b""
-            return buf
+        if self._control_char_sent_counter < self._control_char_sent_limit:
+            self._handle_control_chars()
 
-        try:
-            buf = await self.stdout.read(65535)
-            # nxos at least sends "binary transmission" control char, but seems to not (afaik?)
-            # actually advertise it during the control protocol exchange, causing us to not be able
-            # to "know" that it is in binary transmit mode until later... so we will just always
-            # strip this option (b"\x00") out of the buffered data...
-            buf = buf.replace(b"\x00", b"")
-        except EOFError as exc:
-            raise ScrapliConnectionError(
-                "encountered EOF reading from transport; typically means the device closed the "
-                "connection"
-            ) from exc
+        while not self._cooked_buf and not self._eof:
+            await self._read()
+            if self._control_char_sent_counter < self._control_char_sent_limit:
+                self._handle_control_chars()
 
+        buf = self._cooked_buf
+        self._cooked_buf = b""
         return buf
 
     def write(self, channel_input: bytes) -> None:
@@ -291,7 +294,12 @@ class AsynctelnetTransport(AsyncTransport):
         self.stdout: Optional[asyncio.StreamReader] = None
         self.stdin: Optional[asyncio.StreamWriter] = None
 
-        self._initial_buf = b""
+        self._eof = False
+        self._raw_buf = b""
+        self._cooked_buf = b""
+
+        self._control_char_sent_counter = 0
+        self._control_char_sent_limit = 10
 
     def _handle_control_chars_response(self, control_buf: bytes, c: bytes) -> bytes:
         """
@@ -318,7 +326,7 @@ class AsynctelnetTransport(AsyncTransport):
             if c != IAC:
                 # add whatever character we read to the "normal" output buf so it gets sent off
                 # to the auth method later (username/show prompts may show up here)
-                self._initial_buf += c
+                self._cooked_buf += c
             else:
                 # we got a control character, put it into the control_buf
                 control_buf += c
@@ -350,7 +358,7 @@ class AsynctelnetTransport(AsyncTransport):
 
         return control_buf
 
-    async def _handle_control_chars(self) -> None:
+    def _handle_control_chars(self) -> None:
         """
         Handle control characters -- nearly identical to CPython telnetlib
 
@@ -377,21 +385,11 @@ class AsynctelnetTransport(AsyncTransport):
         # we are working on responding to
         control_buf = b""
 
-        # initial read timeout for control characters can be 1/4 of socket timeout, after reading a
-        # single byte we crank it way down; the next value used to be 0.1 but this was causing some
-        # issues for folks that had devices behaving very slowly... so hopefully 1/10 is a
-        # reasonable value for the follow up char read timeout... of course we will return early if
-        # we do get a char in the buffer so it should be all good!
-        char_read_timeout = self._base_transport_args.timeout_socket / 4
+        while self._raw_buf:
+            c, self._raw_buf = self._raw_buf[:1], self._raw_buf[1:]
+            if not c:
+                raise ScrapliConnectionNotOpened("server returned EOF, connection not opened")
 
-        while True:
-            try:
-                c = await asyncio.wait_for(self.stdout.read(1), timeout=char_read_timeout)
-                if not c:
-                    raise ScrapliConnectionNotOpened("server returned EOF, connection not opened")
-            except asyncio.TimeoutError:
-                return
-            char_read_timeout = self._base_transport_args.timeout_socket / 10
             control_buf = self._handle_control_chars_response(control_buf=control_buf, c=c)
 
     async def open(self) -> None:
@@ -423,8 +421,6 @@ class AsynctelnetTransport(AsyncTransport):
             self.logger.critical(msg)
             raise ScrapliAuthenticationFailed(msg) from exc
 
-        await self._handle_control_chars()
-
         self._post_open_closing_log(closing=False)
 
     def close(self) -> None:
@@ -450,29 +446,39 @@ class AsynctelnetTransport(AsyncTransport):
             return False
         return not self.stdout.at_eof()
 
+    async def _read(self, n: int = 65535) -> None:
+        if not self.stdout:
+            raise ScrapliConnectionNotOpened
+
+        if not self._raw_buf:
+            try:
+                buf = await self.stdout.read(n)
+                self._eof = not buf
+                if self._control_char_sent_counter < self._control_char_sent_limit:
+                    self._raw_buf += buf
+                else:
+                    self._cooked_buf += buf
+            except EOFError as exc:
+                raise ScrapliConnectionError(
+                    "encountered EOF reading from transport; typically means the device closed the "
+                    "connection"
+                ) from exc
+
     @timeout_wrapper
     async def read(self) -> bytes:
         if not self.stdout:
             raise ScrapliConnectionNotOpened
 
-        if self._initial_buf:
-            buf = self._initial_buf
-            self._initial_buf = b""
-            return buf
+        if self._control_char_sent_counter < self._control_char_sent_limit:
+            self._handle_control_chars()
 
-        try:
-            buf = await self.stdout.read(65535)
-            # nxos at least sends "binary transmission" control char, but seems to not (afaik?)
-            # actually advertise it during the control protocol exchange, causing us to not be able
-            # to "know" that it is in binary transmit mode until later... so we will just always
-            # strip this option (b"\x00") out of the buffered data...
-            buf = buf.replace(b"\x00", b"")
-        except EOFError as exc:
-            raise ScrapliConnectionError(
-                "encountered EOF reading from transport; typically means the device closed the "
-                "connection"
-            ) from exc
+        while not self._cooked_buf and not self._eof:
+            await self._read()
+            if self._control_char_sent_counter < self._control_char_sent_limit:
+                self._handle_control_chars()
 
+        buf = self._cooked_buf
+        self._cooked_buf = b""
         return buf
 
     def write(self, channel_input: bytes) -> None:

@@ -1,6 +1,12 @@
 Changelog
 =========
 
+## 2022.07.30.post1
+
+- Big thanks once again to @haccht (and to @egreenspan2 for raising an issue on this as well) for fixing up some 
+  broken telnet control character handling, and for porting that to async side of things as well!
+
+
 ## 2022.07.30
 
 - Added MANIFEST.in to make sure requirements files are in source distribution see #216
