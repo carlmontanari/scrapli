@@ -227,6 +227,9 @@ class TestNetworkDevice:
 
 
 def test_context_manager(test_devices_dict, device_type, transport):
+    if device_type == "cisco_nxos" and "telnet" in transport:
+        pytest.skip("skipping telnet for nxos hosts")
+
     device = test_devices_dict[device_type].copy()
     driver = device.pop("driver")
     device.pop("base_config")
