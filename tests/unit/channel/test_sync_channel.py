@@ -59,7 +59,7 @@ def test_channel_read(fs_, caplog, monkeypatch, sync_transport_no_abc):
     # assert the log output/level as expected; skip the first log message that will be about
     # channel_log being on
     log_record = caplog.records[1]
-    assert "read: b'read_data'" == log_record.msg
+    assert "read: b'read_data\\r'" == log_record.msg
     assert logging.DEBUG == log_record.levelno
 
     # assert channel log output as expected
@@ -69,7 +69,7 @@ def test_channel_read(fs_, caplog, monkeypatch, sync_transport_no_abc):
 
 
 def test_channel_read_until_input(monkeypatch, sync_channel):
-    expected_read_output = b"read_data\nthisismyinput"
+    expected_read_output = b"read_data thisismyinput"
     _read_counter = 0
 
     def _read(cls):

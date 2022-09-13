@@ -29,6 +29,8 @@ class Channel(BaseChannel):
         if self._base_channel_args.channel_lock:
             self.channel_lock = Lock()
 
+        self._read_tail: bytes = b""
+
     @contextmanager
     def _channel_lock(self) -> Iterator[None]:
         """
@@ -66,11 +68,17 @@ class Channel(BaseChannel):
             N/A
 
         """
+        # return _read_tail first if not empty and reset it
+        if self._read_tail:
+            buf = self._read_tail
+            self._read_tail = b""
+            return buf
+
         buf = self.transport.read()
-        buf = buf.replace(b"\r", b"")
 
         self.logger.debug(f"read: {repr(buf)}")
 
+        buf = buf.replace(b"\r", b"")
         if self.channel_log:
             self.channel_log.write(buf)
 
@@ -99,15 +107,21 @@ class Channel(BaseChannel):
             return buf
 
         # squish all channel input words together and cast to lower to make comparison easier
-        processed_channel_input = b"".join(channel_input.lower().split())
+        processed_channel_input = channel_input.lower()
+        processed_channel_input = re.sub(rb"\s+", b" ", processed_channel_input)
 
         while True:
             buf += self.read()
+            buf = buf.replace(b"\x08", b"")
+            buf = re.sub(rb"\s+", b" ", buf)
 
             # replace any backspace chars (particular problem w/ junos), and remove any added spaces
             # this is just for comparison of the inputs to what was read from channel
-            if processed_channel_input in b"".join(buf.lower().replace(b"\x08", b"").split()):
-                return buf
+            found_idx = buf.lower().find(processed_channel_input)
+            if found_idx >= 0:
+                match_end = found_idx + len(processed_channel_input)
+                self._read_tail = buf[match_end:]
+                return buf[:match_end]
 
     def _read_until_prompt(self, buf: bytes = b"") -> bytes:
         """
@@ -144,6 +158,7 @@ class Channel(BaseChannel):
             )
 
             if channel_match:
+                self._read_tail = search_buf[channel_match.end() :]
                 return read_buf.getvalue()
 
     def _read_until_explicit_prompt(self, prompts: List[str]) -> bytes:
@@ -185,6 +200,7 @@ class Channel(BaseChannel):
                 )
 
                 if channel_match:
+                    self._read_tail = search_buf[channel_match.end() :]
                     return read_buf.getvalue()
 
     def _read_until_prompt_or_time(
@@ -230,6 +246,7 @@ class Channel(BaseChannel):
         read_buf = BytesIO(buf)
 
         start = time.time()
+        match_end = 0
         while True:
             try:
                 read_buf.write(self.read())
@@ -242,13 +259,16 @@ class Channel(BaseChannel):
                 break
             if any((channel_output in search_buf for channel_output in channel_outputs)):
                 break
-            if re.search(pattern=regex_channel_outputs_pattern, string=search_buf):
+            if m := re.search(pattern=regex_channel_outputs_pattern, string=search_buf) is not None:
+                match_end = m.end()
                 break
-            if re.search(pattern=search_pattern, string=search_buf):
+            if m := re.search(pattern=search_pattern, string=search_buf) is not None:
+                match_end = m.end()
                 break
 
         _transport_args.timeout_transport = previous_timeout_transport
-
+        if match_end:
+            self._read_tail = search_buf[match_end]
         return read_buf.getvalue()
 
     @timeout_wrapper
@@ -317,10 +337,11 @@ class Channel(BaseChannel):
                     self.write(channel_input=auth_private_key_passphrase, redacted=True)
                     self.send_return()
 
-                if re.search(
+                if m := re.search(
                     pattern=prompt_pattern,
                     string=authenticate_buf,
-                ):
+                ) is not None:
+                    self._read_tail = authenticate_buf[m.end(): ]
                     return
 
     @timeout_wrapper
@@ -438,6 +459,7 @@ class Channel(BaseChannel):
 
                 if channel_match:
                     current_prompt = channel_match.group(0)
+                    self._read_tail = buf[channel_match.end() :]
                     return current_prompt.decode().strip()
 
     @timeout_wrapper
