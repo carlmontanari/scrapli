@@ -259,10 +259,12 @@ class Channel(BaseChannel):
                 break
             if any((channel_output in search_buf for channel_output in channel_outputs)):
                 break
-            if m := re.search(pattern=regex_channel_outputs_pattern, string=search_buf) is not None:
+            m = re.search(pattern=regex_channel_outputs_pattern, string=search_buf)
+            if m is not None:
                 match_end = m.end()
                 break
-            if m := re.search(pattern=search_pattern, string=search_buf) is not None:
+            m = re.search(pattern=search_pattern, string=search_buf)
+            if m is not None:
                 match_end = m.end()
                 break
 
@@ -337,10 +339,11 @@ class Channel(BaseChannel):
                     self.write(channel_input=auth_private_key_passphrase, redacted=True)
                     self.send_return()
 
-                if m := re.search(
+                m = re.search(
                     pattern=prompt_pattern,
                     string=authenticate_buf,
-                ) is not None:
+                )
+                if m is not None:
                     self._read_tail = authenticate_buf[m.end(): ]
                     return
 
