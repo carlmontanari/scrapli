@@ -271,7 +271,7 @@ class MultiResponse(ScrapliMultiResponse):
 
         """
         return (
-            f"{self.__class__.__name__} <Success: {str(not self.failed)}; "
+            f"{self.__class__.__name__} <Success: {not self.failed}; "
             f"Response Elements: {len(self.data)}>"
         )
 

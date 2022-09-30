@@ -1,6 +1,7 @@
 """scrapli.transport.plugins.asynctelnet.transport"""
 import asyncio
 import socket
+from contextlib import suppress
 from dataclasses import dataclass
 from typing import Optional
 
@@ -164,12 +165,11 @@ class AsynctelnetTransport(AsyncTransport):
         if self.stdin:
             self.stdin.close()
 
-            try:
-                self.stdin.close()
-            except AttributeError:
+            with suppress(AttributeError):
                 # wait closed only in 3.7+... unclear if we should be doing something else for 3.6?
-                # it doesnt seem to hurt anything...
-                pass
+                # it doesnt seem to hurt anything... note 9/2022 probably can remove this but...
+                # it still doesnt seem to hurt anything :)
+                self.stdin.close()
 
         self.stdin = None
         self.stdout = None

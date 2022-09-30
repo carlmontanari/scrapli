@@ -2,7 +2,7 @@
 import asyncio
 import re
 import time
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from datetime import datetime
 from io import BytesIO
 from typing import AsyncIterator, List, Optional, Tuple
@@ -69,7 +69,7 @@ class AsyncChannel(BaseChannel):
         buf = await self.transport.read()
         buf = buf.replace(b"\r", b"")
 
-        self.logger.debug(f"read: {repr(buf)}")
+        self.logger.debug(f"read: {buf!r}")
 
         if self.channel_log:
             self.channel_log.write(buf)
@@ -233,11 +233,9 @@ class AsyncChannel(BaseChannel):
 
         start = time.time()
         while True:
-            try:
+            with suppress(ScrapliTimeout):
                 b = await self.read()
                 read_buf.write(b)
-            except ScrapliTimeout:
-                pass
 
             search_buf = self._process_read_buf(read_buf=read_buf)
 

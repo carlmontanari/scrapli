@@ -1,5 +1,6 @@
 """scrapli.transport.base.base_socket"""
 import socket
+from contextlib import suppress
 from typing import Optional, Set
 
 from scrapli.exceptions import ScrapliConnectionNotOpened
@@ -115,14 +116,12 @@ class Socket:
         self.logger.debug(f"opening socket connection to '{self.host}' on port '{self.port}'")
 
         socket_address_families = None
-        try:
+        with suppress(socket.gaierror):
             sock_info = socket.getaddrinfo(self.host, self.port)
             if sock_info:
                 # get all possible address families for the provided host/port
                 # should only ever be two... one for v4 and one for v6... i think/hope?! :)?
                 socket_address_families = {sock[0] for sock in sock_info}
-        except socket.gaierror:
-            pass
 
         if not socket_address_families:
             # this will likely need to be clearer just dont know what failure scenarios exist for

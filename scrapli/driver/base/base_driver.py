@@ -722,7 +722,7 @@ class BaseDriver:
             ScrapliTypeError: if value is not of type str
 
         """
-        self.logger.debug(f"setting 'comms_return_char' value to {repr(value)}")
+        self.logger.debug(f"setting 'comms_return_char' value to {value!r}")
 
         if not isinstance(value, str):
             raise ScrapliTypeError

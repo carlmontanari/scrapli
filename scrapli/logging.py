@@ -183,7 +183,7 @@ class ScrapliFileHandler(FileHandler):
                 "something unexpected happened in the ScrapliFileHandler log handler"
             )
 
-        self._record_buf.msg = f"read : {repr(self._record_msg_buf)}"
+        self._record_buf.msg = f"read : {self._record_msg_buf!r}"
         super().emit(record=self._record_buf)
         self._record_buf = None
         self._record_msg_buf = b""
