@@ -1,7 +1,7 @@
 """scrapli.channel.sync_channel"""
 import re
 import time
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from datetime import datetime
 from io import BytesIO
 from threading import Lock
@@ -69,7 +69,7 @@ class Channel(BaseChannel):
         buf = self.transport.read()
         buf = buf.replace(b"\r", b"")
 
-        self.logger.debug(f"read: {repr(buf)}")
+        self.logger.debug(f"read: {buf!r}")
 
         if self.channel_log:
             self.channel_log.write(buf)
@@ -231,10 +231,8 @@ class Channel(BaseChannel):
 
         start = time.time()
         while True:
-            try:
+            with suppress(ScrapliTimeout):
                 read_buf.write(self.read())
-            except ScrapliTimeout:
-                pass
 
             search_buf = self._process_read_buf(read_buf=read_buf)
 

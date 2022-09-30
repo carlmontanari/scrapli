@@ -28,6 +28,7 @@ import signal
 import struct
 import sys
 import time
+from contextlib import suppress
 from shutil import which
 from typing import List, Optional, Type, TypeVar
 
@@ -314,7 +315,7 @@ class PtyProcess:
             except OSError as err:
                 # [issue #119] 5. If exec fails, the child writes the error
                 # code back to the parent using the pipe, then exits.
-                tosend = f"OSError:{err.errno}:{str(err)}".encode()
+                tosend = f"OSError:{err.errno}:{err}".encode()
                 os.write(exec_err_pipe_write, tosend)
                 os.close(exec_err_pipe_write)
                 os._exit(os.EX_OSERR)
@@ -395,11 +396,8 @@ class PtyProcess:
             # It is possible for __del__ methods to execute during the
             # teardown of the Python VM itself. Thus self.close() may
             # trigger an exception because os.close may be None.
-            try:
+            with suppress(Exception):
                 self.close()
-            # which exception, shouldn't we catch explicitly .. ?
-            except Exception:
-                pass
 
     def close(self) -> None:
         """
@@ -428,10 +426,9 @@ class PtyProcess:
             # course re-create the fileobject this seems like an ok workaround because for reasons
             # unknown to me... this does not hang (even though in theory delete method just closes
             # things...?)
-            try:
+            with suppress(AttributeError):
                 del self.fileobj
-            except AttributeError:
-                pass
+
             # Give kernel time to update process status.
             time.sleep(self.delayafterclose)
             if self.isalive():

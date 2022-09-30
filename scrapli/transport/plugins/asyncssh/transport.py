@@ -1,5 +1,6 @@
 """scrapli.transport.plugins.asyncssh.transport"""
 import asyncio
+from contextlib import suppress
 from dataclasses import dataclass
 from typing import Any, Optional
 
@@ -212,14 +213,12 @@ class AsyncsshTransport(AsyncTransport):
 
         if self.session:
 
-            try:
+            with suppress(BrokenPipeError):
+                # this may raise a BrokenPipeError because seems it is possible for the connection
+                # transport is_closing() to be true already in some cases... since we are closing
+                # the connection anyway we will just ignore this note that this seemed to only
+                # happen in github actions on ubuntu-latest w/ py3.8... hence the suppress!
                 self.session.close()
-            except BrokenPipeError:
-                # it seems it is possible for the connection transport is_closing() to be true
-                # already in some cases... since we are closing the connection anyway we will just
-                # ignore this note that this seemed to only happen in github actions on
-                # ubuntu-latest w/ py3.8...
-                pass
 
         # always reset session/stdin/stdout back to None if we are closing!
         self.session = None
@@ -234,15 +233,14 @@ class AsyncsshTransport(AsyncTransport):
 
         # this may need to be revisited in the future, but this seems to be a good check for
         # aliveness
-        try:
+        with suppress(AttributeError):
             if (
                 self.session._auth_complete  # pylint:  disable=W0212
                 and self.session._transport is not None  # pylint:  disable=W0212
                 and self.session._transport.is_closing() is False  # pylint:  disable=W0212
             ):
                 return True
-        except AttributeError:
-            pass
+
         return False
 
     @timeout_wrapper

@@ -1,5 +1,6 @@
 """scrapli.transport.plugins.ssh2.transport"""
 import base64
+from contextlib import suppress
 from dataclasses import dataclass
 from typing import Optional
 
@@ -164,14 +165,12 @@ class Ssh2Transport(Transport):
         if not self.session:
             raise ScrapliConnectionNotOpened
 
-        try:
+        with suppress(AuthenticationError, SSH2Error):
             self.session.userauth_publickey_fromfile(
                 self.plugin_transport_args.auth_username,
                 self.plugin_transport_args.auth_private_key.encode(),
                 self.plugin_transport_args.auth_private_key_passphrase,
             )
-        except (AuthenticationError, SSH2Error):
-            pass
 
     def _authenticate_password(self) -> None:
         """
@@ -190,14 +189,13 @@ class Ssh2Transport(Transport):
         if not self.session:
             raise ScrapliConnectionNotOpened
 
-        try:
+        with suppress(AuthenticationError):
             self.session.userauth_password(
                 username=self.plugin_transport_args.auth_username,
                 password=self.plugin_transport_args.auth_password,
             )
             return
-        except AuthenticationError:
-            pass
+
         try:
             self.session.userauth_keyboardinteractive(
                 self.plugin_transport_args.auth_username, self.plugin_transport_args.auth_password

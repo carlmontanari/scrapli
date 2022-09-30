@@ -1,4 +1,5 @@
 """scrapli.transport.plugins.paramiko.transport"""
+from contextlib import suppress
 from dataclasses import dataclass
 from typing import Optional
 
@@ -219,14 +220,11 @@ class ParamikoTransport(Transport):
         if not self.session:
             raise ScrapliConnectionNotOpened
 
-        try:
+        with suppress(AuthenticationException):
             self.session.auth_password(
                 username=self.plugin_transport_args.auth_username,
                 password=self.plugin_transport_args.auth_password,
             )
-            return
-        except AuthenticationException:
-            pass
 
     def _open_channel(self) -> None:
         """

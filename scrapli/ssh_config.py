@@ -6,6 +6,7 @@ import re
 import shlex
 import sys
 from copy import deepcopy
+from pathlib import Path
 from typing import Dict, Optional
 
 from scrapli.exceptions import ScrapliTypeError
@@ -76,8 +77,7 @@ class SSHConfig:
 
         self.ssh_config_file = os.path.expanduser(ssh_config_file)
         if self.ssh_config_file:
-            with open(self.ssh_config_file, "r", encoding="utf-8") as f:
-                self.ssh_config = f.read()
+            self.ssh_config = Path(self.ssh_config_file).read_text(encoding="utf-8")
             self.hosts = self._parse()
             if not self.hosts:
                 self.hosts = {}
@@ -433,8 +433,7 @@ class SSHKnownHosts:
 
         self.ssh_known_hosts_file = os.path.expanduser(ssh_known_hosts_file)
         if self.ssh_known_hosts_file:
-            with open(self.ssh_known_hosts_file, "r", encoding="utf-8") as f:
-                self.ssh_known_hosts = f.read()
+            self.ssh_known_hosts = Path(self.ssh_known_hosts_file).read_text(encoding="utf-8")
             self.hosts = self._parse()
             if not self.hosts:
                 self.hosts = {}
