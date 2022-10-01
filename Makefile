@@ -10,7 +10,7 @@ lint:  ## Run linters
 	python -m pydocstyle .
 	python -m mypy --strict scrapli/
 
-darglint:  # Run darglint (docstring/arg checker)
+darglint:  ## Run darglint (docstring/arg checker)
 	find scrapli -type f \( -iname "*.py" \) | xargs darglint -x
 
 test:  ## Run all tests
@@ -46,11 +46,11 @@ cov_integration:  ## Run integration with term and html coverage report
 	--cov-report term \
 	tests/integration/
 
-test_functional:  # Run functional tests
+test_functional:  ## Run functional tests
 	python -m pytest \
 	tests/functional/
 
-cov_functional:  # Run functional tests with term and html coverage report
+cov_functional:  ## Run functional tests with term and html coverage report
 	python -m pytest \
 	--cov=scrapli \
 	--cov-report html \
@@ -59,7 +59,7 @@ cov_functional:  # Run functional tests with term and html coverage report
 
 .PHONY: docs
 docs:  ## Regenerate docs
-	python docs/generate/generate_docs.py
+	python docs/generate.py
 
 test_docs:  ## Run doc testing
 	mkdocs build --clean --strict

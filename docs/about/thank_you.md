@@ -46,5 +46,5 @@ Last, but very much not least, a huge shoutout to JetBrains for building awesome
 pro tools to open source developers (like me)! If you would like to use JetBrains awesome products, check out their 
 open source support page [here](https://jb.gg/OpenSourceSupport) for me info.
 
-<p center><a href=""><img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png" alt="JetBrains Logo (Main) logo." 
+<p center><a href="https://www.jetbrains.com"><img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png" alt="JetBrains Logo (Main) logo." 
 width="400" height="400"/></a></p>

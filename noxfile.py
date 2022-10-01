@@ -83,8 +83,8 @@ def unit_tests(session):
 
     session.run("chmod", "0600", "tests/test_data/files/scrapli_key", external=True)
     session.run("chmod", "0600", "tests/test_data/files/scrapli_key_encrypted", external=True)
-    session.install("-e", ".")
-    session.install("-r", "requirements-dev.txt")
+    session.install("-U", "setuptools", "wheel", "pip")
+    session.install(".[dev]")
     session.run(
         "python",
         "-m",
@@ -118,8 +118,7 @@ def integration_tests(session):
         return
 
     session.install("-U", "setuptools", "wheel", "pip")
-    session.install("-r", "requirements-dev.txt")
-    session.install(".")
+    session.install(".[dev]")
     # setting scrapli boxen -> 1 so that the saved scrapli replay sessions are "correctly"
     # pointing to the boxen dev env (i.e. port 21022 instead of 22 for iosxe, etc.)
     session.run(
@@ -192,7 +191,7 @@ def pylama(session):
         N/A
 
     """
-    session.install("-r", "requirements-dev.txt")
+    session.install(".[dev]")
     session.run("python", "-m", "pylama", ".")
 
 

@@ -1,0 +1,1 @@
+::: driver.core.arista_eos.sync_driver

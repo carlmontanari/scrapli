@@ -1,6 +1,93 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scrapli"
+dynamic = [
+    "version",
+    "dependencies",
+    "optional-dependencies",
+]
+description = "Fast, flexible, sync/async, Python 3.7+ screen scraping client specifically for network devices"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.7"
+authors = [
+    { name = "Carl Montanari", email = "carl.r.montanari@gmail.com" },
+]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+keywords = [
+    "ssh",
+    "telnet",
+    "netconf",
+    "automation",
+    "network",
+    "cisco",
+    "iosxr",
+    "iosxe",
+    "nxos",
+    "arista",
+    "eos",
+    "juniper",
+    "junos",
+]
+
+[project.urls]
+Homepage = "https://github.com/carlmontanari/scrapli"
+Changelog = "https://carlmontanari.github.io/scrapli/changelog"
+Docs = "https://carlmontanari.github.io/scrapli/"
+
+[tool.setuptools]
+packages = [
+    "scrapli"
+]
+
+[tool.setuptools.dynamic]
+version = { attr = "scrapli.__version__" }
+dependencies = { file = "requirements.txt" }
+optional-dependencies.dev = { file = [
+    "requirements-dev.txt",
+    "requirements-textfsm.txt",
+    "requirements-genie.txt",
+    "requirements-ttp.txt",
+    "requirements-paramiko.txt",
+    "requirements-ssh2.txt",
+    "requirements-asyncssh.txt",
+    "requirements-community.txt",
+] }
+optional-dependencies.docs = { file = "requirements-docs.txt" }
+optional-dependencies.textfsm = { file = "requirements-textfsm.txt" }
+optional-dependencies.genie = { file = "requirements-genie.txt" }
+optional-dependencies.ttp = { file = "requirements-ttp.txt" }
+optional-dependencies.paramiko = { file = "requirements-paramiko.txt" }
+optional-dependencies.ssh2 = { file = "requirements-ssh2.txt" }
+optional-dependencies.asyncssh = { file = "requirements-asyncssh.txt" }
+optional-dependencies.community = { file = "requirements-community.txt" }
+
+[tool.setuptools.package-data]
+scrapli = [
+    "py.typed"
+]
+
 [tool.coverage.run]
-source = ["scrapli/"]
-omit = ["scrapli/transport/plugins/system/ptyprocess.py"]
+source = [
+    "scrapli/"
+]
+omit = [
+    "scrapli/transport/plugins/system/ptyprocess.py"
+]
 
 [tool.coverage.report]
 sort = "cover"
@@ -8,8 +95,9 @@ omit = ["scrapli/transport/plugins/system/ptyprocess.py"]
 
 [tool.black]
 line-length = 100
-target-version = ["py311"]
-
+target-version = [
+    "py311",
+]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 
