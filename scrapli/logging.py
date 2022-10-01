@@ -1,10 +1,12 @@
 """scrapli.logging"""
 from ast import literal_eval
+
 # slightly irritating renaming to prevent a cyclic lookup in griffe for mkdocstrings
-from logging import Formatter as Formatter_
-from logging import LogRecord as LogRecord_
 from logging import FileHandler as FileHandler_
-from logging import Logger, LoggerAdapter, NullHandler, getLogger
+from logging import Formatter as Formatter_
+from logging import Logger, LoggerAdapter
+from logging import LogRecord as LogRecord_
+from logging import NullHandler, getLogger
 from typing import TYPE_CHECKING, Optional, Union, cast
 
 from scrapli.exceptions import ScrapliException
