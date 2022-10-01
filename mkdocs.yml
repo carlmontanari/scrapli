@@ -27,6 +27,7 @@ nav:
     - Advanced Usage: user_guide/advanced_usage.md
     - Linting and Testing: user_guide/linting_testing.md
     - FAQ: user_guide/faq.md
+  - API Reference: reference/
   - Changelog: changelog.md
   - More Scrapli:
     - Scrapli Netconf: more_scrapli/scrapli_netconf.md
@@ -66,3 +67,17 @@ extra:
 
 plugins:
     - search
+    - gen-files:
+        scripts:
+        - docs/generate.py
+    - mkdocstrings:
+        handlers:
+          python:
+            paths: [ scrapli ]
+            options:
+              show_signature_annotations: true
+        watch:
+        - scrapli
+    - section-index
+    - literate-nav:
+        nav_file: SUMMARY.md

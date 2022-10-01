@@ -1,6 +1,10 @@
 """scrapli.logging"""
 from ast import literal_eval
-from logging import FileHandler, Formatter, Logger, LoggerAdapter, LogRecord, NullHandler, getLogger
+# slightly irritating renaming to prevent a cyclic lookup in griffe for mkdocstrings
+from logging import Formatter as Formatter_
+from logging import LogRecord as LogRecord_
+from logging import FileHandler as FileHandler_
+from logging import Logger, LoggerAdapter, NullHandler, getLogger
 from typing import TYPE_CHECKING, Optional, Union, cast
 
 from scrapli.exceptions import ScrapliException
@@ -11,7 +15,7 @@ else:
     LoggerAdapterT = LoggerAdapter
 
 
-class ScrapliLogRecord(LogRecord):
+class ScrapliLogRecord(LogRecord_):
     message_id: int
     uid: str
     host: str
@@ -19,7 +23,7 @@ class ScrapliLogRecord(LogRecord):
     target: str
 
 
-class ScrapliFormatter(Formatter):
+class ScrapliFormatter(Formatter_):
     def __init__(self, log_header: bool = True, caller_info: bool = False) -> None:
         """
         Scrapli's opinionated custom log formatter class
@@ -71,7 +75,7 @@ class ScrapliFormatter(Formatter):
         self.header_record.lineno = 0
         self.header_record.message = "MESSAGE"
 
-    def formatMessage(self, record: LogRecord) -> str:
+    def formatMessage(self, record: LogRecord_) -> str:
         """
         Override standard library logging Formatter.formatMessage
 
@@ -129,7 +133,7 @@ class ScrapliFormatter(Formatter):
         return message
 
 
-class ScrapliFileHandler(FileHandler):
+class ScrapliFileHandler(FileHandler_):
     def __init__(
         self,
         filename: str,
@@ -159,7 +163,7 @@ class ScrapliFileHandler(FileHandler):
             encoding=encoding,
             delay=delay,
         )
-        self._record_buf: Optional[LogRecord] = None
+        self._record_buf: Optional[LogRecord_] = None
         self._record_msg_buf: bytes = b""
         self._read_msg_prefix = "read: "
         self._read_msg_prefix_len = len(self._read_msg_prefix)
@@ -188,7 +192,7 @@ class ScrapliFileHandler(FileHandler):
         self._record_buf = None
         self._record_msg_buf = b""
 
-    def emit(self, record: LogRecord) -> None:
+    def emit(self, record: LogRecord_) -> None:
         """
         Override standard library FileHandler.emit to "buffer" subsequent read messages
 
@@ -297,7 +301,7 @@ def enable_basic_logging(
     if file:
         filename = "scrapli.log" if isinstance(file, bool) else file
         if not buffer_log:
-            fh = FileHandler(filename=filename, mode=file_mode)
+            fh = FileHandler_(filename=filename, mode=file_mode)
         else:
             fh = ScrapliFileHandler(filename=filename, mode=file_mode)
 
