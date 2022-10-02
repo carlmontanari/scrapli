@@ -1,4 +1,4 @@
-name: Weekly Build
+name: Weekly Pre Release Build
 
 on:
   schedule:
