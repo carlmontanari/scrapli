@@ -271,11 +271,31 @@ def test_process_output(base_channel):
     assert actual_processed_buf == b"linewithtrailingspace\nsomethingelse"
 
 
-def test_strip_ansi(base_channel):
-    actual_strip_ansi_output = base_channel._strip_ansi(
-        buf=b"[admin@CoolDevice.Sea1: \x1b[1m/\x1b[0;0m]$"
-    )
-    assert actual_strip_ansi_output == b"[admin@CoolDevice.Sea1: /]$"
+@pytest.mark.parametrize(
+    "buf, expected",
+    (
+        (
+            b"[admin@CoolDevice.Sea1: \x1b[1m/\x1b[0;0m]$",
+            b"[admin@CoolDevice.Sea1: /]$",
+        ),
+        (
+            b"VeryLong\x1bECommand",
+            b"VeryLongCommand",
+        ),
+    ),
+)
+def test_strip_ansi(base_channel, buf: bytes, expected: bytes):
+    """
+    See PR 265 for some info about the "x1bE" part :) -> https://github.com/carlmontanari/scrapli/pull/265
+
+    From: https://stackoverflow.com/questions/15011478/ansi-questions-x1b25h-and-x1be
+
+    These are ANSI escape sequences (also known as VT100 codes) are an early standardisation of control codes pre-dating ASCII.
+
+    The escape sequence \x1BE, or Esc+E, is NEL or "Next line", and is used on older terminals and mainframes to denote CR+LF, or \r\n.
+    """
+    actual_strip_ansi_output = base_channel._strip_ansi(buf=buf)
+    assert actual_strip_ansi_output == expected
 
 
 def test_pre_send_input_exception(base_channel):

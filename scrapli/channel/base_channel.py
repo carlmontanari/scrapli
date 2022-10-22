@@ -10,7 +10,7 @@ from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliTypeError, Sc
 from scrapli.logging import get_instance_logger
 from scrapli.transport.base import AsyncTransport, Transport
 
-ANSI_ESCAPE_PATTERN = re.compile(rb"\x1b(\[.*?[@-~]|\].*?(\x07|\x1b\\))")
+ANSI_ESCAPE_PATTERN = re.compile(rb"\x1b(\[.*?[@-~]|\].*?(\x07|\x1b\\)|E)")
 
 
 @dataclass()
