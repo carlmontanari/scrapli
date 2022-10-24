@@ -1,4 +1,4 @@
-<p center><a href=""><img src=https://github.com/carlmontanari/scrapli/blob/master/scrapli.svg?sanitize=true/></a></p>
+<p center><a href=""><img src=https://github.com/carlmontanari/scrapli/blob/main/scrapli.svg?sanitize=true/></a></p>
 
 [![Supported Versions](https://img.shields.io/pypi/pyversions/scrapli.svg)](https://pypi.org/project/scrapli)
 [![PyPI version](https://badge.fury.io/py/scrapli.svg)](https://badge.fury.io/py/scrapli)
