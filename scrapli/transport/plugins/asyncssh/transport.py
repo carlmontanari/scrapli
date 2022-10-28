@@ -168,19 +168,24 @@ class AsyncsshTransport(AsyncTransport):
 
         # Allow passing `transport_options` to asyncssh
         common_args.update(self._base_transport_args.transport_options.get("asyncssh", {}))
+        
+        # Comon authentication args
+        auth_args = {
+            "client_keys": self.plugin_transport_args.auth_private_key,
+            "password": self.plugin_transport_args.auth_password,
+            "preferred_auth": (
+                "publickey",
+                "keyboard-interactive",
+                "password",)
+            }
+
+        # The session args to use in connect() - to merge the dicts in
+        # the order to have transport options preference over predefined auth args 
+        conn_args = {**auth_args, **common_args}
 
         try:
             self.session = await asyncio.wait_for(
-                connect(
-                    client_keys=self.plugin_transport_args.auth_private_key,
-                    password=self.plugin_transport_args.auth_password,
-                    preferred_auth=(
-                        "publickey",
-                        "keyboard-interactive",
-                        "password",
-                    ),
-                    **common_args,
-                ),
+                connect(**conn_args),
                 timeout=self._base_transport_args.timeout_socket,
             )
         except PermissionDenied as exc:
