@@ -2,7 +2,7 @@
 import asyncio
 from contextlib import suppress
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 from asyncssh.connection import SSHClientConnection, connect
 from asyncssh.misc import ConnectionLost, PermissionDenied
@@ -155,10 +155,10 @@ class AsyncsshTransport(AsyncTransport):
             self._verify_key()
 
         # we already fetched host/port/user from the user input and/or the ssh config file, so we
-        # want to use those explicitly. likewise we pass config file we already found. 
+        # want to use those explicitly. likewise we pass config file we already found.
         # We do not set agent explicitly since asyncssh picks up the agent socket from env
-        # if it is not provided, but doesn't use it at all in case if None explicitly provided 
-        common_args = {
+        # if it is not provided, but doesn't use it at all in case if None explicitly provided
+        common_args: Dict[str, Any] = {
             "host": self._base_transport_args.host,
             "port": self._base_transport_args.port,
             "username": self.plugin_transport_args.auth_username,
@@ -168,19 +168,20 @@ class AsyncsshTransport(AsyncTransport):
 
         # Allow passing `transport_options` to asyncssh
         common_args.update(self._base_transport_args.transport_options.get("asyncssh", {}))
-        
-        # Comon authentication args
-        auth_args = {
+
+        # Common authentication args
+        auth_args: Dict[str, Any] = {
             "client_keys": self.plugin_transport_args.auth_private_key,
             "password": self.plugin_transport_args.auth_password,
             "preferred_auth": (
                 "publickey",
                 "keyboard-interactive",
-                "password",)
-            }
+                "password",
+            ),
+        }
 
         # The session args to use in connect() - to merge the dicts in
-        # the order to have transport options preference over predefined auth args 
+        # the order to have transport options preference over predefined auth args
         conn_args = {**auth_args, **common_args}
 
         try:
