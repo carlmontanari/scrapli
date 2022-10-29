@@ -51,8 +51,13 @@ class AsyncsshTransport(AsyncTransport):
         This transport supports some additional `transport_options` to control behavior --
         `asyncssh` is a dictionary that contains options that are passed directly to asyncssh during
         connection creation, you can find the SSH Client options of asyncssh here:
-        https://asyncssh.readthedocs.io/en/latest/api.html#sshclientconnectionoptions. Below is an
-        example of passing in options to modify kex and encryption algorithms
+        https://asyncssh.readthedocs.io/en/latest/api.html#sshclientconnectionoptions. In addition
+        to the asyncssh options, you can pass `"ssh_agent": True` to enable asyncssh's default ssh
+        agent handling. For some more information on that please see:
+        https://github.com/carlmontanari/scrapli/issues/268 and
+        https://github.com/carlmontanari/scrapli/pull/266
+
+        Below is an example of passing in options to modify kex and encryption algorithms
 
         ```
         device = {
@@ -165,6 +170,12 @@ class AsyncsshTransport(AsyncTransport):
             "known_hosts": None,
             "config": self.plugin_transport_args.ssh_config_file,
         }
+
+        enable_agent = self._base_transport_args.transport_options.pop("asyncssh", {}).pop(
+            "ssh_agent", False
+        )
+        if not enable_agent:
+            common_args["agent_path"] = None
 
         # Allow passing `transport_options` to asyncssh
         common_args.update(self._base_transport_args.transport_options.get("asyncssh", {}))
