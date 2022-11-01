@@ -155,14 +155,16 @@ class AsyncsshTransport(AsyncTransport):
             self._verify_key()
 
         # we already fetched host/port/user from the user input and/or the ssh config file, so we
-        # want to use those explicitly. likewise we pass config file we already found. 
-        # We do not set agent explicitly since asyncssh picks up the agent socket from env
-        # if it is not provided, but doesn't use it at all in case if None explicitly provided 
+        # want to use those explicitly. likewise we pass config file we already found. set known
+        # hosts and agent to None so we can not have an agent and deal w/ known hosts ourselves.
+        # to use ssh-agent either empty tuple (to pick up ssh-agent socket from SSH_AUTH_SOCK) or
+        # explicit path to ssh-agent socket should be provided as part of transport_options
         common_args = {
             "host": self._base_transport_args.host,
             "port": self._base_transport_args.port,
             "username": self.plugin_transport_args.auth_username,
             "known_hosts": None,
+            "agent_path": None,
             "config": self.plugin_transport_args.ssh_config_file,
         }
 
