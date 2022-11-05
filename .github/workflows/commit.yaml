@@ -51,14 +51,6 @@ jobs:
 
   build_posix:
     runs-on: ${{ matrix.os }}
-    env:
-      # needed to make the terminal a tty (i think? without this system ssh is super broken)
-      TERM: xterm
-      # libssh2/ssh2-python were getting libssh2 linked incorrectly/weirdly and libraries were trying to be loaded
-      # from the temp dir that pip used for installs. setting the DYLD_LIBRARY_PATH envvar seems to solve this even
-      # if it feels horribly hacky. afaik, this is ignored on linux, so it will only matter on the macos builds
-      # https://stackoverflow.com/questions/71356491/python3-on-mac-having-trouble-loading-libssh2
-      DYLD_LIBRARY_PATH: /usr/local/lib
     strategy:
       max-parallel: 10
       matrix:
@@ -86,5 +78,9 @@ jobs:
           python -m pip install --upgrade setuptools wheel
           python -m pip install nox
       - name: run nox
-        run: python -m nox -p $FRIENDLY_PYTHON_VERSION -k "not darglint"
+        # libssh2/ssh2-python were getting libssh2 linked incorrectly/weirdly and libraries were trying to be loaded
+        # from the temp dir that pip used for installs. setting the DYLD_LIBRARY_PATH envvar seems to solve this even
+        # if it feels horribly hacky. afaik, this is ignored on linux, so it will only matter on the macos builds
+        # https://stackoverflow.com/questions/71356491/python3-on-mac-having-trouble-loading-libssh2
+        run: DYLD_LIBRARY_PATH=/usr/local/lib python -m nox -p $FRIENDLY_PYTHON_VERSION -k "not darglint"
 
