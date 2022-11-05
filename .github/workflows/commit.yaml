@@ -71,7 +71,10 @@ jobs:
         # openssl missing/being linked incorrectly causes ssh2-python install failures
         if: matrix.os == 'macos-latest'
         run: |
-          brew install openssl libssh2
+          brew install openssl
+      - name: Setup tmate session
+        if: matrix.os == 'macos-latest'
+        uses: mxschmitt/action-tmate@v3
       - name: setup test env
         run: |
           python -m pip install --upgrade pip
