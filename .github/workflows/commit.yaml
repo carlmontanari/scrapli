@@ -71,7 +71,7 @@ jobs:
         # openssl missing/being linked incorrectly causes ssh2-python install failures
         if: matrix.os == 'macos-latest'
         run: |
-          brew install openssl
+          brew install openssl libssh2
       - name: setup test env
         run: |
           python -m pip install --upgrade pip
