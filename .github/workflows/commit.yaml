@@ -65,6 +65,8 @@ jobs:
         os: [ubuntu-latest, macos-latest]
         version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
     steps:
+      - name: TEMP
+        run: printenv | grep TERM && printenv | grep DYLD
       - uses: actions/checkout@v3
       - name: set up python ${{ matrix.version }}
         uses: actions/setup-python@v4
@@ -85,8 +87,6 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install --upgrade setuptools wheel
           python -m pip install nox
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
       - name: run nox
         run: python -m nox -p $FRIENDLY_PYTHON_VERSION -k "not darglint"
 
