@@ -146,16 +146,16 @@ class AsynctelnetTransport(AsyncTransport):
                     "connection refused"
                 )
             raise ScrapliConnectionError(msg) from exc
+        except asyncio.TimeoutError as exc:
+            msg = "timed out opening connection to device"
+            self.logger.critical(msg)
+            raise ScrapliAuthenticationFailed(msg) from exc
         except (OSError, socket.gaierror) as exc:
             msg = (
                 f"Failed to open telnet session to host {self._base_transport_args.host} -- "
                 "do you have a bad host/port?"
             )
             raise ScrapliConnectionError(msg) from exc
-        except asyncio.TimeoutError as exc:
-            msg = "timed out opening connection to device"
-            self.logger.critical(msg)
-            raise ScrapliAuthenticationFailed(msg) from exc
 
         self._post_open_closing_log(closing=False)
 

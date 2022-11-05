@@ -1,10 +1,11 @@
 name: Weekly Pre Release Build
 
-on:
-  schedule:
-    # weekly at 0300 PST/1000 UTC on Sunday
-    - cron: '0 10 * * 0'
-  workflow_dispatch:
+# commented out until 3.12 development versions are available!
+# on:
+#   schedule:
+#     # weekly at 0300 PST/1000 UTC on Sunday
+#     - cron: '0 10 * * 0'
+#   workflow_dispatch:
 
 jobs:
   build_posix:
