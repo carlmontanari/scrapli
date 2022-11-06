@@ -2,7 +2,7 @@
 import asyncio
 from contextlib import suppress
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 from asyncssh.connection import SSHClientConnection, connect
 from asyncssh.misc import ConnectionLost, PermissionDenied
@@ -51,8 +51,9 @@ class AsyncsshTransport(AsyncTransport):
         This transport supports some additional `transport_options` to control behavior --
         `asyncssh` is a dictionary that contains options that are passed directly to asyncssh during
         connection creation, you can find the SSH Client options of asyncssh here:
-        https://asyncssh.readthedocs.io/en/latest/api.html#sshclientconnectionoptions. Below is an
-        example of passing in options to modify kex and encryption algorithms
+        https://asyncssh.readthedocs.io/en/latest/api.html#sshclientconnectionoptions.
+
+        Below is an example of passing in options to modify kex and encryption algorithms
 
         ```
         device = {
@@ -156,8 +157,13 @@ class AsyncsshTransport(AsyncTransport):
 
         # we already fetched host/port/user from the user input and/or the ssh config file, so we
         # want to use those explicitly. likewise we pass config file we already found. set known
-        # hosts and agent to None so we can not have an agent and deal w/ known hosts ourselves
-        common_args = {
+        # hosts and agent to None so we can not have an agent and deal w/ known hosts ourselves.
+        # to use ssh-agent either pass an empty tuple (to pick up ssh-agent socket from
+        # SSH_AUTH_SOCK), or pass an explicit path to ssh-agent socket should be provided as part
+        # of transport_options -- in either case these get merged into the dict *after* we set the
+        # default value of `None`, so users options override our defaults.
+
+        common_args: Dict[str, Any] = {
             "host": self._base_transport_args.host,
             "port": self._base_transport_args.port,
             "username": self.plugin_transport_args.auth_username,
@@ -169,18 +175,24 @@ class AsyncsshTransport(AsyncTransport):
         # Allow passing `transport_options` to asyncssh
         common_args.update(self._base_transport_args.transport_options.get("asyncssh", {}))
 
+        # Common authentication args
+        auth_args: Dict[str, Any] = {
+            "client_keys": self.plugin_transport_args.auth_private_key,
+            "password": self.plugin_transport_args.auth_password,
+            "preferred_auth": (
+                "publickey",
+                "keyboard-interactive",
+                "password",
+            ),
+        }
+
+        # The session args to use in connect() - to merge the dicts in
+        # the order to have transport options preference over predefined auth args
+        conn_args = {**auth_args, **common_args}
+
         try:
             self.session = await asyncio.wait_for(
-                connect(
-                    client_keys=self.plugin_transport_args.auth_private_key,
-                    password=self.plugin_transport_args.auth_password,
-                    preferred_auth=(
-                        "publickey",
-                        "keyboard-interactive",
-                        "password",
-                    ),
-                    **common_args,
-                ),
+                connect(**conn_args),
                 timeout=self._base_transport_args.timeout_socket,
             )
         except PermissionDenied as exc:
