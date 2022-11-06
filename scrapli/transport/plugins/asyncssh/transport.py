@@ -51,11 +51,7 @@ class AsyncsshTransport(AsyncTransport):
         This transport supports some additional `transport_options` to control behavior --
         `asyncssh` is a dictionary that contains options that are passed directly to asyncssh during
         connection creation, you can find the SSH Client options of asyncssh here:
-        https://asyncssh.readthedocs.io/en/latest/api.html#sshclientconnectionoptions. In addition
-        to the asyncssh options, you can pass `"ssh_agent": True` to enable asyncssh's default ssh
-        agent handling. For some more information on that please see:
-        https://github.com/carlmontanari/scrapli/issues/268 and
-        https://github.com/carlmontanari/scrapli/pull/266
+        https://asyncssh.readthedocs.io/en/latest/api.html#sshclientconnectionoptions.
 
         Below is an example of passing in options to modify kex and encryption algorithms
 
@@ -162,8 +158,10 @@ class AsyncsshTransport(AsyncTransport):
         # we already fetched host/port/user from the user input and/or the ssh config file, so we
         # want to use those explicitly. likewise we pass config file we already found. set known
         # hosts and agent to None so we can not have an agent and deal w/ known hosts ourselves.
-        # to use ssh-agent either empty tuple (to pick up ssh-agent socket from SSH_AUTH_SOCK) or
-        # explicit path to ssh-agent socket should be provided as part of transport_options
+        # to use ssh-agent either pass an empty tuple (to pick up ssh-agent socket from
+        # SSH_AUTH_SOCK), or pass an explicit path to ssh-agent socket should be provided as part
+        # of transport_options -- in either case these get merged into the dict *after* we set the
+        # default value of `None`, so users options override our defaults.
 
         common_args: Dict[str, Any] = {
             "host": self._base_transport_args.host,
