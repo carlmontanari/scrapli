@@ -50,11 +50,6 @@ Homepage = "https://github.com/carlmontanari/scrapli"
 Changelog = "https://carlmontanari.github.io/scrapli/changelog"
 Docs = "https://carlmontanari.github.io/scrapli/"
 
-[tool.setuptools]
-packages = [
-    "scrapli"
-]
-
 [tool.setuptools.dynamic]
 version = { attr = "scrapli.__version__" }
 dependencies = { file = "requirements.txt" }
