@@ -127,7 +127,7 @@ line_length = 100
 multi_line_output = 3
 include_trailing_comma = true
 known_first_party = "scrapli"
-known_third_party = "asyncssh,napalm,pytest"
+known_third_party = "asyncssh,pytest"
 
 [tool.mypy]
 python_version = "3.11"
