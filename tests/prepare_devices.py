@@ -24,7 +24,16 @@ def prepare_device(test_devices):
             "auth_password": DEVICES[device]["auth_password"],
             "auth_secondary": DEVICES[device]["auth_secondary"],
             "auth_strict_key": DEVICES[device]["auth_strict_key"],
-            "transport_options": {"open_cmd": ["-o", "KexAlgorithms=+diffie-hellman-group14-sha1"]},
+            "transport_options": {
+                "open_cmd": [
+                    "-o",
+                    "KexAlgorithms=+diffie-hellman-group-exchange-sha1,diffie-hellman-group14-sha1",
+                    "-o",
+                    "PubkeyAcceptedKeyTypes=+ssh-rsa",
+                    "-o",
+                    "HostKeyAlgorithms=+ssh-dss,ssh-rsa,rsa-sha2-512,rsa-sha2-256,ssh-rsa,ssh-ed25519",
+                ]
+            },
             "platform": device,
             # nxos on macos w/out acceleration is... slooooooooooow
             "timeout_ops": 120,
