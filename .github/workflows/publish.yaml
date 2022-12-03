@@ -27,7 +27,7 @@ jobs:
           python setup.py sdist bdist_wheel
           python -m twine upload dist/*
       - name: create release branch
-        uses: peterjgrainger/action-create-branch@v2.2.0
+        uses: peterjgrainger/action-create-branch@v2.4.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
