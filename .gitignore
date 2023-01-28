@@ -79,6 +79,7 @@ dmypy.json
 
 # private dir for notes and such
 private/
+.private/
 
 # log output
 *.log

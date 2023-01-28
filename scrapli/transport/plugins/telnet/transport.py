@@ -6,7 +6,7 @@ from scrapli.decorators import timeout_wrapper
 from scrapli.exceptions import ScrapliConnectionError, ScrapliConnectionNotOpened
 from scrapli.transport.base import BasePluginTransportArgs, BaseTransportArgs, Transport
 from scrapli.transport.base.base_socket import Socket
-from scrapli.transport.base.telnet_common import DO, DONT, IAC, SUPPRESS_GO_AHEAD, WILL, WONT
+from scrapli.transport.base.telnet_common import DO, DONT, IAC, NULL, SUPPRESS_GO_AHEAD, WILL, WONT
 
 
 @dataclass()
@@ -238,7 +238,9 @@ class TelnetTransport(Transport):
 
         buf = self._cooked_buf
         self._cooked_buf = b""
-        return buf
+
+        # possible to still have null bytes in the buf, replace them with nothing
+        return buf.replace(NULL, b"")
 
     def write(self, channel_input: bytes) -> None:
         if self.socket is None:

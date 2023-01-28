@@ -1,6 +1,15 @@
 Changelog
 =========
 
+## 2023.01.30
+
+- Expanded ANSII escape sequence handling in #265 thanks to @erwinkinn
+- Improved handling of "preferred_auth" and ssh agent bits in the asyncssh transport thanks to @alekshi work in #266
+- The usual keeping up with bumping dev pins for linters, docs and the like
+- Remove NULL bytes left in telnet transports
+- Run telnet and asynctelnet tests on cisco_nxos (functional tests)
+
+
 ## 2022.07.30.post1
 
 - Big thanks once again to @haccht (and to @egreenspan2 for raising an issue on this as well) for fixing up some 
