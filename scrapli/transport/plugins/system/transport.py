@@ -25,7 +25,7 @@ class PluginTransportArgs(BasePluginTransportArgs):
 class SystemTransport(Transport):
     def __init__(
         self, base_transport_args: BaseTransportArgs, plugin_transport_args: PluginTransportArgs
-    ):
+    ) -> None:
         """
         System (i.e. /bin/ssh) transport plugin.
 
