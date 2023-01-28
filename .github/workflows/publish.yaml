@@ -16,15 +16,13 @@ jobs:
       - name: setup publish env
         run: |
             python -m pip install --upgrade pip
-            python -m pip install setuptools
-            python -m pip install wheel
-            python -m pip install twine
+            python -m pip install setuptools wheel build twine
       - name: build and publish
         env:
           TWINE_USERNAME: ${{ secrets.PYPI_USER }}
           TWINE_PASSWORD: ${{ secrets.PYPI_PASS }}
         run: |
-          python setup.py sdist bdist_wheel
+          python -m build
           python -m twine upload dist/*
       - name: create release branch
         uses: peterjgrainger/action-create-branch@v2.4.0
