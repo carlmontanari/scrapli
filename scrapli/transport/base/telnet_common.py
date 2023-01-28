@@ -1,5 +1,6 @@
 """scrapli.transport.base.telnet_common"""
 
+NULL = bytes([0])
 IAC = bytes([255])
 DONT = bytes([254])
 DO = bytes([253])

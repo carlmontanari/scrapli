@@ -103,6 +103,16 @@ DEVICES = {
         "async_driver": AsyncIOSXRDriver,
         "auth_strict_key": False,
         "base_config": f"{TEST_DATA_PATH}/base_configs/cisco_iosxr",
+        "transport_options": {
+            "open_cmd": [
+                "-o",
+                "KexAlgorithms=+diffie-hellman-group-exchange-sha1,diffie-hellman-group14-sha1",
+                "-o",
+                "PubkeyAcceptedKeyTypes=+ssh-rsa",
+                "-o",
+                "HostKeyAlgorithms=+ssh-dss,ssh-rsa,rsa-sha2-512,rsa-sha2-256,ssh-rsa,ssh-ed25519",
+            ]
+        },
     },
     "arista_eos": {
         "driver": EOSDriver,

@@ -50,9 +50,6 @@ def async_transport(request):
 
 @pytest.fixture(scope="class")
 def conn(test_devices_dict, device_type, transport):
-    if device_type == "cisco_nxos" and transport in TELNET_TRANSPORTS:
-        pytest.skip("skipping telnet for nxos hosts")
-
     device = test_devices_dict[device_type].copy()
     driver = device.pop("driver")
     device.pop("base_config")

@@ -99,7 +99,7 @@ asyncio_mode = "auto"
 
 [tool.pylama]
 linters = "mccabe,pycodestyle,pylint"
-skip = ".nox/*,build/*,docs/*,private/*,scrapli/transport/plugins/system/ptyprocess.py,site/*,tests/*,venv/*"
+skip = ".nox/*,.private/*,build/*,docs/*,private/*,scrapli/transport/plugins/system/ptyprocess.py,site/*,tests/*,venv/*"
 
 [tool.pylama.pycodestyle]
 max_line_length = 100
