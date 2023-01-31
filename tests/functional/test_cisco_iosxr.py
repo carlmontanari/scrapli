@@ -7,14 +7,16 @@ def test_configuration_exclusive(iosxr_conn):
     # last character should be an asterisk indicating configuration is locked
     assert result[0].result[-1:] == "*"
 
+
 def test_admin_privilege_exec(iosxr_conn):
     iosxr_conn.acquire_priv("admin_privilege_exec")
     current_prompt = iosxr_conn.get_prompt()
     iosxr_conn.close()
-    assert current_prompt.endswith('(admin)#')
+    assert current_prompt.endswith("(admin)#")
+
 
 def test_admin_configuration(iosxr_conn):
     iosxr_conn.acquire_priv("admin_configuration")
     current_prompt = iosxr_conn.get_prompt()
     iosxr_conn.close()
-    assert current_prompt.endswith('(admin-config)#')
+    assert current_prompt.endswith("(admin-config)#")
