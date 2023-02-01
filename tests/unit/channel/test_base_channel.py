@@ -190,6 +190,14 @@ def test_channel_send_return(monkeypatch, base_channel):
             "No route to host",
         ),
         (
+            b"no matching host key type found",
+            "No matching host key type found for host",
+        ),
+        (
+            b"Unable to negotiate with 172.20.20.12 port 22: no matching host key type found. Their offer: ssh-rsa",
+            "No matching host key type found for host, their offer: ssh-rsa",
+        ),
+        (
             b"no matching key exchange found.",
             "No matching key exchange found",
         ),
@@ -229,6 +237,8 @@ def test_channel_send_return(monkeypatch, base_channel):
         "operation time out",
         "connection time out",
         "no route to host",
+        "no matching host key type",
+        "no matching host key type found key type",
         "no matching key exchange",
         "no matching key exchange found key exchange",
         "no matching cipher",

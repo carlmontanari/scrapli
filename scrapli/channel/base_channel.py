@@ -396,6 +396,15 @@ class BaseChannel:
             msg = "Timed out connecting to host"
         elif b"no route to host" in output.lower():
             msg = "No route to host"
+        elif b"no matching host key" in output.lower():
+            msg = "No matching host key type found for host"
+            key_exchange_pattern = re.compile(
+                pattern=rb"their offer: ([a-z0-9\-,]*)", flags=re.M | re.I
+            )
+            offered_key_exchanges_match = re.search(pattern=key_exchange_pattern, string=output)
+            if offered_key_exchanges_match:
+                offered_key_exchanges = offered_key_exchanges_match.group(1).decode()
+                msg += f", their offer: {offered_key_exchanges}"
         elif b"no matching key exchange" in output.lower():
             msg = "No matching key exchange found for host"
             key_exchange_pattern = re.compile(
