@@ -1,6 +1,11 @@
 Changelog
 =========
 
+## 2023.07.30 (in development)
+
+- Expand channel auth patterns to include "no matching host key"
+
+
 ## 2023.01.30
 
 - Expanded ANSII escape sequence handling in #265 thanks to @erwinkinn
