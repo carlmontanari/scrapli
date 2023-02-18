@@ -224,7 +224,6 @@ class AsyncsshTransport(AsyncTransport):
         self._pre_open_closing_log(closing=True)
 
         if self.session:
-
             with suppress(BrokenPipeError):
                 # this may raise a BrokenPipeError because seems it is possible for the connection
                 # transport is_closing() to be true already in some cases... since we are closing
