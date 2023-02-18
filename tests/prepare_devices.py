@@ -40,7 +40,6 @@ def prepare_device(test_devices):
         }
 
         with Scrapli(**conn_dict) as conn:
-
             if device == "cisco_iosxe":
                 # getting existing crypto "stuff" from the device to stuff it into config template
                 # to avoid netconf complaints -- replacing crypto was strings caused things to not
