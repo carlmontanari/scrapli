@@ -3,12 +3,10 @@
 
 ## All Driver Arguments
 
-The basic usage section outlined the most commonly used driver arguments, please see the following pages to see all 
-supported driver arguments:
+The basic usage section outlined the most commonly used driver arguments, please see the following page to see all 
+supported base driver arguments:
 
-- [Base `Driver` Arguments](https://carlmontanari.github.io/scrapli/api_docs/driver/base_driver/) 
-- [`GenericDriver` Arguments](https://carlmontanari.github.io/scrapli/api_docs/driver/generic_driver/) 
-- [`NetworkDriver` Arguments](https://carlmontanari.github.io/scrapli/api_docs/driver/network_driver/) 
+- [Base `Driver` Arguments](https://carlmontanari.github.io/scrapli/reference/driver/base/base_driver/) 
 
 Most of these attributes actually get passed from the `Driver` (or sub-class such as `NXOSDriver`) into the
  `Transport` and `Channel` classes, so if you need to modify any of these values after instantiation you should do so
