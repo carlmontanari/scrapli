@@ -9,7 +9,7 @@ from typing import Iterator, List, Optional, Tuple
 
 from scrapli.channel.base_channel import BaseChannel, BaseChannelArgs
 from scrapli.decorators import timeout_wrapper
-from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliTimeout
+from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliConnectionError, ScrapliTimeout
 from scrapli.transport.base import Transport
 
 
@@ -322,7 +322,9 @@ class Channel(BaseChannel):
                     return
 
     @timeout_wrapper
-    def channel_authenticate_telnet(self, auth_username: str = "", auth_password: str = "") -> None:
+    def channel_authenticate_telnet(  # noqa: c901
+        self, auth_username: str = "", auth_password: str = ""
+    ) -> None:
         """
         Handle Telnet Authentication
 
@@ -356,7 +358,16 @@ class Channel(BaseChannel):
 
         with self._channel_lock():
             while True:
-                buf = self.read()
+                try:
+                    buf = self.read()
+                except ScrapliConnectionError:
+                    # telnet transport socket can send us an EOF which gets raised as a connection
+                    # error, if we see that we can try to send a return and go back to the top...
+                    # this first cropped up with telnet on asa devices in:
+                    # https://github.com/carlmontanari/scrapli/issues/278
+                    self.send_return()
+                    return_attempts += 1
+                    continue
 
                 if not buf:
                     current_iteration_time = datetime.now().timestamp()
