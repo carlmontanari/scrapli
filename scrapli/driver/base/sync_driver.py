@@ -24,6 +24,17 @@ class Driver(BaseDriver):
             transport=self.transport,
             base_channel_args=self._base_channel_args,
         )
+        
+    def _post_init(self) -> None:
+        """
+        Adding the _post_init method to the base class. 
+        This method could be called after the init method 
+        of the underlying sync/async drivers.
+
+        Needed for e.g. redefinition
+        conn.channel._auth_telnet_login_pattern
+        """
+        pass
 
     def __enter__(self: _T) -> _T:
         """
