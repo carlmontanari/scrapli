@@ -300,31 +300,6 @@ def test_isalive(monkeypatch, base_driver, test_data):
 
 @pytest.mark.parametrize(
     "test_data",
-    (True, False),
-    ids=(
-        "on_init",
-        "no_on_init",
-    ),
-)
-def test_on_init(test_data):
-    """Assert on init method is executed at end of driver initialization (if provided)"""
-    test_on_init = test_data
-    on_init_called = False
-
-    def _on_init(cls):
-        nonlocal on_init_called
-        on_init_called = True
-
-    BaseDriver(host="localhost", on_init=_on_init if test_on_init else None)
-
-    if test_on_init:
-        assert on_init_called is True
-    else:
-        assert on_init_called is False
-
-
-@pytest.mark.parametrize(
-    "test_data",
     (
         (False, "opening connection to 'localhost' on port '22'"),
         (True, "closing connection to 'localhost' on port '22'"),

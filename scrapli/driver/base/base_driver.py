@@ -189,9 +189,6 @@ class BaseDriver:
             plugin_transport_args=self._plugin_transport_args,
         )
 
-        if self.on_init:
-            self.on_init(self)
-
     def __str__(self) -> str:
         """
         Magic str method for Scrape
