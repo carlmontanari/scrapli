@@ -7,7 +7,7 @@ from shutil import get_terminal_size
 from typing import Any, Dict, List, Optional, TextIO, Union
 from warnings import warn
 
-import pkg_resources  # pylint: disable=C0411
+import pkg_resources
 
 from scrapli.exceptions import ScrapliValueError
 from scrapli.logging import logger
