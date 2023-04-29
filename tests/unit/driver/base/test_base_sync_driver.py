@@ -13,6 +13,31 @@ def test_async_transport_exception():
         Driver(host="localhost", transport="asynctelnet")
 
 
+@pytest.mark.parametrize(
+    "test_data",
+    (True, False),
+    ids=(
+        "on_init",
+        "no_on_init",
+    ),
+)
+def test_on_init(test_data):
+    """Assert on init method is executed at end of driver initialization (if provided)"""
+    test_on_init = test_data
+    on_init_called = False
+
+    def _on_init(cls):
+        nonlocal on_init_called
+        on_init_called = True
+
+    Driver(host="localhost", on_init=_on_init if test_on_init else None)
+
+    if test_on_init:
+        assert on_init_called is True
+    else:
+        assert on_init_called is False
+
+
 def test_context_manager(monkeypatch):
     """Asserts context manager properly opens/closes"""
     channel_ssh_auth_called = False
