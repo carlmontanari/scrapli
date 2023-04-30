@@ -25,6 +25,11 @@ class Driver(BaseDriver):
             base_channel_args=self._base_channel_args,
         )
 
+        # ensure the "on_init" func is called in the actual driver (sync/async rather than the base
+        # class) since we want to wait until after the channel is setup!
+        if self.on_init:
+            self.on_init(self)
+
     def __enter__(self: _T) -> _T:
         """
         Enter method for context manager
