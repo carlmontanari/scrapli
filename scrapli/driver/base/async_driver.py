@@ -25,6 +25,9 @@ class AsyncDriver(BaseDriver):
             base_channel_args=self._base_channel_args,
         )
 
+        if self.on_init:
+            self.on_init(self)
+
     async def __aenter__(self: _T) -> _T:
         """
         Enter method for context manager
