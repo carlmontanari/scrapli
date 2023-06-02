@@ -47,7 +47,7 @@ jobs:
           TERM: xterm
         run: python -m nox -s unit_tests-3.11
       - name: Upload coverage
-        uses: codecov/codecov-action@v3.1.3
+        uses: codecov/codecov-action@v3
 
   build_posix:
     runs-on: ${{ matrix.os }}
