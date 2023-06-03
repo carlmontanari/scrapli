@@ -279,8 +279,10 @@ def timeout_modifier(wrapped_func: Callable[..., Any]) -> Callable[..., Any]:
                 )
                 base_timeout_ops = driver_instance.timeout_ops
                 driver_instance.timeout_ops = kwargs["timeout_ops"]
-                result = await wrapped_func(*args, **kwargs)
-                driver_instance.timeout_ops = base_timeout_ops
+                try:
+                    result = await wrapped_func(*args, **kwargs)
+                finally:
+                    driver_instance.timeout_ops = base_timeout_ops
             return result
 
     else:
@@ -302,8 +304,10 @@ def timeout_modifier(wrapped_func: Callable[..., Any]) -> Callable[..., Any]:
                 )
                 base_timeout_ops = driver_instance.timeout_ops
                 driver_instance.timeout_ops = kwargs["timeout_ops"]
-                result = wrapped_func(*args, **kwargs)
-                driver_instance.timeout_ops = base_timeout_ops
+                try:
+                    result = wrapped_func(*args, **kwargs)
+                finally:
+                    driver_instance.timeout_ops = base_timeout_ops
             return result
 
     # ensures that the wrapped function is updated w/ the original functions docs/etc. --
