@@ -1,5 +1,6 @@
 import asyncio
 import time
+from contextlib import suppress
 
 import pytest
 
@@ -284,4 +285,34 @@ async def test_timeout_modifier_async(monkeypatch, async_driver, test_data):
     monkeypatch.setattr("scrapli.driver.base.async_driver.AsyncDriver.open", _test_timeout_modifier)
     modified_timeout = await async_driver.open(timeout_ops=timeout_ops)
     assert modified_timeout == timeout_ops if timeout_ops else 30
+    assert async_driver.timeout_ops == 30
+
+
+def test_restore_timeout_ops(monkeypatch, sync_driver):
+    timeout_ops = 5
+    assert sync_driver.timeout_ops == 30
+
+    @timeout_modifier
+    def _test_raise_exception(cls, timeout_ops):
+        raise ScrapliTimeout
+
+    monkeypatch.setattr("scrapli.driver.base.sync_driver.Driver.open", _test_raise_exception)
+
+    with suppress(ScrapliTimeout):
+        sync_driver.open(timeout_ops=timeout_ops)
+    assert sync_driver.timeout_ops == 30
+
+
+async def test_restore_timeout_ops_async(monkeypatch, async_driver):
+    timeout_ops = 5
+    assert async_driver.timeout_ops == 30
+
+    @timeout_modifier
+    async def _test_raise_exception(cls, timeout_ops):
+        raise ScrapliTimeout
+
+    monkeypatch.setattr("scrapli.driver.base.async_driver.AsyncDriver.open", _test_raise_exception)
+
+    with suppress(ScrapliTimeout):
+        await async_driver.open(timeout_ops=timeout_ops)
     assert async_driver.timeout_ops == 30
