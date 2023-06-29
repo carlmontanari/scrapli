@@ -21,6 +21,14 @@ else:
 
 _IS_WINDOWS = sys.platform.startswith("win")
 
+if sys.version_info < (3, 10):
+    OriginalFunc = Callable[..., Any]
+else:
+    # Thanks to https://stackoverflow.com/questions/47060133/python-3-type-hinting-for-decorator
+    from typing import ParamSpec, TypeVar
+    Param = ParamSpec("Param")
+    RetType = TypeVar("RetType")
+    OriginalFunc = Callable[Param, RetType]
 
 FUNC_TIMEOUT_MESSAGE_MAP = {
     "channel_authenticate_ssh": "timed out during in channel ssh authentication",
@@ -165,7 +173,7 @@ def _get_transport_logger_timeout(
     )
 
 
-def timeout_wrapper(wrapped_func: Callable[..., Any]) -> Callable[..., Any]:
+def timeout_wrapper(wrapped_func: OriginalFunc) -> OriginalFunc:
     """
     Timeout wrapper for transports
 
@@ -244,7 +252,7 @@ def timeout_wrapper(wrapped_func: Callable[..., Any]) -> Callable[..., Any]:
     return decorate
 
 
-def timeout_modifier(wrapped_func: Callable[..., Any]) -> Callable[..., Any]:
+def timeout_modifier(wrapped_func: OriginalFunc) -> OriginalFunc:
     """
     Decorate an "operation" to modify the timeout_ops value for duration of that operation
 
