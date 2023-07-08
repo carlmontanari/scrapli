@@ -6,6 +6,10 @@ Changelog
 - Expand channel auth patterns to include "no matching host key"
 - Always restore `timeout_ops` even in the event of a timeout -- thank you to @erwinkinn, and please see #289 and #285 
   for more info
+- Add `auth_telnet_login_pattern`, `auth_password_pattern`, and `auth_passphrase_pattern` arguments to drivers -- 
+  this change allows for setting prompt/password/passphrase patterns when using a context manager (previously you 
+  would need to create the driver, then use the property setters to set these -- you can still do that, but this is 
+  nicer!), see #295 and thanks @cmason3 for raising an issue about this topic!
 
 
 ## 2023.01.30

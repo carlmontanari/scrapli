@@ -434,15 +434,10 @@ async telnet transport (creatively called "asynctelnet") built on the standard l
  
 A few things worth noting:
 
-- You can set the username and password prompt expect string after your connection object instantiation
- and before calling the `open` method -- this means if you have non-default prompts you cannot use scrapli with a
-  context manager and Telnet (because the context manager calls open for you). You can set the prompts using the
-   following attributes of the `Channel` (or `AsyncChannel`) object:
-    - `telnet_username_prompt` which defaults to `^(.*username:)|(.*login:)\s?$`
-    - `telnet_password_prompt` which defaults to `^password:\s?$`
- 
-    You can set these values by updating the appropriate attribute, for example: `conn.channel.telnet_username_prompt = "somethingneat"`. 
-  
+- You can set the username and password prompt expect string by passing the `auth_telnet_login_pattern` and
+ `auth_password_pattern` arguments respectively at driver creation -- *or* if you prefer by using the property 
+  setters of the same names on the channel object, for example: `conn.channel.auth_telnet_login_pattern` prior to 
+  calling `open`.
 - If you wish to provide custom prompt values you can provide a string to look for "in" the output from the device, 
   or a regular expression pattern that starts with `^` and ends with `$` -- if you don't use the line anchors the 
     pattern will be `re.escape`'d.

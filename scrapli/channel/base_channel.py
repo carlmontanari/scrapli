@@ -15,10 +15,16 @@ ANSI_ESCAPE_PATTERN = re.compile(rb"\x1b(\[.*?[@-~]|\].*?(\x07|\x1b\\)|E)")
 
 @dataclass()
 class BaseChannelArgs:
-    """
+    r"""
     Dataclass for all base Channel arguments
 
     Args:
+        auth_telnet_login_pattern: the pattern to use to find the telnet login/username prompt,
+            defaults to `r"^(.*username:)|(.*login:)\s?$"`
+        auth_password_pattern: the pattern to use to find the password prompt during in channel
+            authentication, defaults to `r"(.*@.*)?password:\s?$"`
+        auth_passphrase_pattern: the pattern used to find the ssh key passphrase prompt during
+            in channel authentication, defaults to: `r"enter passphrase for key"`
         comms_prompt_pattern: comms_prompt_pattern to assign to the channel; should generally be
             created/passed from the driver class
         comms_return_char: comms_return_char to assign to the channel, see above
@@ -41,6 +47,9 @@ class BaseChannelArgs:
 
     """
 
+    auth_telnet_login_pattern: str = r"^(.*username:)|(.*login:)\s?$"
+    auth_password_pattern: str = r"(.*@.*)?password:\s?$"
+    auth_passphrase_pattern: str = r"enter passphrase for key"
     comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]$"
     comms_return_char: str = "\n"
     comms_prompt_search_depth: int = 1000
@@ -63,6 +72,15 @@ class BaseChannelArgs:
             ScrapliValueError: if invalid channel_log_mode provided
 
         """
+        if self.auth_telnet_login_pattern == "":
+            self.auth_telnet_login_pattern = r"^(.*username:)|(.*login:)\s?$"
+
+        if self.auth_password_pattern == "":
+            self.auth_password_pattern = r"(.*@.*)?password:\s?$"
+
+        if self.auth_passphrase_pattern == "":
+            self.auth_passphrase_pattern = r"enter passphrase for key"
+
         if self.channel_log_mode.lower() not in (
             "write",
             "append",
@@ -110,10 +128,6 @@ class BaseChannel:
 
         self.channel_log: Optional[BinaryIO] = None
 
-        self._auth_telnet_login_pattern = r"^(.*username:)|(.*login:)\s?$"
-        self._auth_password_pattern = r"(.*@.*)?password:\s?$"
-        self._auth_passphrase_pattern = r"enter passphrase for key"
-
     @property
     def auth_telnet_login_pattern(self) -> Pattern[bytes]:
         """
@@ -129,7 +143,9 @@ class BaseChannel:
             N/A
 
         """
-        return re.compile(self._auth_telnet_login_pattern.encode(), flags=re.I | re.M)
+        return re.compile(
+            self._base_channel_args.auth_telnet_login_pattern.encode(), flags=re.I | re.M
+        )
 
     @auth_telnet_login_pattern.setter
     def auth_telnet_login_pattern(self, value: str) -> None:
@@ -152,7 +168,7 @@ class BaseChannel:
         if not isinstance(value, str):
             raise ScrapliTypeError
 
-        self._auth_telnet_login_pattern = value
+        self._base_channel_args.auth_telnet_login_pattern = value
 
     @property
     def auth_password_pattern(self) -> Pattern[bytes]:
@@ -169,7 +185,7 @@ class BaseChannel:
             N/A
 
         """
-        return re.compile(self._auth_password_pattern.encode(), flags=re.I | re.M)
+        return re.compile(self._base_channel_args.auth_password_pattern.encode(), flags=re.I | re.M)
 
     @auth_password_pattern.setter
     def auth_password_pattern(self, value: str) -> None:
@@ -192,7 +208,7 @@ class BaseChannel:
         if not isinstance(value, str):
             raise ScrapliTypeError
 
-        self._auth_password_pattern = value
+        self._base_channel_args.auth_password_pattern = value
 
     @property
     def auth_passphrase_pattern(self) -> Pattern[bytes]:
@@ -209,7 +225,9 @@ class BaseChannel:
             N/A
 
         """
-        return re.compile(self._auth_passphrase_pattern.encode(), flags=re.I | re.M)
+        return re.compile(
+            self._base_channel_args.auth_passphrase_pattern.encode(), flags=re.I | re.M
+        )
 
     @auth_passphrase_pattern.setter
     def auth_passphrase_pattern(self, value: str) -> None:
@@ -232,7 +250,7 @@ class BaseChannel:
         if not isinstance(value, str):
             raise ScrapliTypeError
 
-        self._auth_passphrase_pattern = value
+        self._base_channel_args.auth_passphrase_pattern = value
 
     def open(self) -> None:
         """
