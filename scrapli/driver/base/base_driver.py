@@ -26,6 +26,9 @@ class BaseDriver:
         auth_private_key_passphrase: str = "",
         auth_strict_key: bool = True,
         auth_bypass: bool = False,
+        auth_telnet_login_pattern: str = "",
+        auth_password_pattern: str = "",
+        auth_passphrase_pattern: str = "",
         timeout_socket: float = 15.0,
         timeout_transport: float = 30.0,
         timeout_ops: float = 30.0,
@@ -62,6 +65,12 @@ class BaseDriver:
             auth_strict_key: strict host checking or not
             auth_bypass: bypass "in channel" authentication -- only supported with telnet,
                 asynctelnet, and system transport plugins
+            auth_telnet_login_pattern: the pattern to use to find the telnet login/username prompt,
+                defaults to `r"^(.*username:)|(.*login:)\s?$"`
+            auth_password_pattern: the pattern to use to find the password prompt during in channel
+                authentication, defaults to `r"(.*@.*)?password:\s?$"`
+            auth_passphrase_pattern: the pattern used to find the ssh key passphrase prompt during
+                in channel authentication, defaults to: `r"enter passphrase for key"`
             timeout_socket: timeout for establishing socket/initial connection in seconds
             timeout_transport: timeout for ssh|telnet transport in seconds
             timeout_ops: timeout for ssh channel operations
@@ -135,6 +144,9 @@ class BaseDriver:
         )
 
         self._base_channel_args = BaseChannelArgs(
+            auth_telnet_login_pattern=auth_telnet_login_pattern,
+            auth_password_pattern=auth_password_pattern,
+            auth_passphrase_pattern=auth_passphrase_pattern,
             comms_prompt_pattern=comms_prompt_pattern,
             comms_return_char=comms_return_char,
             timeout_ops=timeout_ops,
