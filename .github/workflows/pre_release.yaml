@@ -1,11 +1,10 @@
-name: Weekly Pre Release Build
+name: Weekly Build (3.12-dev)
 
 on:
   workflow_dispatch:
-# commented out until 3.12 development versions are available!
-#  schedule:
-#    # weekly at 0300 PST/1000 UTC on Sunday
-#    - cron: '0 10 * * 0'
+   schedule:
+     # weekly at 0300 PST/1000 UTC on Sunday
+     - cron: '0 10 * * 0'
 
 jobs:
   build_posix:
@@ -14,7 +13,7 @@ jobs:
       max-parallel: 2
       matrix:
         os: [ubuntu-latest, macos-latest]
-        version: ["3.11-dev"]
+        version: ["3.12-dev"]
     steps:
       - uses: actions/checkout@v3
       - name: set up python ${{ matrix.version }}
