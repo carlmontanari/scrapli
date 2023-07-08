@@ -9,6 +9,7 @@ from logging import Logger, LoggerAdapter
 from typing import TYPE_CHECKING, Any, Callable, Tuple
 
 from scrapli.exceptions import ScrapliTimeout
+from scrapli.settings import Settings
 
 if TYPE_CHECKING:
     from scrapli.driver import AsyncGenericDriver, GenericDriver  # pragma:  no cover
@@ -129,8 +130,14 @@ def _handle_timeout(transport: "BaseTransport", logger: LoggerAdapterT, message:
         ScrapliTimeout: always, if we hit this method we have already timed out!
 
     """
-    logger.critical("operation timed out, closing connection")
-    transport.close()
+    if Settings.NO_TERMINATE_ON_TIMEOUT:
+        logger.critical(
+            "operation timed out, NO_TERMINATE_ON_TIMEOUT is true, not closing connection"
+        )
+    else:
+        logger.critical("operation timed out, closing connection")
+        transport.close()
+
     raise ScrapliTimeout(message)
 
 
