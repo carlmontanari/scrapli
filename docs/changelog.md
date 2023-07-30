@@ -1,7 +1,7 @@
 Changelog
 =========
 
-## 2023.07.30 (in development)
+## 2023.07.30
 
 - Expand channel auth patterns to include "no matching host key"
 - Always restore `timeout_ops` even in the event of a timeout -- thank you to @erwinkinn, and please see #289 and #285 
