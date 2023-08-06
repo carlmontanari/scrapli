@@ -119,7 +119,7 @@ def test_textfsm_parse_string_path(test_data):
                 "protocol": "Internet",
                 "address": "172.31.254.1",
                 "age": "-",
-                "mac": "0000.0c07.acfe",
+                "mac_address": "0000.0c07.acfe",
                 "type": "ARPA",
                 "interface": "Vlan254",
             },
