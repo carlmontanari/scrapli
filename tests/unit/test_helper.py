@@ -117,7 +117,7 @@ def test_textfsm_parse_string_path(test_data):
             True,
             {
                 "protocol": "Internet",
-                "address": "172.31.254.1",
+                "ip_address": "172.31.254.1",
                 "age": "-",
                 "mac_address": "0000.0c07.acfe",
                 "type": "ARPA",
