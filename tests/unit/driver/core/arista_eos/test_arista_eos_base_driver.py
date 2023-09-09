@@ -19,6 +19,7 @@ from scrapli.exceptions import ScrapliPrivilegeError, ScrapliValueError
         ("configuration", "localhost(something)(config)#"),
         ("configuration", "localhost(some thing)(config)#"),
         ("configuration", "localhost(some thing)(config-s-tacocat)#"),
+        ("configuration", "eos_switch(config-s-scrapl-qos-profile-CORE-EGRESS-QUEUING-txq-5)#"),
     ],
     ids=[
         "exec",
@@ -31,6 +32,7 @@ from scrapli.exceptions import ScrapliPrivilegeError, ScrapliValueError
         "config_with_parens",
         "config_with_space",
         "config_session",
+        "config_session_very_long_qos_profile",
     ],
 )
 def test_prompt_patterns(priv_pattern, sync_eos_driver):
@@ -39,14 +41,14 @@ def test_prompt_patterns(priv_pattern, sync_eos_driver):
     prompt_pattern = PRIVS.get(priv_level_name).pattern
     match = re.search(pattern=prompt_pattern, string=prompt, flags=re.M | re.I)
 
+    assert match
+
     if "config-s" in prompt:
         # we will match by the pattern but the `not_contains` will mean that we should end up
         # with 0 matches
         with pytest.raises(ScrapliPrivilegeError):
             sync_eos_driver._determine_current_priv(current_prompt=prompt)
         return
-
-    assert match
 
     current_priv_guesses = sync_eos_driver._determine_current_priv(current_prompt=prompt)
     assert len(current_priv_guesses) == 1
