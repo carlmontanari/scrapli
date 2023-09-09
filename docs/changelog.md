@@ -1,6 +1,12 @@
 Changelog
 =========
 
+## 2024.01.30 (in development)
+
+- Expand `arista_eos` prompt pattern to handle super long config sections (things like qos queues and such). Thanks 
+  to @MarkRudenko over in scrapli_cfg repo for finding this and providing the fix!
+
+
 ## 2023.07.30
 
 - Expand channel auth patterns to include "no matching host key"

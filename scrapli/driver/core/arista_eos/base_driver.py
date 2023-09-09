@@ -31,7 +31,7 @@ PRIVS = {
     ),
     "configuration": (
         PrivilegeLevel(
-            pattern=r"^[\w.\-@()/: ]{1,63}\(config[\w.\-@/:]{0,32}\)#\s?$",
+            pattern=r"^[\w.\-@()/: ]{1,63}\(config[\w.\-@/:]{0,63}\)#\s?$",
             name="configuration",
             previous_priv="privilege_exec",
             deescalate="end",
@@ -79,7 +79,7 @@ class EOSDriverBase:
             raise ScrapliValueError(msg)
         sess_prompt = re.escape(session_name[:6])
         pattern = (
-            rf"^[a-z0-9.\-@()/: ]{{1,63}}\(config\-s\-{sess_prompt}[a-z0-9_.\-@/:]{{0,32}}\)#\s?$"
+            rf"^[a-z0-9.\-@()/: ]{{1,63}}\(config\-s\-{sess_prompt}[a-z0-9_.\-@/:]{{0,64}}\)#\s?$"
         )
         name = session_name
         config_session = PrivilegeLevel(
