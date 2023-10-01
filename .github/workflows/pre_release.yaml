@@ -1,10 +1,10 @@
 name: Weekly Build (3.12-dev)
 
 on:
+  schedule:
+    # weekly at 0300 PST/1000 UTC on Sunday
+    - cron: '0 10 * * 0'
   workflow_dispatch:
-   schedule:
-     # weekly at 0300 PST/1000 UTC on Sunday
-     - cron: '0 10 * * 0'
 
 jobs:
   build_posix:
