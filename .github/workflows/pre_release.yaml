@@ -1,10 +1,11 @@
-name: Weekly Build (3.12-dev)
+name: Weekly Build (dev)
 
 on:
   schedule:
     # weekly at 0300 PST/1000 UTC on Sunday
     - cron: '0 10 * * 0'
-  workflow_dispatch:
+  # commented out till 3.13
+  # workflow_dispatch:
 
 jobs:
   build_posix:
