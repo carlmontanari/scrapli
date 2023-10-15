@@ -59,9 +59,9 @@ def test_textfsm_no_ntc_templates(monkeypatch):
             True,
             {
                 "protocol": "Internet",
-                "address": "172.31.254.1",
+                "ip_address": "172.31.254.1",
                 "age": "-",
-                "mac": "0000.0c07.acfe",
+                "mac_address": "0000.0c07.acfe",
                 "type": "ARPA",
                 "interface": "Vlan254",
             },
@@ -88,9 +88,9 @@ def test_textfsm_parse(test_data):
             True,
             {
                 "protocol": "Internet",
-                "address": "172.31.254.1",
+                "ip_address": "172.31.254.1",
                 "age": "-",
-                "mac": "0000.0c07.acfe",
+                "mac_address": "0000.0c07.acfe",
                 "type": "ARPA",
                 "interface": "Vlan254",
             },
