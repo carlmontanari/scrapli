@@ -114,9 +114,9 @@ drwxr-xr-x  12 carl  staff    384 Jan 27 19:13 .git/"""
             True,
             {
                 "protocol": "Internet",
-                "address": "172.31.254.1",
+                "ip_address": "172.31.254.1",
                 "age": "-",
-                "mac": "0000.0c07.acfe",
+                "mac_address": "0000.0c07.acfe",
                 "type": "ARPA",
                 "interface": "Vlan254",
             },
@@ -145,7 +145,7 @@ Internet  172.31.254.2            -   c800.84b2.e9c2  ARPA   Vlan254
 """
     response.record_response(response_bytes)
     result = response.textfsm_parse_output(template=template)
-    assert result[0]["address"] == "172.31.254.1"
+    assert result[0]["ip_address"] == "172.31.254.1"
 
 
 def test_response_parse_textfsm_fail():
