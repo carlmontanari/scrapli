@@ -292,6 +292,14 @@ def test_process_output(base_channel):
             b"VeryLong\x1bECommand",
             b"VeryLongCommand",
         ),
+        (
+            b"command-prompt# \x1b7",
+            b"command-prompt# ",
+        ),
+        (
+            b"\x1b[7mCTRL+C\x1b[0m \x1b[7mESC\x1b[0m \x1b[7mq\x1b[0m Quit \x1b[7mSPACE\x1b[0m \x1b[7mn\x1b[0m Next Page \x1b[7mENTER\x1b[0m Next Entry \x1b[7ma\x1b[0m All\x1b[1A\x1b[59C\x1b[27m",
+            b"CTRL+C ESC q Quit SPACE n Next Page ENTER Next Entry a All",
+        ),
     ),
 )
 def test_strip_ansi(base_channel, buf: bytes, expected: bytes):
