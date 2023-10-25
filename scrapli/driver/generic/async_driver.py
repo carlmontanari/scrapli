@@ -530,7 +530,13 @@ class AsyncGenericDriver(AsyncDriver, BaseGenericDriver):
         """
         if initial_input is not None:
             self.channel.write(channel_input=f"{initial_input}{self.comms_return_char}")
-            return await self.read_callback(callbacks=callbacks, initial_input=None)
+            return await self.read_callback(
+                callbacks=callbacks,
+                initial_input=None,
+                read_output=read_output,
+                read_delay=read_delay,
+                read_timeout=read_timeout,
+            )
 
         original_transport_timeout = self.timeout_transport
 
