@@ -85,7 +85,7 @@ def _make_eof_intr() -> None:
             raise ValueError("No stream has a fileno")
         intr = ord(termios.tcgetattr(fd)[6][VINTR])
         eof = ord(termios.tcgetattr(fd)[6][VEOF])
-    except (ImportError, OSError, IOError, ValueError, termios.error):
+    except (ImportError, OSError, ValueError, termios.error):
         # unless the controlling process is also not a terminal,
         # such as cron(1), or when stdin and stdout are both closed.
         # Fall-back to using CEOF and CINTR. There
@@ -157,7 +157,7 @@ def _setecho(fd: int, state: bool) -> None:
         attr = termios.tcgetattr(fd)
     except termios.error as err:
         if err.args[0] == errno.EINVAL:
-            raise IOError(err.args[0], "%s: %s." % (err.args[1], errmsg))
+            raise OSError(err.args[0], "{}: {}.".format(err.args[1], errmsg))
         raise
 
     if state:
@@ -169,9 +169,9 @@ def _setecho(fd: int, state: bool) -> None:
         # I tried TCSADRAIN and TCSAFLUSH, but these were inconsistent and
         # blocked on some platforms. TCSADRAIN would probably be ideal.
         termios.tcsetattr(fd, termios.TCSANOW, attr)
-    except IOError as err:
+    except OSError as err:
         if err.args[0] == errno.EINVAL:
-            raise IOError(err.args[0], "%s: %s." % (err.args[1], errmsg))
+            raise OSError(err.args[0], "{}: {}.".format(err.args[1], errmsg))
         raise
 
 
@@ -196,8 +196,8 @@ class PtyProcess:
         _make_eof_intr()  # Ensure _EOF and _INTR are calculated
         self.pid = pid
         self.fd = fd
-        readf = io.open(fd, "rb", buffering=0)
-        writef = io.open(fd, "wb", buffering=0, closefd=False)
+        readf = open(fd, "rb", buffering=0)
+        writef = open(fd, "wb", buffering=0, closefd=False)
         self.fileobj = io.BufferedRWPair(readf, writef)  # type: ignore
 
         self.terminated = False
@@ -283,7 +283,7 @@ class PtyProcess:
         if pid == CHILD:
             try:
                 _setwinsize(fd=STDIN_FILENO, rows=rows, cols=cols)
-            except IOError as err:
+            except OSError as err:
                 if err.args[0] not in (errno.EINVAL, errno.ENOTTY):
                     raise
 
@@ -291,7 +291,7 @@ class PtyProcess:
             if echo is False:
                 try:
                     _setecho(STDIN_FILENO, False)
-                except (IOError, termios.error) as err:
+                except (OSError, termios.error) as err:
                     if err.args[0] not in (errno.EINVAL, errno.ENOTTY):
                         raise
 
@@ -350,7 +350,7 @@ class PtyProcess:
 
         try:
             inst.setwinsize(rows=rows, cols=cols)
-        except IOError as err:
+        except OSError as err:
             if err.args[0] not in (errno.EINVAL, errno.ENOTTY, errno.ENXIO):
                 raise
 
@@ -481,7 +481,7 @@ class PtyProcess:
         """
         try:
             s = self.fileobj.read1(size)
-        except (OSError, IOError) as err:
+        except OSError as err:
             if err.args[0] == errno.EIO:
                 # Linux-style EOF
                 self.flag_eof = True

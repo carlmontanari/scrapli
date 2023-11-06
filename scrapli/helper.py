@@ -1,5 +1,6 @@
 """scrapli.helper"""
 import importlib
+import sys
 import urllib.request
 from io import BytesIO, TextIOWrapper
 from pathlib import Path
@@ -7,11 +8,21 @@ from shutil import get_terminal_size
 from typing import Any, Dict, List, Optional, TextIO, Union
 from warnings import warn
 
-import pkg_resources
-
 from scrapli.exceptions import ScrapliValueError
 from scrapli.logging import logger
 from scrapli.settings import Settings
+
+if sys.version_info >= (3, 9):
+    import importlib.resources as importlib_resources
+else:
+    import pkg_resources as importlib_resources
+
+
+def _textfsm_get_template_directory() -> str:
+    if sys.version_info >= (3, 9):
+        return f"{importlib_resources.files('ntc_templates')}/templates"
+
+    return importlib_resources.resource_filename("ntc_templates", "templates")
 
 
 def _textfsm_get_template(platform: str, command: str) -> Optional[TextIO]:
@@ -43,7 +54,9 @@ def _textfsm_get_template(platform: str, command: str) -> Optional[TextIO]:
         )
         user_warning(title=title, message=message)
         return None
-    template_dir = pkg_resources.resource_filename("ntc_templates", "templates")
+
+    template_dir = _textfsm_get_template_directory()
+
     cli_table = CliTable("index", template_dir)
     template_index = cli_table.index.GetRowMatch({"Platform": platform, "Command": command})
     if not template_index:
