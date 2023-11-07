@@ -141,9 +141,9 @@ def _setecho(fd: int, state: bool) -> None:
         None
 
     Raises:
-        IOError: if termios raises an exception getting the fd
+        OSError: if termios raises an exception getting the fd or raises an exception setting the
+            echo state on the fd
         termios.error: also if termios rasies an exception gettign fd... unclear why the two errors!
-        IOError: if termios raises an exception setting the echo state on the fd
 
     """
     import termios
@@ -244,7 +244,7 @@ class PtyProcess:
             ScrapliValueError: if no ssh binary found on PATH
             Exception: IOError - if unable to set window size of child process
             Exception: OSError - if unable to spawn command in child process
-            IOError: failing to reset window size
+            OSError: failing to reset window size
             exception: if we get an exception decoding output
 
         """
