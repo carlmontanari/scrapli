@@ -1,5 +1,6 @@
 """scrapli.helper"""
 import importlib
+import importlib.resources
 import sys
 import urllib.request
 from io import BytesIO, TextIOWrapper
@@ -12,17 +13,13 @@ from scrapli.exceptions import ScrapliValueError
 from scrapli.logging import logger
 from scrapli.settings import Settings
 
-if sys.version_info >= (3, 9):
-    import importlib.resources as importlib_resources
-else:
-    import pkg_resources as importlib_resources
-
 
 def _textfsm_get_template_directory() -> str:
     if sys.version_info >= (3, 9):
-        return f"{importlib_resources.files('ntc_templates')}/templates"
+        return f"{importlib.resources.files('ntc_templates')}/templates"
 
-    return importlib_resources.resource_filename("ntc_templates", "templates")
+    with importlib.resources.path("ntc_templates", "templates") as path:
+        return str(path)
 
 
 def _textfsm_get_template(platform: str, command: str) -> Optional[TextIO]:
