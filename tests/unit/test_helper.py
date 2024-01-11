@@ -3,12 +3,12 @@ from io import TextIOWrapper
 from pathlib import Path
 from shutil import get_terminal_size
 
-import pkg_resources  # pylint: disable=C041
 import pytest
 
 from scrapli.exceptions import ScrapliValueError
 from scrapli.helper import (
     _textfsm_get_template,
+    _textfsm_get_template_directory,
     format_user_warning,
     genie_parse,
     resolve_file,
@@ -26,7 +26,7 @@ IOS_ARP_NTC_TEMPLATE_URL = "https://raw.githubusercontent.com/networktocode/ntc-
 
 def test_textfsm_get_template():
     template = _textfsm_get_template("cisco_nxos", "show ip arp")
-    template_dir = pkg_resources.resource_filename("ntc_templates", "templates")
+    template_dir = _textfsm_get_template_directory()
     assert isinstance(template, TextIOWrapper)
     assert template.name == f"{template_dir}/cisco_nxos_show_ip_arp.textfsm"
 
