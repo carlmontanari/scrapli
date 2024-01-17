@@ -456,6 +456,7 @@ class Channel(BaseChannel):
         *,
         strip_prompt: bool = True,
         eager: bool = False,
+        eager_input: bool = False,
     ) -> Tuple[bytes, bytes]:
         """
         Primary entry point to send data to devices in shell mode; accept input and returns result
@@ -466,6 +467,8 @@ class Channel(BaseChannel):
             eager: eager mode reads and returns the `_read_until_input` value, but does not attempt
                 to read to the prompt pattern -- this should not be used manually! (only used by
                 `send_configs` with the eager flag set)
+            eager_input: when true does *not* try to read our input off the channel -- generally
+                this should be left alone unless you know what you are doing!
 
         Returns:
             Tuple[bytes, bytes]: tuple of "raw" output and "processed" (cleaned up/stripped) output
@@ -485,7 +488,10 @@ class Channel(BaseChannel):
 
         with self._channel_lock():
             self.write(channel_input=channel_input)
-            _buf_until_input = self._read_until_input(channel_input=bytes_channel_input)
+
+            if not eager_input:
+                _buf_until_input = self._read_until_input(channel_input=bytes_channel_input)
+
             self.send_return()
 
             if not eager:
