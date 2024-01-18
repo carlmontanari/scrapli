@@ -308,7 +308,7 @@ def user_warning(title: str, message: str) -> None:
         warn(warning_message)
 
 
-def output_roughly_contains_input(input_: bytes, output: bytes) -> True:
+def output_roughly_contains_input(input_: bytes, output: bytes) -> bool:
     """
     Return True if all characters in input are contained in order in the given output.
 
@@ -342,7 +342,7 @@ def _roughly_contains_input_iter_output_for_input_char(
     char: int, output: bytes
 ) -> Tuple[bool, bytes]:
     """
-    Iterates over chars in the output to find input, returns remaining output bytes if input found.
+    Iterate over chars in the output to find input, returns remaining output bytes if input found.
 
     Args:
         char: input char to find in output
@@ -357,6 +357,6 @@ def _roughly_contains_input_iter_output_for_input_char(
     """
     for index, output_char in enumerate(output):
         if char == output_char:
-            return True, output[index + 1 :]
+            return True, output[index + 1 :]  # noqa: E203
 
     return False, b""
