@@ -6,7 +6,7 @@ import urllib.request
 from io import BytesIO, TextIOWrapper
 from pathlib import Path
 from shutil import get_terminal_size
-from typing import Any, Dict, List, Optional, TextIO, Union
+from typing import Any, Dict, List, Optional, TextIO, Tuple, Union
 from warnings import warn
 
 from scrapli.exceptions import ScrapliValueError
@@ -306,3 +306,57 @@ def user_warning(title: str, message: str) -> None:
 
     if Settings.SUPPRESS_USER_WARNINGS is False:
         warn(warning_message)
+
+
+def output_roughly_contains_input(input_: bytes, output: bytes) -> True:
+    """
+    Return True if all characters in input are contained in order in the given output.
+
+    Args:
+        input_: the input presented to a device
+        output: the output echoed on the channel
+
+    Returns:
+        bool: True if the input is "roughly" contained in the output, otherwise False
+
+    Raises:
+        N/A
+
+    """
+    if output in input_:
+        return True
+
+    if len(output) < len(input_):
+        return False
+
+    for char in input_:
+        should_continue, output = _roughly_contains_input_iter_output_for_input_char(char, output)
+
+        if not should_continue:
+            return False
+
+    return True
+
+
+def _roughly_contains_input_iter_output_for_input_char(
+    char: int, output: bytes
+) -> Tuple[bool, bytes]:
+    """
+    Iterates over chars in the output to find input, returns remaining output bytes if input found.
+
+    Args:
+        char: input char to find in output
+        output: the output echoed on the channel
+
+    Returns:
+        output: bool indicating char was found, and remaining output chars to continue searching in
+
+    Raises:
+        N/A
+
+    """
+    for index, output_char in enumerate(output):
+        if char == output_char:
+            return True, output[index + 1 :]
+
+    return False, b""

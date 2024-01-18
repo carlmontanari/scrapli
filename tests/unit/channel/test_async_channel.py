@@ -96,6 +96,28 @@ async def test_channel_read_until_input(monkeypatch, async_channel):
     assert actual_read_output == expected_read_output
 
 
+async def test_channel_read_until_input_roughly(monkeypatch, async_channel):
+    async_channel._base_channel_args.comms_roughly_match_inputs = True
+
+    expected_read_output = b"read_data\nthis foo is bar my baz input"
+    _read_counter = 0
+
+    async def _read(cls):
+        nonlocal _read_counter
+
+        if _read_counter == 0:
+            _read_counter += 1
+            return b"read_data\x1b[0;0m\n"
+
+        return b"this foo is bar my baz input"
+
+    monkeypatch.setattr("scrapli.transport.base.async_transport.AsyncTransport.read", _read)
+
+    actual_read_output = await async_channel._read_until_input(channel_input=b"thisismyinput")
+
+    assert actual_read_output == expected_read_output
+
+
 async def test_channel_read_until_input_no_input(async_channel):
     assert await async_channel._read_until_input(channel_input=b"") == b""
 

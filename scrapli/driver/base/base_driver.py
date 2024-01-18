@@ -1,4 +1,4 @@
-"""scrapli.driver.base.base_driver"""
+"""scrapli.driver.base.base_driver"""  # noqa: C0302
 import importlib
 from dataclasses import fields
 from io import BytesIO
@@ -34,6 +34,7 @@ class BaseDriver:
         timeout_ops: float = 30.0,
         comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,48}[#>$]\s*$",
         comms_return_char: str = "\n",
+        comms_roughly_match_inputs: bool = False,
         ssh_config_file: Union[str, bool] = False,
         ssh_known_hosts_file: Union[str, bool] = False,
         on_init: Optional[Callable[..., Any]] = None,
@@ -83,6 +84,12 @@ class BaseDriver:
                 should be mostly sorted for you if using network drivers (i.e. `IOSXEDriver`).
                 Lastly, the case insensitive is just a convenience factor so i can be lazy.
             comms_return_char: character to use to send returns to host
+            comms_roughly_match_inputs: indicates if the channel should "roughly" match inputs sent
+                to the device. If False (default) inputs are strictly checked, as in any input
+                *must* be read back exactly on the channel. When set to True all input chars *must*
+                be read back in order in the output and all chars must be present, but the *exact*
+                input string does not need to be seen. This can be useful if a device echoes back
+                extra characters or rewrites the terminal during command input.
             ssh_config_file: string to path for ssh config file, True to use default ssh config file
                 or False to ignore default ssh config file
             ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
@@ -149,6 +156,7 @@ class BaseDriver:
             auth_passphrase_pattern=auth_passphrase_pattern,
             comms_prompt_pattern=comms_prompt_pattern,
             comms_return_char=comms_return_char,
+            comms_roughly_match_inputs=comms_roughly_match_inputs,
             timeout_ops=timeout_ops,
             channel_log=channel_log,
             channel_log_mode=channel_log_mode,
@@ -249,6 +257,7 @@ class BaseDriver:
             f"timeout_ops={self._base_channel_args.timeout_ops!r}, "
             f"comms_prompt_pattern={self._base_channel_args.comms_prompt_pattern!r}, "
             f"comms_return_char={self._base_channel_args.comms_return_char!r}, "
+            f"comms_roughly_match_inputs={self._base_channel_args.comms_roughly_match_inputs!r}, "
             f"ssh_config_file={self.ssh_config_file!r}, "
             f"ssh_known_hosts_file={self.ssh_known_hosts_file!r}, "
             f"on_init={self.on_init!r}, "
@@ -737,6 +746,84 @@ class BaseDriver:
             raise ScrapliTypeError
 
         self._base_channel_args.comms_return_char = value
+
+    @property
+    def comms_prompt_search_depth(self) -> int:
+        """
+        Getter for `comms_prompt_search_depth` attribute
+
+        Args:
+            N/A
+
+        Returns:
+            int: comms_prompt_search_depth int
+
+        Raises:
+            N/A
+
+        """
+        return self._base_channel_args.comms_prompt_search_depth
+
+    @comms_prompt_search_depth.setter
+    def comms_prompt_search_depth(self, value: int) -> None:
+        """
+        Setter for `comms_prompt_search_depth` attribute
+
+        Args:
+            value: int value for comms_prompt_search_depth
+
+        Returns:
+            None
+
+        Raises:
+            ScrapliTypeError: if value is not of type int
+
+        """
+        self.logger.debug(f"setting 'comms_prompt_search_depth' value to {value!r}")
+
+        if not isinstance(value, int):
+            raise ScrapliTypeError
+
+        self._base_channel_args.comms_prompt_search_depth = value
+
+    @property
+    def comms_roughly_match_inputs(self) -> bool:
+        """
+        Getter for `comms_roughly_match_inputs` attribute
+
+        Args:
+            N/A
+
+        Returns:
+            bool: comms_roughly_match_inputs bool
+
+        Raises:
+            N/A
+
+        """
+        return self._base_channel_args.comms_roughly_match_inputs
+
+    @comms_roughly_match_inputs.setter
+    def comms_roughly_match_inputs(self, value: bool) -> None:
+        """
+        Setter for `comms_roughly_match_inputs` attribute
+
+        Args:
+            value: int value for comms_roughly_match_inputs
+
+        Returns:
+            None
+
+        Raises:
+            ScrapliTypeError: if value is not of type bool
+
+        """
+        self.logger.debug(f"setting 'comms_roughly_match_inputs' value to {value!r}")
+
+        if not isinstance(value, bool):
+            raise ScrapliTypeError
+
+        self._base_channel_args.comms_roughly_match_inputs = value
 
     @property
     def timeout_socket(self) -> float:
