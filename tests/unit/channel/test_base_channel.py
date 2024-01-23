@@ -300,6 +300,10 @@ def test_process_output(base_channel):
             b"\x1b[7mCTRL+C\x1b[0m \x1b[7mESC\x1b[0m \x1b[7mq\x1b[0m Quit \x1b[7mSPACE\x1b[0m \x1b[7mn\x1b[0m Next Page \x1b[7mENTER\x1b[0m Next Entry \x1b[7ma\x1b[0m All\x1b[1A\x1b[59C\x1b[27m",
             b"CTRL+C ESC q Quit SPACE n Next Page ENTER Next Entry a All",
         ),
+        (
+            b"\x1b7c\x1b8\x1b[1C\x1b7o\x1b8\x1b[1C\x1b7n\x1b8\x1b[1C\x1b7f\x1b8\x1b[1C\x1b7i\x1b8\x1b[1C\x1b7g\x1b8\x1b[1C\x1b7u\x1b8\x1b[1C\x1b7r\x1b8\x1b[1C\x1b7e\x1b8\x1b[1C",
+            b"configure",
+        ),
     ),
 )
 def test_strip_ansi(base_channel, buf: bytes, expected: bytes):
