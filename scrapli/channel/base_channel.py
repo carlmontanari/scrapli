@@ -39,6 +39,12 @@ class BaseChannelArgs:
         comms_prompt_search_depth: depth of the buffer to search in for searching for the prompt
             in "read_until_prompt"; smaller number here will generally be faster, though may be less
             reliable; default value is 1000
+        comms_roughly_match_inputs: indicates if the channel should "roughly" match inputs sent
+            to the device. If False (default) inputs are strictly checked, as in any input
+            *must* be read back exactly on the channel. When set to True all input chars *must*
+            be read back in order in the output and all chars must be present, but the *exact*
+            input string does not need to be seen. This can be useful if a device echoes back
+            extra characters or rewrites the terminal during command input.
         timeout_ops: timeout_ops to assign to the channel, see above
         channel_log: log "channel" output -- this would be the output you would normally see on a
             terminal. If `True` logs to `scrapli_channel.log`, if a string is provided, logs to
@@ -61,6 +67,7 @@ class BaseChannelArgs:
     comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,32}[#>$]$"
     comms_return_char: str = "\n"
     comms_prompt_search_depth: int = 1000
+    comms_roughly_match_inputs: bool = False
     timeout_ops: float = 30.0
     channel_log: Union[str, bool, BytesIO] = False
     channel_log_mode: str = "write"

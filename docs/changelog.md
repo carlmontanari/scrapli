@@ -5,7 +5,13 @@ Changelog
 
 - Expand `arista_eos` prompt pattern to handle super long config sections (things like qos queues and such). Thanks 
   to @MarkRudenko over in scrapli_cfg repo for finding this and providing the fix!
-
+- Add `comms_roughly_match_inputs` option -- this uses a "rough" match when looking for inputs (commands/configs you 
+  send) in output printed back on the channel. Basically, if all input characters show up in the output in the correct 
+  order, then we assume the input was found. Of course this could be less "exacting" but it also *probably* is ok 99%
+  of the time :)
+- Added an `eager_input` option to send operations -- this option completely skips checking for inputs being echoed back
+  on the channel. With the addition of the `comms_roughly_match_inputs` option this is *probably* unnecessary, but
+  could be useful for some corner cases.
 
 ## 2023.07.30
 

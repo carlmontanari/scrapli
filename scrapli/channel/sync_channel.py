@@ -10,6 +10,7 @@ from typing import Iterator, List, Optional, Tuple
 from scrapli.channel.base_channel import BaseChannel, BaseChannelArgs
 from scrapli.decorators import timeout_wrapper
 from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliConnectionError, ScrapliTimeout
+from scrapli.helper import output_roughly_contains_input
 from scrapli.transport.base import Transport
 
 
@@ -104,9 +105,16 @@ class Channel(BaseChannel):
         while True:
             buf += self.read()
 
-            # replace any backspace chars (particular problem w/ junos), and remove any added spaces
-            # this is just for comparison of the inputs to what was read from channel
-            if processed_channel_input in b"".join(buf.lower().replace(b"\x08", b"").split()):
+            if not self._base_channel_args.comms_roughly_match_inputs:
+                # replace any backspace chars (particular problem w/ junos), and remove any added
+                # spaces this is just for comparison of the inputs to what was read from channel
+                # note (2024) this would be worked around by using the roughly contains search,
+                # *but* that is slower (probably immaterially for most people but... ya know...)
+                processed_buf = b"".join(buf.lower().replace(b"\x08", b"").split())
+
+                if processed_channel_input in processed_buf:
+                    return buf
+            elif output_roughly_contains_input(input_=processed_channel_input, output=buf):
                 return buf
 
     def _read_until_prompt(self, buf: bytes = b"") -> bytes:
@@ -456,6 +464,7 @@ class Channel(BaseChannel):
         *,
         strip_prompt: bool = True,
         eager: bool = False,
+        eager_input: bool = False,
     ) -> Tuple[bytes, bytes]:
         """
         Primary entry point to send data to devices in shell mode; accept input and returns result
@@ -466,6 +475,8 @@ class Channel(BaseChannel):
             eager: eager mode reads and returns the `_read_until_input` value, but does not attempt
                 to read to the prompt pattern -- this should not be used manually! (only used by
                 `send_configs` with the eager flag set)
+            eager_input: when true does *not* try to read our input off the channel -- generally
+                this should be left alone unless you know what you are doing!
 
         Returns:
             Tuple[bytes, bytes]: tuple of "raw" output and "processed" (cleaned up/stripped) output
@@ -485,7 +496,10 @@ class Channel(BaseChannel):
 
         with self._channel_lock():
             self.write(channel_input=channel_input)
-            _buf_until_input = self._read_until_input(channel_input=bytes_channel_input)
+
+            if not eager_input:
+                _buf_until_input = self._read_until_input(channel_input=bytes_channel_input)
+
             self.send_return()
 
             if not eager:
