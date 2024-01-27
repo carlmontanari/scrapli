@@ -35,6 +35,7 @@ class GenericDriver(Driver, BaseGenericDriver):
         timeout_ops: float = 30.0,
         comms_prompt_pattern: str = r"^\S{0,48}[#>$~@:\]]\s*$",
         comms_return_char: str = "\n",
+        comms_roughly_match_inputs: bool = False,
         ssh_config_file: Union[str, bool] = False,
         ssh_known_hosts_file: Union[str, bool] = False,
         on_init: Optional[Callable[..., Any]] = None,
@@ -64,6 +65,7 @@ class GenericDriver(Driver, BaseGenericDriver):
             timeout_ops=timeout_ops,
             comms_prompt_pattern=comms_prompt_pattern,
             comms_return_char=comms_return_char,
+            comms_roughly_match_inputs=comms_roughly_match_inputs,
             ssh_config_file=ssh_config_file,
             ssh_known_hosts_file=ssh_known_hosts_file,
             on_init=on_init,
@@ -102,6 +104,7 @@ class GenericDriver(Driver, BaseGenericDriver):
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         eager: bool = False,
+        eager_input: bool = False,
         timeout_ops: Optional[float] = None,
     ) -> Response:
         """
@@ -118,6 +121,8 @@ class GenericDriver(Driver, BaseGenericDriver):
             eager: if eager is True we do not read until prompt is seen at each command sent to the
                 channel. Do *not* use this unless you know what you are doing as it is possible that
                 it can make scrapli less reliable!
+            eager_input: when true does *not* try to read our input off the channel -- generally
+                this should be left alone unless you know what you are doing!
             timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
                 the duration of the operation, value is reset to initial value after operation is
                 completed
@@ -142,7 +147,7 @@ class GenericDriver(Driver, BaseGenericDriver):
             failed_when_contains=failed_when_contains,
         )
         raw_response, processed_response = self.channel.send_input(
-            channel_input=command, strip_prompt=strip_prompt, eager=eager
+            channel_input=command, strip_prompt=strip_prompt, eager=eager, eager_input=eager_input
         )
         return self._post_send_command(
             raw_response=raw_response, processed_response=processed_response, response=response
@@ -154,6 +159,7 @@ class GenericDriver(Driver, BaseGenericDriver):
         *,
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
+        eager_input: bool = False,
         timeout_ops: Optional[float] = None,
     ) -> Response:
         """
@@ -163,6 +169,8 @@ class GenericDriver(Driver, BaseGenericDriver):
             command: string to send to device in privilege exec mode
             strip_prompt: strip prompt or not, defaults to True (yes, strip the prompt)
             failed_when_contains: string or list of strings indicating failure if found in response
+            eager_input: when true does *not* try to read our input off the channel -- generally
+                this should be left alone unless you know what you are doing!
             timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
                 the duration of the operation, value is reset to initial value after operation is
                 completed
@@ -178,6 +186,7 @@ class GenericDriver(Driver, BaseGenericDriver):
             command=command,
             strip_prompt=strip_prompt,
             failed_when_contains=failed_when_contains,
+            eager_input=eager_input,
             timeout_ops=timeout_ops,
         )
         return response
@@ -190,6 +199,7 @@ class GenericDriver(Driver, BaseGenericDriver):
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         eager: bool = False,
+        eager_input: bool = False,
         timeout_ops: Optional[float] = None,
     ) -> MultiResponse:
         """
@@ -204,6 +214,8 @@ class GenericDriver(Driver, BaseGenericDriver):
             eager: if eager is True we do not read until prompt is seen at each command sent to the
                 channel. Do *not* use this unless you know what you are doing as it is possible that
                 it can make scrapli less reliable!
+            eager_input: when true does *not* try to read our input off the channel -- generally
+                this should be left alone unless you know what you are doing!
             timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER COMMAND sent, not for the total
@@ -224,6 +236,7 @@ class GenericDriver(Driver, BaseGenericDriver):
                 failed_when_contains=failed_when_contains,
                 timeout_ops=timeout_ops,
                 eager=eager,
+                eager_input=eager_input,
             )
             responses.append(response)
             if stop_on_failed and response.failed is True:
@@ -239,6 +252,7 @@ class GenericDriver(Driver, BaseGenericDriver):
                 failed_when_contains=failed_when_contains,
                 timeout_ops=timeout_ops,
                 eager=False,
+                eager_input=eager_input,
             )
             responses.append(response)
 
@@ -252,6 +266,7 @@ class GenericDriver(Driver, BaseGenericDriver):
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         eager: bool = False,
+        eager_input: bool = False,
         timeout_ops: Optional[float] = None,
     ) -> MultiResponse:
         """
@@ -266,6 +281,8 @@ class GenericDriver(Driver, BaseGenericDriver):
             eager: if eager is True we do not read until prompt is seen at each command sent to the
                 channel. Do *not* use this unless you know what you are doing as it is possible that
                 it can make scrapli less reliable!
+            eager_input: when true does *not* try to read our input off the channel -- generally
+                this should be left alone unless you know what you are doing!
             timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER COMMAND sent, not for the total
@@ -286,6 +303,7 @@ class GenericDriver(Driver, BaseGenericDriver):
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
             eager=eager,
+            eager_input=eager_input,
             timeout_ops=timeout_ops,
         )
 

@@ -11,6 +11,7 @@ from scrapli.helper import (
     _textfsm_get_template_directory,
     format_user_warning,
     genie_parse,
+    output_roughly_contains_input,
     resolve_file,
     textfsm_parse,
     ttp_parse,
@@ -273,3 +274,30 @@ def test_format_user_warning_really_long_title():
 def test_user_warning():
     with pytest.warns(UserWarning):
         user_warning(title="blah", message="something")
+
+
+@pytest.mark.parametrize(
+    "test_data",
+    [
+        (
+            True,
+            b"show version",
+            b"show version",
+        ),
+        (
+            True,
+            b"configure",
+            b"\x1b7c\x1b8\x1b[1C\x1b7o\x1b8\x1b[1C\x1b7n\x1b8\x1b[1C\x1b7f\x1b8\x1b[1C\x1b7i\x1b8\x1b[1C\x1b7g\x1b8\x1b[1C\x1b7u\x1b8\x1b[1C\x1b7r\x1b8\x1b[1C\x1b7e\x1b8\x1b[1C",
+        ),
+        (
+            False,
+            b"show version",
+            b"foo bar baz",
+        ),
+    ],
+    ids=["simple", "messy_ansi", "does_not_contain"],
+)
+def test_output_roughly_contains_input(test_data):
+    expected, input_, output = test_data
+    actual = output_roughly_contains_input(input_=input_, output=output)
+    assert actual == expected

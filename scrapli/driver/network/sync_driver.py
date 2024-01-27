@@ -29,6 +29,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
         timeout_transport: float = 30.0,
         timeout_ops: float = 30.0,
         comms_return_char: str = "\n",
+        comms_roughly_match_inputs: bool = False,
         ssh_config_file: Union[str, bool] = False,
         ssh_known_hosts_file: Union[str, bool] = False,
         on_init: Optional[Callable[..., Any]] = None,
@@ -64,6 +65,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
             timeout_transport=timeout_transport,
             timeout_ops=timeout_ops,
             comms_return_char=comms_return_char,
+            comms_roughly_match_inputs=comms_roughly_match_inputs,
             ssh_config_file=ssh_config_file,
             ssh_known_hosts_file=ssh_known_hosts_file,
             on_init=on_init,
@@ -219,6 +221,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
         *,
         strip_prompt: bool = True,
         failed_when_contains: Optional[Union[str, List[str]]] = None,
+        eager_input: bool = False,
         timeout_ops: Optional[float] = None,
     ) -> Response:
         """
@@ -230,6 +233,8 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
             command: string to send to device in privilege exec mode
             strip_prompt: True/False strip prompt from returned output
             failed_when_contains: string or list of strings indicating failure if found in response
+            eager_input: when true does *not* try to read our input off the channel -- generally
+                this should be left alone unless you know what you are doing!
             timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
                 the duration of the operation, value is reset to initial value after operation is
                 completed
@@ -250,6 +255,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
             command=command,
             strip_prompt=strip_prompt,
             failed_when_contains=failed_when_contains,
+            eager_input=eager_input,
             timeout_ops=timeout_ops,
         )
         self._update_response(response)
@@ -264,6 +270,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         eager: bool = False,
+        eager_input: bool = False,
         timeout_ops: Optional[float] = None,
     ) -> MultiResponse:
         """
@@ -280,6 +287,8 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
             eager: if eager is True we do not read until prompt is seen at each command sent to the
                 channel. Do *not* use this unless you know what you are doing as it is possible that
                 it can make scrapli less reliable!
+            eager_input: when true does *not* try to read our input off the channel -- generally
+                this should be left alone unless you know what you are doing!
             timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER COMMAND sent, not for the total
@@ -303,6 +312,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
             eager=eager,
+            eager_input=eager_input,
             timeout_ops=timeout_ops,
         )
 
@@ -319,6 +329,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
         failed_when_contains: Optional[Union[str, List[str]]] = None,
         stop_on_failed: bool = False,
         eager: bool = False,
+        eager_input: bool = False,
         timeout_ops: Optional[float] = None,
     ) -> MultiResponse:
         """
@@ -333,6 +344,8 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
             eager: if eager is True we do not read until prompt is seen at each command sent to the
                 channel. Do *not* use this unless you know what you are doing as it is possible that
                 it can make scrapli less reliable!
+            eager_input: when true does *not* try to read our input off the channel -- generally
+                this should be left alone unless you know what you are doing!
             timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER COMMAND sent, not for the total
@@ -356,6 +369,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
             eager=eager,
+            eager_input=eager_input,
             timeout_ops=timeout_ops,
         )
 
@@ -477,6 +491,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
         stop_on_failed: bool = False,
         privilege_level: str = "",
         eager: bool = False,
+        eager_input: bool = False,
         timeout_ops: Optional[float] = None,
     ) -> MultiResponse:
         """
@@ -498,6 +513,8 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
             eager: if eager is True we do not read until prompt is seen at each command sent to the
                 channel. Do *not* use this unless you know what you are doing as it is possible that
                 it can make scrapli less reliable!
+            eager_input: when true does *not* try to read our input off the channel -- generally
+                this should be left alone unless you know what you are doing!
             timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER CONFIG sent, not for the total
@@ -525,6 +542,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
             failed_when_contains=failed_when_contains,
             stop_on_failed=stop_on_failed,
             eager=eager,
+            eager_input=eager_input,
             timeout_ops=timeout_ops,
         )
 
@@ -542,6 +560,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
         stop_on_failed: bool = False,
         privilege_level: str = "",
         eager: bool = False,
+        eager_input: bool = False,
         timeout_ops: Optional[float] = None,
     ) -> Response:
         """
@@ -563,6 +582,8 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
             eager: if eager is True we do not read until prompt is seen at each command sent to the
                 channel. Do *not* use this unless you know what you are doing as it is possible that
                 it can make scrapli less reliable!
+            eager_input: when true does *not* try to read our input off the channel -- generally
+                this should be left alone unless you know what you are doing!
             timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER CONFIG sent, not for the total
@@ -585,6 +606,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
             stop_on_failed=stop_on_failed,
             privilege_level=privilege_level,
             eager=eager,
+            eager_input=eager_input,
             timeout_ops=timeout_ops,
         )
         return self._post_send_config(config=config, multi_response=multi_response)
@@ -598,6 +620,7 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
         stop_on_failed: bool = False,
         privilege_level: str = "",
         eager: bool = False,
+        eager_input: bool = False,
         timeout_ops: Optional[float] = None,
     ) -> MultiResponse:
         """
@@ -619,6 +642,8 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
             eager: if eager is True we do not read until prompt is seen at each command sent to the
                 channel. Do *not* use this unless you know what you are doing as it is possible that
                 it can make scrapli less reliable!
+            eager_input: when true does *not* try to read our input off the channel -- generally
+                this should be left alone unless you know what you are doing!
             timeout_ops: timeout ops value for this operation; only sets the timeout_ops value for
                 the duration of the operation, value is reset to initial value after operation is
                 completed. Note that this is the timeout value PER CONFIG sent, not for the total
@@ -640,5 +665,6 @@ class NetworkDriver(GenericDriver, BaseNetworkDriver):
             stop_on_failed=stop_on_failed,
             privilege_level=privilege_level,
             eager=eager,
+            eager_input=eager_input,
             timeout_ops=timeout_ops,
         )
