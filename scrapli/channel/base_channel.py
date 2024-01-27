@@ -11,13 +11,15 @@ from scrapli.logging import get_instance_logger
 from scrapli.transport.base import AsyncTransport, Transport
 
 ANSI_ESCAPE_PATTERN = re.compile(
-    rb"[\x1B\x9B]"
-    rb"[\[\]()#;?]*"
+    pattern=rb"[\x1B\x9B\x9D](\s)?"  # Prefix ESC (^) or CSI (^[) or OSC (^])
     rb"("
-    rb"(([a-zA-Z0-9]*(;[a-zA-Z\d]*)*)?\x07)"
+    rb"([78ME])"  # control cursor position
     rb"|"
-    rb"((\d{1,4}(;\d{0,4})*)?[\dA-PRZcf-ntqry=><~])"
-    rb")"
+    rb"([\x07])"  # BEL (Terminal bell)
+    rb"|"
+    rb"(\[[{}();#=?0-9]*[A-Zhglnmsu~])"  # control codes starts with `[` e.x. ESC [2;37;41m
+    rb")",
+    flags=re.VERBOSE,
 )
 
 

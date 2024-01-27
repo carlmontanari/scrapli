@@ -300,6 +300,54 @@ def test_process_output(base_channel):
             b"\x1b[7mCTRL+C\x1b[0m \x1b[7mESC\x1b[0m \x1b[7mq\x1b[0m Quit \x1b[7mSPACE\x1b[0m \x1b[7mn\x1b[0m Next Page \x1b[7mENTER\x1b[0m Next Entry \x1b[7ma\x1b[0m All\x1b[1A\x1b[59C\x1b[27m",
             b"CTRL+C ESC q Quit SPACE n Next Page ENTER Next Entry a All",
         ),
+        (
+            b"foo\x1B[4mcake\x1B[0m'",
+            b"foocake'",
+        ),
+        (
+            b"\x1B[4mcake\x1B[0m",
+            b"cake",
+        ),
+        (
+            b"foo\x1B[4mcake\x1B[0m",
+            b"foocake",
+        ),
+        (
+            b"\x1B[0m\x1B[4m\x1B[42m\x1B[31mfoo\x1B[39m\x1B[49m\x1B[24mfoo\x1B[0m",
+            b"foofoo",
+        ),
+        (
+            b"foo\x1B[mfoo",
+            b"foofoo",
+        ),
+        (
+            b"\x1B[00;38;5;244m\x1B[m\x1B[00;38;5;33mfoo\x1B[0m",
+            b"foo",
+        ),
+        (
+            b"\x1B[0;33;49;3;9;4mbar\x1B[0m",
+            b"bar",
+        ),
+        (
+            b"foo\x1B[0;33;49;3;9;4mbar",
+            b"foobar",
+        ),
+        (
+            b"foo\x1B[0gbar",
+            b"foobar",
+        ),
+        (
+            b"foo\x1B[Kbar",
+            b"foobar",
+        ),
+        (
+            b"foo\x1B[2Jbar",
+            b"foobar",
+        ),
+        (
+            b"\x1b7c\x1b8\x1b[1C\x1b7o\x1b8\x1b[1C\x1b7n\x1b8\x1b[1C\x1b7f\x1b8\x1b[1C\x1b7i\x1b8\x1b[1C\x1b7g\x1b8\x1b[1C\x1b7u\x1b8\x1b[1C\x1b7r\x1b8\x1b[1C\x1b7e\x1b8\x1b[1C",
+            b"configure",
+        ),
     ),
 )
 def test_strip_ansi(base_channel, buf: bytes, expected: bytes):
