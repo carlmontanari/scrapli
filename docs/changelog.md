@@ -12,6 +12,7 @@ Changelog
 - Added an `eager_input` option to send operations -- this option completely skips checking for inputs being echoed back
   on the channel. With the addition of the `comms_roughly_match_inputs` option this is *probably* unnecessary, but
   could be useful for some corner cases.
+- More ansi pattern improvement (and tests this time!) thanks to @denisbondar for all the work here
 
 ## 2023.07.30
 
