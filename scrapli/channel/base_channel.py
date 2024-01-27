@@ -17,7 +17,7 @@ ANSI_ESCAPE_PATTERN = re.compile(
     rb"|"
     rb"([\x07])"  # BEL (Terminal bell)
     rb"|"
-    rb"(\[[{}();#=?0-9]*[A-Zhlnmsu~])"  # control codes starts with `[` e.x. ESC [2;37;41m
+    rb"(\[[{}();#=?0-9]*[A-Zhglnmsu~])"  # control codes starts with `[` e.x. ESC [2;37;41m
     rb")",
     flags=re.VERBOSE,
 )
