@@ -2,7 +2,7 @@
 from scrapli.driver.base import AsyncDriver, Driver
 from scrapli.factory import AsyncScrapli, Scrapli
 
-__version__ = "2023.07.30"
+__version__ = "2024.01.30"
 
 __all__ = (
     "AsyncDriver",
