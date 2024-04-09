@@ -259,6 +259,9 @@ class AsyncsshTransport(AsyncTransport):
         if not self.stdout:
             raise ScrapliConnectionNotOpened
 
+        if self.stdout.at_eof():
+            raise ScrapliConnectionError("transport at EOF; no more data to be read")
+
         try:
             buf: bytes = await self.stdout.read(65535)
         except ConnectionLost as exc:
