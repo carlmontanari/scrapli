@@ -1,4 +1,5 @@
 """scrapli.driver.generic.sync_driver"""
+
 import time
 from io import BytesIO
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Union

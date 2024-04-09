@@ -1,4 +1,5 @@
 """scrapli.exceptions"""
+
 from typing import Optional
 
 

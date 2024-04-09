@@ -1,4 +1,5 @@
 """examples.async_usage.async_multiple_connections"""
+
 import asyncio
 
 from scrapli.driver.core import AsyncIOSXEDriver, AsyncNXOSDriver

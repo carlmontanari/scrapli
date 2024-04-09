@@ -1,4 +1,5 @@
 """examples.read_callback.async_read_callback"""
+
 import asyncio
 
 from scrapli.driver.core import AsyncIOSXEDriver

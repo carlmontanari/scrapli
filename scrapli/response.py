@@ -1,4 +1,5 @@
 """scrapli.response"""
+
 from collections import UserList
 from datetime import datetime
 from io import TextIOWrapper

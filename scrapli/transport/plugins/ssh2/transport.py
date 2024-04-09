@@ -1,4 +1,5 @@
 """scrapli.transport.plugins.ssh2.transport"""
+
 import base64
 from contextlib import suppress
 from dataclasses import dataclass

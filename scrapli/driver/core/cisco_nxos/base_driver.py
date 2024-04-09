@@ -1,4 +1,5 @@
 """scrapli.driver.core.cisco_nxos.base_driver"""
+
 from typing import Dict
 
 from scrapli.driver.network.base_driver import PrivilegeLevel

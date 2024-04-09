@@ -1,4 +1,5 @@
 """scrapli.driver.base.sync_driver"""
+
 from types import TracebackType
 from typing import Any, Optional, Type, TypeVar
 
