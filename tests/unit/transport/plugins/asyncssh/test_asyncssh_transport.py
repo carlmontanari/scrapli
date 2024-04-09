@@ -17,6 +17,11 @@ class DumbContainer:
         return None
 
 
+class DummySession:
+    def at_eof(self, _) -> bool:
+        return False
+
+
 def test_close(monkeypatch, asyncssh_transport):
     def _close(cls):
         pass
@@ -105,7 +110,7 @@ async def test_read(monkeypatch, asyncssh_transport):
     )
 
     # lie and pretend the session is already assigned/stdout is already a thing
-    asyncssh_transport.stdout = SSHReader("", "")
+    asyncssh_transport.stdout = SSHReader(DummySession(), "")
 
     assert await asyncssh_transport.read() == b"somebytes"
 
@@ -125,7 +130,7 @@ async def test_read_exception_timeout(monkeypatch, asyncssh_transport):
     )
 
     # lie and pretend the session is already assigned/stdout is already a thing
-    asyncssh_transport.stdout = SSHReader("", "")
+    asyncssh_transport.stdout = SSHReader(DummySession(), "")
     asyncssh_transport._base_transport_args.timeout_transport = 0.1
 
     with pytest.raises(ScrapliTimeout):
