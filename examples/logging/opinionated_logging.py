@@ -1,4 +1,5 @@
 """examples.logging.opinionated_logging"""
+
 from scrapli import Scrapli
 from scrapli.logging import enable_basic_logging
 

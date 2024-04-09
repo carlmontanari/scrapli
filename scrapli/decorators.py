@@ -1,4 +1,5 @@
 """scrapli.decorators"""
+
 import asyncio
 import signal
 import sys

@@ -1,4 +1,5 @@
 """scrapli.driver.network.base_driver"""
+
 import re
 from collections import defaultdict
 from datetime import datetime

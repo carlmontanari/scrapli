@@ -1,4 +1,5 @@
 """examples.basic_usage.generic_driver"""
+
 from scrapli.driver import GenericDriver
 
 MY_DEVICE = {

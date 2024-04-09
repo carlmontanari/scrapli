@@ -1,4 +1,5 @@
 """scrapli.channel.async_channel"""
+
 import asyncio
 import re
 import time

@@ -1,4 +1,5 @@
 """scrapli.transport.plugins.system.transport"""
+
 import sys
 from dataclasses import dataclass
 from typing import List, Optional

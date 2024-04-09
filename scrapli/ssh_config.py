@@ -1,4 +1,5 @@
 """scrapli.ssh_config"""
+
 import base64
 import hmac
 import os

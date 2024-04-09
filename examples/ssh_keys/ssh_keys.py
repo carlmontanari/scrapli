@@ -1,4 +1,5 @@
 """examples.ssh_keys.ssh_keys"""
+
 from pathlib import Path
 
 import scrapli

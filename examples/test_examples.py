@@ -1,4 +1,5 @@
 """examples.test_examples"""
+
 import pytest
 
 from .async_usage import async_iosxe_driver

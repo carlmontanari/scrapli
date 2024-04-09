@@ -1,4 +1,5 @@
 """examples.basic_usage.factory"""
+
 from scrapli import Scrapli
 
 MY_DEVICE = {

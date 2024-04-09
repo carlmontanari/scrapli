@@ -1,4 +1,5 @@
 """examples.structured_data.structured_data_textfsm"""
+
 from scrapli.driver.core import IOSXEDriver
 
 MY_DEVICE = {

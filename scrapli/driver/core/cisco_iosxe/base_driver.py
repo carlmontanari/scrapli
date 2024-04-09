@@ -1,4 +1,5 @@
 """scrapli.driver.core.cisco_iosxe.base_driver"""
+
 from scrapli.driver.network.base_driver import PrivilegeLevel
 
 PRIVS = {

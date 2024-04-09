@@ -1,4 +1,5 @@
 """examples.commandeer.commandeer_generic_connection"""
+
 from scrapli import Scrapli
 from scrapli.driver.generic import GenericDriver
 
