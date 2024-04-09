@@ -1,4 +1,5 @@
 """scrapli.transport.plugins.paramiko.transport"""
+
 from contextlib import suppress
 from dataclasses import dataclass
 from typing import Optional

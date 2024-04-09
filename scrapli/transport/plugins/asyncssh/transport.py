@@ -1,4 +1,5 @@
 """scrapli.transport.plugins.asyncssh.transport"""
+
 import asyncio
 from contextlib import suppress
 from dataclasses import dataclass

@@ -1,4 +1,5 @@
 """examples.non_core_device.wlc"""
+
 import logging
 import time
 

@@ -1,4 +1,5 @@
 """examples.banners_macros_etc.iosxe_banners_macros_etc"""
+
 from scrapli.driver.core import IOSXEDriver
 
 MY_DEVICE = {

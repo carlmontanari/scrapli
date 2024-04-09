@@ -1,4 +1,5 @@
 """examples.logging.basic_logging"""
+
 import logging
 
 from scrapli.driver.core import IOSXEDriver

@@ -1,4 +1,5 @@
 """examples.basic_usage.scrapli_driver"""
+
 from scrapli import Driver
 
 MY_DEVICE = {

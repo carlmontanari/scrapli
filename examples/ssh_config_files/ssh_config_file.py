@@ -1,4 +1,5 @@
 """examples.ssh_config_files.ssh_config_file"""
+
 from scrapli.driver.core import IOSXEDriver
 
 # setting `ssh_config_file` to True makes scrapli check in ~/.ssh/ and /etc/ssh/ for a file named

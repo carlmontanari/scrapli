@@ -1,4 +1,5 @@
 """scrapli.driver.generic.base_driver"""
+
 import re
 from typing import (
     TYPE_CHECKING,

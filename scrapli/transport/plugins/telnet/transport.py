@@ -1,4 +1,5 @@
 """scrapli.transport.plugins.telnet.transport"""
+
 from dataclasses import dataclass
 from typing import Optional
 

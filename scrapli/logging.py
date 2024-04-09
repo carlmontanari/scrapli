@@ -1,4 +1,5 @@
 """scrapli.logging"""
+
 from ast import literal_eval
 
 # slightly irritating renaming to prevent a cyclic lookup in griffe for mkdocstrings

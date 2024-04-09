@@ -1,4 +1,5 @@
 """scrapli.transport.async_transport"""
+
 from abc import ABC, abstractmethod
 
 from scrapli.transport.base.base_transport import BaseTransport

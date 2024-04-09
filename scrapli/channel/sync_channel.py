@@ -1,4 +1,5 @@
 """scrapli.channel.sync_channel"""
+
 import re
 import time
 from contextlib import contextmanager, suppress

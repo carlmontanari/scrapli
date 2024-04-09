@@ -1,4 +1,5 @@
 """scrapli.transport.base.base_socket"""
+
 import socket
 from contextlib import suppress
 from typing import Optional, Set
