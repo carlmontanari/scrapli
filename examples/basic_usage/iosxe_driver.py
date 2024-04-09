@@ -1,4 +1,5 @@
 """examples.basic_usage.iosxe_driver"""
+
 from scrapli.driver.core import IOSXEDriver
 
 MY_DEVICE = {

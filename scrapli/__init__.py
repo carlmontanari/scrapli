@@ -1,4 +1,5 @@
 """scrapli"""
+
 from scrapli.driver.base import AsyncDriver, Driver
 from scrapli.factory import AsyncScrapli, Scrapli
 

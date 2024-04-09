@@ -1,4 +1,5 @@
 """scrapli.driver.base.base_driver"""  # noqa: C0302
+
 import importlib
 from dataclasses import fields
 from io import BytesIO

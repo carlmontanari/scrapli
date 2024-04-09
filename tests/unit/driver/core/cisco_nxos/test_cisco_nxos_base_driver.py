@@ -55,9 +55,9 @@ def test_create_configuration_session(sync_nxos_driver):
     sync_nxos_driver.privilege_levels["tacocat"].name = "tacocat"
     sync_nxos_driver.privilege_levels["tacocat"].previous_priv = "privilege_exec"
     sync_nxos_driver.privilege_levels["tacocat"].escalate = "configure session tacocat"
-    sync_nxos_driver.privilege_levels[
-        "tacocat"
-    ].pattern = r"^[a-z0-9.\-_@/:]{1,32}\(config\-s[a-z0-9.\-@/:]{0,32}\)#\s?$"
+    sync_nxos_driver.privilege_levels["tacocat"].pattern = (
+        r"^[a-z0-9.\-_@/:]{1,32}\(config\-s[a-z0-9.\-@/:]{0,32}\)#\s?$"
+    )
 
     with pytest.raises(ScrapliValueError):
         sync_nxos_driver._create_configuration_session(session_name="tacocat")

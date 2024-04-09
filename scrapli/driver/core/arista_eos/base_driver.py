@@ -1,4 +1,5 @@
 """scrapli.driver.core.arista_eos.base_driver"""
+
 import re
 from typing import Dict
 

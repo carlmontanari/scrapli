@@ -1,4 +1,5 @@
 """examples.structured_data.structured_data_genie"""
+
 from scrapli.driver.core import IOSXEDriver
 
 MY_DEVICE = {

@@ -1,4 +1,5 @@
 """scrapli.transport.plugins.asynctelnet.transport"""
+
 import asyncio
 import socket
 from contextlib import suppress

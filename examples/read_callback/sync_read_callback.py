@@ -1,4 +1,5 @@
 """examples.read_callback.sync_read_callback"""
+
 from scrapli.driver.core import IOSXEDriver
 from scrapli.driver.generic.base_driver import ReadCallback
 from scrapli.driver.generic.sync_driver import GenericDriver
