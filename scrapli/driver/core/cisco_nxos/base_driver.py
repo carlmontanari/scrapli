@@ -48,7 +48,7 @@ PRIVS = {
             # giant pattern
             pattern=(
                 r"(^[\w.\-]{1,63}\-tcl#\s?$)|" r"(^[\w.\-]{1,63}\(config\-tcl\)#\s?$)|" r"(^>\s?$)|"
-                r"(^[\w.\-]{1,63}\(maint\-\mode\-tcl\)#\s?$)|" r"(^[\w.\-]{1,63}\(maint\-\mode\)\(config\-tcl\)#\s?$)"
+                r"(^[\w.\-]{1,63}\(maint\-mode\-tcl\)#\s?$)|" r"(^[\w.\-]{1,63}\(maint\-mode\)\(config\-tcl\)#\s?$)"
             ),
             name="tclsh",
             previous_priv="privilege_exec",
