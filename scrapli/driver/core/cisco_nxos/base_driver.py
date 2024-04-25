@@ -8,7 +8,7 @@ from scrapli.exceptions import ScrapliValueError
 PRIVS = {
     "exec": (
         PrivilegeLevel(
-            pattern=r"^[\w.\-]{1,63}>\s?$",
+            pattern=r"^[\w.\-]{1,63}(\(maint\-mode\))?>\s?$",
             name="exec",
             previous_priv="",
             deescalate="",
@@ -19,7 +19,7 @@ PRIVS = {
     ),
     "privilege_exec": (
         PrivilegeLevel(
-            pattern=r"^[\w.\-]{1,63}#\s?$",
+            pattern=r"^[\w.\-]{1,63}(\(maint\-mode\))?#\s?$",
             name="privilege_exec",
             previous_priv="exec",
             deescalate="disable",
@@ -31,7 +31,7 @@ PRIVS = {
     ),
     "configuration": (
         PrivilegeLevel(
-            pattern=r"^[\w.\-]{1,63}\(config[\w.\-@/:\+]{0,32}\)#\s?$",
+            pattern=r"^[\w.\-]{1,63}(\(maint\-mode\))?\(config[\w.\-@/:\+]{0,32}\)#\s?$",
             name="configuration",
             previous_priv="privilege_exec",
             deescalate="end",
@@ -47,7 +47,11 @@ PRIVS = {
             # for now doesnt seem to be a reason to differentiate between them, so just have one
             # giant pattern
             pattern=(
-                r"(^[\w.\-]{1,63}\-tcl#\s?$)|" r"(^[\w.\-]{1,63}\(config\-tcl\)#\s?$)|" r"(^>\s?$)"
+                r"(^[\w.\-]{1,63}\-tcl#\s?$)|"
+                r"(^[\w.\-]{1,63}\(config\-tcl\)#\s?$)|"
+                r"(^>\s?$)|"
+                r"(^[\w.\-]{1,63}\(maint\-mode\-tcl\)#\s?$)|"
+                r"(^[\w.\-]{1,63}\(maint\-mode\)\(config\-tcl\)#\s?$)"
             ),
             name="tclsh",
             previous_priv="privilege_exec",
