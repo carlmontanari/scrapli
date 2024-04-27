@@ -13,7 +13,7 @@ jobs:
       max-parallel: 1
       matrix:
         os: [ubuntu-latest]
-        version: ["3.11"]
+        version: ["3.12"]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -48,11 +48,6 @@ jobs:
         # version we are targeting with nox, while still having versions like 3.9.0a4
         run: |
           echo "FRIENDLY_PYTHON_VERSION=$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")" >> $GITHUB_ENV
-      - name: ensure openssl installed for macos
-        # openssl missing/being linked incorrectly causes ssh2-python install failures
-        if: matrix.os == 'macos-latest'
-        run: |
-          brew install openssl libssh2
       - name: setup test env
         run: |
           python -m pip install --upgrade pip
@@ -61,7 +56,6 @@ jobs:
       - name: run nox
         # TERM is needed needed to make the terminal a tty (i think? without this system ssh is super broken)
         # libssh2/ssh2-python were getting libssh2 linked incorrectly/weirdly and libraries were trying to be loaded
-        # from the temp dir that pip used for installs. setting the DYLD_LIBRARY_PATH envvar seems to solve this even
-        # if it feels horribly hacky. afaik, this is ignored on linux, so it will only matter on the macos builds
-        # https://stackoverflow.com/questions/71356491/python3-on-mac-having-trouble-loading-libssh2
-        run: TERM=xterm DYLD_LIBRARY_PATH=/usr/local/lib python -m nox -p $FRIENDLY_PYTHON_VERSION -k "not darglint"
+        # from the temp dir that pip used for installs. setting the DYLD_LIBRARY_PATH envvar seems to solve this -- note
+        # that if brew macos packages get updated on runners this may break again :)
+        run: TERM=xterm DYLD_LIBRARY_PATH=/opt/homebrew/Cellar/libssh2/1.11.0_1/lib python -m nox -p $FRIENDLY_PYTHON_VERSION -k "not darglint"
