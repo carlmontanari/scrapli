@@ -348,6 +348,11 @@ def test_process_output(base_channel):
             b"\x1b7c\x1b8\x1b[1C\x1b7o\x1b8\x1b[1C\x1b7n\x1b8\x1b[1C\x1b7f\x1b8\x1b[1C\x1b7i\x1b8\x1b[1C\x1b7g\x1b8\x1b[1C\x1b7u\x1b8\x1b[1C\x1b7r\x1b8\x1b[1C\x1b7e\x1b8\x1b[1C",
             b"configure",
         ),
+        # https://github.com/carlmontanari/scrapli/discussions/325#discussioncomment-9234132
+        (
+            b"\x1b[?2004h\x1b]0;user@line5-cpe-0: ~\x07user@line5-cpe-0:~$",
+            b"user@line5-cpe-0:~$",
+        ),
     ),
 )
 def test_strip_ansi(base_channel, buf: bytes, expected: bytes):
