@@ -34,6 +34,7 @@ from shutil import which
 from typing import List, Optional, Type, TypeVar
 
 from scrapli.exceptions import ScrapliValueError
+from scrapli.helper import user_warning
 
 
 class PtyProcessError(Exception):
@@ -173,6 +174,35 @@ def _setecho(fd: int, state: bool) -> None:
     except OSError as err:
         if err.args[0] == errno.EINVAL:
             raise OSError(err.args[0], "{}: {}.".format(err.args[1], errmsg))
+        raise
+
+
+def _setonlcr(fd: int, state: bool) -> None:
+    import termios
+
+    try:
+        attr = termios.tcgetattr(fd)
+    except termios.error as err:
+        if err.args[0] == errno.EINVAL:
+            raise OSError(err.args[0], "{}: {}.".format(err.args[1], errmsg))
+        raise
+
+    if state:
+        attr[1] = attr[1] | termios.ONLCR
+    else:
+        attr[1] = attr[1] & ~termios.ONLCR
+
+    try:
+        termios.tcsetattr(fd, termios.TCSANOW, attr)
+    except OSError as err:
+        if err.args[0] == errno.EINVAL:
+            title = "Set ONLCR!"
+            message = (
+                "_setonlcr() failed -- if you encounter this error please open an issue! unless you "
+                "are seeing this when using scrapli_netconf you can *probably* ignore this though!"
+            )
+
+            user_warning(title=title, message=message)
         raise
 
 
@@ -354,6 +384,12 @@ class PtyProcess:
         except OSError as err:
             if err.args[0] not in (errno.EINVAL, errno.ENOTTY, errno.ENXIO):
                 raise
+
+        # attrs = termios.tcgetattr(fd)
+        # attrs[1] &= ~termios.ONLCR
+        # termios.tcsetattr(fd, termios.TCSANOW, attrs)
+
+        _setonlcr(fd, True)
 
         return inst
 

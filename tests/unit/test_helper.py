@@ -267,8 +267,13 @@ def test_format_user_warning():
 def test_format_user_warning_really_long_title():
     terminal_width = get_terminal_size().columns
 
-    warning_string = format_user_warning(title=("blah" * 30), message="something")
-    assert warning_string.lstrip().startswith("*" * terminal_width)
+    title = "z" * (terminal_width - 5)
+
+    warning_string = format_user_warning(title=title, message="something")
+
+    assert warning_string.strip().startswith("*")
+    assert warning_string.strip().endswith("*")
+    assert title in warning_string
 
 
 def test_user_warning():
