@@ -6,7 +6,7 @@ from typing import Any, Optional, Type, TypeVar
 from scrapli.channel import Channel
 from scrapli.driver.base.base_driver import BaseDriver
 from scrapli.exceptions import ScrapliValueError
-from scrapli.transport import ASYNCIO_TRANSPORTS
+from scrapli.transport import CORE_TRANSPORTS, ASYNCIO_TRANSPORTS
 
 _T = TypeVar("_T", bound="Driver")
 
@@ -15,7 +15,7 @@ class Driver(BaseDriver):
     def __init__(self, **kwargs: Any):
         super().__init__(**kwargs)
 
-        if self.transport_name in ASYNCIO_TRANSPORTS:
+        if self.transport_name in CORE_TRANSPORTS and self.transport_name in ASYNCIO_TRANSPORTS:
             raise ScrapliValueError(
                 "provided transport is *not* an sync transport, must use an sync transport with"
                 " the (sync)Driver(s)"
@@ -96,11 +96,7 @@ class Driver(BaseDriver):
                 auth_private_key_passphrase=self.auth_private_key_passphrase,
             )
         if (
-            self.transport_name
-            in (
-                "telnet",
-                "asynctelnet",
-            )
+            "telnet" in self.transport_name
             and not self.auth_bypass
         ):
             self.channel.channel_authenticate_telnet(

@@ -27,7 +27,7 @@ from scrapli.exceptions import (
 )
 from scrapli.helper import format_user_warning
 from scrapli.logging import logger
-from scrapli.transport import ASYNCIO_TRANSPORTS
+from scrapli.transport import CORE_TRANSPORTS, ASYNCIO_TRANSPORTS
 
 
 def _build_provided_kwargs_dict(  # pylint: disable=R0914
@@ -465,8 +465,8 @@ class Scrapli(NetworkDriver):
         """
         logger.debug("Scrapli factory initialized")
 
-        if transport in ASYNCIO_TRANSPORTS:
-            raise ScrapliValueError("Use 'AsyncScrapli' if using an async transport!")
+        if transport in CORE_TRANSPORTS and transport in ASYNCIO_TRANSPORTS:
+                raise ScrapliValueError("Use 'AsyncScrapli' if using an async transport!")
 
         if not isinstance(platform, str):
             raise ScrapliTypeError(f"Argument 'platform' must be 'str' got '{type(platform)}'")
@@ -764,8 +764,8 @@ class AsyncScrapli(AsyncNetworkDriver):
         """
         logger.debug("AsyncScrapli factory initialized")
 
-        if transport not in ASYNCIO_TRANSPORTS:
-            raise ScrapliValueError("Use 'Scrapli' if using a synchronous transport!")
+        if transport in CORE_TRANSPORTS and transport not in ASYNCIO_TRANSPORTS:
+                raise ScrapliValueError("Use 'Scrapli' if using a synchronous transport!")
 
         if not isinstance(platform, str):
             raise ScrapliTypeError(f"Argument 'platform' must be 'str' got '{type(platform)}'")
