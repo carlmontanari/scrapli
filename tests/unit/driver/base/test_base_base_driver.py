@@ -94,7 +94,7 @@ def monkeypatch_plugin_transport_module(
 
     non_patched_import_lib = importlib.import_module
 
-    def _import_module(name: str, package: str | None = None):
+    def _import_module(name: str, package: Union[str, None] = None):
         if name == plugin_module_name:
             return plugin_module
         return non_patched_import_lib(name=name, package=package)
