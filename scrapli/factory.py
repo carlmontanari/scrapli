@@ -466,7 +466,7 @@ class Scrapli(NetworkDriver):
         logger.debug("Scrapli factory initialized")
 
         if transport in CORE_TRANSPORTS and transport in ASYNCIO_TRANSPORTS:
-                raise ScrapliValueError("Use 'AsyncScrapli' if using an async transport!")
+            raise ScrapliValueError("Use 'AsyncScrapli' if using an async transport!")
 
         if not isinstance(platform, str):
             raise ScrapliTypeError(f"Argument 'platform' must be 'str' got '{type(platform)}'")
@@ -765,7 +765,7 @@ class AsyncScrapli(AsyncNetworkDriver):
         logger.debug("AsyncScrapli factory initialized")
 
         if transport in CORE_TRANSPORTS and transport not in ASYNCIO_TRANSPORTS:
-                raise ScrapliValueError("Use 'Scrapli' if using a synchronous transport!")
+            raise ScrapliValueError("Use 'Scrapli' if using a synchronous transport!")
 
         if not isinstance(platform, str):
             raise ScrapliTypeError(f"Argument 'platform' must be 'str' got '{type(platform)}'")
