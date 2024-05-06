@@ -6,7 +6,7 @@ from typing import Any, Optional, Type, TypeVar
 from scrapli.channel import AsyncChannel
 from scrapli.driver.base.base_driver import BaseDriver
 from scrapli.exceptions import ScrapliValueError
-from scrapli.transport import ASYNCIO_TRANSPORTS
+from scrapli.transport import ASYNCIO_TRANSPORTS, CORE_TRANSPORTS
 
 _T = TypeVar("_T", bound="AsyncDriver")
 
@@ -15,7 +15,7 @@ class AsyncDriver(BaseDriver):
     def __init__(self, **kwargs: Any):
         super().__init__(**kwargs)
 
-        if self.transport_name not in ASYNCIO_TRANSPORTS:
+        if self.transport_name in CORE_TRANSPORTS and self.transport_name not in ASYNCIO_TRANSPORTS:
             raise ScrapliValueError(
                 "provided transport is *not* an asyncio transport, must use an async transport with"
                 " the AsyncDriver(s)"
@@ -88,14 +88,7 @@ class AsyncDriver(BaseDriver):
         await self.transport.open()
         self.channel.open()
 
-        if (
-            self.transport_name
-            in (
-                "telnet",
-                "asynctelnet",
-            )
-            and not self.auth_bypass
-        ):
+        if "telnet" in self.transport_name and not self.auth_bypass:
             await self.channel.channel_authenticate_telnet(
                 auth_username=self.auth_username, auth_password=self.auth_password
             )
