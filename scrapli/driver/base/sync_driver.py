@@ -6,7 +6,7 @@ from typing import Any, Optional, Type, TypeVar
 from scrapli.channel import Channel
 from scrapli.driver.base.base_driver import BaseDriver
 from scrapli.exceptions import ScrapliValueError
-from scrapli.transport import CORE_TRANSPORTS, ASYNCIO_TRANSPORTS
+from scrapli.transport import ASYNCIO_TRANSPORTS, CORE_TRANSPORTS
 
 _T = TypeVar("_T", bound="Driver")
 
@@ -95,10 +95,7 @@ class Driver(BaseDriver):
                 auth_password=self.auth_password,
                 auth_private_key_passphrase=self.auth_private_key_passphrase,
             )
-        if (
-            "telnet" in self.transport_name
-            and not self.auth_bypass
-        ):
+        if "telnet" in self.transport_name and not self.auth_bypass:
             self.channel.channel_authenticate_telnet(
                 auth_username=self.auth_username, auth_password=self.auth_password
             )
