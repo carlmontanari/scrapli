@@ -1,13 +1,101 @@
 import logging
-import sys
 from pathlib import Path
+from dataclasses import dataclass
 
 import pytest
 
 from scrapli.driver.base.base_driver import BaseDriver
 from scrapli.driver.base import Driver, AsyncDriver
-from scrapli.transport.base import AsyncTransport, Transport
+from scrapli.transport.base import Transport, AsyncTransport
+from scrapli.transport.base import BaseTransportArgs, BasePluginTransportArgs
 from scrapli.exceptions import ScrapliTransportPluginError, ScrapliTypeError, ScrapliValueError
+
+@dataclass
+class PluginTransportArgs(BasePluginTransportArgs):
+    pass
+
+
+class DummysyncTransport(Transport):
+    transport_name = "dummysync"
+
+    def __init__(
+        self, base_transport_args: BaseTransportArgs, plugin_transport_args: PluginTransportArgs
+    ) -> None:
+        super().__init__(base_transport_args=base_transport_args)
+        self.plugin_transport_args = plugin_transport_args
+
+    def open(self):
+        pass
+
+    def close(self):
+        pass
+
+    def isalive(self):
+        pass
+
+    def read(self):
+        pass
+
+    def write(self, _):
+        pass
+
+
+class DummyasyncTransport(AsyncTransport):
+    transport_name = "dummyasync"
+
+    def __init__(
+        self, base_transport_args: BaseTransportArgs, plugin_transport_args: PluginTransportArgs
+    ) -> None:
+        super().__init__(base_transport_args=base_transport_args)
+        self.plugin_transport_args = plugin_transport_args
+
+    async def open(self):
+        pass
+
+    def close(self):
+        pass
+
+    def isalive(self):
+        pass
+
+    async def read(self):
+        pass
+
+    def write(self, _):
+        pass
+
+
+def monkeypatch_plugin_transport_module(
+    monkeypatch,
+    transport_name: str,
+    transport_cls: type[Transport] | type[AsyncTransport],
+    transport_args_cls: type[BasePluginTransportArgs] = PluginTransportArgs,
+):
+    """
+    1. Creates a fake module `scrapli_{transport_name}.transport` which
+        contains the transport class and the args class `PluginTransportArgs`
+        as expected by the transport factory for the non-core scenario.
+    2. Makes the fake module available to be imported with importlib.import_module
+        by monkeypatching the `import_module` function.
+    """
+    import types
+    import importlib
+
+    plugin_module_name = f"scrapli_{transport_name}.transport"
+    plugin_module = types.ModuleType(plugin_module_name)
+    plugin_module.__dict__[transport_cls.__name__] = transport_cls
+    plugin_module.__dict__["PluginTransportArgs"] = transport_args_cls
+
+    non_patched_import_lib = importlib.import_module
+
+    def _import_module(name: str, package: str | None = None):
+        if name == plugin_module_name:
+            return plugin_module
+        return non_patched_import_lib(name=name, package=package)
+
+    monkeypatch.setattr("importlib.import_module", _import_module)
+
+    return plugin_module
 
 
 def test_str(base_driver):
@@ -218,56 +306,31 @@ def test_load_non_core_transport_plugin_exception(monkeypatch):
 
     assert "Transport Plugin Extra Not Installed!" in str(exc.value)
 
+
 @pytest.mark.parametrize(
-        "test_data",
-        ((Driver, Transport), (AsyncDriver, AsyncTransport)),
-        ids=("sync_driver", "async_driver")
+    "test_data",
+    (
+        (Driver, "dummysync", DummysyncTransport),
+        (AsyncDriver, "dummyasync", DummyasyncTransport),
+    ),
+    ids=("sync_driver", "async_driver"),
 )
 def test_transport_factory_non_core(monkeypatch, test_data):
     """Assert _transport_factory properly loads non-core transport plugin and args"""
-    import types
-    import importlib
-    from scrapli.transport.base import BasePluginTransportArgs
 
-    driver_factory, base_transport_class = test_data
+    driver_factory, transport_name, transport_cls = test_data
 
-    def _transport_class_init(self, base_transport_args, plugin_transport_args):
-        super(base_transport_class, self).__init__(base_transport_args=base_transport_args)
-        self.plugin_transport_args = plugin_transport_args
+    fake_plugin_module = monkeypatch_plugin_transport_module(
+        monkeypatch, transport_name, transport_cls)
 
-    transport_name = "test"
-    transport_class_name = f"{transport_name.capitalize()}Transport"
-    transport_class = type(transport_class_name, (base_transport_class,), {
-        "__init__": _transport_class_init,
-        "open": lambda _: None,
-        "close": lambda _: None,
-        "isalive": lambda _: None,
-        "read": lambda _: None,
-        "write": lambda _,__: None
-    })
-    transport_plugin_args = type("PluginTransportArgs", (BasePluginTransportArgs,), {})
+    driver = driver_factory(host="localhost", transport=transport_name)
+    plugin_transport_args = fake_plugin_module.__dict__["PluginTransportArgs"]()
+    actual_transport_class, actual_transport_plugin_args = driver._transport_factory()
 
-    plugin_module = types.ModuleType(f"scrapli_{transport_name}.transport")
-    plugin_module.__dict__[transport_class_name] = transport_class
-    plugin_module.__dict__["PluginTransportArgs"] = transport_plugin_args
-
-    def _import_module(name: str, package: str | None = None):
-        if name == f"scrapli_{transport_name}.transport":
-            return plugin_module
-        return importlib.import_module(name=name, package=package)
-
-    monkeypatch.setattr("importlib.import_module", _import_module)
-
-    base_driver = driver_factory(host="localhost", transport="test")
-    plugin_transport_args = transport_plugin_args()
-    actual_transport_class, actual_transport_plugin_args = base_driver._transport_factory()
-
-    assert actual_transport_class == transport_class
+    assert actual_transport_class == transport_cls
     assert actual_transport_plugin_args == plugin_transport_args
+    assert isinstance(driver.transport, transport_cls)
 
-
-# TODO transport factory w/ non-core -- maybe just mock something so the tests dont depend on
-#  anything external
 
 # TODO test load core and non core transport plugins
 
