@@ -27,7 +27,7 @@ from scrapli.exceptions import (
 )
 from scrapli.helper import format_user_warning
 from scrapli.logging import logger
-from scrapli.transport import CORE_TRANSPORTS, ASYNCIO_TRANSPORTS
+from scrapli.transport import ASYNCIO_TRANSPORTS, CORE_TRANSPORTS
 
 
 def _build_provided_kwargs_dict(  # pylint: disable=R0914

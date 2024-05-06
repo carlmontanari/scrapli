@@ -1,14 +1,19 @@
 import logging
-from pathlib import Path
 from dataclasses import dataclass
+from pathlib import Path
 
 import pytest
 
+from scrapli.driver.base import AsyncDriver, Driver
 from scrapli.driver.base.base_driver import BaseDriver
-from scrapli.driver.base import Driver, AsyncDriver
-from scrapli.transport.base import Transport, AsyncTransport
-from scrapli.transport.base import BaseTransportArgs, BasePluginTransportArgs
 from scrapli.exceptions import ScrapliTransportPluginError, ScrapliTypeError, ScrapliValueError
+from scrapli.transport.base import (
+    AsyncTransport,
+    BasePluginTransportArgs,
+    BaseTransportArgs,
+    Transport,
+)
+
 
 @dataclass
 class PluginTransportArgs(BasePluginTransportArgs):
@@ -78,8 +83,8 @@ def monkeypatch_plugin_transport_module(
     2. Makes the fake module available to be imported with importlib.import_module
         by monkeypatching the `import_module` function.
     """
-    import types
     import importlib
+    import types
 
     plugin_module_name = f"scrapli_{transport_name}.transport"
     plugin_module = types.ModuleType(plugin_module_name)
@@ -321,7 +326,8 @@ def test_transport_factory_non_core(monkeypatch, test_data):
     driver_factory, transport_name, transport_cls = test_data
 
     fake_plugin_module = monkeypatch_plugin_transport_module(
-        monkeypatch, transport_name, transport_cls)
+        monkeypatch, transport_name, transport_cls
+    )
 
     driver = driver_factory(host="localhost", transport=transport_name)
     plugin_transport_args = fake_plugin_module.__dict__["PluginTransportArgs"]()
