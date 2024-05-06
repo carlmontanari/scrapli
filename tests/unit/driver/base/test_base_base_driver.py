@@ -1,6 +1,7 @@
 import logging
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Type, Union
 
 import pytest
 
@@ -73,8 +74,8 @@ class DummyasyncTransport(AsyncTransport):
 def monkeypatch_plugin_transport_module(
     monkeypatch,
     transport_name: str,
-    transport_cls: type[Transport] | type[AsyncTransport],
-    transport_args_cls: type[BasePluginTransportArgs] = PluginTransportArgs,
+    transport_cls: Union[Type[Transport], Type[AsyncTransport]],
+    transport_args_cls: Type[BasePluginTransportArgs] = PluginTransportArgs,
 ):
     """
     1. Creates a fake module `scrapli_{transport_name}.transport` which
