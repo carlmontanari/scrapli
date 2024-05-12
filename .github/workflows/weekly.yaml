@@ -13,7 +13,7 @@ jobs:
       max-parallel: 1
       matrix:
         os: [ubuntu-latest]
-        version: ["3.12"]
+        version: ["3.11"]
     steps:
       - uses: actions/checkout@v4
         with:
