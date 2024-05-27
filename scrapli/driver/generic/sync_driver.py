@@ -17,6 +17,23 @@ if TYPE_CHECKING:
     )
 
 
+def generic_on_open(conn: "GenericDriver") -> None:
+    """
+    GenericDriver default on-open -- drains initial login by running a simple get_prompt
+
+    Args:
+        conn: GenericDriver object
+
+    Returns:
+        None
+
+    Raises:
+        N/A
+
+    """
+    conn.get_prompt()
+
+
 class GenericDriver(Driver, BaseGenericDriver):
     def __init__(
         self,
@@ -40,7 +57,7 @@ class GenericDriver(Driver, BaseGenericDriver):
         ssh_config_file: Union[str, bool] = False,
         ssh_known_hosts_file: Union[str, bool] = False,
         on_init: Optional[Callable[..., Any]] = None,
-        on_open: Optional[Callable[..., Any]] = None,
+        on_open: Optional[Callable[..., Any]] = generic_on_open,
         on_close: Optional[Callable[..., Any]] = None,
         transport: str = "system",
         transport_options: Optional[Dict[str, Any]] = None,
