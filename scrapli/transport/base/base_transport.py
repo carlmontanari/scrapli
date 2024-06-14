@@ -24,6 +24,7 @@ class BasePluginTransportArgs:
 
 class BaseTransport(ABC):
     SSH_SYSTEM_CONFIG_MAGIC_STRING: str = "__SCRAPLI_RULES__"
+
     def __init__(self, base_transport_args: BaseTransportArgs) -> None:
         """
         Scrapli's transport base class
