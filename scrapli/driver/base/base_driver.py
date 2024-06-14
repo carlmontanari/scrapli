@@ -14,6 +14,7 @@ from scrapli.logging import get_instance_logger
 from scrapli.ssh_config import ssh_config_factory
 from scrapli.transport import CORE_TRANSPORTS
 from scrapli.transport.base import BasePluginTransportArgs, BaseTransportArgs
+from scrapli.transport.base.base_transport import BaseTransport 
 
 
 class BaseDriver:
@@ -617,12 +618,15 @@ class BaseDriver:
 
         resolved_ssh_config_file = ""
 
-        if Path(ssh_config_file).is_file():
-            resolved_ssh_config_file = str(Path(ssh_config_file))
-        elif Path("~/.ssh/config").expanduser().is_file():
-            resolved_ssh_config_file = str(Path("~/.ssh/config").expanduser())
-        elif Path("/etc/ssh/ssh_config").is_file():
-            resolved_ssh_config_file = str(Path("/etc/ssh/ssh_config"))
+        if ssh_config_file is True and self.transport_name == "system":
+            resolved_ssh_config_file = BaseTransport.SSH_SYSTEM_CONFIG_MAGIC_STRING
+        else:
+            if Path(ssh_config_file).is_file():
+                resolved_ssh_config_file = str(Path(ssh_config_file))
+            elif Path("~/.ssh/config").expanduser().is_file():
+                resolved_ssh_config_file = str(Path("~/.ssh/config").expanduser())
+            elif Path("/etc/ssh/ssh_config").is_file():
+                resolved_ssh_config_file = str(Path("/etc/ssh/ssh_config"))
 
         if resolved_ssh_config_file:
             self.logger.debug(
