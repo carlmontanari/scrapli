@@ -105,10 +105,13 @@ class SystemTransport(Transport):
                     ["-o", f"UserKnownHostsFile={self.plugin_transport_args.ssh_known_hosts_file}"]
                 )
 
-        if self.plugin_transport_args.ssh_config_file:
-            self.open_cmd.extend(["-F", self.plugin_transport_args.ssh_config_file])
+        if self.plugin_transport_args.ssh_config_file == self.SSH_SYSTEM_CONFIG_MAGIC_STRING:
+            self.logger.debug("Using system transport and ssh_config is True, not specifying any SSH config")
         else:
-            self.open_cmd.extend(["-F", "/dev/null"])
+            if self.plugin_transport_args.ssh_config_file:
+                self.open_cmd.extend(["-F", self.plugin_transport_args.ssh_config_file])
+            else:
+                self.open_cmd.extend(["-F", "/dev/null"])
 
         open_cmd_user_args = self._base_transport_args.transport_options.get("open_cmd", [])
         if isinstance(open_cmd_user_args, str):
