@@ -8,11 +8,7 @@ from types import ModuleType
 from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
 
 from scrapli.channel.base_channel import BaseChannelArgs
-from scrapli.exceptions import (
-    ScrapliTransportPluginError,
-    ScrapliTypeError,
-    ScrapliValueError,
-)
+from scrapli.exceptions import ScrapliTransportPluginError, ScrapliTypeError, ScrapliValueError
 from scrapli.helper import format_user_warning, resolve_file
 from scrapli.logging import get_instance_logger
 from scrapli.ssh_config import ssh_config_factory
@@ -187,12 +183,10 @@ class BaseDriver:
         self.auth_username = auth_username
         self.auth_password = auth_password
         self.auth_private_key_passphrase = auth_private_key_passphrase
-        self.auth_private_key, self.auth_strict_key, self.auth_bypass = (
-            self._setup_auth(
-                auth_private_key=auth_private_key,
-                auth_strict_key=auth_strict_key,
-                auth_bypass=auth_bypass,
-            )
+        self.auth_private_key, self.auth_strict_key, self.auth_bypass = self._setup_auth(
+            auth_private_key=auth_private_key,
+            auth_strict_key=auth_strict_key,
+            auth_bypass=auth_bypass,
         )
 
         self.ssh_config_file, self.ssh_known_hosts_file = self._setup_ssh_file_args(
@@ -295,9 +289,7 @@ class BaseDriver:
 
         """
         if not host:
-            raise ScrapliValueError(
-                "`host` should be a hostname/ip address, got nothing!"
-            )
+            raise ScrapliValueError("`host` should be a hostname/ip address, got nothing!")
         if not isinstance(port, int):
             raise ScrapliTypeError(f"`port` should be int, got {type(port)}")
 
@@ -327,13 +319,9 @@ class BaseDriver:
 
         """
         if not isinstance(auth_strict_key, bool):
-            raise ScrapliTypeError(
-                f"`auth_strict_key` should be bool, got {type(auth_strict_key)}"
-            )
+            raise ScrapliTypeError(f"`auth_strict_key` should be bool, got {type(auth_strict_key)}")
         if not isinstance(auth_bypass, bool):
-            raise ScrapliTypeError(
-                f"`auth_bypass` should be bool, got {type(auth_bypass)}"
-            )
+            raise ScrapliTypeError(f"`auth_bypass` should be bool, got {type(auth_bypass)}")
 
         if auth_private_key:
             auth_private_key_path = resolve_file(file=auth_private_key)
@@ -367,9 +355,7 @@ class BaseDriver:
 
         """
         if "telnet" in transport:
-            self.logger.debug(
-                "telnet-based transport selected, ignoring ssh file arguments"
-            )
+            self.logger.debug("telnet-based transport selected, ignoring ssh file arguments")
             # the word "telnet" should occur in all telnet drivers, always. so this should be safe!
             return "", ""
 
@@ -379,8 +365,7 @@ class BaseDriver:
             )
         if not isinstance(ssh_known_hosts_file, (str, bool)):
             raise ScrapliTypeError(
-                "`ssh_known_hosts_file` must be str or bool, got "
-                f"{type(ssh_known_hosts_file)}"
+                "`ssh_known_hosts_file` must be str or bool, got " f"{type(ssh_known_hosts_file)}"
             )
 
         if ssh_config_file is not False:
@@ -388,9 +373,7 @@ class BaseDriver:
                 cfg = ""
             else:
                 cfg = ssh_config_file
-            resolved_ssh_config_file = self._resolve_ssh_config(
-                cfg, transport=transport
-            )
+            resolved_ssh_config_file = self._resolve_ssh_config(cfg, transport=transport)
         else:
             resolved_ssh_config_file = ""
 
@@ -474,9 +457,7 @@ class BaseDriver:
         if on_open is not None and not callable(on_open):
             raise ScrapliTypeError(f"`on_open` must be a callable, got {type(on_open)}")
         if on_close is not None and not callable(on_close):
-            raise ScrapliTypeError(
-                f"`on_close` must be a callable, got {type(on_close)}"
-            )
+            raise ScrapliTypeError(f"`on_close` must be a callable, got {type(on_close)}")
 
         self.on_init = on_init
         self.on_open = on_open
@@ -498,17 +479,12 @@ class BaseDriver:
 
         """
         if self.transport_name in CORE_TRANSPORTS:
-            transport_class, _plugin_transport_args_class = (
-                self._load_core_transport_plugin()
-            )
+            transport_class, _plugin_transport_args_class = self._load_core_transport_plugin()
         else:
-            transport_class, _plugin_transport_args_class = (
-                self._load_non_core_transport_plugin()
-            )
+            transport_class, _plugin_transport_args_class = self._load_non_core_transport_plugin()
 
         _plugin_transport_args = {
-            field.name: getattr(self, field.name)
-            for field in fields(_plugin_transport_args_class)
+            field.name: getattr(self, field.name) for field in fields(_plugin_transport_args_class)
         }
 
         # ignore type as we are typing it as the base class to make life simple, because of this
@@ -621,9 +597,7 @@ class BaseDriver:
             transport_plugin_module=transport_plugin_module
         )
 
-        self.logger.debug(
-            f"non-core transport '{self.transport_name}' loaded successfully"
-        )
+        self.logger.debug(f"non-core transport '{self.transport_name}' loaded successfully")
 
         return transport_class, plugin_transport_args
 
@@ -644,9 +618,7 @@ class BaseDriver:
             N/A
 
         """
-        self.logger.debug(
-            f"attempting to resolve 'ssh_config_file' file {ssh_config_file}"
-        )
+        self.logger.debug(f"attempting to resolve 'ssh_config_file' file {ssh_config_file}")
 
         resolved_ssh_config_file = ""
 
@@ -941,9 +913,7 @@ class BaseDriver:
             raise ScrapliTypeError
 
         if value == 0:
-            self.logger.debug(
-                "'timeout_transport' value is 0, this will disable timeout decorator"
-            )
+            self.logger.debug("'timeout_transport' value is 0, this will disable timeout decorator")
 
         self._base_transport_args.timeout_transport = value
 
@@ -990,9 +960,7 @@ class BaseDriver:
             raise ScrapliTypeError
 
         if value == 0:
-            self.logger.debug(
-                "'timeout_ops' value is 0, this will disable timeout decorator"
-            )
+            self.logger.debug("'timeout_ops' value is 0, this will disable timeout decorator")
 
         self._base_channel_args.timeout_ops = value
 
@@ -1029,9 +997,7 @@ class BaseDriver:
         """
         operation = "closing" if closing else "opening"
 
-        self.logger.info(
-            f"{operation} connection to '{self.host}' on port '{self.port}'"
-        )
+        self.logger.info(f"{operation} connection to '{self.host}' on port '{self.port}'")
 
     def _post_open_closing_log(self, closing: bool = False) -> None:
         """
