@@ -101,9 +101,15 @@ class SystemTransport(Transport):
         else:
             self.open_cmd.extend(["-o", "StrictHostKeyChecking=yes"])
             if self.plugin_transport_args.ssh_known_hosts_file:
-                self.open_cmd.extend(
-                    ["-o", f"UserKnownHostsFile={self.plugin_transport_args.ssh_known_hosts_file}"]
-                )
+                if self.plugin_transport_args.ssh_known_hosts_file == self.SSH_SYSTEM_CONFIG_MAGIC_STRING:
+                    self.logger.debug(
+                        "Using system transport and ssh_known_hosts_file is True, not specifying any "
+                        "known_hosts file"
+                    )
+                else:
+                    self.open_cmd.extend(
+                        ["-o", f"UserKnownHostsFile={self.plugin_transport_args.ssh_known_hosts_file}"]
+                    )
 
         if self.plugin_transport_args.ssh_config_file == self.SSH_SYSTEM_CONFIG_MAGIC_STRING:
             self.logger.debug("Using system transport and ssh_config is True, not specifying any SSH config")
