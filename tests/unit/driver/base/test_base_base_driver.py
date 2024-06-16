@@ -14,6 +14,7 @@ from scrapli.transport.base import (
     BaseTransportArgs,
     Transport,
 )
+from scrapli.transport.plugins.system.transport import SystemTransport
 
 
 @dataclass
@@ -207,15 +208,17 @@ def test_update_ssh_args_from_ssh_config(fs_, real_ssh_config_file_path, base_dr
         (
             True,
             True,
+            SystemTransport.SSH_SYSTEM_CONFIG_MAGIC_STRING,
+            SystemTransport.SSH_SYSTEM_KNOWN_HOSTS_FILE_MAGIC_STRING,
+            "system",
         ),
-        (
-            "blah",
-            "blah",
-        ),
+        (True, True, "", "", "asyncssh"),
+        ("blah", "blah", "", "", "system"),
+        ("blah", "blah", "", "", "asyncssh"),
     ),
-    ids=("true", "unresolvable_path"),
+    ids=("true-system", "true-asyncssh", "unresolvable_path-system", "unresolvable_path-asyncssh"),
 )
-def test_setup_ssh_file_args_resolved(fs_, base_driver, test_data):
+def test_setup_ssh_file_args_resolved(fs_, test_data, base_driver):
     """
     Assert we handle ssh config/known hosts inputs properly
 
@@ -223,16 +226,21 @@ def test_setup_ssh_file_args_resolved(fs_, base_driver, test_data):
     that if given a non False bool or a string we properly try to resolve the ssh files
     """
     # using fakefs to ensure we dont resolve user/system config files
-    ssh_config_file_input, ssh_known_hosts_file_input = test_data
-
+    (
+        ssh_config_file_input,
+        ssh_known_hosts_file_input,
+        expected_result_ssh_config,
+        expected_result_known_hosts,
+        transport,
+    ) = test_data
     resolved_ssh_config_file, resolved_ssh_known_hosts_file = base_driver._setup_ssh_file_args(
-        transport="system",
+        transport=transport,
         ssh_config_file=ssh_config_file_input,
         ssh_known_hosts_file=ssh_known_hosts_file_input,
     )
 
-    assert resolved_ssh_config_file == ""
-    assert resolved_ssh_known_hosts_file == ""
+    assert resolved_ssh_config_file == expected_result_ssh_config
+    assert resolved_ssh_known_hosts_file == expected_result_known_hosts
 
 
 @pytest.mark.parametrize(
@@ -345,55 +353,107 @@ def test_transport_factory_non_core(monkeypatch, test_data):
 @pytest.mark.parametrize(
     "test_data",
     [
-        ("", "/etc/ssh/ssh_config", True, "/etc/ssh/ssh_config"),
+        ("system", "", SystemTransport.SSH_SYSTEM_CONFIG_MAGIC_STRING, True, "/etc/ssh/ssh_config"),
+        ("asyncssh", "", "/etc/ssh/ssh_config", True, "/etc/ssh/ssh_config"),
+        ("system", "/etc/ssh/ssh_config", "/etc/ssh/ssh_config", True, "/etc/ssh/ssh_config"),
+        ("ssh2", "/etc/ssh/ssh_config", "/etc/ssh/ssh_config", True, "/etc/ssh/ssh_config"),
         (
+            "system",
+            "",
+            SystemTransport.SSH_SYSTEM_CONFIG_MAGIC_STRING,
+            True,
+            str(Path("~/.ssh/config").expanduser()),
+        ),
+        (
+            "ssh2",
             "",
             str(Path("~/.ssh/config").expanduser()),
             True,
             str(Path("~/.ssh/config").expanduser()),
         ),
-        ("/non_standard_ssh_config", "/non_standard_ssh_config", True, "/non_standard_ssh_config"),
-        ("", "", False, ""),
+        (
+            "system",
+            "/non_standard_ssh_config",
+            "/non_standard_ssh_config",
+            True,
+            "/non_standard_ssh_config",
+        ),
+        ("ssh2", "", "", False, ""),
     ],
-    ids=("auto_etc", "auto_user", "manual_location", "no_config"),
+    ids=(
+        "auto_etc-system",
+        "auto_etc-asyncssh",
+        "manual_location-system",
+        "manual_location-ssh2",
+        "auto_user-system",
+        "auto_user-ssh2",
+        "non-standard",
+        "no_config-ssh2",
+    ),
 )
 def test_resolve_ssh_config(fs_, real_ssh_config_file_path, base_driver, test_data):
-    input_data, expected_output, mount_real_file, fake_fs_destination = test_data
 
+    transport, input_data, expected_output, mount_real_file, fake_fs_destination = test_data
     if mount_real_file:
         fs_.add_real_file(source_path=real_ssh_config_file_path, target_path=fake_fs_destination)
-    actual_output = base_driver._resolve_ssh_config(ssh_config_file=input_data)
+    actual_output = base_driver._resolve_ssh_config(ssh_config_file=input_data, transport=transport)
     assert actual_output == expected_output
 
 
 @pytest.mark.parametrize(
     "test_data",
     [
-        ("", "/etc/ssh/ssh_known_hosts", True, "/etc/ssh/ssh_known_hosts"),
         (
+            "system",
+            "",
+            SystemTransport.SSH_SYSTEM_KNOWN_HOSTS_FILE_MAGIC_STRING,
+            True,
+            "/etc/ssh/ssh_known_hosts",
+        ),
+        ("asyncssh", "", "/etc/ssh/ssh_known_hosts", True, "/etc/ssh/ssh_known_hosts"),
+        (
+            "system",
+            "",
+            SystemTransport.SSH_SYSTEM_KNOWN_HOSTS_FILE_MAGIC_STRING,
+            True,
+            str(Path("~/.ssh/known_hosts").expanduser()),
+        ),
+        (
+            "asyncssh",
             "",
             str(Path("~/.ssh/known_hosts").expanduser()),
             True,
             str(Path("~/.ssh/known_hosts").expanduser()),
         ),
         (
+            "system",
             "/non_standard_ssh_known_hosts",
             "/non_standard_ssh_known_hosts",
             True,
             "/non_standard_ssh_known_hosts",
         ),
-        ("", "", False, ""),
+        ("system", "", SystemTransport.SSH_SYSTEM_KNOWN_HOSTS_FILE_MAGIC_STRING, False, ""),
+        ("ssh2", "", "", False, ""),
     ],
-    ids=("auto_etc", "auto_user", "manual_location", "no_config"),
+    ids=(
+        "auto_etc-system",
+        "auto_etc-asyncssh",
+        "auto_user-system",
+        "auto_user-asyncssh",
+        "manual_location",
+        "no_config-system",
+        "no_config-ssh2",
+    ),
 )
 def test_resolve_ssh_known_hosts(fs_, real_ssh_known_hosts_file_path, base_driver, test_data):
-    input_data, expected_output, mount_real_file, fake_fs_destination = test_data
-
+    transport, input_data, expected_output, mount_real_file, fake_fs_destination = test_data
     if mount_real_file:
         fs_.add_real_file(
             source_path=real_ssh_known_hosts_file_path, target_path=fake_fs_destination
         )
-    actual_output = base_driver._resolve_ssh_known_hosts(ssh_known_hosts=input_data)
+    actual_output = base_driver._resolve_ssh_known_hosts(
+        ssh_known_hosts=input_data, transport=transport
+    )
     assert actual_output == expected_output
 
 
