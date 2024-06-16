@@ -14,6 +14,7 @@ from scrapli.transport.base import (
     BaseTransportArgs,
     Transport,
 )
+from scrapli.transport.plugins.system.transport import SystemTransport
 
 
 @dataclass
@@ -207,8 +208,8 @@ def test_update_ssh_args_from_ssh_config(fs_, real_ssh_config_file_path, base_dr
         (
             True,
             True,
-            Transport.SSH_SYSTEM_CONFIG_MAGIC_STRING,
-            Transport.SSH_SYSTEM_CONFIG_MAGIC_STRING,
+            SystemTransport.SSH_SYSTEM_CONFIG_MAGIC_STRING,
+            SystemTransport.SSH_SYSTEM_KNOWN_HOSTS_FILE_MAGIC_STRING,
             "system",
         ),
         (True, True, "", "", "asyncssh"),
@@ -352,14 +353,14 @@ def test_transport_factory_non_core(monkeypatch, test_data):
 @pytest.mark.parametrize(
     "test_data",
     [
-        ("system", "", Transport.SSH_SYSTEM_CONFIG_MAGIC_STRING, True, "/etc/ssh/ssh_config"),
+        ("system", "", SystemTransport.SSH_SYSTEM_CONFIG_MAGIC_STRING, True, "/etc/ssh/ssh_config"),
         ("asyncssh", "", "/etc/ssh/ssh_config", True, "/etc/ssh/ssh_config"),
         ("system", "/etc/ssh/ssh_config", "/etc/ssh/ssh_config", True, "/etc/ssh/ssh_config"),
         ("ssh2", "/etc/ssh/ssh_config", "/etc/ssh/ssh_config", True, "/etc/ssh/ssh_config"),
         (
             "system",
             "",
-            Transport.SSH_SYSTEM_CONFIG_MAGIC_STRING,
+            SystemTransport.SSH_SYSTEM_CONFIG_MAGIC_STRING,
             True,
             str(Path("~/.ssh/config").expanduser()),
         ),
@@ -402,12 +403,18 @@ def test_resolve_ssh_config(fs_, real_ssh_config_file_path, base_driver, test_da
 @pytest.mark.parametrize(
     "test_data",
     [
-        ("system", "", Transport.SSH_SYSTEM_CONFIG_MAGIC_STRING, True, "/etc/ssh/ssh_known_hosts"),
+        (
+            "system",
+            "",
+            SystemTransport.SSH_SYSTEM_KNOWN_HOSTS_FILE_MAGIC_STRING,
+            True,
+            "/etc/ssh/ssh_known_hosts",
+        ),
         ("asyncssh", "", "/etc/ssh/ssh_known_hosts", True, "/etc/ssh/ssh_known_hosts"),
         (
             "system",
             "",
-            Transport.SSH_SYSTEM_CONFIG_MAGIC_STRING,
+            SystemTransport.SSH_SYSTEM_KNOWN_HOSTS_FILE_MAGIC_STRING,
             True,
             str(Path("~/.ssh/known_hosts").expanduser()),
         ),
@@ -425,7 +432,7 @@ def test_resolve_ssh_config(fs_, real_ssh_config_file_path, base_driver, test_da
             True,
             "/non_standard_ssh_known_hosts",
         ),
-        ("system", "", Transport.SSH_SYSTEM_CONFIG_MAGIC_STRING, False, ""),
+        ("system", "", SystemTransport.SSH_SYSTEM_KNOWN_HOSTS_FILE_MAGIC_STRING, False, ""),
         ("ssh2", "", "", False, ""),
     ],
     ids=(
