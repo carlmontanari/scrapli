@@ -14,6 +14,7 @@ from scrapli.logging import get_instance_logger
 from scrapli.ssh_config import ssh_config_factory
 from scrapli.transport import CORE_TRANSPORTS
 from scrapli.transport.base import BasePluginTransportArgs, BaseTransportArgs
+from scrapli.transport.plugins.system.transport import SystemTransport
 
 
 class BaseDriver:
@@ -372,7 +373,7 @@ class BaseDriver:
                 cfg = ""
             else:
                 cfg = ssh_config_file
-            resolved_ssh_config_file = self._resolve_ssh_config(cfg)
+            resolved_ssh_config_file = self._resolve_ssh_config(cfg, transport=transport)
         else:
             resolved_ssh_config_file = ""
 
@@ -381,7 +382,9 @@ class BaseDriver:
                 known_hosts = ""
             else:
                 known_hosts = ssh_known_hosts_file
-            resolved_ssh_known_hosts_file = self._resolve_ssh_known_hosts(known_hosts)
+            resolved_ssh_known_hosts_file = self._resolve_ssh_known_hosts(
+                known_hosts, transport=transport
+            )
         else:
             resolved_ssh_known_hosts_file = ""
 
@@ -557,7 +560,9 @@ class BaseDriver:
 
         return transport_class, plugin_transport_args
 
-    def _load_non_core_transport_plugin(self) -> Tuple[Any, Type[BasePluginTransportArgs]]:
+    def _load_non_core_transport_plugin(
+        self,
+    ) -> Tuple[Any, Type[BasePluginTransportArgs]]:
         """
         Find non-core transport plugins and required plugin arguments
 
@@ -596,7 +601,7 @@ class BaseDriver:
 
         return transport_class, plugin_transport_args
 
-    def _resolve_ssh_config(self, ssh_config_file: str) -> str:
+    def _resolve_ssh_config(self, ssh_config_file: str, transport: str) -> str:
         """
         Resolve ssh configuration file from provided string
 
@@ -613,27 +618,20 @@ class BaseDriver:
             N/A
 
         """
-        self.logger.debug("attempting to resolve 'ssh_config_file' file")
+        self.logger.debug(f"attempting to resolve 'ssh_config_file' file {ssh_config_file}")
 
-        resolved_ssh_config_file = ""
+        if ssh_config_file == "" and transport == "system":
+            return SystemTransport.SSH_SYSTEM_CONFIG_MAGIC_STRING
 
-        if Path(ssh_config_file).is_file():
-            resolved_ssh_config_file = str(Path(ssh_config_file))
-        elif Path("~/.ssh/config").expanduser().is_file():
-            resolved_ssh_config_file = str(Path("~/.ssh/config").expanduser())
-        elif Path("/etc/ssh/ssh_config").is_file():
-            resolved_ssh_config_file = str(Path("/etc/ssh/ssh_config"))
+        for path in (ssh_config_file, "~/.ssh/config", "/etc/ssh/ssh_config"):
+            full_path = Path(path).expanduser()
+            if full_path.is_file():
+                return str(full_path)
 
-        if resolved_ssh_config_file:
-            self.logger.debug(
-                f"using '{resolved_ssh_config_file}' as resolved 'ssh_config_file' file'"
-            )
-        else:
-            self.logger.debug("unable to resolve 'ssh_config_file' file")
+        self.logger.debug(f"unable to resolve 'ssh_config_file' file {ssh_config_file}")
+        return ""
 
-        return resolved_ssh_config_file
-
-    def _resolve_ssh_known_hosts(self, ssh_known_hosts: str) -> str:
+    def _resolve_ssh_known_hosts(self, ssh_known_hosts: str, transport: str) -> str:
         """
         Resolve ssh known hosts file from provided string
 
@@ -652,23 +650,17 @@ class BaseDriver:
         """
         self.logger.debug("attempting to resolve 'ssh_known_hosts file'")
 
-        resolved_ssh_known_hosts = ""
+        if ssh_known_hosts == "" and transport == "system":
+            self.logger.debug("Using system known hosts file as 'ssh_known_hosts' file")
+            return SystemTransport.SSH_SYSTEM_KNOWN_HOSTS_FILE_MAGIC_STRING
 
-        if Path(ssh_known_hosts).is_file():
-            resolved_ssh_known_hosts = str(Path(ssh_known_hosts))
-        elif Path("~/.ssh/known_hosts").expanduser().is_file():
-            resolved_ssh_known_hosts = str(Path("~/.ssh/known_hosts").expanduser())
-        elif Path("/etc/ssh/ssh_known_hosts").is_file():
-            resolved_ssh_known_hosts = str(Path("/etc/ssh/ssh_known_hosts"))
+        for path in (ssh_known_hosts, "~/.ssh/known_hosts", "/etc/ssh/ssh_known_hosts"):
+            full_path = Path(path).expanduser()
+            if full_path.is_file():
+                return str(full_path)
 
-        if resolved_ssh_known_hosts:
-            self.logger.debug(
-                f"using '{resolved_ssh_known_hosts}' as resolved 'ssh_known_hosts' file'"
-            )
-        else:
-            self.logger.debug("unable to resolve 'ssh_known_hosts' file")
-
-        return resolved_ssh_known_hosts
+        self.logger.info(f"unable to resolve 'ssh_known_hosts' file {ssh_known_hosts}")
+        return ""
 
     @property
     def comms_prompt_pattern(self) -> str:

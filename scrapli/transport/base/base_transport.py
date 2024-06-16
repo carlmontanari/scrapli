@@ -23,6 +23,7 @@ class BasePluginTransportArgs:
 
 
 class BaseTransport(ABC):
+
     def __init__(self, base_transport_args: BaseTransportArgs) -> None:
         """
         Scrapli's transport base class

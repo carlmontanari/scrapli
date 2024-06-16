@@ -24,6 +24,9 @@ class PluginTransportArgs(BasePluginTransportArgs):
 
 
 class SystemTransport(Transport):
+    SSH_SYSTEM_CONFIG_MAGIC_STRING: str = "SYSTEM_TRANSPORT_SSH_CONFIG_TRUE"
+    SSH_SYSTEM_KNOWN_HOSTS_FILE_MAGIC_STRING: str = "SYSTEM_TRANSPORT_KNOWN_HOSTS_TRUE"
+
     def __init__(
         self, base_transport_args: BaseTransportArgs, plugin_transport_args: PluginTransportArgs
     ) -> None:
@@ -100,15 +103,32 @@ class SystemTransport(Transport):
             self.open_cmd.extend(["-o", "UserKnownHostsFile=/dev/null"])
         else:
             self.open_cmd.extend(["-o", "StrictHostKeyChecking=yes"])
-            if self.plugin_transport_args.ssh_known_hosts_file:
-                self.open_cmd.extend(
-                    ["-o", f"UserKnownHostsFile={self.plugin_transport_args.ssh_known_hosts_file}"]
-                )
 
-        if self.plugin_transport_args.ssh_config_file:
-            self.open_cmd.extend(["-F", self.plugin_transport_args.ssh_config_file])
-        else:
+            if (
+                self.plugin_transport_args.ssh_known_hosts_file
+                == self.SSH_SYSTEM_KNOWN_HOSTS_FILE_MAGIC_STRING
+            ):
+                self.logger.debug(
+                    "Using system transport and ssh_known_hosts_file is True, not specifying any "
+                    "known_hosts file"
+                )
+            elif self.plugin_transport_args.ssh_known_hosts_file:
+                self.open_cmd.extend(
+                    [
+                        "-o",
+                        f"UserKnownHostsFile={self.plugin_transport_args.ssh_known_hosts_file}",
+                    ]
+                )
+            else:
+                self.logger.debug("No known hosts file specified")
+        if not self.plugin_transport_args.ssh_config_file:
             self.open_cmd.extend(["-F", "/dev/null"])
+        elif self.plugin_transport_args.ssh_config_file == self.SSH_SYSTEM_CONFIG_MAGIC_STRING:
+            self.logger.debug(
+                "Using system transport and ssh_config is True, not specifying any SSH config"
+            )
+        else:
+            self.open_cmd.extend(["-F", self.plugin_transport_args.ssh_config_file])
 
         open_cmd_user_args = self._base_transport_args.transport_options.get("open_cmd", [])
         if isinstance(open_cmd_user_args, str):
