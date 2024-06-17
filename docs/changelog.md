@@ -1,7 +1,24 @@
 Changelog
 =========
 
-## 2024.01.30 (in development)
+## 2024.07.30
+
+- Better SSH config/known hosts file handling for system transport by @bennnnnnnn -- now when passing "True" to 
+  ssh_config_file with system transport we no longer pass the -F flag, we just let openssh/the system figure out which
+  config file(s) to use. See #336.
+- Thanks to @ssmyk for working through some issues with GenericDriver -- the default "on_open" function of GenericDriver
+  now will "find" the prompt in order to ensure we drain off any content on the channel left over after logging in; note 
+  you can of course override this if this is not what you want! See #330.
+- Fixed transport name validation to not break for user supplied transports thanks to @mvenditto in #329.
+- Yet more ANSI pattern fixups in #332 and #326 with help from @ssmyk in #325 and @denisbondar in #316.
+- @mota-ovhcloud expanded `cisco_nxos` prompts to handle maintenance mode prompt patterns in #324.
+- #311 from @killjoy1221 replaced `pkg_resources` with `importlib.resources`.
+- Fixed scrapli hanging when connecting to misbehaving ssh servers from @forrejam in #321.
+- Unset `onclr` in system transport -- this should not impact scrapli itself but is a big deal for scrapli_netconf,
+  see scrapli_netconf issue 142 for more details.
+
+
+## 2024.01.30
 
 - Expand `arista_eos` prompt pattern to handle super long config sections (things like qos queues and such). Thanks 
   to @MarkRudenko over in scrapli_cfg repo for finding this and providing the fix!
