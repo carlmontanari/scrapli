@@ -610,6 +610,8 @@ class BaseDriver:
 
         Args:
             ssh_config_file: string representation of ssh config file to try to use
+            transport: string name of selected transport (so we can apply a bit of special handling
+                if system transport in use)
 
         Returns:
             str: string path to ssh config file or an empty string
@@ -640,6 +642,8 @@ class BaseDriver:
 
         Args:
             ssh_known_hosts: string representation of ssh config file to try to use
+            transport: string name of selected transport (so we can apply a bit of special handling
+                if system transport in use)
 
         Returns:
             str: string path to ssh known hosts file or an empty string
