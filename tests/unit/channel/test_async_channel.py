@@ -67,7 +67,7 @@ async def test_channel_read(fs_, caplog, monkeypatch, async_transport_no_abc):
     # assert the log output/level as expected; skip the first log message that will be about
     # channel_log being on
     log_record = caplog.records[1]
-    assert "read: b'read_data'" == log_record.msg
+    assert "read: b'read_data'" == log_record.message
     assert logging.DEBUG == log_record.levelno
 
     # assert channel log output as expected

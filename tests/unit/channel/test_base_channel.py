@@ -136,7 +136,7 @@ def test_channel_write(caplog, monkeypatch, base_channel):
     assert transport_write_called is True
 
     log_record = next(iter(caplog.records))
-    assert "write: 'blah'" == log_record.msg
+    assert "write: 'blah'" == log_record.message
     assert logging.DEBUG == log_record.levelno
 
 
@@ -155,7 +155,7 @@ def test_channel_write_redacted(caplog, monkeypatch, base_channel):
     assert transport_write_called is True
 
     log_record = next(iter(caplog.records))
-    assert "write: REDACTED" == log_record.msg
+    assert "write: REDACTED" == log_record.message
     assert logging.DEBUG == log_record.levelno
 
 
