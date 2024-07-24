@@ -148,13 +148,21 @@ class TelnetTransport(Transport):
         if not self.socket:
             raise ScrapliConnectionNotOpened
 
+        if self._raw_buf.find(NULL) != -1:
+            raise ScrapliConnectionNotOpened("server returned EOF, connection not opened")
+        
+        index = self._raw_buf.find(IAC)
+        if index == -1:
+            self._cooked_buf = self._raw_buf
+            self._raw_buf = b""
+            return
+
+        self._cooked_buf = self._raw_buf[:index]
+        self._raw_buf = self._raw_buf[index:]
         control_buf = b""
 
         while self._raw_buf:
             c, self._raw_buf = self._raw_buf[:1], self._raw_buf[1:]
-            if not c:
-                raise ScrapliConnectionNotOpened("server returned EOF, connection not opened")
-
             control_buf = self._handle_control_chars_response(control_buf=control_buf, c=c)
 
     def open(self) -> None:
@@ -218,7 +226,7 @@ class TelnetTransport(Transport):
                     self._raw_buf += buf
                 else:
                     self._cooked_buf += buf
-            except Exception as exc:
+            except EOFError as exc:
                 raise ScrapliConnectionError(
                     "encountered EOF reading from transport; typically means the device closed the "
                     "connection"
@@ -228,9 +236,6 @@ class TelnetTransport(Transport):
     def read(self) -> bytes:
         if not self.socket:
             raise ScrapliConnectionNotOpened
-
-        if self._control_char_sent_counter < self._control_char_sent_limit:
-            self._handle_control_chars()
 
         while not self._cooked_buf and not self._eof:
             self._read()
