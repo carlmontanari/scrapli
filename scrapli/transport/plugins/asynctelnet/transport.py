@@ -119,7 +119,7 @@ class AsynctelnetTransport(AsyncTransport):
 
         if self._raw_buf.find(NULL) != -1:
             raise ScrapliConnectionNotOpened("server returned EOF, connection not opened")
-        
+
         index = self._raw_buf.find(IAC)
         if index == -1:
             self._cooked_buf = self._raw_buf
@@ -128,7 +128,7 @@ class AsynctelnetTransport(AsyncTransport):
 
         self._cooked_buf = self._raw_buf[:index]
         self._raw_buf = self._raw_buf[index:]
-        
+
         # control_buf is the buffer for control characters, we reset this after being "done" with
         # responding to a control sequence, so it always represents the "current" control sequence
         # we are working on responding to

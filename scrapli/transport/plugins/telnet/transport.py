@@ -150,7 +150,7 @@ class TelnetTransport(Transport):
 
         if self._raw_buf.find(NULL) != -1:
             raise ScrapliConnectionNotOpened("server returned EOF, connection not opened")
-        
+
         index = self._raw_buf.find(IAC)
         if index == -1:
             self._cooked_buf = self._raw_buf
