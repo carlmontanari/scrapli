@@ -493,7 +493,9 @@ class Channel(BaseChannel):
 
         self.logger.info(
             "sending channel input: %s; strip_prompt: %s; eager: %s",
-            channel_input, strip_prompt, eager
+            channel_input,
+            strip_prompt,
+            eager,
         )
 
         with self._channel_lock():
@@ -550,7 +552,10 @@ class Channel(BaseChannel):
         self.logger.info(
             "sending channel input and read: %s; strip_prompt: %s; "
             "expected_outputs: %s; read_duration: %s",
-            channel_input, strip_prompt, expected_outputs, read_duration
+            channel_input,
+            strip_prompt,
+            expected_outputs,
+            read_duration,
         )
 
         with self._channel_lock():
@@ -660,10 +665,10 @@ class Channel(BaseChannel):
 
                 _channel_input = channel_input if not hidden_input else "REDACTED"
                 self.logger.info(
-                    "sending interactive input: %s; "
-                    "expecting: %s; "
-                    "hidden_input: %s",
-                    _channel_input, channel_response, hidden_input
+                    "sending interactive input: %s; " "expecting: %s; " "hidden_input: %s",
+                    _channel_input,
+                    channel_response,
+                    hidden_input,
                 )
 
                 self.write(channel_input=channel_input, redacted=bool(hidden_input))
