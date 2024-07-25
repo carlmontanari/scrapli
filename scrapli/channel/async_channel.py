@@ -71,7 +71,7 @@ class AsyncChannel(BaseChannel):
         buf = await self.transport.read()
         buf = buf.replace(b"\r", b"")
 
-        self.logger.debug(f"read: {buf!r}")
+        self.logger.debug("read: %r", buf)
 
         if self.channel_log:
             self.channel_log.write(buf)
@@ -491,7 +491,10 @@ class AsyncChannel(BaseChannel):
         bytes_channel_input = channel_input.encode()
 
         self.logger.info(
-            f"sending channel input: {channel_input}; strip_prompt: {strip_prompt}; eager: {eager}"
+            "sending channel input: %s; strip_prompt: %s; eager: %s",
+            channel_input,
+            strip_prompt,
+            eager,
         )
 
         async with self._channel_lock():
@@ -546,8 +549,12 @@ class AsyncChannel(BaseChannel):
         ]
 
         self.logger.info(
-            f"sending channel input and read: {channel_input}; strip_prompt: {strip_prompt}; "
-            f"expected_outputs: {expected_outputs}; read_duration: {read_duration}"
+            "sending channel input and read: %s; strip_prompt: %s; "
+            "expected_outputs: %s; read_duration: %s",
+            channel_input,
+            strip_prompt,
+            expected_outputs,
+            read_duration,
         )
 
         async with self._channel_lock():
@@ -657,9 +664,10 @@ class AsyncChannel(BaseChannel):
 
                 _channel_input = channel_input if not hidden_input else "REDACTED"
                 self.logger.info(
-                    f"sending interactive input: {_channel_input}; "
-                    f"expecting: {channel_response}; "
-                    f"hidden_input: {hidden_input}"
+                    "sending interactive input: %s; expecting: %s; hidden_input: %s",
+                    _channel_input,
+                    channel_response,
+                    hidden_input,
                 )
 
                 self.write(channel_input=channel_input, redacted=bool(hidden_input))

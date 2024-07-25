@@ -368,8 +368,10 @@ class BaseChannel:
             N/A
 
         """
-        log_output = "REDACTED" if redacted else repr(channel_input)
-        self.logger.debug(f"write: {log_output}")
+        if redacted:
+            self.logger.debug("write: REDACTED")
+        else:
+            self.logger.debug("write: %r", channel_input)
 
         self.transport.write(channel_input=channel_input.encode())
 
