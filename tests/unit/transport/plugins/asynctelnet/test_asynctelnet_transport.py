@@ -57,7 +57,7 @@ def test_handle_control_characters_response_exception(asynctelnet_transport):
         asynctelnet_transport._handle_control_chars_response(control_buf=b"", c=b"")
 
 
-async def test_handle_control_characters(monkeypatch, asynctelnet_transport):
+def test_handle_control_characters(monkeypatch, asynctelnet_transport):
     # lie like connection is open
     asynctelnet_transport.stdin = BytesIO()
     asynctelnet_transport.stdout = asyncio.StreamReader()
@@ -69,9 +69,23 @@ async def test_handle_control_characters(monkeypatch, asynctelnet_transport):
     assert asynctelnet_transport._cooked_buf == bytes([253])
 
 
-async def test_handle_control_characters_exception(asynctelnet_transport):
+def test_handle_control_characters_actually_finds_control_command(
+    monkeypatch, asynctelnet_transport
+):
+    # lie like connection is open
+    asynctelnet_transport.stdin = BytesIO()
+    asynctelnet_transport.stdout = asyncio.StreamReader()
+    asynctelnet_transport._base_transport_args.timeout_socket = 0.4
+
+    asynctelnet_transport._raw_buf = bytes([33, 255, 251, 34, 35])
+    asynctelnet_transport._handle_control_chars()
+
+    assert asynctelnet_transport._cooked_buf == bytes([33, 35])
+
+
+def test_handle_control_characters_exception(asynctelnet_transport):
     with pytest.raises(ScrapliConnectionNotOpened):
-        await asynctelnet_transport._handle_control_chars()
+        asynctelnet_transport._handle_control_chars()
 
 
 def test_close(asynctelnet_transport):
