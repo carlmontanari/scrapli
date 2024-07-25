@@ -664,7 +664,7 @@ class AsyncChannel(BaseChannel):
 
                 _channel_input = channel_input if not hidden_input else "REDACTED"
                 self.logger.info(
-                    "sending interactive input: %s; " "expecting: %s; " "hidden_input: %s",
+                    "sending interactive input: %s; expecting: %s; hidden_input: %s",
                     _channel_input,
                     channel_response,
                     hidden_input,
