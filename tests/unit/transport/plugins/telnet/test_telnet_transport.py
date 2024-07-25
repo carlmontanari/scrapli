@@ -45,7 +45,8 @@ def test_handle_control_characters_response_third_char(telnet_transport, test_da
     control_buf_input, expected_output = test_data
 
     # lie to transport so socket is not None and give sock a thing to write to
-    class Dummy: ...
+    class Dummy:
+        ...
 
     class DummySock:
         def __init__(self):
@@ -75,7 +76,8 @@ def test_handle_control_characters_response_exception(telnet_transport):
 
 def test_handle_control_characters(monkeypatch, telnet_transport):
     # lie like connection is open
-    class Dummy: ...
+    class Dummy:
+        ...
 
     class DummySock:
         def __init__(self):
@@ -84,7 +86,8 @@ def test_handle_control_characters(monkeypatch, telnet_transport):
         def send(self, channel_input):
             self.buf.write(channel_input)
 
-        def settimeout(self, t): ...
+        def settimeout(self, t):
+            ...
 
     telnet_transport.socket = Dummy()
     telnet_transport.socket.sock = DummySock()
@@ -95,6 +98,30 @@ def test_handle_control_characters(monkeypatch, telnet_transport):
     assert telnet_transport._cooked_buf == bytes([253])
 
 
+def test_handle_control_characters_actually_finds_control_command(monkeypatch, telnet_transport):
+    # lie like connection is open
+    class Dummy:
+        ...
+
+    class DummySock:
+        def __init__(self):
+            self.buf = BytesIO()
+
+        def send(self, channel_input):
+            self.buf.write(channel_input)
+
+        def settimeout(self, t):
+            ...
+
+    telnet_transport.socket = Dummy()
+    telnet_transport.socket.sock = DummySock()
+
+    telnet_transport._raw_buf = bytes([33, 255, 251, 34, 35])
+    telnet_transport._handle_control_chars()
+
+    assert telnet_transport._cooked_buf == bytes([33, 35])
+
+
 def test_handle_control_characters_exception(telnet_transport):
     with pytest.raises(ScrapliConnectionNotOpened):
         telnet_transport._handle_control_chars()
@@ -103,7 +130,8 @@ def test_handle_control_characters_exception(telnet_transport):
 def test_close(telnet_transport):
     # lie like connection is open
     class Dummy:
-        def close(self): ...
+        def close(self):
+            ...
 
     telnet_transport.socket = Dummy()
 
@@ -129,7 +157,8 @@ def test_isalive(telnet_transport):
 
 async def test_read(telnet_transport):
     # lie like connection is open
-    class Dummy: ...
+    class Dummy:
+        ...
 
     class DummySock:
         def __init__(self):
@@ -138,7 +167,8 @@ async def test_read(telnet_transport):
         def send(self, channel_input):
             self.buf.write(channel_input)
 
-        def settimeout(self, t): ...
+        def settimeout(self, t):
+            ...
 
         def recv(self, n):
             self.buf.seek(0)
@@ -154,7 +184,8 @@ async def test_read(telnet_transport):
 def test_read_timeout(telnet_transport):
     # lie like connection is open
     class Dummy:
-        def close(self): ...
+        def close(self):
+            ...
 
     class DummySock:
         def __init__(self):
@@ -167,7 +198,8 @@ def test_read_timeout(telnet_transport):
             time.sleep(1)
             return self.buf.read()
 
-        def settimeout(self, t): ...
+        def settimeout(self, t):
+            ...
 
     telnet_transport.socket = Dummy()
     telnet_transport.socket.sock = DummySock()
@@ -180,7 +212,8 @@ def test_read_timeout(telnet_transport):
 def test_write(telnet_transport):
     # lie like connection is open
     class Dummy:
-        def close(self): ...
+        def close(self):
+            ...
 
     class DummySock:
         def __init__(self):
@@ -193,7 +226,8 @@ def test_write(telnet_transport):
             time.sleep(1)
             return self.buf.read()
 
-        def settimeout(self, t): ...
+        def settimeout(self, t):
+            ...
 
     telnet_transport.socket = Dummy()
     telnet_transport.socket.sock = DummySock()
