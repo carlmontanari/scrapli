@@ -392,7 +392,6 @@ def test_transport_factory_non_core(monkeypatch, test_data):
     ),
 )
 def test_resolve_ssh_config(fs_, real_ssh_config_file_path, base_driver, test_data):
-
     transport, input_data, expected_output, mount_real_file, fake_fs_destination = test_data
     if mount_real_file:
         fs_.add_real_file(source_path=real_ssh_config_file_path, target_path=fake_fs_destination)
