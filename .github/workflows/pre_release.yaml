@@ -4,8 +4,7 @@ on:
   schedule:
     # weekly at 0300 PST/1000 UTC on Sunday
     - cron: '0 10 * * 0'
-  # commented out till 3.13
-  # workflow_dispatch:
+  workflow_dispatch: {}
 
 jobs:
   build_posix:
