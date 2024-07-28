@@ -19,7 +19,14 @@ def _textfsm_get_template_directory() -> str:
     if sys.version_info >= (3, 9):
         return f"{importlib.resources.files('ntc_templates')}/templates"
 
-    with importlib.resources.path("ntc_templates", "templates") as path:
+    if sys.version_info >= (3, 11):
+        # https://docs.python.org/3/library/importlib.resources.html#importlib.resources.path
+        with importlib.resources.as_file(
+            importlib.resources.files("ntc_templates").joinpath("templates")
+        ) as path:
+            return str(path)
+
+    with importlib.resources.path("ntc_templates", "templates") as path:  # pylint: disable=W4902
         return str(path)
 
 
