@@ -55,6 +55,16 @@ Homepage = "https://github.com/carlmontanari/scrapli"
 [tool.setuptools.dynamic]
 version = { attr = "scrapli.__version__" }
 dependencies = { file = "requirements.txt" }
+# dev-darwin is same as dev but excludes ssh2-python
+optional-dependencies.dev-darwin = { file = [
+    "requirements-dev.txt",
+    "requirements-textfsm.txt",
+    "requirements-genie.txt",
+    "requirements-ttp.txt",
+    "requirements-paramiko.txt",
+    "requirements-asyncssh.txt",
+    "requirements-community.txt",
+] }
 optional-dependencies.dev = { file = [
     "requirements-dev.txt",
     "requirements-textfsm.txt",

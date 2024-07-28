@@ -32,8 +32,8 @@ jobs:
           python -m pip install --upgrade setuptools wheel
           python -m pip install nox
       - name: run nox
-        # TERM is needed needed to make the terminal a tty (i think? without this system ssh is super broken)
+        # TERM is needed to make the terminal a tty (i think? without this system ssh is super broken)
         # libssh2/ssh2-python were getting libssh2 linked incorrectly/weirdly and libraries were trying to be loaded
         # from the temp dir that pip used for installs. setting the DYLD_LIBRARY_PATH envvar seems to solve this -- note
         # that if brew macos packages get updated on runners this may break again :)
-        run: TERM=xterm DYLD_LIBRARY_PATH=/opt/homebrew/Cellar/libssh2/1.11.0_1/lib python -m nox -p $FRIENDLY_PYTHON_VERSION -k "not darglint"
+        run: TERM=xterm DYLD_LIBRARY_PATH=/opt/homebrew/Cellar/libssh2/1.11.0_1/lib PRE_RELEASE=1 python -m nox -p $FRIENDLY_PYTHON_VERSION -k "not darglint"
