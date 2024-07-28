@@ -76,7 +76,7 @@ def device_type(request):
     yield request.param
 
 
-@pytest.fixture(scope="function", params=["system", "ssh2", "paramiko"])
+@pytest.fixture(scope="function", params=["system", "paramiko"])
 def transport(request):
     yield request.param
 

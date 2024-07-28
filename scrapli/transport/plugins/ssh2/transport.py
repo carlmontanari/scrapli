@@ -5,9 +5,11 @@ from contextlib import suppress
 from dataclasses import dataclass
 from typing import Optional
 
-from ssh2.channel import Channel
-from ssh2.exceptions import AuthenticationError, SSH2Error
-from ssh2.session import Session
+# ignoring unable to import complaints for linters as ssh2 support is a bit lackluster due to
+# upstream library staleness
+from ssh2.channel import Channel  # pylint: disable=E0401,E0611
+from ssh2.exceptions import AuthenticationError, SSH2Error  # pylint: disable=E0401,E0611
+from ssh2.session import Session  # pylint: disable=E0401,E0611
 
 from scrapli.exceptions import (
     ScrapliAuthenticationFailed,
