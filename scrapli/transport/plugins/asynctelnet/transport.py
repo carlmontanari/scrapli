@@ -117,6 +117,18 @@ class AsynctelnetTransport(AsyncTransport):
         if not self.stdout:
             raise ScrapliConnectionNotOpened
 
+        if self._raw_buf.find(NULL) != -1:
+            raise ScrapliConnectionNotOpened("server returned EOF, connection not opened")
+
+        index = self._raw_buf.find(IAC)
+        if index == -1:
+            self._cooked_buf = self._raw_buf
+            self._raw_buf = b""
+            return
+
+        self._cooked_buf = self._raw_buf[:index]
+        self._raw_buf = self._raw_buf[index:]
+
         # control_buf is the buffer for control characters, we reset this after being "done" with
         # responding to a control sequence, so it always represents the "current" control sequence
         # we are working on responding to
@@ -124,9 +136,6 @@ class AsynctelnetTransport(AsyncTransport):
 
         while self._raw_buf:
             c, self._raw_buf = self._raw_buf[:1], self._raw_buf[1:]
-            if not c:
-                raise ScrapliConnectionNotOpened("server returned EOF, connection not opened")
-
             control_buf = self._handle_control_chars_response(control_buf=control_buf, c=c)
 
     async def open(self) -> None:
@@ -204,9 +213,6 @@ class AsynctelnetTransport(AsyncTransport):
     async def read(self) -> bytes:
         if not self.stdout:
             raise ScrapliConnectionNotOpened
-
-        if self._control_char_sent_counter < self._control_char_sent_limit:
-            self._handle_control_chars()
 
         while not self._cooked_buf and not self._eof:
             await self._read()
