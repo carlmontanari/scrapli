@@ -16,6 +16,8 @@ Changelog
 - Fixed scrapli hanging when connecting to misbehaving ssh servers from @forrejam in #321.
 - Unset `onclr` in system transport -- this should not impact scrapli itself but is a big deal for scrapli_netconf,
   see scrapli_netconf issue 142 for more details.
+- Ensure that channel/transport is closed if there is an exception encoutnered during open in context manager, 
+  thank you to @Basskip in #345 for raising this
 
 
 ## 2024.01.30
