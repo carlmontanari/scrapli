@@ -5,7 +5,7 @@ from typing import Any, Optional, Type, TypeVar
 
 from scrapli.channel import Channel
 from scrapli.driver.base.base_driver import BaseDriver
-from scrapli.exceptions import ScrapliValueError
+from scrapli.exceptions import ScrapliConnectionError, ScrapliValueError
 from scrapli.transport import ASYNCIO_TRANSPORTS, CORE_TRANSPORTS
 
 _T = TypeVar("_T", bound="Driver")
@@ -42,10 +42,22 @@ class Driver(BaseDriver):
             _T: a concrete implementation of the opened Driver object
 
         Raises:
-            N/A
+            ScrapliConnectionError: if an exception occurs during opening
 
         """
-        self.open()
+        try:
+            self.open()
+        except Exception as exc:
+            self.logger.critical(
+                "encountered exception during open in context manager, "
+                "attempting to close transport and channel"
+            )
+
+            self.transport.close()
+            self.channel.close()
+
+            raise ScrapliConnectionError(exc) from exc
+
         return self
 
     def __exit__(
