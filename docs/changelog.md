@@ -16,9 +16,10 @@ Changelog
 - Fixed scrapli hanging when connecting to misbehaving ssh servers from @forrejam in #321.
 - Unset `onclr` in system transport -- this should not impact scrapli itself but is a big deal for scrapli_netconf,
   see scrapli_netconf issue 142 for more details.
-- Ensure that channel/transport is closed if there is an exception encoutnered during open in context manager, 
+- Ensure that channel/transport is closed if there is an exception encountered during open in context manager, 
   thank you to @Basskip in #345 for raising this
-
+- Critical path logging refactored to not use f-strings for performance reasons, see #343 and thank you to @MattCatz
+- Improved control char handling for telnet transports in #344, also thank you to @MattCatz
 
 ## 2024.01.30
 
