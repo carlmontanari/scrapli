@@ -415,7 +415,7 @@ class BaseChannel:
 
         return regex_channel_outputs_pattern
 
-    def _ssh_message_handler(self, output: bytes) -> None:  # noqa: C901
+    def _ssh_message_handler(self, output: bytes) -> None:  # pylint:disable=too-many-branches
         """
         Parse EOF messages from _pty_authenticate and create log/stack exception message
 

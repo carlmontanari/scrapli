@@ -193,9 +193,9 @@ def black(session):
 
 
 @nox.session(python=["3.11"])
-def pylama(session):
+def pylint(session):
     """
-    Nox run pylama
+    Nox run pylint
 
     Args:
         session: nox session
@@ -208,7 +208,7 @@ def pylama(session):
 
     """
     session.install(*_get_install_test_args())
-    session.run("python", "-m", "pylama", ".")
+    session.run("python", "-m", "pylint", "scrapli/")
 
 
 @nox.session(python=["3.11"])
@@ -249,7 +249,6 @@ def mypy(session):
     session.install(".")
     session.install(f"mypy{DEV_REQUIREMENTS['mypy']}")
     session.install(f"types-paramiko{DEV_REQUIREMENTS['types-paramiko']}")
-    session.install(f"types-pkg-resources{DEV_REQUIREMENTS['types-pkg-resources']}")
     session.run("python", "-m", "mypy", "--strict", "scrapli/")
 
 

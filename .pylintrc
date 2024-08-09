@@ -46,7 +46,7 @@ ignore=CVS
 
 # Add files or directories matching the regex patterns to the ignore-list. The
 # regex matches against paths and can be in Posix or Windows format.
-ignore-paths=
+ignore-paths = ".nox/*,.private/*,build/*,docs/*,private/*,scrapli/transport/plugins/system/ptyprocess.py,site/*,tests/*,venv/*"
 
 # Files or directories matching the regex patterns are skipped. The regex
 # matches against base names, not paths. The default value ignores Emacs file
@@ -143,7 +143,7 @@ confidence=HIGH,
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use "--disable=all --enable=classes
 # --disable=W".
-disable=C0103,C0115,R0901,R0902,R0903,R0913,R0914,W1202,W1203
+disable=C0103,C0115,R0401,R0801,R0901,R0902,R0903,R0913,R0914,W1202,W1203
 # C0103 = constant-name (a little too aggressive for some things that aren't "really" constants")
 # C0115 = class docstrings (init doc strings cover this already)
 # W1202 = use % formatting for logging (ignore, using f-strings)
@@ -153,6 +153,8 @@ disable=C0103,C0115,R0901,R0902,R0903,R0913,R0914,W1202,W1203
 # R0903 = too-few-public methods
 # R0913 = too-many-arguments
 # R0914 = too-many-local-variables
+# R0801 = similar-lines
+# R0401 = cyclic-import (too many false positives, seems like this is a common complaint :p)
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option

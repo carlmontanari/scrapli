@@ -6,7 +6,7 @@ help:
 lint:  ## Run linters
 	python -m isort .
 	python -m black .
-	python -m pylama .
+	python -m pylint scrapli/
 	python -m pydocstyle .
 	python -m mypy --strict scrapli/
 
