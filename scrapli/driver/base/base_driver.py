@@ -1,4 +1,4 @@
-"""scrapli.driver.base.base_driver"""  # noqa: C0302
+"""scrapli.driver.base.base_driver"""  # pylint:disable=too-many-lines
 
 import importlib
 from dataclasses import fields
