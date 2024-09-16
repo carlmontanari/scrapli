@@ -142,7 +142,10 @@ class Response:
             self.failed = False
 
     def textfsm_parse_output(
-        self, template: Union[str, TextIO, None] = None, to_dict: bool = True
+        self,
+        template: Union[str, TextIO, None] = None,
+        to_dict: bool = True,
+        raise_err: bool = False,
     ) -> Union[Dict[str, Any], List[Any]]:
         """
         Parse results with textfsm, always return structured data
@@ -153,7 +156,7 @@ class Response:
             template: string path to textfsm template or opened textfsm template file
             to_dict: convert textfsm output from list of lists to list of dicts -- basically create
                 dict from header and row data so it is easier to read/parse the output
-
+            raise_err: exceptions in the textfsm parser will raised for the caller to handle
         Returns:
             structured_result: empty list or parsed data from textfsm
 
@@ -170,7 +173,12 @@ class Response:
             return []
 
         template = cast(Union[str, TextIOWrapper], template)
-        return textfsm_parse(template=template, output=self.result, to_dict=to_dict) or []
+        return (
+            textfsm_parse(
+                template=template, output=self.result, to_dict=to_dict, raise_err=raise_err
+            )
+            or []
+        )
 
     def genie_parse_output(self) -> Union[Dict[str, Any], List[Any]]:
         """

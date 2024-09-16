@@ -268,7 +268,8 @@ scrapli supports parsing output with TextFSM and ntc-templates. This of course r
  set for you (based on the driver device type). If you wish to parse the output of your send commands, you can use the
   `textfsm_parse_output` method of the response object. This method will attempt to find the template for you
    -- based on the textfsm-platform and the channel-input (the command sent). If textfsm parsing succeeds, the
-    structured result is returned. If textfsm parsing fails, an empty list is returned.
+    structured result is returned. If textfsm parsing fails, an empty list is returned. The `textfsm_parse_output` method 
+    also accepts the `raise_err` field to allow parsing exceptions to be handled by the caller.
 
 ```python
 from scrapli.driver.core import IOSXEDriver
