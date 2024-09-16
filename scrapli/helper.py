@@ -97,7 +97,7 @@ def _textfsm_to_dict(
 
 
 def textfsm_parse(
-    template: Union[str, TextIOWrapper], output: str, to_dict: bool = True
+    template: Union[str, TextIOWrapper], output: str, to_dict: bool = True, raise_err: bool = False
 ) -> Union[List[Any], Dict[str, Any]]:
     """
     Parse output with TextFSM and ntc-templates, try to return structured output
@@ -107,6 +107,7 @@ def textfsm_parse(
         output: unstructured output from device to parse
         to_dict: convert textfsm output from list of lists to list of dicts -- basically create dict
             from header and row data so it is easier to read/parse the output
+        raise_err: exceptions in the textfsm parser will raised for the caller to handle
 
     Returns:
         output: structured data
@@ -136,8 +137,10 @@ def textfsm_parse(
                 structured_output=structured_output, header=re_table.header
             )
         return structured_output
-    except textfsm.parser.TextFSMError:
+    except textfsm.parser.TextFSMError as e:
         logger.warning("failed to parse data with textfsm")
+        if raise_err:
+            raise e
     return []
 
 
