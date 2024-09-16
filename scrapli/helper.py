@@ -113,7 +113,8 @@ def textfsm_parse(
         output: structured data
 
     Raises:
-        textfsm.parser.TextFSMError: If raise_err is set and a textfsm parsing error occours
+        ScrapliException: If raise_err is set and a textfsm parsing error occurs, raises from the
+            originating textfsm.parser.TextFSMError exception.
 
     """
     import textfsm  # pylint: disable=C0415
