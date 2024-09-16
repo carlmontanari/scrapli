@@ -155,6 +155,14 @@ def test_response_parse_textfsm_fail():
     assert response.textfsm_parse_output() == []
 
 
+def test_response_parse_textfsm_fail_with_raise():
+    response = Response("localhost", channel_input="show ip arp", textfsm_platform="cisco_ios")
+    response_bytes = b"not ip arp output"
+    response.record_response(response_bytes)
+    with pytest.raises(Exception):
+        assert response.textfsm_parse_output(raise_err=True) == []
+
+
 def test_response_parse_textfsm_no_template():
     response = Response("localhost", channel_input="show ip arp", textfsm_platform="potato")
     response_bytes = b""

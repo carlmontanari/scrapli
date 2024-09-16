@@ -142,6 +142,13 @@ def test_textfsm_parse_failed_to_parse():
     assert result == []
 
 
+def test_textfsm_parse_failed_to_parse_with_raise():
+    template = _textfsm_get_template("cisco_ios", "show ip arp")
+    with pytest.raises(Exception):
+        result = textfsm_parse(template, "not really arp data", raise_err=True)
+        assert result == []
+
+
 @pytest.mark.skipif(
     sys.version_info.minor > 10, reason="genie not currently available for python 3.11"
 )

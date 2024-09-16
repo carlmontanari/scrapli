@@ -113,7 +113,7 @@ def textfsm_parse(
         output: structured data
 
     Raises:
-        N/A
+        textfsm.parser.TextFSMError: If raise_err is set and a textfsm parsing error occours
 
     """
     import textfsm  # pylint: disable=C0415
@@ -137,10 +137,10 @@ def textfsm_parse(
                 structured_output=structured_output, header=re_table.header
             )
         return structured_output
-    except textfsm.parser.TextFSMError as e:
+    except textfsm.parser.TextFSMError:
         logger.warning("failed to parse data with textfsm")
         if raise_err:
-            raise e
+            raise
     return []
 
 
