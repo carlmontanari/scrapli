@@ -47,7 +47,7 @@ async def iosxr_on_close(conn: AsyncNetworkDriver) -> None:
 
 
 class AsyncIOSXRDriver(AsyncNetworkDriver):
-    def __init__(
+    def __init__(  # pylint: disable=R0917
         self,
         host: str,
         privilege_levels: Optional[Dict[str, PrivilegeLevel]] = None,

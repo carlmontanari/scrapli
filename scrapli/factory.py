@@ -30,7 +30,7 @@ from scrapli.logging import logger
 from scrapli.transport import ASYNCIO_TRANSPORTS, CORE_TRANSPORTS
 
 
-def _build_provided_kwargs_dict(  # pylint: disable=R0914
+def _build_provided_kwargs_dict(  # pylint: disable=R0914,R0917
     host: str,
     privilege_levels: Optional[Dict[str, PrivilegeLevel]],
     default_desired_privilege_level: Optional[str],
@@ -337,7 +337,7 @@ class Scrapli(NetworkDriver):
         logger.info(msg)
         return final_driver, additional_kwargs
 
-    def __new__(  # pylint: disable=R0914
+    def __new__(  # pylint: disable=R0914,R0917
         cls,
         platform: str,
         host: str,
@@ -636,7 +636,7 @@ class AsyncScrapli(AsyncNetworkDriver):
         logger.info(msg)
         return final_driver, additional_kwargs
 
-    def __new__(  # pylint: disable=R0914
+    def __new__(  # pylint: disable=R0914,R0917
         cls,
         platform: str,
         host: str,

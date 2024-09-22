@@ -48,7 +48,7 @@ def eos_on_close(conn: NetworkDriver) -> None:
 
 
 class EOSDriver(NetworkDriver, EOSDriverBase):
-    def __init__(
+    def __init__(  # pylint: disable=R0917
         self,
         host: str,
         privilege_levels: Optional[Dict[str, PrivilegeLevel]] = None,

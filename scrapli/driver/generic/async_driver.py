@@ -35,7 +35,7 @@ async def generic_on_open(conn: "AsyncGenericDriver") -> None:
 
 
 class AsyncGenericDriver(AsyncDriver, BaseGenericDriver):
-    def __init__(
+    def __init__(  # pylint: disable=R0917
         self,
         host: str,
         port: Optional[int] = None,
@@ -115,7 +115,7 @@ class AsyncGenericDriver(AsyncDriver, BaseGenericDriver):
         return prompt
 
     @timeout_modifier
-    async def _send_command(
+    async def _send_command(  # pylint: disable=R0917
         self,
         command: str,
         strip_prompt: bool = True,
@@ -484,7 +484,7 @@ class AsyncGenericDriver(AsyncDriver, BaseGenericDriver):
             raw_response=raw_response, processed_response=processed_response, response=response
         )
 
-    async def read_callback(  # noqa: C901
+    async def read_callback(  # pylint: disable=R0917
         self,
         callbacks: List["ReadCallback"],
         initial_input: Optional[str] = None,

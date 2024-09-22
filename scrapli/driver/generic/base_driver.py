@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 
 class ReadCallback:
-    def __init__(
+    def __init__(  # pylint: disable=R0917
         self,
         callback: Callable[
             [Union["GenericDriver", "AsyncGenericDriver"], str],

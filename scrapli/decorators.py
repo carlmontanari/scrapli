@@ -77,7 +77,7 @@ def _signal_raise_exception(
     return _handle_timeout(transport=transport, logger=logger, message=message)
 
 
-def _multiprocessing_timeout(
+def _multiprocessing_timeout(  # pylint: disable=R0917
     transport: "BaseTransport",
     logger: LoggerAdapterT,
     timeout: float,

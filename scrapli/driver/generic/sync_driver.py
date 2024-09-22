@@ -35,7 +35,7 @@ def generic_on_open(conn: "GenericDriver") -> None:
 
 
 class GenericDriver(Driver, BaseGenericDriver):
-    def __init__(
+    def __init__(  # pylint: disable=R0917
         self,
         host: str,
         port: Optional[int] = None,
@@ -116,7 +116,7 @@ class GenericDriver(Driver, BaseGenericDriver):
         return prompt
 
     @timeout_modifier
-    def _send_command(
+    def _send_command(  # pylint: disable=R0917
         self,
         command: str,
         strip_prompt: bool = True,
@@ -209,7 +209,7 @@ class GenericDriver(Driver, BaseGenericDriver):
         )
         return response
 
-    def send_commands(
+    def send_commands(  # pylint: disable=R0917
         self,
         commands: List[str],
         *,
@@ -485,7 +485,7 @@ class GenericDriver(Driver, BaseGenericDriver):
             raw_response=raw_response, processed_response=processed_response, response=response
         )
 
-    def read_callback(
+    def read_callback(  # pylint: disable=R0917
         self,
         callbacks: List["ReadCallback"],
         initial_input: Optional[str] = None,
