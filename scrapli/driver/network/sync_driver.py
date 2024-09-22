@@ -11,7 +11,7 @@ from scrapli.response import MultiResponse, Response
 
 
 class NetworkDriver(GenericDriver, BaseNetworkDriver):
-    def __init__(
+    def __init__(  # pylint: disable=R0917
         self,
         host: str,
         privilege_levels: Dict[str, PrivilegeLevel],

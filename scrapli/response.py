@@ -10,7 +10,7 @@ from scrapli.helper import _textfsm_get_template, genie_parse, textfsm_parse, tt
 
 
 class Response:
-    def __init__(
+    def __init__(  # pylint: disable=R0917
         self,
         host: str,
         channel_input: str,

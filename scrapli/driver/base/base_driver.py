@@ -18,7 +18,7 @@ from scrapli.transport.plugins.system.transport import SystemTransport
 
 
 class BaseDriver:
-    def __init__(
+    def __init__(  # pylint: disable=R0917
         self,
         host: str,
         port: Optional[int] = None,
