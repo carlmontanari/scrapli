@@ -302,7 +302,7 @@ class BaseChannel:
                 # ignore here
                 # note that this will *always* be binary mode, so there doesn't need to be any
                 # encoding, hence ignoring that pylint message!
-                self.channel_log = open(  # pylint: disable=W1514,R1732
+                self.channel_log = open(  # pylint: disable=W1514,R1732,W1501
                     channel_log_destination,
                     mode=f"{self._base_channel_args.channel_log_mode}b",  # type: ignore
                 )
