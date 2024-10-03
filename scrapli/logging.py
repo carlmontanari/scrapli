@@ -1,7 +1,5 @@
 """scrapli.logging"""
 
-from ast import literal_eval
-
 # slightly irritating renaming to prevent a cyclic lookup in griffe for mkdocstrings
 from logging import FileHandler as FileHandler_
 from logging import Formatter as Formatter_
@@ -223,13 +221,13 @@ class ScrapliFileHandler(FileHandler_):
             # no message in the buffer, set the current record to the _record_buf
             self._record_buf = record
             # get the payload of the message after "read: " and re-convert it to bytes
-            self._record_msg_buf = literal_eval(record.msg[self._read_msg_prefix_len :])  # noqa
+            self._record_msg_buf = record.msg[self._read_msg_prefix_len :].encode()
             return
 
         # if we get here we know we are getting subsequent read messages we want to buffer -- the
         # log record data will all be the same, its just the payload that will be new, so add that
         # current payload to the _record_msg_buf buffer
-        self._record_msg_buf += literal_eval(record.msg[self._read_msg_prefix_len :])  # noqa
+        self._record_msg_buf += record.msg[self._read_msg_prefix_len :].encode()
 
 
 def get_instance_logger(
