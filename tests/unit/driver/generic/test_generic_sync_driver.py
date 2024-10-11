@@ -132,6 +132,13 @@ def test_readcallback_basic(monkeypatch, sync_generic_driver):
             only_once=True,
         ),
         ReadCallback(
+            contains="RTR1#",
+            callback=callback_one,
+            name="call1.5",
+            case_insensitive=True,
+            only_once=True,
+        ),
+        ReadCallback(
             contains_re=r"^rtr1#",
             callback=callback_two,
             complete=True,
@@ -140,5 +147,5 @@ def test_readcallback_basic(monkeypatch, sync_generic_driver):
 
     sync_generic_driver.read_callback(callbacks=callbacks, initial_input="nada")
 
-    assert callback_one_counter == 1
+    assert callback_one_counter == 2
     assert callback_two_counter == 1
