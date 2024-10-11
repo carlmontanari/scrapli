@@ -123,6 +123,8 @@ class ReadCallback:
         """
         if self.contains and not self._contains_bytes:
             self._contains_bytes = self.contains.encode()
+            if self.case_insensitive:
+                self._contains_bytes = self._contains_bytes.lower()
 
         return self._contains_bytes
 
@@ -143,6 +145,8 @@ class ReadCallback:
         """
         if self.not_contains and not self._not_contains_bytes:
             self._not_contains_bytes = self.not_contains.encode()
+            if self.case_insensitive:
+                self._not_contains_bytes = self._not_contains_bytes.lower()
 
         return self._not_contains_bytes
 
