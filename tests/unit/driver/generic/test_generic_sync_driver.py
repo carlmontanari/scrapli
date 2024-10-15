@@ -1,3 +1,4 @@
+import logging
 import pytest
 
 from scrapli.driver.generic.base_driver import ReadCallback
@@ -100,9 +101,15 @@ def test_send_interact_no_base_transport_args(sync_generic_driver):
         sync_generic_driver.send_interactive(interact_events=[])
 
 
-def test_readcallback_basic(monkeypatch, sync_generic_driver):
+def test_readcallback_basic(caplog, monkeypatch, sync_generic_driver):
+    outputs = [b"some output#", b"rtr1#", b"rtr1#", b"rtr1#", b"rtr1#"]
+    i = -1
+
     def _read(cls):
-        return b"rtr1#"
+        nonlocal i, outputs
+
+        i += 1
+        return outputs[i]
 
     def _write(cls, channel_input, redacted=False):
         return
@@ -123,7 +130,16 @@ def test_readcallback_basic(monkeypatch, sync_generic_driver):
 
         callback_two_counter += 1
 
+    def callback_some(cls, read_output):
+        pass
+
     callbacks = [
+        ReadCallback(
+            contains="some",
+            callback=callback_some,
+            name="some",
+            only_once=True,
+        ),
         ReadCallback(
             contains="rtr1#",
             callback=callback_one,
@@ -145,7 +161,12 @@ def test_readcallback_basic(monkeypatch, sync_generic_driver):
         ),
     ]
 
-    sync_generic_driver.read_callback(callbacks=callbacks, initial_input="nada")
+    with caplog.at_level(logging.WARNING):
+        sync_generic_driver.read_callback(callbacks=callbacks, initial_input="nada")
 
+    assert "some matches but is set to 'only_once'" not in caplog.text
+    assert "call1 matches but is set to 'only_once'" in caplog.text
+    assert "call1.5 matches but is set to 'only_once'" in caplog.text
+    assert "call2 matches but is set to 'only_once'" not in caplog.text
     assert callback_one_counter == 2
     assert callback_two_counter == 1
