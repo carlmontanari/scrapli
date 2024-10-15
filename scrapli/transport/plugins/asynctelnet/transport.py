@@ -110,15 +110,10 @@ class AsynctelnetTransport(AsyncTransport):
 
         Raises:
             ScrapliConnectionNotOpened: if connection is not opened for some reason
-            ScrapliConnectionNotOpened: if we read an empty byte string from the reader -- this
-                indicates the server sent an EOF -- see #142
 
         """
         if not self.stdout:
             raise ScrapliConnectionNotOpened
-
-        if self._raw_buf.find(NULL) != -1:
-            raise ScrapliConnectionNotOpened("server returned EOF, connection not opened")
 
         index = self._raw_buf.find(IAC)
         if index == -1:
