@@ -595,7 +595,8 @@ class GenericDriver(Driver, BaseGenericDriver):
                 _run_callback = callback.check(read_output=read_output)
 
                 if (
-                    callback.only_once is True
+                    _run_callback is True
+                    and callback.only_once is True
                     and callback._triggered is True  # pylint: disable=W0212
                 ):
                     self.logger.warning(
