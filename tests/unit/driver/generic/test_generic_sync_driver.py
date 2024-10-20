@@ -1,4 +1,5 @@
 import logging
+
 import pytest
 
 from scrapli.driver.generic.base_driver import ReadCallback
