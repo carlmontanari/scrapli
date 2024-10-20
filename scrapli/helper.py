@@ -4,7 +4,7 @@ import importlib
 import importlib.resources
 import sys
 import urllib.request
-from io import BytesIO, TextIOWrapper
+from io import BufferedReader, BytesIO, TextIOWrapper
 from pathlib import Path
 from shutil import get_terminal_size
 from typing import Any, Dict, List, Optional, TextIO, Tuple, Union
@@ -119,6 +119,8 @@ def textfsm_parse(
     """
     import textfsm  # pylint: disable=C0415
 
+    template_file: Union[BufferedReader, TextIOWrapper]
+
     if not isinstance(template, TextIOWrapper):
         if template.startswith("http://") or template.startswith("https://"):
             with urllib.request.urlopen(template) as response:
@@ -127,7 +129,7 @@ def textfsm_parse(
                     encoding=response.headers.get_content_charset(),
                 )
         else:
-            template_file = TextIOWrapper(open(template, mode="rb"))  # pylint: disable=R1732
+            template_file = open(template, mode="rb")  # pylint: disable=R1732
     else:
         template_file = template
     re_table = textfsm.TextFSM(template_file)
