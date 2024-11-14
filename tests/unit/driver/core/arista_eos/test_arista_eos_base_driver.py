@@ -20,6 +20,14 @@ from scrapli.exceptions import ScrapliPrivilegeError, ScrapliValueError
         ("configuration", "localhost(some thing)(config)#"),
         ("configuration", "localhost(some thing)(config-s-tacocat)#"),
         ("configuration", "eos_switch(config-s-scrapl-qos-profile-CORE-EGRESS-QUEUING-txq-5)#"),
+        (
+            "configuration",
+            "eos_switch(config-sg-tacacs+-my_group)#",
+        ),  # conf t / aaa group server tacacs+ my_group
+        (
+            "configuration",
+            "eos_switch(config-s-sc-sg-tacacs+-my_group)#",
+        ),  # conf s / aaa group server tacacs+ my_group
     ],
     ids=[
         "exec",
@@ -33,6 +41,8 @@ from scrapli.exceptions import ScrapliPrivilegeError, ScrapliValueError
         "config_with_space",
         "config_session",
         "config_session_very_long_qos_profile",
+        "config_terminal_tacacs_plus",
+        "config_session_tacacs_plus",
     ],
 )
 def test_prompt_patterns(priv_pattern, sync_eos_driver):
