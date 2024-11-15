@@ -51,6 +51,7 @@ FAILED_WHEN_CONTAINS = [
     "% Invalid input",
     "% Cannot commit",
     "% Unavailable command",
+    "% Duplicate sequence number",
 ]
 
 
