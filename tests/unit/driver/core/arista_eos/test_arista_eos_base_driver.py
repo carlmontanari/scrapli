@@ -47,7 +47,7 @@ def test_prompt_patterns(priv_pattern, sync_eos_driver):
 
     assert match
 
-    if "config-s" in prompt:
+    if "config-s-" in prompt:
         # we will match by the pattern but the `not_contains` will mean that we should end up
         # with 0 matches
         with pytest.raises(ScrapliPrivilegeError):
