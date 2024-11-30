@@ -5,7 +5,7 @@ from scrapli.driver.network.base_driver import PrivilegeLevel
 PRIVS = {
     "exec": (
         PrivilegeLevel(
-            pattern=r"^({\w+(:\d){0,1}}\n){0,1}[\w\-@()/:\.]{1,63}>\s?$",
+            pattern=r"^({\w+(:(\w+){0,1}\d){0,1}}\n){0,1}[\w\-@()/:\.]{1,63}>\s?$",
             name="exec",
             previous_priv="",
             deescalate="",
@@ -16,7 +16,7 @@ PRIVS = {
     ),
     "configuration": (
         PrivilegeLevel(
-            pattern=r"^({\w+(:\d){0,1}}\[edit\]\n){0,1}[\w\-@()/:\.]{1,63}#\s?$",
+            pattern=r"^({\w+(:(\w+){0,1}\d){0,1}}\[edit\]\n){0,1}[\w\-@()/:\.]{1,63}#\s?$",
             name="configuration",
             previous_priv="exec",
             deescalate="exit configuration-mode",
@@ -27,7 +27,7 @@ PRIVS = {
     ),
     "configuration_exclusive": (
         PrivilegeLevel(
-            pattern=r"^({\w+(:\d){0,1}}\[edit\]\n){0,1}[\w\-@()/:\.]{1,63}#\s?$",
+            pattern=r"^({\w+(:(\w+){0,1}\d){0,1}}\[edit\]\n){0,1}[\w\-@()/:\.]{1,63}#\s?$",
             name="configuration_exclusive",
             previous_priv="exec",
             deescalate="exit configuration-mode",
@@ -38,7 +38,7 @@ PRIVS = {
     ),
     "configuration_private": (
         PrivilegeLevel(
-            pattern=r"^({\w+(:\d){0,1}}\[edit\]\n){0,1}[\w\-@()/:\.]{1,63}#\s?$",
+            pattern=r"^({\w+(:(\w+){0,1}\d){0,1}}\[edit\]\n){0,1}[\w\-@()/:\.]{1,63}#\s?$",
             name="configuration_private",
             previous_priv="exec",
             deescalate="exit configuration-mode",
