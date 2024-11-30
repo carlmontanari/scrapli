@@ -18,7 +18,7 @@ from scrapli.driver.core.juniper_junos.base_driver import PRIVS
         ("configuration", "rancid@router2.xyz6# "),
         ("configuration", "{master}[edit]\nusername@MX-960-PE1#"),
         ("configuration", "{backup}[edit]\nusername@MX-480-PE2#"),
-        ("configuration", "{primary:node0}\nusername@SRX-4600-FW1#"),
+        ("configuration", "{primary:node0}[edit]\nusername@SRX-4600-FW1#"),
         ("shell", "asdfklsdjlf\n%"),
         ("shell", "[vrf:foo] regress@EVOvFOOBAR_RE0-re0:~$"),
         ("root_shell", "root@%"),
