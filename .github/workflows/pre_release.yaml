@@ -13,7 +13,7 @@ jobs:
       max-parallel: 2
       matrix:
         os: [ubuntu-latest, macos-latest]
-        version: ["3.13-dev"]
+        version: ["3.14-dev"]
     steps:
       - uses: actions/checkout@v4
       - name: set up python ${{ matrix.version }}

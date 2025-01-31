@@ -9,7 +9,7 @@ jobs:
       max-parallel: 1
       matrix:
         os: [ubuntu-latest]
-        version: ["3.11"]
+        version: ["3.13"]
     steps:
       - uses: actions/checkout@v4
       - name: set up python ${{ matrix.version }}
@@ -30,7 +30,7 @@ jobs:
       max-parallel: 1
       matrix:
         os: [ubuntu-latest]
-        version: ["3.11"]
+        version: ["3.13"]
     steps:
       - uses: actions/checkout@v4
       - name: set up python ${{ matrix.version }}
@@ -45,7 +45,7 @@ jobs:
       - name: run nox
         env:
           TERM: xterm
-        run: python -m nox -s unit_tests-3.11
+        run: python -m nox -s unit_tests-3.13
       - name: Upload coverage
         uses: codecov/codecov-action@v3
 
@@ -55,7 +55,7 @@ jobs:
       max-parallel: 10
       matrix:
         os: [ubuntu-latest, macos-latest]
-        version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
       - name: set up python ${{ matrix.version }}
