@@ -79,7 +79,7 @@ def _get_install_test_args() -> List[str]:
     return args
 
 
-@nox.session(python=["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"])
+@nox.session(python=["3.9", "3.10", "3.11", "3.12", "3.13"])
 def unit_tests(session):
     """
     Nox run unit tests
@@ -115,7 +115,7 @@ def unit_tests(session):
     )
 
 
-@nox.session(python=["3.11"])
+@nox.session(python=["3.13"])
 def integration_tests(session):
     """
     Nox run integration tests
@@ -152,7 +152,7 @@ def integration_tests(session):
     )
 
 
-@nox.session(python=["3.11"])
+@nox.session(python=["3.13"])
 def isort(session):
     """
     Nox run isort
@@ -172,7 +172,7 @@ def isort(session):
     session.run("python", "-m", "isort", "-c", ".")
 
 
-@nox.session(python=["3.11"])
+@nox.session(python=["3.13"])
 def black(session):
     """
     Nox run black
@@ -192,7 +192,7 @@ def black(session):
     session.run("python", "-m", "black", "--check", ".")
 
 
-@nox.session(python=["3.11"])
+@nox.session(python=["3.13"])
 def pylint(session):
     """
     Nox run pylint
@@ -211,7 +211,7 @@ def pylint(session):
     session.run("python", "-m", "pylint", "scrapli/")
 
 
-@nox.session(python=["3.11"])
+@nox.session(python=["3.13"])
 def pydocstyle(session):
     """
     Nox run pydocstyle
@@ -231,7 +231,7 @@ def pydocstyle(session):
     session.run("python", "-m", "pydocstyle", ".")
 
 
-@nox.session(python=["3.11"])
+@nox.session(python=["3.13"])
 def mypy(session):
     """
     Nox run mypy
@@ -252,7 +252,7 @@ def mypy(session):
     session.run("python", "-m", "mypy", "--strict", "scrapli/")
 
 
-@nox.session(python=["3.11"])
+@nox.session(python=["3.13"])
 def darglint(session):
     """
     Nox run darglint

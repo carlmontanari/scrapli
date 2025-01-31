@@ -28,17 +28,17 @@ license = { file = "LICENSE" }
 authors = [
     { name = "Carl Montanari", email = "carl.r.montanari@gmail.com" },
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: POSIX :: Linux",
     "Operating System :: MacOS",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3 :: Only",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
@@ -93,6 +93,7 @@ scrapli = [
 line-length = 100
 target-version = [
     "py311",
+    "py313",
 ]
 
 [tool.isort]
@@ -118,7 +119,7 @@ sort = "cover"
 omit = ["scrapli/transport/plugins/system/ptyprocess.py"]
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.13"
 pretty = true
 ignore_missing_imports = true
 warn_redundant_casts = true
