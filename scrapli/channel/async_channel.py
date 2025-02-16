@@ -334,6 +334,9 @@ class AsyncChannel(BaseChannel):
                 ):
                     return
 
+                # see https://github.com/carlmontanari/scrapli/issues/363#issuecomment-2661495686
+                await asyncio.sleep(0.1)
+
     @timeout_wrapper
     async def channel_authenticate_telnet(  # noqa: C901
         self, auth_username: str = "", auth_password: str = ""
@@ -420,6 +423,8 @@ class AsyncChannel(BaseChannel):
                     string=authenticate_buf,
                 ):
                     return
+
+                await asyncio.sleep(0.1)
 
     @timeout_wrapper
     async def get_prompt(self) -> str:
