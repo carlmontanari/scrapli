@@ -165,7 +165,6 @@ class ScrapliFileHandler(FileHandler_):
             delay=delay,
         )
         self._record_buf: Optional[LogRecord_] = None
-        self._record_msg_buf: bytes = b""
         self._read_msg_prefix = "read: "
         self._read_msg_prefix_len = len(self._read_msg_prefix)
 
@@ -188,10 +187,8 @@ class ScrapliFileHandler(FileHandler_):
                 "something unexpected happened in the ScrapliFileHandler log handler"
             )
 
-        self._record_buf.msg = f"read : {self._record_msg_buf!r}"
         super().emit(record=self._record_buf)
         self._record_buf = None
-        self._record_msg_buf = b""
 
     def emit(self, record: LogRecord_) -> None:
         """
@@ -218,16 +215,16 @@ class ScrapliFileHandler(FileHandler_):
             return
 
         if self._record_buf is None:
-            # no message in the buffer, set the current record to the _record_buf
+            # no message in the buffer, the new record is our _record_buf now
             self._record_buf = record
-            # get the payload of the message after "read: " and re-convert it to bytes
-            self._record_msg_buf = record.msg[self._read_msg_prefix_len :].encode()
+
             return
 
-        # if we get here we know we are getting subsequent read messages we want to buffer -- the
-        # log record data will all be the same, its just the payload that will be new, so add that
-        # current payload to the _record_msg_buf buffer
-        self._record_msg_buf += record.msg[self._read_msg_prefix_len :].encode()
+        # if we get here we know we are getting subsequent read messages we want to buffer, the
+        # only "message" will be "%r" since that is the only content the channel will ever be
+        # emitting that will be buffered, so we just need to append the args here (which will be
+        # the actual read value)
+        self._record_buf.args = (self._record_buf.args[0] + record.args[0],)  # type: ignore
 
 
 def get_instance_logger(
