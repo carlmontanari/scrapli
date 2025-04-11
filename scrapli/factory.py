@@ -308,7 +308,7 @@ class Scrapli(NetworkDriver):
         Parent get driver method for sync Scrapli
 
         Args:
-            platform: name of target platform; i.e. `cisco_iosxe`, `arista_eos`, etc.
+            platform: name of target platform; i.e. `cisco_iosxe`, `arista_eos`, `generic`, etc.
             variant: name of the target platform variant
 
         Returns:
