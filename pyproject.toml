@@ -7,22 +7,14 @@ requires = [
 
 [project]
 name = "scrapli"
-description = "Fast, flexible, sync/async, Python 3.7+ screen scraping client specifically for network devices"
+description = "Fast, flexible, sync/async, Python 3.9+ screen scraping client specifically for network devices"
 readme = "README.md"
 keywords = [
-  "arista",
-  "automation",
-  "cisco",
-  "eos",
-  "iosxe",
-  "iosxr",
-  "juniper",
-  "junos",
   "netconf",
   "network",
-  "nxos",
   "ssh",
   "telnet",
+  "async",
 ]
 license = { file = "LICENSE" }
 authors = [
@@ -55,34 +47,9 @@ Homepage = "https://github.com/carlmontanari/scrapli"
 [tool.setuptools.dynamic]
 version = { attr = "scrapli.__version__" }
 dependencies = { file = "requirements.txt" }
-# dev-darwin is same as dev but excludes ssh2-python
-optional-dependencies.dev-darwin = { file = [
-    "requirements-dev.txt",
-    "requirements-textfsm.txt",
-    "requirements-genie.txt",
-    "requirements-ttp.txt",
-    "requirements-paramiko.txt",
-    "requirements-asyncssh.txt",
-    "requirements-community.txt",
-] }
 optional-dependencies.dev = { file = [
     "requirements-dev.txt",
-    "requirements-textfsm.txt",
-    "requirements-genie.txt",
-    "requirements-ttp.txt",
-    "requirements-paramiko.txt",
-    "requirements-ssh2.txt",
-    "requirements-asyncssh.txt",
-    "requirements-community.txt",
 ] }
-optional-dependencies.docs = { file = "requirements-docs.txt" }
-optional-dependencies.textfsm = { file = "requirements-textfsm.txt" }
-optional-dependencies.genie = { file = "requirements-genie.txt" }
-optional-dependencies.ttp = { file = "requirements-ttp.txt" }
-optional-dependencies.paramiko = { file = "requirements-paramiko.txt" }
-optional-dependencies.ssh2 = { file = "requirements-ssh2.txt" }
-optional-dependencies.asyncssh = { file = "requirements-asyncssh.txt" }
-optional-dependencies.community = { file = "requirements-community.txt" }
 
 [tool.setuptools.package-data]
 scrapli = [
@@ -92,7 +59,6 @@ scrapli = [
 [tool.black]
 line-length = 100
 target-version = [
-    "py311",
     "py313",
 ]
 
@@ -101,22 +67,6 @@ profile = "black"
 line_length = 100
 multi_line_output = 3
 include_trailing_comma = true
-known_first_party = "scrapli"
-known_third_party = "asyncssh,pytest"
-[tool.pytest.ini_options]
-asyncio_mode = "auto"
-
-[tool.coverage.run]
-source = [
-    "scrapli/"
-]
-omit = [
-    "scrapli/transport/plugins/system/ptyprocess.py"
-]
-
-[tool.coverage.report]
-sort = "cover"
-omit = ["scrapli/transport/plugins/system/ptyprocess.py"]
 
 [tool.mypy]
 python_version = "3.13"
@@ -126,20 +76,9 @@ warn_redundant_casts = true
 warn_unused_configs = true
 strict_optional = true
 
-[[tool.mypy.overrides]]
-module = "scrapli.transport.plugins.system.ptyprocess"
-ignore_errors = true
+[tool.pylint.'MAIN']
+ignore-paths = ".private/*,private/*,tests/*,venv/*"
 
-[tool.pydocstyle]
-match-dir = "^scrapli/*"
-ignore = "D101,D202,D203,D212,D400,D406,D407,D408,D409,D415"
-# D101: missing docstring in public class
-# D202: No blank lines allowed after function docstring
-# D203: 1 blank line required before class docstring
-# D212: Multi-line docstring summary should start at the first line
-# D400: First line should end with a period
-# D406: Section name should end with a newline
-# D407: Missing dashed underline after section
-# D408: Section underline should be in the line following the sections name
-# D409: Section underline should match the length of its name
-# D415: first line should end with a period, question mark, or exclamation point
+[tool.pylint.'FORMAT']
+max-line-length = 100
+max-module-lines = 1000
