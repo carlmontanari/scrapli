@@ -229,6 +229,7 @@ class Scrapli(NetworkDriver):
         "cisco_iosxr": IOSXRDriver,
         "cisco_nxos": NXOSDriver,
         "juniper_junos": JunosDriver,
+        "generic": GenericDriver,
     }
     DRIVER_MAP = {"network": NetworkDriver, "generic": GenericDriver}
 
