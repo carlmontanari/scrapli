@@ -31,7 +31,7 @@ PRIVS = {
     ),
     "configuration": (
         PrivilegeLevel(
-            pattern=r"^[\w.\-]{1,63}(\(maint\-mode\))?\(config[\w.\-@/:\+]{0,32}\)#\s?$",
+            pattern=r"^[\w.\-]{1,63}(\(maint\-mode\))?\(conf[\w.\-@/:\+]{0,32}\)#\s?$",
             name="configuration",
             previous_priv="privilege_exec",
             deescalate="end",
