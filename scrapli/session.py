@@ -8,6 +8,11 @@ from scrapli.exceptions import OptionsException
 from scrapli.ffi_mapping import LibScrapliMapping
 from scrapli.ffi_types import DriverPointer, to_c_string
 
+DEFAULT_READ_DELAY_MIN_NS = 1_000
+DEFAULT_READ_DELAY_MAX_NS = 1_000_000
+DEFAULT_READ_DELAY_BACKOFF_FACTOR = 2
+READ_DELAY_MULTIPLIER = 2
+
 
 @dataclass
 class Options:  # pylint: disable=too-many-instance-attributes

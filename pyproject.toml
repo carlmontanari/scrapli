@@ -78,6 +78,7 @@ strict_optional = true
 
 [tool.pylint.'MAIN']
 ignore-paths = ".private/*,private/*,tests/*,venv/*"
+disable="duplicate-code"
 
 [tool.pylint.'FORMAT']
 max-line-length = 100

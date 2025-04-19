@@ -2,6 +2,7 @@
 
 from scrapli.auth import Options as AuthOptions
 from scrapli.cli import Cli
+from scrapli.netconf import Netconf
 from scrapli.session import Options as SessionOptions
 from scrapli.transport import BinOptions as TransportBinOptions
 from scrapli.transport import Options as TransportOptions
@@ -14,6 +15,7 @@ __version__ = "2.0.0-alpha.0"
 __all__ = (
     "AuthOptions",
     "Cli",
+    "Netconf",
     "SessionOptions",
     "TransportOptions",
     "TransportBinOptions",
