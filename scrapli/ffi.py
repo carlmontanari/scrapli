@@ -2,9 +2,12 @@
 
 import os
 import sys
+from logging import getLogger
 from pathlib import Path
 
 from scrapli.exceptions import LibScrapliException
+
+logger = getLogger(__name__)
 
 LIBSCRAPLI_VERSION = "0.0.1-alpha.1"
 LIBSCRAPLI_PATH_OVERRIDE_ENV = "LIBSCRAPLI_PATH"
@@ -25,12 +28,13 @@ def get_libscrapli_path() -> str:
         str: libscrapli shared library path
 
     Raises:
-        N/A
+        LibScrapliException: if libscrapli is not found at override path or default installation
+            path
 
     """
     override_path = os.environ.get(LIBSCRAPLI_PATH_OVERRIDE_ENV)
     if override_path is not None:
-        print(f"using libscrapli path override '{override_path}'")
+        logger.debug("using libscrapli path override '%s'", override_path)
 
         return override_path
 
@@ -45,25 +49,18 @@ def get_libscrapli_path() -> str:
 
     cached_lib_filename = f"{cache_path}/{lib_filename}"
 
-    print(f"looking for libscrapli at '{cached_lib_filename}'")
+    logger.debug("looking for libscrapli at '%s'", cached_lib_filename)
 
     if Path(cached_lib_filename).exists():
         return cached_lib_filename
 
-    print(
-        f"libscrapli does not exist at path '{cached_lib_filename}',"
-        " writing to disk at that location..."
-    )
-
-    _write_libscrapli_to_cache_path(cached_lib_filename)
-
-    return cached_lib_filename
+    raise LibScrapliException(f"libscrapli does not exist at path '{cached_lib_filename}")
 
 
 def _get_libscrapli_cache_path() -> str:
     override_path = os.environ.get(LIBSCRAPLI_PATH_OVERRIDE_ENV)
     if override_path is not None:
-        print(f"using libscrapli cache path override '{override_path}'")
+        logger.debug("using libscrapli cache path override '%s'", override_path)
 
         return override_path
 
@@ -76,15 +73,6 @@ def _get_libscrapli_cache_path() -> str:
     else:
         raise LibScrapliException("unsupported platform")
 
-    # TODO all the prints in here should be logging
-    print(f"using libscrapli cache dir '{cache_dir}'")
+    logger.debug("using libscrapli cache dir '%s'", cache_dir)
 
     return cache_dir
-
-
-def _write_libscrapli_to_cache_path(cached_lib_filename: str) -> str:
-    # TODO obviously
-
-    _ = cached_lib_filename
-
-    raise NotImplementedError

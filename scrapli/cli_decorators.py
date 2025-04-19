@@ -1,11 +1,11 @@
-"""scrapli.decorators"""
+"""scrapli.cli_decorators"""
 
 from ctypes import c_int
 from functools import update_wrapper
 from typing import TYPE_CHECKING, Awaitable, Callable, Concatenate, ParamSpec
 
+from scrapli.cli_result import Result
 from scrapli.exceptions import OptionsException
-from scrapli.result import Result
 
 if TYPE_CHECKING:
     from scrapli.cli import Cli
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 P = ParamSpec("P")
 
 
-def handle_cli_operation_timeout(
+def handle_operation_timeout(
     wrapped: Callable[Concatenate["Cli", P], Result],
 ) -> Callable[Concatenate["Cli", P], Result]:
     """
@@ -80,7 +80,7 @@ def handle_cli_operation_timeout(
     return wrapper
 
 
-def handle_cli_operation_timeout_async(
+def handle_operation_timeout_async(
     wrapped: Callable[Concatenate["Cli", P], Awaitable[Result]],
 ) -> Callable[Concatenate["Cli", P], Awaitable[Result]]:
     """

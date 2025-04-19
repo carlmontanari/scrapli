@@ -8,12 +8,13 @@ from ctypes import (
     c_uint,
 )
 from enum import Enum
+from logging import getLogger
 from random import randint
-from time import sleep
 from typing import Callable, Optional
 
 from scrapli.auth import Options as AuthOptions
-from scrapli.decorators import handle_cli_operation_timeout, handle_cli_operation_timeout_async
+from scrapli.cli_decorators import handle_operation_timeout, handle_operation_timeout_async
+from scrapli.cli_result import Result
 from scrapli.exceptions import (
     AllocationException,
     CloseException,
@@ -34,7 +35,12 @@ from scrapli.ffi_types import (
     ZigSlice,
     to_c_string,
 )
-from scrapli.result import Result
+from scrapli.session import (
+    DEFAULT_READ_DELAY_BACKOFF_FACTOR,
+    DEFAULT_READ_DELAY_MAX_NS,
+    DEFAULT_READ_DELAY_MIN_NS,
+    READ_DELAY_MULTIPLIER,
+)
 from scrapli.session import Options as SessionOptions
 from scrapli.transport import Options as TransportOptions
 
@@ -84,7 +90,14 @@ class Cli:  # pylint: disable=too-many-instance-attributes
         auth_options: Optional[AuthOptions] = None,
         session_options: Optional[SessionOptions] = None,
         transport_options: Optional[TransportOptions] = None,
+        logging_uid: Optional[str] = None,
     ) -> None:
+        logger_name = f"{__name__}.{host}:{port}"
+        if logging_uid is not None:
+            logger_name += f":{logging_uid}"
+
+        self.logger = getLogger(logger_name)
+
         self.ffi_mapping = LibScrapliMapping()
 
         # TODO for now just assuming we are reading a file
@@ -127,7 +140,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
             transport_kind=c_char_p(self.transport_options.get_transport_kind()),
         )
         if ptr == 0:  # type: ignore[comparison-overlap]
-            raise AllocationException("failed to allocate driver")
+            raise AllocationException("failed to allocate cli")
 
         self.ptr = ptr
 
@@ -267,20 +280,14 @@ class Cli:  # pylint: disable=too-many-instance-attributes
         new_delay *= backoff_factor
 
         if new_delay > max_delay:
-            return max_delay
+            return max_delay * READ_DELAY_MULTIPLIER
 
-        return new_delay + randint(0, min_delay)
+        return new_delay + randint(0, min_delay) * READ_DELAY_MULTIPLIER
 
     def _get_result(  # pylint: disable=too-many-locals
         self,
         operation_id: c_uint,
     ) -> Result:
-        # TODO consts for defaults
-        min_delay = self.session_options.read_delay_max_ns or 1_000
-        max_delay = self.session_options.read_delay_max_ns or 1_000_000
-        backoff_factor = self.session_options.read_delay_backoff_factor or 2
-        current_delay = min_delay
-
         done = BoolPointer(c_bool(False))
         input_size = IntPointer(c_int())
         result_raw_size = IntPointer(c_int())
@@ -288,32 +295,19 @@ class Cli:  # pylint: disable=too-many-instance-attributes
         failed_indicator_size = IntPointer(c_int())
         err_size = IntPointer(c_int())
 
-        while True:
-            status = self.ffi_mapping.cli_mapping.poll(
-                ptr=self._ptr_or_exception(),
-                operation_id=operation_id,
-                done=done,
-                input_size=input_size,
-                result_raw_size=result_raw_size,
-                result_size=result_size,
-                failed_indicator_size=failed_indicator_size,
-                err_size=err_size,
-            )
-            if status != 0:
-                raise GetResultException("poll operation failed")
-
-            if done.contents.value is True:
-                break
-
-            # ns to seconds
-            sleep(current_delay / 1_000_000_000)
-
-            current_delay = self._get_poll_delay(
-                current_delay=current_delay,
-                min_delay=min_delay,
-                max_delay=max_delay,
-                backoff_factor=backoff_factor,
-            )
+        # in sync flavor we call the blocking wait to limit the number of calls to the c abi
+        status = self.ffi_mapping.cli_mapping.wait(
+            ptr=self._ptr_or_exception(),
+            operation_id=operation_id,
+            done=done,
+            input_size=input_size,
+            result_raw_size=result_raw_size,
+            result_size=result_size,
+            failed_indicator_size=failed_indicator_size,
+            err_size=err_size,
+        )
+        if status != 0:
+            raise GetResultException("wait operation failed")
 
         start_time = IntPointer(c_int())
         end_time = IntPointer(c_int())
@@ -358,10 +352,11 @@ class Cli:  # pylint: disable=too-many-instance-attributes
         self,
         operation_id: c_uint,
     ) -> Result:
-        # TODO consts for defaults
-        min_delay = self.session_options.read_delay_max_ns or 1_000
-        max_delay = self.session_options.read_delay_max_ns or 1_000_000
-        backoff_factor = self.session_options.read_delay_backoff_factor or 2
+        min_delay = self.session_options.read_delay_min_ns or DEFAULT_READ_DELAY_MIN_NS
+        max_delay = self.session_options.read_delay_max_ns or DEFAULT_READ_DELAY_MAX_NS
+        backoff_factor = (
+            self.session_options.read_delay_backoff_factor or DEFAULT_READ_DELAY_BACKOFF_FACTOR
+        )
         current_delay = min_delay
 
         done = BoolPointer(c_bool(False))
@@ -455,7 +450,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
 
         return c_uint(operation_id.contents.value)
 
-    @handle_cli_operation_timeout
+    @handle_operation_timeout
     def enter_mode(
         self,
         requested_mode: str,
@@ -491,7 +486,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
 
         return self._get_result(operation_id=operation_id)
 
-    @handle_cli_operation_timeout_async
+    @handle_operation_timeout_async
     async def enter_mode_async(
         self,
         requested_mode: str,
@@ -543,7 +538,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
 
         return c_uint(operation_id.contents.value)
 
-    @handle_cli_operation_timeout
+    @handle_operation_timeout
     def get_prompt(
         self,
         *,
@@ -573,7 +568,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
 
         return self._get_result(operation_id=operation_id)
 
-    @handle_cli_operation_timeout_async
+    @handle_operation_timeout_async
     async def get_prompt_async(
         self,
         *,
@@ -629,7 +624,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
 
         return c_uint(operation_id.contents.value)
 
-    @handle_cli_operation_timeout
+    @handle_operation_timeout
     def send_input(  # pylint: disable=too-many-arguments
         self,
         input_: str,
@@ -681,7 +676,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
 
         return self._get_result(operation_id=operation_id)
 
-    @handle_cli_operation_timeout_async
+    @handle_operation_timeout_async
     async def send_input_async(  # pylint: disable=too-many-arguments
         self,
         input_: str,
@@ -765,7 +760,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
 
         return c_uint(operation_id.contents.value)
 
-    @handle_cli_operation_timeout
+    @handle_operation_timeout
     def send_prompted_input(  # pylint: disable=too-many-arguments,too-many-locals
         self,
         input_: str,
@@ -829,7 +824,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
 
         return self._get_result(operation_id=operation_id)
 
-    @handle_cli_operation_timeout_async
+    @handle_operation_timeout_async
     async def send_prompted_input_async(  # pylint: disable=too-many-arguments,too-many-locals
         self,
         input_: str,
