@@ -5,7 +5,8 @@ from ctypes import c_bool, c_char_p, c_int, c_uint
 from enum import Enum
 from logging import getLogger
 from random import randint
-from typing import Callable, Optional
+from types import TracebackType
+from typing import Callable, Optional, Type
 
 from scrapli.auth import Options as AuthOptions
 from scrapli.exceptions import (
@@ -196,6 +197,47 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         self.ptr: Optional[DriverPointer] = None
         self._session_id: Optional[int] = None
+
+    def __enter__(self: "Netconf") -> "Netconf":
+        """
+        Enter method for context manager
+
+        Args:
+            N/A
+
+        Returns:
+            Cli: a concrete implementation of the opened Cli object
+
+        Raises:
+            ScrapliConnectionError: if an exception occurs during opening
+
+        """
+        self.open()
+
+        return self
+
+    def __exit__(
+        self,
+        exception_type: Optional[Type[BaseException]],
+        exception_value: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -> None:
+        """
+        Exit method to cleanup for context manager
+
+        Args:
+            exception_type: exception type being raised
+            exception_value: message from exception being raised
+            traceback: traceback from exception being raised
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        """
+        self.close()
 
     def _ptr_or_exception(self) -> DriverPointer:
         if self.ptr is None:

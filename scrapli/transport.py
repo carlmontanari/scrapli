@@ -370,3 +370,33 @@ class Options:
             self._transport_kind = TransportKind.TEST.encode(encoding="utf-8")
 
         return self._transport_kind
+
+    def __repr__(self) -> str:
+        """
+        Magic repr method for Options object
+
+        Args:
+            N/A
+
+        Returns:
+            str: repr for Options object
+
+        Raises:
+            N/A
+
+        """
+        if self.bin:
+            return (
+                # it will probably be "canonical" to import Options as SessionOptions, so we'll make
+                # the repr do that too
+                f"Transport{self.__class__.__name__}("
+                f"bin={self.bin!r}, "
+            )
+
+        if self.ssh2:
+            return f"Transport{self.__class__.__name__}(" f"ssh2={self.ssh2!r}, "
+
+        if self.telnet:
+            return f"Transport{self.__class__.__name__}(" f"telnet={self.telnet!r}, "
+
+        return f"Transport{self.__class__.__name__}(" f"test={self.test!r}, "

@@ -121,3 +121,31 @@ class Options:  # pylint: disable=too-many-instance-attributes
             status = ffi_mapping.options_mapping.session.set_recorder_path(ptr, self._recorder_path)
             if status != 0:
                 raise OptionsException("failed to set session recorder path")
+
+    def __repr__(self) -> str:
+        """
+        Magic repr method for Options object
+
+        Args:
+            N/A
+
+        Returns:
+            str: repr for Options object
+
+        Raises:
+            N/A
+
+        """
+        return (
+            # it will probably be "canonical" to import Options as SessionOptions, so we'll make
+            # the repr do that too
+            f"Session{self.__class__.__name__}("
+            f"read_size={self.read_size!r}, "
+            f"read_delay_min_ns={self.read_delay_min_ns!r} "
+            f"read_delay_max_ns={self.read_delay_max_ns!r} "
+            f"read_delay_backoff_factor={self.read_delay_backoff_factor!r}) "
+            f"return_char={self.return_char!r}) "
+            f"operation_timeout_ns={self.operation_timeout_ns!r}) "
+            f"operation_max_search_depth={self.operation_max_search_depth!r}) "
+            f"recorder_path={self.recorder_path!r}) "
+        )
