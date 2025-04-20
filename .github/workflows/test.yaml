@@ -1,0 +1,77 @@
+---
+name: test
+
+on:
+  workflow_call: {}
+  workflow_dispatch:
+    inputs:
+      debug_unit:
+        description: "start tmate before unit tests"
+        type: boolean
+        required: false
+        default: false
+      debug_functional:
+        description: "start tmate before functional tests"
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # TODO setup!
+
+      - name: setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_unit }}
+
+      - name: unit tests
+        run: |
+          make test
+
+  functional:
+    runs-on: ubuntu-latest
+
+    # run functional on main or prs pointing to main
+    if: (github.ref_name == 'main' || github.base_ref == 'main') || (github.event_name == 'workflow_dispatch' && inputs.debug_e2e)
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+       # TODO setup!
+
+      - name: install containerlab
+        run: |
+          bash -c "$(curl -sL https://get.containerlab.dev)" -- -v ${{ env.CONTAINERLAB_VERSION }}
+
+      - name: run containerlab topology
+        run: |
+          sudo clab deploy -t topo.ci.amd64.yaml
+        working-directory: e2e/clab
+
+       # TODO setup!
+
+      - name: setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_e2e }}
+
+      - name: wait for srl node to be available
+        run: |
+          ./wait.sh
+        working-directory: e2e/clab
+        # wait.sh should timeout but seems like it sometimes gets hung in actions
+        timeout-minutes: 5
+
+      - name: functional tests
+        run: |
+          make test-functional-ci

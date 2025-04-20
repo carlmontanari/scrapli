@@ -1,1 +1,4 @@
 include requirements*.txt
+include scrapli/lib/__init__.py
+include scrapli/lib/*.so
+include scrapli/lib/*.dylib
