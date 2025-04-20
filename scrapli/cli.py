@@ -1,5 +1,6 @@
 """scrapli.cli"""
 
+import importlib.resources
 from asyncio import sleep as async_sleep
 from ctypes import (
     c_bool,
@@ -9,6 +10,7 @@ from ctypes import (
 )
 from enum import Enum
 from logging import getLogger
+from pathlib import Path
 from random import randint
 from typing import Callable, Optional
 
@@ -22,6 +24,7 @@ from scrapli.exceptions import (
     NotOpenedException,
     OpenException,
     OperationException,
+    OptionsException,
     SubmitOperationException,
 )
 from scrapli.ffi_mapping import LibScrapliMapping
@@ -100,9 +103,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
 
         self.ffi_mapping = LibScrapliMapping()
 
-        # TODO for now just assuming we are reading a file
-        with open(definition_file_or_name, "rb") as f:
-            self.definition_string = f.read()
+        self._load_definition(definition_file_or_name=definition_file_or_name)
 
         # note: many places have encodings done prior to function calls such that the encoded
         # result is not gc'd prior to being used in zig-land, so it looks a bit weird, but thats
@@ -122,6 +123,24 @@ class Cli:  # pylint: disable=too-many-instance-attributes
         self.transport_options = transport_options or TransportOptions()
 
         self.ptr: Optional[DriverPointer] = None
+
+    def _load_definition(self, definition_file_or_name: str) -> None:
+        with importlib.resources.path(
+            "scrapli.definitions", f"{definition_file_or_name}.yaml"
+        ) as source_lib_definition:
+            if Path(source_lib_definition).exists():
+                with open(source_lib_definition, "rb") as f:
+                    self.definition_string = f.read()
+
+                return
+
+        if Path(definition_file_or_name).exists():
+            with open(definition_file_or_name, "rb") as f:
+                self.definition_string = f.read()
+
+        raise OptionsException(
+            f"definition platform name or filename '{definition_file_or_name}' not found"
+        )
 
     def _ptr_or_exception(self) -> DriverPointer:
         if self.ptr is None:

@@ -17,6 +17,19 @@ XDG_CACHE_HOME_ENV = "XDG_CACHE_HOME"
 
 
 def get_libscrapli_shared_object_filename(version: str = LIBSCRAPLI_VERSION) -> str:
+    """
+    Returns the name of the libscrapli shared object for the given version/platform.
+
+    Args:
+        version: the libscrapli version
+
+    Returns:
+        str: filename of the shared object
+
+    Raises:
+        LibScrapliException: if unsupported platform
+
+    """
     if sys.platform == "linux":
         lib_filename = f"libscrapli.so.{version}"
     elif sys.platform == "darwin":

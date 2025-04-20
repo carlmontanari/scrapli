@@ -57,8 +57,9 @@ optional-dependencies.dev = { file = [
 [tool.setuptools.package-data]
 scrapli = [
     "py.typed",
+    "scrapli/definitions/*.yaml",
     "scrapli/lib/*.so",
-    "scrapli/lib/*.dylib"
+    "scrapli/lib/*.dylib",
 ]
 
 [tool.black]

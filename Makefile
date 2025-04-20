@@ -10,3 +10,45 @@ fmt: ## Run formatters
 lint: ## Run linters
 	python -m pylint scrapli/
 	python -m mypy --strict scrapli/
+
+test: ## Run unit tests
+	python -m pytest tests/unit/
+
+test-functional: ## Run functional tests
+	python -m pytest tests/functional/
+
+test-functional-ci: ## Run functional tests against "ci" test topology
+	python -m pytest tests/functional/
+
+build-clab-launcher: ## Builds the clab launcher image
+	docker build \
+		-f tests/functional/clab/launcher/Dockerfile \
+		-t clab-launcher:latest \
+		tests/functional/clab/launcher
+
+run-clab: ## Runs the clab functional testing topo; uses the clab launcher to run nicely on darwin
+	docker network rm clab || true
+	docker network create \
+		--driver bridge \
+		--subnet=172.20.20.0/24 \
+		--gateway=172.20.20.1 \
+		--ipv6 \
+		--subnet=2001:172:20:20::/64 \
+		--gateway=2001:172:20:20::1 \
+		--opt com.docker.network.driver.mtu=65535 \
+		--label containerlab \
+		clab
+	docker run \
+		-d \
+		--rm \
+		--name clab-launcher \
+		--privileged \
+		--pid=host \
+		--stop-signal=SIGINT \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v /run/netns:/run/netns \
+		-v "$$(pwd)/tests/functional/clab:$$(pwd)/tests/functional/clab" \
+		-e "LAUNCHER_WORKDIR=$$(pwd)/tests/functional/clab" \
+		-e "HOST_ARCH=$$(uname -m)" \
+		clab-launcher:latest
+
