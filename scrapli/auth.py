@@ -185,3 +185,32 @@ class Options:  # pylint: disable=too-many-instance-attributes
             )
             if status != 0:
                 raise OptionsException("failed to set auth private key passphrase pattern")
+
+    def __repr__(self) -> str:
+        """
+        Magic repr method for Options object
+
+        Args:
+            N/A
+
+        Returns:
+            str: repr for Options object
+
+        Raises:
+            N/A
+
+        """
+        return (
+            # it will probably be "canonical" to import Options as AuthOptions, so we'll make
+            # the repr do that too
+            f"Auth{self.__class__.__name__}("
+            f"username={self.username!r}, "
+            "password=REDACTED, "
+            f"private_key_path={self.private_key_path!r} "
+            f"private_key_passphrase={self.private_key_passphrase!r} "
+            f"lookups={self.lookups!r}) "
+            f"in_session_auth_bypass={self.in_session_auth_bypass!r}) "
+            f"username_pattern={self.username_pattern!r}) "
+            f"password_pattern={self.password_pattern!r}) "
+            f"private_key_passphrase_pattern={self.private_key_passphrase_pattern!r}) "
+        )

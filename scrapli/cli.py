@@ -12,7 +12,8 @@ from enum import Enum
 from logging import getLogger
 from pathlib import Path
 from random import randint
-from typing import Callable, Optional
+from types import TracebackType
+from typing import Callable, Optional, Type
 
 from scrapli.auth import Options as AuthOptions
 from scrapli.cli_decorators import handle_operation_timeout, handle_operation_timeout_async
@@ -103,6 +104,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
 
         self.ffi_mapping = LibScrapliMapping()
 
+        self.definition_file_or_name = definition_file_or_name
         self._load_definition(definition_file_or_name=definition_file_or_name)
 
         # note: many places have encodings done prior to function calls such that the encoded
@@ -123,6 +125,87 @@ class Cli:  # pylint: disable=too-many-instance-attributes
         self.transport_options = transport_options or TransportOptions()
 
         self.ptr: Optional[DriverPointer] = None
+
+    def __enter__(self: "Cli") -> "Cli":
+        """
+        Enter method for context manager
+
+        Args:
+            N/A
+
+        Returns:
+            Cli: a concrete implementation of the opened Cli object
+
+        Raises:
+            ScrapliConnectionError: if an exception occurs during opening
+
+        """
+        self.open()
+
+        return self
+
+    def __exit__(
+        self,
+        exception_type: Optional[Type[BaseException]],
+        exception_value: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -> None:
+        """
+        Exit method to cleanup for context manager
+
+        Args:
+            exception_type: exception type being raised
+            exception_value: message from exception being raised
+            traceback: traceback from exception being raised
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        """
+        self.close()
+
+    def __str__(self) -> str:
+        """
+        Magic str method for Cli object
+
+        Args:
+            N/A
+
+        Returns:
+            str: str representation of Cli
+
+        Raises:
+            N/A
+
+        """
+        return f"scrapli.Cli {self.host}:{self.port}"
+
+    def __repr__(self) -> str:
+        """
+        Magic repr method for Cli object
+
+        Args:
+            N/A
+
+        Returns:
+            str: repr for Cli object
+
+        Raises:
+            N/A
+
+        """
+        return (
+            f"{self.__class__.__name__}("
+            f"definition_file_or_name={self.definition_file_or_name!r}, "
+            f"host={self.host!r}, "
+            f"port={self.port!r}, "
+            f"auth_options={self.auth_options!r} "
+            f"session_options={self.auth_options!r} "
+            f"transport_options={self.transport_options!r}) "
+        )
 
     def _load_definition(self, definition_file_or_name: str) -> None:
         with importlib.resources.path(
