@@ -1,0 +1,36 @@
+---
+name: libscrapli
+
+topology:
+  kinds:
+    srl:
+      image: ghcr.io/nokia/srlinux:24.10.1-492-amd64
+    ceos:
+      # no native arm, runs under rosetta
+      image: ceos64:4.33.1F
+  nodes:
+    srl:
+      kind: srl
+      mgmt-ipv4: 172.20.20.16
+      mgmt-ipv6: 2001:172:20:20::16
+      startup-config: configs/srl-startup.json
+      # for running on darwin
+      ports:
+        - 21022:22
+        - 21023:23
+        - 21080:80
+        - 21161:161
+        - 21443:443
+        - 21830:830
+    ceos:
+      kind: ceos
+      mgmt-ipv4: 172.20.20.17
+      mgmt-ipv6: 2001:172:20:20::17
+      startup-config: configs/ceos-startup.conf
+      ports:
+        - 22022:22
+        - 22023:23
+        - 22080:80
+        - 22161:161
+        - 22443:443
+        - 22830:830

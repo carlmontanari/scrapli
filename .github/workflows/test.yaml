@@ -26,7 +26,19 @@ jobs:
         with:
           fetch-depth: 1
 
-      # TODO setup!
+      - name: load env vars for workflow run
+        run: |
+          source .github/vars.env
+          echo "PYTHON_VERSION=$PYTHON_VERSION" >> "$GITHUB_ENV"
+
+      - name: set up python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: install python dev tools
+        run: |
+          python -m pip install -r requirements-dev.txt
 
       - name: setup tmate session
         uses: mxschmitt/action-tmate@v3
@@ -48,7 +60,16 @@ jobs:
         with:
           fetch-depth: 1
 
-       # TODO setup!
+      - name: load env vars for workflow run
+        run: |
+          source .github/vars.env
+          echo "PYTHON_VERSION=$PYTHON_VERSION" >> "$GITHUB_ENV"
+          echo "CONTAINERLAB_VERSION=$CONTAINERLAB_VERSION" >> "$GITHUB_ENV"
+
+      - name: set up python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: install containerlab
         run: |
@@ -59,7 +80,9 @@ jobs:
           sudo clab deploy -t topo.ci.amd64.yaml
         working-directory: e2e/clab
 
-       # TODO setup!
+      - name: install python dev tools
+        run: |
+          python -m pip install -r requirements-dev.txt
 
       - name: setup tmate session
         uses: mxschmitt/action-tmate@v3
