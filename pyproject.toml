@@ -3,6 +3,7 @@ build-backend = "setuptools.build_meta"
 requires = [
   "setuptools",
   "wheel",
+  "ziglang==0.14.0",
 ]
 
 [project]
@@ -16,13 +17,12 @@ keywords = [
   "telnet",
   "async",
 ]
-license = { file = "LICENSE" }
+license = "MIT"
 authors = [
     { name = "Carl Montanari", email = "carl.r.montanari@gmail.com" },
 ]
 requires-python = ">=3.9"
 classifiers = [
-    "License :: OSI Approved :: MIT License",
     "Operating System :: POSIX :: Linux",
     "Operating System :: MacOS",
     "Programming Language :: Python",
@@ -44,6 +44,9 @@ Changelog = "https://carlmontanari.github.io/scrapli/changelog"
 Docs = "https://carlmontanari.github.io/scrapli/"
 Homepage = "https://github.com/carlmontanari/scrapli"
 
+[tool.setuptools]
+packages = ["scrapli", "scrapli.lib"]
+
 [tool.setuptools.dynamic]
 version = { attr = "scrapli.__version__" }
 dependencies = { file = "requirements.txt" }
@@ -53,7 +56,9 @@ optional-dependencies.dev = { file = [
 
 [tool.setuptools.package-data]
 scrapli = [
-    "py.typed"
+    "py.typed",
+    "scrapli/lib/*.so",
+    "scrapli/lib/*.dylib"
 ]
 
 [tool.black]

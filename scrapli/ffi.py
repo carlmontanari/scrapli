@@ -1,5 +1,6 @@
 """scrapli.ffi"""
 
+import importlib.resources
 import os
 import sys
 from logging import getLogger
@@ -15,11 +16,24 @@ LIBSCRAPLI_CACHE_PATH_OVERRIDE_ENV = "LIBSCRAPLI_CACHE_PATH"
 XDG_CACHE_HOME_ENV = "XDG_CACHE_HOME"
 
 
+def get_libscrapli_shared_object_filename(version: str = LIBSCRAPLI_VERSION) -> str:
+    if sys.platform == "linux":
+        lib_filename = f"libscrapli.so.{version}"
+    elif sys.platform == "darwin":
+        lib_filename = f"libscrapli.{version}.dylib"
+    else:
+        raise LibScrapliException("unsupported platform")
+
+    return lib_filename
+
+
 def get_libscrapli_path() -> str:
     """
     Returns the file path to the libscrapli shared library.
 
-    Attempts to load from override paths or the user/xdg cache directory.
+    Attempts to load from override paths or from installed path in scrapli itself -- this would be
+    either the shared object(s) from source (i.e. cloning the repo) or from the installation either
+    via a wheel or sdist.
 
     Args:
         N/A
@@ -38,41 +52,13 @@ def get_libscrapli_path() -> str:
 
         return override_path
 
-    if sys.platform == "linux":
-        lib_filename = f"libscrapli.so.{LIBSCRAPLI_VERSION}"
-    elif sys.platform == "darwin":
-        lib_filename = f"libscrapli.{LIBSCRAPLI_VERSION}.dylib"
-    else:
-        raise LibScrapliException("unsupported platform")
+    source_lib_filename = (
+        f"{importlib.resources.files("scrapli.lib")}/{get_libscrapli_shared_object_filename()}"
+    )
 
-    cache_path = _get_libscrapli_cache_path()
+    logger.debug("loading libscrapli from scrapli installation '%s'", source_lib_filename)
 
-    cached_lib_filename = f"{cache_path}/{lib_filename}"
+    if Path(source_lib_filename).exists():
+        return source_lib_filename
 
-    logger.debug("looking for libscrapli at '%s'", cached_lib_filename)
-
-    if Path(cached_lib_filename).exists():
-        return cached_lib_filename
-
-    raise LibScrapliException(f"libscrapli does not exist at path '{cached_lib_filename}")
-
-
-def _get_libscrapli_cache_path() -> str:
-    override_path = os.environ.get(LIBSCRAPLI_PATH_OVERRIDE_ENV)
-    if override_path is not None:
-        logger.debug("using libscrapli cache path override '%s'", override_path)
-
-        return override_path
-
-    if sys.platform == "linux":
-        cache_dir = os.environ.get(XDG_CACHE_HOME_ENV)
-        if cache_dir is None:
-            cache_dir = f"{os.environ.get('HOME')}/.cache/scrapli"
-    elif sys.platform == "darwin":
-        cache_dir = f"{os.environ.get('HOME')}/Library/Caches/scrapli"
-    else:
-        raise LibScrapliException("unsupported platform")
-
-    logger.debug("using libscrapli cache dir '%s'", cache_dir)
-
-    return cache_dir
+    raise LibScrapliException("libscrapli not available")

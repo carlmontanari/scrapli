@@ -1,0 +1,21 @@
+---
+name: lint
+
+on:
+  workflow_call: {}
+  workflow_dispatch: {}
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # TODO: setup!
+
+      - name: run the linters
+        run: |
+          make lint
