@@ -12,7 +12,7 @@ from setuptools.command.editable_wheel import editable_wheel
 from setuptools.command.sdist import sdist
 
 LIBSCRAPLI_REPO = os.environ.get("LIBSCRAPLI_REPO", "https://github.com/scrapli/libscrapli")
-LIBSCRAPLI_TAG = os.environ.get("LIBSCRAPLI_TAG", "v0.0.1-alpha.1")
+LIBSCRAPLI_TAG = os.environ.get("LIBSCRAPLI_TAG", "v0.0.1-alpha.2")
 LIBSCRAPLI_BUILD_PATH_ENV = "LIBSCRAPLI_BUILD_PATH"
 LIBSCRPALI_ZIG_TRIPLE_ENV = "LIBSCRAPLI_ZIG_TRIPLE"
 
@@ -82,14 +82,6 @@ class Libscrapli:
 
     @staticmethod
     def _get_clone_command(tmp_build_dir: str) -> list[str]:
-        # TODO for testing
-        return [
-            "rsync",
-            "-a",
-            "/Users/carl/dev/github/libscrapli/",
-            tmp_build_dir,
-        ]
-
         if LIBSCRAPLI_TAG == "":
             return [
                 "git",
