@@ -1,4 +1,4 @@
-"""scrapli.cli"""
+"""scrapli.cli""" # pylint: disable=too-many-lines
 
 import importlib.resources
 from asyncio import sleep as async_sleep
@@ -137,7 +137,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
             Cli: a concrete implementation of the opened Cli object
 
         Raises:
-            ScrapliConnectionError: if an exception occurs during opening
+            N/A
 
         """
         self.open()
@@ -166,6 +166,47 @@ class Cli:  # pylint: disable=too-many-instance-attributes
 
         """
         self.close()
+
+    async def __aenter__(self: "Cli") -> "Cli":
+        """
+        Enter method for context manager
+
+        Args:
+            N/A
+
+        Returns:
+            Cli: a concrete implementation of the opened Cli object
+
+        Raises:
+            N/A
+
+        """
+        await self.open_async()
+
+        return self
+
+    async def __aexit__(
+        self,
+        exception_type: Optional[Type[BaseException]],
+        exception_value: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -> None:
+        """
+        Exit method to cleanup for context manager
+
+        Args:
+            exception_type: exception type being raised
+            exception_value: message from exception being raised
+            traceback: traceback from exception being raised
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        """
+        await self.close_async()
 
     def __str__(self) -> str:
         """
