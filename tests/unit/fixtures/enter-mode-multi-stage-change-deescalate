@@ -1,6 +1,6 @@
 Warning: Permanently added '[localhost]:22022' (ED25519) to the list of known hosts.
 (admin@localhost) Password: 
-Last login: Fri Mar 21 23:13:16 2025 from 192.168.65.1
+Last login: Mon Apr 21 01:55:05 2025 from 192.168.65.1
 eos1>
 eos1>
 eos1>enable
@@ -15,3 +15,6 @@ eos1(config)#
 eos1(config)#end
 eos1#disable
 eos1>
+eos1>enable
+Password: 
+eos1#

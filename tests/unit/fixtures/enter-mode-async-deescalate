@@ -1,6 +1,6 @@
 Warning: Permanently added '[localhost]:22022' (ED25519) to the list of known hosts.
 (admin@localhost) Password: 
-Last login: Mon Apr 21 01:30:44 2025 from 192.168.65.1
+Last login: Mon Apr 21 02:03:21 2025 from 192.168.65.1
 eos1>
 eos1>
 eos1>enable
@@ -10,4 +10,8 @@ Width set to 32767 columns.
 eos1#term len 0
 Pagination disabled.
 eos1#
+eos1#disable
+eos1>
+eos1>enable
+Password: 
 eos1#

@@ -20,12 +20,12 @@ def _original_name_to_filename(originalname: str) -> str:
 
 
 @pytest.fixture(scope="function")
-def cli_sync(request: pytest.FixtureRequest) -> Cli:
+def cli(request: pytest.FixtureRequest) -> Cli:
     """Fixture to provide a sync Cli instance for unit testing"""
 
     f = f"{request.node.path.parent}/fixtures/{_original_name_to_filename(originalname=request.node.originalname)}"
 
-    if id_ := request.node.callspec.id:
+    if id_ := getattr(getattr(request.node, "callspec", False), "id", False):
         f = f"{f}-{id_}"
 
     if request.config.getoption("--record"):
@@ -58,7 +58,7 @@ def cli_assert_result(request: pytest.FixtureRequest) -> Callable[[Result], None
     """Fixture to update or assert golden files for unit tests"""
     f = f"{request.node.path.parent}/golden/{_original_name_to_filename(originalname=request.node.originalname)}"
 
-    if id_ := request.node.callspec.id:
+    if id_ := getattr(getattr(request.node, "callspec", False), "id", False):
         f = f"{f}-{id_}"
 
     def _cli_assert_result(actual: Result) -> None:
