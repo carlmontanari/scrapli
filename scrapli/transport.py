@@ -31,7 +31,7 @@ class TransportKind(str, Enum):
     BIN = "bin"
     SSH2 = "ssh2"
     TELNET = "telnet"
-    TEST = "test"
+    TEST = "test_"
 
 
 @dataclass

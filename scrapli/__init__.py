@@ -1,5 +1,6 @@
 """scrapli"""
 
+from scrapli.auth import LookupKeyValue
 from scrapli.auth import Options as AuthOptions
 from scrapli.cli import Cli
 from scrapli.netconf import Netconf
@@ -16,6 +17,7 @@ __all__ = (
     "AuthOptions",
     "Cli",
     "Netconf",
+    "LookupKeyValue",
     "SessionOptions",
     "TransportOptions",
     "TransportBinOptions",
