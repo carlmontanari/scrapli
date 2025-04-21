@@ -1,0 +1,19 @@
+Warning: Permanently added '[localhost]:22022' (ED25519) to the list of known hosts.
+(admin@localhost) Password: 
+Last login: Fri Mar 21 23:13:29 2025 from 192.168.65.1
+eos1>
+eos1>
+eos1>enable
+Password: 
+eos1#term width 32767
+Width set to 32767 columns.
+eos1#term len 0
+Pagination disabled.
+eos1#
+eos1#bash
+
+Arista Networks EOS shell
+
+[admin@eos1 ~]$ read -p "Will you prompt me plz? " answer
+Will you prompt me plz? nou
+[admin@eos1 ~]$ 

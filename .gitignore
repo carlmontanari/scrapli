@@ -84,5 +84,7 @@ private/
 # log output
 *.log
 
-# mkdocs site
-site/*
+# functional testing things (containerlab bin will go away once dind fix is merged and released)
+tests/functional/clab/clab-libscrapli
+tests/functional/clab/*.bak
+tests/functional/clab/launcher/containerlab
