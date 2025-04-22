@@ -1,7 +1,7 @@
 """scrapli.netconf"""
 
 from asyncio import sleep as async_sleep
-from ctypes import c_bool, c_char_p, c_int, c_uint
+from ctypes import c_bool, c_char_p, c_int, c_uint, c_uint64
 from enum import Enum
 from logging import getLogger
 from random import randint
@@ -26,6 +26,7 @@ from scrapli.ffi_types import (
     IntPointer,
     LogFuncCallback,
     OperationIdPointer,
+    UnixTimestampPointer,
     ZigSlice,
     to_c_string,
 )
@@ -426,8 +427,8 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         if status != 0:
             raise GetResultException("wait operation failed")
 
-        start_time = IntPointer(c_int())
-        end_time = IntPointer(c_int())
+        start_time = UnixTimestampPointer(c_uint64())
+        end_time = UnixTimestampPointer(c_uint64())
 
         input_slice = ZigSlice(size=input_size.contents)
         result_raw_slice = ZigSlice(size=result_raw_size.contents)

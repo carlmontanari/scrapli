@@ -10,6 +10,7 @@ from ctypes import (
     c_size_t,
     c_uint,
     c_uint8,
+    c_uint64,
     c_void_p,
     cast,
 )
@@ -26,6 +27,7 @@ ZigSlicePointer: TypeAlias = POINTER("ZigSlice")  # type: ignore[valid-type, cal
 PointerPointer: TypeAlias = POINTER(c_uint8)  # type: ignore[valid-type]
 StringPointer: TypeAlias = POINTER(c_char_p)  # type: ignore[valid-type]
 IntPointer: TypeAlias = POINTER(c_int)  # type: ignore[valid-type]
+UnixTimestampPointer: TypeAlias = POINTER(c_uint64)  # type: ignore[valid-type]
 BoolPointer: TypeAlias = POINTER(c_bool)  # type: ignore[valid-type]
 
 LogFuncCallback: TypeAlias = CFUNCTYPE(None, c_int, StringPointer)  # type: ignore[valid-type]

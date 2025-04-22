@@ -78,12 +78,91 @@ async def test_enter_mode_async(requested_mode, post_open_requested_mode, cli, c
         cli_assert_result(actual=actual)
 
 
-@pytest.mark.parametrize(argnames="case", argvalues=(), ids=())
-def test_send_input(case): ...
+SEND_INPUT_ARGNAMES = (
+    "input_",
+    "requested_mode",  # mode to send the input at
+    "post_open_requested_mode",  # acquire this before "doing" the test
+)
+SEND_INPUT_ARGVALUES = (
+    (
+        "show version | i Kern",
+        "privileged_exec",
+        None,
+    ),
+    (
+        "show running-config all | include snmp",
+        "privileged_exec",
+        None,
+    ),
+    (
+        "do show version | i Kern",
+        "configuration",
+        "configuration",
+    ),
+    (
+        "do show version | i Kern",
+        "configuration",
+        None,
+    ),
+)
+SEND_INPUT_IDS = (
+    "simple",
+    "simple-requires-pagination",
+    "simple-already-in-non-default-mode",
+    "simple-acquire-non-default-mode",
+)
 
 
-@pytest.mark.parametrize(argnames="case", argvalues=(), ids=())
-def test_send_inputs(case): ...
+@pytest.mark.parametrize(
+    argnames=SEND_INPUT_ARGNAMES,
+    argvalues=SEND_INPUT_ARGVALUES,
+    ids=SEND_INPUT_IDS,
+)
+def test_send_input(input_, requested_mode, post_open_requested_mode, cli, cli_assert_result):
+    with cli as c:
+        if post_open_requested_mode is not None:
+            c.enter_mode(requested_mode=post_open_requested_mode)
+
+        cli_assert_result(actual=c.send_input(input_=input_, requested_mode=requested_mode))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    argnames=SEND_INPUT_ARGNAMES,
+    argvalues=SEND_INPUT_ARGVALUES,
+    ids=SEND_INPUT_IDS,
+)
+async def test_send_input_async(
+    input_, requested_mode, post_open_requested_mode, cli, cli_assert_result
+):
+    async with cli as c:
+        if post_open_requested_mode is not None:
+            await c.enter_mode_async(requested_mode=post_open_requested_mode)
+
+        actual = await c.send_input_async(input_=input_, requested_mode=requested_mode)
+
+        cli_assert_result(actual=actual)
+
+
+SEND_INPUTS_ARGNAMES = ("inputs",)
+SEND_INPUTS_ARGVALUES = (
+    (("show version | i Kern",)),
+    (("show version | i Kern", "show version | i Kern")),
+)
+SEND_INPUTS_IDS = (
+    "send-single-input",
+    "send-multi-input",
+)
+
+
+@pytest.mark.parametrize(
+    argnames=SEND_INPUT_ARGNAMES,
+    argvalues=SEND_INPUT_ARGVALUES,
+    ids=SEND_INPUT_IDS,
+)
+def test_send_inputs(inputs, cli, cli_assert_result):
+    with cli as c:
+        cli_assert_result(actual=c.send_inputs(inputs=inputs))
 
 
 @pytest.mark.parametrize(argnames="case", argvalues=(), ids=())
