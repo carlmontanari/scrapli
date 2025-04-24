@@ -31,6 +31,7 @@ class Result:  # pylint: disable=too-many-instance-attributes
         results_failed_indicator: str,
     ) -> None:
         # TODO str/repr
+        # TODO textfsm/genie/ttp
         self.host = host
         self.port = port
         self.inputs = inputs.split(OPERATION_DELIMITER)
@@ -92,6 +93,9 @@ class Result:  # pylint: disable=too-many-instance-attributes
             N/A
 
         """
+        if not self.splits:
+            return 0
+
         return self.splits[-1]
 
     @property
