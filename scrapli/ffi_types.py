@@ -24,7 +24,6 @@ OperationId: TypeAlias = c_uint
 OperationIdPointer: TypeAlias = POINTER(OperationId)  # type: ignore[valid-type]
 CancelPointer: TypeAlias = POINTER(c_bool)  # type: ignore[valid-type]
 ZigSlicePointer: TypeAlias = POINTER("ZigSlice")  # type: ignore[valid-type, call-overload]
-PointerPointer: TypeAlias = POINTER(c_uint8)  # type: ignore[valid-type]
 StringPointer: TypeAlias = POINTER(c_char_p)  # type: ignore[valid-type]
 IntPointer: TypeAlias = POINTER(c_int)  # type: ignore[valid-type]
 UnixTimestampPointer: TypeAlias = POINTER(c_uint64)  # type: ignore[valid-type]
@@ -33,9 +32,9 @@ BoolPointer: TypeAlias = POINTER(c_bool)  # type: ignore[valid-type]
 LogFuncCallback: TypeAlias = CFUNCTYPE(None, c_int, StringPointer)  # type: ignore[valid-type]
 
 
-class ZigSlice(Structure):  # pylint: disable=too-few-public-methods
+class ZigU64Slice(Structure):  # pylint: disable=too-few-public-methods
     """
-    A struct representing a slice in zig.
+    A struct representing a slice of u64 in zig.
 
     Args:
         N/A
@@ -49,12 +48,55 @@ class ZigSlice(Structure):  # pylint: disable=too-few-public-methods
     """
 
     _fields_ = [
-        ("ptr", PointerPointer),
+        ("ptr", POINTER(c_uint64)),
         ("len", c_size_t),
     ]
 
     def __init__(self, size: c_int):
-        self.ptr = cast((c_uint8 * size.value)(), PointerPointer)
+        self.ptr = cast((c_uint64 * size.value)(), POINTER(c_uint64))
+        self.len = size.value
+
+        super().__init__()
+
+    def get_contents(self) -> list[int]:
+        """
+        Return the contents of the slice as a list of ints.
+
+        Args:
+            N/A
+
+        Returns:
+            list[int]: the slice contents
+
+        Raises:
+            N/A
+
+        """
+        return [self.ptr[i] for i in range(self.len)]
+
+
+class ZigSlice(Structure):  # pylint: disable=too-few-public-methods
+    """
+    A struct representing a slice of u8 (a string) in zig.
+
+    Args:
+        N/A
+
+    Returns:
+        None
+
+    Raises:
+        N/A
+
+    """
+
+    _fields_ = [
+        ("ptr", POINTER(c_uint8)),
+        ("len", c_size_t),
+    ]
+
+    def __init__(self, size: c_int):
+        self.ptr = cast((c_uint8 * size.value)(), POINTER(c_uint8))
         self.len = size.value
 
         super().__init__()

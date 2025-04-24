@@ -39,6 +39,7 @@ from scrapli.ffi_types import (
     OperationIdPointer,
     UnixTimestampPointer,
     ZigSlice,
+    ZigU64Slice,
     to_c_string,
 )
 from scrapli.session import (
@@ -434,10 +435,11 @@ class Cli:  # pylint: disable=too-many-instance-attributes
         operation_id: c_uint,
     ) -> Result:
         done = BoolPointer(c_bool(False))
-        input_size = IntPointer(c_int())
-        result_raw_size = IntPointer(c_int())
-        result_size = IntPointer(c_int())
-        failed_indicator_size = IntPointer(c_int())
+        operation_count = IntPointer(c_int())
+        inputs_size = IntPointer(c_int())
+        results_raw_size = IntPointer(c_int())
+        results_size = IntPointer(c_int())
+        results_failed_indicator_size = IntPointer(c_int())
         err_size = IntPointer(c_int())
 
         # in sync flavor we call the blocking wait to limit the number of calls to the c abi
@@ -445,34 +447,35 @@ class Cli:  # pylint: disable=too-many-instance-attributes
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
             done=done,
-            input_size=input_size,
-            result_raw_size=result_raw_size,
-            result_size=result_size,
-            failed_indicator_size=failed_indicator_size,
+            operation_count=operation_count,
+            inputs_size=inputs_size,
+            results_raw_size=results_raw_size,
+            results_size=results_size,
+            results_failed_indicator_size=results_failed_indicator_size,
             err_size=err_size,
         )
         if status != 0:
             raise GetResultException("wait operation failed")
 
         start_time = UnixTimestampPointer(c_uint64())
-        end_time = UnixTimestampPointer(c_uint64())
+        splits = ZigU64Slice(size=operation_count.contents)
 
-        input_slice = ZigSlice(size=input_size.contents)
-        result_raw_slice = ZigSlice(size=result_raw_size.contents)
-        result_slice = ZigSlice(size=result_size.contents)
+        inputs_slice = ZigSlice(size=inputs_size.contents)
+        results_raw_slice = ZigSlice(size=results_raw_size.contents)
+        results_slice = ZigSlice(size=results_size.contents)
 
-        result_failed_indicator_slice = ZigSlice(size=failed_indicator_size.contents)
+        results_failed_indicator_slice = ZigSlice(size=results_failed_indicator_size.contents)
         err_slice = ZigSlice(size=err_size.contents)
 
         status = self.ffi_mapping.cli_mapping.fetch(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
             start_time=start_time,
-            end_time=end_time,
-            input_slice=input_slice,
-            result_raw_slice=result_raw_slice,
-            result_slice=result_slice,
-            result_failed_indicator_slice=result_failed_indicator_slice,
+            splits=splits,
+            inputs_slice=inputs_slice,
+            results_raw_slice=results_raw_slice,
+            results_slice=results_slice,
+            results_failed_indicator_slice=results_failed_indicator_slice,
             err_slice=err_slice,
         )
         if status != 0:
@@ -483,14 +486,14 @@ class Cli:  # pylint: disable=too-many-instance-attributes
             raise OperationException(err_contents)
 
         return Result(
-            input_=input_slice.get_decoded_contents(),
+            inputs=inputs_slice.get_decoded_contents(),
             host=self.host,
             port=self.port,
             start_time=start_time.contents.value,
-            end_time=end_time.contents.value,
-            result_raw=result_raw_slice.get_contents(),
-            result=result_slice.get_decoded_contents(),
-            result_failed_indicator=result_failed_indicator_slice.get_decoded_contents(),
+            splits=splits.get_contents(),
+            results_raw=results_raw_slice.get_contents(),
+            results=results_slice.get_decoded_contents(),
+            results_failed_indicator=results_failed_indicator_slice.get_decoded_contents(),
         )
 
     async def _get_result_async(  # pylint: disable=too-many-locals
@@ -505,10 +508,11 @@ class Cli:  # pylint: disable=too-many-instance-attributes
         current_delay = min_delay
 
         done = BoolPointer(c_bool(False))
-        input_size = IntPointer(c_int())
-        result_raw_size = IntPointer(c_int())
-        result_size = IntPointer(c_int())
-        failed_indicator_size = IntPointer(c_int())
+        operation_count = IntPointer(c_int())
+        inputs_size = IntPointer(c_int())
+        results_raw_size = IntPointer(c_int())
+        results_size = IntPointer(c_int())
+        results_failed_indicator_size = IntPointer(c_int())
         err_size = IntPointer(c_int())
 
         while True:
@@ -516,10 +520,11 @@ class Cli:  # pylint: disable=too-many-instance-attributes
                 ptr=self._ptr_or_exception(),
                 operation_id=operation_id,
                 done=done,
-                input_size=input_size,
-                result_raw_size=result_raw_size,
-                result_size=result_size,
-                failed_indicator_size=failed_indicator_size,
+                operation_count=operation_count,
+                inputs_size=inputs_size,
+                results_raw_size=results_raw_size,
+                results_size=results_size,
+                results_failed_indicator_size=results_failed_indicator_size,
                 err_size=err_size,
             )
             if status != 0:
@@ -538,25 +543,25 @@ class Cli:  # pylint: disable=too-many-instance-attributes
                 backoff_factor=backoff_factor,
             )
 
-        start_time = IntPointer(c_int())
-        end_time = IntPointer(c_int())
+        start_time = UnixTimestampPointer(c_uint64())
+        splits = ZigU64Slice(size=operation_count.contents)
 
-        input_slice = ZigSlice(size=input_size.contents)
-        result_raw_slice = ZigSlice(size=result_raw_size.contents)
-        result_slice = ZigSlice(size=result_size.contents)
+        inputs_slice = ZigSlice(size=inputs_size.contents)
+        results_raw_slice = ZigSlice(size=results_raw_size.contents)
+        results_slice = ZigSlice(size=results_size.contents)
 
-        result_failed_indicator_slice = ZigSlice(size=failed_indicator_size.contents)
+        results_failed_indicator_slice = ZigSlice(size=results_failed_indicator_size.contents)
         err_slice = ZigSlice(size=err_size.contents)
 
         status = self.ffi_mapping.cli_mapping.fetch(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
             start_time=start_time,
-            end_time=end_time,
-            input_slice=input_slice,
-            result_raw_slice=result_raw_slice,
-            result_slice=result_slice,
-            result_failed_indicator_slice=result_failed_indicator_slice,
+            splits=splits,
+            inputs_slice=inputs_slice,
+            results_raw_slice=results_raw_slice,
+            results_slice=results_slice,
+            results_failed_indicator_slice=results_failed_indicator_slice,
             err_slice=err_slice,
         )
         if status != 0:
@@ -567,14 +572,14 @@ class Cli:  # pylint: disable=too-many-instance-attributes
             raise OperationException(err_contents)
 
         return Result(
-            input_=input_slice.get_decoded_contents(),
+            inputs=inputs_slice.get_decoded_contents(),
             host=self.host,
             port=self.port,
             start_time=start_time.contents.value,
-            end_time=end_time.contents.value,
-            result_raw=result_raw_slice.get_contents(),
-            result=result_slice.get_decoded_contents(),
-            result_failed_indicator=result_failed_indicator_slice.get_decoded_contents(),
+            splits=splits.get_contents(),
+            results_raw=results_raw_slice.get_contents(),
+            results=results_slice.get_decoded_contents(),
+            results_failed_indicator=results_failed_indicator_slice.get_decoded_contents(),
         )
 
     def _enter_mode(
@@ -872,6 +877,141 @@ class Cli:  # pylint: disable=too-many-instance-attributes
         )
 
         return await self._get_result_async(operation_id=operation_id)
+
+    @handle_operation_timeout
+    def send_inputs(  # pylint: disable=too-many-arguments, too-many-locals
+        self,
+        inputs: list[str],
+        *,
+        requested_mode: str = "",
+        input_handling: InputHandling = InputHandling.FUZZY,
+        retain_input: bool = False,
+        retain_trailing_prompt: bool = False,
+        stop_on_indicated_failure: bool = True,
+        operation_timeout_ns: Optional[int] = None,
+    ) -> Result:
+        """
+        Send inputs (plural!) on the cli connection.
+
+        Args:
+            inputs: the inputs to send
+            requested_mode: name of the mode to send the input at`
+            input_handling: how to handle the input
+            retain_input: retain the input in the final "result"
+            retain_trailing_prompt: retain the trailing prompt in the final "result"
+            stop_on_indicated_failure: stops sending inputs at first indicated failure
+            operation_timeout_ns: operation timeout in ns for this operation
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator; note that the timeout here is for the whole operation,
+        # meaning all the "inputs" combined, not individually
+        _ = operation_timeout_ns
+
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        result: Optional[Result] = None
+
+        for input_ in inputs:
+            _input = to_c_string(input_)
+            _requested_mode = to_c_string(requested_mode)
+            _input_handling = to_c_string(input_handling)
+
+            operation_id = self._send_input(
+                operation_id=operation_id,
+                cancel=cancel,
+                input_=_input,
+                requested_mode=_requested_mode,
+                input_handling=_input_handling,
+                retain_input=c_bool(retain_input),
+                retain_trailing_prompt=c_bool(retain_trailing_prompt),
+            )
+
+            _result = self._get_result(operation_id=operation_id)
+
+            if result is None:
+                result = _result
+            else:
+                result.extend(result=_result)
+
+            if result.failed and stop_on_indicated_failure:
+                return result
+
+        return result  # type: ignore[return-value]
+
+    @handle_operation_timeout_async
+    async def send_inputs_async(  # pylint: disable=too-many-arguments, too-many-locals
+        self,
+        inputs: list[str],
+        *,
+        requested_mode: str = "",
+        input_handling: InputHandling = InputHandling.FUZZY,
+        retain_input: bool = False,
+        retain_trailing_prompt: bool = False,
+        stop_on_indicated_failure: bool = True,
+        operation_timeout_ns: Optional[int] = None,
+    ) -> Result:
+        """
+        Send inputs (plural!) on the cli connection.
+
+        Args:
+            inputs: the inputs to send
+            requested_mode: name of the mode to send the input at`
+            input_handling: how to handle the input
+            retain_input: retain the input in the final "result"
+            retain_trailing_prompt: retain the trailing prompt in the final "result"
+            stop_on_indicated_failure: stops sending inputs at first indicated failure
+            operation_timeout_ns: operation timeout in ns for this operation
+
+        Returns:
+            MultiResult: a MultiResult object representing the operations
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator; note that the timeout here is for the whole operation,
+        # meaning all the "inputs" combined, not individually
+        _ = operation_timeout_ns
+
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        result: Optional[Result] = None
+
+        for input_ in inputs:
+            _input = to_c_string(input_)
+            _requested_mode = to_c_string(requested_mode)
+            _input_handling = to_c_string(input_handling)
+
+            operation_id = self._send_input(
+                operation_id=operation_id,
+                cancel=cancel,
+                input_=_input,
+                requested_mode=_requested_mode,
+                input_handling=_input_handling,
+                retain_input=c_bool(retain_input),
+                retain_trailing_prompt=c_bool(retain_trailing_prompt),
+            )
+
+            _result = await self._get_result_async(operation_id=operation_id)
+            if result is None:
+                result = _result
+            else:
+                result.extend(result=_result)
+
+            if result.failed and stop_on_indicated_failure:
+                return result
+
+        return result  # type: ignore[return-value]
 
     def _send_prompted_input(  # pylint: disable=too-many-arguments,too-many-locals
         self,

@@ -63,12 +63,12 @@ def cli_assert_result(request: pytest.FixtureRequest) -> Callable[[Result], None
 
     def _cli_assert_result(actual: Result) -> None:
         if request.config.getoption("--update"):
-            with open(f, "w") as _f:
+            with open(file=f, mode="w") as _f:
                 _f.write(actual.result)
 
             return
 
-        with open(f, "r") as _f:
+        with open(file=f, mode="r", newline="") as _f:
             golden = _f.read()
 
         assert actual.result == golden
@@ -78,6 +78,6 @@ def cli_assert_result(request: pytest.FixtureRequest) -> Callable[[Result], None
         assert actual.start_time != 0
         assert actual.end_time != 0
         # TODO elapsed time, failed indicator, maybe more?
-        assert actual.result_raw != b""
+        assert len(actual.results_raw) != 0
 
     return _cli_assert_result

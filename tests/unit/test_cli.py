@@ -146,8 +146,8 @@ async def test_send_input_async(
 
 SEND_INPUTS_ARGNAMES = ("inputs",)
 SEND_INPUTS_ARGVALUES = (
-    (("show version | i Kern",)),
-    (("show version | i Kern", "show version | i Kern")),
+    (("show version | i Kern",),),
+    (("show version | i Kern", "show version | i Kern"),),
 )
 SEND_INPUTS_IDS = (
     "send-single-input",
@@ -155,14 +155,28 @@ SEND_INPUTS_IDS = (
 )
 
 
+# TODO fix :)
 @pytest.mark.parametrize(
-    argnames=SEND_INPUT_ARGNAMES,
-    argvalues=SEND_INPUT_ARGVALUES,
-    ids=SEND_INPUT_IDS,
+    argnames=SEND_INPUTS_ARGNAMES,
+    argvalues=SEND_INPUTS_ARGVALUES,
+    ids=SEND_INPUTS_IDS,
 )
 def test_send_inputs(inputs, cli, cli_assert_result):
     with cli as c:
         cli_assert_result(actual=c.send_inputs(inputs=inputs))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    argnames=SEND_INPUTS_ARGNAMES,
+    argvalues=SEND_INPUTS_ARGVALUES,
+    ids=SEND_INPUTS_IDS,
+)
+async def test_send_inputs_async(inputs, cli, cli_assert_result):
+    async with cli as c:
+        actual = await c.send_inputs_async(inputs=inputs)
+
+        cli_assert_result(actual=actual)
 
 
 @pytest.mark.parametrize(argnames="case", argvalues=(), ids=())
