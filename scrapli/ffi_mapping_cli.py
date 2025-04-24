@@ -22,6 +22,7 @@ from scrapli.ffi_types import (
     UnixTimestampPointer,
     ZigSlice,
     ZigSlicePointer,
+    ZigU64Slice,
 )
 
 
@@ -72,6 +73,7 @@ class LibScrapliCliMapping:
                 IntPointer,
                 IntPointer,
                 IntPointer,
+                IntPointer,
             ],
             int,
         ] = lib.ls_cli_poll_operation
@@ -97,6 +99,7 @@ class LibScrapliCliMapping:
                 IntPointer,
                 IntPointer,
                 IntPointer,
+                IntPointer,
             ],
             int,
         ] = lib.ls_cli_wait_operation
@@ -117,7 +120,7 @@ class LibScrapliCliMapping:
                 DriverPointer,
                 OperationId,
                 IntPointer,
-                IntPointer,
+                ZigU64Slice,
                 ZigSlicePointer,
                 ZigSlicePointer,
                 ZigSlicePointer,
@@ -130,7 +133,7 @@ class LibScrapliCliMapping:
             DriverPointer,
             OperationId,
             UnixTimestampPointer,
-            UnixTimestampPointer,
+            POINTER(ZigU64Slice),
             POINTER(ZigSlice),
             POINTER(ZigSlice),
             POINTER(ZigSlice),
@@ -253,10 +256,11 @@ class LibScrapliCliMapping:
         ptr: DriverPointer,
         operation_id: OperationId,
         done: BoolPointer,
-        input_size: IntPointer,
-        result_raw_size: IntPointer,
-        result_size: IntPointer,
-        failed_indicator_size: IntPointer,
+        operation_count: IntPointer,
+        inputs_size: IntPointer,
+        results_raw_size: IntPointer,
+        results_size: IntPointer,
+        results_failed_indicator_size: IntPointer,
         err_size: IntPointer,
     ) -> int:
         """
@@ -268,10 +272,12 @@ class LibScrapliCliMapping:
             ptr: ptr to the cli object
             operation_id: operation id of which to poll
             done: bool pointer that is set to true if the operation has completed
-            input_size: int pointer to fill with the operation's input size
-            result_raw_size: int pointer to fill with the operation's result raw size
-            result_size:  int pointer to fill with the operation's result size
-            failed_indicator_size: int pointer to fill with the operation's failed indicator size
+            operation_count: int pointer to fill with the count of operations
+            inputs_size: int pointer to fill with the operation's input size
+            results_raw_size: int pointer to fill with the operation's result raw size
+            results_size:  int pointer to fill with the operation's result size
+            results_failed_indicator_size: int pointer to fill with the operation's failed indicator
+                size
             err_size: int pointer to fill with the operation's error size
 
         Returns:
@@ -286,10 +292,11 @@ class LibScrapliCliMapping:
             ptr,
             operation_id,
             done,
-            input_size,
-            result_raw_size,
-            result_size,
-            failed_indicator_size,
+            operation_count,
+            inputs_size,
+            results_raw_size,
+            results_size,
+            results_failed_indicator_size,
             err_size,
         )
 
@@ -299,10 +306,11 @@ class LibScrapliCliMapping:
         ptr: DriverPointer,
         operation_id: OperationId,
         done: BoolPointer,
-        input_size: IntPointer,
-        result_raw_size: IntPointer,
-        result_size: IntPointer,
-        failed_indicator_size: IntPointer,
+        operation_count: IntPointer,
+        inputs_size: IntPointer,
+        results_raw_size: IntPointer,
+        results_size: IntPointer,
+        results_failed_indicator_size: IntPointer,
         err_size: IntPointer,
     ) -> int:
         """
@@ -314,10 +322,12 @@ class LibScrapliCliMapping:
             ptr: ptr to the cli object
             operation_id: operation id of which to poll
             done: bool pointer that is set to true if the operation has completed
-            input_size: int pointer to fill with the operation's input size
-            result_raw_size: int pointer to fill with the operation's result raw size
-            result_size:  int pointer to fill with the operation's result size
-            failed_indicator_size: int pointer to fill with the operation's failed indicator size
+            operation_count: int pointer to fill with the count of operations
+            inputs_size: int pointer to fill with the operation's input size
+            results_raw_size: int pointer to fill with the operation's result raw size
+            results_size:  int pointer to fill with the operation's result size
+            results_failed_indicator_size: int pointer to fill with the operation's failed indicator
+                size
             err_size: int pointer to fill with the operation's error size
 
         Returns:
@@ -332,10 +342,11 @@ class LibScrapliCliMapping:
             ptr,
             operation_id,
             done,
-            input_size,
-            result_raw_size,
-            result_size,
-            failed_indicator_size,
+            operation_count,
+            inputs_size,
+            results_raw_size,
+            results_size,
+            results_failed_indicator_size,
             err_size,
         )
 
@@ -345,11 +356,11 @@ class LibScrapliCliMapping:
         ptr: DriverPointer,
         operation_id: OperationId,
         start_time: UnixTimestampPointer,
-        end_time: UnixTimestampPointer,
-        input_slice: ZigSlicePointer,
-        result_raw_slice: ZigSlicePointer,
-        result_slice: ZigSlicePointer,
-        result_failed_indicator_slice: ZigSlicePointer,
+        splits: ZigU64Slice,
+        inputs_slice: ZigSlicePointer,
+        results_raw_slice: ZigSlicePointer,
+        results_slice: ZigSlicePointer,
+        results_failed_indicator_slice: ZigSlicePointer,
         err_slice: ZigSlicePointer,
     ) -> int:
         """
@@ -361,11 +372,11 @@ class LibScrapliCliMapping:
             ptr: ptr to the cli object
             operation_id: operation id of which to poll
             start_time: int pointer to fill with the operation's start time
-            end_time: int pointer to fill with the operation's end time
-            input_slice: pre allocated slice to fill with the operations input
-            result_raw_slice: pre allocated slice to fill with the operations result raw
-            result_slice: pre allocated slice to fill with the operations result
-            result_failed_indicator_slice: pre allocated slice to fill with the operations failed
+            splits: slice of u64 timestamps -- the end time (in unix ns) for each operation
+            inputs_slice: pre allocated slice to fill with the operations input
+            results_raw_slice: pre allocated slice to fill with the operations result raw
+            results_slice: pre allocated slice to fill with the operations result
+            results_failed_indicator_slice: pre allocated slice to fill with the operations failed
                 indicator
             err_slice: pre allocated slice to fill with the operations error
 
@@ -381,11 +392,11 @@ class LibScrapliCliMapping:
             ptr,
             operation_id,
             start_time,
-            end_time,
-            input_slice,
-            result_raw_slice,
-            result_slice,
-            result_failed_indicator_slice,
+            splits,
+            inputs_slice,
+            results_raw_slice,
+            results_slice,
+            results_failed_indicator_slice,
             err_slice,
         )
 

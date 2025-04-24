@@ -1,22 +1,14 @@
 """scrapli.result"""
 
-from dataclasses import dataclass
+OPERATION_DELIMITER = "__libscrapli__"
 
 
-@dataclass
 class Result:  # pylint: disable=too-many-instance-attributes
     """
-    Result holds the result of an operation.
+    Result represents a set of results from some Cli operation(s).
 
     Args:
-        input_:
-        host:
-        port:
-        start_time:
-        end_time:
-        result_raw:
-        result:
-        result_failed_indicator:
+        N/A
 
     Returns:
         None
@@ -26,14 +18,81 @@ class Result:  # pylint: disable=too-many-instance-attributes
 
     """
 
-    input_: str
-    host: str
-    port: int
-    start_time: int
-    end_time: int
-    result_raw: bytes
-    result: str
-    result_failed_indicator: str
+    def __init__(  # pylint: disable=too-many-arguments
+        self,
+        *,
+        host: str,
+        port: int,
+        inputs: str,
+        start_time: int,
+        splits: list[int],
+        results_raw: bytes,
+        results: str,
+        results_failed_indicator: str,
+    ) -> None:
+        # TODO str/repr
+        self.host = host
+        self.port = port
+        self.inputs = inputs.split(OPERATION_DELIMITER)
+        self.start_time = start_time
+        self.splits = splits
+        self.results_raw = results_raw.split(OPERATION_DELIMITER.encode())
+        self.results = results.split(OPERATION_DELIMITER)
+        self.results_failed_indicator = results_failed_indicator
+
+    def extend(self, result: "Result") -> None:
+        """
+        Extends this Result object with another Result object.
+
+        Args:
+            N/A
+
+        Returns:
+            N/A
+
+        Raises:
+            N/A
+
+        """
+        self.inputs.extend(result.inputs)
+        self.results_raw.extend(result.results_raw)
+        self.results.extend(result.results)
+        self.splits.extend(result.splits)
+
+    @property
+    def failed(self) -> bool:
+        """
+        Returns True if any failed indicators were seen, otherwise False.
+
+        Args:
+            N/A
+
+        Returns:
+            bool: True for failed, otherwise False
+
+        Raises:
+            N/A
+
+        """
+        # TODO maybe this changes depending on what indicator stuff looks like
+        return not self.results_failed_indicator
+
+    @property
+    def end_time(self) -> int:
+        """
+        Returns the end time of the operations in unix nano.
+
+        Args:
+            N/A
+
+        Returns:
+            int: end time in unix nano
+
+        Raises:
+            N/A
+
+        """
+        return self.splits[-1]
 
     @property
     def elapsed_time_seconds(self) -> float:
@@ -52,29 +111,19 @@ class Result:  # pylint: disable=too-many-instance-attributes
         """
         return (self.end_time - self.start_time) / 1_000_000_000
 
+    @property
+    def result(self) -> str:
+        """
+        Returns the results joined on newline chars. Note this does *not* include inputs sent.
 
-@dataclass
-class MultiResult:  # pylint: disable=too-many-instance-attributes
-    """
-    MultiResult holds the result of a multi operation (send_inputs).
+        Args:
+            N/A
 
-    Args:
-        host:
-        port:
-        start_time:
-        end_time:
-        results:
+        Returns:
+            str: joined results
 
-    Returns:
-        None
+        Raises:
+            N/A
 
-    Raises:
-        N/A
-
-    """
-
-    host: str
-    port: int
-    start_time: int
-    end_time: int
-    results: list[Result]
+        """
+        return "\n".join(self.results)
