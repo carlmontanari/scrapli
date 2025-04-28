@@ -155,7 +155,6 @@ SEND_INPUTS_IDS = (
 )
 
 
-# TODO fix :)
 @pytest.mark.parametrize(
     argnames=SEND_INPUTS_ARGNAMES,
     argvalues=SEND_INPUTS_ARGVALUES,
@@ -179,5 +178,49 @@ async def test_send_inputs_async(inputs, cli, cli_assert_result):
         cli_assert_result(actual=actual)
 
 
-@pytest.mark.parametrize(argnames="case", argvalues=(), ids=())
-def test_send_prompted_input(case): ...
+SEND_PROMPTED_INPUTS_ARGNAMES = ("input_", "prompt", "prompt_pattern", "response", "requested_mode")
+SEND_PROMPTED_INPUTS_ARGVALUES = (
+    ('read -p "Will you prompt me plz?"', "Will you prompt me plz?", "", "nou", "bash"),
+)
+SEND_PROMPTED_INPUTS_IDS = ("simple",)
+
+
+@pytest.mark.parametrize(
+    argnames=SEND_PROMPTED_INPUTS_ARGNAMES,
+    argvalues=SEND_PROMPTED_INPUTS_ARGVALUES,
+    ids=SEND_PROMPTED_INPUTS_IDS,
+)
+def test_send_prompted_input(
+    input_, prompt, prompt_pattern, response, requested_mode, cli, cli_assert_result
+):
+    with cli as c:
+        cli_assert_result(
+            actual=c.send_prompted_input(
+                input_=input_,
+                prompt=prompt,
+                prompt_pattern=prompt_pattern,
+                response=response,
+                requested_mode=requested_mode,
+            )
+        )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    argnames=SEND_PROMPTED_INPUTS_ARGNAMES,
+    argvalues=SEND_PROMPTED_INPUTS_ARGVALUES,
+    ids=SEND_PROMPTED_INPUTS_IDS,
+)
+async def test_send_prompted_input_async(
+    input_, prompt, prompt_pattern, response, requested_mode, cli, cli_assert_result
+):
+    async with cli as c:
+        actual = await c.send_prompted_input(
+            input_=input_,
+            prompt=prompt,
+            prompt_pattern=prompt_pattern,
+            response=response,
+            requested_mode=requested_mode,
+        )
+
+        cli_assert_result(actual=actual)

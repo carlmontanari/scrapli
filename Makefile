@@ -20,6 +20,12 @@ test-functional: ## Run functional tests
 test-functional-ci: ## Run functional tests against "ci" test topology
 	python -m pytest tests/functional/
 
+build-netopeer-server: ## Builds the netopeer server image
+	docker build \
+		-f tests/functional/clab/netopeer/Dockerfile \
+		-t libscrapli-netopeer2:latest \
+		tests/functional/clab/netopeer
+
 build-clab-launcher: ## Builds the clab launcher image
 	docker build \
 		-f tests/functional/clab/launcher/Dockerfile \

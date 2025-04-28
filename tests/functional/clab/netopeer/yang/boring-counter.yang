@@ -1,0 +1,19 @@
+module boring-counter {
+    yang-version 1.1;
+    namespace "urn:boring:counter";
+    prefix "bc";
+
+    container system {
+        leaf counter {
+            type int32;
+            default "0";
+            description "A counter that increments every second";
+        }
+    }
+
+    notification counter-update {
+        leaf counter-value {
+            type int32;
+        }
+    }
+}
