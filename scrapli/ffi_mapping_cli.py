@@ -63,6 +63,32 @@ class LibScrapliCliMapping:
         ]
         lib.ls_alloc_cli.restype = DriverPointer
 
+        self._get_ntc_templates_platform: Callable[
+            [
+                DriverPointer,
+                ZigSlicePointer,
+            ],
+            int,
+        ] = lib.ls_cli_get_ntc_templates_platform
+        lib.ls_cli_get_ntc_templates_platform.argtypes = [
+            DriverPointer,
+            POINTER(ZigSlice),
+        ]
+        lib.ls_cli_get_ntc_templates_platform.restype = c_uint8
+
+        self._get_genie_platform: Callable[
+            [
+                DriverPointer,
+                ZigSlicePointer,
+            ],
+            int,
+        ] = lib._get_genie_platform
+        lib._get_genie_platform.argtypes = [
+            DriverPointer,
+            POINTER(ZigSlice),
+        ]
+        lib._get_genie_platform.restype = c_uint8
+
         self._poll: Callable[
             [
                 DriverPointer,
@@ -197,9 +223,10 @@ class LibScrapliCliMapping:
                 c_char_p,
                 c_char_p,
                 c_char_p,
+                c_char_p,
+                c_char_p,
+                c_char_p,
                 c_bool,
-                c_char_p,
-                c_char_p,
                 c_bool,
             ],
             int,
@@ -212,9 +239,10 @@ class LibScrapliCliMapping:
             c_char_p,
             c_char_p,
             c_char_p,
+            c_char_p,
+            c_char_p,
+            c_char_p,
             c_bool,
-            c_char_p,
-            c_char_p,
             c_bool,
         ]
         lib.ls_cli_send_prompted_input.restype = c_uint8
@@ -249,6 +277,62 @@ class LibScrapliCliMapping:
 
         """
         return self._alloc(definition_string, logger_callback, host, port, transport_kind)
+
+    def get_ntc_templates_platform(
+        self,
+        *,
+        ptr: DriverPointer,
+        ntc_templates_platform: ZigSlicePointer,
+    ) -> int:
+        """
+        Writes the ntc templates platform into the given slice pointer.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: ptr to the cli object
+            ntc_templates_platform: slice to write the ntc templates platform into
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._get_ntc_templates_platform(
+            ptr,
+            ntc_templates_platform,
+        )
+
+    def get_genie_platform(
+        self,
+        *,
+        ptr: DriverPointer,
+        genie_platform: ZigSlicePointer,
+    ) -> int:
+        """
+        Writes the (cisco/pyats) genie platform into the given slice pointer.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: ptr to the cli object
+            genie_platform: slice to write the ntc templates platform into
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._get_genie_platform(
+            ptr,
+            genie_platform,
+        )
 
     def poll(
         self,
@@ -509,9 +593,10 @@ class LibScrapliCliMapping:
         prompt: c_char_p,
         prompt_pattern: c_char_p,
         response: c_char_p,
-        hidden_response: c_bool,
+        abort_input: c_char_p,
         requested_mode: c_char_p,
         input_handling: c_char_p,
+        hidden_response: c_bool,
         retain_trailing_prompt: c_bool,
     ) -> int:
         """
@@ -527,10 +612,12 @@ class LibScrapliCliMapping:
             prompt: the prompt to expect
             prompt_pattern: the prompt pattern to expect
             response: the response to write when the prompt has been seen
-            hidden_response: bool indicated if the response we write will be "hidden" on the device
+            abort_input: the input to send to abort the "prompted input" operation if an error
+                is encountered
             requested_mode: string name of the mode to send the input in
             input_handling: string mapping to input handling enum that governs how the input is
                 handled
+            hidden_response: bool indicated if the response we write will be "hidden" on the device
             retain_trailing_prompt: boolean indicating whether to retain the trailing
 
         Returns:
@@ -549,8 +636,9 @@ class LibScrapliCliMapping:
             prompt,
             prompt_pattern,
             response,
-            hidden_response,
+            abort_input,
             requested_mode,
             input_handling,
+            hidden_response,
             retain_trailing_prompt,
         )

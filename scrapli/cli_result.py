@@ -1,4 +1,5 @@
 """scrapli.result"""
+from typing import Any, TextIO
 
 OPERATION_DELIMITER = "__libscrapli__"
 
@@ -29,9 +30,9 @@ class Result:  # pylint: disable=too-many-instance-attributes
         results_raw: bytes,
         results: str,
         results_failed_indicator: str,
+        textfsm_platform: str,
+        genie_platform: str,
     ) -> None:
-        # TODO str/repr
-        # TODO textfsm/genie/ttp
         self.host = host
         self.port = port
         self.inputs = inputs.split(OPERATION_DELIMITER)
@@ -40,6 +41,8 @@ class Result:  # pylint: disable=too-many-instance-attributes
         self.results_raw = results_raw.split(OPERATION_DELIMITER.encode())
         self.results = results.split(OPERATION_DELIMITER)
         self.results_failed_indicator = results_failed_indicator
+        self.textfsm_platform = textfsm_platform
+        self.genie_platform = genie_platform
 
     def extend(self, result: "Result") -> None:
         """
@@ -75,7 +78,6 @@ class Result:  # pylint: disable=too-many-instance-attributes
             N/A
 
         """
-        # TODO maybe this changes depending on what indicator stuff looks like
         return not self.results_failed_indicator
 
     @property
@@ -131,3 +133,49 @@ class Result:  # pylint: disable=too-many-instance-attributes
 
         """
         return "\n".join(self.results)
+
+    def textfsm_parse(
+        self,
+        template: str | TextIO | None = None,
+        to_dict: bool = True,
+        raise_err: bool = False,
+    ) -> dict[str, Any] | list[Any]:
+        """
+        Parse results with textfsm, always return structured data
+
+        Returns an empty list if parsing fails!
+
+        Args:
+            template: string path to textfsm template or opened textfsm template file
+            to_dict: convert textfsm output from list of lists to list of dicts -- basically create
+                dict from header and row data so it is easier to read/parse the output
+            raise_err: exceptions in the textfsm parser will raised for the caller to handle
+
+        Returns:
+            structured_result: empty list or parsed data from textfsm
+
+        Raises:
+            N/A
+
+        """
+        raise NotImplementedError("not yet implemented!")
+
+    def genie_parse(
+        self,
+    ) -> dict[str, Any] | list[Any]:
+        """
+        Parse results with genie, always return structured data
+
+        Returns an empty list if parsing fails!
+
+        Args:
+            N/A
+
+        Returns:
+            structured_result: empty list or parsed data from genie
+
+        Raises:
+            N/A
+
+        """
+        raise NotImplementedError("not yet implemented!")

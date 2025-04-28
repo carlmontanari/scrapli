@@ -44,6 +44,9 @@ class LookupKeyValue:
 
         return self._key, self._value
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(key='{self.key}', value='REDACTED')"
+
 
 @dataclass
 class Options:  # pylint: disable=too-many-instance-attributes

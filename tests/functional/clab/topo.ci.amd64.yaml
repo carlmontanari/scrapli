@@ -16,3 +16,8 @@ topology:
       mgmt-ipv4: 172.20.20.16
       mgmt-ipv6: 2001:172:20:20::16
       startup-config: configs/srl-startup.json
+    netopeer:
+      kind: linux
+      image: libscrapli-netopeer2:latest
+      mgmt-ipv4: 172.20.20.18
+      mgmt-ipv6: 2001:172:20:20::18

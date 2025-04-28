@@ -35,3 +35,15 @@ topology:
         - 22161:161
         - 22443:443
         - 22830:830
+    netopeer:
+      kind: linux
+      image: libscrapli-netopeer2:latest
+      mgmt-ipv4: 172.20.20.18
+      mgmt-ipv6: 2001:172:20:20::18
+      ports:
+        - 23022:22
+        - 23023:23
+        - 23080:80
+        - 23161:161
+        - 23443:443
+        - 23830:830

@@ -129,6 +129,9 @@ class Cli:  # pylint: disable=too-many-instance-attributes
 
         self.ptr: Optional[DriverPointer] = None
 
+        self._ntc_templates_platform: Optional[str] = None
+        self._genie_platform: Optional[str] = None
+
     def __enter__(self: "Cli") -> "Cli":
         """
         Enter method for context manager
@@ -294,6 +297,68 @@ class Cli:  # pylint: disable=too-many-instance-attributes
         self,
     ) -> None:
         self.ffi_mapping.shared_mapping.free(ptr=self._ptr_or_exception())
+
+    @property
+    def ntc_templates_platform(self) -> str:
+        """
+        Returns the ntc templates platform for the cli object.
+
+        Args:
+            N/A
+
+        Returns:
+            str: the ntc templates platform name
+
+        Raises:
+            N/A
+
+        """
+        if self._ntc_templates_platform is not None:
+            return self._ntc_templates_platform
+
+        ntc_templates_platform = ZigSlice(size=c_int(256))
+
+        status = self.ffi_mapping.cli_mapping.get_ntc_templates_platform(
+            ptr=self._ptr_or_exception(),
+            ntc_templates_platform=ntc_templates_platform,
+        )
+        if status != 0:
+            raise GetResultException("failed to retrieve ntc templates platform")
+
+        self._ntc_templates_platform = ntc_templates_platform.get_decoded_contents().strip("\x00")
+
+        return self._ntc_templates_platform
+
+    @property
+    def genie_platform(self) -> str:
+        """
+        Returns the genie platform for the cli object.
+
+        Args:
+            N/A
+
+        Returns:
+            str: the genie platform name
+
+        Raises:
+            N/A
+
+        """
+        if self._genie_platform is not None:
+            return self._genie_platform
+
+        genie_platform = ZigSlice(size=c_int(256))
+
+        status = self.ffi_mapping.cli_mapping.get_ntc_templates_platform(
+            ptr=self._ptr_or_exception(),
+            ntc_templates_platform=genie_platform,
+        )
+        if status != 0:
+            raise GetResultException("failed to retrieve genie templates platform")
+
+        self._genie_platform = genie_platform.get_decoded_contents().strip("\x00")
+
+        return self._genie_platform
 
     def _open(self) -> c_uint:
         self._alloc()
@@ -494,6 +559,8 @@ class Cli:  # pylint: disable=too-many-instance-attributes
             results_raw=results_raw_slice.get_contents(),
             results=results_slice.get_decoded_contents(),
             results_failed_indicator=results_failed_indicator_slice.get_decoded_contents(),
+            textfsm_platform=self.ntc_templates_platform,
+            genie_platform=self.genie_platform,
         )
 
     async def _get_result_async(  # pylint: disable=too-many-locals
@@ -580,6 +647,8 @@ class Cli:  # pylint: disable=too-many-instance-attributes
             results_raw=results_raw_slice.get_contents(),
             results=results_slice.get_decoded_contents(),
             results_failed_indicator=results_failed_indicator_slice.get_decoded_contents(),
+            textfsm_platform=self.ntc_templates_platform,
+            genie_platform=self.genie_platform,
         )
 
     def _enter_mode(
@@ -1023,6 +1092,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
         prompt_pattern: c_char_p,
         response: c_char_p,
         hidden_response: c_bool,
+        abort_input: c_char_p,
         requested_mode: c_char_p,
         input_handling: c_char_p,
         retain_trailing_prompt: c_bool,
@@ -1036,6 +1106,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
             prompt_pattern=prompt_pattern,
             response=response,
             hidden_response=hidden_response,
+            abort_input=abort_input,
             requested_mode=requested_mode,
             input_handling=input_handling,
             retain_trailing_prompt=retain_trailing_prompt,
@@ -1053,9 +1124,10 @@ class Cli:  # pylint: disable=too-many-instance-attributes
         prompt_pattern: str,
         response: str,
         *,
-        hidden_response: bool = False,
         requested_mode: str = "",
+        abort_input: str = "",
         input_handling: InputHandling = InputHandling.FUZZY,
+        hidden_response: bool = False,
         retain_trailing_prompt: bool = False,
         operation_timeout_ns: Optional[int] = None,
     ) -> Result:
@@ -1067,9 +1139,11 @@ class Cli:  # pylint: disable=too-many-instance-attributes
             prompt: the prompt to respond to (must set this or prompt_pattern)
             prompt_pattern: the prompt pattern to respond to (must set this or prompt)
             response: the response to send to the prompt
-            hidden_response: if the response input will be hidden (like for a password prompt)
+            abort_input: the input to send to abort the "prompted input" operation if an error
+                is encountered
             requested_mode: name of the mode to send the input at
             input_handling: how to handle the input
+            hidden_response: if the response input will be hidden (like for a password prompt)
             retain_trailing_prompt: retain the trailing prompt in the final "result"
             operation_timeout_ns: operation timeout in ns for this operation
 
@@ -1091,6 +1165,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
         _prompt = to_c_string(prompt)
         _prompt_pattern = to_c_string(prompt_pattern)
         _response = to_c_string(response)
+        _abort_input = to_c_string(abort_input)
         _requested_mode = to_c_string(requested_mode)
         _input_handling = to_c_string(input_handling)
 
@@ -1101,9 +1176,10 @@ class Cli:  # pylint: disable=too-many-instance-attributes
             prompt=_prompt,
             prompt_pattern=_prompt_pattern,
             response=_response,
-            hidden_response=c_bool(hidden_response),
+            abort_input=_abort_input,
             requested_mode=_requested_mode,
             input_handling=_input_handling,
+            hidden_response=c_bool(hidden_response),
             retain_trailing_prompt=c_bool(retain_trailing_prompt),
         )
 
@@ -1117,9 +1193,10 @@ class Cli:  # pylint: disable=too-many-instance-attributes
         prompt_pattern: str,
         response: str,
         *,
-        hidden_response: bool = False,
+        abort_input: str = "",
         requested_mode: str = "",
         input_handling: InputHandling = InputHandling.FUZZY,
+        hidden_response: bool = False,
         retain_trailing_prompt: bool = False,
         operation_timeout_ns: Optional[int] = None,
     ) -> Result:
@@ -1131,9 +1208,11 @@ class Cli:  # pylint: disable=too-many-instance-attributes
             prompt: the prompt to respond to (must set this or prompt_pattern)
             prompt_pattern: the prompt pattern to respond to (must set this or prompt)
             response: the response to send to the prompt
-            hidden_response: if the response input will be hidden (like for a password prompt)
+            abort_input: the input to send to abort the "prompted input" operation if an error
+                is encountered
             requested_mode: name of the mode to send the input at
             input_handling: how to handle the input
+            hidden_response: if the response input will be hidden (like for a password prompt)
             retain_trailing_prompt: retain the trailing prompt in the final "result"
             operation_timeout_ns: operation timeout in ns for this operation
 
@@ -1155,6 +1234,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
         _prompt = to_c_string(prompt)
         _prompt_pattern = to_c_string(prompt_pattern)
         _response = to_c_string(response)
+        _abort_input = to_c_string(abort_input)
         _requested_mode = to_c_string(requested_mode)
         _input_handling = to_c_string(input_handling)
 
@@ -1165,9 +1245,10 @@ class Cli:  # pylint: disable=too-many-instance-attributes
             prompt=_prompt,
             prompt_pattern=_prompt_pattern,
             response=_response,
-            hidden_response=c_bool(hidden_response),
+            abort_input=_abort_input,
             requested_mode=_requested_mode,
             input_handling=_input_handling,
+            hidden_response=c_bool(hidden_response),
             retain_trailing_prompt=c_bool(retain_trailing_prompt),
         )
 

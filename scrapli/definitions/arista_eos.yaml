@@ -36,7 +36,7 @@ modes:
           - send_input:
               input: 'end'
   - name: 'bash'
-    prompt_pattern: '^\[[\w.\-@()\/: ]{1,64}~\]\$'
+    prompt_pattern: '^\[[\w.\-@()\/: ]{1,63}~\]\$'
     accessible_modes:
       - name: 'privileged_exec'
         instructions:
