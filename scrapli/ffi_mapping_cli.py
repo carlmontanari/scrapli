@@ -82,12 +82,12 @@ class LibScrapliCliMapping:
                 ZigSlicePointer,
             ],
             int,
-        ] = lib._get_genie_platform
-        lib._get_genie_platform.argtypes = [
+        ] = lib.ls_cli_get_genie_platform
+        lib.ls_cli_get_genie_platform.argtypes = [
             DriverPointer,
             POINTER(ZigSlice),
         ]
-        lib._get_genie_platform.restype = c_uint8
+        lib.ls_cli_get_genie_platform.restype = c_uint8
 
         self._poll: Callable[
             [
