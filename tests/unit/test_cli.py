@@ -215,7 +215,7 @@ async def test_send_prompted_input_async(
     input_, prompt, prompt_pattern, response, requested_mode, cli, cli_assert_result
 ):
     async with cli as c:
-        actual = await c.send_prompted_input(
+        actual = await c.send_prompted_input_async(
             input_=input_,
             prompt=prompt,
             prompt_pattern=prompt_pattern,
