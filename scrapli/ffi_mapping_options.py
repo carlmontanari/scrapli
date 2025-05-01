@@ -838,6 +838,15 @@ class LibScrapliTransportSsh2OptionsMapping:  # pylint: disable=too-few-public-m
     """
 
     def __init__(self, lib: CDLL) -> None:
+        self._set_known_hosts_path: Callable[[DriverPointer, c_char_p], int] = (
+            lib.ls_option_transport_ssh2_known_hosts_path
+        )
+        lib.ls_option_transport_ssh2_known_hosts_path.argtypes = [
+            DriverPointer,
+            c_char_p,
+        ]
+        lib.ls_option_transport_ssh2_known_hosts_path.restype = c_uint8
+
         self._set_libssh2_trace: Callable[[DriverPointer], int] = (
             lib.ls_option_transport_ssh2_libssh2trace
         )
@@ -845,6 +854,27 @@ class LibScrapliTransportSsh2OptionsMapping:  # pylint: disable=too-few-public-m
             DriverPointer,
         ]
         lib.ls_option_transport_ssh2_libssh2trace.restype = c_uint8
+
+    def set_known_hosts_path(self, ptr: DriverPointer, path: c_char_p) -> int:
+        """
+        Set ssh2 transport known hosts file path.
+
+        Should not be used/called directly.
+
+        Args:
+            ptr: ptr to the cli/netconf object
+            path: the path to the known hosts file
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._set_known_hosts_path(ptr, path)
+
 
     def set_libssh2_trace(self, ptr: DriverPointer) -> int:
         """
