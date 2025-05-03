@@ -13,6 +13,141 @@ from scrapli.ffi_types import (
 )
 
 
+class LibScrapliNetconfOptionsMapping:
+    """
+    Mapping to libscrapli netconf option setter exported functions.
+
+    Should not be used/called directly.
+
+    Args:
+        N/A
+
+    Returns:
+        None
+
+    Raises:
+        N/A
+
+    """
+
+    def __init__(self, lib: CDLL) -> None:
+        self._set_error_tag: Callable[[DriverPointer, c_char_p], int] = (
+            lib.ls_option_netconf_error_tag
+        )
+        lib.ls_option_netconf_error_tag.argtypes = [
+            DriverPointer,
+            c_char_p,
+        ]
+        lib.ls_option_netconf_error_tag.restype = c_uint8
+
+        self._set_preferred_version: Callable[[DriverPointer, c_char_p], int] = (
+            lib.ls_option_netconf_preferred_version
+        )
+        lib.ls_option_netconf_preferred_version.argtypes = [
+            DriverPointer,
+            c_char_p,
+        ]
+        lib.ls_option_netconf_preferred_version.restype = c_uint8
+
+        self._set_message_poll_interva_ns: Callable[[DriverPointer, c_int], int] = (
+            lib.ls_option_netconf_message_poll_interval
+        )
+        lib.ls_option_netconf_message_poll_interval.argtypes = [
+            DriverPointer,
+            c_int,
+        ]
+        lib.ls_option_netconf_message_poll_interval.restype = c_uint8
+
+        self._set_base_namespace_prefix: Callable[[DriverPointer, c_char_p], int] = (
+            lib.ls_option_netconf_base_namespace_prefix
+        )
+        lib.ls_option_netconf_base_namespace_prefix.argtypes = [
+            DriverPointer,
+            c_char_p,
+        ]
+        lib.ls_option_netconf_base_namespace_prefix.restype = c_uint8
+
+    def set_error_tag(self, ptr: DriverPointer, error_tag: c_char_p) -> int:
+        """
+        Set the error tag substring.
+
+        Should not be used/called directly.
+
+        Args:
+            ptr: ptr to the netconf object
+            error_tag: error tag substring
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._set_error_tag(ptr, error_tag)
+
+    def set_preferred_version(self, ptr: DriverPointer, version: c_char_p) -> int:
+        """
+        Set the preferred netconf version.
+
+        Should not be used/called directly.
+
+        Args:
+            ptr: ptr to the netconf object
+            version: version string
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._set_preferred_version(ptr, version)
+
+    def set_message_poll_interva_ns(self, ptr: DriverPointer, interval: c_int) -> int:
+        """
+        Set the netconf message poll interval.
+
+        Should not be used/called directly.
+
+        Args:
+            ptr: ptr to the netconf object
+            interval: interval in ns
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._set_message_poll_interva_ns(ptr, interval)
+
+    def set_base_namespace_prefix(self, ptr: DriverPointer, prefix: c_char_p) -> int:
+        """
+        Set the netconf base namespace prefix.
+
+        Should not be used/called directly.
+
+        Args:
+            ptr: ptr to the netconf object
+            prefix: prefix for the base namespace
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._set_base_namespace_prefix(ptr, prefix)
+
+
 class LibScrapliSessionOptionsMapping:
     """
     Mapping to libscrapli session option setter exported functions.
@@ -875,7 +1010,6 @@ class LibScrapliTransportSsh2OptionsMapping:  # pylint: disable=too-few-public-m
         """
         return self._set_known_hosts_path(ptr, path)
 
-
     def set_libssh2_trace(self, ptr: DriverPointer) -> int:
         """
         Set ssh2 transport libssh2 trace
@@ -981,6 +1115,7 @@ class LibScrapliOptionsMapping:  # pylint: disable=too-few-public-methods
     """
 
     def __init__(self, lib: CDLL) -> None:
+        self.netconf = LibScrapliNetconfOptionsMapping(lib)
         self.session = LibScrapliSessionOptionsMapping(lib)
         self.auth = LibScrapliAuthOptionsMapping(lib)
         self.transport_bin = LibScrapliTransportBinOptionsMapping(lib)

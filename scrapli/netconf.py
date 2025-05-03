@@ -2,6 +2,7 @@
 
 from asyncio import sleep as async_sleep
 from ctypes import c_bool, c_char_p, c_int, c_uint, c_uint64
+from dataclasses import dataclass, field
 from enum import Enum
 from logging import getLogger
 from random import randint
@@ -16,6 +17,7 @@ from scrapli.exceptions import (
     NotOpenedException,
     OpenException,
     OperationException,
+    OptionsException,
     SubmitOperationException,
 )
 from scrapli.ffi_mapping import LibScrapliMapping
@@ -40,6 +42,25 @@ from scrapli.session import (
 )
 from scrapli.session import Options as SessionOptions
 from scrapli.transport import Options as TransportOptions
+
+
+class Version(str, Enum):
+    """
+    Enum representing a netconf version
+
+    Args:
+        N/A
+
+    Returns:
+        None
+
+    Raises:
+        N/A
+
+    """
+
+    VERSION_1_0 = "1.0"
+    VERSION_1_1 = "1.1"
 
 
 class DatastoreType(str, Enum):
@@ -149,6 +170,110 @@ class ConfigFilter(str, Enum):
     FALSE = "false"
 
 
+@dataclass
+class Options:  # pylint: disable=too-many-instance-attributes
+    """
+    Options holds netconf related options to pass to the ffi layer.
+
+    Args:
+        error_tag: the error tag substring that identifies errors in an rpc reply
+        preferred_version: preferred netconf version to use
+        message_poll_interval_ns: interval in ns for message polling
+        base_namespace_prefix: prefix to prepend to base namespaces
+
+    Returns:
+        None
+
+    Raises:
+        N/A
+
+    """
+
+    error_tag: Optional[str] = None
+    preferred_version: Optional[Version] = None
+    message_poll_interval_ns: Optional[int] = None
+    base_namespace_prefix: Optional[str] = None
+
+    _error_tag: Optional[c_char_p] = field(init=False, default=None, repr=False)
+    _preferred_version: Optional[c_char_p] = field(init=False, default=None, repr=False)
+    _base_namespace_prefix: Optional[c_char_p] = field(init=False, default=None, repr=False)
+
+    def apply(  # pylint: disable=too-many-branches
+        self, ffi_mapping: LibScrapliMapping, ptr: DriverPointer
+    ) -> None:
+        """
+        Applies the options to the given driver pointer.
+
+        Should not be called directly/by users.
+
+        Args:
+            ffi_mapping: the handle to the ffi mapping singleton
+            ptr: the pointer to the underlying cli or netconf object
+
+        Returns:
+            None
+
+        Raises:
+            OptionsException: if any option apply returns a non-zero return code.
+
+        """
+        if self.error_tag is not None:
+            self._error_tag = to_c_string(self.error_tag)
+
+            status = ffi_mapping.options_mapping.netconf.set_error_tag(ptr, self._error_tag)
+            if status != 0:
+                raise OptionsException("failed to set netconf error tag")
+
+        if self.preferred_version is not None:
+            self._preferred_version = to_c_string(self.preferred_version)
+
+            status = ffi_mapping.options_mapping.netconf.set_preferred_version(
+                ptr, self._preferred_version
+            )
+            if status != 0:
+                raise OptionsException("failed to set netconf preferred version")
+
+        if self.message_poll_interval_ns is not None:
+            status = ffi_mapping.options_mapping.netconf.set_message_poll_interva_ns(
+                ptr, c_int(self.message_poll_interval_ns)
+            )
+            if status != 0:
+                raise OptionsException("failed to set netconf message poll interval")
+
+        if self.base_namespace_prefix is not None:
+            self._base_namespace_prefix = to_c_string(self.base_namespace_prefix)
+
+            status = ffi_mapping.options_mapping.netconf.set_base_namespace_prefix(
+                ptr, self._base_namespace_prefix
+            )
+            if status != 0:
+                raise OptionsException("failed to set netconf base namespace prefix")
+
+    def __repr__(self) -> str:
+        """
+        Magic repr method for Options object
+
+        Args:
+            N/A
+
+        Returns:
+            str: repr for Options object
+
+        Raises:
+            N/A
+
+        """
+        return (
+            # it will probably be "canonical" to import Options as AuthOptions, so we'll make
+            # the repr do that too
+            f"Netconf{self.__class__.__name__}("
+            f"error_tag={self.error_tag!r}, "
+            f"preferred_version={self.preferred_version!r} "
+            f"message_poll_interval_ns={self.message_poll_interval_ns!r} "
+            f"base_namespace_prefix={self.base_namespace_prefix!r}) "
+        )
+
+
 class Netconf:  # pylint: disable=too-many-instance-attributes
     """
     Netconf represents a netconf connection object.
@@ -170,6 +295,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         *,
         logger_callback: Optional[Callable[[int, str], None]] = None,
         port: int = 830,
+        options: Optional[Options] = None,
         auth_options: Optional[AuthOptions] = None,
         session_options: Optional[SessionOptions] = None,
         transport_options: Optional[TransportOptions] = None,
@@ -192,6 +318,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         self.port = port
 
+        self.options = options or Options()
         self.auth_options = auth_options or AuthOptions()
         self.session_options = session_options or SessionOptions()
         self.transport_options = transport_options or TransportOptions()
@@ -268,6 +395,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
     def _open(self) -> c_uint:
         self._alloc()
 
+        self.options.apply(self.ffi_mapping, self._ptr_or_exception())
         self.auth_options.apply(self.ffi_mapping, self._ptr_or_exception())
         self.session_options.apply(self.ffi_mapping, self._ptr_or_exception())
         self.transport_options.apply(self.ffi_mapping, self._ptr_or_exception())

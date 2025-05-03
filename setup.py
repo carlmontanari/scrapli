@@ -1,3 +1,5 @@
+"""setup"""
+
 import os
 import platform
 import shutil
@@ -12,7 +14,7 @@ from setuptools.command.editable_wheel import editable_wheel
 from setuptools.command.sdist import sdist
 
 LIBSCRAPLI_REPO = os.environ.get("LIBSCRAPLI_REPO", "https://github.com/scrapli/libscrapli")
-LIBSCRAPLI_TAG = os.environ.get("LIBSCRAPLI_TAG", "v0.0.1-alpha.2")
+LIBSCRAPLI_TAG = os.environ.get("LIBSCRAPLI_TAG", "v0.0.1-alpha.3")
 LIBSCRAPLI_BUILD_PATH_ENV = "LIBSCRAPLI_BUILD_PATH"
 LIBSCRPALI_ZIG_TRIPLE_ENV = "LIBSCRAPLI_ZIG_TRIPLE"
 
@@ -26,7 +28,7 @@ WHEEL_TARGETS = {
 }
 
 
-class Libscrapli:
+class Libscrapli:  # pylint: disable=too-few-public-methods
     """Dumb container for setup-related helpers"""
 
     @staticmethod
@@ -39,7 +41,7 @@ class Libscrapli:
         if p == "arm64":
             return "aarch64"
 
-        raise Exception("unsupported platform")
+        raise NotImplementedError("unsupported platform")
 
     @staticmethod
     def _get_zig_style_platform() -> str:
@@ -51,7 +53,7 @@ class Libscrapli:
                 return "linux-musl"
             return "linux-gnu"
 
-        raise Exception("unsupported platform")
+        raise NotImplementedError("unsupported platform")
 
     @staticmethod
     def _get_libscrapli_build_path() -> Path:
@@ -61,7 +63,7 @@ class Libscrapli:
         return Path(tempfile.mkdtemp())
 
     @staticmethod
-    def _clean_libscrapli_build_path(libscrapli_build_path: Path):
+    def _clean_libscrapli_build_path(libscrapli_build_path: Path) -> None:
         if LIBSCRAPLI_BUILD_PATH_ENV in os.environ:
             # build path env set, likely in ci, dont clean up as we may need it for
             # building other wheels. ci will/should clean it
@@ -76,7 +78,7 @@ class Libscrapli:
         elif sys.platform == "darwin":
             lib_filename = f"libscrapli.{version}.dylib"
         else:
-            raise Exception("unsupported platform")
+            raise NotImplementedError("unsupported platform")
 
         return lib_filename
 
@@ -123,7 +125,7 @@ class Libscrapli:
 
         return cmd
 
-    def _run_sdist_and_editable_wheel(self):
+    def _run_sdist_and_editable_wheel(self) -> None:
         src_lib_path = Path("scrapli/lib")
 
         libscrapli_build_path = self._get_libscrapli_build_path()
@@ -148,20 +150,29 @@ class Libscrapli:
         self._clean_libscrapli_build_path(libscrapli_build_path=libscrapli_build_path)
 
 
-class LibscrapliSdist(sdist, Libscrapli):
-    def run(self):
+class LibscrapliSdist(sdist, Libscrapli):  # type: ignore # pylint: disable=too-few-public-methods\
+    """Setuptools sdist dispatcher"""
+
+    def run(self) -> None:
+        """Run the sdist install"""
         self._run_sdist_and_editable_wheel()
         super().run()
 
 
-class LibscrapliEditableWheel(editable_wheel, Libscrapli):
-    def run(self):
+class LibscrapliEditableWheel(editable_wheel, Libscrapli):  # type: ignore # pylint: disable=too-few-public-methods
+    """Setuptools editable wheel dispatcher"""
+
+    def run(self) -> None:
+        """Run the editable wheel install"""
         self._run_sdist_and_editable_wheel()
         super().run()
 
 
-class LibscrapliBdist(bdist_wheel, Libscrapli):
-    def run(self):
+class LibscrapliBdist(bdist_wheel, Libscrapli):  # type: ignore  # pylint: disable=too-few-public-methods
+    """Setuptools bdist dispatcher"""
+
+    def run(self) -> None:
+        """Run the bdist install"""
         if LIBSCRPALI_ZIG_TRIPLE_ENV in os.environ:
             zig_triple = os.environ[LIBSCRPALI_ZIG_TRIPLE_ENV]
             wheel_platform = WHEEL_TARGETS[zig_triple]
@@ -169,8 +180,8 @@ class LibscrapliBdist(bdist_wheel, Libscrapli):
             # we *technically* have a pure python package meaning we can lie to bdist_wheel and tell
             # it what our platform should be. so do that. we are "pure" python because we have no
             #  c-extensions, only the pre compiled zig shared object (i.e. .so or .dylib)
-            self.plat_name_supplied = True
-            self.plat_name = wheel_platform
+            self.plat_name_supplied = True  # pylint: disable=attribute-defined-outside-init
+            self.plat_name = wheel_platform  # pylint: disable=attribute-defined-outside-init
         else:
             # not set in env, so not in ci, just do native/current platform like normal, but we
             # still need to know what that is so we grab the correct built shared object

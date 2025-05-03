@@ -134,7 +134,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
 
     def __enter__(self: "Cli") -> "Cli":
         """
-        Enter method for context manager
+        Enter method for context manager.
 
         Args:
             N/A
@@ -157,7 +157,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
         traceback: Optional[TracebackType],
     ) -> None:
         """
-        Exit method to cleanup for context manager
+        Exit method to cleanup for context manager.
 
         Args:
             exception_type: exception type being raised
@@ -175,7 +175,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
 
     async def __aenter__(self: "Cli") -> "Cli":
         """
-        Enter method for context manager
+        Enter method for context manager.
 
         Args:
             N/A
@@ -198,7 +198,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
         traceback: Optional[TracebackType],
     ) -> None:
         """
-        Exit method to cleanup for context manager
+        Exit method to cleanup for context manager.
 
         Args:
             exception_type: exception type being raised
@@ -216,7 +216,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
 
     def __str__(self) -> str:
         """
-        Magic str method for Cli object
+        Magic str method for Cli object.
 
         Args:
             N/A
@@ -232,7 +232,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
 
     def __repr__(self) -> str:
         """
-        Magic repr method for Cli object
+        Magic repr method for Cli object.
 
         Args:
             N/A

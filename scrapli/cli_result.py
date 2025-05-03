@@ -1,4 +1,5 @@
 """scrapli.result"""
+
 from typing import Any, TextIO
 
 OPERATION_DELIMITER = "__libscrapli__"
