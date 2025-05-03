@@ -17,7 +17,7 @@ def handle_operation_timeout(
     wrapped: Callable[Concatenate["Cli", P], Result],
 ) -> Callable[Concatenate["Cli", P], Result]:
     """
-    Wraps a Cli operation and sets the timeout value for the duration of the operation
+    Wraps a Cli operation and sets the timeout value for the duration of the operation.
 
     Args:
         wrapped: the operation function
@@ -32,7 +32,7 @@ def handle_operation_timeout(
 
     def wrapper(inst: "Cli", /, *args: P.args, **kwargs: P.kwargs) -> Result:
         """
-        The operation timeout wrapper
+        The operation timeout wrapper.
 
         Args:
             inst: the Cli instance
@@ -84,7 +84,7 @@ def handle_operation_timeout_async(
     wrapped: Callable[Concatenate["Cli", P], Awaitable[Result]],
 ) -> Callable[Concatenate["Cli", P], Awaitable[Result]]:
     """
-    Wraps a Cli operation and sets the timeout value for the duration of the operation
+    Wraps a Cli operation and sets the timeout value for the duration of the operation.
 
     Args:
         wrapped: the operation function
@@ -99,7 +99,7 @@ def handle_operation_timeout_async(
 
     async def wrapper(inst: "Cli", /, *args: P.args, **kwargs: P.kwargs) -> Result:
         """
-        The operation timeout wrapper
+        The operation timeout wrapper.
 
         Args:
             inst: the Cli instance

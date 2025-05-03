@@ -4,12 +4,12 @@ help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 fmt: ## Run formatters
-	python -m isort .
-	python -m black .
+	python -m isort setup.py scrapli/
+	python -m black setup.py scrapli/
 
 lint: ## Run linters
-	python -m pylint scrapli/
-	python -m mypy --strict scrapli/
+	python -m pylint setup.py scrapli/
+	python -m mypy --strict setup.py scrapli/
 
 test: ## Run unit tests
 	python -m pytest tests/unit/
@@ -57,4 +57,3 @@ run-clab: ## Runs the clab functional testing topo; uses the clab launcher to ru
 		-e "LAUNCHER_WORKDIR=$$(pwd)/tests/functional/clab" \
 		-e "HOST_ARCH=$$(uname -m)" \
 		clab-launcher:latest
-
