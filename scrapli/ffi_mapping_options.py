@@ -58,15 +58,6 @@ class LibScrapliNetconfOptionsMapping:
         ]
         lib.ls_option_netconf_message_poll_interval.restype = c_uint8
 
-        self._set_base_namespace_prefix: Callable[[DriverPointer, c_char_p], int] = (
-            lib.ls_option_netconf_base_namespace_prefix
-        )
-        lib.ls_option_netconf_base_namespace_prefix.argtypes = [
-            DriverPointer,
-            c_char_p,
-        ]
-        lib.ls_option_netconf_base_namespace_prefix.restype = c_uint8
-
     def set_error_tag(self, ptr: DriverPointer, error_tag: c_char_p) -> int:
         """
         Set the error tag substring.
@@ -126,26 +117,6 @@ class LibScrapliNetconfOptionsMapping:
 
         """
         return self._set_message_poll_interva_ns(ptr, interval)
-
-    def set_base_namespace_prefix(self, ptr: DriverPointer, prefix: c_char_p) -> int:
-        """
-        Set the netconf base namespace prefix.
-
-        Should not be used/called directly.
-
-        Args:
-            ptr: ptr to the netconf object
-            prefix: prefix for the base namespace
-
-        Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
-
-        Raises:
-            N/A
-
-        """
-        return self._set_base_namespace_prefix(ptr, prefix)
 
 
 class LibScrapliSessionOptionsMapping:

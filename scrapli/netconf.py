@@ -1,4 +1,4 @@
-"""scrapli.netconf"""
+"""scrapli.netconf"""  # pylint: disable=too-many-lines
 
 from asyncio import sleep as async_sleep
 from ctypes import c_bool, c_char_p, c_int, c_uint, c_uint64
@@ -179,7 +179,6 @@ class Options:  # pylint: disable=too-many-instance-attributes
         error_tag: the error tag substring that identifies errors in an rpc reply
         preferred_version: preferred netconf version to use
         message_poll_interval_ns: interval in ns for message polling
-        base_namespace_prefix: prefix to prepend to base namespaces
 
     Returns:
         None
@@ -192,11 +191,9 @@ class Options:  # pylint: disable=too-many-instance-attributes
     error_tag: Optional[str] = None
     preferred_version: Optional[Version] = None
     message_poll_interval_ns: Optional[int] = None
-    base_namespace_prefix: Optional[str] = None
 
     _error_tag: Optional[c_char_p] = field(init=False, default=None, repr=False)
     _preferred_version: Optional[c_char_p] = field(init=False, default=None, repr=False)
-    _base_namespace_prefix: Optional[c_char_p] = field(init=False, default=None, repr=False)
 
     def apply(  # pylint: disable=too-many-branches
         self, ffi_mapping: LibScrapliMapping, ptr: DriverPointer
@@ -240,15 +237,6 @@ class Options:  # pylint: disable=too-many-instance-attributes
             if status != 0:
                 raise OptionsException("failed to set netconf message poll interval")
 
-        if self.base_namespace_prefix is not None:
-            self._base_namespace_prefix = to_c_string(self.base_namespace_prefix)
-
-            status = ffi_mapping.options_mapping.netconf.set_base_namespace_prefix(
-                ptr, self._base_namespace_prefix
-            )
-            if status != 0:
-                raise OptionsException("failed to set netconf base namespace prefix")
-
     def __repr__(self) -> str:
         """
         Magic repr method for Options object
@@ -264,13 +252,12 @@ class Options:  # pylint: disable=too-many-instance-attributes
 
         """
         return (
-            # it will probably be "canonical" to import Options as AuthOptions, so we'll make
+            # it will probably be "canonical" to import Options as NetconfOptions, so we'll make
             # the repr do that too
             f"Netconf{self.__class__.__name__}("
             f"error_tag={self.error_tag!r}, "
             f"preferred_version={self.preferred_version!r} "
-            f"message_poll_interval_ns={self.message_poll_interval_ns!r} "
-            f"base_namespace_prefix={self.base_namespace_prefix!r}) "
+            f"message_poll_interval_ns={self.message_poll_interval_ns!r})"
         )
 
 
@@ -937,3 +924,787 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         )
 
         return await self._get_result_async(operation_id=operation_id)
+
+    def _edit_config(  # pylint: disable=too-many-arguments,too-many-locals
+        self,
+        *,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+    ) -> c_uint: ...
+
+    @handle_operation_timeout
+    def edit_config(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute an edit-config rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+    @handle_operation_timeout_async
+    async def edit_config_async(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute an edit-config rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+    def _copy_config(  # pylint: disable=too-many-arguments,too-many-locals
+        self,
+        *,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+    ) -> c_uint: ...
+
+    @handle_operation_timeout
+    def copy_config(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute a copy-config rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+    @handle_operation_timeout_async
+    async def copy_config_async(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute a copy-config rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+    def _delete_config(  # pylint: disable=too-many-arguments,too-many-locals
+        self,
+        *,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+    ) -> c_uint: ...
+
+    @handle_operation_timeout
+    def delete_config(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute a delete-config rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+    @handle_operation_timeout_async
+    async def delete_config_async(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute a delete-config rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+    def _lock(  # pylint: disable=too-many-arguments,too-many-locals
+        self,
+        *,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+    ) -> c_uint: ...
+
+    @handle_operation_timeout
+    def lock(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute a lock rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+    @handle_operation_timeout_async
+    async def lock_async(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute a lock rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+    def _unlock(  # pylint: disable=too-many-arguments,too-many-locals
+        self,
+        *,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+    ) -> c_uint: ...
+
+    @handle_operation_timeout
+    def unlock(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute an unlock rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+    @handle_operation_timeout_async
+    async def unlock_async(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute an unlock rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+    def _get(  # pylint: disable=too-many-arguments,too-many-locals
+        self,
+        *,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+    ) -> c_uint: ...
+
+    @handle_operation_timeout
+    def get(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute a get rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+    @handle_operation_timeout_async
+    async def get_async(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute a get rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+    def _close_session(  # pylint: disable=too-many-arguments,too-many-locals
+        self,
+        *,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+    ) -> c_uint: ...
+
+    @handle_operation_timeout
+    def close_session(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute a close-session rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+    @handle_operation_timeout_async
+    async def close_session_async(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute a close-session rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+    def _kill_session(  # pylint: disable=too-many-arguments,too-many-locals
+        self,
+        *,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+    ) -> c_uint: ...
+
+    @handle_operation_timeout
+    def kill_session(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute a kill-session rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+    @handle_operation_timeout_async
+    async def kill_session_async(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute a kill-session rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+    def _commit(  # pylint: disable=too-many-arguments,too-many-locals
+        self,
+        *,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+    ) -> c_uint: ...
+
+    @handle_operation_timeout
+    def commit(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute a commit rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+    @handle_operation_timeout_async
+    async def commit_async(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute a commit rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+    def _discard(  # pylint: disable=too-many-arguments,too-many-locals
+        self,
+        *,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+    ) -> c_uint: ...
+
+    @handle_operation_timeout
+    def discard(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute a discard rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+    @handle_operation_timeout_async
+    async def discard_async(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute a discard rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+    def _cancel_commit(  # pylint: disable=too-many-arguments,too-many-locals
+        self,
+        *,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+    ) -> c_uint: ...
+
+    @handle_operation_timeout
+    def cancel_commit(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute a cancel-commit rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+    @handle_operation_timeout_async
+    async def cancel_commit_async(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute a cancel-commit rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+    def _validate(  # pylint: disable=too-many-arguments,too-many-locals
+        self,
+        *,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+    ) -> c_uint: ...
+
+    @handle_operation_timeout
+    def validate(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute a validate rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+    @handle_operation_timeout_async
+    async def validate_async(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute a validate rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+    def _get_schema(  # pylint: disable=too-many-arguments,too-many-locals
+        self,
+        *,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+    ) -> c_uint: ...
+
+    @handle_operation_timeout
+    def get_schema(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute a get-schema rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+    @handle_operation_timeout_async
+    async def get_schema_async(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute a get-schema rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+    def _get_data(  # pylint: disable=too-many-arguments,too-many-locals
+        self,
+        *,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+    ) -> c_uint: ...
+
+    @handle_operation_timeout
+    def get_data(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute a get-data rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+    @handle_operation_timeout_async
+    async def get_data_async(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute a get-data rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+    def _edit_data(  # pylint: disable=too-many-arguments,too-many-locals
+        self,
+        *,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+    ) -> c_uint: ...
+
+    @handle_operation_timeout
+    def edit_data(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute an edit-data rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+    @handle_operation_timeout_async
+    async def edit_data_async(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute an edit-data rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+    def _action(  # pylint: disable=too-many-arguments,too-many-locals
+        self,
+        *,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+    ) -> c_uint: ...
+
+    @handle_operation_timeout
+    def action(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute an action rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+    @handle_operation_timeout_async
+    async def action_async(  # pylint: disable=too-many-arguments
+        self,
+    ) -> Result:
+        """
+        Execute an action rpc operation.
+
+        Args:
+            TODO
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns

@@ -4,8 +4,8 @@ help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 fmt: ## Run formatters
-	python -m isort setup.py scrapli/
-	python -m black setup.py scrapli/
+	python -m isort setup.py scrapli/ tests/
+	python -m black setup.py scrapli/ tests/
 
 lint: ## Run linters
 	python -m pylint setup.py scrapli/
