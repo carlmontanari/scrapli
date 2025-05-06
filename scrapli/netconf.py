@@ -792,14 +792,13 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         *,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
-        source: DatastoreType = DatastoreType.RUNNING,
-        filter_: str = "",
-        filter_type: FilterType = FilterType.SUBTREE,
-        filter_namespace_prefix: str = "",
-        filter_namespace: str = "",
-        defaults_type: DefaultsType = DefaultsType.UNSET,
+        source: DatastoreType,
+        filter_: str,
+        filter_type: FilterType,
+        filter_namespace_prefix: str,
+        filter_namespace: str,
+        defaults_type: DefaultsType,
     ) -> c_uint:
-
         _source = to_c_string(source)
         _filter = to_c_string(filter_)
         _filter_type = to_c_string(filter_type)
@@ -930,17 +929,37 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         *,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
-    ) -> c_uint: ...
+        config: str,
+        target: DatastoreType,
+    ) -> c_uint:
+        _config = to_c_string(config)
+        _target = to_c_string(target)
+
+        status = self.ffi_mapping.netconf_mapping.edit_config(
+            ptr=self._ptr_or_exception(),
+            operation_id=operation_id,
+            cancel=cancel,
+            config=_config,
+            target=_target,
+        )
+        if status != 0:
+            raise SubmitOperationException("submitting edit-config operation failed")
+
+        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def edit_config(  # pylint: disable=too-many-arguments
         self,
+        *,
+        config: str = "",
+        target: DatastoreType = DatastoreType.RUNNING,
     ) -> Result:
         """
         Execute an edit-config rpc operation.
 
         Args:
-            TODO
+            config: string config payload to send
+            target: target datastore as DatastoreType enum
 
         Returns:
             Result: a Result object representing the operation
@@ -952,16 +971,32 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         """
         # only used in the decorator
         _ = operation_timeout_ns
+
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._edit_config(
+            operation_id=operation_id,
+            cancel=cancel,
+            config=config,
+            target=target,
+        )
+
+        return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
     async def edit_config_async(  # pylint: disable=too-many-arguments
         self,
+        *,
+        config: str = "",
+        target: DatastoreType = DatastoreType.RUNNING,
     ) -> Result:
         """
         Execute an edit-config rpc operation.
 
         Args:
-            TODO
+            config: string config payload to send
+            target: target datastore as DatastoreType enum
 
         Returns:
             Result: a Result object representing the operation
@@ -973,23 +1008,55 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         """
         # only used in the decorator
         _ = operation_timeout_ns
+
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._edit_config(
+            operation_id=operation_id,
+            cancel=cancel,
+            config=config,
+            target=target,
+        )
+
+        return await self._get_result_async(operation_id=operation_id)
 
     def _copy_config(  # pylint: disable=too-many-arguments,too-many-locals
         self,
         *,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
-    ) -> c_uint: ...
+        target: DatastoreType,
+        source: DatastoreType,
+    ) -> c_uint:
+        _target = to_c_string(target)
+        _source = to_c_string(source)
+
+        status = self.ffi_mapping.netconf_mapping.copy_config(
+            ptr=self._ptr_or_exception(),
+            operation_id=operation_id,
+            cancel=cancel,
+            target=_target,
+            source=_source,
+        )
+        if status != 0:
+            raise SubmitOperationException("submitting copy-config operation failed")
+
+        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def copy_config(  # pylint: disable=too-many-arguments
         self,
+        *,
+        target: DatastoreType = DatastoreType.RUNNING,
+        source: DatastoreType = DatastoreType.STARTUP,
     ) -> Result:
         """
         Execute a copy-config rpc operation.
 
         Args:
-            TODO
+            target: target to copy *to*
+            source: source to copy *from*
 
         Returns:
             Result: a Result object representing the operation
@@ -1001,16 +1068,32 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         """
         # only used in the decorator
         _ = operation_timeout_ns
+
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._copy_config(
+            operation_id=operation_id,
+            cancel=cancel,
+            target=target,
+            source=source,
+        )
+
+        return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
     async def copy_config_async(  # pylint: disable=too-many-arguments
         self,
+        *,
+        target: DatastoreType = DatastoreType.RUNNING,
+        source: DatastoreType = DatastoreType.STARTUP,
     ) -> Result:
         """
         Execute a copy-config rpc operation.
 
         Args:
-            TODO
+            target: target to copy *to*
+            source: source to copy *from*
 
         Returns:
             Result: a Result object representing the operation
@@ -1022,23 +1105,50 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         """
         # only used in the decorator
         _ = operation_timeout_ns
+
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._copy_config(
+            operation_id=operation_id,
+            cancel=cancel,
+            target=target,
+            source=source,
+        )
+
+        return await self._get_result_async(operation_id=operation_id)
 
     def _delete_config(  # pylint: disable=too-many-arguments,too-many-locals
         self,
         *,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
-    ) -> c_uint: ...
+        target: DatastoreType,
+    ) -> c_uint:
+        _target = to_c_string(target)
+
+        status = self.ffi_mapping.netconf_mapping.delete_config(
+            ptr=self._ptr_or_exception(),
+            operation_id=operation_id,
+            cancel=cancel,
+            target=_target,
+        )
+        if status != 0:
+            raise SubmitOperationException("submitting delete-config operation failed")
+
+        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def delete_config(  # pylint: disable=too-many-arguments
         self,
+        *,
+        target: DatastoreType = DatastoreType.RUNNING,
     ) -> Result:
         """
         Execute a delete-config rpc operation.
 
         Args:
-            TODO
+            target: target datastore to delete
 
         Returns:
             Result: a Result object representing the operation
@@ -1050,16 +1160,29 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         """
         # only used in the decorator
         _ = operation_timeout_ns
+
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._delete_config(
+            operation_id=operation_id,
+            cancel=cancel,
+            target=target,
+        )
+
+        return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
     async def delete_config_async(  # pylint: disable=too-many-arguments
         self,
+        *,
+        target: DatastoreType = DatastoreType.RUNNING,
     ) -> Result:
         """
         Execute a delete-config rpc operation.
 
         Args:
-            TODO
+            target: target datastore to delete
 
         Returns:
             Result: a Result object representing the operation
@@ -1071,23 +1194,49 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         """
         # only used in the decorator
         _ = operation_timeout_ns
+
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._delete_config(
+            operation_id=operation_id,
+            cancel=cancel,
+            target=target,
+        )
+
+        return await self._get_result_async(operation_id=operation_id)
 
     def _lock(  # pylint: disable=too-many-arguments,too-many-locals
         self,
         *,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
-    ) -> c_uint: ...
+        target: DatastoreType,
+    ) -> c_uint:
+        _target = to_c_string(target)
+
+        status = self.ffi_mapping.netconf_mapping.lock(
+            ptr=self._ptr_or_exception(),
+            operation_id=operation_id,
+            cancel=cancel,
+            target=_target,
+        )
+        if status != 0:
+            raise SubmitOperationException("submitting lock operation failed")
+
+        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def lock(  # pylint: disable=too-many-arguments
         self,
+        *,
+        target: DatastoreType = DatastoreType.RUNNING,
     ) -> Result:
         """
         Execute a lock rpc operation.
 
         Args:
-            TODO
+            target: target datastore to lock
 
         Returns:
             Result: a Result object representing the operation
@@ -1099,16 +1248,29 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         """
         # only used in the decorator
         _ = operation_timeout_ns
+
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._lock(
+            operation_id=operation_id,
+            cancel=cancel,
+            target=target,
+        )
+
+        return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
     async def lock_async(  # pylint: disable=too-many-arguments
         self,
+        *,
+        target: DatastoreType = DatastoreType.RUNNING,
     ) -> Result:
         """
         Execute a lock rpc operation.
 
         Args:
-            TODO
+            target: target datastore to lock
 
         Returns:
             Result: a Result object representing the operation
@@ -1120,23 +1282,49 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         """
         # only used in the decorator
         _ = operation_timeout_ns
+
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._lock(
+            operation_id=operation_id,
+            cancel=cancel,
+            target=target,
+        )
+
+        return await self._get_result_async(operation_id=operation_id)
 
     def _unlock(  # pylint: disable=too-many-arguments,too-many-locals
         self,
         *,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
-    ) -> c_uint: ...
+        target: DatastoreType,
+    ) -> c_uint:
+        _target = to_c_string(target)
+
+        status = self.ffi_mapping.netconf_mapping.unlock(
+            ptr=self._ptr_or_exception(),
+            operation_id=operation_id,
+            cancel=cancel,
+            target=_target,
+        )
+        if status != 0:
+            raise SubmitOperationException("submitting unlock operation failed")
+
+        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def unlock(  # pylint: disable=too-many-arguments
         self,
+        *,
+        target: DatastoreType = DatastoreType.RUNNING,
     ) -> Result:
         """
         Execute an unlock rpc operation.
 
         Args:
-            TODO
+            target: target datastore to unlock
 
         Returns:
             Result: a Result object representing the operation
@@ -1148,16 +1336,29 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         """
         # only used in the decorator
         _ = operation_timeout_ns
+
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._unlock(
+            operation_id=operation_id,
+            cancel=cancel,
+            target=target,
+        )
+
+        return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
     async def unlock_async(  # pylint: disable=too-many-arguments
         self,
+        *,
+        target: DatastoreType = DatastoreType.RUNNING,
     ) -> Result:
         """
         Execute an unlock rpc operation.
 
         Args:
-            TODO
+            target: target datastore to unlock
 
         Returns:
             Result: a Result object representing the operation
@@ -1169,23 +1370,69 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         """
         # only used in the decorator
         _ = operation_timeout_ns
+
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._unlock(
+            operation_id=operation_id,
+            cancel=cancel,
+            target=target,
+        )
+
+        return await self._get_result_async(operation_id=operation_id)
 
     def _get(  # pylint: disable=too-many-arguments,too-many-locals
         self,
         *,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
-    ) -> c_uint: ...
+        filter_: str,
+        filter_type: FilterType,
+        filter_namespace_prefix: str,
+        filter_namespace: str,
+        defaults_type: DefaultsType,
+    ) -> c_uint:
+        _filter = to_c_string(filter_)
+        _filter_type = to_c_string(filter_type)
+        _filter_namespace_prefix = to_c_string(filter_namespace_prefix)
+        _filter_namespace = to_c_string(filter_namespace)
+        _defaults_type = to_c_string(defaults_type)
+
+        status = self.ffi_mapping.netconf_mapping.get(
+            ptr=self._ptr_or_exception(),
+            operation_id=operation_id,
+            cancel=cancel,
+            filter_=_filter,
+            filter_type=_filter_type,
+            filter_namespace_prefix=_filter_namespace_prefix,
+            filter_namespace=_filter_namespace,
+            defaults_type=_defaults_type,
+        )
+        if status != 0:
+            raise SubmitOperationException("submitting get operation failed")
+
+        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def get(  # pylint: disable=too-many-arguments
         self,
+        *,
+        filter_: str = "",
+        filter_type: FilterType = FilterType.SUBTREE,
+        filter_namespace_prefix: str = "",
+        filter_namespace: str = "",
+        defaults_type: DefaultsType = DefaultsType.UNSET,
     ) -> Result:
         """
         Execute a get rpc operation.
 
         Args:
-            TODO
+            filter_: filter to apply to the get-config (or not if empty string)
+            filter_type: type of filter to apply, subtree|xpath
+            filter_namespace_prefix: filter namespace prefix
+            filter_namespace: filter namespace
+            defaults_type: defaults type to apply to the get-config, "unset" means dont apply one
 
         Returns:
             Result: a Result object representing the operation
@@ -1197,16 +1444,41 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         """
         # only used in the decorator
         _ = operation_timeout_ns
+
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._get(
+            operation_id=operation_id,
+            cancel=cancel,
+            filter_=filter_,
+            filter_type=filter_type,
+            filter_namespace_prefix=filter_namespace_prefix,
+            filter_namespace=filter_namespace,
+            defaults_type=defaults_type,
+        )
+
+        return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
     async def get_async(  # pylint: disable=too-many-arguments
         self,
+        *,
+        filter_: str = "",
+        filter_type: FilterType = FilterType.SUBTREE,
+        filter_namespace_prefix: str = "",
+        filter_namespace: str = "",
+        defaults_type: DefaultsType = DefaultsType.UNSET,
     ) -> Result:
         """
         Execute a get rpc operation.
 
         Args:
-            TODO
+            filter_: filter to apply to the get-config (or not if empty string)
+            filter_type: type of filter to apply, subtree|xpath
+            filter_namespace_prefix: filter namespace prefix
+            filter_namespace: filter namespace
+            defaults_type: defaults type to apply to the get-config, "unset" means dont apply one
 
         Returns:
             Result: a Result object representing the operation
@@ -1218,13 +1490,37 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         """
         # only used in the decorator
         _ = operation_timeout_ns
+
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._get(
+            operation_id=operation_id,
+            cancel=cancel,
+            filter_=filter_,
+            filter_type=filter_type,
+            filter_namespace_prefix=filter_namespace_prefix,
+            filter_namespace=filter_namespace,
+            defaults_type=defaults_type,
+        )
+
+        return await self._get_result_async(operation_id=operation_id)
 
     def _close_session(  # pylint: disable=too-many-arguments,too-many-locals
         self,
         *,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
-    ) -> c_uint: ...
+    ) -> c_uint:
+        status = self.ffi_mapping.netconf_mapping.close_session(
+            ptr=self._ptr_or_exception(),
+            operation_id=operation_id,
+            cancel=cancel,
+        )
+        if status != 0:
+            raise SubmitOperationException("submitting close-session operation failed")
+
+        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def close_session(  # pylint: disable=too-many-arguments
@@ -1234,7 +1530,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         Execute a close-session rpc operation.
 
         Args:
-            TODO
+            N/A
 
         Returns:
             Result: a Result object representing the operation
@@ -1247,6 +1543,16 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         # only used in the decorator
         _ = operation_timeout_ns
 
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._close_session(
+            operation_id=operation_id,
+            cancel=cancel,
+        )
+
+        return self._get_result(operation_id=operation_id)
+
     @handle_operation_timeout_async
     async def close_session_async(  # pylint: disable=too-many-arguments
         self,
@@ -1255,7 +1561,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         Execute a close-session rpc operation.
 
         Args:
-            TODO
+            N/A
 
         Returns:
             Result: a Result object representing the operation
@@ -1273,17 +1579,29 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         *,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
-    ) -> c_uint: ...
+        session_id: int,
+    ) -> c_uint:
+        status = self.ffi_mapping.netconf_mapping.kill_session(
+            ptr=self._ptr_or_exception(),
+            operation_id=operation_id,
+            cancel=cancel,
+            session_id=session_id,
+        )
+        if status != 0:
+            raise SubmitOperationException("submitting kill-session operation failed")
+
+        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def kill_session(  # pylint: disable=too-many-arguments
         self,
+        session_id: int,
     ) -> Result:
         """
         Execute a kill-session rpc operation.
 
         Args:
-            TODO
+            session_id: session id to kill
 
         Returns:
             Result: a Result object representing the operation
@@ -1296,15 +1614,27 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         # only used in the decorator
         _ = operation_timeout_ns
 
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._kill_session(
+            operation_id=operation_id,
+            cancel=cancel,
+            session_id=session_id,
+        )
+
+        return self._get_result(operation_id=operation_id)
+
     @handle_operation_timeout_async
     async def kill_session_async(  # pylint: disable=too-many-arguments
         self,
+        session_id: int,
     ) -> Result:
         """
         Execute a kill-session rpc operation.
 
         Args:
-            TODO
+            session_id: session id to kill
 
         Returns:
             Result: a Result object representing the operation
@@ -1322,7 +1652,16 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         *,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
-    ) -> c_uint: ...
+    ) -> c_uint:
+        status = self.ffi_mapping.netconf_mapping.commit(
+            ptr=self._ptr_or_exception(),
+            operation_id=operation_id,
+            cancel=cancel,
+        )
+        if status != 0:
+            raise SubmitOperationException("submitting commit operation failed")
+
+        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def commit(  # pylint: disable=too-many-arguments
@@ -1332,7 +1671,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         Execute a commit rpc operation.
 
         Args:
-            TODO
+            N/A
 
         Returns:
             Result: a Result object representing the operation
@@ -1345,6 +1684,16 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         # only used in the decorator
         _ = operation_timeout_ns
 
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._commit(
+            operation_id=operation_id,
+            cancel=cancel,
+        )
+
+        return self._get_result(operation_id=operation_id)
+
     @handle_operation_timeout_async
     async def commit_async(  # pylint: disable=too-many-arguments
         self,
@@ -1353,7 +1702,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         Execute a commit rpc operation.
 
         Args:
-            TODO
+            N/A
 
         Returns:
             Result: a Result object representing the operation
@@ -1371,7 +1720,16 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         *,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
-    ) -> c_uint: ...
+    ) -> c_uint:
+        status = self.ffi_mapping.netconf_mapping.discard(
+            ptr=self._ptr_or_exception(),
+            operation_id=operation_id,
+            cancel=cancel,
+        )
+        if status != 0:
+            raise SubmitOperationException("submitting discard operation failed")
+
+        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def discard(  # pylint: disable=too-many-arguments
@@ -1381,7 +1739,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         Execute a discard rpc operation.
 
         Args:
-            TODO
+            N/A
 
         Returns:
             Result: a Result object representing the operation
@@ -1393,6 +1751,16 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         """
         # only used in the decorator
         _ = operation_timeout_ns
+
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._discard(
+            operation_id=operation_id,
+            cancel=cancel,
+        )
+
+        return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
     async def discard_async(  # pylint: disable=too-many-arguments
@@ -1402,7 +1770,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         Execute a discard rpc operation.
 
         Args:
-            TODO
+            N/A
 
         Returns:
             Result: a Result object representing the operation
@@ -1415,12 +1783,31 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         # only used in the decorator
         _ = operation_timeout_ns
 
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._discard(
+            operation_id=operation_id,
+            cancel=cancel,
+        )
+
+        return await self._get_result_async(operation_id=operation_id)
+
     def _cancel_commit(  # pylint: disable=too-many-arguments,too-many-locals
         self,
         *,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
-    ) -> c_uint: ...
+    ) -> c_uint:
+        status = self.ffi_mapping.netconf_mapping.cancel_commit(
+            ptr=self._ptr_or_exception(),
+            operation_id=operation_id,
+            cancel=cancel,
+        )
+        if status != 0:
+            raise SubmitOperationException("submitting cancel-commit operation failed")
+
+        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def cancel_commit(  # pylint: disable=too-many-arguments
@@ -1430,7 +1817,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         Execute a cancel-commit rpc operation.
 
         Args:
-            TODO
+            N/A
 
         Returns:
             Result: a Result object representing the operation
@@ -1442,6 +1829,16 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         """
         # only used in the decorator
         _ = operation_timeout_ns
+
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._cancel_commit(
+            operation_id=operation_id,
+            cancel=cancel,
+        )
+
+        return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
     async def cancel_commit_async(  # pylint: disable=too-many-arguments
@@ -1451,7 +1848,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         Execute a cancel-commit rpc operation.
 
         Args:
-            TODO
+            N/A
 
         Returns:
             Result: a Result object representing the operation
@@ -1463,23 +1860,48 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         """
         # only used in the decorator
         _ = operation_timeout_ns
+
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._cancel_commit(
+            operation_id=operation_id,
+            cancel=cancel,
+        )
+
+        return await self._get_result_async(operation_id=operation_id)
 
     def _validate(  # pylint: disable=too-many-arguments,too-many-locals
         self,
         *,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
-    ) -> c_uint: ...
+        source: DatastoreType,
+    ) -> c_uint:
+        _source = to_c_string(source)
+
+        status = self.ffi_mapping.netconf_mapping.validate(
+            ptr=self._ptr_or_exception(),
+            operation_id=operation_id,
+            cancel=cancel,
+            source=_source,
+        )
+        if status != 0:
+            raise SubmitOperationException("submitting validate operation failed")
+
+        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def validate(  # pylint: disable=too-many-arguments
         self,
+        *,
+        source: DatastoreType = DatastoreType.RUNNING,
     ) -> Result:
         """
         Execute a validate rpc operation.
 
         Args:
-            TODO
+            source: datastore to validate
 
         Returns:
             Result: a Result object representing the operation
@@ -1491,16 +1913,29 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         """
         # only used in the decorator
         _ = operation_timeout_ns
+
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._validate(
+            operation_id=operation_id,
+            cancel=cancel,
+            source=source,
+        )
+
+        return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
     async def validate_async(  # pylint: disable=too-many-arguments
         self,
+        *,
+        source: DatastoreType = DatastoreType.RUNNING,
     ) -> Result:
         """
         Execute a validate rpc operation.
 
         Args:
-            TODO
+            source: datastore to validate
 
         Returns:
             Result: a Result object representing the operation
@@ -1512,23 +1947,59 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         """
         # only used in the decorator
         _ = operation_timeout_ns
+
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._validate(
+            operation_id=operation_id,
+            cancel=cancel,
+            source=source,
+        )
+
+        return await self._get_result_async(operation_id=operation_id)
 
     def _get_schema(  # pylint: disable=too-many-arguments,too-many-locals
         self,
         *,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
-    ) -> c_uint: ...
+        identifier: str,
+        version: str,
+        format: SchemaFormat,
+    ) -> c_uint:
+        _identifier = to_c_string(identifier)
+        _version = to_c_string(version)
+        _format = to_c_string(format)
+
+        status = self.ffi_mapping.netconf_mapping.get_schema(
+            ptr=self._ptr_or_exception(),
+            operation_id=operation_id,
+            cancel=cancel,
+            identifier=_identifier,
+            version=_version,
+            format=_format,
+        )
+        if status != 0:
+            raise SubmitOperationException("submitting get-schema operation failed")
+
+        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def get_schema(  # pylint: disable=too-many-arguments
         self,
+        identifier: str,
+        *,
+        version: str = "",
+        format: SchemaFormat = SchemaFormat.YANG,
     ) -> Result:
         """
         Execute a get-schema rpc operation.
 
         Args:
-            TODO
+            identifier: schema identifier to get
+            version: optional schema version to request
+            format: schema format to apply
 
         Returns:
             Result: a Result object representing the operation
@@ -1540,16 +2011,35 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         """
         # only used in the decorator
         _ = operation_timeout_ns
+
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._get_schema(
+            operation_id=operation_id,
+            cancel=cancel,
+            identifier=identifier,
+            version=version,
+            format=format,
+        )
+
+        return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
     async def get_schema_async(  # pylint: disable=too-many-arguments
         self,
+        identifier: str,
+        *,
+        version: str = "",
+        format: SchemaFormat = SchemaFormat.YANG,
     ) -> Result:
         """
         Execute a get-schema rpc operation.
 
         Args:
-            TODO
+            identifier: schema identifier to get
+            version: optional schema version to request
+            format: schema format to apply
 
         Returns:
             Result: a Result object representing the operation
@@ -1561,23 +2051,66 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         """
         # only used in the decorator
         _ = operation_timeout_ns
+
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._get_schema(
+            operation_id=operation_id,
+            cancel=cancel,
+            identifier=identifier,
+            version=version,
+            format=format,
+        )
+
+        return await self._get_result_async(operation_id=operation_id)
 
     def _get_data(  # pylint: disable=too-many-arguments,too-many-locals
         self,
         *,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
+        source: DatastoreType,
+        filter_: str,
+        filter_type: FilterType,
+        filter_namespace_prefix: str,
+        filter_namespace: str,
+        config_filter: ConfigFilter,
+        origin_filters: str,
+        max_depth: int,
+        with_origin: bool,
+        defaults_type: DefaultsType,
     ) -> c_uint: ...
 
     @handle_operation_timeout
     def get_data(  # pylint: disable=too-many-arguments
         self,
+        *,
+        source: DatastoreType = DatastoreType.RUNNING,
+        filter_: str = "",
+        filter_type: FilterType = FilterType.SUBTREE,
+        filter_namespace_prefix: str = "",
+        filter_namespace: str = "",
+        config_filter: ConfigFilter = ConfigFilter.UNSET,
+        origin_filters: str = "",
+        max_depth: int = 0,
+        with_origin: bool = False,
+        defaults_type: DefaultsType = DefaultsType.UNSET,
     ) -> Result:
         """
         Execute a get-data rpc operation.
 
         Args:
-            TODO
+            source: source datastore to get data from
+            filter_: filter to apply to the get-config (or not if empty string)
+            filter_type: type of filter to apply, subtree|xpath
+            filter_namespace_prefix: filter namespace prefix
+            filter_namespace: filter namespace
+            config_filter: config filter true/false, or unset to leave up to the server
+            origin_filters: fully formed origin filter xml payload to embed
+            max_depth: max depth of data requested
+            with_origin: include origin data
+            defaults_type: defaults type to apply to the get-config, "unset" means dont apply one
 
         Returns:
             Result: a Result object representing the operation
@@ -1589,16 +2122,56 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         """
         # only used in the decorator
         _ = operation_timeout_ns
+
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._get_data(
+            operation_id=operation_id,
+            cancel=cancel,
+            source=source,
+            filter_=filter_,
+            filter_type=filter_type,
+            filter_namespace_prefix=filter_namespace_prefix,
+            filter_namespace=filter_namespace,
+            config_filter=config_filter,
+            origin_filters=origin_filters,
+            max_depth=max_depth,
+            with_origin=with_origin,
+            defaults_type=defaults_type,
+        )
+
+        return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
     async def get_data_async(  # pylint: disable=too-many-arguments
         self,
+        *,
+        source: DatastoreType = DatastoreType.RUNNING,
+        filter_: str = "",
+        filter_type: FilterType = FilterType.SUBTREE,
+        filter_namespace_prefix: str = "",
+        filter_namespace: str = "",
+        config_filter: ConfigFilter = ConfigFilter.UNSET,
+        origin_filters: str = "",
+        max_depth: int = 0,
+        with_origin: bool = False,
+        defaults_type: DefaultsType = DefaultsType.UNSET,
     ) -> Result:
         """
         Execute a get-data rpc operation.
 
         Args:
-            TODO
+            source: source datastore to get data from
+            filter_: filter to apply to the get-config (or not if empty string)
+            filter_type: type of filter to apply, subtree|xpath
+            filter_namespace_prefix: filter namespace prefix
+            filter_namespace: filter namespace
+            config_filter: config filter true/false, or unset to leave up to the server
+            origin_filters: fully formed origin filter xml payload to embed
+            max_depth: max depth of data requested
+            with_origin: include origin data
+            defaults_type: defaults type to apply to the get-config, "unset" means dont apply one
 
         Returns:
             Result: a Result object representing the operation
@@ -1610,23 +2183,49 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         """
         # only used in the decorator
         _ = operation_timeout_ns
+
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._get_data(
+            operation_id=operation_id,
+            cancel=cancel,
+            source=source,
+            filter_=filter_,
+            filter_type=filter_type,
+            filter_namespace_prefix=filter_namespace_prefix,
+            filter_namespace=filter_namespace,
+            config_filter=config_filter,
+            origin_filters=origin_filters,
+            max_depth=max_depth,
+            with_origin=with_origin,
+            defaults_type=defaults_type,
+        )
+
+        return await self._get_result_async(operation_id=operation_id)
 
     def _edit_data(  # pylint: disable=too-many-arguments,too-many-locals
         self,
         *,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
+        content: str,
+        target: DatastoreType,
     ) -> c_uint: ...
 
     @handle_operation_timeout
     def edit_data(  # pylint: disable=too-many-arguments
         self,
+        content: str,
+        *,
+        target: DatastoreType = DatastoreType.RUNNING,
     ) -> Result:
         """
         Execute an edit-data rpc operation.
 
         Args:
-            TODO
+            content: full payload content to send
+            target: datastore to target
 
         Returns:
             Result: a Result object representing the operation
@@ -1639,15 +2238,31 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         # only used in the decorator
         _ = operation_timeout_ns
 
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._edit_data(
+            operation_id=operation_id,
+            cancel=cancel,
+            content=content,
+            target=target,
+        )
+
+        return self._get_result(operation_id=operation_id)
+
     @handle_operation_timeout_async
     async def edit_data_async(  # pylint: disable=too-many-arguments
         self,
+        content: str,
+        *,
+        target: DatastoreType = DatastoreType.RUNNING,
     ) -> Result:
         """
         Execute an edit-data rpc operation.
 
         Args:
-            TODO
+            content: full payload content to send
+            target: datastore to target
 
         Returns:
             Result: a Result object representing the operation
@@ -1665,17 +2280,19 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         *,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
+        action: str,
     ) -> c_uint: ...
 
     @handle_operation_timeout
     def action(  # pylint: disable=too-many-arguments
         self,
+        action: str,
     ) -> Result:
         """
         Execute an action rpc operation.
 
         Args:
-            TODO
+            action: action to execute
 
         Returns:
             Result: a Result object representing the operation
@@ -1688,15 +2305,27 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         # only used in the decorator
         _ = operation_timeout_ns
 
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._action(
+            operation_id=operation_id,
+            cancel=cancel,
+            action=action,
+        )
+
+        return self._get_result(operation_id=operation_id)
+
     @handle_operation_timeout_async
     async def action_async(  # pylint: disable=too-many-arguments
         self,
+        action: str,
     ) -> Result:
         """
         Execute an action rpc operation.
 
         Args:
-            TODO
+            action: action to execute
 
         Returns:
             Result: a Result object representing the operation
