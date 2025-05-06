@@ -953,6 +953,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         *,
         config: str = "",
         target: DatastoreType = DatastoreType.RUNNING,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute an edit-config rpc operation.
@@ -990,6 +991,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         *,
         config: str = "",
         target: DatastoreType = DatastoreType.RUNNING,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute an edit-config rpc operation.
@@ -1050,6 +1052,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         *,
         target: DatastoreType = DatastoreType.RUNNING,
         source: DatastoreType = DatastoreType.STARTUP,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute a copy-config rpc operation.
@@ -1087,6 +1090,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         *,
         target: DatastoreType = DatastoreType.RUNNING,
         source: DatastoreType = DatastoreType.STARTUP,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute a copy-config rpc operation.
@@ -1143,6 +1147,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         self,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute a delete-config rpc operation.
@@ -1177,6 +1182,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         self,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute a delete-config rpc operation.
@@ -1231,6 +1237,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         self,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute a lock rpc operation.
@@ -1265,6 +1272,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         self,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute a lock rpc operation.
@@ -1319,6 +1327,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         self,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute an unlock rpc operation.
@@ -1353,6 +1362,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         self,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute an unlock rpc operation.
@@ -1423,6 +1433,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         filter_namespace_prefix: str = "",
         filter_namespace: str = "",
         defaults_type: DefaultsType = DefaultsType.UNSET,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute a get rpc operation.
@@ -1469,6 +1480,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         filter_namespace_prefix: str = "",
         filter_namespace: str = "",
         defaults_type: DefaultsType = DefaultsType.UNSET,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute a get rpc operation.
@@ -1525,6 +1537,8 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
     @handle_operation_timeout
     def close_session(  # pylint: disable=too-many-arguments
         self,
+        *,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute a close-session rpc operation.
@@ -1556,6 +1570,8 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
     @handle_operation_timeout_async
     async def close_session_async(  # pylint: disable=too-many-arguments
         self,
+        *,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute a close-session rpc operation.
@@ -1596,6 +1612,8 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
     def kill_session(  # pylint: disable=too-many-arguments
         self,
         session_id: int,
+        *,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute a kill-session rpc operation.
@@ -1629,6 +1647,8 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
     async def kill_session_async(  # pylint: disable=too-many-arguments
         self,
         session_id: int,
+        *,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute a kill-session rpc operation.
@@ -1646,6 +1666,17 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         """
         # only used in the decorator
         _ = operation_timeout_ns
+
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._kill_session(
+            operation_id=operation_id,
+            cancel=cancel,
+            session_id=session_id,
+        )
+
+        return await self._get_result_async(operation_id=operation_id)
 
     def _commit(  # pylint: disable=too-many-arguments,too-many-locals
         self,
@@ -1666,6 +1697,8 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
     @handle_operation_timeout
     def commit(  # pylint: disable=too-many-arguments
         self,
+        *,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute a commit rpc operation.
@@ -1697,6 +1730,8 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
     @handle_operation_timeout_async
     async def commit_async(  # pylint: disable=too-many-arguments
         self,
+        *,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute a commit rpc operation.
@@ -1734,6 +1769,8 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
     @handle_operation_timeout
     def discard(  # pylint: disable=too-many-arguments
         self,
+        *,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute a discard rpc operation.
@@ -1765,6 +1802,8 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
     @handle_operation_timeout_async
     async def discard_async(  # pylint: disable=too-many-arguments
         self,
+        *,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute a discard rpc operation.
@@ -1812,6 +1851,8 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
     @handle_operation_timeout
     def cancel_commit(  # pylint: disable=too-many-arguments
         self,
+        *,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute a cancel-commit rpc operation.
@@ -1843,6 +1884,8 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
     @handle_operation_timeout_async
     async def cancel_commit_async(  # pylint: disable=too-many-arguments
         self,
+        *,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute a cancel-commit rpc operation.
@@ -1896,6 +1939,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         self,
         *,
         source: DatastoreType = DatastoreType.RUNNING,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute a validate rpc operation.
@@ -1930,6 +1974,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         self,
         *,
         source: DatastoreType = DatastoreType.RUNNING,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute a validate rpc operation.
@@ -1966,11 +2011,11 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         cancel: CancelPointer,
         identifier: str,
         version: str,
-        format: SchemaFormat,
+        format_: SchemaFormat,
     ) -> c_uint:
         _identifier = to_c_string(identifier)
         _version = to_c_string(version)
-        _format = to_c_string(format)
+        _format = to_c_string(format_)
 
         status = self.ffi_mapping.netconf_mapping.get_schema(
             ptr=self._ptr_or_exception(),
@@ -1978,7 +2023,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
             cancel=cancel,
             identifier=_identifier,
             version=_version,
-            format=_format,
+            format_=_format,
         )
         if status != 0:
             raise SubmitOperationException("submitting get-schema operation failed")
@@ -1991,7 +2036,8 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         identifier: str,
         *,
         version: str = "",
-        format: SchemaFormat = SchemaFormat.YANG,
+        format_: SchemaFormat = SchemaFormat.YANG,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute a get-schema rpc operation.
@@ -1999,7 +2045,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         Args:
             identifier: schema identifier to get
             version: optional schema version to request
-            format: schema format to apply
+            format_: schema format to apply
 
         Returns:
             Result: a Result object representing the operation
@@ -2020,7 +2066,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
             cancel=cancel,
             identifier=identifier,
             version=version,
-            format=format,
+            format_=format_,
         )
 
         return self._get_result(operation_id=operation_id)
@@ -2031,7 +2077,8 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         identifier: str,
         *,
         version: str = "",
-        format: SchemaFormat = SchemaFormat.YANG,
+        format_: SchemaFormat = SchemaFormat.YANG,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute a get-schema rpc operation.
@@ -2039,7 +2086,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         Args:
             identifier: schema identifier to get
             version: optional schema version to request
-            format: schema format to apply
+            format_: schema format to apply
 
         Returns:
             Result: a Result object representing the operation
@@ -2060,7 +2107,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
             cancel=cancel,
             identifier=identifier,
             version=version,
-            format=format,
+            format_=format_,
         )
 
         return await self._get_result_async(operation_id=operation_id)
@@ -2080,7 +2127,35 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         max_depth: int,
         with_origin: bool,
         defaults_type: DefaultsType,
-    ) -> c_uint: ...
+    ) -> c_uint:
+        _source = to_c_string(source)
+        _filter = to_c_string(filter_)
+        _filter_type = to_c_string(filter_type)
+        _filter_namespace_prefix = to_c_string(filter_namespace_prefix)
+        _filter_namespace = to_c_string(filter_namespace)
+        _config_filter = to_c_string(config_filter)
+        _origin_filters = to_c_string(origin_filters)
+        _defaults_type = to_c_string(defaults_type)
+
+        status = self.ffi_mapping.netconf_mapping.get_data(
+            ptr=self._ptr_or_exception(),
+            operation_id=operation_id,
+            cancel=cancel,
+            source=_source,
+            filter_=_filter,
+            filter_type=_filter_type,
+            filter_namespace_prefix=_filter_namespace_prefix,
+            filter_namespace=_filter_namespace,
+            config_filter=_config_filter,
+            origin_filters=_origin_filters,
+            max_depth=c_int(max_depth),
+            with_origin=c_bool(with_origin),
+            defaults_type=_defaults_type,
+        )
+        if status != 0:
+            raise SubmitOperationException("submitting copy-config operation failed")
+
+        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def get_data(  # pylint: disable=too-many-arguments
@@ -2096,6 +2171,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         max_depth: int = 0,
         with_origin: bool = False,
         defaults_type: DefaultsType = DefaultsType.UNSET,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute a get-data rpc operation.
@@ -2157,6 +2233,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         max_depth: int = 0,
         with_origin: bool = False,
         defaults_type: DefaultsType = DefaultsType.UNSET,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute a get-data rpc operation.
@@ -2211,7 +2288,21 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         cancel: CancelPointer,
         content: str,
         target: DatastoreType,
-    ) -> c_uint: ...
+    ) -> c_uint:
+        _content = to_c_string(content)
+        _target = to_c_string(target)
+
+        status = self.ffi_mapping.netconf_mapping.edit_data(
+            ptr=self._ptr_or_exception(),
+            operation_id=operation_id,
+            cancel=cancel,
+            content=_content,
+            target=_target,
+        )
+        if status != 0:
+            raise SubmitOperationException("submitting copy-config operation failed")
+
+        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def edit_data(  # pylint: disable=too-many-arguments
@@ -2219,6 +2310,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         content: str,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute an edit-data rpc operation.
@@ -2256,6 +2348,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         content: str,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute an edit-data rpc operation.
@@ -2287,6 +2380,8 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
     def action(  # pylint: disable=too-many-arguments
         self,
         action: str,
+        *,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute an action rpc operation.
@@ -2320,6 +2415,8 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
     async def action_async(  # pylint: disable=too-many-arguments
         self,
         action: str,
+        *,
+        operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
         Execute an action rpc operation.

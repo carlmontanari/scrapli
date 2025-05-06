@@ -2,6 +2,7 @@
 
 from ctypes import (
     CDLL,
+    c_bool,
     c_char_p,
     c_int,
     c_uint8,
@@ -24,7 +25,7 @@ from scrapli.ffi_types import (
 )
 
 
-class LibScrapliNetconfMapping:
+class LibScrapliNetconfMapping:  # pylint: disable=too-many-public-methods
     """
     Mapping to libscrapli netconf object functions mapping.
 
@@ -41,7 +42,7 @@ class LibScrapliNetconfMapping:
 
     """
 
-    def __init__(self, lib: CDLL) -> None:
+    def __init__(self, lib: CDLL) -> None:  # pylint: disable=too-many-statements
         self._alloc: Callable[
             [
                 LogFuncCallback,
@@ -198,6 +199,306 @@ class LibScrapliNetconfMapping:
             c_char_p,
         ]
         lib.ls_netconf_get_config.restype = c_uint8
+
+        self._edit_config: Callable[
+            [
+                DriverPointer,
+                OperationIdPointer,
+                CancelPointer,
+                c_char_p,
+                c_char_p,
+            ],
+            int,
+        ] = lib.ls_netconf_edit_config
+        lib.ls_netconf_edit_config.argtypes = [
+            DriverPointer,
+            OperationIdPointer,
+            CancelPointer,
+            c_char_p,
+            c_char_p,
+        ]
+        lib.ls_netconf_edit_config.restype = c_uint8
+
+        self._copy_config: Callable[
+            [
+                DriverPointer,
+                OperationIdPointer,
+                CancelPointer,
+                c_char_p,
+                c_char_p,
+            ],
+            int,
+        ] = lib.ls_netconf_copy_config
+        lib.ls_netconf_copy_config.argtypes = [
+            DriverPointer,
+            OperationIdPointer,
+            CancelPointer,
+            c_char_p,
+            c_char_p,
+        ]
+        lib.ls_netconf_copy_config.restype = c_uint8
+
+        self._delete_config: Callable[
+            [
+                DriverPointer,
+                OperationIdPointer,
+                CancelPointer,
+                c_char_p,
+            ],
+            int,
+        ] = lib.ls_netconf_delete_config
+        lib.ls_netconf_delete_config.argtypes = [
+            DriverPointer,
+            OperationIdPointer,
+            CancelPointer,
+            c_char_p,
+        ]
+        lib.ls_netconf_delete_config.restype = c_uint8
+
+        self._lock: Callable[
+            [
+                DriverPointer,
+                OperationIdPointer,
+                CancelPointer,
+                c_char_p,
+            ],
+            int,
+        ] = lib.ls_netconf_lock
+        lib.ls_netconf_lock.argtypes = [
+            DriverPointer,
+            OperationIdPointer,
+            CancelPointer,
+            c_char_p,
+        ]
+        lib.ls_netconf_lock.restype = c_uint8
+
+        self._unlock: Callable[
+            [
+                DriverPointer,
+                OperationIdPointer,
+                CancelPointer,
+                c_char_p,
+            ],
+            int,
+        ] = lib.ls_netconf_unlock
+        lib.ls_netconf_unlock.argtypes = [
+            DriverPointer,
+            OperationIdPointer,
+            CancelPointer,
+            c_char_p,
+        ]
+        lib.ls_netconf_unlock.restype = c_uint8
+
+        self._get: Callable[
+            [
+                DriverPointer,
+                OperationIdPointer,
+                CancelPointer,
+                c_char_p,
+                c_char_p,
+                c_char_p,
+                c_char_p,
+                c_char_p,
+            ],
+            int,
+        ] = lib.ls_netconf_get
+        lib.ls_netconf_get.argtypes = [
+            DriverPointer,
+            OperationIdPointer,
+            CancelPointer,
+            c_char_p,
+            c_char_p,
+            c_char_p,
+            c_char_p,
+            c_char_p,
+        ]
+        lib.ls_netconf_get.restype = c_uint8
+
+        self._close_session: Callable[
+            [
+                DriverPointer,
+                OperationIdPointer,
+                CancelPointer,
+            ],
+            int,
+        ] = lib.ls_netconf_close_session
+        lib.ls_netconf_close_session.argtypes = [
+            DriverPointer,
+            OperationIdPointer,
+            CancelPointer,
+        ]
+        lib.ls_netconf_close_session.restype = c_uint8
+
+        self._kill_session: Callable[
+            [
+                DriverPointer,
+                OperationIdPointer,
+                CancelPointer,
+                c_int,
+            ],
+            int,
+        ] = lib.ls_netconf_kill_session
+        lib.ls_netconf_kill_session.argtypes = [
+            DriverPointer,
+            OperationIdPointer,
+            CancelPointer,
+            c_int,
+        ]
+        lib.ls_netconf_kill_session.restype = c_uint8
+
+        self._commit: Callable[
+            [
+                DriverPointer,
+                OperationIdPointer,
+                CancelPointer,
+            ],
+            int,
+        ] = lib.ls_netconf_commit
+        lib.ls_netconf_commit.argtypes = [
+            DriverPointer,
+            OperationIdPointer,
+            CancelPointer,
+        ]
+        lib.ls_netconf_commit.restype = c_uint8
+
+        self._discard: Callable[
+            [
+                DriverPointer,
+                OperationIdPointer,
+                CancelPointer,
+            ],
+            int,
+        ] = lib.ls_netconf_discard
+        lib.ls_netconf_discard.argtypes = [
+            DriverPointer,
+            OperationIdPointer,
+            CancelPointer,
+        ]
+        lib.ls_netconf_discard.restype = c_uint8
+
+        self._cancel_commit: Callable[
+            [
+                DriverPointer,
+                OperationIdPointer,
+                CancelPointer,
+            ],
+            int,
+        ] = lib.ls_netconf_cancel_commit
+        lib.ls_netconf_cancel_commit.argtypes = [
+            DriverPointer,
+            OperationIdPointer,
+            CancelPointer,
+        ]
+        lib.ls_netconf_cancel_commit.restype = c_uint8
+
+        self._validate: Callable[
+            [
+                DriverPointer,
+                OperationIdPointer,
+                CancelPointer,
+                c_char_p,
+            ],
+            int,
+        ] = lib.ls_netconf_validate
+        lib.ls_netconf_validate.argtypes = [
+            DriverPointer,
+            OperationIdPointer,
+            CancelPointer,
+            c_char_p,
+        ]
+        lib.ls_netconf_validate.restype = c_uint8
+
+        self._get_schema: Callable[
+            [
+                DriverPointer,
+                OperationIdPointer,
+                CancelPointer,
+                c_char_p,
+                c_char_p,
+                c_char_p,
+            ],
+            int,
+        ] = lib.ls_netconf_get_schema
+        lib.ls_netconf_get_schema.argtypes = [
+            DriverPointer,
+            OperationIdPointer,
+            CancelPointer,
+            c_char_p,
+            c_char_p,
+            c_char_p,
+        ]
+        lib.ls_netconf_get_schema.restype = c_uint8
+
+        self._get_data: Callable[
+            [
+                DriverPointer,
+                OperationIdPointer,
+                CancelPointer,
+                c_char_p,
+                c_char_p,
+                c_char_p,
+                c_char_p,
+                c_char_p,
+                c_char_p,
+                c_char_p,
+                c_int,
+                c_bool,
+                c_char_p,
+            ],
+            int,
+        ] = lib.ls_netconf_get_data
+        lib.ls_netconf_get_data.argtypes = [
+            DriverPointer,
+            OperationIdPointer,
+            CancelPointer,
+            c_char_p,
+            c_char_p,
+            c_char_p,
+            c_char_p,
+            c_char_p,
+            c_char_p,
+            c_char_p,
+            c_int,
+            c_bool,
+            c_char_p,
+        ]
+        lib.ls_netconf_get_data.restype = c_uint8
+
+        self._edit_data: Callable[
+            [
+                DriverPointer,
+                OperationIdPointer,
+                CancelPointer,
+                c_char_p,
+                c_char_p,
+            ],
+            int,
+        ] = lib.ls_netconf_edit_data
+        lib.ls_netconf_edit_data.argtypes = [
+            DriverPointer,
+            OperationIdPointer,
+            CancelPointer,
+            c_char_p,
+            c_char_p,
+        ]
+        lib.ls_netconf_edit_data.restype = c_uint8
+
+        self._action: Callable[
+            [
+                DriverPointer,
+                OperationIdPointer,
+                CancelPointer,
+                c_char_p,
+            ],
+            int,
+        ] = lib.ls_netconf_action
+        lib.ls_netconf_action.argtypes = [
+            DriverPointer,
+            OperationIdPointer,
+            CancelPointer,
+            c_char_p,
+        ]
+        lib.ls_netconf_action.restype = c_uint8
 
     def alloc(
         self,
@@ -462,6 +763,12 @@ class LibScrapliNetconfMapping:
             ptr: ptr to the netconf object
             operation_id: int pointer to fill with the id of the submitted operation
             cancel: bool pointer that can be set to true to cancel the operation
+            source: source data store to get config from
+            filter_: filter to apply
+            filter_type: filter type (subtree|xpath)
+            filter_namespace_prefix: optional prefix for filter namespace
+            filter_namespace: optional namespace for filter
+            defaults_type: defaults type setting
 
         Returns:
             int: return code, non-zero value indicates an error. technically a c_uint8 converted by
@@ -481,4 +788,589 @@ class LibScrapliNetconfMapping:
             filter_namespace_prefix,
             filter_namespace,
             defaults_type,
+        )
+
+    def edit_config(
+        self,
+        *,
+        ptr: DriverPointer,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+        config: c_char_p,
+        target: c_char_p,
+    ) -> int:
+        """
+        Execute an edit-config rpc operation.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: ptr to the netconf object
+            operation_id: int pointer to fill with the id of the submitted operation
+            cancel: bool pointer that can be set to true to cancel the operation
+            config: the config to send
+            target: the target datastore
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._edit_config(
+            ptr,
+            operation_id,
+            cancel,
+            config,
+            target,
+        )
+
+    def copy_config(
+        self,
+        *,
+        ptr: DriverPointer,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+        target: c_char_p,
+        source: c_char_p,
+    ) -> int:
+        """
+        Execute a copy-config rpc operation.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: ptr to the netconf object
+            operation_id: int pointer to fill with the id of the submitted operation
+            cancel: bool pointer that can be set to true to cancel the operation
+            target: the target/destination datastore to copy to
+            source: the source datastore to copy from
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._copy_config(
+            ptr,
+            operation_id,
+            cancel,
+            target,
+            source,
+        )
+
+    def delete_config(
+        self,
+        *,
+        ptr: DriverPointer,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+        target: c_char_p,
+    ) -> int:
+        """
+        Execute a delete-config rpc operation.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: ptr to the netconf object
+            operation_id: int pointer to fill with the id of the submitted operation
+            cancel: bool pointer that can be set to true to cancel the operation
+            target: the target/destination datastore to delete
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._delete_config(
+            ptr,
+            operation_id,
+            cancel,
+            target,
+        )
+
+    def lock(
+        self,
+        *,
+        ptr: DriverPointer,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+        target: c_char_p,
+    ) -> int:
+        """
+        Execute a lock rpc operation.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: ptr to the netconf object
+            operation_id: int pointer to fill with the id of the submitted operation
+            cancel: bool pointer that can be set to true to cancel the operation
+            target: the target/destination datastore to lock
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._lock(
+            ptr,
+            operation_id,
+            cancel,
+            target,
+        )
+
+    def unlock(
+        self,
+        *,
+        ptr: DriverPointer,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+        target: c_char_p,
+    ) -> int:
+        """
+        Execute an unlock rpc operation.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: ptr to the netconf object
+            operation_id: int pointer to fill with the id of the submitted operation
+            cancel: bool pointer that can be set to true to cancel the operation
+            target: the target/destination datastore to lock
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._unlock(
+            ptr,
+            operation_id,
+            cancel,
+            target,
+        )
+
+    def get(
+        self,
+        *,
+        ptr: DriverPointer,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+        filter_: c_char_p,
+        filter_type: c_char_p,
+        filter_namespace_prefix: c_char_p,
+        filter_namespace: c_char_p,
+        defaults_type: c_char_p,
+    ) -> int:
+        """
+        Execute a get rpc operation.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: ptr to the netconf object
+            operation_id: int pointer to fill with the id of the submitted operation
+            cancel: bool pointer that can be set to true to cancel the operation
+            filter_: filter to apply
+            filter_type: filter type (subtree|xpath)
+            filter_namespace_prefix: optional prefix for filter namespace
+            filter_namespace: optional namespace for filter
+            defaults_type: defaults type setting
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._get(
+            ptr,
+            operation_id,
+            cancel,
+            filter_,
+            filter_type,
+            filter_namespace_prefix,
+            filter_namespace,
+            defaults_type,
+        )
+
+    def close_session(
+        self,
+        *,
+        ptr: DriverPointer,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+    ) -> int:
+        """
+        Execute a close-config rpc operation.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: ptr to the netconf object
+            operation_id: int pointer to fill with the id of the submitted operation
+            cancel: bool pointer that can be set to true to cancel the operation
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._close_session(
+            ptr,
+            operation_id,
+            cancel,
+        )
+
+    def kill_session(
+        self,
+        *,
+        ptr: DriverPointer,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+        session_id: c_int,
+    ) -> int:
+        """
+        Execute a close-config rpc operation.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: ptr to the netconf object
+            operation_id: int pointer to fill with the id of the submitted operation
+            cancel: bool pointer that can be set to true to cancel the operation
+            session_id: the session id to kill
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._kill_session(
+            ptr,
+            operation_id,
+            cancel,
+            session_id,
+        )
+
+    def commit(
+        self,
+        *,
+        ptr: DriverPointer,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+    ) -> int:
+        """
+        Execute a commit rpc operation.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: ptr to the netconf object
+            operation_id: int pointer to fill with the id of the submitted operation
+            cancel: bool pointer that can be set to true to cancel the operation
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._commit(
+            ptr,
+            operation_id,
+            cancel,
+        )
+
+    def discard(
+        self,
+        *,
+        ptr: DriverPointer,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+    ) -> int:
+        """
+        Execute a discard rpc operation.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: ptr to the netconf object
+            operation_id: int pointer to fill with the id of the submitted operation
+            cancel: bool pointer that can be set to true to cancel the operation
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._discard(
+            ptr,
+            operation_id,
+            cancel,
+        )
+
+    def cancel_commit(
+        self,
+        *,
+        ptr: DriverPointer,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+    ) -> int:
+        """
+        Execute a cancel-commit rpc operation.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: ptr to the netconf object
+            operation_id: int pointer to fill with the id of the submitted operation
+            cancel: bool pointer that can be set to true to cancel the operation
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._cancel_commit(
+            ptr,
+            operation_id,
+            cancel,
+        )
+
+    def validate(
+        self,
+        *,
+        ptr: DriverPointer,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+        source: c_char_p,
+    ) -> int:
+        """
+        Execute a validate rpc operation.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: ptr to the netconf object
+            operation_id: int pointer to fill with the id of the submitted operation
+            cancel: bool pointer that can be set to true to cancel the operation
+            source: datastore to validate
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._validate(
+            ptr,
+            operation_id,
+            cancel,
+            source,
+        )
+
+    def get_schema(
+        self,
+        *,
+        ptr: DriverPointer,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+        identifier: c_char_p,
+        version: c_char_p,
+        format_: c_char_p,
+    ) -> int:
+        """
+        Execute a get-schema rpc operation.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: ptr to the netconf object
+            operation_id: int pointer to fill with the id of the submitted operation
+            cancel: bool pointer that can be set to true to cancel the operation
+            identifier: schema identifier to get
+            version: optional schema version to request
+            format_: schema format to apply
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._get_schema(
+            ptr,
+            operation_id,
+            cancel,
+            identifier,
+            version,
+            format_,
+        )
+
+    def get_data(
+        self,
+        *,
+        ptr: DriverPointer,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+        source: c_char_p,
+        filter_: c_char_p,
+        filter_type: c_char_p,
+        filter_namespace_prefix: c_char_p,
+        filter_namespace: c_char_p,
+        config_filter: c_char_p,
+        origin_filters: c_char_p,
+        max_depth: c_int,
+        with_origin: c_bool,
+        defaults_type: c_char_p,
+    ) -> int:
+        """
+        Execute a get-data rpc operation.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: ptr to the netconf object
+            operation_id: int pointer to fill with the id of the submitted operation
+            cancel: bool pointer that can be set to true to cancel the operation
+            source: source datastore to get data from
+            filter_: filter to apply to the get-config (or not if empty string)
+            filter_type: type of filter to apply, subtree|xpath
+            filter_namespace_prefix: filter namespace prefix
+            filter_namespace: filter namespace
+            config_filter: config filter true/false, or unset to leave up to the server
+            origin_filters: fully formed origin filter xml payload to embed
+            max_depth: max depth of data requested
+            with_origin: include origin data
+            defaults_type: defaults type to apply to the get-config, "unset" means dont apply one
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._get_data(
+            ptr,
+            operation_id,
+            cancel,
+            source,
+            filter_,
+            filter_type,
+            filter_namespace_prefix,
+            filter_namespace,
+            config_filter,
+            origin_filters,
+            max_depth,
+            with_origin,
+            defaults_type,
+        )
+
+    def edit_data(
+        self,
+        *,
+        ptr: DriverPointer,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+        content: c_char_p,
+        target: c_char_p,
+    ) -> int:
+        """
+        Execute a edit-data rpc operation.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: ptr to the netconf object
+            operation_id: int pointer to fill with the id of the submitted operation
+            cancel: bool pointer that can be set to true to cancel the operation
+            content: full payload content to send
+            target: datastore to target
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._edit_data(
+            ptr,
+            operation_id,
+            cancel,
+            content,
+            target,
+        )
+
+    def action(
+        self,
+        *,
+        ptr: DriverPointer,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+        action: c_char_p,
+    ) -> int:
+        """
+        Execute an action rpc operation.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: ptr to the netconf object
+            operation_id: int pointer to fill with the id of the submitted operation
+            cancel: bool pointer that can be set to true to cancel the operation
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._action(
+            ptr,
+            operation_id,
+            cancel,
+            action,
         )
