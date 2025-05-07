@@ -8,7 +8,7 @@ fmt: ## Run formatters
 	python -m black setup.py scrapli/ tests/
 
 lint: ## Run linters
-	python -m pylint setup.py scrapli/
+	python -m ruff check
 	python -m mypy --strict setup.py scrapli/
 
 test: ## Run unit tests

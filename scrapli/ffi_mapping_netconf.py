@@ -1,4 +1,4 @@
-"""scrapli.ffi_mapping_cli"""  # pylint: disable=too-many-lines,too-many-arguments,too-many-instance-attributes
+"""scrapli.ffi_mapping_cli"""
 
 from ctypes import (
     CDLL,
@@ -42,7 +42,7 @@ class LibScrapliNetconfMapping:  # pylint: disable=too-many-public-methods
 
     """
 
-    def __init__(self, lib: CDLL) -> None:  # pylint: disable=too-many-statements
+    def __init__(self, lib: CDLL) -> None:  # noqa: PLR0915
         self._alloc: Callable[
             [
                 LogFuncCallback,
@@ -1359,6 +1359,7 @@ class LibScrapliNetconfMapping:  # pylint: disable=too-many-public-methods
             ptr: ptr to the netconf object
             operation_id: int pointer to fill with the id of the submitted operation
             cancel: bool pointer that can be set to true to cancel the operation
+            action: the action to send
 
         Returns:
             int: return code, non-zero value indicates an error. technically a c_uint8 converted by

@@ -7,7 +7,7 @@ from enum import Enum
 from logging import getLogger
 from random import randint
 from types import TracebackType
-from typing import Callable, Optional, Type
+from typing import Callable, Optional
 
 from scrapli.auth import Options as AuthOptions
 from scrapli.exceptions import (
@@ -195,7 +195,7 @@ class Options:  # pylint: disable=too-many-instance-attributes
     _error_tag: Optional[c_char_p] = field(init=False, default=None, repr=False)
     _preferred_version: Optional[c_char_p] = field(init=False, default=None, repr=False)
 
-    def apply(  # pylint: disable=too-many-branches
+    def apply(  # noqa: PLR0913
         self, ffi_mapping: LibScrapliMapping, ptr: DriverPointer
     ) -> None:
         """
@@ -276,7 +276,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
     """
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(  # noqa: PLR0913
         self,
         host: str,
         *,
@@ -333,7 +333,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
     def __exit__(
         self,
-        exception_type: Optional[Type[BaseException]],
+        exception_type: Optional[BaseException],
         exception_value: Optional[BaseException],
         traceback: Optional[TracebackType],
     ) -> None:
@@ -787,7 +787,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         return await self._get_result_async(operation_id=operation_id)
 
-    def _get_config(  # pylint: disable=too-many-arguments,too-many-locals
+    def _get_config(  # noqa: PLR0913,too-many-locals
         self,
         *,
         operation_id: OperationIdPointer,
@@ -823,7 +823,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def get_config(  # pylint: disable=too-many-arguments
+    def get_config(  # noqa: PLR0913
         self,
         *,
         source: DatastoreType = DatastoreType.RUNNING,
@@ -874,7 +874,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def get_config_async(  # pylint: disable=too-many-arguments
+    async def get_config_async(  # noqa: PLR0913
         self,
         *,
         source: DatastoreType = DatastoreType.RUNNING,
@@ -924,7 +924,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         return await self._get_result_async(operation_id=operation_id)
 
-    def _edit_config(  # pylint: disable=too-many-arguments,too-many-locals
+    def _edit_config(  # noqa: PLR0913,too-many-locals
         self,
         *,
         operation_id: OperationIdPointer,
@@ -948,7 +948,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def edit_config(  # pylint: disable=too-many-arguments
+    def edit_config(  # noqa: PLR0913
         self,
         *,
         config: str = "",
@@ -961,6 +961,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         Args:
             config: string config payload to send
             target: target datastore as DatastoreType enum
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -986,7 +987,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def edit_config_async(  # pylint: disable=too-many-arguments
+    async def edit_config_async(  # noqa: PLR0913
         self,
         *,
         config: str = "",
@@ -999,6 +1000,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         Args:
             config: string config payload to send
             target: target datastore as DatastoreType enum
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1023,7 +1025,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         return await self._get_result_async(operation_id=operation_id)
 
-    def _copy_config(  # pylint: disable=too-many-arguments,too-many-locals
+    def _copy_config(  # noqa: PLR0913,too-many-locals
         self,
         *,
         operation_id: OperationIdPointer,
@@ -1047,7 +1049,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def copy_config(  # pylint: disable=too-many-arguments
+    def copy_config(  # noqa: PLR0913
         self,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
@@ -1060,6 +1062,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         Args:
             target: target to copy *to*
             source: source to copy *from*
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1085,7 +1088,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def copy_config_async(  # pylint: disable=too-many-arguments
+    async def copy_config_async(  # noqa: PLR0913
         self,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
@@ -1098,6 +1101,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         Args:
             target: target to copy *to*
             source: source to copy *from*
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1122,7 +1126,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         return await self._get_result_async(operation_id=operation_id)
 
-    def _delete_config(  # pylint: disable=too-many-arguments,too-many-locals
+    def _delete_config(  # noqa: PLR0913,too-many-locals
         self,
         *,
         operation_id: OperationIdPointer,
@@ -1143,7 +1147,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def delete_config(  # pylint: disable=too-many-arguments
+    def delete_config(  # noqa: PLR0913
         self,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
@@ -1154,6 +1158,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         Args:
             target: target datastore to delete
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1178,7 +1183,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def delete_config_async(  # pylint: disable=too-many-arguments
+    async def delete_config_async(  # noqa: PLR0913
         self,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
@@ -1189,6 +1194,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         Args:
             target: target datastore to delete
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1212,7 +1218,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         return await self._get_result_async(operation_id=operation_id)
 
-    def _lock(  # pylint: disable=too-many-arguments,too-many-locals
+    def _lock(  # noqa: PLR0913,too-many-locals
         self,
         *,
         operation_id: OperationIdPointer,
@@ -1233,7 +1239,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def lock(  # pylint: disable=too-many-arguments
+    def lock(  # noqa: PLR0913
         self,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
@@ -1244,6 +1250,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         Args:
             target: target datastore to lock
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1268,7 +1275,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def lock_async(  # pylint: disable=too-many-arguments
+    async def lock_async(  # noqa: PLR0913
         self,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
@@ -1279,6 +1286,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         Args:
             target: target datastore to lock
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1302,7 +1310,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         return await self._get_result_async(operation_id=operation_id)
 
-    def _unlock(  # pylint: disable=too-many-arguments,too-many-locals
+    def _unlock(  # noqa: PLR0913,too-many-locals
         self,
         *,
         operation_id: OperationIdPointer,
@@ -1323,7 +1331,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def unlock(  # pylint: disable=too-many-arguments
+    def unlock(  # noqa: PLR0913
         self,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
@@ -1334,6 +1342,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         Args:
             target: target datastore to unlock
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1358,7 +1367,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def unlock_async(  # pylint: disable=too-many-arguments
+    async def unlock_async(  # noqa: PLR0913
         self,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
@@ -1369,6 +1378,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         Args:
             target: target datastore to unlock
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1392,7 +1402,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         return await self._get_result_async(operation_id=operation_id)
 
-    def _get(  # pylint: disable=too-many-arguments,too-many-locals
+    def _get(  # noqa: PLR0913,too-many-locals
         self,
         *,
         operation_id: OperationIdPointer,
@@ -1425,7 +1435,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def get(  # pylint: disable=too-many-arguments
+    def get(  # noqa: PLR0913
         self,
         *,
         filter_: str = "",
@@ -1444,6 +1454,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
             filter_namespace_prefix: filter namespace prefix
             filter_namespace: filter namespace
             defaults_type: defaults type to apply to the get-config, "unset" means dont apply one
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1472,7 +1483,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def get_async(  # pylint: disable=too-many-arguments
+    async def get_async(  # noqa: PLR0913
         self,
         *,
         filter_: str = "",
@@ -1491,6 +1502,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
             filter_namespace_prefix: filter namespace prefix
             filter_namespace: filter namespace
             defaults_type: defaults type to apply to the get-config, "unset" means dont apply one
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1518,7 +1530,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         return await self._get_result_async(operation_id=operation_id)
 
-    def _close_session(  # pylint: disable=too-many-arguments,too-many-locals
+    def _close_session(  # noqa: PLR0913,too-many-locals
         self,
         *,
         operation_id: OperationIdPointer,
@@ -1535,7 +1547,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def close_session(  # pylint: disable=too-many-arguments
+    def close_session(  # noqa: PLR0913
         self,
         *,
         operation_timeout_ns: Optional[int] = None,
@@ -1544,7 +1556,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         Execute a close-session rpc operation.
 
         Args:
-            N/A
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1568,7 +1580,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def close_session_async(  # pylint: disable=too-many-arguments
+    async def close_session_async(  # noqa: PLR0913
         self,
         *,
         operation_timeout_ns: Optional[int] = None,
@@ -1577,7 +1589,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         Execute a close-session rpc operation.
 
         Args:
-            N/A
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1590,7 +1602,17 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         # only used in the decorator
         _ = operation_timeout_ns
 
-    def _kill_session(  # pylint: disable=too-many-arguments,too-many-locals
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._close_session(
+            operation_id=operation_id,
+            cancel=cancel,
+        )
+
+        return await self._get_result_async(operation_id=operation_id)
+
+    def _kill_session(  # noqa: PLR0913,too-many-locals
         self,
         *,
         operation_id: OperationIdPointer,
@@ -1609,7 +1631,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def kill_session(  # pylint: disable=too-many-arguments
+    def kill_session(  # noqa: PLR0913
         self,
         session_id: int,
         *,
@@ -1620,6 +1642,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         Args:
             session_id: session id to kill
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1644,7 +1667,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def kill_session_async(  # pylint: disable=too-many-arguments
+    async def kill_session_async(  # noqa: PLR0913
         self,
         session_id: int,
         *,
@@ -1655,6 +1678,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         Args:
             session_id: session id to kill
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1678,7 +1702,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         return await self._get_result_async(operation_id=operation_id)
 
-    def _commit(  # pylint: disable=too-many-arguments,too-many-locals
+    def _commit(  # noqa: PLR0913,too-many-locals
         self,
         *,
         operation_id: OperationIdPointer,
@@ -1695,7 +1719,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def commit(  # pylint: disable=too-many-arguments
+    def commit(  # noqa: PLR0913
         self,
         *,
         operation_timeout_ns: Optional[int] = None,
@@ -1704,7 +1728,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         Execute a commit rpc operation.
 
         Args:
-            N/A
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1728,7 +1752,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def commit_async(  # pylint: disable=too-many-arguments
+    async def commit_async(  # noqa: PLR0913
         self,
         *,
         operation_timeout_ns: Optional[int] = None,
@@ -1737,7 +1761,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         Execute a commit rpc operation.
 
         Args:
-            N/A
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1750,7 +1774,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         # only used in the decorator
         _ = operation_timeout_ns
 
-    def _discard(  # pylint: disable=too-many-arguments,too-many-locals
+    def _discard(  # noqa: PLR0913,too-many-locals
         self,
         *,
         operation_id: OperationIdPointer,
@@ -1767,7 +1791,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def discard(  # pylint: disable=too-many-arguments
+    def discard(  # noqa: PLR0913
         self,
         *,
         operation_timeout_ns: Optional[int] = None,
@@ -1776,7 +1800,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         Execute a discard rpc operation.
 
         Args:
-            N/A
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1800,7 +1824,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def discard_async(  # pylint: disable=too-many-arguments
+    async def discard_async(  # noqa: PLR0913
         self,
         *,
         operation_timeout_ns: Optional[int] = None,
@@ -1809,7 +1833,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         Execute a discard rpc operation.
 
         Args:
-            N/A
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1832,7 +1856,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         return await self._get_result_async(operation_id=operation_id)
 
-    def _cancel_commit(  # pylint: disable=too-many-arguments,too-many-locals
+    def _cancel_commit(  # noqa: PLR0913,too-many-locals
         self,
         *,
         operation_id: OperationIdPointer,
@@ -1849,7 +1873,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def cancel_commit(  # pylint: disable=too-many-arguments
+    def cancel_commit(  # noqa: PLR0913
         self,
         *,
         operation_timeout_ns: Optional[int] = None,
@@ -1858,7 +1882,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         Execute a cancel-commit rpc operation.
 
         Args:
-            N/A
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1882,7 +1906,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def cancel_commit_async(  # pylint: disable=too-many-arguments
+    async def cancel_commit_async(  # noqa: PLR0913
         self,
         *,
         operation_timeout_ns: Optional[int] = None,
@@ -1891,7 +1915,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         Execute a cancel-commit rpc operation.
 
         Args:
-            N/A
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1914,7 +1938,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         return await self._get_result_async(operation_id=operation_id)
 
-    def _validate(  # pylint: disable=too-many-arguments,too-many-locals
+    def _validate(  # noqa: PLR0913,too-many-locals
         self,
         *,
         operation_id: OperationIdPointer,
@@ -1935,7 +1959,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def validate(  # pylint: disable=too-many-arguments
+    def validate(  # noqa: PLR0913
         self,
         *,
         source: DatastoreType = DatastoreType.RUNNING,
@@ -1946,6 +1970,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         Args:
             source: datastore to validate
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1970,7 +1995,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def validate_async(  # pylint: disable=too-many-arguments
+    async def validate_async(  # noqa: PLR0913
         self,
         *,
         source: DatastoreType = DatastoreType.RUNNING,
@@ -1981,6 +2006,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         Args:
             source: datastore to validate
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -2004,7 +2030,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         return await self._get_result_async(operation_id=operation_id)
 
-    def _get_schema(  # pylint: disable=too-many-arguments,too-many-locals
+    def _get_schema(  # noqa: PLR0913,too-many-locals
         self,
         *,
         operation_id: OperationIdPointer,
@@ -2031,7 +2057,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def get_schema(  # pylint: disable=too-many-arguments
+    def get_schema(  # noqa: PLR0913
         self,
         identifier: str,
         *,
@@ -2046,6 +2072,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
             identifier: schema identifier to get
             version: optional schema version to request
             format_: schema format to apply
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -2072,7 +2099,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def get_schema_async(  # pylint: disable=too-many-arguments
+    async def get_schema_async(  # noqa: PLR0913
         self,
         identifier: str,
         *,
@@ -2087,6 +2114,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
             identifier: schema identifier to get
             version: optional schema version to request
             format_: schema format to apply
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -2112,7 +2140,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         return await self._get_result_async(operation_id=operation_id)
 
-    def _get_data(  # pylint: disable=too-many-arguments,too-many-locals
+    def _get_data(  # noqa: PLR0913,too-many-locals
         self,
         *,
         operation_id: OperationIdPointer,
@@ -2158,7 +2186,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def get_data(  # pylint: disable=too-many-arguments
+    def get_data(  # noqa: PLR0913
         self,
         *,
         source: DatastoreType = DatastoreType.RUNNING,
@@ -2187,6 +2215,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
             max_depth: max depth of data requested
             with_origin: include origin data
             defaults_type: defaults type to apply to the get-config, "unset" means dont apply one
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -2220,7 +2249,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def get_data_async(  # pylint: disable=too-many-arguments
+    async def get_data_async(  # noqa: PLR0913
         self,
         *,
         source: DatastoreType = DatastoreType.RUNNING,
@@ -2249,6 +2278,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
             max_depth: max depth of data requested
             with_origin: include origin data
             defaults_type: defaults type to apply to the get-config, "unset" means dont apply one
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -2281,7 +2311,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         return await self._get_result_async(operation_id=operation_id)
 
-    def _edit_data(  # pylint: disable=too-many-arguments,too-many-locals
+    def _edit_data(  # noqa: PLR0913,too-many-locals
         self,
         *,
         operation_id: OperationIdPointer,
@@ -2305,7 +2335,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def edit_data(  # pylint: disable=too-many-arguments
+    def edit_data(  # noqa: PLR0913
         self,
         content: str,
         *,
@@ -2318,6 +2348,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         Args:
             content: full payload content to send
             target: datastore to target
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -2343,7 +2374,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def edit_data_async(  # pylint: disable=too-many-arguments
+    async def edit_data_async(  # noqa: PLR0913
         self,
         content: str,
         *,
@@ -2356,6 +2387,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         Args:
             content: full payload content to send
             target: datastore to target
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -2368,7 +2400,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         # only used in the decorator
         _ = operation_timeout_ns
 
-    def _action(  # pylint: disable=too-many-arguments,too-many-locals
+    def _action(  # noqa: PLR0913,too-many-locals
         self,
         *,
         operation_id: OperationIdPointer,
@@ -2377,7 +2409,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
     ) -> c_uint: ...
 
     @handle_operation_timeout
-    def action(  # pylint: disable=too-many-arguments
+    def action(  # noqa: PLR0913
         self,
         action: str,
         *,
@@ -2388,6 +2420,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         Args:
             action: action to execute
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -2412,7 +2445,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def action_async(  # pylint: disable=too-many-arguments
+    async def action_async(  # noqa: PLR0913
         self,
         action: str,
         *,
@@ -2423,6 +2456,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         Args:
             action: action to execute
+            operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
             Result: a Result object representing the operation

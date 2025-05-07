@@ -49,7 +49,7 @@ class LookupKeyValue:
 
 
 @dataclass
-class Options:  # pylint: disable=too-many-instance-attributes
+class Options:
     """
     Options holds auth related options to pass to the ffi layer.
 
@@ -98,7 +98,7 @@ class Options:  # pylint: disable=too-many-instance-attributes
         init=False, default=None, repr=False
     )
 
-    def apply(  # pylint: disable=too-many-branches
+    def apply(  # noqa: C901, PLR0912
         self, ffi_mapping: LibScrapliMapping, ptr: DriverPointer
     ) -> None:
         """

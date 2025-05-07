@@ -20,7 +20,7 @@ class Result:  # pylint: disable=too-many-instance-attributes
 
     """
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(  # noqa: PLR0913
         self,
         *,
         host: str,
@@ -50,7 +50,7 @@ class Result:  # pylint: disable=too-many-instance-attributes
         Extends this Result object with another Result object.
 
         Args:
-            N/A
+            result: the result object with which to extend this result object
 
         Returns:
             N/A
