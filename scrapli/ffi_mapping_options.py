@@ -290,7 +290,7 @@ class LibScrapliSessionOptionsMapping:
         return self._set_read_delay_backoff_factor(ptr, read_delay_backoff_factor)
 
     def set_return_char(self, ptr: DriverPointer, return_char: c_char_p) -> int:
-        """
+        r"""
         Set the session return char
 
         Should not be used/called directly.

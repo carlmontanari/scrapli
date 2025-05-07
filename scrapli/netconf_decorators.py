@@ -1,8 +1,9 @@
 """scrapli.netconf_decorators"""
 
 from ctypes import c_int
+from collections.abc import Awaitable
 from functools import update_wrapper
-from typing import TYPE_CHECKING, Awaitable, Callable, Concatenate, ParamSpec
+from typing import TYPE_CHECKING, Callable, Concatenate, ParamSpec
 
 from scrapli.exceptions import OptionsException
 from scrapli.netconf_result import Result

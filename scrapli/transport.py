@@ -72,9 +72,9 @@ class BinOptions:  # pylint: disable=too-many-instance-attributes
     _ssh_config_path: Optional[c_char_p] = field(init=False, default=None, repr=False)
     _known_hosts_path: Optional[c_char_p] = field(init=False, default=None, repr=False)
 
-    def apply(  # pylint: disable=too-many-branches
+    def apply(  # noqa: C901, PLR0912
         self, ffi_mapping: LibScrapliMapping, ptr: DriverPointer
-    ) -> None:  # pylint: disable=too-many-branches
+    ) -> None:
         """
         Applies the options to the given driver pointer.
 

@@ -15,7 +15,7 @@ READ_DELAY_MULTIPLIER = 2
 
 
 @dataclass
-class Options:  # pylint: disable=too-many-instance-attributes
+class Options:
     """
     Options holds session related options to pass to the ffi layer.
 
@@ -49,7 +49,7 @@ class Options:  # pylint: disable=too-many-instance-attributes
     _return_char: Optional[c_char_p] = field(init=False, default=None, repr=False)
     _recorder_path: Optional[c_char_p] = field(init=False, default=None, repr=False)
 
-    def apply(  # pylint: disable=too-many-branches
+    def apply(  # noqa: C901, PLR0912
         self, ffi_mapping: LibScrapliMapping, ptr: DriverPointer
     ) -> None:
         """

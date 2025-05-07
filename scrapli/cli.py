@@ -1,4 +1,4 @@
-"""scrapli.cli"""  # pylint: disable=too-many-lines
+"""scrapli.cli"""
 
 import importlib.resources
 from asyncio import sleep as async_sleep
@@ -14,7 +14,7 @@ from logging import getLogger
 from pathlib import Path
 from random import randint
 from types import TracebackType
-from typing import Callable, Optional, Type
+from typing import Callable, Optional
 
 from scrapli.auth import Options as AuthOptions
 from scrapli.cli_decorators import handle_operation_timeout, handle_operation_timeout_async
@@ -87,7 +87,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
 
     """
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(  # noqa: PLR0913
         self,
         definition_file_or_name: str,
         host: str,
@@ -152,7 +152,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
 
     def __exit__(
         self,
-        exception_type: Optional[Type[BaseException]],
+        exception_type: Optional[BaseException],
         exception_value: Optional[BaseException],
         traceback: Optional[TracebackType],
     ) -> None:
@@ -193,7 +193,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
 
     async def __aexit__(
         self,
-        exception_type: Optional[Type[BaseException]],
+        exception_type: Optional[BaseException],
         exception_value: Optional[BaseException],
         traceback: Optional[TracebackType],
     ) -> None:
@@ -817,7 +817,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
 
         return await self._get_result_async(operation_id=operation_id)
 
-    def _send_input(  # pylint: disable=too-many-arguments
+    def _send_input(  # noqa: PLR0913
         self,
         *,
         operation_id: OperationIdPointer,
@@ -844,7 +844,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def send_input(  # pylint: disable=too-many-arguments
+    def send_input(  # noqa: PLR0913
         self,
         input_: str,
         *,
@@ -896,7 +896,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def send_input_async(  # pylint: disable=too-many-arguments
+    async def send_input_async(  # noqa: PLR0913
         self,
         input_: str,
         *,
@@ -948,7 +948,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
         return await self._get_result_async(operation_id=operation_id)
 
     @handle_operation_timeout
-    def send_inputs(  # pylint: disable=too-many-arguments, too-many-locals
+    def send_inputs(  # noqa: PLR0913, too-many-locals
         self,
         inputs: list[str],
         *,
@@ -1016,7 +1016,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
         return result  # type: ignore[return-value]
 
     @handle_operation_timeout_async
-    async def send_inputs_async(  # pylint: disable=too-many-arguments, too-many-locals
+    async def send_inputs_async(  # noqa: PLR0913, too-many-locals
         self,
         inputs: list[str],
         *,
@@ -1082,7 +1082,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
 
         return result  # type: ignore[return-value]
 
-    def _send_prompted_input(  # pylint: disable=too-many-arguments,too-many-locals
+    def _send_prompted_input(  # noqa: PLR0913,too-many-locals
         self,
         *,
         operation_id: OperationIdPointer,
@@ -1117,7 +1117,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def send_prompted_input(  # pylint: disable=too-many-arguments,too-many-locals
+    def send_prompted_input(  # noqa: PLR0913,too-many-locals
         self,
         input_: str,
         prompt: str,
@@ -1186,7 +1186,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def send_prompted_input_async(  # pylint: disable=too-many-arguments,too-many-locals
+    async def send_prompted_input_async(  # noqa: PLR0913,too-many-locals
         self,
         input_: str,
         prompt: str,

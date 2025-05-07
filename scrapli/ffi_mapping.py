@@ -236,8 +236,9 @@ class LibScrapliMapping:  # pylint: disable=too-few-public-methods
     _instance = None
 
     def __new__(cls) -> "LibScrapliMapping":
+        """Returns the singleton instance of the ffi mapping"""
         if not cls._instance:
-            cls._instance = super(LibScrapliMapping, cls).__new__(cls)
+            cls._instance = super().__new__(cls)
 
         return cls._instance
 

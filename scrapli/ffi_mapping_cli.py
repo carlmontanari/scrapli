@@ -1,4 +1,4 @@
-"""scrapli.ffi_mapping_cli"""  # pylint: disable=too-many-lines,too-many-arguments,too-many-instance-attributes
+"""scrapli.ffi_mapping_cli"""  # noqa: PLR0913
 
 from ctypes import (
     CDLL,
@@ -557,7 +557,7 @@ class LibScrapliCliMapping:
             ptr: ptr to the cli object
             operation_id: int pointer to fill with the id of the submitted operation
             cancel: bool pointer that can be set to true to cancel the operation
-            input: the input to send
+            input_: the input to send
             requested_mode: string name of the mode to send the input in
             input_handling: string mapping to input handling enum that governs how the input is
                 handled

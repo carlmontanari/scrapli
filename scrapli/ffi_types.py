@@ -139,7 +139,7 @@ def to_c_string(s: str) -> c_char_p:
     Accepts a string and converts it to a c_char_p.
 
     Args:
-        N/A
+        s: the string-like thing to convert to a c_char_p
 
     Returns:
         c_char_p: the converted string
