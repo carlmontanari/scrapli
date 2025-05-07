@@ -35,7 +35,7 @@ class TransportKind(str, Enum):
 
 
 @dataclass
-class BinOptions:  # pylint: disable=too-many-instance-attributes
+class BinOptions:
     """
     Options holds bin transport options to pass to the ffi layer.
 

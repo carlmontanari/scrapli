@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class Result:  # pylint: disable=too-many-instance-attributes
+class Result:
     """
     Result holds the result of an operation.
 

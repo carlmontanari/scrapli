@@ -152,7 +152,7 @@ class Options:
         if self.lookups is not None:
             for lookup in self.lookups:
                 status = ffi_mapping.options_mapping.auth.set_lookup_key_value(
-                    ptr, *lookup._get_c_strings()  # pylint: disable=protected-access
+                    ptr, *lookup._get_c_strings()
                 )
                 if status != 0:
                     raise OptionsException("failed to set auth lookup key/value")

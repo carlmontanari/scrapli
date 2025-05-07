@@ -1,4 +1,4 @@
-"""scrapli.netconf"""  # pylint: disable=too-many-lines
+"""scrapli.netconf"""
 
 from asyncio import sleep as async_sleep
 from ctypes import c_bool, c_char_p, c_int, c_uint, c_uint64
@@ -171,7 +171,7 @@ class ConfigFilter(str, Enum):
 
 
 @dataclass
-class Options:  # pylint: disable=too-many-instance-attributes
+class Options:
     """
     Options holds netconf related options to pass to the ffi layer.
 
@@ -195,9 +195,7 @@ class Options:  # pylint: disable=too-many-instance-attributes
     _error_tag: Optional[c_char_p] = field(init=False, default=None, repr=False)
     _preferred_version: Optional[c_char_p] = field(init=False, default=None, repr=False)
 
-    def apply(  # noqa: PLR0913
-        self, ffi_mapping: LibScrapliMapping, ptr: DriverPointer
-    ) -> None:
+    def apply(self, ffi_mapping: LibScrapliMapping, ptr: DriverPointer) -> None:
         """
         Applies the options to the given driver pointer.
 
@@ -261,7 +259,7 @@ class Options:  # pylint: disable=too-many-instance-attributes
         )
 
 
-class Netconf:  # pylint: disable=too-many-instance-attributes
+class Netconf:
     """
     Netconf represents a netconf connection object.
 
@@ -515,7 +513,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         return new_delay + randint(0, min_delay) * READ_DELAY_MULTIPLIER
 
-    def _get_result(  # pylint: disable=too-many-locals
+    def _get_result(
         self,
         operation_id: c_uint,
     ) -> Result:
@@ -584,7 +582,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
             rpc_errors=rpc_errors_slice.get_decoded_contents(),
         )
 
-    async def _get_result_async(  # pylint: disable=too-many-locals
+    async def _get_result_async(
         self,
         operation_id: c_uint,
     ) -> Result:
@@ -924,7 +922,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         return await self._get_result_async(operation_id=operation_id)
 
-    def _edit_config(  # noqa: PLR0913,too-many-locals
+    def _edit_config(
         self,
         *,
         operation_id: OperationIdPointer,
@@ -948,7 +946,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def edit_config(  # noqa: PLR0913
+    def edit_config(
         self,
         *,
         config: str = "",
@@ -987,7 +985,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def edit_config_async(  # noqa: PLR0913
+    async def edit_config_async(
         self,
         *,
         config: str = "",
@@ -1025,7 +1023,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         return await self._get_result_async(operation_id=operation_id)
 
-    def _copy_config(  # noqa: PLR0913,too-many-locals
+    def _copy_config(
         self,
         *,
         operation_id: OperationIdPointer,
@@ -1049,7 +1047,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def copy_config(  # noqa: PLR0913
+    def copy_config(
         self,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
@@ -1088,7 +1086,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def copy_config_async(  # noqa: PLR0913
+    async def copy_config_async(
         self,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
@@ -1126,7 +1124,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         return await self._get_result_async(operation_id=operation_id)
 
-    def _delete_config(  # noqa: PLR0913,too-many-locals
+    def _delete_config(
         self,
         *,
         operation_id: OperationIdPointer,
@@ -1147,7 +1145,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def delete_config(  # noqa: PLR0913
+    def delete_config(
         self,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
@@ -1183,7 +1181,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def delete_config_async(  # noqa: PLR0913
+    async def delete_config_async(
         self,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
@@ -1218,7 +1216,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         return await self._get_result_async(operation_id=operation_id)
 
-    def _lock(  # noqa: PLR0913,too-many-locals
+    def _lock(
         self,
         *,
         operation_id: OperationIdPointer,
@@ -1239,7 +1237,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def lock(  # noqa: PLR0913
+    def lock(
         self,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
@@ -1275,7 +1273,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def lock_async(  # noqa: PLR0913
+    async def lock_async(
         self,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
@@ -1310,7 +1308,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         return await self._get_result_async(operation_id=operation_id)
 
-    def _unlock(  # noqa: PLR0913,too-many-locals
+    def _unlock(
         self,
         *,
         operation_id: OperationIdPointer,
@@ -1331,7 +1329,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def unlock(  # noqa: PLR0913
+    def unlock(
         self,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
@@ -1367,7 +1365,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def unlock_async(  # noqa: PLR0913
+    async def unlock_async(
         self,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
@@ -1530,7 +1528,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         return await self._get_result_async(operation_id=operation_id)
 
-    def _close_session(  # noqa: PLR0913,too-many-locals
+    def _close_session(
         self,
         *,
         operation_id: OperationIdPointer,
@@ -1547,7 +1545,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def close_session(  # noqa: PLR0913
+    def close_session(
         self,
         *,
         operation_timeout_ns: Optional[int] = None,
@@ -1580,7 +1578,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def close_session_async(  # noqa: PLR0913
+    async def close_session_async(
         self,
         *,
         operation_timeout_ns: Optional[int] = None,
@@ -1612,7 +1610,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         return await self._get_result_async(operation_id=operation_id)
 
-    def _kill_session(  # noqa: PLR0913,too-many-locals
+    def _kill_session(
         self,
         *,
         operation_id: OperationIdPointer,
@@ -1623,7 +1621,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
             cancel=cancel,
-            session_id=session_id,
+            session_id=c_int(session_id),
         )
         if status != 0:
             raise SubmitOperationException("submitting kill-session operation failed")
@@ -1631,7 +1629,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def kill_session(  # noqa: PLR0913
+    def kill_session(
         self,
         session_id: int,
         *,
@@ -1667,7 +1665,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def kill_session_async(  # noqa: PLR0913
+    async def kill_session_async(
         self,
         session_id: int,
         *,
@@ -1702,7 +1700,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         return await self._get_result_async(operation_id=operation_id)
 
-    def _commit(  # noqa: PLR0913,too-many-locals
+    def _commit(
         self,
         *,
         operation_id: OperationIdPointer,
@@ -1719,7 +1717,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def commit(  # noqa: PLR0913
+    def commit(
         self,
         *,
         operation_timeout_ns: Optional[int] = None,
@@ -1752,7 +1750,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def commit_async(  # noqa: PLR0913
+    async def commit_async(
         self,
         *,
         operation_timeout_ns: Optional[int] = None,
@@ -1774,7 +1772,17 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         # only used in the decorator
         _ = operation_timeout_ns
 
-    def _discard(  # noqa: PLR0913,too-many-locals
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._commit(
+            operation_id=operation_id,
+            cancel=cancel,
+        )
+
+        return await self._get_result_async(operation_id=operation_id)
+
+    def _discard(
         self,
         *,
         operation_id: OperationIdPointer,
@@ -1791,7 +1799,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def discard(  # noqa: PLR0913
+    def discard(
         self,
         *,
         operation_timeout_ns: Optional[int] = None,
@@ -1824,7 +1832,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def discard_async(  # noqa: PLR0913
+    async def discard_async(
         self,
         *,
         operation_timeout_ns: Optional[int] = None,
@@ -1856,7 +1864,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         return await self._get_result_async(operation_id=operation_id)
 
-    def _cancel_commit(  # noqa: PLR0913,too-many-locals
+    def _cancel_commit(
         self,
         *,
         operation_id: OperationIdPointer,
@@ -1873,7 +1881,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def cancel_commit(  # noqa: PLR0913
+    def cancel_commit(
         self,
         *,
         operation_timeout_ns: Optional[int] = None,
@@ -1906,7 +1914,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def cancel_commit_async(  # noqa: PLR0913
+    async def cancel_commit_async(
         self,
         *,
         operation_timeout_ns: Optional[int] = None,
@@ -1938,7 +1946,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         return await self._get_result_async(operation_id=operation_id)
 
-    def _validate(  # noqa: PLR0913,too-many-locals
+    def _validate(
         self,
         *,
         operation_id: OperationIdPointer,
@@ -1959,7 +1967,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def validate(  # noqa: PLR0913
+    def validate(
         self,
         *,
         source: DatastoreType = DatastoreType.RUNNING,
@@ -1995,7 +2003,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def validate_async(  # noqa: PLR0913
+    async def validate_async(
         self,
         *,
         source: DatastoreType = DatastoreType.RUNNING,
@@ -2030,7 +2038,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         return await self._get_result_async(operation_id=operation_id)
 
-    def _get_schema(  # noqa: PLR0913,too-many-locals
+    def _get_schema(
         self,
         *,
         operation_id: OperationIdPointer,
@@ -2057,7 +2065,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def get_schema(  # noqa: PLR0913
+    def get_schema(
         self,
         identifier: str,
         *,
@@ -2099,7 +2107,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def get_schema_async(  # noqa: PLR0913
+    async def get_schema_async(
         self,
         identifier: str,
         *,
@@ -2311,7 +2319,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
 
         return await self._get_result_async(operation_id=operation_id)
 
-    def _edit_data(  # noqa: PLR0913,too-many-locals
+    def _edit_data(
         self,
         *,
         operation_id: OperationIdPointer,
@@ -2335,7 +2343,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def edit_data(  # noqa: PLR0913
+    def edit_data(
         self,
         content: str,
         *,
@@ -2374,7 +2382,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def edit_data_async(  # noqa: PLR0913
+    async def edit_data_async(
         self,
         content: str,
         *,
@@ -2400,16 +2408,40 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         # only used in the decorator
         _ = operation_timeout_ns
 
-    def _action(  # noqa: PLR0913,too-many-locals
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._edit_data(
+            operation_id=operation_id,
+            cancel=cancel,
+            content=content,
+            target=target,
+        )
+
+        return await self._get_result_async(operation_id=operation_id)
+
+    def _action(
         self,
         *,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
         action: str,
-    ) -> c_uint: ...
+    ) -> c_uint:
+        _action = to_c_string(action)
+
+        status = self.ffi_mapping.netconf_mapping.action(
+            ptr=self._ptr_or_exception(),
+            operation_id=operation_id,
+            cancel=cancel,
+            action=_action,
+        )
+        if status != 0:
+            raise SubmitOperationException("submitting action operation failed")
+
+        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def action(  # noqa: PLR0913
+    def action(
         self,
         action: str,
         *,
@@ -2445,7 +2477,7 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def action_async(  # noqa: PLR0913
+    async def action_async(
         self,
         action: str,
         *,
@@ -2468,3 +2500,14 @@ class Netconf:  # pylint: disable=too-many-instance-attributes
         """
         # only used in the decorator
         _ = operation_timeout_ns
+
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._action(
+            operation_id=operation_id,
+            cancel=cancel,
+            action=action,
+        )
+
+        return await self._get_result_async(operation_id=operation_id)
