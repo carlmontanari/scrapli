@@ -28,7 +28,7 @@ WHEEL_TARGETS = {
 }
 
 
-class Libscrapli:  # pylint: disable=too-few-public-methods
+class Libscrapli:
     """Dumb container for setup-related helpers"""
 
     @staticmethod
@@ -150,7 +150,7 @@ class Libscrapli:  # pylint: disable=too-few-public-methods
         self._clean_libscrapli_build_path(libscrapli_build_path=libscrapli_build_path)
 
 
-class LibscrapliSdist(sdist, Libscrapli):  # type: ignore # pylint: disable=too-few-public-methods\
+class LibscrapliSdist(sdist, Libscrapli):  # type: ignore
     """Setuptools sdist dispatcher"""
 
     def run(self) -> None:
@@ -159,7 +159,7 @@ class LibscrapliSdist(sdist, Libscrapli):  # type: ignore # pylint: disable=too-
         super().run()
 
 
-class LibscrapliEditableWheel(editable_wheel, Libscrapli):  # type: ignore # pylint: disable=too-few-public-methods
+class LibscrapliEditableWheel(editable_wheel, Libscrapli):  # type: ignore
     """Setuptools editable wheel dispatcher"""
 
     def run(self) -> None:
@@ -168,7 +168,7 @@ class LibscrapliEditableWheel(editable_wheel, Libscrapli):  # type: ignore # pyl
         super().run()
 
 
-class LibscrapliBdist(bdist_wheel, Libscrapli):  # type: ignore  # pylint: disable=too-few-public-methods
+class LibscrapliBdist(bdist_wheel, Libscrapli):  # type: ignore
     """Setuptools bdist dispatcher"""
 
     def run(self) -> None:
@@ -180,8 +180,8 @@ class LibscrapliBdist(bdist_wheel, Libscrapli):  # type: ignore  # pylint: disab
             # we *technically* have a pure python package meaning we can lie to bdist_wheel and tell
             # it what our platform should be. so do that. we are "pure" python because we have no
             #  c-extensions, only the pre compiled zig shared object (i.e. .so or .dylib)
-            self.plat_name_supplied = True  # pylint: disable=attribute-defined-outside-init
-            self.plat_name = wheel_platform  # pylint: disable=attribute-defined-outside-init
+            self.plat_name_supplied = True
+            self.plat_name = wheel_platform
         else:
             # not set in env, so not in ci, just do native/current platform like normal, but we
             # still need to know what that is so we grab the correct built shared object

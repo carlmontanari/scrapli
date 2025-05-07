@@ -16,11 +16,11 @@ __version__ = "2.0.0-alpha.0"
 __all__ = (
     "AuthOptions",
     "Cli",
-    "Netconf",
     "LookupKeyValue",
+    "Netconf",
     "SessionOptions",
-    "TransportOptions",
     "TransportBinOptions",
+    "TransportOptions",
     "TransportSsh2Options",
     "TransportTelnetOptions",
     "TransportTestOptions",

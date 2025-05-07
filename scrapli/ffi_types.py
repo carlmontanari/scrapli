@@ -14,7 +14,7 @@ from ctypes import (
     c_void_p,
     cast,
 )
-from typing import TypeAlias
+from typing import ClassVar, TypeAlias
 
 DriverPointer: TypeAlias = c_void_p
 OperationId: TypeAlias = c_uint
@@ -32,7 +32,7 @@ BoolPointer: TypeAlias = POINTER(c_bool)  # type: ignore[valid-type]
 LogFuncCallback: TypeAlias = CFUNCTYPE(None, c_int, StringPointer)  # type: ignore[valid-type]
 
 
-class ZigU64Slice(Structure):  # pylint: disable=too-few-public-methods
+class ZigU64Slice(Structure):
     """
     A struct representing a slice of u64 in zig.
 
@@ -47,7 +47,8 @@ class ZigU64Slice(Structure):  # pylint: disable=too-few-public-methods
 
     """
 
-    _fields_ = [
+    # fields must be declared this way to be c types compatible
+    _fields_ = [  # noqa: RUF012
         ("ptr", POINTER(c_uint64)),
         ("len", c_size_t),
     ]
@@ -75,7 +76,7 @@ class ZigU64Slice(Structure):  # pylint: disable=too-few-public-methods
         return [self.ptr[i] for i in range(self.len)]
 
 
-class ZigSlice(Structure):  # pylint: disable=too-few-public-methods
+class ZigSlice(Structure):
     """
     A struct representing a slice of u8 (a string) in zig.
 
@@ -90,7 +91,7 @@ class ZigSlice(Structure):  # pylint: disable=too-few-public-methods
 
     """
 
-    _fields_ = [
+    _fields_ = [  # noqa: RUF012
         ("ptr", POINTER(c_uint8)),
         ("len", c_size_t),
     ]

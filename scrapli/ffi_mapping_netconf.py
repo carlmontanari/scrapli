@@ -25,7 +25,7 @@ from scrapli.ffi_types import (
 )
 
 
-class LibScrapliNetconfMapping:  # pylint: disable=too-many-public-methods
+class LibScrapliNetconfMapping:
     """
     Mapping to libscrapli netconf object functions mapping.
 

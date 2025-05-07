@@ -5,7 +5,7 @@ from typing import Any, TextIO
 OPERATION_DELIMITER = "__libscrapli__"
 
 
-class Result:  # pylint: disable=too-many-instance-attributes
+class Result:
     """
     Result represents a set of results from some Cli operation(s).
 

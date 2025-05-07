@@ -1,4 +1,4 @@
-"""scrapli.ffi_mapping_options"""  # pylint: disable=too-many-lines,too-many-arguments,too-many-instance-attributes
+"""scrapli.ffi_mapping_options"""
 
 from ctypes import (
     CDLL,
@@ -926,7 +926,7 @@ class LibScrapliTransportBinOptionsMapping:
         return self._set_term_width(ptr, width)
 
 
-class LibScrapliTransportSsh2OptionsMapping:  # pylint: disable=too-few-public-methods
+class LibScrapliTransportSsh2OptionsMapping:
     """
     Mapping to libscrapli ssh2 transport option setter exported functions.
 
@@ -1001,7 +1001,7 @@ class LibScrapliTransportSsh2OptionsMapping:  # pylint: disable=too-few-public-m
         return self._set_libssh2_trace(ptr)
 
 
-class LibScrapliTransportTelnetOptionsMapping:  # pylint: disable=too-few-public-methods
+class LibScrapliTransportTelnetOptionsMapping:
     """
     Mapping to libscrapli telnet transport option setter exported functions.
 
@@ -1022,7 +1022,7 @@ class LibScrapliTransportTelnetOptionsMapping:  # pylint: disable=too-few-public
         _ = lib
 
 
-class LibScrapliTransportTestOptionsMapping:  # pylint: disable=too-few-public-methods
+class LibScrapliTransportTestOptionsMapping:
     """
     Mapping to libscrapli test transport option setter exported functions.
 
@@ -1068,7 +1068,7 @@ class LibScrapliTransportTestOptionsMapping:  # pylint: disable=too-few-public-m
         return self._set_f(ptr, f)
 
 
-class LibScrapliOptionsMapping:  # pylint: disable=too-few-public-methods
+class LibScrapliOptionsMapping:
     """
     Mapping to libscrapli option setter exported functions.
 

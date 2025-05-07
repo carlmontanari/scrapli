@@ -1,7 +1,7 @@
 """scrapli.netconf_decorators"""
 
-from ctypes import c_int
 from collections.abc import Awaitable
+from ctypes import c_int
 from functools import update_wrapper
 from typing import TYPE_CHECKING, Callable, Concatenate, ParamSpec
 
@@ -59,7 +59,7 @@ def handle_operation_timeout(
             return wrapped(inst, *args, **kwargs)
 
         status = inst.ffi_mapping.options_mapping.session.set_operation_timeout_ns(
-            inst._ptr_or_exception(),  # pylint: disable=protected-access
+            inst._ptr_or_exception(),
             c_int(operation_timeout_ns),
         )
         if status != 0:
@@ -68,7 +68,7 @@ def handle_operation_timeout(
         res = wrapped(inst, *args, **kwargs)
 
         status = inst.ffi_mapping.options_mapping.session.set_operation_timeout_ns(
-            inst._ptr_or_exception(),  # pylint: disable=protected-access
+            inst._ptr_or_exception(),
             c_int(operation_timeout_ns),
         )
         if status != 0:
@@ -126,7 +126,7 @@ def handle_operation_timeout_async(
             return await wrapped(inst, *args, **kwargs)
 
         status = inst.ffi_mapping.options_mapping.session.set_operation_timeout_ns(
-            inst._ptr_or_exception(),  # pylint: disable=protected-access
+            inst._ptr_or_exception(),
             c_int(operation_timeout_ns),
         )
         if status != 0:
@@ -135,7 +135,7 @@ def handle_operation_timeout_async(
         res = await wrapped(inst, *args, **kwargs)
 
         status = inst.ffi_mapping.options_mapping.session.set_operation_timeout_ns(
-            inst._ptr_or_exception(),  # pylint: disable=protected-access
+            inst._ptr_or_exception(),
             c_int(operation_timeout_ns),
         )
         if status != 0:

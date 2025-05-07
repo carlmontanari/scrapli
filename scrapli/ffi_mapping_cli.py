@@ -1,4 +1,4 @@
-"""scrapli.ffi_mapping_cli"""  # noqa: PLR0913
+"""scrapli.ffi_mapping_cli"""
 
 from ctypes import (
     CDLL,

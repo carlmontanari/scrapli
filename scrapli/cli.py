@@ -72,7 +72,7 @@ class InputHandling(str, Enum):
     IGNORE = "ignore"
 
 
-class Cli:  # pylint: disable=too-many-instance-attributes
+class Cli:
     """
     Cli represents a cli connection object.
 
@@ -495,7 +495,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
 
         return new_delay + randint(0, min_delay) * READ_DELAY_MULTIPLIER
 
-    def _get_result(  # pylint: disable=too-many-locals
+    def _get_result(
         self,
         operation_id: c_uint,
     ) -> Result:
@@ -563,7 +563,7 @@ class Cli:  # pylint: disable=too-many-instance-attributes
             genie_platform=self.genie_platform,
         )
 
-    async def _get_result_async(  # pylint: disable=too-many-locals
+    async def _get_result_async(
         self,
         operation_id: c_uint,
     ) -> Result:

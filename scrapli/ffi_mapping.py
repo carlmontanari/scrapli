@@ -1,4 +1,4 @@
-"""scrapli.ffi_mapping"""  # pylint: disable=too-many-lines,too-many-arguments,too-many-instance-attributes
+"""scrapli.ffi_mapping"""
 
 from ctypes import (
     CDLL,
@@ -218,7 +218,7 @@ class LibScrapliSharedMapping:
         return self._write(ptr, buf, redacted)
 
 
-class LibScrapliMapping:  # pylint: disable=too-few-public-methods
+class LibScrapliMapping:
     """
     Single mapping to libscrapli shared library exported functions.
 
