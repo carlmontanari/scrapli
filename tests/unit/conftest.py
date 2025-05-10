@@ -15,6 +15,10 @@ from scrapli import (
 from scrapli.cli_result import Result
 
 HOST = "localhost"
+SSH_PORT_RECORD = 22022
+SSH_PORT = 22
+NETCONF_PORT_RECORD = 23830
+NETCONF_PORT = 830
 
 
 def _original_name_to_filename(originalname: str) -> str:
@@ -24,20 +28,21 @@ def _original_name_to_filename(originalname: str) -> str:
 @pytest.fixture(scope="function")
 def cli(request: pytest.FixtureRequest) -> Cli:
     """Fixture to provide a Cli instance for unit testing"""
-
-    f = f"{request.node.path.parent}/fixtures/cli/{_original_name_to_filename(originalname=request.node.originalname)}"
+    filename = _original_name_to_filename(originalname=request.node.originalname)
+    fixture_dir = f"{request.node.path.parent}/fixtures/cli"
+    f = f"{fixture_dir}/{filename}"
 
     if id_ := getattr(getattr(request.node, "callspec", False), "id", False):
         f = f"{f}-{id_}"
 
     if request.config.getoption("--record"):
-        port = 22022
+        port = SSH_PORT_RECORD
         session_options = SessionOptions(
             recorder_path=f,
         )
         transport_options = TransportOptions()
     else:
-        port = 22
+        port = SSH_PORT
         session_options = SessionOptions(read_size=1)
         transport_options = TransportOptions(test=TransportTestOptions(f=f))
 
@@ -58,7 +63,9 @@ def cli(request: pytest.FixtureRequest) -> Cli:
 @pytest.fixture(scope="function")
 def cli_assert_result(request: pytest.FixtureRequest) -> Callable[[Result], None]:
     """Fixture to update or assert golden files for unit tests"""
-    f = f"{request.node.path.parent}/golden/cli/{_original_name_to_filename(originalname=request.node.originalname)}"
+    filename = _original_name_to_filename(originalname=request.node.originalname)
+    golden_dir = f"{request.node.path.parent}/golden/cli"
+    f = f"{golden_dir}/{filename}"
 
     if id_ := getattr(getattr(request.node, "callspec", False), "id", False):
         f = f"{f}-{id_}"
@@ -75,12 +82,14 @@ def cli_assert_result(request: pytest.FixtureRequest) -> Callable[[Result], None
 
         assert actual.result == golden
 
-        assert actual.port == 22
+        assert actual.port == SSH_PORT
         assert actual.host == HOST
         assert actual.start_time != 0
         assert actual.end_time != 0
-        # TODO elapsed time, failed indicator, maybe more?
+        assert actual.elapsed_time_seconds != 0
+        assert len(actual.results) != 0
         assert len(actual.results_raw) != 0
+        assert actual.failed is False
 
     return _cli_assert_result
 
@@ -88,19 +97,21 @@ def cli_assert_result(request: pytest.FixtureRequest) -> Callable[[Result], None
 @pytest.fixture(scope="function")
 def netconf(request: pytest.FixtureRequest) -> Netconf:
     """Fixture to provide a Netconf instance for unit testing"""
-    f = f"{request.node.path.parent}/fixtures/netconf/{_original_name_to_filename(originalname=request.node.originalname)}"
+    filename = _original_name_to_filename(originalname=request.node.originalname)
+    fixture_dir = f"{request.node.path.parent}/fixtures/netconf"
+    f = f"{fixture_dir}/{filename}"
 
     if id_ := getattr(getattr(request.node, "callspec", False), "id", False):
         f = f"{f}-{id_}"
 
     if request.config.getoption("--record"):
-        port = 23830
+        port = NETCONF_PORT_RECORD
         session_options = SessionOptions(
             recorder_path=f,
         )
         transport_options = TransportOptions()
     else:
-        port = 830
+        port = NETCONF_PORT
         session_options = SessionOptions(read_size=1, operation_max_search_depth=32)
         transport_options = TransportOptions(test=TransportTestOptions(f=f))
 
@@ -122,7 +133,9 @@ def netconf(request: pytest.FixtureRequest) -> Netconf:
 @pytest.fixture(scope="function")
 def netconf_assert_result(request: pytest.FixtureRequest) -> Callable[[Result], None]:
     """Fixture to update or assert golden files for unit tests"""
-    f = f"{request.node.path.parent}/golden/netconf/{_original_name_to_filename(originalname=request.node.originalname)}"
+    filename = _original_name_to_filename(originalname=request.node.originalname)
+    golden_dir = f"{request.node.path.parent}/golden/netconf"
+    f = f"{golden_dir}/{filename}"
 
     if id_ := getattr(getattr(request.node, "callspec", False), "id", False):
         f = f"{f}-{id_}"
@@ -139,11 +152,15 @@ def netconf_assert_result(request: pytest.FixtureRequest) -> Callable[[Result], 
 
         assert actual.result == golden
 
-        assert actual.port == 830
+        assert actual.port == NETCONF_PORT
         assert actual.host == HOST
         assert actual.start_time != 0
         assert actual.end_time != 0
-        # TODO elapsed time, failed indicator, maybe more?
+        assert actual.elapsed_time_seconds != 0
+        assert len(actual.result) != 0
         assert len(actual.result_raw) != 0
+        # would be nice to check failed, but for now we dont as we are just making sure
+        # we send valid rpcs for things like cancel commit which will always (for now)
+        # reply w/ an error saying no commit to cancel.
 
     return _netconf_assert_result

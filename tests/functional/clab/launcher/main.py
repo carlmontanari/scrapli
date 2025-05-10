@@ -181,6 +181,7 @@ class Launcher:
             destroy_command,
             capture_output=True,
             cwd=os.getenv("LAUNCHER_WORKDIR", "/launcher"),
+            check=True,
         )
 
         if proc.returncode != 0:

@@ -948,7 +948,7 @@ class Cli:
         return await self._get_result_async(operation_id=operation_id)
 
     @handle_operation_timeout
-    def send_inputs(  # noqa: PLR0913, too-many-locals
+    def send_inputs(  # noqa: PLR0913
         self,
         inputs: list[str],
         *,
@@ -983,12 +983,13 @@ class Cli:
         # meaning all the "inputs" combined, not individually
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
 
         result: Optional[Result] = None
 
         for input_ in inputs:
+            operation_id = OperationIdPointer(c_uint(0))
+
             _input = to_c_string(input_)
             _requested_mode = to_c_string(requested_mode)
             _input_handling = to_c_string(input_handling)
@@ -1016,7 +1017,7 @@ class Cli:
         return result  # type: ignore[return-value]
 
     @handle_operation_timeout_async
-    async def send_inputs_async(  # noqa: PLR0913, too-many-locals
+    async def send_inputs_async(  # noqa: PLR0913
         self,
         inputs: list[str],
         *,
@@ -1051,12 +1052,13 @@ class Cli:
         # meaning all the "inputs" combined, not individually
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
 
         result: Optional[Result] = None
 
         for input_ in inputs:
+            operation_id = OperationIdPointer(c_uint(0))
+
             _input = to_c_string(input_)
             _requested_mode = to_c_string(requested_mode)
             _input_handling = to_c_string(input_handling)
@@ -1082,7 +1084,7 @@ class Cli:
 
         return result  # type: ignore[return-value]
 
-    def _send_prompted_input(  # noqa: PLR0913,too-many-locals
+    def _send_prompted_input(  # noqa: PLR0913
         self,
         *,
         operation_id: OperationIdPointer,
@@ -1117,7 +1119,7 @@ class Cli:
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def send_prompted_input(  # noqa: PLR0913,too-many-locals
+    def send_prompted_input(  # noqa: PLR0913
         self,
         input_: str,
         prompt: str,
@@ -1186,7 +1188,7 @@ class Cli:
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def send_prompted_input_async(  # noqa: PLR0913,too-many-locals
+    async def send_prompted_input_async(  # noqa: PLR0913
         self,
         input_: str,
         prompt: str,

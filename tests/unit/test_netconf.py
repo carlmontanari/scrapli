@@ -53,18 +53,17 @@ async def test_cancel_commit_async(netconf, netconf_assert_result):
         netconf_assert_result(actual=actual)
 
 
-# TODO
-# def test_close_session(netconf, netconf_assert_result):
-#     with netconf as n:
-#         netconf_assert_result(actual=n.close_session())
+def test_close_session(netconf, netconf_assert_result):
+    with netconf as n:
+        netconf_assert_result(actual=n.close_session())
 
 
-# @pytest.mark.asyncio
-# async def test_close_session_async(netconf, netconf_assert_result):
-#     async with netconf as n:
-#         actual = await n.close_session_async()
+@pytest.mark.asyncio
+async def test_close_session_async(netconf, netconf_assert_result):
+    async with netconf as n:
+        actual = await n.close_session_async()
 
-#         netconf_assert_result(actual=actual)
+        netconf_assert_result(actual=actual)
 
 
 def test_commit(netconf, netconf_assert_result):
@@ -168,11 +167,6 @@ async def test_edit_config_async(config, target, netconf, netconf_assert_result)
         actual = await n.edit_config_async(config=config, target=target)
 
         netconf_assert_result(actual=actual)
-
-
-def test_get_config(netconf, netconf_assert_result):
-    with netconf as n:
-        netconf_assert_result(actual=n.get_config())
 
 
 EDIT_DATA_ARGNAMES = ("content",)

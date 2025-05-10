@@ -36,3 +36,37 @@ class Result:
     result: str
     rpc_warnings: str
     rpc_errors: str
+
+    @property
+    def failed(self) -> bool:
+        """
+        Returns True if any failed indicators were seen, otherwise False.
+
+        Args:
+            N/A
+
+        Returns:
+            bool: True for failed, otherwise False
+
+        Raises:
+            N/A
+
+        """
+        return bool(self.rpc_errors)
+
+    @property
+    def elapsed_time_seconds(self) -> float:
+        """
+        Returns the number of seconds the operation took.
+
+        Args:
+            N/A
+
+        Returns:
+            float: duration in seconds
+
+        Raises:
+            N/A
+
+        """
+        return (self.end_time - self.start_time) / 1_000_000_000

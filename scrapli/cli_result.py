@@ -79,7 +79,7 @@ class Result:
             N/A
 
         """
-        return not self.results_failed_indicator
+        return bool(self.results_failed_indicator)
 
     @property
     def end_time(self) -> int:
@@ -97,7 +97,10 @@ class Result:
 
         """
         if not self.splits:
-            return 0
+            # if we had no splits it was a "noop" type op (like enter mode when
+            # you are already in the requested mode), so we'll lie and say it
+            # was a 1ns op time
+            return self.start_time + 1
 
         return self.splits[-1]
 
