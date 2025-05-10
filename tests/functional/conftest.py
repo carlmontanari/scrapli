@@ -7,6 +7,7 @@ from scrapli import (
     AuthOptions,
     Cli,
     LookupKeyValue,
+    SessionOptions,
     TransportBinOptions,
     TransportOptions,
     TransportSsh2Options,
@@ -49,6 +50,10 @@ def cli(platform, transport) -> Cli:
         host=host,
         port=port,
         auth_options=auth_options,
+        session_options=SessionOptions(
+            # because we do the info from state on srl :)
+            operation_timeout_s=300,
+        ),
         transport_options=transport_options,
     )
 
