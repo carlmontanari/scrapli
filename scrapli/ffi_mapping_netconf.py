@@ -51,14 +51,48 @@ class LibScrapliNetconfMapping:
                 c_char_p,
             ],
             DriverPointer,
-        ] = lib.ls_alloc_netconf
-        lib.ls_alloc_netconf.argtypes = [
+        ] = lib.ls_netconf_alloc
+        lib.ls_netconf_alloc.argtypes = [
             LogFuncCallback,
             c_char_p,
             c_int,
             c_char_p,
         ]
-        lib.ls_alloc_netconf.restype = DriverPointer
+        lib.ls_netconf_alloc.restype = DriverPointer
+
+        self._open: Callable[
+            [
+                DriverPointer,
+                OperationIdPointer,
+                CancelPointer,
+            ],
+            int,
+        ] = lib.ls_netconf_open
+        lib.ls_netconf_open.argtypes = [
+            DriverPointer,
+            OperationIdPointer,
+            CancelPointer,
+        ]
+        lib.ls_netconf_open.restype = c_uint8
+
+        self._close: Callable[
+            [
+                DriverPointer,
+                OperationIdPointer,
+                CancelPointer,
+                c_bool,
+                c_bool,
+            ],
+            int,
+        ] = lib.ls_netconf_close
+        lib.ls_netconf_close.argtypes = [
+            DriverPointer,
+            OperationIdPointer,
+            CancelPointer,
+            c_bool,
+            c_bool,
+        ]
+        lib.ls_netconf_close.restype = c_uint8
 
         self._poll: Callable[
             [
@@ -528,6 +562,67 @@ class LibScrapliNetconfMapping:
 
         """
         return self._alloc(logger_callback, host, port, transport_kind)
+
+    def open(
+        self, ptr: DriverPointer, operation_id: OperationIdPointer, cancel: CancelPointer
+    ) -> int:
+        """
+        Open the driver at ptr.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: the ptr to the libscrapli netconf object.
+            operation_id: c_int pointer that is filled with the operation id to poll for completion.
+            cancel: bool pointer that can be set to true to cancel the operation.
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._open(ptr, operation_id, cancel)
+
+    def close(
+        self,
+        ptr: DriverPointer,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+        expect_no_reply: c_bool,
+        force: c_bool,
+    ) -> int:
+        """
+        Close the driver at ptr.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: the ptr to the libscrapli netconf object.
+            operation_id: c_int pointer that is filled with the operation id to poll for completion.
+            cancel: bool pointer that can be set to true to cancel the operation.
+            expect_no_reply: indicates the connection should send a close-session rpc but assume the
+                server receives it and dont listen for a rpc-reply -- useful if the server gets the
+                request and immediately closes the connection
+            force: bool indicating if the connection should skip sending close-session rpc or not
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._close(
+            ptr,
+            operation_id,
+            cancel,
+            expect_no_reply,
+            force,
+        )
 
     def poll(
         self,

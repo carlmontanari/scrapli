@@ -7,6 +7,7 @@ from scrapli import (
     Cli,
     LookupKeyValue,
     Netconf,
+    NetconfOptions,
     SessionOptions,
     TransportOptions,
     TransportTestOptions,
@@ -87,14 +88,13 @@ def cli_assert_result(request: pytest.FixtureRequest) -> Callable[[Result], None
 @pytest.fixture(scope="function")
 def netconf(request: pytest.FixtureRequest) -> Netconf:
     """Fixture to provide a Netconf instance for unit testing"""
-
     f = f"{request.node.path.parent}/fixtures/netconf/{_original_name_to_filename(originalname=request.node.originalname)}"
 
     if id_ := getattr(getattr(request.node, "callspec", False), "id", False):
         f = f"{f}-{id_}"
 
     if request.config.getoption("--record"):
-        port = 22830
+        port = 23830
         session_options = SessionOptions(
             recorder_path=f,
         )
@@ -107,6 +107,9 @@ def netconf(request: pytest.FixtureRequest) -> Netconf:
     return Netconf(
         host=HOST,
         port=port,
+        options=NetconfOptions(
+            close_force=True,
+        ),
         auth_options=AuthOptions(
             username="root",
             password="password",
@@ -141,6 +144,6 @@ def netconf_assert_result(request: pytest.FixtureRequest) -> Callable[[Result], 
         assert actual.start_time != 0
         assert actual.end_time != 0
         # TODO elapsed time, failed indicator, maybe more?
-        assert len(actual.results_raw) != 0
+        assert len(actual.result_raw) != 0
 
     return _netconf_assert_result

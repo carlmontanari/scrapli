@@ -2,6 +2,7 @@
 
 from ctypes import (
     CDLL,
+    POINTER,
     c_bool,
     c_char_p,
     c_int,
@@ -45,41 +46,11 @@ class LibScrapliSharedMapping:
                 DriverPointer,
             ],
             int,
-        ] = lib.ls_free
-        lib.ls_free.argtypes = [
+        ] = lib.ls_shared_free
+        lib.ls_shared_free.argtypes = [
             DriverPointer,
         ]
-        lib.ls_free.restype = None
-
-        self._open: Callable[
-            [
-                DriverPointer,
-                OperationIdPointer,
-                CancelPointer,
-            ],
-            int,
-        ] = lib.ls_open
-        lib.ls_open.argtypes = [
-            DriverPointer,
-            OperationIdPointer,
-            CancelPointer,
-        ]
-        lib.ls_open.restype = c_uint8
-
-        self._close: Callable[
-            [
-                DriverPointer,
-                OperationIdPointer,
-                CancelPointer,
-            ],
-            int,
-        ] = lib.ls_close
-        lib.ls_close.argtypes = [
-            DriverPointer,
-            OperationIdPointer,
-            CancelPointer,
-        ]
-        lib.ls_close.restype = c_uint8
+        lib.ls_shared_free.restype = None
 
         self._read: Callable[
             [
@@ -88,13 +59,13 @@ class LibScrapliSharedMapping:
                 IntPointer,
             ],
             int,
-        ] = lib.ls_read_session
-        lib.ls_read_session.argtypes = [
+        ] = lib.ls_shared_read_session
+        lib.ls_shared_read_session.argtypes = [
             DriverPointer,
             StringPointer,
             IntPointer,
         ]
-        lib.ls_read_session.restype = c_int
+        lib.ls_shared_read_session.restype = c_int
 
         self._write: Callable[
             [
@@ -103,13 +74,13 @@ class LibScrapliSharedMapping:
                 c_bool,
             ],
             int,
-        ] = lib.ls_write_session
-        lib.ls_write_session.argtypes = [
+        ] = lib.ls_shared_write_session
+        lib.ls_shared_write_session.argtypes = [
             DriverPointer,
             c_char_p,
             c_bool,
         ]
-        lib.ls_write_session.restype = c_uint8
+        lib.ls_shared_write_session.restype = c_uint8
 
     def free(self, ptr: DriverPointer) -> int:
         """
@@ -128,52 +99,6 @@ class LibScrapliSharedMapping:
 
         """
         return self._free(ptr)
-
-    def open(
-        self, ptr: DriverPointer, operation_id: OperationIdPointer, cancel: CancelPointer
-    ) -> int:
-        """
-        Open the driver at ptr.
-
-        Should (generally) not be called directly/by users.
-
-        Args:
-            ptr: the ptr to the libscraplicli/netconf object.
-            operation_id: c_int pointer that is filled with the operation id to poll for completion.
-            cancel: bool pointer that can be set to true to cancel the operation.
-
-        Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
-
-        Raises:
-            N/A
-
-        """
-        return self._open(ptr, operation_id, cancel)
-
-    def close(
-        self, ptr: DriverPointer, operation_id: OperationIdPointer, cancel: CancelPointer
-    ) -> int:
-        """
-        Close the driver at ptr.
-
-        Should (generally) not be called directly/by users.
-
-        Args:
-            ptr: the ptr to the libscraplicli/netconf object.
-            operation_id: c_int pointer that is filled with the operation id to poll for completion.
-            cancel: bool pointer that can be set to true to cancel the operation.
-
-        Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
-
-        Raises:
-            N/A
-
-        """
-        return self._close(ptr, operation_id, cancel)
 
     def read(self, ptr: DriverPointer, buf: StringPointer, read_size: IntPointer) -> int:
         """
