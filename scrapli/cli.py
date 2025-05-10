@@ -370,7 +370,7 @@ class Cli:
         operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
 
-        status = self.ffi_mapping.shared_mapping.open(
+        status = self.ffi_mapping.cli_mapping.open(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
             cancel=cancel,
@@ -425,7 +425,7 @@ class Cli:
         operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
 
-        status = self.ffi_mapping.shared_mapping.close(
+        status = self.ffi_mapping.cli_mapping.close(
             ptr=self._ptr_or_exception(), operation_id=operation_id, cancel=cancel
         )
         if status != 0:

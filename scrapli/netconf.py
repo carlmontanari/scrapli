@@ -1,7 +1,7 @@
 """scrapli.netconf"""
 
 from asyncio import sleep as async_sleep
-from ctypes import c_bool, c_char_p, c_int, c_uint, c_uint64
+from ctypes import POINTER, c_bool, c_char_p, c_int, c_uint, c_uint64
 from dataclasses import dataclass, field
 from enum import Enum
 from logging import getLogger
@@ -179,6 +179,10 @@ class Options:
         error_tag: the error tag substring that identifies errors in an rpc reply
         preferred_version: preferred netconf version to use
         message_poll_interval_ns: interval in ns for message polling
+        force_close: exists to enable sending "force" on close when using the context manager, this
+            option causes the connection to not wait for the result of the close-session rpc. this
+            can be useful if the device immediately closes the connection, not sending the "ok"
+            reply.
 
     Returns:
         None
@@ -191,6 +195,8 @@ class Options:
     error_tag: Optional[str] = None
     preferred_version: Optional[Version] = None
     message_poll_interval_ns: Optional[int] = None
+    close_expect_no_reply: bool = False
+    close_force: bool = False
 
     _error_tag: Optional[c_char_p] = field(init=False, default=None, repr=False)
     _preferred_version: Optional[c_char_p] = field(init=False, default=None, repr=False)
@@ -350,7 +356,54 @@ class Netconf:
             N/A
 
         """
-        self.close()
+        self.close(
+            expect_no_reply=self.options.close_expect_no_reply,
+            force=self.options.close_force,
+        )
+
+    async def __aenter__(self: "Netconf") -> "Netconf":
+        """
+        Enter method for context manager.
+
+        Args:
+            N/A
+
+        Returns:
+            Netconf: a concrete implementation of the opened Netconf object
+
+        Raises:
+            N/A
+
+        """
+        await self.open_async()
+
+        return self
+
+    async def __aexit__(
+        self,
+        exception_type: Optional[BaseException],
+        exception_value: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -> None:
+        """
+        Exit method to cleanup for context manager.
+
+        Args:
+            exception_type: exception type being raised
+            exception_value: message from exception being raised
+            traceback: traceback from exception being raised
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        """
+        await self.close_async(
+            expect_no_reply=self.options.close_expect_no_reply,
+            force=self.options.close_force,
+        )
 
     def _ptr_or_exception(self) -> DriverPointer:
         if self.ptr is None:
@@ -388,7 +441,7 @@ class Netconf:
         operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
 
-        status = self.ffi_mapping.shared_mapping.open(
+        status = self.ffi_mapping.netconf_mapping.open(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
             cancel=cancel,
@@ -439,12 +492,22 @@ class Netconf:
 
         return await self._get_result_async(operation_id=operation_id)
 
-    def _close(self) -> c_uint:
+    def _close(
+        self,
+        expect_no_reply: bool,
+        force: bool,
+    ) -> c_uint:
         operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
+        _expect_no_reply = c_bool(expect_no_reply)
+        _force = c_bool(force)
 
-        status = self.ffi_mapping.shared_mapping.close(
-            ptr=self._ptr_or_exception(), operation_id=operation_id, cancel=cancel
+        status = self.ffi_mapping.netconf_mapping.close(
+            ptr=self._ptr_or_exception(),
+            operation_id=operation_id,
+            cancel=cancel,
+            expect_no_reply=_expect_no_reply,
+            force=_force,
         )
         if status != 0:
             raise CloseException("submitting close operation")
@@ -453,12 +516,17 @@ class Netconf:
 
     def close(
         self,
+        *,
+        expect_no_reply: bool = False,
+        force: bool = False,
     ) -> Result:
         """
         Close the netconf connection.
 
         Args:
-            N/A
+            expect_no_reply: causes the connection to send a close-session rpc but not to listen
+                for that rpc's reply, and instead immediately closing the connection after sending
+            force: skips sending a close-session rpc and just directly shuts down the connection
 
         Returns:
             None
@@ -468,7 +536,7 @@ class Netconf:
             CloseException: if the operation fails
 
         """
-        operation_id = self._close()
+        operation_id = self._close(expect_no_reply=expect_no_reply, force=force)
 
         result = self._get_result(operation_id=operation_id)
 
@@ -478,12 +546,17 @@ class Netconf:
 
     async def close_async(
         self,
+        *,
+        expect_no_reply: bool = False,
+        force: bool = False,
     ) -> Result:
         """
         Close the netconf connection.
 
         Args:
-            N/A
+            expect_no_reply: causes the connection to send a close-session rpc but not to listen
+                for that rpc's reply, and instead immediately closing the connection after sending
+            force: skips sending a close-session rpc and just directly shuts down the connection
 
         Returns:
             None
@@ -493,7 +566,7 @@ class Netconf:
             CloseException: if the operation fails
 
         """
-        operation_id = self._close()
+        operation_id = self._close(expect_no_reply=expect_no_reply, force=force)
 
         result = await self._get_result_async(operation_id=operation_id)
 

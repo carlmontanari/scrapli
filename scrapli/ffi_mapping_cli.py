@@ -53,15 +53,15 @@ class LibScrapliCliMapping:
                 c_char_p,
             ],
             DriverPointer,
-        ] = lib.ls_alloc_cli
-        lib.ls_alloc_cli.argtypes = [
+        ] = lib.ls_cli_alloc
+        lib.ls_cli_alloc.argtypes = [
             c_char_p,
             LogFuncCallback,
             c_char_p,
             c_int,
             c_char_p,
         ]
-        lib.ls_alloc_cli.restype = DriverPointer
+        lib.ls_cli_alloc.restype = DriverPointer
 
         self._get_ntc_templates_platform: Callable[
             [
@@ -88,6 +88,36 @@ class LibScrapliCliMapping:
             POINTER(ZigSlice),
         ]
         lib.ls_cli_get_genie_platform.restype = c_uint8
+
+        self._open: Callable[
+            [
+                DriverPointer,
+                OperationIdPointer,
+                CancelPointer,
+            ],
+            int,
+        ] = lib.ls_cli_open
+        lib.ls_cli_open.argtypes = [
+            DriverPointer,
+            OperationIdPointer,
+            CancelPointer,
+        ]
+        lib.ls_cli_open.restype = c_uint8
+
+        self._close: Callable[
+            [
+                DriverPointer,
+                OperationIdPointer,
+                CancelPointer,
+            ],
+            int,
+        ] = lib.ls_cli_close
+        lib.ls_cli_close.argtypes = [
+            DriverPointer,
+            OperationIdPointer,
+            CancelPointer,
+        ]
+        lib.ls_cli_close.restype = c_uint8
 
         self._poll: Callable[
             [
@@ -332,6 +362,59 @@ class LibScrapliCliMapping:
         return self._get_genie_platform(
             ptr,
             genie_platform,
+        )
+
+    def open(
+        self, ptr: DriverPointer, operation_id: OperationIdPointer, cancel: CancelPointer
+    ) -> int:
+        """
+        Open the driver at ptr.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: the ptr to the libscrapli cli object.
+            operation_id: c_int pointer that is filled with the operation id to poll for completion.
+            cancel: bool pointer that can be set to true to cancel the operation.
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._open(ptr, operation_id, cancel)
+
+    def close(
+        self,
+        ptr: DriverPointer,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+    ) -> int:
+        """
+        Close the driver at ptr.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: the ptr to the libscrapli cli object.
+            operation_id: c_int pointer that is filled with the operation id to poll for completion.
+            cancel: bool pointer that can be set to true to cancel the operation.
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._close(
+            ptr,
+            operation_id,
+            cancel,
         )
 
     def poll(

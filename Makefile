@@ -12,13 +12,13 @@ lint: ## Run linters
 	python -m mypy --strict setup.py scrapli/
 
 test: ## Run unit tests
-	python -m pytest tests/unit/
+	python -m pytest tests/unit/ -v
 
 test-functional: ## Run functional tests
-	python -m pytest tests/functional/
+	python -m pytest tests/functional/ -v
 
 test-functional-ci: ## Run functional tests against "ci" test topology
-	python -m pytest tests/functional/
+	python -m pytest tests/functional/ -v
 
 build-netopeer-server: ## Builds the netopeer server image
 	docker build \
