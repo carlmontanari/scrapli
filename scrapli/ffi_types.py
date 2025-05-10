@@ -26,7 +26,7 @@ CancelPointer: TypeAlias = POINTER(c_bool)  # type: ignore[valid-type]
 ZigSlicePointer: TypeAlias = POINTER("ZigSlice")  # type: ignore[valid-type, call-overload]
 StringPointer: TypeAlias = POINTER(c_char_p)  # type: ignore[valid-type]
 IntPointer: TypeAlias = POINTER(c_int)  # type: ignore[valid-type]
-UnixTimestampPointer: TypeAlias = POINTER(c_int)  # type: ignore[valid-type]
+UnixTimestampPointer: TypeAlias = POINTER(c_uint64)  # type: ignore[valid-type]
 BoolPointer: TypeAlias = POINTER(c_bool)  # type: ignore[valid-type]
 
 LogFuncCallback: TypeAlias = CFUNCTYPE(None, c_int, StringPointer)  # type: ignore[valid-type]

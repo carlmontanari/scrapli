@@ -1,6 +1,6 @@
 Warning: Permanently added '[localhost]:22022' (ED25519) to the list of known hosts.
 (admin@localhost) Password: 
-Last login: Thu Apr 24 01:34:36 2025 from 192.168.65.1
+Last login: Sat May 10 19:07:30 2025 from 192.168.65.1
 eos1>
 eos1>
 eos1>enable
@@ -11,4 +11,24 @@ eos1#term len 0
 Pagination disabled.
 eos1#show version | i Kern
 Kernel version: 6.10.14-linuxkit
+eos1#show version
+Arista cEOSLab
+Hardware version: 
+Serial number: 6BCE609EE28F48CCC8ABB67389F15FF2
+Hardware MAC address: 001c.730a.c83b
+System MAC address: 001c.730a.c83b
+
+Software image version: 4.33.1F-39879738.4331F (engineering build)
+Architecture: x86_64
+Internal build version: 4.33.1F-39879738.4331F
+Internal build ID: 798d1a3d-9815-49ba-91a2-9043a969f565
+Image format version: 1.0
+Image optimization: None
+
+Kernel version: 6.10.14-linuxkit
+
+Uptime: 2 days, 21 hours and 55 minutes
+Total memory: 24572172 kB
+Free memory: 12588740 kB
+
 eos1#

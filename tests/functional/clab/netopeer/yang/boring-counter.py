@@ -13,7 +13,6 @@ def main():
     try:
         with sysrepo.SysrepoConnection() as conn:
             with conn.start_session() as sess:
-                # sess.subscribe_module_change("boring-counter", None, boring_counter_change_cb)
                 threading.Thread(
                     target=update_counter_periodically, args=(sess,), daemon=True
                 ).start()
@@ -33,7 +32,7 @@ def boring_counter_change_cb(event, req_id, changes, private_data):
 
 
 def update_counter_periodically(sess):
-    global counter_value
+    global counter_value  # noqa: PLW0603
 
     while True:
         counter_value += 1

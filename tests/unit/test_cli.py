@@ -147,7 +147,7 @@ async def test_send_input_async(
 SEND_INPUTS_ARGNAMES = ("inputs",)
 SEND_INPUTS_ARGVALUES = (
     (("show version | i Kern",),),
-    (("show version | i Kern", "show version | i Kern"),),
+    (("show version | i Kern", "show version"),),
 )
 SEND_INPUTS_IDS = (
     "send-single-input",

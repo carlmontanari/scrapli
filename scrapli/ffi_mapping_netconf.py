@@ -6,6 +6,7 @@ from ctypes import (
     c_char_p,
     c_int,
     c_uint8,
+    c_uint64,
 )
 from typing import Callable
 
@@ -166,8 +167,8 @@ class LibScrapliNetconfMapping:
         lib.ls_netconf_fetch_operation.argtypes = [
             DriverPointer,
             OperationId,
-            IntPointer,
-            IntPointer,
+            POINTER(c_uint64),
+            POINTER(c_uint64),
             POINTER(ZigSlice),
             POINTER(ZigSlice),
             POINTER(ZigSlice),

@@ -702,8 +702,8 @@ class Netconf:
                 backoff_factor=backoff_factor,
             )
 
-        start_time = IntPointer(c_int())
-        end_time = IntPointer(c_int())
+        start_time = UnixTimestampPointer(c_uint64())
+        end_time = UnixTimestampPointer(c_uint64())
 
         input_slice = ZigSlice(size=input_size.contents)
         result_raw_slice = ZigSlice(size=result_raw_size.contents)
