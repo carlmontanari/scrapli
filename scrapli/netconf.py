@@ -1,7 +1,7 @@
 """scrapli.netconf"""
 
 from asyncio import sleep as async_sleep
-from ctypes import POINTER, c_bool, c_char_p, c_int, c_uint, c_uint64
+from ctypes import c_bool, c_char_p, c_int, c_uint, c_uint64
 from dataclasses import dataclass, field
 from enum import Enum
 from logging import getLogger

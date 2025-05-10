@@ -2,7 +2,6 @@
 
 from ctypes import (
     CDLL,
-    POINTER,
     c_bool,
     c_char_p,
     c_int,
@@ -15,10 +14,8 @@ from scrapli.ffi_mapping_cli import LibScrapliCliMapping
 from scrapli.ffi_mapping_netconf import LibScrapliNetconfMapping
 from scrapli.ffi_mapping_options import LibScrapliOptionsMapping
 from scrapli.ffi_types import (
-    CancelPointer,
     DriverPointer,
     IntPointer,
-    OperationIdPointer,
     StringPointer,
 )
 

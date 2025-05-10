@@ -77,6 +77,7 @@ select = [
     "E",
     "W",
     "D",
+    "F",
     "UP",
     "FURB",
     "RUF",

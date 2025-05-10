@@ -14,7 +14,7 @@ from ctypes import (
     c_void_p,
     cast,
 )
-from typing import ClassVar, TypeAlias
+from typing import TypeAlias
 
 DriverPointer: TypeAlias = c_void_p
 OperationId: TypeAlias = c_uint
