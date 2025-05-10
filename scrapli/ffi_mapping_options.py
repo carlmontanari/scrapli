@@ -5,6 +5,7 @@ from ctypes import (
     c_char_p,
     c_int,
     c_uint8,
+    c_uint64,
 )
 from typing import Callable
 
@@ -137,77 +138,111 @@ class LibScrapliSessionOptionsMapping:
     """
 
     def __init__(self, lib: CDLL) -> None:
-        self._set_read_size: Callable[[DriverPointer, c_int], int] = lib.ls_option_session_read_size
+        self._set_read_size: Callable[
+            [
+                DriverPointer,
+                c_uint64,
+            ],
+            int,
+        ] = lib.ls_option_session_read_size
         lib.ls_option_session_read_size.argtypes = [
             DriverPointer,
-            c_int,
+            c_uint64,
         ]
         lib.ls_option_session_read_size.restype = c_uint8
 
-        self._set_read_delay_min_ns: Callable[[DriverPointer, c_int], int] = (
-            lib.ls_option_session_read_delay_min_ns
-        )
+        self._set_read_delay_min_ns: Callable[
+            [
+                DriverPointer,
+                c_uint64,
+            ],
+            int,
+        ] = lib.ls_option_session_read_delay_min_ns
         lib.ls_option_session_read_delay_min_ns.argtypes = [
             DriverPointer,
-            c_int,
+            c_uint64,
         ]
         lib.ls_option_session_read_delay_min_ns.restype = c_uint8
 
-        self._set_read_delay_max_ns: Callable[[DriverPointer, c_int], int] = (
-            lib.ls_option_session_read_delay_max_ns
-        )
+        self._set_read_delay_max_ns: Callable[
+            [
+                DriverPointer,
+                c_uint64,
+            ],
+            int,
+        ] = lib.ls_option_session_read_delay_max_ns
         lib.ls_option_session_read_delay_max_ns.argtypes = [
             DriverPointer,
-            c_int,
+            c_uint64,
         ]
         lib.ls_option_session_read_delay_max_ns.restype = c_uint8
 
-        self._set_read_delay_backoff_factor: Callable[[DriverPointer, c_int], int] = (
-            lib.ls_option_session_read_delay_backoff_factor
-        )
+        self._set_read_delay_backoff_factor: Callable[
+            [
+                DriverPointer,
+                c_uint8,
+            ],
+            int,
+        ] = lib.ls_option_session_read_delay_backoff_factor
         lib.ls_option_session_read_delay_backoff_factor.argtypes = [
             DriverPointer,
-            c_int,
+            c_uint8,
         ]
         lib.ls_option_session_read_delay_backoff_factor.restype = c_uint8
 
-        self._set_return_char: Callable[[DriverPointer, c_char_p], int] = (
-            lib.ls_option_session_return_char
-        )
+        self._set_return_char: Callable[
+            [
+                DriverPointer,
+                c_char_p,
+            ],
+            int,
+        ] = lib.ls_option_session_return_char
         lib.ls_option_session_return_char.argtypes = [
             DriverPointer,
             c_char_p,
         ]
         lib.ls_option_session_return_char.restype = c_uint8
 
-        self._set_operation_timeout_ns: Callable[[DriverPointer, c_int], int] = (
-            lib.ls_option_session_operation_timeout_ns
-        )
+        self._set_operation_timeout_ns: Callable[
+            [
+                DriverPointer,
+                c_uint64,
+            ],
+            int,
+        ] = lib.ls_option_session_operation_timeout_ns
         lib.ls_option_session_operation_timeout_ns.argtypes = [
             DriverPointer,
-            c_int,
+            c_uint64,
         ]
         lib.ls_option_session_operation_timeout_ns.restype = c_uint8
 
-        self._set_operation_max_search_depth: Callable[[DriverPointer, c_int], int] = (
-            lib.ls_option_session_operation_max_search_depth
-        )
+        self._set_operation_max_search_depth: Callable[
+            [
+                DriverPointer,
+                c_uint64,
+            ],
+            int,
+        ] = lib.ls_option_session_operation_max_search_depth
         lib.ls_option_session_operation_max_search_depth.argtypes = [
             DriverPointer,
-            c_int,
+            c_uint64,
         ]
         lib.ls_option_session_operation_max_search_depth.restype = c_uint8
 
-        self._set_recorder_path: Callable[[DriverPointer, c_char_p], int] = (
-            lib.ls_option_session_record_destination
-        )
+        self._set_recorder_path: Callable[
+            [
+                DriverPointer,
+                c_char_p,
+            ],
+            int,
+        ] = lib.ls_option_session_record_destination
         lib.ls_option_session_record_destination.argtypes = [
             DriverPointer,
             c_char_p,
         ]
         lib.ls_option_session_record_destination.restype = c_uint8
 
-    def set_read_size(self, ptr: DriverPointer, read_size: c_int) -> int:
+    def set_read_size(self, ptr: DriverPointer, read_size: c_uint64) -> int:
         """
         Set the session read size.
 
@@ -227,7 +262,7 @@ class LibScrapliSessionOptionsMapping:
         """
         return self._set_read_size(ptr, read_size)
 
-    def set_read_delay_min_ns(self, ptr: DriverPointer, read_delay_min_ns: c_int) -> int:
+    def set_read_delay_min_ns(self, ptr: DriverPointer, read_delay_min_ns: c_uint64) -> int:
         """
         Set the session minimum read delay in ns.
 
@@ -247,7 +282,7 @@ class LibScrapliSessionOptionsMapping:
         """
         return self._set_read_delay_min_ns(ptr, read_delay_min_ns)
 
-    def set_read_delay_max_ns(self, ptr: DriverPointer, read_delay_max_ns: c_int) -> int:
+    def set_read_delay_max_ns(self, ptr: DriverPointer, read_delay_max_ns: c_uint64) -> int:
         """
         Set the session maximum read delay in ns.
 
@@ -268,7 +303,7 @@ class LibScrapliSessionOptionsMapping:
         return self._set_read_delay_max_ns(ptr, read_delay_max_ns)
 
     def set_read_delay_backoff_factor(
-        self, ptr: DriverPointer, read_delay_backoff_factor: c_int
+        self, ptr: DriverPointer, read_delay_backoff_factor: c_uint8
     ) -> int:
         """
         Set the session read delay backoff factor.
@@ -309,7 +344,9 @@ class LibScrapliSessionOptionsMapping:
         """
         return self._set_return_char(ptr, return_char)
 
-    def set_operation_timeout_ns(self, ptr: DriverPointer, set_operation_timeout_ns: c_int) -> int:
+    def set_operation_timeout_ns(
+        self, ptr: DriverPointer, set_operation_timeout_ns: c_uint64
+    ) -> int:
         """
         Set the session operation timeout in ns.
 
@@ -330,7 +367,7 @@ class LibScrapliSessionOptionsMapping:
         return self._set_operation_timeout_ns(ptr, set_operation_timeout_ns)
 
     def set_operation_max_search_depth(
-        self, ptr: DriverPointer, set_operation_max_search_depth: c_int
+        self, ptr: DriverPointer, set_operation_max_search_depth: c_uint64
     ) -> int:
         """
         Set the session maximum prompt search depth

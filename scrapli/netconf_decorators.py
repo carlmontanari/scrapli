@@ -1,7 +1,7 @@
 """scrapli.netconf_decorators"""
 
 from collections.abc import Awaitable
-from ctypes import c_int
+from ctypes import c_uint64
 from functools import update_wrapper
 from typing import TYPE_CHECKING, Callable, Concatenate, ParamSpec
 
@@ -60,7 +60,7 @@ def handle_operation_timeout(
 
         status = inst.ffi_mapping.options_mapping.session.set_operation_timeout_ns(
             inst._ptr_or_exception(),
-            c_int(operation_timeout_ns),
+            c_uint64(operation_timeout_ns),
         )
         if status != 0:
             raise OptionsException("failed to set session operation timeout")
@@ -69,7 +69,7 @@ def handle_operation_timeout(
 
         status = inst.ffi_mapping.options_mapping.session.set_operation_timeout_ns(
             inst._ptr_or_exception(),
-            c_int(operation_timeout_ns),
+            c_uint64(operation_timeout_ns),
         )
         if status != 0:
             raise OptionsException("failed to set session operation timeout")
@@ -127,7 +127,7 @@ def handle_operation_timeout_async(
 
         status = inst.ffi_mapping.options_mapping.session.set_operation_timeout_ns(
             inst._ptr_or_exception(),
-            c_int(operation_timeout_ns),
+            c_uint64(operation_timeout_ns),
         )
         if status != 0:
             raise OptionsException("failed to set session operation timeout")
@@ -136,7 +136,7 @@ def handle_operation_timeout_async(
 
         status = inst.ffi_mapping.options_mapping.session.set_operation_timeout_ns(
             inst._ptr_or_exception(),
-            c_int(operation_timeout_ns),
+            c_uint64(operation_timeout_ns),
         )
         if status != 0:
             raise OptionsException("failed to set session operation timeout")
