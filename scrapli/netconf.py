@@ -195,7 +195,6 @@ class Options:
     error_tag: Optional[str] = None
     preferred_version: Optional[Version] = None
     message_poll_interval_ns: Optional[int] = None
-    close_expect_no_reply: bool = False
     close_force: bool = False
 
     _error_tag: Optional[c_char_p] = field(init=False, default=None, repr=False)
@@ -262,6 +261,7 @@ class Options:
             f"error_tag={self.error_tag!r}, "
             f"preferred_version={self.preferred_version!r} "
             f"message_poll_interval_ns={self.message_poll_interval_ns!r})"
+            f"close_force={self.close_force!r})"
         )
 
 
@@ -357,7 +357,6 @@ class Netconf:
 
         """
         self.close(
-            expect_no_reply=self.options.close_expect_no_reply,
             force=self.options.close_force,
         )
 
@@ -401,7 +400,6 @@ class Netconf:
 
         """
         await self.close_async(
-            expect_no_reply=self.options.close_expect_no_reply,
             force=self.options.close_force,
         )
 
@@ -494,19 +492,16 @@ class Netconf:
 
     def _close(
         self,
-        expect_no_reply: bool,
         force: bool,
     ) -> c_uint:
         operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
-        _expect_no_reply = c_bool(expect_no_reply)
         _force = c_bool(force)
 
         status = self.ffi_mapping.netconf_mapping.close(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
             cancel=cancel,
-            expect_no_reply=_expect_no_reply,
             force=_force,
         )
         if status != 0:
@@ -517,15 +512,12 @@ class Netconf:
     def close(
         self,
         *,
-        expect_no_reply: bool = False,
         force: bool = False,
     ) -> Result:
         """
         Close the netconf connection.
 
         Args:
-            expect_no_reply: causes the connection to send a close-session rpc but not to listen
-                for that rpc's reply, and instead immediately closing the connection after sending
             force: skips sending a close-session rpc and just directly shuts down the connection
 
         Returns:
@@ -536,7 +528,7 @@ class Netconf:
             CloseException: if the operation fails
 
         """
-        operation_id = self._close(expect_no_reply=expect_no_reply, force=force)
+        operation_id = self._close(force=force)
 
         result = self._get_result(operation_id=operation_id)
 
@@ -547,15 +539,12 @@ class Netconf:
     async def close_async(
         self,
         *,
-        expect_no_reply: bool = False,
         force: bool = False,
     ) -> Result:
         """
         Close the netconf connection.
 
         Args:
-            expect_no_reply: causes the connection to send a close-session rpc but not to listen
-                for that rpc's reply, and instead immediately closing the connection after sending
             force: skips sending a close-session rpc and just directly shuts down the connection
 
         Returns:
@@ -566,7 +555,7 @@ class Netconf:
             CloseException: if the operation fails
 
         """
-        operation_id = self._close(expect_no_reply=expect_no_reply, force=force)
+        operation_id = self._close(force=force)
 
         result = await self._get_result_async(operation_id=operation_id)
 

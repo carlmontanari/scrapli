@@ -1,3 +1,4 @@
+import subprocess
 import sys
 from collections.abc import Callable
 
@@ -16,6 +17,7 @@ from scrapli import (
 from scrapli.cli_result import Result
 
 IS_DARWIN = sys.platform == "darwin"
+EOS_AVAILABLE = "ceos" in subprocess.getoutput("docker ps")
 SSH_PORT = 22
 NETCONF_PORT = 830
 
@@ -28,6 +30,10 @@ def _original_name_to_filename(originalname: str) -> str:
 def cli(platform, transport) -> Cli:
     """Fixture to provide a Cli instance for functional testing"""
     if platform == "arista_eos":
+        if EOS_AVAILABLE is False:
+            # because we cant have this publicly in ci afaik
+            pytest.skip("eos not available, skipping...")
+
         host = "localhost" if IS_DARWIN else "172.20.20.17"
         port = 22022 if IS_DARWIN else SSH_PORT
         auth_options = AuthOptions(
@@ -97,6 +103,10 @@ def cli_assert_result(request: pytest.FixtureRequest) -> Callable[[Result], None
 def netconf(platform, transport) -> Netconf:
     """Fixture to provide a Netconf instance for functional testing"""
     if platform == "arista_eos":
+        if EOS_AVAILABLE is False:
+            # because we cant have this publicly in ci afaik
+            pytest.skip("eos not available, skipping...")
+
         host = "localhost" if IS_DARWIN else "172.20.20.17"
         port = 22830 if IS_DARWIN else NETCONF_PORT
         auth_options = AuthOptions(

@@ -82,7 +82,6 @@ class LibScrapliNetconfMapping:
                 OperationIdPointer,
                 CancelPointer,
                 c_bool,
-                c_bool,
             ],
             int,
         ] = lib.ls_netconf_close
@@ -90,7 +89,6 @@ class LibScrapliNetconfMapping:
             DriverPointer,
             OperationIdPointer,
             CancelPointer,
-            c_bool,
             c_bool,
         ]
         lib.ls_netconf_close.restype = c_uint8
@@ -592,7 +590,6 @@ class LibScrapliNetconfMapping:
         ptr: DriverPointer,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
-        expect_no_reply: c_bool,
         force: c_bool,
     ) -> int:
         """
@@ -604,9 +601,6 @@ class LibScrapliNetconfMapping:
             ptr: the ptr to the libscrapli netconf object.
             operation_id: c_int pointer that is filled with the operation id to poll for completion.
             cancel: bool pointer that can be set to true to cancel the operation.
-            expect_no_reply: indicates the connection should send a close-session rpc but assume the
-                server receives it and dont listen for a rpc-reply -- useful if the server gets the
-                request and immediately closes the connection
             force: bool indicating if the connection should skip sending close-session rpc or not
 
         Returns:
@@ -621,7 +615,6 @@ class LibScrapliNetconfMapping:
             ptr,
             operation_id,
             cancel,
-            expect_no_reply,
             force,
         )
 

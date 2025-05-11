@@ -17,8 +17,22 @@ ACTION_ARGVALUES = (
         "netopeer",
         "bin",
     ),
+    (
+        """
+        <system xmlns="urn:dummy:actions">
+            <reboot>
+                <delay>5</delay>
+            </reboot>
+        </system>
+        """,
+        "netopeer",
+        "ssh2",
+    ),
 )
-ACTION_IDS = ("simple",)
+ACTION_IDS = (
+    "netopeer-bin-simple",
+    "netopeer-ssh2-simple",
+)
 
 
 @pytest.mark.parametrize(
