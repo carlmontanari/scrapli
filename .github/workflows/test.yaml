@@ -40,6 +40,10 @@ jobs:
         run: |
           python -m pip install -r requirements-dev.txt
 
+      - name: install scrapli+libscrapli
+        run: |
+          python -m pip install .
+
       - name: setup tmate session
         uses: mxschmitt/action-tmate@v3
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_unit }}
@@ -83,6 +87,10 @@ jobs:
       - name: install python dev tools
         run: |
           python -m pip install -r requirements-dev.txt
+
+      - name: install scrapli+libscrapli
+        run: |
+          python -m pip install .
 
       - name: setup tmate session
         uses: mxschmitt/action-tmate@v3

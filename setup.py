@@ -14,7 +14,7 @@ from setuptools.command.editable_wheel import editable_wheel
 from setuptools.command.sdist import sdist
 
 LIBSCRAPLI_REPO = os.environ.get("LIBSCRAPLI_REPO", "https://github.com/scrapli/libscrapli")
-LIBSCRAPLI_TAG = os.environ.get("LIBSCRAPLI_TAG", "v0.0.1-alpha.3")
+LIBSCRAPLI_TAG = os.environ.get("LIBSCRAPLI_TAG", "v0.0.1-alpha.4")
 LIBSCRAPLI_BUILD_PATH_ENV = "LIBSCRAPLI_BUILD_PATH"
 LIBSCRPALI_ZIG_TRIPLE_ENV = "LIBSCRAPLI_ZIG_TRIPLE"
 
