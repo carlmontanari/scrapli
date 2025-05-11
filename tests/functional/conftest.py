@@ -1,210 +1,174 @@
+import subprocess
+import sys
+from collections.abc import Callable
+
 import pytest
 
-TIMEOUT_SOCKET = 60
-TIMEOUT_TRANSPORT = 60
-TIMEOUT_OPS = 60
-TELNET_TRANSPORTS = (
-    "telnet",
-    "asynctelnet",
+from scrapli import (
+    AuthOptions,
+    Cli,
+    LookupKeyValue,
+    Netconf,
+    SessionOptions,
+    TransportBinOptions,
+    TransportOptions,
+    TransportSsh2Options,
 )
+from scrapli.cli_result import Result
+
+IS_DARWIN = sys.platform == "darwin"
+EOS_AVAILABLE = "ceos" in subprocess.getoutput("docker ps")
+SSH_PORT = 22
+NETCONF_PORT = 830
 
 
-def pytest_addoption(parser):
-    parser.addoption(
-        "--update", action="store_true", default=False, help="pass to update test output"
-    )
+def _original_name_to_filename(originalname: str) -> str:
+    return originalname.removeprefix("test_").replace("_", "-")
 
 
-@pytest.fixture
-def update(request):
-    return request.config.getoption("--update")
-
-
-@pytest.fixture(scope="session")
-def real_invalid_ssh_key_path(test_data_path):
-    return f"{test_data_path}/files/invalid_key"
-
-
-@pytest.fixture(scope="session")
-def real_valid_ssh_key_path(test_data_path):
-    return f"{test_data_path}/files/scrapli_key"
-
-
-@pytest.fixture(
-    scope="class",
-    params=["cisco_iosxe", "cisco_nxos", "cisco_iosxr", "arista_eos", "juniper_junos"],
-)
-def device_type(request):
-    yield request.param
-
-
-@pytest.fixture(scope="class", params=["system", "ssh2", "paramiko", "telnet"])
-def transport(request):
-    yield request.param
-
-
-@pytest.fixture(scope="function", params=["asyncssh", "asynctelnet"])
-def async_transport(request):
-    yield request.param
-
-
-@pytest.fixture(scope="class")
-def conn(test_devices_dict, device_type, transport):
-    device = test_devices_dict[device_type].copy()
-    driver = device.pop("driver")
-    device.pop("base_config")
-    device.pop("async_driver")
-
-    port = device.pop("port")
-    if transport in TELNET_TRANSPORTS:
-        port = port + 1
-
-    conn = driver(
-        **device,
-        port=port,
-        transport=transport,
-        timeout_socket=TIMEOUT_SOCKET,
-        timeout_transport=TIMEOUT_TRANSPORT,
-        timeout_ops=TIMEOUT_OPS,
-    )
-    conn.open()
-    return conn
-
-
-# scoping to function is probably dumb but dont have to screw around with which event loop is what this way
 @pytest.fixture(scope="function")
-async def async_conn(test_devices_dict, device_type, async_transport):
-    device = test_devices_dict[device_type].copy()
-    driver = device.pop("async_driver")
-    device.pop("base_config")
-    device.pop("driver")
+def cli(platform, transport) -> Cli:
+    """Fixture to provide a Cli instance for functional testing"""
+    if platform == "arista_eos":
+        if EOS_AVAILABLE is False:
+            # because we cant have this publicly in ci afaik
+            pytest.skip("eos not available, skipping...")
 
-    port = device.pop("port")
-    if async_transport in TELNET_TRANSPORTS:
-        port = port + 1
+        host = "localhost" if IS_DARWIN else "172.20.20.17"
+        port = 22022 if IS_DARWIN else SSH_PORT
+        auth_options = AuthOptions(
+            username="admin",
+            password="admin",
+            lookups=[LookupKeyValue(key="enable", value="libscrapli")],
+        )
+    else:
+        host = "localhost" if sys.platform == "darwin" else "172.20.20.16"
+        port = 21022 if IS_DARWIN else SSH_PORT
+        auth_options = AuthOptions(
+            username="admin",
+            password="NokiaSrl1!",
+        )
 
-    async_conn = driver(
-        **device,
+    if transport == "bin":
+        transport_options = TransportOptions(TransportBinOptions())
+    else:
+        transport_options = TransportOptions(TransportSsh2Options())
+
+    return Cli(
+        definition_file_or_name=platform,
+        host=host,
         port=port,
-        transport=async_transport,
-        timeout_socket=TIMEOUT_SOCKET,
-        timeout_transport=TIMEOUT_TRANSPORT,
-        timeout_ops=TIMEOUT_OPS,
+        auth_options=auth_options,
+        session_options=SessionOptions(
+            # because we do the info from state on srl :)
+            operation_timeout_s=300,
+        ),
+        transport_options=transport_options,
     )
-    await async_conn.open()
-    # yield then ensure we close since we are not persisting connections between tests for now
-    yield async_conn
-    if async_conn.isalive():
-        await async_conn.close()
 
 
-@pytest.fixture(scope="class")
-def iosxe_conn(test_devices_dict, transport):
-    device = test_devices_dict["cisco_iosxe"].copy()
-    driver = device.pop("driver")
-    device.pop("base_config")
-    device.pop("async_driver")
+@pytest.fixture(scope="function")
+def cli_assert_result(request: pytest.FixtureRequest) -> Callable[[Result], None]:
+    """Fixture to update or assert golden files for functional tests"""
+    filename = _original_name_to_filename(originalname=request.node.originalname)
+    golden_dir = f"{request.node.path.parent}/golden/cli"
+    f = f"{golden_dir}/{filename}"
 
-    port = device.pop("port")
-    if transport in TELNET_TRANSPORTS:
-        port = port + 1
+    if id_ := getattr(getattr(request.node, "callspec", False), "id", False):
+        f = f"{f}-{id_}"
 
-    iosxe_conn = driver(
-        **device,
+    def _cli_assert_result(actual: Result) -> None:
+        if request.config.getoption("--update"):
+            with open(file=f, mode="w") as _f:
+                _f.write(actual.result)
+
+            return
+
+        with open(file=f, mode="r", newline="") as _f:
+            golden = _f.read()
+
+        assert actual.result == golden
+
+        assert actual.start_time != 0
+        assert actual.end_time != 0
+        assert actual.elapsed_time_seconds != 0
+        assert len(actual.results) != 0
+        assert len(actual.results_raw) != 0
+        assert actual.failed is False
+
+    return _cli_assert_result
+
+
+@pytest.fixture(scope="function")
+def netconf(platform, transport) -> Netconf:
+    """Fixture to provide a Netconf instance for functional testing"""
+    if platform == "arista_eos":
+        if EOS_AVAILABLE is False:
+            # because we cant have this publicly in ci afaik
+            pytest.skip("eos not available, skipping...")
+
+        host = "localhost" if IS_DARWIN else "172.20.20.17"
+        port = 22830 if IS_DARWIN else NETCONF_PORT
+        auth_options = AuthOptions(
+            username="admin",
+            password="admin",
+        )
+    elif platform == "nokia_srl":
+        host = "localhost" if sys.platform == "darwin" else "172.20.20.16"
+        port = 21830 if IS_DARWIN else NETCONF_PORT
+        auth_options = AuthOptions(
+            username="admin",
+            password="NokiaSrl1!",
+        )
+    else:
+        # netopeer server
+        host = "localhost" if sys.platform == "darwin" else "172.20.20.18"
+        port = 23830 if IS_DARWIN else NETCONF_PORT
+        auth_options = AuthOptions(
+            username="root",
+            password="password",
+        )
+
+    if transport == "bin":
+        transport_options = TransportOptions(TransportBinOptions())
+    else:
+        transport_options = TransportOptions(TransportSsh2Options())
+
+    return Netconf(
+        host=host,
         port=port,
-        transport=transport,
-        timeout_socket=TIMEOUT_SOCKET,
+        auth_options=auth_options,
+        transport_options=transport_options,
     )
-    iosxe_conn.open()
-    return iosxe_conn
 
 
-@pytest.fixture(scope="class")
-def iosxr_conn(test_devices_dict, transport):
-    device = test_devices_dict["cisco_iosxr"].copy()
-    driver = device.pop("driver")
-    device.pop("base_config")
-    device.pop("async_driver")
+@pytest.fixture(scope="function")
+def netconf_assert_result(request: pytest.FixtureRequest) -> Callable[[Result], None]:
+    """Fixture to update or assert golden files for functional tests"""
+    filename = _original_name_to_filename(originalname=request.node.originalname)
+    golden_dir = f"{request.node.path.parent}/golden/netconf"
+    f = f"{golden_dir}/{filename}"
 
-    port = device.pop("port")
-    if transport in TELNET_TRANSPORTS:
-        port = port + 1
+    if id_ := getattr(getattr(request.node, "callspec", False), "id", False):
+        f = f"{f}-{id_}"
 
-    conn = driver(
-        **device,
-        port=port,
-        transport=transport,
-        timeout_socket=TIMEOUT_SOCKET,
-        timeout_transport=TIMEOUT_TRANSPORT,
-        timeout_ops=TIMEOUT_OPS,
-    )
-    conn.open()
-    return conn
+    def _netconf_assert_result(actual: Result) -> None:
+        if request.config.getoption("--update"):
+            with open(file=f, mode="w") as _f:
+                _f.write(actual.result)
 
+            return
 
-@pytest.fixture(scope="class")
-def junos_conn(test_devices_dict, transport):
-    device = test_devices_dict["juniper_junos"].copy()
-    driver = device.pop("driver")
-    device.pop("base_config")
-    device.pop("async_driver")
+        with open(file=f, mode="r", newline="") as _f:
+            golden = _f.read()
 
-    port = device.pop("port")
-    if transport in TELNET_TRANSPORTS:
-        port = port + 1
+        assert actual.result == golden
 
-    conn = driver(
-        **device,
-        port=port,
-        transport=transport,
-        timeout_socket=TIMEOUT_SOCKET,
-        timeout_transport=TIMEOUT_TRANSPORT,
-        timeout_ops=TIMEOUT_OPS,
-    )
-    conn.open()
-    return conn
+        assert actual.start_time != 0
+        assert actual.end_time != 0
+        assert actual.elapsed_time_seconds != 0
+        assert len(actual.result) != 0
+        assert len(actual.result_raw) != 0
+        assert actual.failed is False
 
-
-@pytest.fixture(scope="class")
-def eos_conn(test_devices_dict, transport):
-    device = test_devices_dict["arista_eos"].copy()
-    driver = device.pop("driver")
-    device.pop("base_config")
-    device.pop("async_driver")
-
-    port = device.pop("port")
-    if transport in TELNET_TRANSPORTS:
-        port = port + 1
-
-    conn = driver(
-        **device,
-        port=port,
-        transport=transport,
-        timeout_socket=TIMEOUT_SOCKET,
-    )
-    conn.open()
-    return conn
-
-
-@pytest.fixture(scope="class")
-def nxos_conn(test_devices_dict, transport):
-    if transport in TELNET_TRANSPORTS:
-        pytest.skip("skipping telnet for nxos hosts")
-
-    device = test_devices_dict["cisco_nxos"].copy()
-    driver = device.pop("driver")
-    device.pop("base_config")
-    device.pop("async_driver")
-
-    port = device.pop("port")
-    if transport in TELNET_TRANSPORTS:
-        port = port + 1
-
-    conn = driver(
-        **device,
-        port=port,
-        transport=transport,
-        timeout_socket=TIMEOUT_SOCKET,
-    )
-    conn.open()
-    return conn
+    return _netconf_assert_result

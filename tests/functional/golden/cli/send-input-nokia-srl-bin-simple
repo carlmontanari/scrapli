@@ -1,0 +1,229 @@
+system {
+        control-plane-traffic {
+            input {
+                acl {
+                    acl-filter cpm type ipv4 {
+                    }
+                    acl-filter cpm type ipv6 {
+                    }
+                }
+            }
+        }
+        aaa {
+            authentication {
+                idle-timeout 7200
+                authentication-method [
+                    local
+                ]
+                linuxadmin-user {
+                    password $y$j9T$M4zc5SlI3znLz6Zk1B1sK.$V5GCtle0EBx7hWhngQ5u.pOQwO/KDVEQHtBqJ66EhW5
+                }
+            }
+            server-group local {
+                type local
+            }
+        }
+        ssh-server mgmt {
+            admin-state enable
+            network-instance mgmt
+            use-credentialz true
+        }
+        ssh-server mgmt-netconf {
+            admin-state enable
+            network-instance mgmt
+            port 830
+            disable-shell true
+        }
+        lldp {
+            admin-state enable
+        }
+        tls {
+            server-profile clab-profile {
+                key $aes1$ATRYAbgW8XCbA28=$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
+                certificate "-----BEGIN CERTIFICATE-----
+MIID8jCCAtqgAwIBAgIUEc2RnwCnuLpgdYBvyiWoA6mILcUwDQYJKoZIhvcNAQEL
+BQAwXTELMAkGA1UEBhMCQkUxEDAOBgNVBAcTB0FudHdlcnAxDjAMBgNVBAoTBU5v
+a2lhMRYwFAYDVQQLEw1Db250YWluZXIgbGFiMRQwEgYDVQQDEwtzcmwgUm9vdCBD
+QTAeFw0yMzAxMzEyMDAxMDBaFw0yNDAxMzEyMDAxMDBaMFwxCzAJBgNVBAYTAkJF
+MRAwDgYDVQQHEwdBbnR3ZXJwMQ4wDAYDVQQKEwVOb2tpYTEWMBQGA1UECxMNQ29u
+dGFpbmVyIGxhYjETMBEGA1UEAxMKc3JsLnNybC5pbzCCASIwDQYJKoZIhvcNAQEB
+BQADggEPADCCAQoCggEBAMrue28sWGLoMhPozVtt/Z8KrVMysJW7753aDf9sOseO
+rHqH7CPKOr3TEwFO39d7id6mqLc7dxpUVWdXSsdBxBnW/XA4hx5IEP+vjJS6vzBf
+/jQhgaMpcvyZ6HmldzZZ54yx91L7W80KMbQJ17+WSbXxuUPVEQehCPVgrS9FyCKv
+qCc8iJmk/oTXYJckD3mF0lYuGJFTcnc/HdTMjLsJ6dVAl+SyEJXzMSRaKwAr5aHP
+HQ2enWaR0+bJltFC369REA9ni8qQ+OIXZyNyj37tVBlIY3ws3+NoHIMkjScoRgaQ
+C0xhY+McYKGfsYR3l3nno6B6Axvi74EZK6CDazKuE4UCAwEAAaOBqjCBpzAOBgNV
+HQ8BAf8EBAMCBaAwHQYDVR0lBBYwFAYIKwYBBQUHAwEGCCsGAQUFBwMCMAwGA1Ud
+EwEB/wQCMAAwHQYDVR0OBBYEFJR1h8HJM4CWUAfRKvROrWXnmjQMMB8GA1UdIwQY
+MBaAFPzZSIYYJqoFFINeOCLtlqCnfCTPMCgGA1UdEQQhMB+CA3NybIIMY2xhYi1z
+cmwtc3Jsggpzcmwuc3JsLmlvMA0GCSqGSIb3DQEBCwUAA4IBAQCQxBOqqorPUNK+
+iwFSPZ9UjDjNFwJlm7blg8cJ7y9sNLi5gfl/gjgzA5fSOxoPpNKAn9jWPMIu2yUr
+9vEho8l0pitjry+RpgglX//wcdyoTrQBNrA6fZmY/XGjvlWPtfqiSdhhFO2hduJZ
+y+b1P8IjA8fd/odpD3cPWRLbedtvUSZ3R7onngDaLCNu4BaryVwupau+HeVTd8iO
+hLNNOPVX4mlAyJOmjGcH3x2XZEGSLVAKbIDbsvqgj0QkIWoXqJgPjwPhP8/TMKNG
+LEKz+Oa+8boGhcZcgfVslUZaHJGar2jv2C2wpSENThxXh5nDYWWyx6/qkzqzW6YH
+o+phN+pt
+-----END CERTIFICATE-----
+"
+                authenticate-client false
+            }
+        }
+        grpc-server mgmt {
+            admin-state enable
+            tls-profile clab-profile
+            network-instance mgmt
+            services [
+                gnmi
+                gnoi
+            ]
+            unix-socket {
+                admin-state enable
+            }
+        }
+        json-rpc-server {
+            admin-state enable
+            network-instance mgmt {
+                http {
+                    admin-state enable
+                }
+                https {
+                    admin-state enable
+                    tls-profile clab-profile
+                }
+            }
+        }
+        banner {
+            login-banner "................................................................
+:                  Welcome to Nokia SR Linux!                  :
+:              Open Network OS for the NetOps era.             :
+:                                                              :
+:    This is a freely distributed official container image.    :
+:                      Use it - Share it                       :
+:                                                              :
+: Get started: https://learn.srlinux.dev                       :
+: Container:   https://go.srlinux.dev/container-image          :
+: Docs:        https://doc.srlinux.dev/22-11                   :
+: Rel. notes:  https://doc.srlinux.dev/rn22-11-1               :
+: YANG:        https://yang.srlinux.dev/v22.11.1               :
+: Discord:     https://go.srlinux.dev/discord                  :
+: Contact:     https://go.srlinux.dev/contact-sales            :
+................................................................
+"
+        }
+        logging {
+            buffer messages {
+                rotate 3
+                size 10000000
+                facility local6 {
+                    priority {
+                        match-above informational
+                    }
+                }
+            }
+            buffer system {
+                facility auth {
+                    priority {
+                        match-above warning
+                    }
+                }
+                facility cron {
+                    priority {
+                        match-above warning
+                    }
+                }
+                facility daemon {
+                    priority {
+                        match-above warning
+                    }
+                }
+                facility ftp {
+                    priority {
+                        match-above warning
+                    }
+                }
+                facility kern {
+                    priority {
+                        match-above warning
+                    }
+                }
+                facility lpr {
+                    priority {
+                        match-above warning
+                    }
+                }
+                facility mail {
+                    priority {
+                        match-above warning
+                    }
+                }
+                facility news {
+                    priority {
+                        match-above warning
+                    }
+                }
+                facility syslog {
+                    priority {
+                        match-above warning
+                    }
+                }
+                facility user {
+                    priority {
+                        match-above warning
+                    }
+                }
+                facility uucp {
+                    priority {
+                        match-above warning
+                    }
+                }
+                facility local0 {
+                    priority {
+                        match-above warning
+                    }
+                }
+                facility local1 {
+                    priority {
+                        match-above warning
+                    }
+                }
+                facility local2 {
+                    priority {
+                        match-above warning
+                    }
+                }
+                facility local3 {
+                    priority {
+                        match-above warning
+                    }
+                }
+                facility local4 {
+                    priority {
+                        match-above warning
+                    }
+                }
+                facility local5 {
+                    priority {
+                        match-above warning
+                    }
+                }
+                facility local7 {
+                    priority {
+                        match-above warning
+                    }
+                }
+            }
+            file messages {
+                rotate 3
+                size 10000000
+                facility local6 {
+                    priority {
+                        match-above warning
+                    }
+                }
+            }
+        }
+        netconf-server default {
+            admin-state enable
+            ssh-server mgmt-netconf
+        }
+    }
