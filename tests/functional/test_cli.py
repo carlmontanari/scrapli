@@ -1,6 +1,9 @@
 import pytest
 
-GET_PROMPT_ARGNAMES = ("platform", "transport")
+GET_PROMPT_ARGNAMES = (
+    "platform",
+    "transport",
+)
 GET_PROMPT_ARGVALUES = (
     (
         "arista_eos",
@@ -382,14 +385,24 @@ def test_send_input(
         if post_open_requested_mode is not None:
             c.enter_mode(requested_mode=post_open_requested_mode)
 
-        cli_assert_result(
-            actual=c.send_input(
-                input_=input_,
-                requested_mode=requested_mode,
-                retain_input=retain_input,
-                retain_trailing_prompt=retain_trailing_prompt,
-            )
+        actual = c.send_input(
+            input_=input_,
+            requested_mode=requested_mode,
+            retain_input=retain_input,
+            retain_trailing_prompt=retain_trailing_prompt,
         )
+
+        if input_ == "info from state":
+            # we dont save the 40mb of output from this command, and also even if we did
+            # the counters etc would change so comparing would be pointless
+            assert actual.start_time != 0
+            assert actual.end_time != 0
+            assert actual.elapsed_time_seconds != 0
+            assert len(actual.results) != 0
+            assert len(actual.results_raw) != 0
+            assert actual.failed is False
+        else:
+            cli_assert_result(actual=actual)
 
 
 @pytest.mark.asyncio
@@ -420,6 +433,167 @@ async def test_send_input_async(
             requested_mode=requested_mode,
             retain_input=retain_input,
             retain_trailing_prompt=retain_trailing_prompt,
+        )
+
+        if input_ == "info from state":
+            assert actual.start_time != 0
+            assert actual.end_time != 0
+            assert actual.elapsed_time_seconds != 0
+            assert len(actual.results) != 0
+            assert len(actual.results_raw) != 0
+            assert actual.failed is False
+        else:
+            cli_assert_result(actual=actual)
+
+
+SEND_INPUTS_ARGNAMES = (
+    "inputs",
+    "platform",
+    "transport",
+)
+SEND_INPUTS_ARGVALUES = (
+    (
+        ("show version | i Kern",),
+        "arista_eos",
+        "bin",
+    ),
+    (
+        ("show version | i Kern",),
+        "arista_eos",
+        "ssh2",
+    ),
+    (
+        ("show version | i Kern", "show run"),
+        "arista_eos",
+        "bin",
+    ),
+    (
+        ("show version | i Kern", "show run"),
+        "arista_eos",
+        "ssh2",
+    ),
+    (
+        ("info system", "info"),
+        "nokia_srl",
+        "bin",
+    ),
+    (
+        ("info system", "info"),
+        "nokia_srl",
+        "ssh2",
+    ),
+)
+SEND_INPUTS_IDS = (
+    "arista-eos-bin-same-privilege-level-single-input",
+    "arista-eos-ssh2-same-privilege-level-single-input",
+    "arista-eos-bin-same-privilege-level-multi-input",
+    "arista-eos-ssh2-same-privilege-level-multi-input",
+    "nokia-srl-bin-same-privilege-level-multi-input",
+    "nokia-srl-ssh2-same-privilege-level-multi-input",
+)
+
+
+@pytest.mark.parametrize(
+    argnames=SEND_INPUTS_ARGNAMES,
+    argvalues=SEND_INPUTS_ARGVALUES,
+    ids=SEND_INPUTS_IDS,
+)
+def test_send_inputs(inputs, cli, cli_assert_result):
+    with cli as c:
+        cli_assert_result(actual=c.send_inputs(inputs=inputs))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    argnames=SEND_INPUTS_ARGNAMES,
+    argvalues=SEND_INPUTS_ARGVALUES,
+    ids=SEND_INPUTS_IDS,
+)
+async def test_send_inputs_async(inputs, cli, cli_assert_result):
+    async with cli as c:
+        actual = await c.send_inputs_async(inputs=inputs)
+
+        cli_assert_result(actual=actual)
+
+
+SEND_PROMPTED_INPUT_ARGNAMES = (
+    "input_",
+    "prompt",
+    "response",
+    "requested_mode",
+    "platform",
+    "transport",
+)
+SEND_PROMPTED_INPUT_ARGVALUES = (
+    (
+        'read -p "Will you prompt me plz? " answer',
+        "Will you prompt me plz?",
+        "nou",
+        "bash",
+        "arista_eos",
+        "bin",
+    ),
+    (
+        'read -p "Will you prompt me plz? " answer',
+        "Will you prompt me plz?",
+        "nou",
+        "bash",
+        "arista_eos",
+        "ssh2",
+    ),
+)
+SEND_PROMPTED_INPUT_IDS = (
+    "arista-eos-bin",
+    "arista-eos-ssh2",
+)
+
+
+@pytest.mark.parametrize(
+    argnames=SEND_PROMPTED_INPUT_ARGNAMES,
+    argvalues=SEND_PROMPTED_INPUT_ARGVALUES,
+    ids=SEND_PROMPTED_INPUT_IDS,
+)
+def test_send_prompted_input(
+    input_,
+    prompt,
+    response,
+    requested_mode,
+    cli,
+    cli_assert_result,
+):
+    with cli as c:
+        cli_assert_result(
+            actual=c.send_prompted_input(
+                input_=input_,
+                prompt=prompt,
+                prompt_pattern="",
+                requested_mode=requested_mode,
+                response=response,
+            )
+        )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    argnames=SEND_PROMPTED_INPUT_ARGNAMES,
+    argvalues=SEND_PROMPTED_INPUT_ARGVALUES,
+    ids=SEND_PROMPTED_INPUT_IDS,
+)
+async def test_send_prompted_input_async(
+    input_,
+    prompt,
+    response,
+    requested_mode,
+    cli,
+    cli_assert_result,
+):
+    async with cli as c:
+        actual = await c.send_prompted_input_async(
+            input_=input_,
+            prompt=prompt,
+            prompt_pattern="",
+            requested_mode=requested_mode,
+            response=response,
         )
 
         cli_assert_result(actual=actual)
