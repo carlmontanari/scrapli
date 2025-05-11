@@ -1,2 +1,0 @@
-show run | i hostname
-show run | i hostname

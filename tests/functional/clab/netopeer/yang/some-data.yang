@@ -1,0 +1,32 @@
+module some-data {
+    yang-version 1.1;
+    namespace "urn:some:data";
+    prefix dd;
+
+    container system {
+        config true;
+
+        leaf hostname {
+            type string;
+        }
+
+        leaf uptime {
+            type uint32;
+            default 1;
+        }
+
+        list interfaces {
+            key "name";
+            config true;
+
+            leaf name {
+                type string;
+            }
+
+            leaf enabled {
+                type boolean;
+                default true;
+            }
+        }
+    }
+}

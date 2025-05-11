@@ -1,1 +1,0 @@
-::: transport.base.telnet_common

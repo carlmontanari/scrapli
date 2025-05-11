@@ -1,0 +1,20 @@
+module dummy-actions {
+  yang-version 1.1;
+  namespace "urn:dummy:actions";
+  prefix "da";
+
+  container system {
+    action reboot {
+      input {
+        leaf delay {
+          type uint8;
+        }
+      }
+      output {
+        leaf status {
+          type string;
+        }
+      }
+    }
+  }
+}
