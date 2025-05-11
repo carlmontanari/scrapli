@@ -1,0 +1,5 @@
+eos1(config)#
+eos1(config)#end
+eos1#
+eos1#disable
+eos1>

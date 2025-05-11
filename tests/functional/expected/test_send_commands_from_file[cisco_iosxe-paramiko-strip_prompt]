@@ -1,3 +1,0 @@
-show run | i hostname
-hostname vr-csrshow run | i hostname
-hostname vr-csr
