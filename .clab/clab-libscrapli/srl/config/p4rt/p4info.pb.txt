@@ -1,0 +1,173 @@
+pkg_info {
+  name: "wbb.p4"
+  version: "0.0.0"
+  arch: "v1model"
+  organization: "Google"
+}
+tables {
+  preamble {
+    id: 33554691
+    name: "ingress.acl_wbb_ingress.acl_wbb_ingress_table"
+    alias: "acl_wbb_ingress_table"
+    annotations: "@p4runtime_role(\"sdn_controller\")"
+    annotations: "@sai_acl(INGRESS)"
+    annotations: "@entry_restriction(\"\n    // WBB only allows for very specific table entries:\n\n    // Traceroute (6 entries)\n    (\n      // IPv4 or IPv6\n      ((is_ipv4 == 1 && is_ipv6::mask == 0) ||\n        (is_ipv4::mask == 0 && is_ipv6 == 1)) &&\n      // TTL 0, 1, and 2\n      (ttl == 0 || ttl == 1 || ttl == 2) &&\n      ether_type::mask == 0 && outer_vlan_id::mask == 0\n    ) ||\n    // LLDP\n    (\n      ether_type == 0x88cc &&\n      is_ipv4::mask == 0 && is_ipv6::mask == 0 && ttl::mask == 0 &&\n      outer_vlan_id::mask == 0\n    ) ||\n    // ND\n    (\n    // TODO remove optional match for VLAN ID once VLAN ID is\n    // completely removed from ND flows.\n      (( outer_vlan_id::mask == 0xfff && outer_vlan_id == 0x0FA0) ||\n      outer_vlan_id::mask == 0);\n      ether_type == 0x6007;\n      is_ipv4::mask == 0;\n      is_ipv6::mask == 0;\n      ttl::mask == 0\n    )\n  \")"
+  }
+  match_fields {
+    id: 1
+    name: "is_ipv4"
+    annotations: "@sai_field(SAI_ACL_TABLE_ATTR_FIELD_ACL_IP_TYPE / IPV4ANY)"
+    bitwidth: 1
+    match_type: OPTIONAL
+  }
+  match_fields {
+    id: 2
+    name: "is_ipv6"
+    annotations: "@sai_field(SAI_ACL_TABLE_ATTR_FIELD_ACL_IP_TYPE / IPV6ANY)"
+    bitwidth: 1
+    match_type: OPTIONAL
+  }
+  match_fields {
+    id: 3
+    name: "ether_type"
+    annotations: "@sai_field(SAI_ACL_TABLE_ATTR_FIELD_ETHER_TYPE)"
+    bitwidth: 16
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 4
+    name: "ttl"
+    annotations: "@sai_field(SAI_ACL_TABLE_ATTR_FIELD_TTL)"
+    bitwidth: 8
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 5
+    name: "outer_vlan_id"
+    annotations: "@sai_field(SAI_ACL_TABLE_ATTR_FIELD_OUTER_VLAN_ID)"
+    bitwidth: 12
+    match_type: TERNARY
+  }
+  action_refs {
+    id: 16777479
+    annotations: "@proto_id(1)"
+  }
+  action_refs {
+    id: 16777480
+    annotations: "@proto_id(2)"
+  }
+  action_refs {
+    id: 21257015
+    annotations: "@defaultonly"
+    scope: DEFAULT_ONLY
+  }
+  const_default_action_id: 21257015
+  direct_resource_ids: 318767363
+  direct_resource_ids: 352321793
+  size: 8
+}
+actions {
+  preamble {
+    id: 21257015
+    name: "NoAction"
+    alias: "NoAction"
+    annotations: "@noWarn(\"unused\")"
+  }
+}
+actions {
+  preamble {
+    id: 16777479
+    name: "ingress.acl_wbb_ingress.acl_wbb_ingress_copy"
+    alias: "acl_wbb_ingress_copy"
+    annotations: "@sai_action(SAI_PACKET_ACTION_COPY)"
+  }
+}
+actions {
+  preamble {
+    id: 16777480
+    name: "ingress.acl_wbb_ingress.acl_wbb_ingress_trap"
+    alias: "acl_wbb_ingress_trap"
+    annotations: "@sai_action(SAI_PACKET_ACTION_TRAP)"
+  }
+}
+direct_counters {
+  preamble {
+    id: 318767363
+    name: "ingress.acl_wbb_ingress.acl_wbb_ingress_counter"
+    alias: "acl_wbb_ingress_counter"
+  }
+  spec {
+    unit: BOTH
+  }
+  direct_table_id: 33554691
+}
+direct_meters {
+  preamble {
+    id: 352321793
+    name: "ingress.acl_wbb_ingress.acl_wbb_ingress_meter"
+    alias: "acl_wbb_ingress_meter"
+  }
+  spec {
+    unit: BYTES
+  }
+  direct_table_id: 33554691
+}
+controller_packet_metadata {
+  preamble {
+    id: 81826293
+    name: "packet_in"
+    alias: "packet_in"
+    annotations: "@controller_header(\"packet_in\")"
+  }
+  metadata {
+    id: 1
+    name: "ingress_port"
+    type_name {
+      name: "port_id_t"
+    }
+  }
+  metadata {
+    id: 2
+    name: "target_egress_port"
+    type_name {
+      name: "port_id_t"
+    }
+  }
+}
+controller_packet_metadata {
+  preamble {
+    id: 76689799
+    name: "packet_out"
+    alias: "packet_out"
+    annotations: "@controller_header(\"packet_out\")"
+  }
+  metadata {
+    id: 1
+    name: "egress_port"
+    type_name {
+      name: "port_id_t"
+    }
+  }
+  metadata {
+    id: 2
+    name: "submit_to_ingress"
+    bitwidth: 1
+  }
+  metadata {
+    id: 3
+    name: "unused_pad"
+    annotations: "@padding"
+    bitwidth: 6
+  }
+}
+type_info {
+  new_types {
+    key: "port_id_t"
+    value {
+      translated_type {
+        sdn_string {
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,64 @@
+---
+name: libscrapli
+
+mgmt:
+  network: clab
+  bridge: clab
+  ipv4-subnet: 172.20.20.0/24
+  ipv4-gw: 172.20.20.1
+  ipv6-subnet: 2001:172:20:20::/64
+  ipv6-gw: 2001:172:20:20::1
+  mtu: 65535
+
+topology:
+  kinds:
+    srl:
+      image: ghcr.io/nokia/srlinux:24.10.1-492-amd64
+    ceos:
+      # no native arm, runs under rosetta
+      image: ceos64:4.33.1F
+  nodes:
+    srl:
+      kind: srl
+      mgmt-ipv4: 172.20.20.16
+      mgmt-ipv6: 2001:172:20:20::16
+      startup-config: configs/srl-startup.json
+      # for running on darwin
+      ports:
+        - 21022:22
+        - 21023:23
+        - 21080:80
+        - 21161:161
+        - 21443:443
+        - 21830:830
+    ceos:
+      kind: ceos
+      mgmt-ipv4: 172.20.20.17
+      mgmt-ipv6: 2001:172:20:20::17
+      startup-config: configs/ceos-startup.conf
+      ports:
+        - 22022:22
+        - 22023:23
+        - 22080:80
+        - 22161:161
+        - 22443:443
+        - 22830:830
+    netopeer:
+      kind: linux
+      image: ghcr.io/scrapli/scrapli_clab/netopeer:0.0.7
+      mgmt-ipv4: 172.20.20.18
+      mgmt-ipv6: 2001:172:20:20::18
+      ports:
+        - 23022:22
+        - 23023:23
+        - 23080:80
+        - 23161:161
+        - 23443:443
+        - 23830:830
+    jumper:
+      kind: linux
+      image: ghcr.io/scrapli/scrapli_clab/jumper:dev-latest
+      mgmt-ipv4: 172.20.20.19
+      mgmt-ipv6: 2001:172:20:20::19
+      ports:
+        - 24022:22

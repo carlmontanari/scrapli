@@ -1,0 +1,32 @@
+all:
+  vars:
+    # The generated inventory is assumed to be used from the clab host.
+    # Hence no http proxy should be used. Therefore we make sure the http
+    # module does not attempt using any global http proxy.
+    ansible_httpapi_use_proxy: false
+  children:
+    ceos:
+      vars:
+        # ansible_connection: set ansible_connection variable if required
+        ansible_user: admin
+        ansible_password: admin
+      hosts:
+        clab-libscrapli-ceos:
+          ansible_host: 172.20.20.17
+    linux:
+      hosts:
+        clab-libscrapli-jumper:
+          ansible_host: 172.20.20.19
+        clab-libscrapli-netopeer:
+          ansible_host: 172.20.20.18
+    srl:
+      vars:
+        ansible_network_os: nokia.srlinux.srlinux
+        # default connection type for nodes of this kind
+        # feel free to override this in your inventory
+        ansible_connection: ansible.netcommon.httpapi
+        ansible_user: admin
+        ansible_password: NokiaSrl1!
+      hosts:
+        clab-libscrapli-srl:
+          ansible_host: 172.20.20.16
