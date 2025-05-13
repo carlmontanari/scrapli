@@ -56,3 +56,763 @@ async def test_action_async(action, netconf, netconf_assert_result):
         actual = await n.action_async(action=action)
 
         netconf_assert_result(actual=actual)
+
+
+CANCEL_COMMIT_ARGNAMES = (
+    "platform",
+    "transport",
+)
+CANCEL_COMMIT_ARGVALUES = (
+    (
+        "netopeer",
+        "bin",
+    ),
+    (
+        "netopeer",
+        "ssh2",
+    ),
+)
+CANCEL_COMMIT_IDS = (
+    "netopeer-bin-simple",
+    "netopeer-ssh2-simple",
+)
+
+
+@pytest.mark.parametrize(
+    argnames=CANCEL_COMMIT_ARGNAMES,
+    argvalues=CANCEL_COMMIT_ARGVALUES,
+    ids=CANCEL_COMMIT_IDS,
+)
+def test_cancel_commit(netconf, netconf_assert_result):
+    with netconf as n:
+        netconf_assert_result(actual=n.cancel_commit())
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    argnames=CANCEL_COMMIT_ARGNAMES,
+    argvalues=CANCEL_COMMIT_ARGVALUES,
+    ids=CANCEL_COMMIT_IDS,
+)
+async def test_cancel_commit_async(netconf, netconf_assert_result):
+    async with netconf as n:
+        actual = await n.cancel_commit_async()
+
+        netconf_assert_result(actual=actual)
+
+
+CLOSE_SESSION_ARGNAMES = (
+    "platform",
+    "transport",
+)
+CLOSE_SESSION_ARGVALUES = (
+    (
+        "netopeer",
+        "bin",
+    ),
+    (
+        "netopeer",
+        "ssh2",
+    ),
+)
+CLOSE_SESSION_IDS = (
+    "netopeer-bin-simple",
+    "netopeer-ssh2-simple",
+)
+
+
+@pytest.mark.parametrize(
+    argnames=CLOSE_SESSION_ARGNAMES,
+    argvalues=CLOSE_SESSION_ARGVALUES,
+    ids=CLOSE_SESSION_IDS,
+)
+def test_close_session(netconf, netconf_assert_result):
+    netconf.open()
+    netconf_assert_result(actual=netconf.close_session())
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    argnames=CLOSE_SESSION_ARGNAMES,
+    argvalues=CLOSE_SESSION_ARGVALUES,
+    ids=CLOSE_SESSION_IDS,
+)
+async def test_close_session_async(netconf, netconf_assert_result):
+    await netconf.open()
+    actual = await netconf.close_session_async()
+    netconf_assert_result(actual=actual)
+
+
+COMMIT_ARGNAMES = (
+    "platform",
+    "transport",
+)
+COMMIT_ARGVALUES = (
+    (
+        "netopeer",
+        "bin",
+    ),
+    (
+        "netopeer",
+        "ssh2",
+    ),
+)
+COMMIT_IDS = (
+    "netopeer-bin-simple",
+    "netopeer-ssh2-simple",
+)
+
+
+@pytest.mark.parametrize(
+    argnames=COMMIT_ARGNAMES,
+    argvalues=COMMIT_ARGVALUES,
+    ids=COMMIT_IDS,
+)
+def test_commit(netconf, netconf_assert_result):
+    with netconf as n:
+        netconf_assert_result(actual=n.commit())
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    argnames=COMMIT_ARGNAMES,
+    argvalues=COMMIT_ARGVALUES,
+    ids=COMMIT_IDS,
+)
+async def test_commit_async(netconf, netconf_assert_result):
+    async with netconf as n:
+        actual = await n.commit_async()
+
+        netconf_assert_result(actual=actual)
+
+
+COPY_CONFIG_ARGNAMES = (
+    "platform",
+    "transport",
+)
+COPY_CONFIG_ARGVALUES = (
+    (
+        "netopeer",
+        "bin",
+    ),
+    (
+        "netopeer",
+        "ssh2",
+    ),
+)
+COPY_CONFIG_IDS = (
+    "netopeer-bin-simple",
+    "netopeer-ssh2-simple",
+)
+
+
+@pytest.mark.parametrize(
+    argnames=COPY_CONFIG_ARGNAMES,
+    argvalues=COPY_CONFIG_ARGVALUES,
+    ids=COPY_CONFIG_IDS,
+)
+def test_copy_config(netconf, netconf_assert_result):
+    with netconf as n:
+        netconf_assert_result(actual=n.copy_config())
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    argnames=COPY_CONFIG_ARGNAMES,
+    argvalues=COPY_CONFIG_ARGVALUES,
+    ids=COPY_CONFIG_IDS,
+)
+async def test_copy_config_async(netconf, netconf_assert_result):
+    async with netconf as n:
+        actual = await n.copy_config_async()
+
+        netconf_assert_result(actual=actual)
+
+
+DELETE_CONFIG_ARGNAMES = (
+    "platform",
+    "transport",
+)
+DELETE_CONFIG_ARGVALUES = (
+    (
+        "netopeer",
+        "bin",
+    ),
+    (
+        "netopeer",
+        "ssh2",
+    ),
+)
+DELETE_CONFIG_IDS = (
+    "netopeer-bin-simple",
+    "netopeer-ssh2-simple",
+)
+
+
+@pytest.mark.parametrize(
+    argnames=DELETE_CONFIG_ARGNAMES,
+    argvalues=DELETE_CONFIG_ARGVALUES,
+    ids=DELETE_CONFIG_IDS,
+)
+def test_delete_config(netconf, netconf_assert_result):
+    with netconf as n:
+        netconf_assert_result(actual=n.delete_config())
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    argnames=DELETE_CONFIG_ARGNAMES,
+    argvalues=DELETE_CONFIG_ARGVALUES,
+    ids=DELETE_CONFIG_IDS,
+)
+async def test_delete_config_async(netconf, netconf_assert_result):
+    async with netconf as n:
+        actual = await n.delete_config_async()
+
+        netconf_assert_result(actual=actual)
+
+
+DISCARD_ARGNAMES = (
+    "platform",
+    "transport",
+)
+DISCARD_ARGVALUES = (
+    (
+        "netopeer",
+        "bin",
+    ),
+    (
+        "netopeer",
+        "ssh2",
+    ),
+)
+DISCARD_IDS = (
+    "netopeer-bin-simple",
+    "netopeer-ssh2-simple",
+)
+
+
+@pytest.mark.parametrize(
+    argnames=DISCARD_ARGNAMES,
+    argvalues=DISCARD_ARGVALUES,
+    ids=DISCARD_IDS,
+)
+def test_discard(netconf, netconf_assert_result):
+    with netconf as n:
+        netconf_assert_result(actual=n.discard())
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    argnames=DISCARD_ARGNAMES,
+    argvalues=DISCARD_ARGVALUES,
+    ids=DISCARD_IDS,
+)
+async def test_discard_async(netconf, netconf_assert_result):
+    async with netconf as n:
+        actual = await n.discard_async()
+
+        netconf_assert_result(actual=actual)
+
+
+EDIT_CONFIG_ARGNAMES = (
+    "config",
+    "platform",
+    "transport",
+)
+EDIT_CONFIG_ARGVALUES = (
+    (
+        "",
+        "netopeer",
+        "bin",
+    ),
+    (
+        "",
+        "netopeer",
+        "ssh2",
+    ),
+)
+EDIT_CONFIG_IDS = (
+    "netopeer-bin-simple",
+    "netopeer-ssh2-simple",
+)
+
+
+@pytest.mark.parametrize(
+    argnames=EDIT_CONFIG_ARGNAMES,
+    argvalues=EDIT_CONFIG_ARGVALUES,
+    ids=EDIT_CONFIG_IDS,
+)
+def test_edit_config(config, netconf, netconf_assert_result):
+    with netconf as n:
+        netconf_assert_result(actual=n.edit_config(config=config))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    argnames=EDIT_CONFIG_ARGNAMES,
+    argvalues=EDIT_CONFIG_ARGVALUES,
+    ids=EDIT_CONFIG_IDS,
+)
+async def test_edit_config_async(config, netconf, netconf_assert_result):
+    async with netconf as n:
+        actual = await n.edit_config_async(config=config)
+
+        netconf_assert_result(actual=actual)
+
+
+EDIT_DATA_ARGNAMES = (
+    "content",
+    "platform",
+    "transport",
+)
+EDIT_DATA_ARGVALUES = (
+    (
+        "",
+        "netopeer",
+        "bin",
+    ),
+    (
+        "",
+        "netopeer",
+        "ssh2",
+    ),
+)
+EDIT_DATA_IDS = (
+    "netopeer-bin-simple",
+    "netopeer-ssh2-simple",
+)
+
+
+@pytest.mark.parametrize(
+    argnames=EDIT_DATA_ARGNAMES,
+    argvalues=EDIT_DATA_ARGVALUES,
+    ids=EDIT_DATA_IDS,
+)
+def test_edit_data(content, netconf, netconf_assert_result):
+    with netconf as n:
+        netconf_assert_result(actual=n.edit_data(content=content))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    argnames=EDIT_DATA_ARGNAMES,
+    argvalues=EDIT_DATA_ARGVALUES,
+    ids=EDIT_DATA_IDS,
+)
+async def test_edit_data_async(content, netconf, netconf_assert_result):
+    async with netconf as n:
+        actual = await n.edit_data_async(content=content)
+
+        netconf_assert_result(actual=actual)
+
+
+GET_CONFIG_ARGNAMES = (
+    "platform",
+    "transport",
+)
+GET_CONFIG_ARGVALUES = (
+    (
+        "netopeer",
+        "bin",
+    ),
+    (
+        "netopeer",
+        "ssh2",
+    ),
+)
+GET_CONFIG_IDS = (
+    "netopeer-bin-simple",
+    "netopeer-ssh2-simple",
+)
+
+
+@pytest.mark.parametrize(
+    argnames=GET_CONFIG_ARGNAMES,
+    argvalues=GET_CONFIG_ARGVALUES,
+    ids=GET_CONFIG_IDS,
+)
+def test_get_config(netconf, netconf_assert_result):
+    with netconf as n:
+        netconf_assert_result(actual=n.get_config())
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    argnames=GET_CONFIG_ARGNAMES,
+    argvalues=GET_CONFIG_ARGVALUES,
+    ids=GET_CONFIG_IDS,
+)
+async def test_get_config_async(netconf, netconf_assert_result):
+    async with netconf as n:
+        actual = await n.get_config_async()
+
+        netconf_assert_result(actual=actual)
+
+
+GET_DATA_ARGNAMES = (
+    "filter_",
+    "platform",
+    "transport",
+)
+GET_DATA_ARGVALUES = (
+    (
+        '<system xmlns="urn:some:data"></system>',
+        "netopeer",
+        "bin",
+    ),
+    (
+        '<system xmlns="urn:some:data"></system>',
+        "netopeer",
+        "ssh2",
+    ),
+)
+GET_DATA_IDS = (
+    "netopeer-bin-simple",
+    "netopeer-ssh2-simple",
+)
+
+
+@pytest.mark.parametrize(
+    argnames=GET_DATA_ARGNAMES,
+    argvalues=GET_DATA_ARGVALUES,
+    ids=GET_DATA_IDS,
+)
+def test_get_data(filter_, netconf, netconf_assert_result):
+    with netconf as n:
+        netconf_assert_result(actual=n.get_data(filter_=filter_))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    argnames=GET_DATA_ARGNAMES,
+    argvalues=GET_DATA_ARGVALUES,
+    ids=GET_DATA_IDS,
+)
+async def test_get_data_async(filter_, netconf, netconf_assert_result):
+    async with netconf as n:
+        actual = await n.get_data_async(filter_=filter_)
+
+        netconf_assert_result(actual=actual)
+
+
+GET_SCHEMA_ARGNAMES = (
+    "identifier",
+    "platform",
+    "transport",
+)
+GET_SCHEMA_ARGVALUES = (
+    (
+        "ietf-yang-types",
+        "netopeer",
+        "bin",
+    ),
+    (
+        "ietf-yang-types",
+        "netopeer",
+        "ssh2",
+    ),
+)
+GET_SCHEMA_IDS = (
+    "netopeer-bin-simple",
+    "netopeer-ssh2-simple",
+)
+
+
+@pytest.mark.parametrize(
+    argnames=GET_SCHEMA_ARGNAMES,
+    argvalues=GET_SCHEMA_ARGVALUES,
+    ids=GET_SCHEMA_IDS,
+)
+def test_get_schema(identifier, netconf, netconf_assert_result):
+    with netconf as n:
+        netconf_assert_result(actual=n.get_schema(identifier=identifier))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    argnames=GET_SCHEMA_ARGNAMES,
+    argvalues=GET_SCHEMA_ARGVALUES,
+    ids=GET_SCHEMA_IDS,
+)
+async def test_get_schema_async(identifier, netconf, netconf_assert_result):
+    async with netconf as n:
+        actual = await n.get_schema_async(identifier=identifier)
+
+        netconf_assert_result(actual=actual)
+
+
+GET_ARGNAMES = (
+    "filter_",
+    "platform",
+    "transport",
+)
+GET_ARGVALUES = (
+    (
+        "",
+        "netopeer",
+        "bin",
+    ),
+    (
+        "",
+        "netopeer",
+        "ssh2",
+    ),
+    (
+        "<interfaces><interface><name>Management0</name><state></state></interface></interfaces>",
+        "netopeer",
+        "bin",
+    ),
+    (
+        "<interfaces><interface><name>Management0</name><state></state></interface></interfaces>",
+        "netopeer",
+        "ssh2",
+    ),
+)
+GET_IDS = (
+    "netopeer-bin-simple",
+    "netopeer-ssh2-simple",
+    "netopeer-bin-filtered",
+    "netopeer-ssh2-filtered",
+)
+
+
+@pytest.mark.parametrize(
+    argnames=GET_ARGNAMES,
+    argvalues=GET_ARGVALUES,
+    ids=GET_IDS,
+)
+def test_get(filter_, netconf, netconf_assert_result):
+    with netconf as n:
+        netconf_assert_result(actual=n.get(filter_=filter_))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    argnames=GET_ARGNAMES,
+    argvalues=GET_ARGVALUES,
+    ids=GET_IDS,
+)
+async def test_get_async(filter_, netconf, netconf_assert_result):
+    async with netconf as n:
+        actual = await n.get_async(filter_=filter_)
+
+        netconf_assert_result(actual=actual)
+
+
+KILL_SESSION_ARGNAMES = (
+    "platform",
+    "transport",
+)
+KILL_SESSION_ARGVALUES = (
+    (
+        "netopeer",
+        "bin",
+    ),
+    (
+        "netopeer",
+        "ssh2",
+    ),
+)
+KILL_SESSION_IDS = (
+    "netopeer-bin-simple",
+    "netopeer-ssh2-simple",
+)
+
+
+@pytest.mark.parametrize(
+    argnames=KILL_SESSION_ARGNAMES,
+    argvalues=KILL_SESSION_ARGVALUES,
+    ids=KILL_SESSION_IDS,
+)
+def test_kill_session(netconf, netconf_assert_result):
+    with netconf as n:
+        netconf_assert_result(actual=n.kill_session())
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    argnames=KILL_SESSION_ARGNAMES,
+    argvalues=KILL_SESSION_ARGVALUES,
+    ids=KILL_SESSION_IDS,
+)
+async def test_kill_session_async(netconf, netconf_assert_result):
+    async with netconf as n:
+        actual = await n.kill_session_async()
+
+        netconf_assert_result(actual=actual)
+
+
+LOCK_ARGNAMES = (
+    "platform",
+    "transport",
+)
+LOCK_ARGVALUES = (
+    (
+        "netopeer",
+        "bin",
+    ),
+    (
+        "netopeer",
+        "ssh2",
+    ),
+)
+LOCK_IDS = (
+    "netopeer-bin-simple",
+    "netopeer-ssh2-simple",
+)
+
+
+@pytest.mark.parametrize(
+    argnames=LOCK_ARGNAMES,
+    argvalues=LOCK_ARGVALUES,
+    ids=LOCK_IDS,
+)
+def test_lock(netconf, netconf_assert_result):
+    with netconf as n:
+        netconf_assert_result(actual=n.lock())
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    argnames=LOCK_ARGNAMES,
+    argvalues=LOCK_ARGVALUES,
+    ids=LOCK_IDS,
+)
+async def test_lock_async(netconf, netconf_assert_result):
+    async with netconf as n:
+        actual = await n.lock_async()
+
+        netconf_assert_result(actual=actual)
+
+
+UNLOCK_ARGNAMES = (
+    "platform",
+    "transport",
+)
+UNLOCK_ARGVALUES = (
+    (
+        "netopeer",
+        "bin",
+    ),
+    (
+        "netopeer",
+        "ssh2",
+    ),
+)
+UNLOCK_IDS = (
+    "netopeer-bin-simple",
+    "netopeer-ssh2-simple",
+)
+
+
+@pytest.mark.parametrize(
+    argnames=UNLOCK_ARGNAMES,
+    argvalues=UNLOCK_ARGVALUES,
+    ids=UNLOCK_IDS,
+)
+def test_unlock(netconf, netconf_assert_result):
+    with netconf as n:
+        netconf_assert_result(actual=n.unlock())
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    argnames=UNLOCK_ARGNAMES,
+    argvalues=UNLOCK_ARGVALUES,
+    ids=UNLOCK_IDS,
+)
+async def test_unlock_async(netconf, netconf_assert_result):
+    async with netconf as n:
+        actual = await n.unlock_async()
+
+        netconf_assert_result(actual=actual)
+
+
+RAW_RPC_ARGNAMES = (
+    "payload",
+    "platform",
+    "transport",
+)
+RAW_RPC_ARGVALUES = (
+    (
+        "<get-config><source><running/></source></get-config>",
+        "netopeer",
+        "bin",
+    ),
+    (
+        "<get-config><source><running/></source></get-config>",
+        "netopeer",
+        "ssh2",
+    ),
+)
+RAW_RPC_IDS = (
+    "netopeer-bin-simple",
+    "netopeer-ssh2-simple",
+)
+
+
+@pytest.mark.parametrize(
+    argnames=RAW_RPC_ARGNAMES,
+    argvalues=RAW_RPC_ARGVALUES,
+    ids=RAW_RPC_IDS,
+)
+def test_raw_rpc(payload, netconf, netconf_assert_result):
+    with netconf as n:
+        netconf_assert_result(actual=n.raw_rpc(payload=payload))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    argnames=RAW_RPC_ARGNAMES,
+    argvalues=RAW_RPC_ARGVALUES,
+    ids=RAW_RPC_IDS,
+)
+async def test_raw_rpc_async(payload, netconf, netconf_assert_result):
+    async with netconf as n:
+        actual = await n.raw_rpc_async(payload=payload)
+
+        netconf_assert_result(actual=actual)
+
+
+VALIDATE_ARGNAMES = (
+    "platform",
+    "transport",
+)
+VALIDATE_ARGVALUES = (
+    (
+        "netopeer",
+        "bin",
+    ),
+    (
+        "netopeer",
+        "ssh2",
+    ),
+)
+VALIDATE_IDS = (
+    "netopeer-bin-simple",
+    "netopeer-ssh2-simple",
+)
+
+
+@pytest.mark.parametrize(
+    argnames=VALIDATE_ARGNAMES,
+    argvalues=VALIDATE_ARGVALUES,
+    ids=VALIDATE_IDS,
+)
+def test_validate(netconf, netconf_assert_result):
+    with netconf as n:
+        netconf_assert_result(actual=n.validate())
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    argnames=VALIDATE_ARGNAMES,
+    argvalues=VALIDATE_ARGVALUES,
+    ids=VALIDATE_IDS,
+)
+async def test_validate_async(netconf, netconf_assert_result):
+    async with netconf as n:
+        actual = await n.validate_async()
+
+        netconf_assert_result(actual=actual)
