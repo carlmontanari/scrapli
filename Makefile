@@ -14,6 +14,11 @@ lint: ## Run linters
 test: ## Run unit tests
 	python -m pytest tests/unit/ -v
 
+test-cov:  ## Run all tests with term and html coverage report
+	python -m pytest tests/unit/ -v \
+	--cov=scrapli \
+	--cov-report html
+
 test-functional: ## Run functional tests
 	python -m pytest tests/functional/ -v
 
