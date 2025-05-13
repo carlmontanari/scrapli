@@ -39,3 +39,7 @@ class NotOpenedException(ScrapliException):
 
 class OperationException(ScrapliException):
     """Exception raised when an error is returned from an operation"""
+
+
+class ParsingException(ScrapliException):
+    """Exception raised when parsing (usually cli) output fails"""
