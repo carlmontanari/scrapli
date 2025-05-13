@@ -34,7 +34,17 @@ packages = ["scrapli", "scrapli.lib"]
 [tool.setuptools.dynamic]
 version = { attr = "scrapli.__version__" }
 dependencies = { file = "requirements.txt" }
-optional-dependencies.dev = { file = ["requirements-dev.txt"] }
+optional-dependencies.dev = { file = [
+    "requirements-dev.txt",
+    "requirements-genie.txt",
+    "requirements-textfsm.txt",
+] }
+optional-dependencies.full = { file = [
+    "requirements-textfsm.txt",
+    "requirements-genie.txt",
+] }
+optional-dependencies.textfsm = { file = "requirements-textfsm.txt" }
+optional-dependencies.genie = { file = "requirements-genie.txt" }
 
 [tool.setuptools.package-data]
 scrapli = [
