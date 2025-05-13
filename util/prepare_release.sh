@@ -33,14 +33,17 @@ else
 fi
 
 sed -i.bak -E "s|(LIBSCRAPLI_VERSION = )(.*)|\1\"${TARGET_TAG#v}\"|g" scrapli/ffi.py
+sed -i.bak -E "s|(LIBSCRAPLI_VERSION = )(.*)|\1\"${TARGET_TAG#v}\"|g" setup.py
 
-git diff -- scrapli/ffi.py
+git diff -- scrapli/ffi.py setup.py
 
 read -p "looks good? (y/n): " confirm
 
 if [[ "$confirm" == [yY] ]]; then
   rm scrapli/ffi.py.bak
+  rm setup.py.bak
 else
   echo "restoring...."
   mv scrapli/ffi.py.bak scrapli/ffi.py
+  mv setup.py.bak setup.py
 fi
