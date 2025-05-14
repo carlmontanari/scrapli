@@ -36,9 +36,13 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
+      # genie has ridiculous pins, pip (and maybe you?) will die if you try to isntall it
+      # with basically anything else... so just install separately
       - name: install python dev tools
         run: |
           python -m pip install -r requirements-dev.txt
+          python -m pip install -r requirements-genie.txt
+          python -m pip install -r requirements-textfsm.txt
 
       - name: install scrapli+libscrapli
         run: |

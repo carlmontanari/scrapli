@@ -768,15 +768,13 @@ class Netconf:
         *,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
-        payload: str,
+        payload: c_char_p,
     ) -> c_uint:
-        _payload = to_c_string(payload)
-
         status = self.ffi_mapping.netconf_mapping.raw_rpc(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
             cancel=cancel,
-            payload=_payload,
+            payload=payload,
         )
         if status != 0:
             raise SubmitOperationException("submitting raw rpc operation failed")
@@ -811,7 +809,9 @@ class Netconf:
         operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
 
-        operation_id = self._raw_rpc(operation_id=operation_id, cancel=cancel, payload=payload)
+        _payload = to_c_string(payload)
+
+        operation_id = self._raw_rpc(operation_id=operation_id, cancel=cancel, payload=_payload)
 
         return self._get_result(operation_id=operation_id)
 
@@ -843,7 +843,9 @@ class Netconf:
         operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
 
-        operation_id = self._raw_rpc(operation_id=operation_id, cancel=cancel, payload=payload)
+        _payload = to_c_string(payload)
+
+        operation_id = self._raw_rpc(operation_id=operation_id, cancel=cancel, payload=_payload)
 
         return await self._get_result_async(operation_id=operation_id)
 
@@ -852,30 +854,23 @@ class Netconf:
         *,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
-        source: DatastoreType,
-        filter_: str,
-        filter_type: FilterType,
-        filter_namespace_prefix: str,
-        filter_namespace: str,
-        defaults_type: DefaultsType,
+        source: c_char_p,
+        filter_: c_char_p,
+        filter_type: c_char_p,
+        filter_namespace_prefix: c_char_p,
+        filter_namespace: c_char_p,
+        defaults_type: c_char_p,
     ) -> c_uint:
-        _source = to_c_string(source)
-        _filter = to_c_string(filter_)
-        _filter_type = to_c_string(filter_type)
-        _filter_namespace_prefix = to_c_string(filter_namespace_prefix)
-        _filter_namespace = to_c_string(filter_namespace)
-        _defaults_type = to_c_string(defaults_type)
-
         status = self.ffi_mapping.netconf_mapping.get_config(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
             cancel=cancel,
-            source=_source,
-            filter_=_filter,
-            filter_type=_filter_type,
-            filter_namespace_prefix=_filter_namespace_prefix,
-            filter_namespace=_filter_namespace,
-            defaults_type=_defaults_type,
+            source=source,
+            filter_=filter_,
+            filter_type=filter_type,
+            filter_namespace_prefix=filter_namespace_prefix,
+            filter_namespace=filter_namespace,
+            defaults_type=defaults_type,
         )
         if status != 0:
             raise SubmitOperationException("submitting get-config operation failed")
@@ -920,15 +915,22 @@ class Netconf:
         operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
 
+        _source = to_c_string(source)
+        _filter = to_c_string(filter_)
+        _filter_type = to_c_string(filter_type)
+        _filter_namespace_prefix = to_c_string(filter_namespace_prefix)
+        _filter_namespace = to_c_string(filter_namespace)
+        _defaults_type = to_c_string(defaults_type)
+
         operation_id = self._get_config(
             operation_id=operation_id,
             cancel=cancel,
-            source=source,
-            filter_=filter_,
-            filter_type=filter_type,
-            filter_namespace_prefix=filter_namespace_prefix,
-            filter_namespace=filter_namespace,
-            defaults_type=defaults_type,
+            source=_source,
+            filter_=_filter,
+            filter_type=_filter_type,
+            filter_namespace_prefix=_filter_namespace_prefix,
+            filter_namespace=_filter_namespace,
+            defaults_type=_defaults_type,
         )
 
         return self._get_result(operation_id=operation_id)
@@ -971,15 +973,22 @@ class Netconf:
         operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
 
+        _source = to_c_string(source)
+        _filter = to_c_string(filter_)
+        _filter_type = to_c_string(filter_type)
+        _filter_namespace_prefix = to_c_string(filter_namespace_prefix)
+        _filter_namespace = to_c_string(filter_namespace)
+        _defaults_type = to_c_string(defaults_type)
+
         operation_id = self._get_config(
             operation_id=operation_id,
             cancel=cancel,
-            source=source,
-            filter_=filter_,
-            filter_type=filter_type,
-            filter_namespace_prefix=filter_namespace_prefix,
-            filter_namespace=filter_namespace,
-            defaults_type=defaults_type,
+            source=_source,
+            filter_=_filter,
+            filter_type=_filter_type,
+            filter_namespace_prefix=_filter_namespace_prefix,
+            filter_namespace=_filter_namespace,
+            defaults_type=_defaults_type,
         )
 
         return await self._get_result_async(operation_id=operation_id)
@@ -989,18 +998,15 @@ class Netconf:
         *,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
-        config: str,
-        target: DatastoreType,
+        config: c_char_p,
+        target: c_char_p,
     ) -> c_uint:
-        _config = to_c_string(config)
-        _target = to_c_string(target)
-
         status = self.ffi_mapping.netconf_mapping.edit_config(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
             cancel=cancel,
-            config=_config,
-            target=_target,
+            config=config,
+            target=target,
         )
         if status != 0:
             raise SubmitOperationException("submitting edit-config operation failed")
@@ -1037,11 +1043,14 @@ class Netconf:
         operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
 
+        _config = to_c_string(config)
+        _target = to_c_string(target)
+
         operation_id = self._edit_config(
             operation_id=operation_id,
             cancel=cancel,
-            config=config,
-            target=target,
+            config=_config,
+            target=_target,
         )
 
         return self._get_result(operation_id=operation_id)
@@ -1076,11 +1085,14 @@ class Netconf:
         operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
 
+        _config = to_c_string(config)
+        _target = to_c_string(target)
+
         operation_id = self._edit_config(
             operation_id=operation_id,
             cancel=cancel,
-            config=config,
-            target=target,
+            config=_config,
+            target=_target,
         )
 
         return await self._get_result_async(operation_id=operation_id)
@@ -1090,18 +1102,15 @@ class Netconf:
         *,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
-        target: DatastoreType,
-        source: DatastoreType,
+        target: c_char_p,
+        source: c_char_p,
     ) -> c_uint:
-        _target = to_c_string(target)
-        _source = to_c_string(source)
-
         status = self.ffi_mapping.netconf_mapping.copy_config(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
             cancel=cancel,
-            target=_target,
-            source=_source,
+            target=target,
+            source=source,
         )
         if status != 0:
             raise SubmitOperationException("submitting copy-config operation failed")
@@ -1138,11 +1147,14 @@ class Netconf:
         operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
 
+        _target = to_c_string(target)
+        _source = to_c_string(source)
+
         operation_id = self._copy_config(
             operation_id=operation_id,
             cancel=cancel,
-            target=target,
-            source=source,
+            target=_target,
+            source=_source,
         )
 
         return self._get_result(operation_id=operation_id)
@@ -1177,11 +1189,14 @@ class Netconf:
         operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
 
+        _target = to_c_string(target)
+        _source = to_c_string(source)
+
         operation_id = self._copy_config(
             operation_id=operation_id,
             cancel=cancel,
-            target=target,
-            source=source,
+            target=_target,
+            source=_source,
         )
 
         return await self._get_result_async(operation_id=operation_id)
@@ -1191,15 +1206,13 @@ class Netconf:
         *,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
-        target: DatastoreType,
+        target: c_char_p,
     ) -> c_uint:
-        _target = to_c_string(target)
-
         status = self.ffi_mapping.netconf_mapping.delete_config(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
             cancel=cancel,
-            target=_target,
+            target=target,
         )
         if status != 0:
             raise SubmitOperationException("submitting delete-config operation failed")
@@ -1234,10 +1247,12 @@ class Netconf:
         operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
 
+        _target = to_c_string(target)
+
         operation_id = self._delete_config(
             operation_id=operation_id,
             cancel=cancel,
-            target=target,
+            target=_target,
         )
 
         return self._get_result(operation_id=operation_id)
@@ -1270,10 +1285,12 @@ class Netconf:
         operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
 
+        _target = to_c_string(target)
+
         operation_id = self._delete_config(
             operation_id=operation_id,
             cancel=cancel,
-            target=target,
+            target=_target,
         )
 
         return await self._get_result_async(operation_id=operation_id)
@@ -1283,15 +1300,13 @@ class Netconf:
         *,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
-        target: DatastoreType,
+        target: c_char_p,
     ) -> c_uint:
-        _target = to_c_string(target)
-
         status = self.ffi_mapping.netconf_mapping.lock(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
             cancel=cancel,
-            target=_target,
+            target=target,
         )
         if status != 0:
             raise SubmitOperationException("submitting lock operation failed")
@@ -1326,10 +1341,12 @@ class Netconf:
         operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
 
+        _target = to_c_string(target)
+
         operation_id = self._lock(
             operation_id=operation_id,
             cancel=cancel,
-            target=target,
+            target=_target,
         )
 
         return self._get_result(operation_id=operation_id)
@@ -1362,10 +1379,12 @@ class Netconf:
         operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
 
+        _target = to_c_string(target)
+
         operation_id = self._lock(
             operation_id=operation_id,
             cancel=cancel,
-            target=target,
+            target=_target,
         )
 
         return await self._get_result_async(operation_id=operation_id)
@@ -1375,15 +1394,13 @@ class Netconf:
         *,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
-        target: DatastoreType,
+        target: c_char_p,
     ) -> c_uint:
-        _target = to_c_string(target)
-
         status = self.ffi_mapping.netconf_mapping.unlock(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
             cancel=cancel,
-            target=_target,
+            target=target,
         )
         if status != 0:
             raise SubmitOperationException("submitting unlock operation failed")
@@ -1418,10 +1435,12 @@ class Netconf:
         operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
 
+        _target = to_c_string(target)
+
         operation_id = self._unlock(
             operation_id=operation_id,
             cancel=cancel,
-            target=target,
+            target=_target,
         )
 
         return self._get_result(operation_id=operation_id)
@@ -1454,10 +1473,12 @@ class Netconf:
         operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
 
+        _target = to_c_string(target)
+
         operation_id = self._unlock(
             operation_id=operation_id,
             cancel=cancel,
-            target=target,
+            target=_target,
         )
 
         return await self._get_result_async(operation_id=operation_id)
@@ -1467,27 +1488,21 @@ class Netconf:
         *,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
-        filter_: str,
-        filter_type: FilterType,
-        filter_namespace_prefix: str,
-        filter_namespace: str,
-        defaults_type: DefaultsType,
+        filter_: c_char_p,
+        filter_type: c_char_p,
+        filter_namespace_prefix: c_char_p,
+        filter_namespace: c_char_p,
+        defaults_type: c_char_p,
     ) -> c_uint:
-        _filter = to_c_string(filter_)
-        _filter_type = to_c_string(filter_type)
-        _filter_namespace_prefix = to_c_string(filter_namespace_prefix)
-        _filter_namespace = to_c_string(filter_namespace)
-        _defaults_type = to_c_string(defaults_type)
-
         status = self.ffi_mapping.netconf_mapping.get(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
             cancel=cancel,
-            filter_=_filter,
-            filter_type=_filter_type,
-            filter_namespace_prefix=_filter_namespace_prefix,
-            filter_namespace=_filter_namespace,
-            defaults_type=_defaults_type,
+            filter_=filter_,
+            filter_type=filter_type,
+            filter_namespace_prefix=filter_namespace_prefix,
+            filter_namespace=filter_namespace,
+            defaults_type=defaults_type,
         )
         if status != 0:
             raise SubmitOperationException("submitting get operation failed")
@@ -1530,14 +1545,20 @@ class Netconf:
         operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
 
+        _filter = to_c_string(filter_)
+        _filter_type = to_c_string(filter_type)
+        _filter_namespace_prefix = to_c_string(filter_namespace_prefix)
+        _filter_namespace = to_c_string(filter_namespace)
+        _defaults_type = to_c_string(defaults_type)
+
         operation_id = self._get(
             operation_id=operation_id,
             cancel=cancel,
-            filter_=filter_,
-            filter_type=filter_type,
-            filter_namespace_prefix=filter_namespace_prefix,
-            filter_namespace=filter_namespace,
-            defaults_type=defaults_type,
+            filter_=_filter,
+            filter_type=_filter_type,
+            filter_namespace_prefix=_filter_namespace_prefix,
+            filter_namespace=_filter_namespace,
+            defaults_type=_defaults_type,
         )
 
         return self._get_result(operation_id=operation_id)
@@ -1578,14 +1599,20 @@ class Netconf:
         operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
 
+        _filter = to_c_string(filter_)
+        _filter_type = to_c_string(filter_type)
+        _filter_namespace_prefix = to_c_string(filter_namespace_prefix)
+        _filter_namespace = to_c_string(filter_namespace)
+        _defaults_type = to_c_string(defaults_type)
+
         operation_id = self._get(
             operation_id=operation_id,
             cancel=cancel,
-            filter_=filter_,
-            filter_type=filter_type,
-            filter_namespace_prefix=filter_namespace_prefix,
-            filter_namespace=filter_namespace,
-            defaults_type=defaults_type,
+            filter_=_filter,
+            filter_type=_filter_type,
+            filter_namespace_prefix=_filter_namespace_prefix,
+            filter_namespace=_filter_namespace,
+            defaults_type=_defaults_type,
         )
 
         return await self._get_result_async(operation_id=operation_id)
@@ -2013,15 +2040,13 @@ class Netconf:
         *,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
-        source: DatastoreType,
+        source: c_char_p,
     ) -> c_uint:
-        _source = to_c_string(source)
-
         status = self.ffi_mapping.netconf_mapping.validate(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
             cancel=cancel,
-            source=_source,
+            source=source,
         )
         if status != 0:
             raise SubmitOperationException("submitting validate operation failed")
@@ -2056,10 +2081,12 @@ class Netconf:
         operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
 
+        _source = to_c_string(source)
+
         operation_id = self._validate(
             operation_id=operation_id,
             cancel=cancel,
-            source=source,
+            source=_source,
         )
 
         return self._get_result(operation_id=operation_id)
@@ -2092,10 +2119,12 @@ class Netconf:
         operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
 
+        _source = to_c_string(source)
+
         operation_id = self._validate(
             operation_id=operation_id,
             cancel=cancel,
-            source=source,
+            source=_source,
         )
 
         return await self._get_result_async(operation_id=operation_id)
@@ -2105,21 +2134,17 @@ class Netconf:
         *,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
-        identifier: str,
-        version: str,
-        format_: SchemaFormat,
+        identifier: c_char_p,
+        version: c_char_p,
+        format_: c_char_p,
     ) -> c_uint:
-        _identifier = to_c_string(identifier)
-        _version = to_c_string(version)
-        _format = to_c_string(format_)
-
         status = self.ffi_mapping.netconf_mapping.get_schema(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
             cancel=cancel,
-            identifier=_identifier,
-            version=_version,
-            format_=_format,
+            identifier=identifier,
+            version=version,
+            format_=format_,
         )
         if status != 0:
             raise SubmitOperationException("submitting get-schema operation failed")
@@ -2158,12 +2183,16 @@ class Netconf:
         operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
 
+        _identifier = to_c_string(identifier)
+        _version = to_c_string(version)
+        _format = to_c_string(format_)
+
         operation_id = self._get_schema(
             operation_id=operation_id,
             cancel=cancel,
-            identifier=identifier,
-            version=version,
-            format_=format_,
+            identifier=_identifier,
+            version=_version,
+            format_=_format,
         )
 
         return self._get_result(operation_id=operation_id)
@@ -2200,12 +2229,16 @@ class Netconf:
         operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
 
+        _identifier = to_c_string(identifier)
+        _version = to_c_string(version)
+        _format = to_c_string(format_)
+
         operation_id = self._get_schema(
             operation_id=operation_id,
             cancel=cancel,
-            identifier=identifier,
-            version=version,
-            format_=format_,
+            identifier=_identifier,
+            version=_version,
+            format_=_format,
         )
 
         return await self._get_result_async(operation_id=operation_id)
@@ -2215,40 +2248,31 @@ class Netconf:
         *,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
-        source: DatastoreType,
-        filter_: str,
-        filter_type: FilterType,
-        filter_namespace_prefix: str,
-        filter_namespace: str,
-        config_filter: ConfigFilter,
-        origin_filters: str,
+        source: c_char_p,
+        filter_: c_char_p,
+        filter_type: c_char_p,
+        filter_namespace_prefix: c_char_p,
+        filter_namespace: c_char_p,
+        config_filter: c_char_p,
+        origin_filters: c_char_p,
         max_depth: int,
         with_origin: bool,
-        defaults_type: DefaultsType,
+        defaults_type: c_char_p,
     ) -> c_uint:
-        _source = to_c_string(source)
-        _filter = to_c_string(filter_)
-        _filter_type = to_c_string(filter_type)
-        _filter_namespace_prefix = to_c_string(filter_namespace_prefix)
-        _filter_namespace = to_c_string(filter_namespace)
-        _config_filter = to_c_string(config_filter)
-        _origin_filters = to_c_string(origin_filters)
-        _defaults_type = to_c_string(defaults_type)
-
         status = self.ffi_mapping.netconf_mapping.get_data(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
             cancel=cancel,
-            source=_source,
-            filter_=_filter,
-            filter_type=_filter_type,
-            filter_namespace_prefix=_filter_namespace_prefix,
-            filter_namespace=_filter_namespace,
-            config_filter=_config_filter,
-            origin_filters=_origin_filters,
+            source=source,
+            filter_=filter_,
+            filter_type=filter_type,
+            filter_namespace_prefix=filter_namespace_prefix,
+            filter_namespace=filter_namespace,
+            config_filter=config_filter,
+            origin_filters=origin_filters,
             max_depth=c_int(max_depth),
             with_origin=c_bool(with_origin),
-            defaults_type=_defaults_type,
+            defaults_type=defaults_type,
         )
         if status != 0:
             raise SubmitOperationException("submitting copy-config operation failed")
@@ -2301,19 +2325,28 @@ class Netconf:
         operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
 
+        _source = to_c_string(source)
+        _filter = to_c_string(filter_)
+        _filter_type = to_c_string(filter_type)
+        _filter_namespace_prefix = to_c_string(filter_namespace_prefix)
+        _filter_namespace = to_c_string(filter_namespace)
+        _config_filter = to_c_string(config_filter)
+        _origin_filters = to_c_string(origin_filters)
+        _defaults_type = to_c_string(defaults_type)
+
         operation_id = self._get_data(
             operation_id=operation_id,
             cancel=cancel,
-            source=source,
-            filter_=filter_,
-            filter_type=filter_type,
-            filter_namespace_prefix=filter_namespace_prefix,
-            filter_namespace=filter_namespace,
-            config_filter=config_filter,
-            origin_filters=origin_filters,
+            source=_source,
+            filter_=_filter,
+            filter_type=_filter_type,
+            filter_namespace_prefix=_filter_namespace_prefix,
+            filter_namespace=_filter_namespace,
+            config_filter=_config_filter,
+            origin_filters=_origin_filters,
             max_depth=max_depth,
             with_origin=with_origin,
-            defaults_type=defaults_type,
+            defaults_type=_defaults_type,
         )
 
         return self._get_result(operation_id=operation_id)
@@ -2364,19 +2397,28 @@ class Netconf:
         operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
 
+        _source = to_c_string(source)
+        _filter = to_c_string(filter_)
+        _filter_type = to_c_string(filter_type)
+        _filter_namespace_prefix = to_c_string(filter_namespace_prefix)
+        _filter_namespace = to_c_string(filter_namespace)
+        _config_filter = to_c_string(config_filter)
+        _origin_filters = to_c_string(origin_filters)
+        _defaults_type = to_c_string(defaults_type)
+
         operation_id = self._get_data(
             operation_id=operation_id,
             cancel=cancel,
-            source=source,
-            filter_=filter_,
-            filter_type=filter_type,
-            filter_namespace_prefix=filter_namespace_prefix,
-            filter_namespace=filter_namespace,
-            config_filter=config_filter,
-            origin_filters=origin_filters,
+            source=_source,
+            filter_=_filter,
+            filter_type=_filter_type,
+            filter_namespace_prefix=_filter_namespace_prefix,
+            filter_namespace=_filter_namespace,
+            config_filter=_config_filter,
+            origin_filters=_origin_filters,
             max_depth=max_depth,
             with_origin=with_origin,
-            defaults_type=defaults_type,
+            defaults_type=_defaults_type,
         )
 
         return await self._get_result_async(operation_id=operation_id)
@@ -2386,18 +2428,15 @@ class Netconf:
         *,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
-        content: str,
-        target: DatastoreType,
+        content: c_char_p,
+        target: c_char_p,
     ) -> c_uint:
-        _content = to_c_string(content)
-        _target = to_c_string(target)
-
         status = self.ffi_mapping.netconf_mapping.edit_data(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
             cancel=cancel,
-            content=_content,
-            target=_target,
+            content=content,
+            target=target,
         )
         if status != 0:
             raise SubmitOperationException("submitting copy-config operation failed")
@@ -2434,11 +2473,14 @@ class Netconf:
         operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
 
+        _content = to_c_string(content)
+        _target = to_c_string(target)
+
         operation_id = self._edit_data(
             operation_id=operation_id,
             cancel=cancel,
-            content=content,
-            target=target,
+            content=_content,
+            target=_target,
         )
 
         return self._get_result(operation_id=operation_id)
@@ -2473,11 +2515,14 @@ class Netconf:
         operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
 
+        _content = to_c_string(content)
+        _target = to_c_string(target)
+
         operation_id = self._edit_data(
             operation_id=operation_id,
             cancel=cancel,
-            content=content,
-            target=target,
+            content=_content,
+            target=_target,
         )
 
         return await self._get_result_async(operation_id=operation_id)
@@ -2487,15 +2532,13 @@ class Netconf:
         *,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
-        action: str,
+        action: c_char_p,
     ) -> c_uint:
-        _action = to_c_string(action)
-
         status = self.ffi_mapping.netconf_mapping.action(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
             cancel=cancel,
-            action=_action,
+            action=action,
         )
         if status != 0:
             raise SubmitOperationException("submitting action operation failed")
@@ -2530,10 +2573,12 @@ class Netconf:
         operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
 
+        _action = to_c_string(action)
+
         operation_id = self._action(
             operation_id=operation_id,
             cancel=cancel,
-            action=action,
+            action=_action,
         )
 
         return self._get_result(operation_id=operation_id)
@@ -2566,10 +2611,12 @@ class Netconf:
         operation_id = OperationIdPointer(c_uint(0))
         cancel = CancelPointer(c_bool(False))
 
+        _action = to_c_string(action)
+
         operation_id = self._action(
             operation_id=operation_id,
             cancel=cancel,
-            action=action,
+            action=_action,
         )
 
         return await self._get_result_async(operation_id=operation_id)
