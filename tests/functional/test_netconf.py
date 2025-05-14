@@ -1,5 +1,7 @@
 import pytest
 
+from scrapli.netconf import DatastoreType
+
 ACTION_ARGNAMES = (
     "action",
     "platform",
@@ -230,15 +232,18 @@ async def test_copy_config_async(netconf, netconf_assert_result):
 
 
 DELETE_CONFIG_ARGNAMES = (
+    "target",
     "platform",
     "transport",
 )
 DELETE_CONFIG_ARGVALUES = (
     (
+        DatastoreType.STARTUP,
         "netopeer",
         "bin",
     ),
     (
+        DatastoreType.STARTUP,
         "netopeer",
         "ssh2",
     ),
@@ -254,9 +259,9 @@ DELETE_CONFIG_IDS = (
     argvalues=DELETE_CONFIG_ARGVALUES,
     ids=DELETE_CONFIG_IDS,
 )
-def test_delete_config(netconf, netconf_assert_result):
+def test_delete_config(target, netconf, netconf_assert_result):
     with netconf as n:
-        netconf_assert_result(actual=n.delete_config())
+        netconf_assert_result(actual=n.delete_config(target=target))
 
 
 @pytest.mark.asyncio
@@ -265,9 +270,9 @@ def test_delete_config(netconf, netconf_assert_result):
     argvalues=DELETE_CONFIG_ARGVALUES,
     ids=DELETE_CONFIG_IDS,
 )
-async def test_delete_config_async(netconf, netconf_assert_result):
+async def test_delete_config_async(target, netconf, netconf_assert_result):
     async with netconf as n:
-        actual = await n.delete_config_async()
+        actual = await n.delete_config_async(target=target)
 
         netconf_assert_result(actual=actual)
 
@@ -368,12 +373,36 @@ EDIT_DATA_ARGNAMES = (
 )
 EDIT_DATA_ARGVALUES = (
     (
-        "",
+        """
+        <system xmlns="urn:some:data">
+            <hostname>my-router</hostname>
+            <interfaces>
+                <name>eth0</name>
+                <enabled>true</enabled>
+            </interfaces>
+            <interfaces>
+                <name>eth1</name>
+                <enabled>false</enabled>
+            </interfaces>
+        </system>
+        """,
         "netopeer",
         "bin",
     ),
     (
-        "",
+        """
+        <system xmlns="urn:some:data">
+            <hostname>my-router</hostname>
+            <interfaces>
+                <name>eth0</name>
+                <enabled>true</enabled>
+            </interfaces>
+            <interfaces>
+                <name>eth1</name>
+                <enabled>false</enabled>
+            </interfaces>
+        </system>
+        """,
         "netopeer",
         "ssh2",
     ),

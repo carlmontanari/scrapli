@@ -1400,8 +1400,8 @@ class LibScrapliNetconfMapping:
         ptr: DriverPointer,
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
-        content: c_char_p,
         target: c_char_p,
+        content: c_char_p,
     ) -> int:
         """
         Execute a edit-data rpc operation.
@@ -1412,8 +1412,8 @@ class LibScrapliNetconfMapping:
             ptr: ptr to the netconf object
             operation_id: int pointer to fill with the id of the submitted operation
             cancel: bool pointer that can be set to true to cancel the operation
-            content: full payload content to send
             target: datastore to target
+            content: full payload content to send
 
         Returns:
             int: return code, non-zero value indicates an error. technically a c_uint8 converted by
@@ -1427,8 +1427,8 @@ class LibScrapliNetconfMapping:
             ptr,
             operation_id,
             cancel,
-            content,
             target,
+            content,
         )
 
     def action(

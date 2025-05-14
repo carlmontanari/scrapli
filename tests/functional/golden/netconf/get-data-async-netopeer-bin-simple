@@ -1,0 +1,1 @@
+<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><data xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-nmda"><system xmlns="urn:some:data"><hostname>my-router</hostname><interfaces><name>eth0</name><enabled>true</enabled></interfaces><interfaces><name>eth1</name><enabled>false</enabled></interfaces></system></data></rpc-reply>
