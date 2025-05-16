@@ -2,7 +2,7 @@
 
 import urllib.request
 from importlib import import_module, resources
-from io import BufferedReader, BytesIO, TextIOWrapper
+from io import BytesIO, TextIOWrapper
 from logging import getLogger
 from typing import Any, Optional, TextIO
 
@@ -11,7 +11,7 @@ from scrapli.exceptions import ParsingException
 logger = getLogger(__name__)
 
 
-def _textfsm_get_template(platform: str, command: str) -> Optional[TextIO]:
+def textfsm_get_template(platform: str, command: str) -> Optional[TextIO]:
     """
     Find correct TextFSM template based on platform and command executed
 
@@ -74,13 +74,13 @@ def _textfsm_to_dict(
 
 
 def textfsm_parse(
-    template: str | TextIOWrapper, output: str, to_dict: bool = True
+    template: str | TextIO, output: str, to_dict: bool = True
 ) -> list[Any] | dict[str, Any]:
     """
     Parse output with TextFSM and ntc-templates, try to return structured output
 
     Args:
-        template: TextIOWrapper or string of URL or filesystem path to template to use to parse data
+        template: TextIO or string of URL or filesystem path to template to use to parse data
         output: unstructured output from device to parse
         to_dict: convert textfsm output from list of lists to list of dicts -- basically create dict
             from header and row data so it is easier to read/parse the output
@@ -95,21 +95,19 @@ def textfsm_parse(
     """
     import textfsm
 
-    template_file: BufferedReader | TextIOWrapper
-
-    if not isinstance(template, TextIOWrapper):
+    if isinstance(template, str):
         if template.startswith("http://") or template.startswith("https://"):
             with urllib.request.urlopen(template) as response:
-                template_file = TextIOWrapper(
-                    BytesIO(response.read()),
-                    encoding=response.headers.get_content_charset(),
+                re_table = textfsm.TextFSM(
+                    TextIOWrapper(
+                        BytesIO(response.read()),
+                        encoding=response.headers.get_content_charset(),
+                    )
                 )
         else:
-            template_file = open(template, mode="rb")
+            re_table = textfsm.TextFSM(open(template, mode="rb"))
     else:
-        template_file = template
-
-    re_table = textfsm.TextFSM(template_file)
+        re_table = textfsm.TextFSM(template)
 
     try:
         structured_output: list[Any] | dict[str, Any] = re_table.ParseText(output)

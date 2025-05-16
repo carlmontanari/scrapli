@@ -2,6 +2,9 @@
 
 from typing import Any, TextIO
 
+from scrapli.cli_parse import genie_parse, textfsm_get_template, textfsm_parse
+from scrapli.exceptions import ParsingException
+
 OPERATION_DELIMITER = "__libscrapli__"
 
 
@@ -140,20 +143,20 @@ class Result:
 
     def textfsm_parse(
         self,
+        index: int = 0,
         template: str | TextIO | None = None,
         to_dict: bool = True,
-        raise_err: bool = False,
-    ) -> dict[str, Any] | list[Any]:
+    ) -> list[Any] | dict[str, Any]:
         """
         Parse results with textfsm, always return structured data
 
         Returns an empty list if parsing fails!
 
         Args:
+            index: the index of the result to parse, assumes first/zeroith if not provided
             template: string path to textfsm template or opened textfsm template file
             to_dict: convert textfsm output from list of lists to list of dicts -- basically create
                 dict from header and row data so it is easier to read/parse the output
-            raise_err: exceptions in the textfsm parser will raised for the caller to handle
 
         Returns:
             structured_result: empty list or parsed data from textfsm
@@ -162,10 +165,19 @@ class Result:
             N/A
 
         """
-        raise NotImplementedError("not yet implemented!")
+        if template is None:
+            template = textfsm_get_template(
+                platform=self.textfsm_platform, command=self.inputs[index]
+            )
+
+        if template is None:
+            raise ParsingException("no template provided or available for input")
+
+        return textfsm_parse(template=template, output=self.result, to_dict=to_dict)
 
     def genie_parse(
         self,
+        index: int = 0,
     ) -> dict[str, Any] | list[Any]:
         """
         Parse results with genie, always return structured data
@@ -173,7 +185,7 @@ class Result:
         Returns an empty list if parsing fails!
 
         Args:
-            N/A
+            index: the index of the result to parse, assumes first/zeroith if not provided
 
         Returns:
             structured_result: empty list or parsed data from genie
@@ -182,4 +194,4 @@ class Result:
             N/A
 
         """
-        raise NotImplementedError("not yet implemented!")
+        return genie_parse(self.genie_platform, self.inputs[index], self.results[index])
