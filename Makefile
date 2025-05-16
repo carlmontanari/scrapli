@@ -23,7 +23,7 @@ test-functional: ## Run functional tests
 	python -m pytest tests/functional/ -v
 
 test-functional-ci: ## Run functional tests against "ci" test topology
-	python -m pytest tests/functional/ -v
+	python -m pytest tests/functional/ -v $(ARGS)
 
 build-netopeer-server: ## Builds the netopeer server image
 	docker build \
