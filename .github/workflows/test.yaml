@@ -106,14 +106,12 @@ jobs:
 
       - name: setup tmate session
         uses: mxschmitt/action-tmate@v3
-        # if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_e2e }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_e2e }}
 
       - name: wait for srl node to be available
         run: |
           ./wait.sh
         working-directory: tests/functional/clab
-        # wait.sh should timeout but seems like it sometimes gets hung in actions
-        timeout-minutes: 5
 
       - name: functional tests
         # skip the "enormous" output test as its super slow in gh runners
