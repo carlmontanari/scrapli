@@ -14,7 +14,7 @@ from logging import getLogger
 from pathlib import Path
 from random import randint
 from types import TracebackType
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 
 from scrapli.auth import Options as AuthOptions
 from scrapli.cli_decorators import handle_operation_timeout, handle_operation_timeout_async
@@ -104,6 +104,7 @@ class Cli:
             logger_name += f":{logging_uid}"
 
         self.logger = getLogger(logger_name)
+        self._logging_uid = logging_uid
 
         self.ffi_mapping = LibScrapliMapping()
 
@@ -120,6 +121,7 @@ class Cli:
         self.logger_callback = (
             LogFuncCallback(logger_callback) if logger_callback else LogFuncCallback(0)
         )
+        self._logger_callback = logger_callback
 
         self.port = port
 
@@ -252,6 +254,20 @@ class Cli:
             f"auth_options={self.auth_options!r} "
             f"session_options={self.auth_options!r} "
             f"transport_options={self.transport_options!r}) "
+        )
+
+    def __copy__(self, memodict: dict[Any, Any] = {}) -> "Cli":
+        # reasonably safely copy of the object... *reasonably*... basically assumes that options
+        # will never be mutated during an objects lifetime, which *should* be the case. probably.
+        return Cli(
+            host=self.host,
+            definition_file_or_name=self.definition_file_or_name,
+            logger_callback=self._logger_callback,
+            port=self.port,
+            auth_options=self.auth_options,
+            session_options=self.session_options,
+            transport_options=self.transport_options,
+            logging_uid=self._logging_uid,
         )
 
     def _load_definition(self, definition_file_or_name: str) -> None:

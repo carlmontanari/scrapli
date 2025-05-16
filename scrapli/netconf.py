@@ -7,7 +7,7 @@ from enum import Enum
 from logging import getLogger
 from random import randint
 from types import TracebackType
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 
 from scrapli.auth import Options as AuthOptions
 from scrapli.exceptions import (
@@ -297,6 +297,7 @@ class Netconf:
             logger_name += f":{logging_uid}"
 
         self.logger = getLogger(logger_name)
+        self._logging_uid = logging_uid
 
         self.ffi_mapping = LibScrapliMapping()
 
@@ -306,6 +307,7 @@ class Netconf:
         self.logger_callback = (
             LogFuncCallback(logger_callback) if logger_callback else LogFuncCallback(0)
         )
+        self._logger_callback = logger_callback
 
         self.port = port
 
@@ -401,6 +403,60 @@ class Netconf:
         """
         await self.close_async(
             force=self.options.close_force,
+        )
+
+    def __str__(self) -> str:
+        """
+        Magic str method for Netconf object.
+
+        Args:
+            N/A
+
+        Returns:
+            str: str representation of Netconf
+
+        Raises:
+            N/A
+
+        """
+        return f"scrapli.Netconf {self.host}:{self.port}"
+
+    def __repr__(self) -> str:
+        """
+        Magic repr method for Netconf object.
+
+        Args:
+            N/A
+
+        Returns:
+            str: repr for Netconf object
+
+        Raises:
+            N/A
+
+        """
+        return (
+            f"{self.__class__.__name__}("
+            f"host={self.host!r}, "
+            f"port={self.port!r}, "
+            f"options={self.options!r} "
+            f"auth_options={self.auth_options!r} "
+            f"session_options={self.auth_options!r} "
+            f"transport_options={self.transport_options!r}) "
+        )
+
+    def __copy__(self, memodict: dict[Any, Any] = {}) -> "Netconf":
+        # reasonably safely copy of the object... *reasonably*... basically assumes that options
+        # will never be mutated during an objects lifetime, which *should* be the case. probably.
+        return Netconf(
+            host=self.host,
+            logger_callback=self._logger_callback,
+            port=self.port,
+            options=self.options,
+            auth_options=self.auth_options,
+            session_options=self.session_options,
+            transport_options=self.transport_options,
+            logging_uid=self._logging_uid,
         )
 
     def _ptr_or_exception(self) -> DriverPointer:
