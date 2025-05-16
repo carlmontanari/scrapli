@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import pytest
 
 from scrapli.netconf import DatastoreType
@@ -140,7 +142,7 @@ def test_close_session(netconf, netconf_assert_result):
     ids=CLOSE_SESSION_IDS,
 )
 async def test_close_session_async(netconf, netconf_assert_result):
-    await netconf.open()
+    await netconf.open_async()
     actual = await netconf.close_session_async()
     netconf_assert_result(actual=actual)
 
@@ -635,17 +637,17 @@ KILL_SESSION_ARGNAMES = (
 )
 KILL_SESSION_ARGVALUES = (
     (
-        "netopeer",
+        "nokia_srl",
         "bin",
     ),
     (
-        "netopeer",
+        "nokia_srl",
         "ssh2",
     ),
 )
 KILL_SESSION_IDS = (
-    "netopeer-bin-simple",
-    "netopeer-ssh2-simple",
+    "nokia-srl-bin-simple",
+    "nokia-srl-ssh2-simple",
 )
 
 
@@ -655,8 +657,14 @@ KILL_SESSION_IDS = (
     ids=KILL_SESSION_IDS,
 )
 def test_kill_session(netconf, netconf_assert_result):
-    with netconf as n:
-        netconf_assert_result(actual=n.kill_session())
+    # had some issues with (maybe my jank patch) netopeer -- it didnt wanna let me open two
+    # connections at the same time and i never looked closer... so this is just tested with srl
+    netconf_2 = deepcopy(netconf)
+
+    netconf.open()
+    netconf_2.open()
+
+    netconf_assert_result(actual=netconf.kill_session(session_id=netconf_2.session_id))
 
 
 @pytest.mark.asyncio
@@ -666,10 +674,14 @@ def test_kill_session(netconf, netconf_assert_result):
     ids=KILL_SESSION_IDS,
 )
 async def test_kill_session_async(netconf, netconf_assert_result):
-    async with netconf as n:
-        actual = await n.kill_session_async()
+    netconf_2 = deepcopy(netconf)
 
-        netconf_assert_result(actual=actual)
+    await netconf.open_async()
+    await netconf_2.open_async()
+
+    actual = await netconf.kill_session_async(session_id=netconf_2.session_id)
+
+    netconf_assert_result(actual=actual)
 
 
 LOCK_ARGNAMES = (
@@ -742,6 +754,7 @@ UNLOCK_IDS = (
 )
 def test_unlock(netconf, netconf_assert_result):
     with netconf as n:
+        n.lock()
         netconf_assert_result(actual=n.unlock())
 
 
@@ -753,6 +766,7 @@ def test_unlock(netconf, netconf_assert_result):
 )
 async def test_unlock_async(netconf, netconf_assert_result):
     async with netconf as n:
+        await n.lock_async()
         actual = await n.unlock_async()
 
         netconf_assert_result(actual=actual)

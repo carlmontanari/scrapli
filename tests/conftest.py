@@ -47,9 +47,11 @@ def clean_cli_output() -> str:
     return _clean_cli_output
 
 
-NETCONF_TIMESTAMP_PATTERN = re.compile(r"\d{4}-\d{2}-\d{2}T\d+:\d+:\d+\.\d+Z")
+NETCONF_TIMESTAMP_PATTERN = re.compile(r"\d{4}-\d{2}-\d{2}T\d+:\d+:\d+\.\d+(?:([\d:+]+)|Z)")
 NETCONF_SESSION_ID_PATTERN = re.compile(r"<session-id>\d+</session-id>")
 NETCONF_PASSWORD_PATTERN = re.compile(r"<password>.*?</password>")
+NETCONF_DUMMY_COUNTER_PATTERN = re.compile(r"<counter>\d+</counter>")
+NETCONF_STATISTICS_ELEMENT_PATTERN = re.compile(r"<statistics>.*?</statistics>")
 
 
 @pytest.fixture(scope="function")
@@ -58,6 +60,8 @@ def clean_netconf_output() -> str:
         output = NETCONF_TIMESTAMP_PATTERN.sub("__TIMESTAMP__", output)
         output = NETCONF_SESSION_ID_PATTERN.sub("__SESSIONID__", output)
         output = NETCONF_PASSWORD_PATTERN.sub("__PASSWORD__", output)
+        output = NETCONF_DUMMY_COUNTER_PATTERN.sub("__COUNTER__", output)
+        output = NETCONF_STATISTICS_ELEMENT_PATTERN.sub("__STATISTICS__", output)
 
         return output
 
