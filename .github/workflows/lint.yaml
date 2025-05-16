@@ -9,9 +9,9 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     strategy:
-      max-parallel: 5
+      max-parallel: 4
       matrix:
-        version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        version: ["3.10", "3.11", "3.12", "3.13"]
 
     steps:
       - name: checkout
