@@ -1,4 +1,4 @@
-from copy import deepcopy
+from copy import copy
 
 import pytest
 
@@ -659,7 +659,7 @@ KILL_SESSION_IDS = (
 def test_kill_session(netconf, netconf_assert_result):
     # had some issues with (maybe my jank patch) netopeer -- it didnt wanna let me open two
     # connections at the same time and i never looked closer... so this is just tested with srl
-    netconf_2 = deepcopy(netconf)
+    netconf_2 = copy(netconf)
 
     netconf.open()
     netconf_2.open()
@@ -674,7 +674,7 @@ def test_kill_session(netconf, netconf_assert_result):
     ids=KILL_SESSION_IDS,
 )
 async def test_kill_session_async(netconf, netconf_assert_result):
-    netconf_2 = deepcopy(netconf)
+    netconf_2 = copy(netconf)
 
     await netconf.open_async()
     await netconf_2.open_async()
