@@ -1,3 +1,8 @@
+import re
+
+import pytest
+
+
 def pytest_addoption(parser):
     parser.addoption(
         "--record",
@@ -19,3 +24,41 @@ def pytest_addoption(parser):
         default=False,
         help="skip slow tests -- like really huge outputes",
     )
+
+
+CLI_USER_AT_HOST_PATTERN = re.compile(r"\b\w+@\w+\b")
+CLI_TIMESTAMP_PATTERN = re.compile(
+    r"(?im)((mon)|(tue)|(wed)|(thu)|(fri)|(sat)|(sun))\s+"
+    r"((jan)|(feb)|(mar)|(apr)|(may)|(jun)|(jul)|(aug)|(sep)|(oct)|(nov)|(dec))\s+"
+    r"\d+\s+\d+:\d+:\d+\s\d+"
+)
+CLI_PASSWORD_PATTERN = re.compile(r"(?im)^\s+password .*$", re.MULTILINE)
+
+
+@pytest.fixture(scope="function")
+def clean_cli_output() -> str:
+    def _clean_cli_output(output: str) -> str:
+        output = CLI_USER_AT_HOST_PATTERN.sub("user@host", output)
+        output = CLI_TIMESTAMP_PATTERN.sub("Mon Jan 1 00:00:00 2025", output)
+        output = CLI_PASSWORD_PATTERN.sub("__PASSWORD__", output)
+
+        return output
+
+    return _clean_cli_output
+
+
+NETCONF_TIMESTAMP_PATTERN = re.compile(r"\d{4}-\d{2}-\d{2}T\d+:\d+:\d+\.\d+Z")
+NETCONF_SESSION_ID_PATTERN = re.compile(r"<session-id>\d+</session-id>")
+NETCONF_PASSWORD_PATTERN = re.compile(r"<password>.*?</password>")
+
+
+@pytest.fixture(scope="function")
+def clean_netconf_output() -> str:
+    def _clean_netconf_output(output: str) -> str:
+        output = NETCONF_TIMESTAMP_PATTERN.sub("__TIMESTAMP__", output)
+        output = NETCONF_SESSION_ID_PATTERN.sub("__SESSIONID__", output)
+        output = NETCONF_PASSWORD_PATTERN.sub("__PASSWORD__", output)
+
+        return output
+
+    return _clean_netconf_output

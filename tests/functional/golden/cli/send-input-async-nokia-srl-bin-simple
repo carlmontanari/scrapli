@@ -16,7 +16,7 @@ system {
                     local
                 ]
                 linuxadmin-user {
-                    password $y$j9T$M4zc5SlI3znLz6Zk1B1sK.$V5GCtle0EBx7hWhngQ5u.pOQwO/KDVEQHtBqJ66EhW5
+__PASSWORD__
                 }
             }
             server-group local {

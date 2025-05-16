@@ -68,7 +68,9 @@ def cli(platform, transport) -> Cli:
 
 
 @pytest.fixture(scope="function")
-def cli_assert_result(request: pytest.FixtureRequest) -> Callable[[Result], None]:
+def cli_assert_result(
+    request: pytest.FixtureRequest, clean_cli_output: Callable[[str], str]
+) -> Callable[[Result], None]:
     """Fixture to update or assert golden files for functional tests"""
     filename = _original_name_to_filename(originalname=request.node.originalname)
     golden_dir = f"{request.node.path.parent}/golden/cli"
@@ -80,14 +82,14 @@ def cli_assert_result(request: pytest.FixtureRequest) -> Callable[[Result], None
     def _cli_assert_result(actual: Result) -> None:
         if request.config.getoption("--update"):
             with open(file=f, mode="w") as _f:
-                _f.write(actual.result)
+                _f.write(clean_cli_output(actual.result))
 
             return
 
         with open(file=f, mode="r", newline="") as _f:
             golden = _f.read()
 
-        assert actual.result == golden
+        assert clean_cli_output(actual.result) == golden
 
         assert actual.start_time != 0
         assert actual.end_time != 0
@@ -143,7 +145,9 @@ def netconf(platform, transport) -> Netconf:
 
 
 @pytest.fixture(scope="function")
-def netconf_assert_result(request: pytest.FixtureRequest) -> Callable[[Result], None]:
+def netconf_assert_result(
+    request: pytest.FixtureRequest, clean_netconf_output: Callable[[str], str]
+) -> Callable[[Result], None]:
     """Fixture to update or assert golden files for functional tests"""
     filename = _original_name_to_filename(originalname=request.node.originalname)
     golden_dir = f"{request.node.path.parent}/golden/netconf"
@@ -155,14 +159,14 @@ def netconf_assert_result(request: pytest.FixtureRequest) -> Callable[[Result], 
     def _netconf_assert_result(actual: Result) -> None:
         if request.config.getoption("--update"):
             with open(file=f, mode="w") as _f:
-                _f.write(actual.result)
+                _f.write(clean_netconf_output(actual.result))
 
             return
 
         with open(file=f, mode="r", newline="") as _f:
             golden = _f.read()
 
-        assert actual.result == golden
+        assert clean_netconf_output(actual.result) == golden
 
         assert actual.start_time != 0
         assert actual.end_time != 0
