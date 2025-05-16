@@ -6,9 +6,9 @@ no aaa root
 !
 username admin role network-admin secret sha512 $6$oZ/Y7soa0jnzZY.q$ng59V5ArhD.L.KYbbtPZDy/rMzh4Rm/tSJZ2ivGbO.B66mZupJ3tRoBRl0o52/IdZHktmMnPgiVLc7j6MQ5be.
 username admin-sshkey privilege 15 role network-admin secret *
-username admin-sshkey ssh-key ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIB+SagqWzUmmTTvY5Vygtovc46wiHHzCk9zr7NHMaBNc libscrapli@foo
+username admin-sshkey ssh-key ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIB+SagqWzUmmTTvY5Vygtovc46wiHHzCk9zr7NHMaBNc user@host
 username admin-sshkey-passphrase privilege 15 role network-admin secret *
-username admin-sshkey-passphrase ssh-key ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDelVQKXaDJ2Nbulmu2St884NLoxx05DMv/P4eu2/TCP libscrapli@foo
+username admin-sshkey-passphrase ssh-key ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDelVQKXaDJ2Nbulmu2St884NLoxx05DMv/P4eu2/TCP user@host
 username netconf-admin privilege 15 role network-admin secret sha512 $6$oZ/Y7soa0jnzZY.q$ng59V5ArhD.L.KYbbtPZDy/rMzh4Rm/tSJZ2ivGbO.B66mZupJ3tRoBRl0o52/IdZHktmMnPgiVLc7j6MQ5be.
 !
 management api http-commands
