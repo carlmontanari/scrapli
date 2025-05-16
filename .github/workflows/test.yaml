@@ -86,7 +86,7 @@ jobs:
       - name: run containerlab topology
         run: |
           sudo clab deploy -t topo.ci.amd64.yaml
-        working-directory: e2e/clab
+        working-directory: tests/functional/clab
 
       - name: install python dev tools
         run: |
@@ -103,7 +103,7 @@ jobs:
       - name: wait for srl node to be available
         run: |
           ./wait.sh
-        working-directory: e2e/clab
+        working-directory: tests/functional/clab
         # wait.sh should timeout but seems like it sometimes gets hung in actions
         timeout-minutes: 5
 

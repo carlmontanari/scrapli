@@ -3,7 +3,7 @@ from io import TextIOWrapper
 
 import pytest
 
-from scrapli.cli_parse import _textfsm_get_template, genie_parse, textfsm_parse
+from scrapli.cli_parse import genie_parse, textfsm_get_template, textfsm_parse
 from scrapli.exceptions import ParsingException
 
 IOS_ARP = """Protocol  Address          Age (min)  Hardware Addr   Type   Interface
@@ -14,14 +14,14 @@ IOS_ARP_NTC_TEMPLATE_URL = "https://raw.githubusercontent.com/networktocode/ntc-
 
 
 def test_textfsm_get_template():
-    template = _textfsm_get_template("cisco_nxos", "show ip arp")
+    template = textfsm_get_template("cisco_nxos", "show ip arp")
     template_dir = f"{resources.files('ntc_templates')}/templates"
     assert isinstance(template, TextIOWrapper)
     assert template.name == f"{template_dir}/cisco_nxos_show_ip_arp.textfsm"
 
 
 def test_textfsm_get_template_invalid_template():
-    template = _textfsm_get_template("cisco_nxos", "show racecar")
+    template = textfsm_get_template("cisco_nxos", "show racecar")
     assert not template
 
 
@@ -48,7 +48,7 @@ def test_textfsm_get_template_invalid_template():
 )
 def test_textfsm_parse(test_data):
     to_dict, expected_output = test_data
-    template = _textfsm_get_template("cisco_ios", "show ip arp")
+    template = textfsm_get_template("cisco_ios", "show ip arp")
     result = textfsm_parse(template, IOS_ARP, to_dict=to_dict)
     assert isinstance(result, list)
     assert result[0] == expected_output
@@ -77,7 +77,7 @@ def test_textfsm_parse(test_data):
 )
 def test_textfsm_parse_string_path(test_data):
     to_dict, expected_output = test_data
-    template = _textfsm_get_template("cisco_ios", "show ip arp")
+    template = textfsm_get_template("cisco_ios", "show ip arp")
     result = textfsm_parse(template.name, IOS_ARP, to_dict=to_dict)
     assert isinstance(result, list)
     assert result[0] == expected_output
@@ -113,7 +113,7 @@ def test_textfsm_parse_url_path(test_data):
 
 
 def test_textfsm_parse_failed_to_parse():
-    template = _textfsm_get_template("cisco_ios", "show ip arp")
+    template = textfsm_get_template("cisco_ios", "show ip arp")
 
     with pytest.raises(ParsingException):
         textfsm_parse(template, "not really arp data")
