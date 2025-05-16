@@ -825,12 +825,16 @@ class Netconf:
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
         payload: c_char_p,
+        base_namespace_prefix: c_char_p,
+        extra_namespaces: c_char_p,
     ) -> c_uint:
         status = self.ffi_mapping.netconf_mapping.raw_rpc(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
             cancel=cancel,
             payload=payload,
+            base_namespace_prefix=base_namespace_prefix,
+            extra_namespaces=extra_namespaces,
         )
         if status != 0:
             raise SubmitOperationException("submitting raw rpc operation failed")
@@ -842,6 +846,8 @@ class Netconf:
         self,
         payload: str,
         *,
+        base_namespace_prefix: str = "",
+        extra_namespaces: str = "",
         operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
@@ -849,6 +855,11 @@ class Netconf:
 
         Args:
             payload: the raw rpc payload
+            base_namespace_prefix: prefix to use for hte base/default netconf base namespace
+            extra_namespaces: extra namespace::prefix pairs (using "::" as split there), and
+                split by "__libscrapli__" for additional pairs. this plus the base namespace
+                prefix can allow for weird cases like nxos where the base namespace must be
+                prefixed and then additional namespaces indicating desired targets must be added
             operation_timeout_ns: operation timeout in ns for this operation
 
         Returns:
@@ -866,8 +877,16 @@ class Netconf:
         cancel = CancelPointer(c_bool(False))
 
         _payload = to_c_string(payload)
+        _base_namespace_prefix = to_c_string(base_namespace_prefix)
+        _extra_namespaces = to_c_string(extra_namespaces)
 
-        operation_id = self._raw_rpc(operation_id=operation_id, cancel=cancel, payload=_payload)
+        operation_id = self._raw_rpc(
+            operation_id=operation_id,
+            cancel=cancel,
+            payload=_payload,
+            base_namespace_prefix=_base_namespace_prefix,
+            extra_namespaces=_extra_namespaces,
+        )
 
         return self._get_result(operation_id=operation_id)
 
@@ -876,6 +895,8 @@ class Netconf:
         self,
         payload: str,
         *,
+        base_namespace_prefix: str = "",
+        extra_namespaces: str = "",
         operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
@@ -883,6 +904,11 @@ class Netconf:
 
         Args:
             payload: the raw rpc payload
+            base_namespace_prefix: prefix to use for hte base/default netconf base namespace
+            extra_namespaces: extra namespace::prefix pairs (using "::" as split there), and
+                split by "__libscrapli__" for additional pairs. this plus the base namespace
+                prefix can allow for weird cases like nxos where the base namespace must be
+                prefixed and then additional namespaces indicating desired targets must be added
             operation_timeout_ns: operation timeout in ns for this operation
 
         Returns:
@@ -900,8 +926,16 @@ class Netconf:
         cancel = CancelPointer(c_bool(False))
 
         _payload = to_c_string(payload)
+        _base_namespace_prefix = to_c_string(base_namespace_prefix)
+        _extra_namespaces = to_c_string(extra_namespaces)
 
-        operation_id = self._raw_rpc(operation_id=operation_id, cancel=cancel, payload=_payload)
+        operation_id = self._raw_rpc(
+            operation_id=operation_id,
+            cancel=cancel,
+            payload=_payload,
+            base_namespace_prefix=_base_namespace_prefix,
+            extra_namespaces=_extra_namespaces,
+        )
 
         return await self._get_result_async(operation_id=operation_id)
 
