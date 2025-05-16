@@ -106,7 +106,7 @@ jobs:
 
       - name: setup tmate session
         uses: mxschmitt/action-tmate@v3
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_e2e }}
+        # if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_e2e }}
 
       - name: wait for srl node to be available
         run: |
