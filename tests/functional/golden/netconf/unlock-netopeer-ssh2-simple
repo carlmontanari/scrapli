@@ -1,1 +1,1 @@
-<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><rpc-error><error-type>application</error-type><error-tag>operation-failed</error-tag><error-severity>error</error-severity><error-message xml:lang="en">Module "ietf-netconf-acm" was not locked by this session 531.</error-message></rpc-error></rpc-reply>
+<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="102"><ok/></rpc-reply>
