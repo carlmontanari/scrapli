@@ -19,6 +19,10 @@ on:
 jobs:
   unit:
     runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 5
+      matrix:
+        version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
 
     steps:
       - name: checkout
@@ -34,9 +38,9 @@ jobs:
       - name: set up python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: ${{ matrix.version }}
 
-      # genie has ridiculous pins, pip (and maybe you?) will die if you try to isntall it
+      # genie has ridiculous pins, pip (and maybe you?) will die if you try to install it
       # with basically anything else... so just install separately
       - name: install python dev tools
         run: |

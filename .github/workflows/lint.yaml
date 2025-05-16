@@ -8,6 +8,11 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 5
+      matrix:
+        version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -22,7 +27,7 @@ jobs:
       - name: set up python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: ${{ matrix.version }}
 
       - name: install python dev tools
         run: |
