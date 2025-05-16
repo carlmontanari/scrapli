@@ -195,6 +195,8 @@ class LibScrapliNetconfMapping:
                 OperationIdPointer,
                 CancelPointer,
                 c_char_p,
+                c_char_p,
+                c_char_p,
             ],
             int,
         ] = lib.ls_netconf_raw_rpc
@@ -202,6 +204,8 @@ class LibScrapliNetconfMapping:
             DriverPointer,
             OperationIdPointer,
             CancelPointer,
+            c_char_p,
+            c_char_p,
             c_char_p,
         ]
         lib.ls_netconf_raw_rpc.restype = c_uint8
@@ -803,6 +807,8 @@ class LibScrapliNetconfMapping:
         operation_id: OperationIdPointer,
         cancel: CancelPointer,
         payload: c_char_p,
+        base_namespace_prefix: c_char_p,
+        extra_namespaces: c_char_p,
     ) -> int:
         """
         Execute a "raw" / user defined rpc operation.
@@ -814,6 +820,11 @@ class LibScrapliNetconfMapping:
             operation_id: int pointer to fill with the id of the submitted operation
             cancel: bool pointer that can be set to true to cancel the operation
             payload: the payload to write into the outer rpc element
+            base_namespace_prefix: prefix to use for hte base/default netconf base namespace
+            extra_namespaces: extra namespace::prefix pairs (using "::" as split there), and
+                split by "__libscrapli__" for additional pairs. this plus the base namespace
+                prefix can allow for weird cases like nxos where the base namespace must be
+                prefixed and then additional namespaces indicating desired targets must be added
 
         Returns:
             int: return code, non-zero value indicates an error. technically a c_uint8 converted by
@@ -828,6 +839,8 @@ class LibScrapliNetconfMapping:
             operation_id,
             cancel,
             payload,
+            base_namespace_prefix,
+            extra_namespaces,
         )
 
     def get_config(
