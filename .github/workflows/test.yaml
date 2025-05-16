@@ -83,6 +83,10 @@ jobs:
         run: |
           bash -c "$(curl -sL https://get.containerlab.dev)" -- -v ${{ env.CONTAINERLAB_VERSION }}
 
+      - name: build netopeer server image
+        run: |
+          make build-netopeer-server
+
       - name: run containerlab topology
         run: |
           sudo clab deploy -t topo.ci.amd64.yaml
