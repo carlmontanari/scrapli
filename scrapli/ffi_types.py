@@ -16,8 +16,8 @@ from ctypes import (
 )
 from typing import TypeAlias
 
-DriverPointer: TypeAlias = c_void_p
-OperationId: TypeAlias = c_uint
+DriverPointer = c_void_p
+OperationId = c_uint
 
 # mypy seems to dislike the pointer bits, but these do accurately reflect the api surface,
 # so... we'll just tell mypy to chill out on these

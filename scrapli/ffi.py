@@ -65,9 +65,8 @@ def get_libscrapli_path() -> str:
 
         return override_path
 
-    source_lib_filename = (
-        f"{importlib.resources.files("scrapli.lib")}/{get_libscrapli_shared_object_filename()}"
-    )
+    source_lib_dir = importlib.resources.files("scrapli.lib")
+    source_lib_filename = f"{source_lib_dir}/{get_libscrapli_shared_object_filename()}"
 
     logger.debug("loading libscrapli from scrapli installation '%s'", source_lib_filename)
 
