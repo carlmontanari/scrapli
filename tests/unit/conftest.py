@@ -154,7 +154,7 @@ def netconf_assert_result(
         with open(file=f, mode="r", newline="") as _f:
             golden = _f.read()
 
-        assert clean_netconf_output(actual.result) == golden
+        assert clean_netconf_output(actual.result) == clean_netconf_output(golden)
 
         assert actual.port == NETCONF_PORT
         assert actual.host == HOST
