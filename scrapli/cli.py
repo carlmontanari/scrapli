@@ -42,6 +42,7 @@ from scrapli.ffi_types import (
     ZigU64Slice,
     to_c_string,
 )
+from scrapli.helper import resolve_file
 from scrapli.session import (
     DEFAULT_READ_DELAY_BACKOFF_FACTOR,
     DEFAULT_READ_DELAY_MAX_NS,
@@ -1099,6 +1100,94 @@ class Cli:
                 return result
 
         return result  # type: ignore[return-value]
+
+    def send_inputs_from_file(  # noqa: PLR0913
+        self,
+        f: str,
+        *,
+        requested_mode: str = "",
+        input_handling: InputHandling = InputHandling.FUZZY,
+        retain_input: bool = False,
+        retain_trailing_prompt: bool = False,
+        stop_on_indicated_failure: bool = True,
+        operation_timeout_ns: Optional[int] = None,
+    ) -> Result:
+        """
+        Send inputs (plural! from a file, line-by-line) on the cli connection.
+
+        Args:
+            f: the file to load -- each line will be sent, tralining newlines ignored
+            requested_mode: name of the mode to send the input at`
+            input_handling: how to handle the input
+            retain_input: retain the input in the final "result"
+            retain_trailing_prompt: retain the trailing prompt in the final "result"
+            stop_on_indicated_failure: stops sending inputs at first indicated failure
+            operation_timeout_ns: operation timeout in ns for this operation
+
+        Returns:
+            MultiResult: a MultiResult object representing the operations
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        with open(resolve_file(f), encoding="utf-8", mode="r") as _f:
+            inputs = _f.read().splitlines()
+
+        return self.send_inputs(
+            inputs=inputs,
+            requested_mode=requested_mode,
+            input_handling=input_handling,
+            retain_input=retain_input,
+            retain_trailing_prompt=retain_trailing_prompt,
+            stop_on_indicated_failure=stop_on_indicated_failure,
+            operation_timeout_ns=operation_timeout_ns,
+        )
+
+    async def send_inputs_from_file_async(  # noqa: PLR0913
+        self,
+        f: str,
+        *,
+        requested_mode: str = "",
+        input_handling: InputHandling = InputHandling.FUZZY,
+        retain_input: bool = False,
+        retain_trailing_prompt: bool = False,
+        stop_on_indicated_failure: bool = True,
+        operation_timeout_ns: Optional[int] = None,
+    ) -> Result:
+        """
+        Send inputs (plural! from a file, line-by-line) on the cli connection.
+
+        Args:
+            f: the file to load -- each line will be sent, tralining newlines ignored
+            requested_mode: name of the mode to send the input at`
+            input_handling: how to handle the input
+            retain_input: retain the input in the final "result"
+            retain_trailing_prompt: retain the trailing prompt in the final "result"
+            stop_on_indicated_failure: stops sending inputs at first indicated failure
+            operation_timeout_ns: operation timeout in ns for this operation
+
+        Returns:
+            MultiResult: a MultiResult object representing the operations
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        with open(resolve_file(f), encoding="utf-8", mode="r") as _f:
+            inputs = _f.read().splitlines()
+
+        return await self.send_inputs_async(
+            inputs=inputs,
+            requested_mode=requested_mode,
+            input_handling=input_handling,
+            retain_input=retain_input,
+            retain_trailing_prompt=retain_trailing_prompt,
+            stop_on_indicated_failure=stop_on_indicated_failure,
+            operation_timeout_ns=operation_timeout_ns,
+        )
 
     def _send_prompted_input(  # noqa: PLR0913
         self,
