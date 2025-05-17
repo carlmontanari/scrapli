@@ -53,8 +53,6 @@ NETCONF_PASSWORD_PATTERN = re.compile(r"<password>.*?</password>")
 NETCONF_KEY_PATTERN = re.compile(r"<cleartext-private-key>.*?</cleartext-private-key>")
 NETCONF_DUMMY_COUNTER_PATTERN = re.compile(r"<counter>\d+</counter>")
 NETCONF_STATISTICS_ELEMENT_PATTERN = re.compile(r"<statistics>.*?</statistics>")
-NETCONF_SOURCE_HOST_PATTERN = re.compile(r"<source-host>.*?</source-host>")
-NETCONF_PID_PATTERN = re.compile(r"<pid>\d+</pid>")
 
 
 @pytest.fixture(scope="function")
@@ -66,8 +64,6 @@ def clean_netconf_output() -> str:
         output = NETCONF_KEY_PATTERN.sub("__KEY__", output)
         output = NETCONF_DUMMY_COUNTER_PATTERN.sub("__COUNTER__", output)
         output = NETCONF_STATISTICS_ELEMENT_PATTERN.sub("__STATISTICS__", output)
-        output = NETCONF_SOURCE_HOST_PATTERN.sub("__HOST__", output)
-        output = NETCONF_PID_PATTERN.sub("__PID__", output)
 
         return output
 
