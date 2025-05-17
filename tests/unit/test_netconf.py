@@ -231,3 +231,162 @@ async def test_get_config_async(netconf, netconf_assert_result):
         actual = await n.get_config_async()
 
         netconf_assert_result(actual=actual)
+
+
+GET_DATA_ARGNAMES = ("filter_",)
+GET_DATA_ARGVALUES = (('<system xmlns="urn:some:data"></system>',),)
+GET_DATA_IDS = ("simple",)
+
+
+@pytest.mark.parametrize(
+    argnames=GET_DATA_ARGNAMES,
+    argvalues=GET_DATA_ARGVALUES,
+    ids=GET_DATA_IDS,
+)
+def test_get_data(filter_, netconf, netconf_assert_result):
+    with netconf as n:
+        netconf_assert_result(actual=n.get_data(filter_=filter_))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    argnames=GET_DATA_ARGNAMES,
+    argvalues=GET_DATA_ARGVALUES,
+    ids=GET_DATA_IDS,
+)
+async def test_get_data_async(filter_, netconf, netconf_assert_result):
+    async with netconf as n:
+        actual = await n.get_data_async(filter_=filter_)
+
+        netconf_assert_result(actual=actual)
+
+
+GET_SCHEMA_ARGNAMES = ("identifier",)
+GET_SCHEMA_ARGVALUES = (("ietf-yang-types",),)
+GET_SCHEMA_IDS = ("simple",)
+
+
+@pytest.mark.parametrize(
+    argnames=GET_SCHEMA_ARGNAMES,
+    argvalues=GET_SCHEMA_ARGVALUES,
+    ids=GET_SCHEMA_IDS,
+)
+def test_get_schema(identifier, netconf, netconf_assert_result):
+    with netconf as n:
+        netconf_assert_result(actual=n.get_schema(identifier=identifier))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    argnames=GET_SCHEMA_ARGNAMES,
+    argvalues=GET_SCHEMA_ARGVALUES,
+    ids=GET_SCHEMA_IDS,
+)
+async def test_get_schema_async(identifier, netconf, netconf_assert_result):
+    async with netconf as n:
+        actual = await n.get_schema_async(identifier=identifier)
+
+        netconf_assert_result(actual=actual)
+
+
+GET_ARGNAMES = ("filter_",)
+GET_ARGVALUES = (
+    ("",),
+    ("<interfaces><interface><name>Management0</name><state></state></interface></interfaces>",),
+)
+GET_IDS = (
+    "simple",
+    "filtered",
+)
+
+
+@pytest.mark.parametrize(
+    argnames=GET_ARGNAMES,
+    argvalues=GET_ARGVALUES,
+    ids=GET_IDS,
+)
+def test_get(filter_, netconf, netconf_assert_result):
+    with netconf as n:
+        netconf_assert_result(actual=n.get(filter_=filter_))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    argnames=GET_ARGNAMES,
+    argvalues=GET_ARGVALUES,
+    ids=GET_IDS,
+)
+async def test_get_async(filter_, netconf, netconf_assert_result):
+    async with netconf as n:
+        actual = await n.get_async(filter_=filter_)
+
+        netconf_assert_result(actual=actual)
+
+
+def test_lock(netconf, netconf_assert_result):
+    with netconf as n:
+        netconf_assert_result(actual=n.lock())
+
+
+@pytest.mark.asyncio
+async def test_lock_async(netconf, netconf_assert_result):
+    async with netconf as n:
+        actual = await n.lock_async()
+
+        netconf_assert_result(actual=actual)
+
+
+def test_unlock(netconf, netconf_assert_result):
+    with netconf as n:
+        n.lock()
+        netconf_assert_result(actual=n.unlock())
+
+
+@pytest.mark.asyncio
+async def test_unlock_async(netconf, netconf_assert_result):
+    async with netconf as n:
+        await n.lock_async()
+        actual = await n.unlock_async()
+
+        netconf_assert_result(actual=actual)
+
+
+RAW_RPC_ARGNAMES = ("payload",)
+RAW_RPC_ARGVALUES = (("<get-config><source><running/></source></get-config>",),)
+RAW_RPC_IDS = ("simple",)
+
+
+@pytest.mark.parametrize(
+    argnames=RAW_RPC_ARGNAMES,
+    argvalues=RAW_RPC_ARGVALUES,
+    ids=RAW_RPC_IDS,
+)
+def test_raw_rpc(payload, netconf, netconf_assert_result):
+    with netconf as n:
+        netconf_assert_result(actual=n.raw_rpc(payload=payload))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    argnames=RAW_RPC_ARGNAMES,
+    argvalues=RAW_RPC_ARGVALUES,
+    ids=RAW_RPC_IDS,
+)
+async def test_raw_rpc_async(payload, netconf, netconf_assert_result):
+    async with netconf as n:
+        actual = await n.raw_rpc_async(payload=payload)
+
+        netconf_assert_result(actual=actual)
+
+
+def test_validate(netconf, netconf_assert_result):
+    with netconf as n:
+        netconf_assert_result(actual=n.validate())
+
+
+@pytest.mark.asyncio
+async def test_validate_async(netconf, netconf_assert_result):
+    async with netconf as n:
+        actual = await n.validate_async()
+
+        netconf_assert_result(actual=actual)
