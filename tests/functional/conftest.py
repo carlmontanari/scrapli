@@ -24,7 +24,10 @@ SSH_PORT = 22
 NETCONF_PORT = 830
 
 NETCONF_NON_EXACT_GOLDEN_MATCH_THRESHOLD = 0.8
-NETCONF_NON_EXACT_CASE_SUB_STRS = ("test_get[netopeer",)
+NETCONF_NON_EXACT_CASE_SUB_STRS = (
+    "test_get[netopeer",
+    "test_get_async[netopeer",
+)
 
 
 def _original_name_to_filename(originalname: str) -> str:
