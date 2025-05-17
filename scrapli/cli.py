@@ -271,14 +271,14 @@ class Cli:
         )
 
     def _load_definition(self, definition_file_or_name: str) -> None:
-        with importlib.resources.path(
-            "scrapli.definitions", f"{definition_file_or_name}.yaml"
-        ) as source_lib_definition:
-            if Path(source_lib_definition).exists():
-                with open(source_lib_definition, "rb") as f:
-                    self.definition_string = f.read()
+        definitions_path = importlib.resources.files("scrapli.definitions")
+        definition_path = f"{definitions_path}/{definition_file_or_name}.yaml"
 
-                return
+        if Path(definition_path).exists():
+            with open(definition_path, "rb") as f:
+                self.definition_string = f.read()
+
+            return
 
         if Path(definition_file_or_name).exists():
             with open(definition_file_or_name, "rb") as f:
