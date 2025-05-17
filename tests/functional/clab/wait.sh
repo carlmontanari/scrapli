@@ -48,12 +48,12 @@ while [ $SECONDS -lt $END_TIME ]; do
       sleep 1
     ) \
       | sshpass -p "password" \
-      ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no -l root 172.20.20.18 -s netconf  2>&1 \
+      ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no -l root -p 830 172.20.20.18 -s netconf  2>&1 \
       | grep "<hello"
 
     if [ $? -eq 0 ]; then
         echo "netopeer netconf available..."
-        break
+        exit 0
     fi
 
     sleep $INTERVAL
