@@ -178,6 +178,40 @@ async def test_send_inputs_async(inputs, cli, cli_assert_result):
         cli_assert_result(actual=actual)
 
 
+SEND_INPUTS_FROM_FILE_ARGNAMES = ("f",)
+SEND_INPUTS_FROM_FILE_ARGVALUES = (
+    ("tests/unit/fixtures/cli/_inputs_from_file_single",),
+    ("tests/unit/fixtures/cli/_inputs_from_file_multi",),
+)
+SEND_INPUTS_FROM_FILE_IDS = (
+    "send-single-input",
+    "send-multi-input",
+)
+
+
+@pytest.mark.parametrize(
+    argnames=SEND_INPUTS_FROM_FILE_ARGNAMES,
+    argvalues=SEND_INPUTS_FROM_FILE_ARGVALUES,
+    ids=SEND_INPUTS_FROM_FILE_IDS,
+)
+def test_send_inputs_from_file(f, cli, cli_assert_result):
+    with cli as c:
+        cli_assert_result(actual=c.send_inputs_from_file(f=f))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    argnames=SEND_INPUTS_FROM_FILE_ARGNAMES,
+    argvalues=SEND_INPUTS_FROM_FILE_ARGVALUES,
+    ids=SEND_INPUTS_FROM_FILE_IDS,
+)
+async def test_send_inputs_from_file_async(f, cli, cli_assert_result):
+    async with cli as c:
+        actual = await c.send_inputs_from_file_async(f=f)
+
+        cli_assert_result(actual=actual)
+
+
 SEND_PROMPTED_INPUTS_ARGNAMES = ("input_", "prompt", "prompt_pattern", "response", "requested_mode")
 SEND_PROMPTED_INPUTS_ARGVALUES = (
     ('read -p "Will you prompt me plz?"', "Will you prompt me plz?", "", "nou", "bash"),
