@@ -1,5 +1,7 @@
 import pytest
 
+from scrapli.cli import InputHandling
+
 
 def test_get_prompt(cli, cli_assert_result):
     with cli as c:
@@ -82,27 +84,82 @@ SEND_INPUT_ARGNAMES = (
     "input_",
     "requested_mode",  # mode to send the input at
     "post_open_requested_mode",  # acquire this before "doing" the test
+    "input_handling",
+    "retain_input",
+    "retain_trailing_prompt",
 )
 SEND_INPUT_ARGVALUES = (
     (
         "show version | i Kern",
         "privileged_exec",
         None,
+        InputHandling.FUZZY,
+        False,
+        False,
     ),
     (
         "show running-config all | include snmp",
         "privileged_exec",
         None,
+        InputHandling.FUZZY,
+        False,
+        False,
     ),
     (
         "do show version | i Kern",
         "configuration",
         "configuration",
+        InputHandling.FUZZY,
+        False,
+        False,
     ),
     (
         "do show version | i Kern",
         "configuration",
         None,
+        InputHandling.FUZZY,
+        False,
+        False,
+    ),
+    (
+        "show version | i Kern",
+        "privileged_exec",
+        None,
+        InputHandling.EXACT,
+        False,
+        False,
+    ),
+    (
+        "show version | i Kern",
+        "privileged_exec",
+        None,
+        InputHandling.IGNORE,
+        False,
+        False,
+    ),
+    (
+        "show version | i Kern",
+        "privileged_exec",
+        None,
+        InputHandling.FUZZY,
+        True,
+        False,
+    ),
+    (
+        "show version | i Kern",
+        "privileged_exec",
+        None,
+        InputHandling.FUZZY,
+        False,
+        True,
+    ),
+    (
+        "show version | i Kern",
+        "privileged_exec",
+        None,
+        InputHandling.FUZZY,
+        True,
+        True,
     ),
 )
 SEND_INPUT_IDS = (
@@ -110,6 +167,11 @@ SEND_INPUT_IDS = (
     "simple-requires-pagination",
     "simple-already-in-non-default-mode",
     "simple-acquire-non-default-mode",
+    "simple-input-handling-exact",
+    "simple-input-handling-ignore",
+    "simple-retain-input",
+    "simple-retain-trailing-prompt",
+    "simple-retain-all",
 )
 
 
@@ -118,12 +180,29 @@ SEND_INPUT_IDS = (
     argvalues=SEND_INPUT_ARGVALUES,
     ids=SEND_INPUT_IDS,
 )
-def test_send_input(input_, requested_mode, post_open_requested_mode, cli, cli_assert_result):
+def test_send_input(
+    input_,
+    requested_mode,
+    post_open_requested_mode,
+    input_handling,
+    retain_input,
+    retain_trailing_prompt,
+    cli,
+    cli_assert_result,
+):
     with cli as c:
         if post_open_requested_mode is not None:
             c.enter_mode(requested_mode=post_open_requested_mode)
 
-        cli_assert_result(actual=c.send_input(input_=input_, requested_mode=requested_mode))
+        cli_assert_result(
+            actual=c.send_input(
+                input_=input_,
+                requested_mode=requested_mode,
+                input_handling=input_handling,
+                retain_input=retain_input,
+                retain_trailing_prompt=retain_trailing_prompt,
+            )
+        )
 
 
 @pytest.mark.asyncio
@@ -133,13 +212,26 @@ def test_send_input(input_, requested_mode, post_open_requested_mode, cli, cli_a
     ids=SEND_INPUT_IDS,
 )
 async def test_send_input_async(
-    input_, requested_mode, post_open_requested_mode, cli, cli_assert_result
+    input_,
+    requested_mode,
+    post_open_requested_mode,
+    input_handling,
+    retain_input,
+    retain_trailing_prompt,
+    cli,
+    cli_assert_result,
 ):
     async with cli as c:
         if post_open_requested_mode is not None:
             await c.enter_mode_async(requested_mode=post_open_requested_mode)
 
-        actual = await c.send_input_async(input_=input_, requested_mode=requested_mode)
+        actual = await c.send_input_async(
+            input_=input_,
+            requested_mode=requested_mode,
+            input_handling=input_handling,
+            retain_input=retain_input,
+            retain_trailing_prompt=retain_trailing_prompt,
+        )
 
         cli_assert_result(actual=actual)
 
