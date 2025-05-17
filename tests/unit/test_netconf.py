@@ -2,6 +2,13 @@ import pytest
 
 from scrapli.netconf import DatastoreType
 
+
+def test_session_id(netconf):
+    with netconf as n:
+        assert n.session_id is not None
+        assert n.session_id != 0
+
+
 ACTION_ARGNAMES = ("action",)
 ACTION_ARGVALUES = (
     (
