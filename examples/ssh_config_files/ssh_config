@@ -1,3 +1,0 @@
-Host 172.18.0.11
-  IdentityFile scrapli_key
-  User scrapli
