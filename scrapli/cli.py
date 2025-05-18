@@ -272,6 +272,7 @@ class Cli:
         )
 
     def _load_definition(self, definition_file_or_name: str) -> None:
+        # TODO -- here we should have an override env var just like we do for ffi
         definitions_path = importlib.resources.files("scrapli.definitions")
         definition_path = f"{definitions_path}/{definition_file_or_name}.yaml"
 
