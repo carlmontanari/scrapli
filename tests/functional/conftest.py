@@ -42,6 +42,7 @@ def cli(platform, transport) -> Cli:
             # because we cant have this publicly in ci afaik
             pytest.skip("eos not available, skipping...")
 
+        definition_file_or_name = "arista_eos"
         host = "localhost" if IS_DARWIN else "172.20.20.17"
         port = 22022 if IS_DARWIN else SSH_PORT
         auth_options = AuthOptions(
@@ -50,6 +51,7 @@ def cli(platform, transport) -> Cli:
             lookups=[LookupKeyValue(key="enable", value="libscrapli")],
         )
     else:
+        definition_file_or_name = "nokia_srlinux"
         host = "localhost" if sys.platform == "darwin" else "172.20.20.16"
         port = 21022 if IS_DARWIN else SSH_PORT
         auth_options = AuthOptions(
@@ -63,7 +65,7 @@ def cli(platform, transport) -> Cli:
         transport_options = TransportOptions(TransportSsh2Options())
 
     return Cli(
-        definition_file_or_name=platform,
+        definition_file_or_name=definition_file_or_name,
         host=host,
         port=port,
         auth_options=auth_options,
