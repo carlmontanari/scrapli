@@ -9,7 +9,7 @@ from scrapli.cli_decorators import handle_operation_timeout, handle_operation_ti
 
 def test_handle_operation_timeout_unmodified():
     c = Cli(
-        definition_file_or_name="nokia_srl",
+        definition_file_or_name="nokia_srlinux",
         host="localhost",
     )
 
@@ -29,7 +29,7 @@ def test_handle_operation_timeout_unmodified():
 @pytest.mark.asyncio
 async def test_handle_operation_timeout_async_unmodified():
     c = Cli(
-        definition_file_or_name="nokia_srl",
+        definition_file_or_name="nokia_srlinux",
         host="localhost",
     )
 
@@ -48,7 +48,7 @@ async def test_handle_operation_timeout_async_unmodified():
 
 def test_handle_operation_timeout_modified():
     c = Cli(
-        definition_file_or_name="nokia_srl",
+        definition_file_or_name="nokia_srlinux",
         host="localhost",
     )
 
@@ -70,7 +70,7 @@ def test_handle_operation_timeout_modified():
 @pytest.mark.asyncio
 async def test_handle_operation_timeout_async_modified():
     c = Cli(
-        definition_file_or_name="nokia_srl",
+        definition_file_or_name="nokia_srlinux",
         host="localhost",
     )
 

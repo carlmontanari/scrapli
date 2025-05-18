@@ -3,7 +3,7 @@ prompt_pattern: ^.*[>#$]\s?+$
 default_mode: privileged_exec
 modes:
   - name: exec
-    prompt_pattern: ^[\w.\-@/:]{1,63}>\s?+$
+    prompt_pattern: ^[\w.\-]{1,63}(\(maint\-mode\))?>\s?$
     accessible_modes:
       - name: privileged_exec
         instructions:
@@ -12,7 +12,7 @@ modes:
               prompt_exact: 'Password:'
               response: __lookup::enable
   - name: privileged_exec
-    prompt_pattern: ^[\w.\-@/:]{1,63}#\s?+$
+    prompt_pattern: ^[\w.\-]{1,63}(\(maint\-mode\))?#\s?$
     accessible_modes:
       - name: exec
         instructions:
@@ -27,16 +27,18 @@ modes:
           - send_input:
               input: tclsh
   - name: configuration
-    prompt_pattern: ^[\w.\-@/:]{1,63}\([\w.\-@/:+]{0,32}\)#\s?+$
+    prompt_pattern: ^[\w.\-]{1,63}(\(maint\-mode\))?\(conf[\w.\-@/:\+]{0,32}\)#\s?$
     prompt_excludes:
-      - tcl)
+      - config-tcl
+      - config-s)
+      - config-s-
     accessible_modes:
       - name: privileged_exec
         instructions:
           - send_input:
               input: end
   - name: tclsh
-    prompt_pattern: ^([\w.\-@/+>:]+\(tcl\)[>#]|\+>)\s?+$
+    prompt_pattern: (^[\w.\-]{1,63}\-tcl#\s?$)|(^[\w.\-]{1,63}\(config\-tcl\)#\s?$)|(^>\s?$)|(^[\w.\-]{1,63}\(maint\-mode\-tcl\)#\s?$)|(^[\w.\-]{1,63}\(maint\-mode\)\(config\-tcl\)#\s?$)
     accessible_modes:
       - name: privileged_exec
         instructions:
@@ -46,12 +48,13 @@ failure_indicators:
   - '% Ambiguous command'
   - '% Incomplete command'
   - '% Invalid input detected'
-  - '% Unknown command'
+  - '% Invalid command at'
+  - '% Invalid parameter'
 on_open_instructions:
   - enter_mode:
       requested_mode: privileged_exec
   - send_input:
-      input: term width 512
+      input: term width 511
   - send_input:
       input: term len 0
 on_close_instructions:
@@ -59,5 +62,3 @@ on_close_instructions:
       requested_mode: privileged_exec
   - write:
       input: exit
-ntc_templates_platform: cisco_iosxe
-genie_platform: iosxe

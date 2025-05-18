@@ -2,51 +2,35 @@
 prompt_pattern: ^.*[>#$]\s?+$
 default_mode: privileged_exec
 modes:
-  - name: exec
-    prompt_pattern: ^[\w.\-@/:]{1,63}>\s?+$
-    accessible_modes:
-      - name: privileged_exec
-        instructions:
-          - send_prompted_input:
-              input: enable
-              prompt_exact: 'Password:'
-              response: __lookup::enable
   - name: privileged_exec
-    prompt_pattern: ^[\w.\-@/:]{1,63}#\s?+$
+    prompt_pattern: ^[\w.\-@/:]{1,63}#\s?$
     accessible_modes:
-      - name: exec
-        instructions:
-          - send_input:
-              input: disable
       - name: configuration
         instructions:
           - send_input:
               input: configure terminal
-      - name: tclsh
+      - name: configuration_exclusive
         instructions:
           - send_input:
-              input: tclsh
+              input: configure exclusive
   - name: configuration
-    prompt_pattern: ^[\w.\-@/:]{1,63}\([\w.\-@/:+]{0,32}\)#\s?+$
-    prompt_excludes:
-      - tcl)
+    prompt_pattern: ^[\w.\-@/:]{1,63}\(config[\w.\-@/:]{0,32}\)#\s?$
     accessible_modes:
       - name: privileged_exec
         instructions:
           - send_input:
               input: end
-  - name: tclsh
-    prompt_pattern: ^([\w.\-@/+>:]+\(tcl\)[>#]|\+>)\s?+$
+  - name: configuration_exclusive
+    prompt_pattern: ^[\w.\-@/:]{1,63}\(config[\w.\-@/:]{0,32}\)#\s?$
     accessible_modes:
       - name: privileged_exec
         instructions:
           - send_input:
-              input: tclquit
+              input: end
 failure_indicators:
   - '% Ambiguous command'
   - '% Incomplete command'
   - '% Invalid input detected'
-  - '% Unknown command'
 on_open_instructions:
   - enter_mode:
       requested_mode: privileged_exec

@@ -25,4 +25,4 @@ cp "$TMP_DIR"/definitions/*.yaml scrapli/definitions/
 
 rm -rf "$TMP_DIR"
 
-sed -i.bak -E "s|(__definitions_version__\s*=\s*\")[^\"]+(\".*)|\1${TARGET_DEFINITIONS_TAG#v}\2|g" scrapli/__init__.py
+sed -i.bak -E "s|(__definitions_version__ = )(.*)|\1\"${TARGET_DEFINITIONS_TAG#v}\"|g" scrapli/__init__.py
