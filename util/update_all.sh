@@ -129,7 +129,7 @@ fi
 
 echo
 
-CHANGES=$(git diff -- scrapli/ffi.py setup.py scrapli/__init__.py)
+CHANGES=$(git diff -- scrapli/ffi.py setup.py scrapli/__init__.py scrapli/definitions)
 
 if [[ -z "$CHANGES" ]]; then
     echo "no changes to commit, exiting..."
@@ -143,7 +143,7 @@ if [[ "$confirm" == [yY] ]]; then
     rm scrapli/ffi.py.bak setup.py.bak scrapli/__init__.py.bak
 else
     echo "restoring..."
-    mv scrapli/ffi.py.bak scrapli/ffi.py
-    mv setup.py.bak setup.py
-    mv scrapli/__init__.py.bak scrapli/__init__.py
+    mv scrapli/ffi.py.bak scrapli/ffi.py || true
+    mv setup.py.bak setup.py || true
+    mv scrapli/__init__.py.bak scrapli/__init__.py || true
 fi
