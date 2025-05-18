@@ -8,4 +8,4 @@ if [[ -z "$SCRAPLI_VERSION" ]]; then
     exit 1
 fi
 
-sed -i.bak -E "s|(__version__\s*=\s*\")[^\"]+(\".*)|\1${SCRAPLI_VERSION}\2|g" scrapli/__init__.py
+sed -i.bak -E "s|(__version__ = )(.*)|\1${SCRAPLI_VERSION}\2|g" scrapli/__init__.py

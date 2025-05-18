@@ -11,6 +11,7 @@ from ctypes import (
 )
 from enum import Enum
 from logging import getLogger
+from os import environ
 from pathlib import Path
 from random import randint
 from types import TracebackType
@@ -51,6 +52,9 @@ from scrapli.session import (
 )
 from scrapli.session import Options as SessionOptions
 from scrapli.transport import Options as TransportOptions
+
+CLI_DEFINITIONS_PATH_OVERRIDE_ENV = "SCRAPLI_DEFINITIONS_PATH"
+CLI_DEFINITIONS_PATH_OVERRIDE = environ.get(CLI_DEFINITIONS_PATH_OVERRIDE_ENV)
 
 
 class InputHandling(str, Enum):
@@ -272,9 +276,11 @@ class Cli:
         )
 
     def _load_definition(self, definition_file_or_name: str) -> None:
-        # TODO -- here we should have an override env var just like we do for ffi
-        definitions_path = importlib.resources.files("scrapli.definitions")
-        definition_path = f"{definitions_path}/{definition_file_or_name}.yaml"
+        if CLI_DEFINITIONS_PATH_OVERRIDE is not None:
+            definition_path = f"{CLI_DEFINITIONS_PATH_OVERRIDE}/{definition_file_or_name}.yaml"
+        else:
+            definitions_path = importlib.resources.files("scrapli.definitions")
+            definition_path = f"{definitions_path}/{definition_file_or_name}.yaml"
 
         if Path(definition_path).exists():
             with open(definition_path, "rb") as f:
