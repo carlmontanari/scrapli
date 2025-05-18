@@ -65,7 +65,14 @@ while true; do
         TARGET_LIBSCRAPLI_TAG="$input"
         break
     else
-        echo "invalid tag. pick a valid tag dork"
+        if [[ "$input" =~ ^[0-9a-f]{7,40}$ ]]; then
+            echo "using commit hash $input"
+            echo
+            TARGET_DEFINITION_TAG="$input"
+            break
+        else
+            echo "invalid tag or hash. pick a valid value dork"
+        fi
     fi
 done
 

@@ -2,6 +2,7 @@
 
 import os
 import platform
+import re
 import shutil
 import subprocess
 import sys
@@ -84,27 +85,51 @@ class Libscrapli:
         return lib_filename
 
     @staticmethod
-    def _get_clone_command(tmp_build_dir: str) -> list[str]:
+    def _get_clone_command(tmp_build_dir: str) -> list[list[str]]:
         if LIBSCRAPLI_TAG == "":
             return [
-                "git",
-                "clone",
-                "--depth",
-                "1",
-                LIBSCRAPLI_REPO,
-                tmp_build_dir,
+                [
+                    "git",
+                    "clone",
+                    "--depth",
+                    "1",
+                    LIBSCRAPLI_REPO,
+                    tmp_build_dir,
+                ]
+            ]
+
+        if re.fullmatch(r"[0-9a-f]{7,40}", LIBSCRAPLI_TAG):
+            # specific hash not main, not a release
+            return [
+                [
+                    "git",
+                    "clone",
+                    "--depth",
+                    "1",
+                    LIBSCRAPLI_REPO,
+                    tmp_build_dir,
+                ],
+                [
+                    "git",
+                    "-C",
+                    tmp_build_dir,
+                    "checkout",
+                    LIBSCRAPLI_TAG,
+                ],
             ]
 
         return [
-            "git",
-            "clone",
-            "--branch",
-            LIBSCRAPLI_TAG,
-            "--depth",
-            "1",
-            "--single-branch",
-            LIBSCRAPLI_REPO,
-            tmp_build_dir,
+            [
+                "git",
+                "clone",
+                "--branch",
+                LIBSCRAPLI_TAG,
+                "--depth",
+                "1",
+                "--single-branch",
+                LIBSCRAPLI_REPO,
+                tmp_build_dir,
+            ]
         ]
 
     @staticmethod
@@ -132,9 +157,10 @@ class Libscrapli:
         libscrapli_build_path = self._get_libscrapli_build_path()
 
         if LIBSCRAPLI_BUILD_PATH_ENV not in os.environ:
-            subprocess.check_call(
-                self._get_clone_command(tmp_build_dir=str(libscrapli_build_path)),
-            )
+            clone_commands = self._get_clone_command(tmp_build_dir=str(libscrapli_build_path))
+
+            for clone_command in clone_commands:
+                subprocess.check_call(clone_command)
 
             subprocess.check_call(
                 self._get_build_command(all_targets=False),
@@ -193,9 +219,10 @@ class LibscrapliBdist(bdist_wheel, Libscrapli):  # type: ignore
         libscrapli_build_path = self._get_libscrapli_build_path()
 
         if LIBSCRAPLI_BUILD_PATH_ENV not in os.environ:
-            subprocess.check_call(
-                self._get_clone_command(tmp_build_dir=str(libscrapli_build_path)),
-            )
+            clone_commands = self._get_clone_command(tmp_build_dir=str(libscrapli_build_path))
+
+            for clone_command in clone_commands:
+                subprocess.check_call(clone_command)
 
             subprocess.check_call(
                 # if no zig triple specified, then we are building for the current platform, so
