@@ -8,15 +8,15 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from typing import Optional
 
 from setuptools import setup
 from setuptools.command.bdist_wheel import bdist_wheel
 from setuptools.command.editable_wheel import editable_wheel
 from setuptools.command.sdist import sdist
 
-LIBSCRAPLI_VERSION = "0.0.1-alpha.5"
-LIBSCRAPLI_REPO = os.environ.get("LIBSCRAPLI_REPO", "https://github.com/scrapli/libscrapli")
-LIBSCRAPLI_TAG = os.environ.get("LIBSCRAPLI_TAG", f"v{LIBSCRAPLI_VERSION}")
+LIBSCRAPLI_VERSION = "a06695d"
+LIBSCRAPLI_REPO = "https://github.com/scrapli/libscrapli"
 LIBSCRAPLI_BUILD_PATH_ENV = "LIBSCRAPLI_BUILD_PATH"
 LIBSCRPALI_ZIG_TRIPLE_ENV = "LIBSCRAPLI_ZIG_TRIPLE"
 
@@ -32,6 +32,34 @@ WHEEL_TARGETS = {
 
 class Libscrapli:
     """Dumb container for setup-related helpers"""
+
+    _libscrapli_tag: Optional[str] = None
+
+    @property
+    def libscrapli_tag(self) -> str:
+        """
+        Return the libscrapli version/tag
+
+        Args:
+            N/A
+
+        Returns:
+            str: the parsed libscrapli verison/tag
+
+        Raises:
+            N/A
+
+        """
+        if self._libscrapli_tag is not None:
+            return self._libscrapli_tag
+
+        self._libscrapli_tag = (
+            f"v{LIBSCRAPLI_VERSION}"
+            if not re.fullmatch(r"[0-9a-f]{7,40}", LIBSCRAPLI_VERSION)
+            else LIBSCRAPLI_VERSION
+        )
+
+        return self._libscrapli_tag
 
     @staticmethod
     def _get_zig_style_arch() -> str:
@@ -74,7 +102,21 @@ class Libscrapli:
         shutil.rmtree(libscrapli_build_path)
 
     @staticmethod
-    def _get_libscrapli_shared_object_filename(version: str) -> str:
+    def _get_libscrapli_built_shared_object_filename(build_path: str) -> str:
+        if sys.platform == "linux":
+            lib_filenames = list(Path(build_path).glob("libscrapli.so.*"))
+        elif sys.platform == "darwin":
+            lib_filenames = list(Path(build_path).glob("libscrapli.*.dylib"))
+        else:
+            raise NotImplementedError("unsupported platform")
+
+        if len(lib_filenames) != 1:
+            raise OSError("not exactly one built shared library object")
+
+        return lib_filenames[0].name
+
+    @staticmethod
+    def _get_libscrapli_output_shared_object_filename(version: str) -> str:
         if sys.platform == "linux":
             lib_filename = f"libscrapli.so.{version}"
         elif sys.platform == "darwin":
@@ -84,9 +126,9 @@ class Libscrapli:
 
         return lib_filename
 
-    @staticmethod
-    def _get_clone_command(tmp_build_dir: str) -> list[list[str]]:
-        if LIBSCRAPLI_TAG == "":
+    def _get_clone_command(self, tmp_build_dir: str) -> list[list[str]]:
+        if self.libscrapli_tag == "":
+            # unset means pull main
             return [
                 [
                     "git",
@@ -98,7 +140,7 @@ class Libscrapli:
                 ]
             ]
 
-        if re.fullmatch(r"[0-9a-f]{7,40}", LIBSCRAPLI_TAG):
+        if re.fullmatch(r"[0-9a-f]{7,40}", self.libscrapli_tag):
             # specific hash not main, not a release
             return [
                 [
@@ -114,7 +156,7 @@ class Libscrapli:
                     "-C",
                     tmp_build_dir,
                     "checkout",
-                    LIBSCRAPLI_TAG,
+                    self.libscrapli_tag,
                 ],
             ]
 
@@ -123,7 +165,7 @@ class Libscrapli:
                 "git",
                 "clone",
                 "--branch",
-                LIBSCRAPLI_TAG,
+                self.libscrapli_tag,
                 "--depth",
                 "1",
                 "--single-branch",
@@ -167,11 +209,16 @@ class Libscrapli:
                 cwd=libscrapli_build_path,
             )
 
-        lib_name = self._get_libscrapli_shared_object_filename(version=LIBSCRAPLI_TAG.lstrip("v"))
+        built_lib_name = self._get_libscrapli_built_shared_object_filename(
+            build_path=f"{libscrapli_build_path}/zig-out/native/"
+        )
+        out_lib_name = self._get_libscrapli_output_shared_object_filename(
+            version=self.libscrapli_tag.lstrip("v")
+        )
 
-        built_lib = f"{libscrapli_build_path}/zig-out/native/{lib_name}"
+        built_lib = f"{libscrapli_build_path}/zig-out/native/{built_lib_name}"
 
-        lib_dest = src_lib_path / lib_name
+        lib_dest = src_lib_path / out_lib_name
         shutil.copy2(built_lib, lib_dest)
 
         self._clean_libscrapli_build_path(libscrapli_build_path=libscrapli_build_path)
@@ -231,11 +278,16 @@ class LibscrapliBdist(bdist_wheel, Libscrapli):  # type: ignore
                 cwd=libscrapli_build_path,
             )
 
-        lib_name = self._get_libscrapli_shared_object_filename(version=LIBSCRAPLI_TAG.lstrip("v"))
+        built_lib_name = self._get_libscrapli_built_shared_object_filename(
+            build_path=f"{libscrapli_build_path}/zig-out/{zig_triple}"
+        )
+        out_lib_name = self._get_libscrapli_output_shared_object_filename(
+            version=self.libscrapli_tag.lstrip("v")
+        )
 
-        built_lib = f"{libscrapli_build_path}/zig-out/{zig_triple}/{lib_name}"
+        built_lib = f"{libscrapli_build_path}/zig-out/{zig_triple}/{built_lib_name}"
 
-        lib_dest = src_lib_path / lib_name
+        lib_dest = src_lib_path / out_lib_name
         shutil.copy2(built_lib, lib_dest)
 
         self._clean_libscrapli_build_path(libscrapli_build_path=libscrapli_build_path)

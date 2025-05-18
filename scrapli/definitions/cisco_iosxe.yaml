@@ -1,47 +1,47 @@
 ---
-prompt_pattern: ^.*[>#$]\s?+$
-default_mode: privileged_exec
+prompt_pattern: '^.*[>#$]\s?+$'
+default_mode: 'privileged_exec'
 modes:
-  - name: exec
-    prompt_pattern: ^[\w.\-@/:]{1,63}>\s?+$
+  - name: 'exec'
+    prompt_pattern: '^[\w.\-@/:]{1,63}>\s?+$'
     accessible_modes:
-      - name: privileged_exec
+      - name: 'privileged_exec'
         instructions:
           - send_prompted_input:
-              input: enable
+              input: 'enable'
               prompt_exact: 'Password:'
-              response: __lookup::enable
-  - name: privileged_exec
-    prompt_pattern: ^[\w.\-@/:]{1,63}#\s?+$
+              response: '__lookup::enable'
+  - name: 'privileged_exec'
+    prompt_pattern: '^[\w.\-@/:]{1,63}#\s?+$'
     accessible_modes:
-      - name: exec
+      - name: 'exec'
         instructions:
           - send_input:
-              input: disable
-      - name: configuration
+              input: 'disable'
+      - name: 'configuration'
         instructions:
           - send_input:
-              input: configure terminal
-      - name: tclsh
+              input: 'configure terminal'
+      - name: 'tclsh'
         instructions:
           - send_input:
-              input: tclsh
-  - name: configuration
-    prompt_pattern: ^[\w.\-@/:]{1,63}\([\w.\-@/:+]{0,32}\)#\s?+$
+              input: 'tclsh'
+  - name: 'configuration'
+    prompt_pattern: '^[\w.\-@/:]{1,63}\([\w.\-@/:+]{0,32}\)#\s?+$'
     prompt_excludes:
-      - tcl)
+      - 'tcl)'
     accessible_modes:
-      - name: privileged_exec
+      - name: 'privileged_exec'
         instructions:
           - send_input:
-              input: end
-  - name: tclsh
-    prompt_pattern: ^([\w.\-@/+>:]+\(tcl\)[>#]|\+>)\s?+$
+              input: 'end'
+  - name: 'tclsh'
+    prompt_pattern: '^([\w.\-@/+>:]+\(tcl\)[>#]|\+>)\s?+$'
     accessible_modes:
-      - name: privileged_exec
+      - name: 'privileged_exec'
         instructions:
           - send_input:
-              input: tclquit
+              input: 'tclquit'
 failure_indicators:
   - '% Ambiguous command'
   - '% Incomplete command'
@@ -49,15 +49,15 @@ failure_indicators:
   - '% Unknown command'
 on_open_instructions:
   - enter_mode:
-      requested_mode: privileged_exec
+      requested_mode: 'privileged_exec'
   - send_input:
-      input: term width 512
+      input: 'term width 512'
   - send_input:
-      input: term len 0
+      input: 'term len 0'
 on_close_instructions:
   - enter_mode:
-      requested_mode: privileged_exec
+      requested_mode: 'privileged_exec'
   - write:
-      input: exit
-ntc_templates_platform: cisco_iosxe
-genie_platform: iosxe
+      input: 'exit'
+ntc_templates_platform: 'cisco_iosxe'
+genie_platform: 'iosxe'
