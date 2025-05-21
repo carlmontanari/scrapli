@@ -1,3 +1,5 @@
+from copy import copy
+
 import pytest
 
 from scrapli.netconf import DatastoreType
@@ -323,6 +325,35 @@ async def test_get_async(filter_, netconf, netconf_assert_result):
         netconf_assert_result(actual=actual)
 
 
+def test_kill_session(netconf_srl, netconf_assert_result):
+    n1 = copy(netconf_srl)
+    n2 = copy(netconf_srl)
+
+    n1.open()
+    n2.open()
+
+    actual = n1.kill_session(session_id=n2.session_id)
+
+    n1.close()
+
+    netconf_assert_result(actual=actual)
+
+
+@pytest.mark.asyncio
+async def test_kill_session_async(netconf_srl, netconf_assert_result):
+    n1 = copy(netconf_srl)
+    n2 = copy(netconf_srl)
+
+    await n1.open_async()
+    await n2.open_async()
+
+    actual = await n1.kill_session_async(session_id=n2.session_id)
+
+    await n1.close_async()
+
+    netconf_assert_result(actual=actual)
+
+
 def test_lock(netconf, netconf_assert_result):
     with netconf as n:
         netconf_assert_result(actual=n.lock())
@@ -351,9 +382,21 @@ async def test_unlock_async(netconf, netconf_assert_result):
         netconf_assert_result(actual=actual)
 
 
-RAW_RPC_ARGNAMES = ("payload",)
-RAW_RPC_ARGVALUES = (("<get-config><source><running/></source></get-config>",),)
-RAW_RPC_IDS = ("simple",)
+RAW_RPC_ARGNAMES = ("payload", "extra_namespaces")
+RAW_RPC_ARGVALUES = (
+    (
+        "<get-config><source><running/></source></get-config>",
+        None,
+    ),
+    (
+        "<get-config><source><running/></source></get-config>",
+        [("foo", "bar"), ("baz", "qux")],
+    ),
+)
+RAW_RPC_IDS = (
+    "simple",
+    "simple-extra-namespaces",
+)
 
 
 @pytest.mark.parametrize(
@@ -361,9 +404,9 @@ RAW_RPC_IDS = ("simple",)
     argvalues=RAW_RPC_ARGVALUES,
     ids=RAW_RPC_IDS,
 )
-def test_raw_rpc(payload, netconf, netconf_assert_result):
+def test_raw_rpc(payload, extra_namespaces, netconf, netconf_assert_result):
     with netconf as n:
-        netconf_assert_result(actual=n.raw_rpc(payload=payload))
+        netconf_assert_result(actual=n.raw_rpc(payload=payload, extra_namespaces=extra_namespaces))
 
 
 @pytest.mark.asyncio
@@ -372,7 +415,44 @@ def test_raw_rpc(payload, netconf, netconf_assert_result):
     argvalues=RAW_RPC_ARGVALUES,
     ids=RAW_RPC_IDS,
 )
-async def test_raw_rpc_async(payload, netconf, netconf_assert_result):
+async def test_raw_rpc_async(payload, extra_namespaces, netconf, netconf_assert_result):
+    async with netconf as n:
+        actual = await n.raw_rpc_async(payload=payload, extra_namespaces=extra_namespaces)
+
+        netconf_assert_result(actual=actual)
+
+
+RAW_RPC_CREATE_SUBSCRIPTION_ARGNAMES = ("payload",)
+RAW_RPC_CREATE_SUBSCRIPTION_ARGVALUES = (
+    (
+        """<create-subscription xmlns="urn:ietf:params:xml:ns:netconf:notification:1.0">
+         <stream>NETCONF</stream>
+         <filter type="subtree">
+           <counter-update xmlns="urn:boring:counter"/>
+         </filter>
+       </create-subscription>""",
+    ),
+)
+RAW_RPC_CREATE_SUBSCRIPTION_IDS = ("simple",)
+
+
+@pytest.mark.parametrize(
+    argnames=RAW_RPC_CREATE_SUBSCRIPTION_ARGNAMES,
+    argvalues=RAW_RPC_CREATE_SUBSCRIPTION_ARGVALUES,
+    ids=RAW_RPC_CREATE_SUBSCRIPTION_IDS,
+)
+def test_raw_rpc_create_subscription(payload, netconf, netconf_assert_result):
+    with netconf as n:
+        netconf_assert_result(actual=n.raw_rpc(payload=payload))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    argnames=RAW_RPC_CREATE_SUBSCRIPTION_ARGNAMES,
+    argvalues=RAW_RPC_CREATE_SUBSCRIPTION_ARGVALUES,
+    ids=RAW_RPC_CREATE_SUBSCRIPTION_IDS,
+)
+async def test_raw_rpc_create_subscription_async(payload, netconf, netconf_assert_result):
     async with netconf as n:
         actual = await n.raw_rpc_async(payload=payload)
 

@@ -847,7 +847,7 @@ class Netconf:
         payload: str,
         *,
         base_namespace_prefix: str = "",
-        extra_namespaces: str = "",
+        extra_namespaces: Optional[list[tuple[str, str]]] = None,
         operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
@@ -856,10 +856,9 @@ class Netconf:
         Args:
             payload: the raw rpc payload
             base_namespace_prefix: prefix to use for hte base/default netconf base namespace
-            extra_namespaces: extra namespace::prefix pairs (using "::" as split there), and
-                split by "__libscrapli__" for additional pairs. this plus the base namespace
-                prefix can allow for weird cases like nxos where the base namespace must be
-                prefixed and then additional namespaces indicating desired targets must be added
+            extra_namespaces: optional list of pairs of prefix::namespaces. this plus the base
+                namespace prefix can allow for weird cases like nxos where the base namespace must
+                be prefixed and then additional namespaces indicating desired targets must be added
             operation_timeout_ns: operation timeout in ns for this operation
 
         Returns:
@@ -878,7 +877,13 @@ class Netconf:
 
         _payload = to_c_string(payload)
         _base_namespace_prefix = to_c_string(base_namespace_prefix)
-        _extra_namespaces = to_c_string(extra_namespaces)
+
+        if extra_namespaces is not None:
+            _extra_namespaces = to_c_string(
+                "__libscrapli__".join(["::".join(p) for p in extra_namespaces])
+            )
+        else:
+            _extra_namespaces = to_c_string("")
 
         operation_id = self._raw_rpc(
             operation_id=operation_id,
@@ -896,7 +901,7 @@ class Netconf:
         payload: str,
         *,
         base_namespace_prefix: str = "",
-        extra_namespaces: str = "",
+        extra_namespaces: Optional[list[tuple[str, str]]] = None,
         operation_timeout_ns: Optional[int] = None,
     ) -> Result:
         """
@@ -905,10 +910,9 @@ class Netconf:
         Args:
             payload: the raw rpc payload
             base_namespace_prefix: prefix to use for hte base/default netconf base namespace
-            extra_namespaces: extra namespace::prefix pairs (using "::" as split there), and
-                split by "__libscrapli__" for additional pairs. this plus the base namespace
-                prefix can allow for weird cases like nxos where the base namespace must be
-                prefixed and then additional namespaces indicating desired targets must be added
+            extra_namespaces: optional list of pairs of prefix::namespaces. this plus the base
+                namespace prefix can allow for weird cases like nxos where the base namespace must
+                be prefixed and then additional namespaces indicating desired targets must be added
             operation_timeout_ns: operation timeout in ns for this operation
 
         Returns:
@@ -927,7 +931,13 @@ class Netconf:
 
         _payload = to_c_string(payload)
         _base_namespace_prefix = to_c_string(base_namespace_prefix)
-        _extra_namespaces = to_c_string(extra_namespaces)
+
+        if extra_namespaces is not None:
+            _extra_namespaces = to_c_string(
+                "__libscrapli__".join(["::".join(p) for p in extra_namespaces])
+            )
+        else:
+            _extra_namespaces = to_c_string("")
 
         operation_id = self._raw_rpc(
             operation_id=operation_id,
