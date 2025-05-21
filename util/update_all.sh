@@ -147,7 +147,9 @@ echo "$CHANGES"
 read -p "looks good? (y/n): " confirm
 
 if [[ "$confirm" == [yY] ]]; then
-    rm scrapli/ffi.py.bak setup.py.bak scrapli/__init__.py.bak
+    rm scrapli/ffi.py.bak || true
+    rm setup.py.bak || true
+    rm scrapli/__init__.py.bak || true
 else
     echo "restoring..."
     mv scrapli/ffi.py.bak scrapli/ffi.py || true
