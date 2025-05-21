@@ -21,7 +21,7 @@ LATEST_LIBSCRAPLI_TAGS=(
     )
 )
 CURRENT_LIBSCRAPLI_TAG=$(
-    grep -Eo 'LIBSCRAPLI_VERSION\s=\s"[^"]+"' scrapli/ffi.py | cut -d '"' -f2
+    grep -Eo 'LIBSCRAPLI_VERSION = "[^"]+"' scrapli/ffi.py | cut -d '"' -f2
 )
 
 LATEST_DEFINITION_TAGS=(
