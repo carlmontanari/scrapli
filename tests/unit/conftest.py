@@ -133,6 +133,42 @@ def netconf(request: pytest.FixtureRequest) -> Netconf:
 
 
 @pytest.fixture(scope="function")
+def netconf_srl(request: pytest.FixtureRequest) -> Netconf:
+    """Fixture to provide a Netconf instance (srl not netopeer) for unit testing"""
+    filename = _original_name_to_filename(originalname=request.node.originalname)
+    fixture_dir = f"{request.node.path.parent}/fixtures/netconf"
+    f = f"{fixture_dir}/{filename}"
+
+    if id_ := getattr(getattr(request.node, "callspec", False), "id", False):
+        f = f"{f}-{id_}"
+
+    if request.config.getoption("--record"):
+        port = 21830
+        session_options = SessionOptions(
+            recorder_path=f,
+        )
+        transport_options = TransportOptions()
+    else:
+        port = NETCONF_PORT
+        session_options = SessionOptions(read_size=1, operation_max_search_depth=32)
+        transport_options = TransportOptions(test=TransportTestOptions(f=f))
+
+    return Netconf(
+        host=HOST,
+        port=port,
+        options=NetconfOptions(
+            close_force=True,
+        ),
+        auth_options=AuthOptions(
+            username="admin",
+            password="NokiaSrl1!",
+        ),
+        session_options=session_options,
+        transport_options=transport_options,
+    )
+
+
+@pytest.fixture(scope="function")
 def netconf_assert_result(
     request: pytest.FixtureRequest, clean_netconf_output: Callable[[str], str]
 ) -> Callable[[Result], None]:
