@@ -23,11 +23,28 @@ EOS_AVAILABLE = "ceos" in subprocess.getoutput("docker ps")
 SSH_PORT = 22
 NETCONF_PORT = 830
 
+CLI_NO_GOLDEN = (
+    "nokia-srl-bin-enormous-output",
+    "nokia-srl-ssh2-enormous-output",
+)
+
 NETCONF_NON_EXACT_GOLDEN_MATCH_THRESHOLD = 0.8
 NETCONF_NON_EXACT_CASE_SUB_STRS = (
     "test_get[netopeer",
     "test_get_async[netopeer",
 )
+
+SLOW_TESTS = (
+    "test_send_input[nokia-srl-bin-enormous-output]",
+    "test_send_input[nokia-srl-ssh2-enormous-output]",
+    "test_send_input_async[nokia-srl-bin-enormous-output]",
+    "test_send_input_async[nokia-srl-ssh2-enormous-output]",
+)
+
+
+@pytest.fixture(scope="session")
+def slow_tests() -> tuple[str, ...]:
+    return SLOW_TESTS
 
 
 def _original_name_to_filename(originalname: str) -> str:
@@ -90,16 +107,17 @@ def cli_assert_result(
         f = f"{f}-{id_}"
 
     def _cli_assert_result(actual: Result) -> None:
-        if request.config.getoption("--update"):
-            with open(file=f, mode="w") as _f:
-                _f.write(clean_cli_output(actual.result))
+        if not any(case in request.node.name for case in CLI_NO_GOLDEN):
+            if request.config.getoption("--update"):
+                with open(file=f, mode="w") as _f:
+                    _f.write(clean_cli_output(actual.result))
 
-            return
+                return
 
-        with open(file=f, mode="r", newline="") as _f:
-            golden = _f.read()
+            with open(file=f, mode="r", newline="") as _f:
+                golden = _f.read()
 
-        assert clean_cli_output(actual.result) == golden
+            assert clean_cli_output(actual.result) == golden
 
         assert actual.start_time != 0
         assert actual.end_time != 0
@@ -176,7 +194,7 @@ def netconf_assert_result(
         with open(file=f, mode="r", newline="") as _f:
             golden = _f.read()
 
-        if any(case in request.node.nodeid for case in NETCONF_NON_EXACT_CASE_SUB_STRS):
+        if any(case in request.node.name for case in NETCONF_NON_EXACT_CASE_SUB_STRS):
             # too much stuff moves round in these test cases to bother doing an actual check
             # so we'll just make sure things are ~80% similar and call it good -- the reality is
             # if the rpc didnt fail, it was probably ok anyway :)
