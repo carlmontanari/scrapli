@@ -14,6 +14,10 @@ GET_PROMPT_ARGVALUES = (
         "ssh2",
     ),
     (
+        "arista_eos",
+        "telnet",
+    ),
+    (
         "nokia_srl",
         "bin",
     ),
@@ -25,6 +29,7 @@ GET_PROMPT_ARGVALUES = (
 GET_PROMPT_IDS = (
     "arista-eos-bin",
     "arista-eos-ssh2",
+    "arista-eos-telnet",
     "nokia_srl-bin",
     "nokia_srl-ssh2",
 )
@@ -74,6 +79,12 @@ ENTER_MODE_ARGVALUES = (
     ),
     (
         "privileged_exec",
+        None,
+        "arista_eos",
+        "telnet",
+    ),
+    (
+        "privileged_exec",
         "exec",
         "arista_eos",
         "bin",
@@ -85,6 +96,12 @@ ENTER_MODE_ARGVALUES = (
         "ssh2",
     ),
     (
+        "privileged_exec",
+        "exec",
+        "arista_eos",
+        "telnet",
+    ),
+    (
         "configuration",
         "exec",
         "arista_eos",
@@ -97,6 +114,12 @@ ENTER_MODE_ARGVALUES = (
         "ssh2",
     ),
     (
+        "configuration",
+        "exec",
+        "arista_eos",
+        "telnet",
+    ),
+    (
         "privileged_exec",
         "configuration",
         "arista_eos",
@@ -107,6 +130,12 @@ ENTER_MODE_ARGVALUES = (
         "configuration",
         "arista_eos",
         "ssh2",
+    ),
+    (
+        "privileged_exec",
+        "configuration",
+        "arista_eos",
+        "telnet",
     ),
     (
         "exec",
@@ -136,12 +165,16 @@ ENTER_MODE_ARGVALUES = (
 ENTER_MODE_IDS = (
     "arista-eos-bin-no-change",
     "arista-eos-ssh2-no-change",
+    "arista-eos-telnet-no-change",
     "arista-eos-bin-escalate-with-password",
     "arista-eos-ssh2-escalate-with-password",
+    "arista-eos-telnet-escalate-with-password",
     "arista-eos-bin-multi-escalate-with-password",
     "arista-eos-ssh2-multi-escalate-with-password",
+    "arista-eos-telnet-multi-escalate-with-password",
     "arista-eos-bin-deescalate",
     "arista-eos-ssh2-deescalate",
+    "arista-eos-telnet-deescalate",
     "nokia_srl-bin-no-change",
     "nokia_srl-ssh2-no-change",
     "nokia_srl-bin-escalate",
@@ -217,6 +250,15 @@ SEND_INPUT_ARGVALUES = (
         "ssh2",
     ),
     (
+        "show version | i Ker",
+        "privileged_exec",
+        None,
+        False,
+        False,
+        "arista_eos",
+        "telnet",
+    ),
+    (
         "show run",
         "privileged_exec",
         None,
@@ -233,6 +275,15 @@ SEND_INPUT_ARGVALUES = (
         False,
         "arista_eos",
         "ssh2",
+    ),
+    (
+        "show run",
+        "privileged_exec",
+        None,
+        False,
+        False,
+        "arista_eos",
+        "telnet",
     ),
     (
         "show run",
@@ -255,6 +306,15 @@ SEND_INPUT_ARGVALUES = (
     (
         "show run",
         "privileged_exec",
+        "configuration",
+        False,
+        False,
+        "arista_eos",
+        "telnet",
+    ),
+    (
+        "show run",
+        "privileged_exec",
         None,
         True,
         False,
@@ -274,6 +334,15 @@ SEND_INPUT_ARGVALUES = (
         "show run",
         "privileged_exec",
         None,
+        True,
+        False,
+        "arista_eos",
+        "telnet",
+    ),
+    (
+        "show run",
+        "privileged_exec",
+        None,
         False,
         True,
         "arista_eos",
@@ -292,6 +361,15 @@ SEND_INPUT_ARGVALUES = (
         "show run",
         "privileged_exec",
         None,
+        False,
+        True,
+        "arista_eos",
+        "telnet",
+    ),
+    (
+        "show run",
+        "privileged_exec",
+        None,
         True,
         True,
         "arista_eos",
@@ -305,6 +383,15 @@ SEND_INPUT_ARGVALUES = (
         True,
         "arista_eos",
         "ssh2",
+    ),
+    (
+        "show run",
+        "privileged_exec",
+        None,
+        True,
+        True,
+        "arista_eos",
+        "telnet",
     ),
     (
         "info system",
@@ -317,6 +404,24 @@ SEND_INPUT_ARGVALUES = (
     ),
     (
         "info system",
+        "exec",
+        None,
+        False,
+        False,
+        "nokia_srl",
+        "ssh2",
+    ),
+    (
+        "info",
+        "exec",
+        None,
+        False,
+        False,
+        "nokia_srl",
+        "bin",
+    ),
+    (
+        "info",
         "exec",
         None,
         False,
@@ -344,20 +449,28 @@ SEND_INPUT_ARGVALUES = (
     ),
 )
 SEND_INPUT_IDS = (
-    "arista-eos-bin-same-privilege-level-no-pagination",
-    "arista-eos-ssh2-same-privilege-level-no-pagination",
-    "arista-eos-bin-same-privilege-level-pagination",
-    "arista-eos-ssh2-same-privilege-level-pagination",
-    "arista-eos-bin-change-privilege-level-pagination",
-    "arista-eos-ssh2-change-privilege-level-pagination",
-    "arista-eos-bin-same-privilege-level-pagination-retain-input",
-    "arista-eos-ssh2-same-privilege-level-pagination-retain-input",
-    "arista-eos-bin-same-privilege-level-pagination-retain-trailing-prompt",
-    "arista-eos-ssh2-same-privilege-level-pagination-retain-trailing-prompt",
-    "arista-eos-bin-same-privilege-level-pagination-retain-input-and-trailing-prompt",
-    "arista-eos-ssh2-same-privilege-level-pagination-retain-input-and-trailing-prompt",
+    "arista-eos-bin-same-mode-no-pagination",
+    "arista-eos-ssh2-same-mode-no-pagination",
+    "arista-eos-telnet-same-mode-no-pagination",
+    "arista-eos-bin-same-mode-pagination",
+    "arista-eos-ssh2-same-mode-pagination",
+    "arista-eos-telnet-same-mode-pagination",
+    "arista-eos-bin-change-mode-pagination",
+    "arista-eos-ssh2-change-mode-pagination",
+    "arista-eos-telnet-change-mode-pagination",
+    "arista-eos-bin-same-mode-pagination-retain-input",
+    "arista-eos-ssh2-same-mode-pagination-retain-input",
+    "arista-eos-telnet-same-mode-pagination-retain-input",
+    "arista-eos-bin-same-mode-pagination-retain-trailing-prompt",
+    "arista-eos-ssh2-same-mode-pagination-retain-trailing-prompt",
+    "arista-eos-telnet-same-mode-pagination-retain-trailing-prompt",
+    "arista-eos-bin-same-mode-pagination-retain-input-and-trailing-prompt",
+    "arista-eos-ssh2-same-mode-pagination-retain-input-and-trailing-prompt",
+    "arista-eos-telnet-same-mode-pagination-retain-input-and-trailing-prompt",
     "nokia-srl-bin-simple",
     "nokia-srl-ssh2-simple",
+    "nokia-srl-bin-big-output",
+    "nokia-srl-ssh2-big-output",
     "nokia-srl-bin-enormous-output",
     "nokia-srl-ssh2-enormous-output",
 )
@@ -377,8 +490,9 @@ def test_send_input(
     cli,
     cli_assert_result,
     request,
+    slow_tests,
 ):
-    if request.config.getoption("--skip-slow") and input_ == "info from state":
+    if request.config.getoption("--skip-slow") and request.node.name in slow_tests:
         pytest.skip("skipping huge output test due to skip-slow flag")
 
     with cli as c:
@@ -392,17 +506,7 @@ def test_send_input(
             retain_trailing_prompt=retain_trailing_prompt,
         )
 
-        if input_ == "info from state":
-            # we dont save the 40mb of output from this command, and also even if we did
-            # the counters etc would change so comparing would be pointless
-            assert actual.start_time != 0
-            assert actual.end_time != 0
-            assert actual.elapsed_time_seconds != 0
-            assert len(actual.results) != 0
-            assert len(actual.results_raw) != 0
-            assert actual.failed is False
-        else:
-            cli_assert_result(actual=actual)
+        cli_assert_result(actual=actual)
 
 
 @pytest.mark.asyncio
@@ -420,8 +524,9 @@ async def test_send_input_async(
     cli,
     cli_assert_result,
     request,
+    slow_tests,
 ):
-    if request.config.getoption("--skip-slow") and input_ == "info from state":
+    if request.config.getoption("--skip-slow") and request.node.name in slow_tests:
         pytest.skip("skipping huge output test due to skip-slow flag")
 
     async with cli as c:
@@ -435,15 +540,7 @@ async def test_send_input_async(
             retain_trailing_prompt=retain_trailing_prompt,
         )
 
-        if input_ == "info from state":
-            assert actual.start_time != 0
-            assert actual.end_time != 0
-            assert actual.elapsed_time_seconds != 0
-            assert len(actual.results) != 0
-            assert len(actual.results_raw) != 0
-            assert actual.failed is False
-        else:
-            cli_assert_result(actual=actual)
+        cli_assert_result(actual=actual)
 
 
 SEND_INPUTS_ARGNAMES = (
@@ -484,12 +581,12 @@ SEND_INPUTS_ARGVALUES = (
     ),
 )
 SEND_INPUTS_IDS = (
-    "arista-eos-bin-same-privilege-level-single-input",
-    "arista-eos-ssh2-same-privilege-level-single-input",
-    "arista-eos-bin-same-privilege-level-multi-input",
-    "arista-eos-ssh2-same-privilege-level-multi-input",
-    "nokia-srl-bin-same-privilege-level-multi-input",
-    "nokia-srl-ssh2-same-privilege-level-multi-input",
+    "arista-eos-bin-same-mode-single-input",
+    "arista-eos-ssh2-same-mode-single-input",
+    "arista-eos-bin-same-mode-multi-input",
+    "arista-eos-ssh2-same-mode-multi-input",
+    "nokia-srl-bin-same-mode-multi-input",
+    "nokia-srl-ssh2-same-mode-multi-input",
 )
 
 

@@ -116,4 +116,4 @@ jobs:
       - name: functional tests
         # skip the "enormous" output test as its super slow in gh runners
         run: |
-          make test-functional-ci ARGS=--skip-slow
+          make test-functional-ci ARGS="--skip-slow"
