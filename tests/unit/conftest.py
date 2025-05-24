@@ -156,9 +156,6 @@ def netconf_srl(request: pytest.FixtureRequest) -> Netconf:
     return Netconf(
         host=HOST,
         port=port,
-        options=NetconfOptions(
-            close_force=True,
-        ),
         auth_options=AuthOptions(
             username="admin",
             password="NokiaSrl1!",

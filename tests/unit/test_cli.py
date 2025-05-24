@@ -304,17 +304,29 @@ async def test_send_inputs_from_file_async(f, cli, cli_assert_result):
         cli_assert_result(actual=actual)
 
 
-SEND_PROMPTED_INPUTS_ARGNAMES = ("input_", "prompt", "prompt_pattern", "response", "requested_mode")
-SEND_PROMPTED_INPUTS_ARGVALUES = (
-    ('read -p "Will you prompt me plz?"', "Will you prompt me plz?", "", "nou", "bash"),
+SEND_PROMPTED_INPUT_ARGNAMES = (
+    "input_",
+    "prompt",
+    "prompt_pattern",
+    "response",
+    "requested_mode",
 )
-SEND_PROMPTED_INPUTS_IDS = ("simple",)
+SEND_PROMPTED_INPUT_ARGVALUES = (
+    (
+        'read -p "Will you prompt me plz? " answer',
+        "Will you prompt me plz?",
+        "",
+        "nou",
+        "bash",
+    ),
+)
+SEND_PROMPTED_INPUT_IDS = ("simple",)
 
 
 @pytest.mark.parametrize(
-    argnames=SEND_PROMPTED_INPUTS_ARGNAMES,
-    argvalues=SEND_PROMPTED_INPUTS_ARGVALUES,
-    ids=SEND_PROMPTED_INPUTS_IDS,
+    argnames=SEND_PROMPTED_INPUT_ARGNAMES,
+    argvalues=SEND_PROMPTED_INPUT_ARGVALUES,
+    ids=SEND_PROMPTED_INPUT_IDS,
 )
 def test_send_prompted_input(
     input_, prompt, prompt_pattern, response, requested_mode, cli, cli_assert_result
@@ -333,9 +345,9 @@ def test_send_prompted_input(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    argnames=SEND_PROMPTED_INPUTS_ARGNAMES,
-    argvalues=SEND_PROMPTED_INPUTS_ARGVALUES,
-    ids=SEND_PROMPTED_INPUTS_IDS,
+    argnames=SEND_PROMPTED_INPUT_ARGNAMES,
+    argvalues=SEND_PROMPTED_INPUT_ARGVALUES,
+    ids=SEND_PROMPTED_INPUT_IDS,
 )
 async def test_send_prompted_input_async(
     input_, prompt, prompt_pattern, response, requested_mode, cli, cli_assert_result
