@@ -818,6 +818,62 @@ async def test_raw_rpc_async(payload, netconf, netconf_assert_result):
         netconf_assert_result(actual=actual)
 
 
+RAW_RPC_CREATE_SUBSCRIPTION_ARGNAMES = (
+    "payload",
+    "platform",
+    "transport",
+)
+RAW_RPC_CREATE_SUBSCRIPTION_ARGVALUES = (
+    (
+        """<create-subscription xmlns="urn:ietf:params:xml:ns:netconf:notification:1.0">
+     <stream>NETCONF</stream>
+     <filter type="subtree">
+       <counter-update xmlns="urn:boring:counter"/>
+     </filter>
+   </create-subscription>""",
+        "netopeer",
+        "bin",
+    ),
+    (
+        """<create-subscription xmlns="urn:ietf:params:xml:ns:netconf:notification:1.0">
+         <stream>NETCONF</stream>
+         <filter type="subtree">
+           <counter-update xmlns="urn:boring:counter"/>
+         </filter>
+       </create-subscription>""",
+        "netopeer",
+        "ssh2",
+    ),
+)
+RAW_RPC_CREATE_SUBSCRIPTION_IDS = (
+    "netopeer-bin-simple",
+    "netopeer-ssh2-simple",
+)
+
+
+@pytest.mark.parametrize(
+    argnames=RAW_RPC_CREATE_SUBSCRIPTION_ARGNAMES,
+    argvalues=RAW_RPC_CREATE_SUBSCRIPTION_ARGVALUES,
+    ids=RAW_RPC_CREATE_SUBSCRIPTION_IDS,
+)
+def test_raw_rpc_create_subscription(payload, netconf, netconf_assert_result):
+    with netconf as n:
+        netconf_assert_result(actual=n.raw_rpc(payload=payload))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    argnames=RAW_RPC_CREATE_SUBSCRIPTION_ARGNAMES,
+    argvalues=RAW_RPC_CREATE_SUBSCRIPTION_ARGVALUES,
+    ids=RAW_RPC_CREATE_SUBSCRIPTION_IDS,
+)
+async def test_raw_rpc_create_subscription_async(payload, netconf, netconf_assert_result):
+    async with netconf as n:
+        actual = await n.raw_rpc_async(payload=payload)
+
+        netconf_assert_result(actual=actual)
+
+
 VALIDATE_ARGNAMES = (
     "platform",
     "transport",

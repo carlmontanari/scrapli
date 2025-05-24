@@ -1,2 +1,2 @@
-[user@host ~]$ read -p "Will you prompt me plz?"
-Will you prompt me plz?nou
+[user@host ~]$ read -p "Will you prompt me plz? " answer
+Will you prompt me plz? nou
