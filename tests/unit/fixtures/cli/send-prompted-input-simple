@@ -1,6 +1,6 @@
 Warning: Permanently added '[localhost]:22022' (ED25519) to the list of known hosts.
 (admin@localhost) Password: 
-Last login: Mon Apr 28 03:26:24 2025 from 192.168.65.1
+Last login: Sat May 24 20:25:05 2025 from 192.168.65.1
 eos1>
 eos1>
 eos1>enable
@@ -14,8 +14,8 @@ eos1#bash
 
 Arista Networks EOS shell
 
-[admin@eos1 ~]$ read -p "Will you prompt me plz?"
-Will you prompt me plz?nou
+[admin@eos1 ~]$ read -p "Will you prompt me plz? " answer
+Will you prompt me plz? nou
 [admin@eos1 ~]$ 
 [admin@eos1 ~]$ exit
 logout
