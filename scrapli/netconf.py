@@ -14,6 +14,7 @@ from scrapli.exceptions import (
     AllocationException,
     CloseException,
     GetResultException,
+    NoMessagesException,
     NotOpenedException,
     OpenException,
     OperationException,
@@ -28,7 +29,7 @@ from scrapli.ffi_types import (
     IntPointer,
     LogFuncCallback,
     OperationIdPointer,
-    UnixTimestampPointer,
+    U64Pointer,
     ZigSlice,
     to_c_string,
 )
@@ -658,8 +659,8 @@ class Netconf:
         if status != 0:
             raise GetResultException("wait operation failed")
 
-        start_time = UnixTimestampPointer(c_uint64())
-        end_time = UnixTimestampPointer(c_uint64())
+        start_time = U64Pointer(c_uint64())
+        end_time = U64Pointer(c_uint64())
 
         input_slice = ZigSlice(size=input_size.contents)
         result_raw_slice = ZigSlice(size=result_raw_size.contents)
@@ -747,8 +748,8 @@ class Netconf:
                 backoff_factor=backoff_factor,
             )
 
-        start_time = UnixTimestampPointer(c_uint64())
-        end_time = UnixTimestampPointer(c_uint64())
+        start_time = U64Pointer(c_uint64())
+        end_time = U64Pointer(c_uint64())
 
         input_slice = ZigSlice(size=input_size.contents)
         result_raw_slice = ZigSlice(size=result_raw_size.contents)
@@ -818,6 +819,115 @@ class Netconf:
         self._session_id = session_id.contents.value
 
         return self._session_id
+
+    def get_subscription_id(self, payload: str) -> int:
+        """
+        Get the subscription id from a rpc-reply (from an establish-subscription rpc).
+
+        Args:
+            payload: the payload to find the subscription id in
+
+        Returns:
+            int: subscription id
+
+        Raises:
+            N/A
+
+        """
+        _payload = to_c_string(payload)
+        subscription_id = U64Pointer(c_uint64())
+
+        status = self.ffi_mapping.netconf_mapping.get_subscription_id(
+            payload=_payload,
+            subscription_id=subscription_id,
+        )
+        if status != 0:
+            raise GetResultException("fetch subscriptiond id failed")
+
+        return int(subscription_id.contents.value)
+
+    def get_next_notification(
+        self,
+    ) -> str:
+        """
+        Fetch the next notification message if available.
+
+        Args:
+            N/A
+
+        Returns:
+            str: the string content of the next notification
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+            NoMessagesException: if there are no notifications to fetch
+
+        """
+        notification_size = IntPointer(c_int())
+
+        self.ffi_mapping.netconf_mapping.get_next_notification_size(
+            ptr=self._ptr_or_exception(),
+            notification_size=notification_size,
+        )
+
+        if notification_size.contents == 0:
+            raise NoMessagesException("no notification messages available")
+
+        notification_slice = ZigSlice(size=notification_size.contents)
+
+        status = self.ffi_mapping.netconf_mapping.get_next_notification(
+            ptr=self._ptr_or_exception(),
+            notification_slice=notification_slice,
+        )
+        if status != 0:
+            raise SubmitOperationException("submitting getting next notification failed")
+
+        return notification_slice.get_decoded_contents()
+
+    def get_next_subscription(
+        self,
+        subscription_id: int,
+    ) -> str:
+        """
+        Fetch the next notification message if available.
+
+        Args:
+            subscription_id: subscription id to fetch a message for
+
+        Returns:
+            str: the string content of the next notification
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+            NoMessagesException: if there are no notifications to fetch
+
+        """
+        subscription_size = IntPointer(c_int())
+
+        self.ffi_mapping.netconf_mapping.get_next_subscription_size(
+            ptr=self._ptr_or_exception(),
+            subscription_id=c_uint64(subscription_id),
+            subscription_size=subscription_size,
+        )
+
+        if subscription_size.contents == 0:
+            raise NoMessagesException(
+                f"no subscription messages available for subscription id {subscription_id}",
+            )
+
+        subscription_slice = ZigSlice(size=subscription_size.contents)
+
+        status = self.ffi_mapping.netconf_mapping.get_next_subscription(
+            ptr=self._ptr_or_exception(),
+            subscription_id=c_uint64(subscription_id),
+            subscription_slice=subscription_slice,
+        )
+        if status != 0:
+            raise SubmitOperationException("submitting getting next subscription failed")
+
+        return subscription_slice.get_decoded_contents()
 
     def _raw_rpc(
         self,
