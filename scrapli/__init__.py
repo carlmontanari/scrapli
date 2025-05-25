@@ -13,7 +13,7 @@ from scrapli.transport import TelnetOptions as TransportTelnetOptions
 from scrapli.transport import TestOptions as TransportTestOptions
 
 __version__ = "2.0.0-alpha.0"
-__definitions_version__ = "2d05af4"
+__definitions_version__ = "471f12e"
 
 __all__ = (
     "AuthOptions",
