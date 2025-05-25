@@ -1,0 +1,14 @@
+Warning: Permanently added '[localhost]:22022' (ED25519) to the list of known hosts.
+(admin@localhost) Password: 
+Last login: Sat May 17 19:02:31 2025 from 192.168.65.1
+eos1>
+eos1>
+eos1>enable
+Password: 
+eos1#term width 32767
+Width set to 32767 columns.
+eos1#term len 0
+Pagination disabled.
+eos1#show version | i Kern
+Kernel version: 6.10.14-linuxkit
+eos1#

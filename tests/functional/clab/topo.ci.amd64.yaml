@@ -1,0 +1,23 @@
+---
+name: libscrapli
+
+mgmt:
+  network: containerlab
+  ipv4-subnet: 172.20.20.0/24
+  ipv6-subnet: 2001:172:20:20::/64
+
+topology:
+  kinds:
+    srl:
+      image: ghcr.io/nokia/srlinux:24.10.1-492-amd64
+  nodes:
+    srl:
+      kind: srl
+      mgmt-ipv4: 172.20.20.16
+      mgmt-ipv6: 2001:172:20:20::16
+      startup-config: configs/srl-startup.json
+    netopeer:
+      kind: linux
+      image: libscrapli-netopeer2:latest
+      mgmt-ipv4: 172.20.20.18
+      mgmt-ipv6: 2001:172:20:20::18
