@@ -511,7 +511,6 @@ class Cli:
     def _get_poll_delay(
         current_delay: int, min_delay: int, max_delay: int, backoff_factor: int
     ) -> int:
-        # TODO this needs to be.... more thoughtful? because its hugely cpu slamming in python
         new_delay = current_delay
         new_delay *= backoff_factor
 
@@ -630,7 +629,6 @@ class Cli:
 
             current_delay = self._get_poll_delay(
                 current_delay=current_delay,
-                # TODO this *feels* ok?
                 min_delay=min_delay,
                 max_delay=max_delay * 10,
                 backoff_factor=backoff_factor,
