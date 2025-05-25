@@ -205,13 +205,13 @@ class LibScrapliNetconfMapping:
         self._get_next_notification_size: Callable[
             [
                 DriverPointer,
-                IntPointer,
+                U64Pointer,
             ],
             int,
         ] = lib.ls_netconf_next_notification_message_size
         lib.ls_netconf_next_notification_message_size.argtypes = [
             DriverPointer,
-            IntPointer,
+            POINTER(c_uint64),
         ]
         lib.ls_netconf_next_notification_message_size.restype = c_uint8
 
@@ -232,14 +232,14 @@ class LibScrapliNetconfMapping:
             [
                 DriverPointer,
                 c_uint64,
-                IntPointer,
+                U64Pointer,
             ],
             int,
         ] = lib.ls_netconf_next_subscription_message_size
         lib.ls_netconf_next_subscription_message_size.argtypes = [
             DriverPointer,
             c_uint64,
-            IntPointer,
+            POINTER(c_uint64),
         ]
         lib.ls_netconf_next_subscription_message_size.restype = c_uint8
 
@@ -901,7 +901,7 @@ class LibScrapliNetconfMapping:
         self,
         *,
         ptr: DriverPointer,
-        notification_size: IntPointer,
+        notification_size: U64Pointer,
     ) -> int:
         """
         Get the size of the next notification message.
@@ -958,7 +958,7 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         subscription_id: c_uint64,
-        subscription_size: IntPointer,
+        subscription_size: U64Pointer,
     ) -> int:
         """
         Get the size of the next subscription message for the given id.
