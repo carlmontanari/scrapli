@@ -494,6 +494,11 @@ def test_get_next_notification(request, netconf):
         if request.config.getoption("--record"):
             # boring counter updates every 3s; only when recording fixture ofc
             sleep(4)
+        else:
+            # just to ensure the background thread has read the notificaiton... important
+            # because in unit tests we are literally reading 1 char at a time and ci has
+            # slow compute :)
+            sleep(1)
 
         actual = n.get_next_notification()
 
@@ -545,6 +550,11 @@ def test_get_next_subscription(request):
         if request.config.getoption("--record"):
             # only when recording fixture ofc
             sleep(10)
+        else:
+            # just to ensure the background thread has read the notificaiton... important
+            # because in unit tests we are literally reading 1 char at a time and ci has
+            # slow compute :)
+            sleep(1)
 
         actual = n.get_next_subscription(subscription_id=n.get_subscription_id(r.result))
 

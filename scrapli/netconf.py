@@ -864,7 +864,7 @@ class Netconf:
             NoMessagesException: if there are no notifications to fetch
 
         """
-        notification_size = IntPointer(c_int())
+        notification_size = U64Pointer(c_uint64())
 
         self.ffi_mapping.netconf_mapping.get_next_notification_size(
             ptr=self._ptr_or_exception(),
@@ -904,7 +904,7 @@ class Netconf:
             NoMessagesException: if there are no notifications to fetch
 
         """
-        subscription_size = IntPointer(c_int())
+        subscription_size = U64Pointer(c_uint64())
 
         self.ffi_mapping.netconf_mapping.get_next_subscription_size(
             ptr=self._ptr_or_exception(),
