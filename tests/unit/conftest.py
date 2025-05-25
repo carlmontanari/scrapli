@@ -7,7 +7,6 @@ from scrapli import (
     Cli,
     LookupKeyValue,
     Netconf,
-    NetconfOptions,
     SessionOptions,
     TransportOptions,
     TransportTestOptions,
@@ -120,9 +119,6 @@ def netconf(request: pytest.FixtureRequest) -> Netconf:
     return Netconf(
         host=HOST,
         port=port,
-        options=NetconfOptions(
-            close_force=True,
-        ),
         auth_options=AuthOptions(
             username="root",
             password="password",

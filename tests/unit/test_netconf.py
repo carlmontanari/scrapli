@@ -1,7 +1,15 @@
 from copy import copy
+from time import sleep
 
 import pytest
 
+from scrapli import (
+    AuthOptions,
+    Netconf,
+    SessionOptions,
+    TransportOptions,
+    TransportTestOptions,
+)
 from scrapli.netconf import DatastoreType
 
 
@@ -63,16 +71,15 @@ async def test_cancel_commit_async(netconf, netconf_assert_result):
 
 
 def test_close_session(netconf, netconf_assert_result):
-    with netconf as n:
-        netconf_assert_result(actual=n.close_session())
+    netconf.open()
+    netconf_assert_result(actual=netconf.close_session())
 
 
 @pytest.mark.asyncio
 async def test_close_session_async(netconf, netconf_assert_result):
-    async with netconf as n:
-        actual = await n.close_session_async()
-
-        netconf_assert_result(actual=actual)
+    await netconf.open_async()
+    actual = await netconf.close_session_async()
+    netconf_assert_result(actual=actual)
 
 
 def test_commit(netconf, netconf_assert_result):
@@ -470,3 +477,75 @@ async def test_validate_async(netconf, netconf_assert_result):
         actual = await n.validate_async()
 
         netconf_assert_result(actual=actual)
+
+
+def test_get_next_notification(request, netconf):
+    with netconf as n:
+        _ = n.raw_rpc(
+            payload="""
+<create-subscription xmlns="urn:ietf:params:xml:ns:netconf:notification:1.0">
+    <stream>NETCONF</stream>
+    <filter type="subtree">
+        <counter-update xmlns="urn:boring:counter"/>
+    </filter>
+</create-subscription>"""
+        )
+
+        if request.config.getoption("--record"):
+            # boring counter updates every 3s; only when recording fixture ofc
+            sleep(4)
+
+        actual = n.get_next_notification()
+
+        assert actual is not None
+
+
+def test_get_next_subscription(request):
+    filename = request.node.originalname.removeprefix("test_").replace("_", "-")
+    fixture_dir = f"{request.node.path.parent}/fixtures/netconf"
+    f = f"{fixture_dir}/{filename}"
+
+    if request.config.getoption("--record"):
+        pytest.fail(
+            "are you really sure? this is not using the clab setup, "
+            "make sure you have either cisco sandbox or something else "
+            "handy to re-record this test fixture",
+        )
+
+        session_options = SessionOptions(
+            recorder_path=f,
+        )
+        transport_options = TransportOptions()
+    else:
+        session_options = SessionOptions(read_size=1, operation_max_search_depth=32)
+        transport_options = TransportOptions(test=TransportTestOptions(f=f))
+
+    netconf = Netconf(
+        # you may want to use: devnetsandboxiosxe.cisco.com -- have to login to get creds
+        host="SETME",
+        port=830,
+        auth_options=AuthOptions(
+            username="SETME",
+            password="SETME",
+        ),
+        session_options=session_options,
+        transport_options=transport_options,
+    )
+
+    with netconf as n:
+        r = n.raw_rpc(
+            payload="""
+<establish-subscription xmlns="urn:ietf:params:xml:ns:yang:ietf-event-notifications" xmlns:yp="urn:ietf:params:xml:ns:yang:ietf-yang-push">
+    <stream>yp:yang-push</stream>
+    <yp:xpath-filter>/mdt-oper:mdt-oper-data/mdt-subscriptions</yp:xpath-filter>
+    <yp:period>1000</yp:period>
+</establish-subscription>"""
+        )
+
+        if request.config.getoption("--record"):
+            # only when recording fixture ofc
+            sleep(10)
+
+        actual = n.get_next_subscription(subscription_id=n.get_subscription_id(r.result))
+
+        assert actual is not None

@@ -106,7 +106,7 @@ convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
 "scrapli/ffi_mapping_*.py" = ["PLR0913"]
-"tests/**.py" = ["D", "PLR0913"]
+"tests/**.py" = ["D", "E501", "PLR0913"]
 
 [tool.pytest.ini_options]
 asyncio_default_fixture_loop_scope = "function"

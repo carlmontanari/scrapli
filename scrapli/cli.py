@@ -38,7 +38,7 @@ from scrapli.ffi_types import (
     IntPointer,
     LogFuncCallback,
     OperationIdPointer,
-    UnixTimestampPointer,
+    U64Pointer,
     ZigSlice,
     ZigU64Slice,
     to_c_string,
@@ -511,6 +511,7 @@ class Cli:
     def _get_poll_delay(
         current_delay: int, min_delay: int, max_delay: int, backoff_factor: int
     ) -> int:
+        # TODO this needs to be.... more thoughtful? because its hugely cpu slamming in python
         new_delay = current_delay
         new_delay *= backoff_factor
 
@@ -546,7 +547,7 @@ class Cli:
         if status != 0:
             raise GetResultException("wait operation failed")
 
-        start_time = UnixTimestampPointer(c_uint64())
+        start_time = U64Pointer(c_uint64())
         splits = ZigU64Slice(size=operation_count.contents)
 
         inputs_slice = ZigSlice(size=inputs_size.contents)
@@ -629,12 +630,13 @@ class Cli:
 
             current_delay = self._get_poll_delay(
                 current_delay=current_delay,
+                # TODO this *feels* ok?
                 min_delay=min_delay,
-                max_delay=max_delay,
+                max_delay=max_delay * 10,
                 backoff_factor=backoff_factor,
             )
 
-        start_time = UnixTimestampPointer(c_uint64())
+        start_time = U64Pointer(c_uint64())
         splits = ZigU64Slice(size=operation_count.contents)
 
         inputs_slice = ZigSlice(size=inputs_size.contents)

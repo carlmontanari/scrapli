@@ -20,7 +20,7 @@ from scrapli.ffi_types import (
     LogFuncCallback,
     OperationId,
     OperationIdPointer,
-    UnixTimestampPointer,
+    U64Pointer,
     ZigSlice,
     ZigSlicePointer,
 )
@@ -151,8 +151,8 @@ class LibScrapliNetconfMapping:
             [
                 DriverPointer,
                 OperationId,
-                UnixTimestampPointer,
-                UnixTimestampPointer,
+                U64Pointer,
+                U64Pointer,
                 ZigSlicePointer,
                 ZigSlicePointer,
                 ZigSlicePointer,
@@ -188,6 +188,75 @@ class LibScrapliNetconfMapping:
             IntPointer,
         ]
         lib.ls_netconf_get_session_id.restype = c_uint8
+
+        self._get_subscription_id: Callable[
+            [
+                c_char_p,
+                U64Pointer,
+            ],
+            int,
+        ] = lib.ls_netconf_get_subscription_id
+        lib.ls_netconf_get_subscription_id.argtypes = [
+            c_char_p,
+            POINTER(c_uint64),
+        ]
+        lib.ls_netconf_get_subscription_id.restype = c_uint8
+
+        self._get_next_notification_size: Callable[
+            [
+                DriverPointer,
+                IntPointer,
+            ],
+            int,
+        ] = lib.ls_netconf_next_notification_message_size
+        lib.ls_netconf_next_notification_message_size.argtypes = [
+            DriverPointer,
+            IntPointer,
+        ]
+        lib.ls_netconf_next_notification_message_size.restype = c_uint8
+
+        self._get_next_notification: Callable[
+            [
+                DriverPointer,
+                ZigSlicePointer,
+            ],
+            int,
+        ] = lib.ls_netconf_next_notification_message
+        lib.ls_netconf_next_notification_message.argtypes = [
+            DriverPointer,
+            POINTER(ZigSlice),
+        ]
+        lib.ls_netconf_next_notification_message.restype = c_uint8
+
+        self._get_next_subscription_size: Callable[
+            [
+                DriverPointer,
+                c_uint64,
+                IntPointer,
+            ],
+            int,
+        ] = lib.ls_netconf_next_subscription_message_size
+        lib.ls_netconf_next_subscription_message_size.argtypes = [
+            DriverPointer,
+            c_uint64,
+            IntPointer,
+        ]
+        lib.ls_netconf_next_subscription_message_size.restype = c_uint8
+
+        self._get_next_subscription: Callable[
+            [
+                DriverPointer,
+                c_uint64,
+                ZigSlicePointer,
+            ],
+            int,
+        ] = lib.ls_netconf_next_subscription_message
+        lib.ls_netconf_next_subscription_message.argtypes = [
+            DriverPointer,
+            c_uint64,
+            POINTER(ZigSlice),
+        ]
+        lib.ls_netconf_next_subscription_message.restype = c_uint8
 
         self._raw_rpc: Callable[
             [
@@ -725,8 +794,8 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id: OperationId,
-        start_time: UnixTimestampPointer,
-        end_time: UnixTimestampPointer,
+        start_time: U64Pointer,
+        end_time: U64Pointer,
         input_slice: ZigSlicePointer,
         result_raw_slice: ZigSlicePointer,
         result_slice: ZigSlicePointer,
@@ -798,6 +867,152 @@ class LibScrapliNetconfMapping:
         return self._get_session_id(
             ptr,
             session_id,
+        )
+
+    def get_subscription_id(
+        self,
+        *,
+        payload: c_char_p,
+        subscription_id: U64Pointer,
+    ) -> int:
+        """
+        Get the subscription id from the given subscription response payload.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            payload: payload to get the subscription id from
+            subscription_id: int pointer to fill with the subscription id
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._get_subscription_id(
+            payload,
+            subscription_id,
+        )
+
+    def get_next_notification_size(
+        self,
+        *,
+        ptr: DriverPointer,
+        notification_size: IntPointer,
+    ) -> int:
+        """
+        Get the size of the next notification message.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: ptr to the netconf object
+            notification_size: int pointer to fill with the session id
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._get_next_notification_size(
+            ptr,
+            notification_size,
+        )
+
+    def get_next_notification(
+        self,
+        *,
+        ptr: DriverPointer,
+        notification_slice: ZigSlicePointer,
+    ) -> int:
+        """
+        Get the next notification message.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: ptr to the netconf object
+            notification_slice: pre populted slice to fill with the notification
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._get_next_notification(
+            ptr,
+            notification_slice,
+        )
+
+    def get_next_subscription_size(
+        self,
+        *,
+        ptr: DriverPointer,
+        subscription_id: c_uint64,
+        subscription_size: IntPointer,
+    ) -> int:
+        """
+        Get the size of the next subscription message for the given id.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: ptr to the netconf object
+            subscription_id: subscription id to fetch a message for
+            subscription_size: int pointer to fill with the session id
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._get_next_subscription_size(
+            ptr,
+            subscription_id,
+            subscription_size,
+        )
+
+    def get_next_subscription(
+        self,
+        *,
+        ptr: DriverPointer,
+        subscription_id: c_uint64,
+        subscription_slice: ZigSlicePointer,
+    ) -> int:
+        """
+        Get the next subscription message for the given id.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: ptr to the netconf object
+            subscription_id: subscription id to fetch a message for
+            subscription_slice: pre populted slice to fill with the notification
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._get_next_subscription(
+            ptr,
+            subscription_id,
+            subscription_slice,
         )
 
     def raw_rpc(
