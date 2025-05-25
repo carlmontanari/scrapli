@@ -43,3 +43,7 @@ class OperationException(ScrapliException):
 
 class ParsingException(ScrapliException):
     """Exception raised when parsing (usually cli) output fails"""
+
+
+class NoMessagesException(ScrapliException):
+    """Exception raised when attempting to request notifications or subscriptions and none exist"""
