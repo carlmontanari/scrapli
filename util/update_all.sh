@@ -155,4 +155,5 @@ else
     mv scrapli/ffi.py.bak scrapli/ffi.py || true
     mv setup.py.bak setup.py || true
     mv scrapli/__init__.py.bak scrapli/__init__.py || true
+    git restore scrapli/definitions
 fi

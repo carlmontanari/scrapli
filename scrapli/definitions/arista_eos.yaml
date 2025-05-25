@@ -1,5 +1,5 @@
 ---
-prompt_pattern: '^[^<\n\r]{1,}[>#$]\s?$'
+prompt_pattern: '^[^<\r\n]{1,}[>#$]\s?$'
 default_mode: 'privileged_exec'
 modes:
   - name: 'exec'
