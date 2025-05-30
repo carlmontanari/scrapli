@@ -12,5 +12,9 @@ jobs:
   lint:
     uses: ./.github/workflows/lint.yaml
 
+  build:
+    uses: ./.github/workflows/libscrapli.yaml
+
   test:
     uses: ./.github/workflows/test.yaml
+    needs: build
