@@ -44,7 +44,7 @@ def wait_for_available_operation_result(fd: int) -> None:
         N/A
 
     """
-    r, _, _ = select([fd], [], [])
+    _, _, _ = select([fd], [], [])
     read(fd, 1)
 
 
