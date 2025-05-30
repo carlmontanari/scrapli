@@ -197,6 +197,14 @@ class Libscrapli:
     def _run_sdist_and_editable_wheel(self) -> None:
         src_lib_path = Path("scrapli/lib")
 
+        out_lib_name = self._get_libscrapli_output_shared_object_filename(
+            version=self.libscrapli_tag.lstrip("v")
+        )
+
+        if Path(src_lib_path / out_lib_name).exists():
+            # requested target already exists, dont waste time building
+            return
+
         libscrapli_build_path = self._get_libscrapli_build_path()
 
         if LIBSCRAPLI_BUILD_PATH_ENV not in os.environ:
@@ -212,9 +220,6 @@ class Libscrapli:
 
         built_lib_name = self._get_libscrapli_built_shared_object_filename(
             build_path=f"{libscrapli_build_path}/zig-out/native/"
-        )
-        out_lib_name = self._get_libscrapli_output_shared_object_filename(
-            version=self.libscrapli_tag.lstrip("v")
         )
 
         built_lib = f"{libscrapli_build_path}/zig-out/native/{built_lib_name}"
@@ -264,6 +269,16 @@ class LibscrapliBdist(bdist_wheel, Libscrapli):  # type: ignore
 
         src_lib_path = Path("scrapli/lib")
 
+        out_lib_name = self._get_libscrapli_output_shared_object_filename(
+            version=self.libscrapli_tag.lstrip("v")
+        )
+
+        if Path(src_lib_path / out_lib_name).exists():
+            # requested target already exists, dont waste time building
+            super().run()
+
+            return
+
         libscrapli_build_path = self._get_libscrapli_build_path()
 
         if LIBSCRAPLI_BUILD_PATH_ENV not in os.environ:
@@ -281,9 +296,6 @@ class LibscrapliBdist(bdist_wheel, Libscrapli):  # type: ignore
 
         built_lib_name = self._get_libscrapli_built_shared_object_filename(
             build_path=f"{libscrapli_build_path}/zig-out/{zig_triple}"
-        )
-        out_lib_name = self._get_libscrapli_output_shared_object_filename(
-            version=self.libscrapli_tag.lstrip("v")
         )
 
         built_lib = f"{libscrapli_build_path}/zig-out/{zig_triple}/{built_lib_name}"
