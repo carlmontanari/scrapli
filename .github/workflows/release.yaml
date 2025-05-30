@@ -1,0 +1,46 @@
+---
+name: release
+
+on:
+  release:
+    types:
+      - created
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: package sdist
+        run: |
+          python -m build --sdist
+
+      # because we are a "pure" python package build would only build a none-any wheel, buuuut in
+      # reality we are not *really* "pure" python because we have the zig .so/.dylib bits -- but
+      # we have no c extensions or anything so we still sorta act like pure python. so in order to
+      # build all the wheels for our targets we just loop over the zig-triples and an env var in
+      # setup.py figures out what to build/package as we sorta kinda lie to setuptools things :)
+      - name: package wheels
+        run: |
+          for target in \
+            x86_64-macos \
+            aarch64-macos \
+            x86_64-linux-gnu \
+            x86_64-linux-musl \
+            aarch64-linux-gnu \
+            aarch64-linux-musl
+          do
+            LIBSCRAPLI_ZIG_TRIPLE="$target" python -m build --wheel
+          done
+
+      - name: publish to pypi
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_PROJECT_TOKEN }}
+        run: |
+          python -m twine upload dist/*
