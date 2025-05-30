@@ -1,0 +1,48 @@
+---
+name: publish
+
+on:
+  workflow_call: {}
+  workflow_dispatch: {}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: load env vars for workflow run
+        run: |
+          source .github/vars.env
+          echo "PYTHON_VERSION=$PYTHON_VERSION" >> "$GITHUB_ENV"
+
+      - name: set up python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: package sdist
+        run: |
+          python -m build --sdist
+
+      # because we are a "pure" python package build would only build a none-any wheel, buuuut in
+      # reality we are not *really* "pure" python because we have the zig .so/.dylib bits -- but
+      # we have no c extensions or anything so we still sorta act like pure python. so in order to
+      # build all the wheels for our targets we just loop over the zig-triples and an env var in
+      # setup.py figures out what to build/package as we sorta kinda lie to setuptools things :)
+      # this (imo) is just way nicer than having to have a runner for every target using something
+      # like cibuildwheels
+      - name: package wheels
+        run: |
+          ./util/build_wheels.sh
+
+      - name: publish to pypi
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_PROJECT_TOKEN }}
+        run: |
+          python -m twine upload dist/*
