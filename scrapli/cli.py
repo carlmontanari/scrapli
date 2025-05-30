@@ -1,7 +1,6 @@
 """scrapli.cli"""
 
 import importlib.resources
-from asyncio import sleep as async_sleep
 from ctypes import (
     c_bool,
     c_char_p,
@@ -13,7 +12,6 @@ from enum import Enum
 from logging import getLogger
 from os import environ
 from pathlib import Path
-from random import randint
 from types import TracebackType
 from typing import Any, Callable, Optional
 
@@ -32,7 +30,6 @@ from scrapli.exceptions import (
 )
 from scrapli.ffi_mapping import LibScrapliMapping
 from scrapli.ffi_types import (
-    BoolPointer,
     CancelPointer,
     DriverPointer,
     IntPointer,
@@ -43,12 +40,10 @@ from scrapli.ffi_types import (
     ZigU64Slice,
     to_c_string,
 )
-from scrapli.helper import resolve_file
-from scrapli.session import (
-    DEFAULT_READ_DELAY_BACKOFF_FACTOR,
-    DEFAULT_READ_DELAY_MAX_NS,
-    DEFAULT_READ_DELAY_MIN_NS,
-    READ_DELAY_MULTIPLIER,
+from scrapli.helper import (
+    resolve_file,
+    wait_for_available_operation_result,
+    wait_for_available_operation_result_async,
 )
 from scrapli.session import Options as SessionOptions
 from scrapli.transport import Options as TransportOptions
@@ -135,6 +130,7 @@ class Cli:
         self.transport_options = transport_options or TransportOptions()
 
         self.ptr: Optional[DriverPointer] = None
+        self.poll_fd: int = 0
 
         self._ntc_templates_platform: Optional[str] = None
         self._genie_platform: Optional[str] = None
@@ -317,6 +313,16 @@ class Cli:
 
         self.ptr = ptr
 
+        poll_fd = int(
+            self.ffi_mapping.shared_mapping.get_poll_fd(
+                ptr=self._ptr_or_exception(),
+            )
+        )
+        if poll_fd == 0:
+            raise AllocationException("failed to allocate cli")
+
+        self.poll_fd = poll_fd
+
     def _free(
         self,
     ) -> None:
@@ -384,15 +390,16 @@ class Cli:
 
         return self._genie_platform
 
-    def _open(self) -> c_uint:
+    def _open(
+        self,
+        operation_id: OperationIdPointer,
+        cancel: CancelPointer,
+    ) -> c_uint:
         self._alloc()
 
         self.auth_options.apply(self.ffi_mapping, self._ptr_or_exception())
         self.session_options.apply(self.ffi_mapping, self._ptr_or_exception())
         self.transport_options.apply(self.ffi_mapping, self._ptr_or_exception())
-
-        operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         status = self.ffi_mapping.cli_mapping.open(
             ptr=self._ptr_or_exception(),
@@ -404,7 +411,6 @@ class Cli:
 
             raise OpenException("failed to submit open operation")
 
-        # cast it again, for mypy reasons
         return c_uint(operation_id.contents.value)
 
     def open(
@@ -423,7 +429,10 @@ class Cli:
             OpenException: if the operation fails
 
         """
-        operation_id = self._open()
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._open(operation_id=operation_id, cancel=cancel)
 
         return self._get_result(operation_id=operation_id)
 
@@ -441,7 +450,10 @@ class Cli:
             OpenException: if the operation fails
 
         """
-        operation_id = self._open()
+        operation_id = OperationIdPointer(c_uint(0))
+        cancel = CancelPointer(c_bool(False))
+
+        operation_id = self._open(operation_id=operation_id, cancel=cancel)
 
         return await self._get_result_async(operation_id=operation_id)
 
@@ -507,23 +519,12 @@ class Cli:
 
         return result
 
-    @staticmethod
-    def _get_poll_delay(
-        current_delay: int, min_delay: int, max_delay: int, backoff_factor: int
-    ) -> int:
-        new_delay = current_delay
-        new_delay *= backoff_factor
-
-        if new_delay > max_delay:
-            return max_delay * READ_DELAY_MULTIPLIER
-
-        return new_delay + randint(0, min_delay) * READ_DELAY_MULTIPLIER
-
     def _get_result(
         self,
         operation_id: c_uint,
     ) -> Result:
-        done = BoolPointer(c_bool(False))
+        wait_for_available_operation_result(self.poll_fd)
+
         operation_count = IntPointer(c_int())
         inputs_size = IntPointer(c_int())
         results_raw_size = IntPointer(c_int())
@@ -531,11 +532,9 @@ class Cli:
         results_failed_indicator_size = IntPointer(c_int())
         err_size = IntPointer(c_int())
 
-        # in sync flavor we call the blocking wait to limit the number of calls to the c abi
-        status = self.ffi_mapping.cli_mapping.wait(
+        status = self.ffi_mapping.cli_mapping.fetch_sizes(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
-            done=done,
             operation_count=operation_count,
             inputs_size=inputs_size,
             results_raw_size=results_raw_size,
@@ -591,14 +590,8 @@ class Cli:
         self,
         operation_id: c_uint,
     ) -> Result:
-        min_delay = self.session_options.read_delay_min_ns or DEFAULT_READ_DELAY_MIN_NS
-        max_delay = self.session_options.read_delay_max_ns or DEFAULT_READ_DELAY_MAX_NS
-        backoff_factor = (
-            self.session_options.read_delay_backoff_factor or DEFAULT_READ_DELAY_BACKOFF_FACTOR
-        )
-        current_delay = min_delay
+        await wait_for_available_operation_result_async(fd=self.poll_fd)
 
-        done = BoolPointer(c_bool(False))
         operation_count = IntPointer(c_int())
         inputs_size = IntPointer(c_int())
         results_raw_size = IntPointer(c_int())
@@ -606,33 +599,18 @@ class Cli:
         results_failed_indicator_size = IntPointer(c_int())
         err_size = IntPointer(c_int())
 
-        while True:
-            status = self.ffi_mapping.cli_mapping.poll(
-                ptr=self._ptr_or_exception(),
-                operation_id=operation_id,
-                done=done,
-                operation_count=operation_count,
-                inputs_size=inputs_size,
-                results_raw_size=results_raw_size,
-                results_size=results_size,
-                results_failed_indicator_size=results_failed_indicator_size,
-                err_size=err_size,
-            )
-            if status != 0:
-                raise GetResultException("poll operation failed")
-
-            if done.contents.value is True:
-                break
-
-            # ns to seconds
-            await async_sleep(current_delay / 1_000_000_000)
-
-            current_delay = self._get_poll_delay(
-                current_delay=current_delay,
-                min_delay=min_delay,
-                max_delay=max_delay * 10,
-                backoff_factor=backoff_factor,
-            )
+        status = self.ffi_mapping.cli_mapping.fetch_sizes(
+            ptr=self._ptr_or_exception(),
+            operation_id=operation_id,
+            operation_count=operation_count,
+            inputs_size=inputs_size,
+            results_raw_size=results_raw_size,
+            results_size=results_size,
+            results_failed_indicator_size=results_failed_indicator_size,
+            err_size=err_size,
+        )
+        if status != 0:
+            raise GetResultException("wait operation failed")
 
         start_time = U64Pointer(c_uint64())
         splits = ZigU64Slice(size=operation_count.contents)
