@@ -12,7 +12,6 @@ from typing import Callable
 from _ctypes import POINTER
 
 from scrapli.ffi_types import (
-    BoolPointer,
     CancelPointer,
     DriverPointer,
     IntPointer,
@@ -119,11 +118,10 @@ class LibScrapliCliMapping:
         ]
         lib.ls_cli_close.restype = c_uint8
 
-        self._poll: Callable[
+        self._fetch_sizes: Callable[
             [
                 DriverPointer,
                 OperationId,
-                BoolPointer,
                 IntPointer,
                 IntPointer,
                 IntPointer,
@@ -132,44 +130,18 @@ class LibScrapliCliMapping:
                 IntPointer,
             ],
             int,
-        ] = lib.ls_cli_poll_operation
-        lib.ls_cli_poll_operation.argtypes = [
+        ] = lib.ls_cli_fetch_operation_sizes
+        lib.ls_cli_fetch_operation_sizes.argtypes = [
             DriverPointer,
             OperationId,
-            BoolPointer,
+            IntPointer,
             IntPointer,
             IntPointer,
             IntPointer,
             IntPointer,
             IntPointer,
         ]
-        lib.ls_cli_poll_operation.restype = c_uint8
-
-        self._wait: Callable[
-            [
-                DriverPointer,
-                OperationId,
-                BoolPointer,
-                IntPointer,
-                IntPointer,
-                IntPointer,
-                IntPointer,
-                IntPointer,
-                IntPointer,
-            ],
-            int,
-        ] = lib.ls_cli_wait_operation
-        lib.ls_cli_wait_operation.argtypes = [
-            DriverPointer,
-            OperationId,
-            BoolPointer,
-            IntPointer,
-            IntPointer,
-            IntPointer,
-            IntPointer,
-            IntPointer,
-        ]
-        lib.ls_cli_wait_operation.restype = c_uint8
+        lib.ls_cli_fetch_operation_sizes.restype = c_uint8
 
         self._fetch: Callable[
             [
@@ -417,12 +389,11 @@ class LibScrapliCliMapping:
             cancel,
         )
 
-    def poll(
+    def fetch_sizes(
         self,
         *,
         ptr: DriverPointer,
         operation_id: OperationId,
-        done: BoolPointer,
         operation_count: IntPointer,
         inputs_size: IntPointer,
         results_raw_size: IntPointer,
@@ -431,14 +402,13 @@ class LibScrapliCliMapping:
         err_size: IntPointer,
     ) -> int:
         """
-        Poll for the result of a cli operation.
+        Fetch the sizes of a cli operation's results.
 
         Should (generally) not be called directly/by users.
 
         Args:
             ptr: ptr to the cli object
             operation_id: operation id of which to poll
-            done: bool pointer that is set to true if the operation has completed
             operation_count: int pointer to fill with the count of operations
             inputs_size: int pointer to fill with the operation's input size
             results_raw_size: int pointer to fill with the operation's result raw size
@@ -455,60 +425,9 @@ class LibScrapliCliMapping:
             N/A
 
         """
-        return self._poll(
+        return self._fetch_sizes(
             ptr,
             operation_id,
-            done,
-            operation_count,
-            inputs_size,
-            results_raw_size,
-            results_size,
-            results_failed_indicator_size,
-            err_size,
-        )
-
-    def wait(
-        self,
-        *,
-        ptr: DriverPointer,
-        operation_id: OperationId,
-        done: BoolPointer,
-        operation_count: IntPointer,
-        inputs_size: IntPointer,
-        results_raw_size: IntPointer,
-        results_size: IntPointer,
-        results_failed_indicator_size: IntPointer,
-        err_size: IntPointer,
-    ) -> int:
-        """
-        Wait for the result of a cli operation.
-
-        Should (generally) not be called directly/by users.
-
-        Args:
-            ptr: ptr to the cli object
-            operation_id: operation id of which to poll
-            done: bool pointer that is set to true if the operation has completed
-            operation_count: int pointer to fill with the count of operations
-            inputs_size: int pointer to fill with the operation's input size
-            results_raw_size: int pointer to fill with the operation's result raw size
-            results_size:  int pointer to fill with the operation's result size
-            results_failed_indicator_size: int pointer to fill with the operation's failed indicator
-                size
-            err_size: int pointer to fill with the operation's error size
-
-        Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
-
-        Raises:
-            N/A
-
-        """
-        return self._wait(
-            ptr,
-            operation_id,
-            done,
             operation_count,
             inputs_size,
             results_raw_size,
