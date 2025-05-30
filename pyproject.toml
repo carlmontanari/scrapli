@@ -1,6 +1,6 @@
 [build-system]
 build-backend = "setuptools.build_meta"
-requires = ["setuptools", "wheel", "ziglang==0.14.0"]
+requires = ["setuptools", "wheel", "ziglang==0.14.1"]
 
 [project]
 name = "scrapli"
@@ -28,7 +28,7 @@ Docs = "https://carlmontanari.github.io/scrapli/"
 Homepage = "https://github.com/carlmontanari/scrapli"
 
 [tool.setuptools]
-packages = ["scrapli", "scrapli.lib"]
+packages = ["scrapli", "scrapli.definitions", "scrapli.lib"]
 
 [tool.setuptools.dynamic]
 version = { attr = "scrapli.__version__" }
