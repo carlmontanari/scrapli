@@ -610,7 +610,7 @@ class Cli:
             err_size=err_size,
         )
         if status != 0:
-            raise GetResultException("wait operation failed")
+            raise GetResultException("fetch operation sizes failed")
 
         start_time = U64Pointer(c_uint64())
         splits = ZigU64Slice(size=operation_count.contents)

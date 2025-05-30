@@ -18,11 +18,14 @@ on:
 
 jobs:
   unit:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
-      max-parallel: 4
+      max-parallel: 16
       matrix:
         version: ["3.10", "3.11", "3.12", "3.13"]
+        # we want to ensure we are doing the unit tests on all our main targets
+        # this ensures all the ctypes magic works on all the platforms we can run in ci at least
+        os: ["ubuntu-latest", "macos-latest", "ubuntu-24.04-arm", "macos-13"]
 
     steps:
       - name: checkout
@@ -43,22 +46,6 @@ jobs:
           python -m pip install -r requirements-genie.txt
           python -m pip install -r requirements-textfsm.txt
 
-      # load from the cached built .so/.dylib objects -- pip install skips the whole zig build part
-      # if scrapil/lib already contains the expected/target shared object
-      - name: set target libscrapli version
-        run: |
-          echo "LIBSCRAPLI_VERSION=$(grep -Eo 'LIBSCRAPLI_VERSION\s*=\s*\"[^\"]+\"' setup.py | cut -d '"' -f2)" >> "$GITHUB_ENV"
-
-      - name: restore libscrapli from build cache
-        uses: actions/cache@v3
-        with:
-          path: ./scrapli/lib
-          key: x86_64-linux-gnu-libscrapli.${{ env.LIBSCRAPLI_VERSION }}.so
-
-      - name: rename restored libscracpli
-        run: |
-          mv ./scrapli/lib/libscrapli.* ./scrapli/lib/libscrapli.${{ env.LIBSCRAPLI_VERSION }}.so
-
       - name: install scrapli+libscrapli
         run: |
           python -m pip install .
@@ -72,14 +59,7 @@ jobs:
           make test
 
   functional:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      max-parallel: 4
-      matrix:
-        # we want to ensure we are doing the functional tests on all our main targets
-        # this ensures all the ctypes magic works on all the platforms we can run in ci at least
-        # if unit tests etc work then this *should* work but... ya know... trust but verify i guess
-        os: ["ubuntu-latest", "macos-latest", "ubuntu-24.04-arm", "macos-13"]
+    runs-on: "ubuntu-latest"
 
     # run functional on main or prs pointing to main
     if: >
@@ -125,48 +105,6 @@ jobs:
         run: |
           python -m pip install -r requirements-dev.txt
 
-      # load from the cached built .so/.dylib objects -- pip install skips the whole zig build part
-      # if scrapil/lib already contains the expected/target shared object; this one is worse than
-      # for unit tests as we deal w/ multiple different targets
-      - name: set target libscrapli version
-        run: |
-          case "${{ matrix.os }}" in
-            "ubuntu-latest")
-              ZIG_TRIPLE="x86_64-linux-gnu"
-              EXT="so"
-              ;;
-            "ubuntu-24.04-arm")
-              ZIG_TRIPLE="aarch64-linux-gnu"
-              EXT="so"
-              ;;
-            "macos-latest")
-              ZIG_TRIPLE="x86_64-macos"
-              EXT="dylib"
-              ;;
-            "macos-13")
-              ZIG_TRIPLE="aarch64-macos"
-              EXT="dylib"
-              ;;
-            *)
-              echo "Unknown OS: ${{ matrix.os }}"
-              exit 1
-              ;;
-          esac
-          LIBSCRAPLI_VERSION="$(grep -Eo 'LIBSCRAPLI_VERSION\s*=\s*\"[^\"]+\"' setup.py | cut -d '"' -f2)"
-          LIBSCRAPLI_OUT_NAME="libscrapli.${LIBSCRAPLI_VERSION}.${EXT}"
-          echo "LIBSCRAPLI_CACHED_NAME=${ZIG_TRIPLE}-${LIBSCRAPLI_OUT_NAME}" >> "$GITHUB_ENV"
-          echo "LIBSCRAPLI_NAME=${LIBSCRAPLI_OUT_NAME}" >> "$GITHUB_ENV"
-
-      - name: restore libscrapli from build cache
-        uses: actions/cache@v3
-        with:
-          path: ./scrapli/lib
-          key: x86_64-linux-gnu-libscrapli.${{ env.LIBSCRAPLI_VERSION }}.so
-
-      - name: rename restored libscracpli
-        run: |
-          mv ./scrapli/lib/libscrapli.* ./scrapli/lib/${{ env.LIBSCRAPLI_NAME }}
-
       - name: install scrapli+libscrapli
         run: |
           python -m pip install .
@@ -176,9 +114,9 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_e2e }}
 
       - name: wait for srl node to be available
+        working-directory: tests/functional/clab
         run: |
           ./wait.sh
-        working-directory: tests/functional/clab
 
       - name: functional tests
         # skip the "enormous" output test as its super slow in gh runners

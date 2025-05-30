@@ -717,7 +717,7 @@ class Netconf:
             err_size=err_size,
         )
         if status != 0:
-            raise GetResultException("poll operation failed")
+            raise GetResultException("fetch operation sizes failed")
 
         start_time = U64Pointer(c_uint64())
         end_time = U64Pointer(c_uint64())

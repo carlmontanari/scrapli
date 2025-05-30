@@ -4,12 +4,12 @@ requires = ["setuptools", "wheel", "ziglang==0.14.1"]
 
 [project]
 name = "scrapli"
-description = "Fast, flexible, sync/async, Python 3.9+ screen scraping client specifically for network devices"
+description = "Fast, flexible, sync/async, Python 3.10+ screen scraping client specifically for network devices"
 readme = "README.md"
 keywords = ["netconf", "network", "ssh", "telnet", "async"]
 license = "MIT"
 authors = [{ name = "Carl Montanari", email = "carl.r.montanari@gmail.com" }]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
     "Operating System :: POSIX :: Linux",
     "Operating System :: MacOS",
@@ -49,7 +49,7 @@ optional-dependencies.genie = { file = "requirements-genie.txt" }
 scrapli = [
     "py.typed",
     "scrapli/definitions/*.yaml",
-    "scrapli/lib/*.so",
+    "scrapli/lib/*.so.*",
     "scrapli/lib/*.dylib",
 ]
 
