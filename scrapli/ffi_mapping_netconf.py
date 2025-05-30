@@ -13,7 +13,6 @@ from typing import Callable
 from _ctypes import POINTER
 
 from scrapli.ffi_types import (
-    BoolPointer,
     CancelPointer,
     DriverPointer,
     IntPointer,
@@ -93,11 +92,10 @@ class LibScrapliNetconfMapping:
         ]
         lib.ls_netconf_close.restype = c_uint8
 
-        self._poll: Callable[
+        self._fetch_sizes: Callable[
             [
                 DriverPointer,
                 OperationId,
-                BoolPointer,
                 IntPointer,
                 IntPointer,
                 IntPointer,
@@ -106,11 +104,10 @@ class LibScrapliNetconfMapping:
                 IntPointer,
             ],
             int,
-        ] = lib.ls_netconf_poll_operation
-        lib.ls_netconf_poll_operation.argtypes = [
+        ] = lib.ls_netconf_fetch_operation_sizes
+        lib.ls_netconf_fetch_operation_sizes.argtypes = [
             DriverPointer,
             OperationId,
-            BoolPointer,
             IntPointer,
             IntPointer,
             IntPointer,
@@ -118,34 +115,7 @@ class LibScrapliNetconfMapping:
             IntPointer,
             IntPointer,
         ]
-        lib.ls_netconf_poll_operation.restype = c_uint8
-
-        self._wait: Callable[
-            [
-                DriverPointer,
-                OperationId,
-                BoolPointer,
-                IntPointer,
-                IntPointer,
-                IntPointer,
-                IntPointer,
-                IntPointer,
-                IntPointer,
-            ],
-            int,
-        ] = lib.ls_netconf_wait_operation
-        lib.ls_netconf_wait_operation.argtypes = [
-            DriverPointer,
-            OperationId,
-            BoolPointer,
-            IntPointer,
-            IntPointer,
-            IntPointer,
-            IntPointer,
-            IntPointer,
-            IntPointer,
-        ]
-        lib.ls_netconf_wait_operation.restype = c_uint8
+        lib.ls_netconf_fetch_operation_sizes.restype = c_uint8
 
         self._fetch: Callable[
             [
@@ -691,12 +661,11 @@ class LibScrapliNetconfMapping:
             force,
         )
 
-    def poll(
+    def fetch_sizes(
         self,
         *,
         ptr: DriverPointer,
         operation_id: OperationId,
-        done: BoolPointer,
         input_size: IntPointer,
         result_raw_size: IntPointer,
         result_size: IntPointer,
@@ -705,14 +674,13 @@ class LibScrapliNetconfMapping:
         err_size: IntPointer,
     ) -> int:
         """
-        Poll for the result of a netconf operation.
+        Fetch the sizes of a netconf operation's results.
 
         Should (generally) not be called directly/by users.
 
         Args:
             ptr: ptr to the netconf object
             operation_id: operation id of which to poll
-            done: bool pointer that is set to true if the operation has completed
             input_size: int pointer to fill with the operation's input size
             result_raw_size: int pointer to fill with the operation's result raw size
             result_size:  int pointer to fill with the operation's result size
@@ -728,59 +696,9 @@ class LibScrapliNetconfMapping:
             N/A
 
         """
-        return self._poll(
+        return self._fetch_sizes(
             ptr,
             operation_id,
-            done,
-            input_size,
-            result_raw_size,
-            result_size,
-            rpc_warnings_size,
-            rpc_errors_size,
-            err_size,
-        )
-
-    def wait(
-        self,
-        *,
-        ptr: DriverPointer,
-        operation_id: OperationId,
-        done: BoolPointer,
-        input_size: IntPointer,
-        result_raw_size: IntPointer,
-        result_size: IntPointer,
-        rpc_warnings_size: IntPointer,
-        rpc_errors_size: IntPointer,
-        err_size: IntPointer,
-    ) -> int:
-        """
-        Wait for the result of a netconf operation.
-
-        Should (generally) not be called directly/by users.
-
-        Args:
-            ptr: ptr to the netconf object
-            operation_id: operation id of which to poll
-            done: bool pointer that is set to true if the operation has completed
-            input_size: int pointer to fill with the operation's input size
-            result_raw_size: int pointer to fill with the operation's result raw size
-            result_size:  int pointer to fill with the operation's result size
-            rpc_warnings_size: int pointer to fill with the size of any rpc warning string
-            rpc_errors_size: int pointer to fill with the size of any rpc error string
-            err_size: int pointer to fill with the operation's error size
-
-        Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
-
-        Raises:
-            N/A
-
-        """
-        return self._wait(
-            ptr,
-            operation_id,
-            done,
             input_size,
             result_raw_size,
             result_size,

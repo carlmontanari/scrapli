@@ -1,11 +1,9 @@
 """scrapli.netconf"""
 
-from asyncio import sleep as async_sleep
 from ctypes import c_bool, c_char_p, c_int, c_uint, c_uint64
 from dataclasses import dataclass, field
 from enum import Enum
 from logging import getLogger
-from random import randint
 from types import TracebackType
 from typing import Any, Callable, Optional
 
@@ -23,7 +21,6 @@ from scrapli.exceptions import (
 )
 from scrapli.ffi_mapping import LibScrapliMapping
 from scrapli.ffi_types import (
-    BoolPointer,
     CancelPointer,
     DriverPointer,
     IntPointer,
@@ -33,14 +30,12 @@ from scrapli.ffi_types import (
     ZigSlice,
     to_c_string,
 )
+from scrapli.helper import (
+    wait_for_available_operation_result,
+    wait_for_available_operation_result_async,
+)
 from scrapli.netconf_decorators import handle_operation_timeout, handle_operation_timeout_async
 from scrapli.netconf_result import Result
-from scrapli.session import (
-    DEFAULT_READ_DELAY_BACKOFF_FACTOR,
-    DEFAULT_READ_DELAY_MAX_NS,
-    DEFAULT_READ_DELAY_MIN_NS,
-    READ_DELAY_MULTIPLIER,
-)
 from scrapli.session import Options as SessionOptions
 from scrapli.transport import Options as TransportOptions
 
@@ -480,6 +475,16 @@ class Netconf:
 
         self.ptr = ptr
 
+        poll_fd = int(
+            self.ffi_mapping.shared_mapping.get_poll_fd(
+                ptr=self._ptr_or_exception(),
+            )
+        )
+        if poll_fd == 0:
+            raise AllocationException("failed to allocate netconf")
+
+        self.poll_fd = poll_fd
+
     def _free(
         self,
     ) -> None:
@@ -620,23 +625,12 @@ class Netconf:
 
         return result
 
-    @staticmethod
-    def _get_poll_delay(
-        current_delay: int, min_delay: int, max_delay: int, backoff_factor: int
-    ) -> int:
-        new_delay = current_delay
-        new_delay *= backoff_factor
-
-        if new_delay > max_delay:
-            return max_delay * READ_DELAY_MULTIPLIER
-
-        return new_delay + randint(0, min_delay) * READ_DELAY_MULTIPLIER
-
     def _get_result(
         self,
         operation_id: c_uint,
     ) -> Result:
-        done = BoolPointer(c_bool(False))
+        wait_for_available_operation_result(self.poll_fd)
+
         input_size = IntPointer(c_int())
         result_raw_size = IntPointer(c_int())
         result_size = IntPointer(c_int())
@@ -644,11 +638,9 @@ class Netconf:
         rpc_errors_size = IntPointer(c_int())
         err_size = IntPointer(c_int())
 
-        # in sync flavor we call the blocking wait to limit the number of calls to the c abi
-        status = self.ffi_mapping.netconf_mapping.wait(
+        status = self.ffi_mapping.netconf_mapping.fetch_sizes(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
-            done=done,
             input_size=input_size,
             result_raw_size=result_raw_size,
             result_size=result_size,
@@ -705,14 +697,8 @@ class Netconf:
         self,
         operation_id: c_uint,
     ) -> Result:
-        min_delay = self.session_options.read_delay_min_ns or DEFAULT_READ_DELAY_MIN_NS
-        max_delay = self.session_options.read_delay_max_ns or DEFAULT_READ_DELAY_MAX_NS
-        backoff_factor = (
-            self.session_options.read_delay_backoff_factor or DEFAULT_READ_DELAY_BACKOFF_FACTOR
-        )
-        current_delay = min_delay
+        await wait_for_available_operation_result_async(fd=self.poll_fd)
 
-        done = BoolPointer(c_bool(False))
         input_size = IntPointer(c_int())
         result_raw_size = IntPointer(c_int())
         result_size = IntPointer(c_int())
@@ -720,33 +706,18 @@ class Netconf:
         rpc_errors_size = IntPointer(c_int())
         err_size = IntPointer(c_int())
 
-        while True:
-            status = self.ffi_mapping.netconf_mapping.poll(
-                ptr=self._ptr_or_exception(),
-                operation_id=operation_id,
-                done=done,
-                input_size=input_size,
-                result_raw_size=result_raw_size,
-                result_size=result_size,
-                rpc_warnings_size=rpc_warnings_size,
-                rpc_errors_size=rpc_errors_size,
-                err_size=err_size,
-            )
-            if status != 0:
-                raise GetResultException("poll operation failed")
-
-            if done.contents.value is True:
-                break
-
-            # ns to seconds
-            await async_sleep(current_delay / 1_000_000_000)
-
-            current_delay = self._get_poll_delay(
-                current_delay=current_delay,
-                min_delay=min_delay,
-                max_delay=max_delay,
-                backoff_factor=backoff_factor,
-            )
+        status = self.ffi_mapping.netconf_mapping.fetch_sizes(
+            ptr=self._ptr_or_exception(),
+            operation_id=operation_id,
+            input_size=input_size,
+            result_raw_size=result_raw_size,
+            result_size=result_size,
+            rpc_warnings_size=rpc_warnings_size,
+            rpc_errors_size=rpc_errors_size,
+            err_size=err_size,
+        )
+        if status != 0:
+            raise GetResultException("poll operation failed")
 
         start_time = U64Pointer(c_uint64())
         end_time = U64Pointer(c_uint64())

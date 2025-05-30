@@ -6,6 +6,7 @@ from ctypes import (
     c_char_p,
     c_int,
     c_uint8,
+    c_uint32,
 )
 from typing import Callable
 
@@ -38,6 +39,17 @@ class LibScrapliSharedMapping:
     """
 
     def __init__(self, lib: CDLL) -> None:
+        self._get_poll_fd: Callable[
+            [
+                DriverPointer,
+            ],
+            c_uint32,
+        ] = lib.ls_shared_get_poll_fd
+        lib.ls_shared_get_poll_fd.argtypes = [
+            DriverPointer,
+        ]
+        lib.ls_cli_alloc.restype = c_uint32
+
         self._free: Callable[
             [
                 DriverPointer,
@@ -79,6 +91,24 @@ class LibScrapliSharedMapping:
         ]
         lib.ls_shared_write_session.restype = c_uint8
 
+    def get_poll_fd(self, ptr: DriverPointer) -> c_uint32:
+        """
+        Get the operation poll fd from the driver at ptr.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: the ptr to the libscrapli cli/netconf object.
+
+        Returns:
+            c_uint32: the poll fd for the driver.
+
+        Raises:
+            N/A
+
+        """
+        return self._get_poll_fd(ptr)
+
     def free(self, ptr: DriverPointer) -> int:
         """
         Free the driver at ptr.
@@ -86,7 +116,7 @@ class LibScrapliSharedMapping:
         Should (generally) not be called directly/by users.
 
         Args:
-            ptr: the ptr to the libscraplicli/netconf object.
+            ptr: the ptr to the libscrapli cli/netconf object.
 
         Returns:
             c_uint8: return code, non-zero value indicates an error.
@@ -104,7 +134,7 @@ class LibScrapliSharedMapping:
         Should (generally) not be called directly/by users.
 
         Args:
-            ptr: the ptr to the libscraplicli/netconf object.
+            ptr: the ptr to the libscrapli cli/netconf object.
             buf: buffer to fill during the read operation.
             read_size: c_int pointer that is filled with number of bytes written into buf.
 
@@ -125,7 +155,7 @@ class LibScrapliSharedMapping:
         Should (generally) not be called directly/by users.
 
         Args:
-            ptr: the ptr to the libscraplicli/netconf object.
+            ptr: the ptr to the libscrapli cli/netconf object.
             buf: buffer contents to write during the write operation..
             redacted: bool indicated if the write contents should be redacted from logs.
 

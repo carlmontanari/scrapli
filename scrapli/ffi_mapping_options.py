@@ -151,45 +151,6 @@ class LibScrapliSessionOptionsMapping:
         ]
         lib.ls_option_session_read_size.restype = c_uint8
 
-        self._set_read_delay_min_ns: Callable[
-            [
-                DriverPointer,
-                c_uint64,
-            ],
-            int,
-        ] = lib.ls_option_session_read_delay_min_ns
-        lib.ls_option_session_read_delay_min_ns.argtypes = [
-            DriverPointer,
-            c_uint64,
-        ]
-        lib.ls_option_session_read_delay_min_ns.restype = c_uint8
-
-        self._set_read_delay_max_ns: Callable[
-            [
-                DriverPointer,
-                c_uint64,
-            ],
-            int,
-        ] = lib.ls_option_session_read_delay_max_ns
-        lib.ls_option_session_read_delay_max_ns.argtypes = [
-            DriverPointer,
-            c_uint64,
-        ]
-        lib.ls_option_session_read_delay_max_ns.restype = c_uint8
-
-        self._set_read_delay_backoff_factor: Callable[
-            [
-                DriverPointer,
-                c_uint8,
-            ],
-            int,
-        ] = lib.ls_option_session_read_delay_backoff_factor
-        lib.ls_option_session_read_delay_backoff_factor.argtypes = [
-            DriverPointer,
-            c_uint8,
-        ]
-        lib.ls_option_session_read_delay_backoff_factor.restype = c_uint8
-
         self._set_return_char: Callable[
             [
                 DriverPointer,
@@ -261,68 +222,6 @@ class LibScrapliSessionOptionsMapping:
 
         """
         return self._set_read_size(ptr, read_size)
-
-    def set_read_delay_min_ns(self, ptr: DriverPointer, read_delay_min_ns: c_uint64) -> int:
-        """
-        Set the session minimum read delay in ns.
-
-        Should not be used/called directly.
-
-        Args:
-            ptr: ptr to the cli/netconf object
-            read_delay_min_ns: minimum read delay in ns
-
-        Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
-
-        Raises:
-            N/A
-
-        """
-        return self._set_read_delay_min_ns(ptr, read_delay_min_ns)
-
-    def set_read_delay_max_ns(self, ptr: DriverPointer, read_delay_max_ns: c_uint64) -> int:
-        """
-        Set the session maximum read delay in ns.
-
-        Should not be used/called directly.
-
-        Args:
-            ptr: ptr to the cli/netconf object
-            read_delay_max_ns: maximum read delay in ns
-
-        Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
-
-        Raises:
-            N/A
-
-        """
-        return self._set_read_delay_max_ns(ptr, read_delay_max_ns)
-
-    def set_read_delay_backoff_factor(
-        self, ptr: DriverPointer, read_delay_backoff_factor: c_uint8
-    ) -> int:
-        """
-        Set the session read delay backoff factor.
-
-        Should not be used/called directly.
-
-        Args:
-            ptr: ptr to the cli/netconf object
-            read_delay_backoff_factor: read delay backoff factor
-
-        Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
-
-        Raises:
-            N/A
-
-        """
-        return self._set_read_delay_backoff_factor(ptr, read_delay_backoff_factor)
 
     def set_return_char(self, ptr: DriverPointer, return_char: c_char_p) -> int:
         r"""
