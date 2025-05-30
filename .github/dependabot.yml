@@ -5,6 +5,6 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
-      timezone: "PST8PDT"
+      timezone: "America/Los_Angeles"
       time: "03:00"
     target-branch: "main"
