@@ -15,7 +15,7 @@ from setuptools.command.bdist_wheel import bdist_wheel
 from setuptools.command.editable_wheel import editable_wheel
 from setuptools.command.sdist import sdist
 
-LIBSCRAPLI_VERSION = "0.0.1-alpha.8"
+LIBSCRAPLI_VERSION = "0.0.1-alpha.9"
 LIBSCRAPLI_REPO = "https://github.com/scrapli/libscrapli"
 LIBSCRAPLI_BUILD_PATH_ENV = "LIBSCRAPLI_BUILD_PATH"
 LIBSCRPALI_ZIG_TRIPLE_ENV = "LIBSCRAPLI_ZIG_TRIPLE"
@@ -26,7 +26,8 @@ WHEEL_TARGETS = {
     "aarch64-macos": "macosx_11_0_arm64",
     "x86_64-linux-gnu": "manylinux_x86_64",
     "x86_64-linux-musl": "musllinux_x86_64",
-    "aarch64-linux": "manylinux_arm64",
+    "aarch64-linux-gnu": "manylinux_arm64",
+    "aarch64-linux-musl": "musllinux_arm64",
 }
 
 
