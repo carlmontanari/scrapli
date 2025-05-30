@@ -45,9 +45,7 @@ class Options:
             if self.operation_timeout_ns is None and self.operation_timeout_s is not None:
                 self.operation_timeout_ns = int(self.operation_timeout_s / 1e-9)
 
-    def apply(  # noqa: C901
-        self, ffi_mapping: LibScrapliMapping, ptr: DriverPointer
-    ) -> None:
+    def apply(self, ffi_mapping: LibScrapliMapping, ptr: DriverPointer) -> None:  # noqa: C901
         """
         Applies the options to the given driver pointer.
 
