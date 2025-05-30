@@ -4,12 +4,12 @@ help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 fmt: ## Run formatters
-	python -m isort setup.py scrapli/ tests/
-	python -m black setup.py scrapli/ tests/
+	python -m isort setup.py noxfile.py scrapli/ tests/
+	python -m black setup.py noxfile.py scrapli/ tests/
 
 lint: ## Run linters
 	python -m ruff check
-	python -m mypy --strict setup.py scrapli/
+	python -m mypy --strict setup.py noxfile.py scrapli/
 
 test: ## Run unit tests
 	python -m pytest tests/unit/ -v
