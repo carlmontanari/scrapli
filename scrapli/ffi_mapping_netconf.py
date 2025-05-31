@@ -8,7 +8,7 @@ from ctypes import (
     c_uint8,
     c_uint64,
 )
-from typing import Callable
+from collections.abc import Callable
 
 from _ctypes import POINTER
 

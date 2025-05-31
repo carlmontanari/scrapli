@@ -3,7 +3,6 @@
 from ctypes import c_char_p, c_int
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
 
 from scrapli.exceptions import OptionsException
 from scrapli.ffi_mapping import LibScrapliMapping
@@ -57,20 +56,20 @@ class BinOptions:
 
     """
 
-    bin: Optional[str] = None
-    extra_open_args: Optional[list[str]] = None
-    override_open_args: Optional[list[str]] = None
-    ssh_config_path: Optional[str] = None
-    known_hosts_path: Optional[str] = None
-    enable_strict_key: Optional[bool] = None
-    term_height: Optional[int] = None
-    term_width: Optional[int] = None
+    bin: str | None = None
+    extra_open_args: list[str] | None = None
+    override_open_args: list[str] | None = None
+    ssh_config_path: str | None = None
+    known_hosts_path: str | None = None
+    enable_strict_key: bool | None = None
+    term_height: int | None = None
+    term_width: int | None = None
 
-    _bin: Optional[c_char_p] = field(init=False, default=None, repr=False)
-    _extra_open_args: Optional[c_char_p] = field(init=False, default=None, repr=False)
-    _override_open_args: Optional[c_char_p] = field(init=False, default=None, repr=False)
-    _ssh_config_path: Optional[c_char_p] = field(init=False, default=None, repr=False)
-    _known_hosts_path: Optional[c_char_p] = field(init=False, default=None, repr=False)
+    _bin: c_char_p | None = field(init=False, default=None, repr=False)
+    _extra_open_args: c_char_p | None = field(init=False, default=None, repr=False)
+    _override_open_args: c_char_p | None = field(init=False, default=None, repr=False)
+    _ssh_config_path: c_char_p | None = field(init=False, default=None, repr=False)
+    _known_hosts_path: c_char_p | None = field(init=False, default=None, repr=False)
 
     def apply(  # noqa: C901, PLR0912
         self, ffi_mapping: LibScrapliMapping, ptr: DriverPointer
@@ -170,7 +169,7 @@ class Ssh2Options:
 
     """
 
-    libssh2_trace: Optional[bool] = None
+    libssh2_trace: bool | None = None
 
     def apply(self, ffi_mapping: LibScrapliMapping, ptr: DriverPointer) -> None:
         """
@@ -247,9 +246,9 @@ class TestOptions:
 
     """
 
-    f: Optional[str] = None
+    f: str | None = None
 
-    _f: Optional[c_char_p] = field(init=False, default=None, repr=False)
+    _f: c_char_p | None = field(init=False, default=None, repr=False)
 
     def apply(self, ffi_mapping: LibScrapliMapping, ptr: DriverPointer) -> None:
         """
@@ -298,12 +297,12 @@ class Options:
 
     """
 
-    bin: Optional[BinOptions] = None
-    ssh2: Optional[Ssh2Options] = None
-    telnet: Optional[TelnetOptions] = None
-    test: Optional[TestOptions] = None
+    bin: BinOptions | None = None
+    ssh2: Ssh2Options | None = None
+    telnet: TelnetOptions | None = None
+    test: TestOptions | None = None
 
-    _transport_kind: Optional[bytes] = field(init=False, default=None, repr=False)
+    _transport_kind: bytes | None = field(init=False, default=None, repr=False)
 
     def __post_init__(self) -> None:
         _set_fields = [f for f in [self.bin, self.ssh2, self.telnet, self.test] if f is not None]

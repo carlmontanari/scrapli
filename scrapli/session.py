@@ -2,7 +2,6 @@
 
 from ctypes import c_char_p, c_uint64
 from dataclasses import dataclass, field
-from typing import Optional
 
 from scrapli.exceptions import OptionsException
 from scrapli.ffi_mapping import LibScrapliMapping
@@ -30,15 +29,15 @@ class Options:
 
     """
 
-    read_size: Optional[int] = None
-    return_char: Optional[str] = None
-    operation_timeout_s: Optional[int] = None
-    operation_timeout_ns: Optional[int] = None
-    operation_max_search_depth: Optional[int] = None
-    recorder_path: Optional[str] = None
+    read_size: int | None = None
+    return_char: str | None = None
+    operation_timeout_s: int | None = None
+    operation_timeout_ns: int | None = None
+    operation_max_search_depth: int | None = None
+    recorder_path: str | None = None
 
-    _return_char: Optional[c_char_p] = field(init=False, default=None, repr=False)
-    _recorder_path: Optional[c_char_p] = field(init=False, default=None, repr=False)
+    _return_char: c_char_p | None = field(init=False, default=None, repr=False)
+    _recorder_path: c_char_p | None = field(init=False, default=None, repr=False)
 
     def __post_init__(self) -> None:
         if self.operation_timeout_s is not None or self.operation_timeout_ns is not None:
