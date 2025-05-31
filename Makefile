@@ -7,6 +7,10 @@ fmt: ## Run formatters
 	python -m isort setup.py noxfile.py scrapli/ tests/
 	python -m black setup.py noxfile.py scrapli/ tests/
 
+fmt-check:
+	python -m isort --check --diff setup.py noxfile.py scrapli/ tests/
+	python -m black --check --diff setup.py noxfile.py scrapli/ tests/
+
 lint: ## Run linters
 	python -m ruff check
 	python -m mypy --strict setup.py noxfile.py scrapli/

@@ -93,9 +93,7 @@ class Options:
     _private_key_passphrase: c_char_p | None = field(init=False, default=None, repr=False)
     _username_pattern: c_char_p | None = field(init=False, default=None, repr=False)
     _password_pattern: c_char_p | None = field(init=False, default=None, repr=False)
-    _private_key_passphrase_pattern: c_char_p | None = field(
-        init=False, default=None, repr=False
-    )
+    _private_key_passphrase_pattern: c_char_p | None = field(init=False, default=None, repr=False)
 
     def apply(  # noqa: C901, PLR0912
         self, ffi_mapping: LibScrapliMapping, ptr: DriverPointer

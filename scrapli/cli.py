@@ -1,6 +1,7 @@
 """scrapli.cli"""
 
 import importlib.resources
+from collections.abc import Callable
 from ctypes import (
     c_bool,
     c_char_p,
@@ -14,7 +15,6 @@ from os import environ
 from pathlib import Path
 from types import TracebackType
 from typing import Any
-from collections.abc import Callable
 
 from scrapli.auth import Options as AuthOptions
 from scrapli.cli_decorators import handle_operation_timeout, handle_operation_timeout_async

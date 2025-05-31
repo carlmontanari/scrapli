@@ -22,7 +22,7 @@ def pytest_addoption(parser):
         "--skip-slow",
         action="store_true",
         default=False,
-        help="skip slow tests -- like really huge outputes",
+        help="skip slow tests -- like really huge outputs",
     )
 
 

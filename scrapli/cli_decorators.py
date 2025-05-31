@@ -1,10 +1,9 @@
 """scrapli.cli_decorators"""
 
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 from ctypes import c_uint64
 from functools import update_wrapper
 from typing import TYPE_CHECKING, Concatenate, ParamSpec
-from collections.abc import Callable
 
 from scrapli.cli_result import Result
 from scrapli.exceptions import OptionsException
