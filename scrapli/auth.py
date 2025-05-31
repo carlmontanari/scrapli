@@ -2,7 +2,6 @@
 
 from ctypes import c_char_p
 from dataclasses import dataclass, field
-from typing import Optional
 
 from scrapli.exceptions import OptionsException
 from scrapli.ffi_mapping import LibScrapliMapping
@@ -35,8 +34,8 @@ class LookupKeyValue:
     key: str
     value: str
 
-    _key: Optional[c_char_p] = field(init=False, default=None, repr=False)
-    _value: Optional[c_char_p] = field(init=False, default=None, repr=False)
+    _key: c_char_p | None = field(init=False, default=None, repr=False)
+    _value: c_char_p | None = field(init=False, default=None, repr=False)
 
     def _get_c_strings(self) -> tuple[c_char_p, c_char_p]:
         self._key = to_c_string(self.key)
@@ -78,23 +77,23 @@ class Options:
 
     """
 
-    username: Optional[str] = None
-    password: Optional[str] = None
-    private_key_path: Optional[str] = None
-    private_key_passphrase: Optional[str] = None
-    lookups: Optional[list[LookupKeyValue]] = None
-    in_session_auth_bypass: Optional[bool] = None
-    username_pattern: Optional[str] = None
-    password_pattern: Optional[str] = None
-    private_key_passphrase_pattern: Optional[str] = None
+    username: str | None = None
+    password: str | None = None
+    private_key_path: str | None = None
+    private_key_passphrase: str | None = None
+    lookups: list[LookupKeyValue] | None = None
+    in_session_auth_bypass: bool | None = None
+    username_pattern: str | None = None
+    password_pattern: str | None = None
+    private_key_passphrase_pattern: str | None = None
 
-    _username: Optional[c_char_p] = field(init=False, default=None, repr=False)
-    _password: Optional[c_char_p] = field(init=False, default=None, repr=False)
-    _private_key_path: Optional[c_char_p] = field(init=False, default=None, repr=False)
-    _private_key_passphrase: Optional[c_char_p] = field(init=False, default=None, repr=False)
-    _username_pattern: Optional[c_char_p] = field(init=False, default=None, repr=False)
-    _password_pattern: Optional[c_char_p] = field(init=False, default=None, repr=False)
-    _private_key_passphrase_pattern: Optional[c_char_p] = field(
+    _username: c_char_p | None = field(init=False, default=None, repr=False)
+    _password: c_char_p | None = field(init=False, default=None, repr=False)
+    _private_key_path: c_char_p | None = field(init=False, default=None, repr=False)
+    _private_key_passphrase: c_char_p | None = field(init=False, default=None, repr=False)
+    _username_pattern: c_char_p | None = field(init=False, default=None, repr=False)
+    _password_pattern: c_char_p | None = field(init=False, default=None, repr=False)
+    _private_key_passphrase_pattern: c_char_p | None = field(
         init=False, default=None, repr=False
     )
 

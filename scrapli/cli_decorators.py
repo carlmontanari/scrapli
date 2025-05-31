@@ -3,7 +3,8 @@
 from collections.abc import Awaitable
 from ctypes import c_uint64
 from functools import update_wrapper
-from typing import TYPE_CHECKING, Callable, Concatenate, ParamSpec
+from typing import TYPE_CHECKING, Concatenate, ParamSpec
+from collections.abc import Callable
 
 from scrapli.cli_result import Result
 from scrapli.exceptions import OptionsException

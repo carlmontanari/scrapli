@@ -9,7 +9,6 @@ import sys
 import tempfile
 from http import HTTPStatus
 from pathlib import Path
-from typing import Optional
 from urllib.request import urlopen
 
 from setuptools import setup
@@ -43,8 +42,8 @@ WHEEL_TARGETS = {
 class Libscrapli:
     """Dumb container for setup-related helpers"""
 
-    _libscrapli_tag: Optional[str] = None
-    _libscrapli_version_is_release: Optional[bool] = None
+    _libscrapli_tag: str | None = None
+    _libscrapli_version_is_release: bool | None = None
 
     @property
     def libscrapli_tag(self) -> str:

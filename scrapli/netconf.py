@@ -5,7 +5,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from logging import getLogger
 from types import TracebackType
-from typing import Any, Callable, Optional
+from typing import Any
+from collections.abc import Callable
 
 from scrapli.auth import Options as AuthOptions
 from scrapli.exceptions import (
@@ -188,13 +189,13 @@ class Options:
 
     """
 
-    error_tag: Optional[str] = None
-    preferred_version: Optional[Version] = None
-    message_poll_interval_ns: Optional[int] = None
+    error_tag: str | None = None
+    preferred_version: Version | None = None
+    message_poll_interval_ns: int | None = None
     close_force: bool = False
 
-    _error_tag: Optional[c_char_p] = field(init=False, default=None, repr=False)
-    _preferred_version: Optional[c_char_p] = field(init=False, default=None, repr=False)
+    _error_tag: c_char_p | None = field(init=False, default=None, repr=False)
+    _preferred_version: c_char_p | None = field(init=False, default=None, repr=False)
 
     def apply(self, ffi_mapping: LibScrapliMapping, ptr: DriverPointer) -> None:
         """
@@ -280,13 +281,13 @@ class Netconf:
         self,
         host: str,
         *,
-        logger_callback: Optional[Callable[[int, str], None]] = None,
+        logger_callback: Callable[[int, str], None] | None = None,
         port: int = 830,
-        options: Optional[Options] = None,
-        auth_options: Optional[AuthOptions] = None,
-        session_options: Optional[SessionOptions] = None,
-        transport_options: Optional[TransportOptions] = None,
-        logging_uid: Optional[str] = None,
+        options: Options | None = None,
+        auth_options: AuthOptions | None = None,
+        session_options: SessionOptions | None = None,
+        transport_options: TransportOptions | None = None,
+        logging_uid: str | None = None,
     ) -> None:
         logger_name = f"{__name__}.{host}:{port}"
         if logging_uid is not None:
@@ -312,8 +313,8 @@ class Netconf:
         self.session_options = session_options or SessionOptions()
         self.transport_options = transport_options or TransportOptions()
 
-        self.ptr: Optional[DriverPointer] = None
-        self._session_id: Optional[int] = None
+        self.ptr: DriverPointer | None = None
+        self._session_id: int | None = None
 
     def __enter__(self: "Netconf") -> "Netconf":
         """
@@ -335,9 +336,9 @@ class Netconf:
 
     def __exit__(
         self,
-        exception_type: Optional[BaseException],
-        exception_value: Optional[BaseException],
-        traceback: Optional[TracebackType],
+        exception_type: BaseException | None,
+        exception_value: BaseException | None,
+        traceback: TracebackType | None,
     ) -> None:
         """
         Exit method to cleanup for context manager
@@ -378,9 +379,9 @@ class Netconf:
 
     async def __aexit__(
         self,
-        exception_type: Optional[BaseException],
-        exception_value: Optional[BaseException],
-        traceback: Optional[TracebackType],
+        exception_type: BaseException | None,
+        exception_value: BaseException | None,
+        traceback: TracebackType | None,
     ) -> None:
         """
         Exit method to cleanup for context manager.
@@ -928,8 +929,8 @@ class Netconf:
         payload: str,
         *,
         base_namespace_prefix: str = "",
-        extra_namespaces: Optional[list[tuple[str, str]]] = None,
-        operation_timeout_ns: Optional[int] = None,
+        extra_namespaces: list[tuple[str, str]] | None = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute a "raw" / user crafted rpc operation.
@@ -982,8 +983,8 @@ class Netconf:
         payload: str,
         *,
         base_namespace_prefix: str = "",
-        extra_namespaces: Optional[list[tuple[str, str]]] = None,
-        operation_timeout_ns: Optional[int] = None,
+        extra_namespaces: list[tuple[str, str]] | None = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute a "raw" / user crafted rpc operation.
@@ -1068,7 +1069,7 @@ class Netconf:
         filter_namespace_prefix: str = "",
         filter_namespace: str = "",
         defaults_type: DefaultsType = DefaultsType.UNSET,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute a get-config rpc operation.
@@ -1126,7 +1127,7 @@ class Netconf:
         filter_namespace_prefix: str = "",
         filter_namespace: str = "",
         defaults_type: DefaultsType = DefaultsType.UNSET,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute a get-config rpc operation.
@@ -1200,7 +1201,7 @@ class Netconf:
         *,
         config: str = "",
         target: DatastoreType = DatastoreType.RUNNING,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute an edit-config rpc operation.
@@ -1242,7 +1243,7 @@ class Netconf:
         *,
         config: str = "",
         target: DatastoreType = DatastoreType.RUNNING,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute an edit-config rpc operation.
@@ -1304,7 +1305,7 @@ class Netconf:
         *,
         target: DatastoreType = DatastoreType.RUNNING,
         source: DatastoreType = DatastoreType.STARTUP,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute a copy-config rpc operation.
@@ -1346,7 +1347,7 @@ class Netconf:
         *,
         target: DatastoreType = DatastoreType.RUNNING,
         source: DatastoreType = DatastoreType.STARTUP,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute a copy-config rpc operation.
@@ -1405,7 +1406,7 @@ class Netconf:
         self,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute a delete-config rpc operation.
@@ -1443,7 +1444,7 @@ class Netconf:
         self,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute a delete-config rpc operation.
@@ -1499,7 +1500,7 @@ class Netconf:
         self,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute a lock rpc operation.
@@ -1537,7 +1538,7 @@ class Netconf:
         self,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute a lock rpc operation.
@@ -1593,7 +1594,7 @@ class Netconf:
         self,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute an unlock rpc operation.
@@ -1631,7 +1632,7 @@ class Netconf:
         self,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute an unlock rpc operation.
@@ -1699,7 +1700,7 @@ class Netconf:
         filter_namespace_prefix: str = "",
         filter_namespace: str = "",
         defaults_type: DefaultsType = DefaultsType.UNSET,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute a get rpc operation.
@@ -1753,7 +1754,7 @@ class Netconf:
         filter_namespace_prefix: str = "",
         filter_namespace: str = "",
         defaults_type: DefaultsType = DefaultsType.UNSET,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute a get rpc operation.
@@ -1818,7 +1819,7 @@ class Netconf:
     def close_session(
         self,
         *,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute a close-session rpc operation.
@@ -1851,7 +1852,7 @@ class Netconf:
     async def close_session_async(
         self,
         *,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute a close-session rpc operation.
@@ -1903,7 +1904,7 @@ class Netconf:
         self,
         session_id: int,
         *,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute a kill-session rpc operation.
@@ -1939,7 +1940,7 @@ class Netconf:
         self,
         session_id: int,
         *,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute a kill-session rpc operation.
@@ -1990,7 +1991,7 @@ class Netconf:
     def commit(
         self,
         *,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute a commit rpc operation.
@@ -2023,7 +2024,7 @@ class Netconf:
     async def commit_async(
         self,
         *,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute a commit rpc operation.
@@ -2072,7 +2073,7 @@ class Netconf:
     def discard(
         self,
         *,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute a discard rpc operation.
@@ -2105,7 +2106,7 @@ class Netconf:
     async def discard_async(
         self,
         *,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute a discard rpc operation.
@@ -2154,7 +2155,7 @@ class Netconf:
     def cancel_commit(
         self,
         *,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute a cancel-commit rpc operation.
@@ -2187,7 +2188,7 @@ class Netconf:
     async def cancel_commit_async(
         self,
         *,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute a cancel-commit rpc operation.
@@ -2239,7 +2240,7 @@ class Netconf:
         self,
         *,
         source: DatastoreType = DatastoreType.RUNNING,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute a validate rpc operation.
@@ -2277,7 +2278,7 @@ class Netconf:
         self,
         *,
         source: DatastoreType = DatastoreType.RUNNING,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute a validate rpc operation.
@@ -2339,7 +2340,7 @@ class Netconf:
         *,
         version: str = "",
         format_: SchemaFormat = SchemaFormat.YANG,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute a get-schema rpc operation.
@@ -2385,7 +2386,7 @@ class Netconf:
         *,
         version: str = "",
         format_: SchemaFormat = SchemaFormat.YANG,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute a get-schema rpc operation.
@@ -2474,7 +2475,7 @@ class Netconf:
         max_depth: int = 0,
         with_origin: bool = False,
         defaults_type: DefaultsType = DefaultsType.UNSET,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute a get-data rpc operation.
@@ -2546,7 +2547,7 @@ class Netconf:
         max_depth: int = 0,
         with_origin: bool = False,
         defaults_type: DefaultsType = DefaultsType.UNSET,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute a get-data rpc operation.
@@ -2630,7 +2631,7 @@ class Netconf:
         content: str,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute an edit-data rpc operation.
@@ -2672,7 +2673,7 @@ class Netconf:
         content: str,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute an edit-data rpc operation.
@@ -2731,7 +2732,7 @@ class Netconf:
         self,
         action: str,
         *,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute an action rpc operation.
@@ -2769,7 +2770,7 @@ class Netconf:
         self,
         action: str,
         *,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute an action rpc operation.

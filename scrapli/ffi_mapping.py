@@ -8,7 +8,7 @@ from ctypes import (
     c_uint8,
     c_uint32,
 )
-from typing import Callable
+from collections.abc import Callable
 
 from scrapli.ffi import get_libscrapli_path
 from scrapli.ffi_mapping_cli import LibScrapliCliMapping
