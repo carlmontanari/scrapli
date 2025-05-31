@@ -4,14 +4,14 @@ import urllib.request
 from importlib import import_module, resources
 from io import BytesIO, TextIOWrapper
 from logging import getLogger
-from typing import Any, Optional, TextIO
+from typing import Any, TextIO
 
 from scrapli.exceptions import ParsingException
 
 logger = getLogger(__name__)
 
 
-def textfsm_get_template(platform: str, command: str) -> Optional[TextIO]:
+def textfsm_get_template(platform: str, command: str) -> TextIO | None:
     """
     Find correct TextFSM template based on platform and command executed
 
@@ -153,7 +153,7 @@ def genie_parse(platform: str, command: str, output: str) -> list[Any] | dict[st
     try:
         get_parser(command, genie_device)
         genie_parsed_result = genie_device.parse(command, output=output)
-        if isinstance(genie_parsed_result, (list, dict)):
+        if isinstance(genie_parsed_result, list | dict):
             return genie_parsed_result
     except Exception as exc:
         raise ParsingException("failed parsing output with 'genie'") from exc

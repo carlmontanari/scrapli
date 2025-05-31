@@ -13,7 +13,8 @@ from logging import getLogger
 from os import environ
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Callable, Optional
+from typing import Any
+from collections.abc import Callable
 
 from scrapli.auth import Options as AuthOptions
 from scrapli.cli_decorators import handle_operation_timeout, handle_operation_timeout_async
@@ -92,12 +93,12 @@ class Cli:
         definition_file_or_name: str,
         host: str,
         *,
-        logger_callback: Optional[Callable[[int, str], None]] = None,
+        logger_callback: Callable[[int, str], None] | None = None,
         port: int = 22,
-        auth_options: Optional[AuthOptions] = None,
-        session_options: Optional[SessionOptions] = None,
-        transport_options: Optional[TransportOptions] = None,
-        logging_uid: Optional[str] = None,
+        auth_options: AuthOptions | None = None,
+        session_options: SessionOptions | None = None,
+        transport_options: TransportOptions | None = None,
+        logging_uid: str | None = None,
     ) -> None:
         logger_name = f"{__name__}.{host}:{port}"
         if logging_uid is not None:
@@ -129,11 +130,11 @@ class Cli:
         self.session_options = session_options or SessionOptions()
         self.transport_options = transport_options or TransportOptions()
 
-        self.ptr: Optional[DriverPointer] = None
+        self.ptr: DriverPointer | None = None
         self.poll_fd: int = 0
 
-        self._ntc_templates_platform: Optional[str] = None
-        self._genie_platform: Optional[str] = None
+        self._ntc_templates_platform: str | None = None
+        self._genie_platform: str | None = None
 
     def __enter__(self: "Cli") -> "Cli":
         """
@@ -155,9 +156,9 @@ class Cli:
 
     def __exit__(
         self,
-        exception_type: Optional[BaseException],
-        exception_value: Optional[BaseException],
-        traceback: Optional[TracebackType],
+        exception_type: BaseException | None,
+        exception_value: BaseException | None,
+        traceback: TracebackType | None,
     ) -> None:
         """
         Exit method to cleanup for context manager.
@@ -196,9 +197,9 @@ class Cli:
 
     async def __aexit__(
         self,
-        exception_type: Optional[BaseException],
-        exception_value: Optional[BaseException],
-        traceback: Optional[TracebackType],
+        exception_type: BaseException | None,
+        exception_value: BaseException | None,
+        traceback: TracebackType | None,
     ) -> None:
         """
         Exit method to cleanup for context manager.
@@ -676,7 +677,7 @@ class Cli:
         self,
         requested_mode: str,
         *,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Enter the given mode on the cli connection.
@@ -712,7 +713,7 @@ class Cli:
         self,
         requested_mode: str,
         *,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Enter the given mode on the cli connection.
@@ -763,7 +764,7 @@ class Cli:
     def get_prompt(
         self,
         *,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Get the current prompt of the cli connection.
@@ -793,7 +794,7 @@ class Cli:
     async def get_prompt_async(
         self,
         *,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Get the current prompt of the cli connection.
@@ -854,7 +855,7 @@ class Cli:
         input_handling: InputHandling = InputHandling.FUZZY,
         retain_input: bool = False,
         retain_trailing_prompt: bool = False,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Send an input on the cli connection.
@@ -906,7 +907,7 @@ class Cli:
         input_handling: InputHandling = InputHandling.FUZZY,
         retain_input: bool = False,
         retain_trailing_prompt: bool = False,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Send an input on the cli connection.
@@ -959,7 +960,7 @@ class Cli:
         retain_input: bool = False,
         retain_trailing_prompt: bool = False,
         stop_on_indicated_failure: bool = True,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Send inputs (plural!) on the cli connection.
@@ -987,7 +988,7 @@ class Cli:
 
         cancel = CancelPointer(c_bool(False))
 
-        result: Optional[Result] = None
+        result: Result | None = None
 
         for input_ in inputs:
             operation_id = OperationIdPointer(c_uint(0))
@@ -1028,7 +1029,7 @@ class Cli:
         retain_input: bool = False,
         retain_trailing_prompt: bool = False,
         stop_on_indicated_failure: bool = True,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Send inputs (plural!) on the cli connection.
@@ -1056,7 +1057,7 @@ class Cli:
 
         cancel = CancelPointer(c_bool(False))
 
-        result: Optional[Result] = None
+        result: Result | None = None
 
         for input_ in inputs:
             operation_id = OperationIdPointer(c_uint(0))
@@ -1095,7 +1096,7 @@ class Cli:
         retain_input: bool = False,
         retain_trailing_prompt: bool = False,
         stop_on_indicated_failure: bool = True,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Send inputs (plural! from a file, line-by-line) on the cli connection.
@@ -1139,7 +1140,7 @@ class Cli:
         retain_input: bool = False,
         retain_trailing_prompt: bool = False,
         stop_on_indicated_failure: bool = True,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Send inputs (plural! from a file, line-by-line) on the cli connection.
@@ -1221,7 +1222,7 @@ class Cli:
         input_handling: InputHandling = InputHandling.FUZZY,
         hidden_response: bool = False,
         retain_trailing_prompt: bool = False,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Send a prompted input on the cli connection.
@@ -1290,7 +1291,7 @@ class Cli:
         input_handling: InputHandling = InputHandling.FUZZY,
         hidden_response: bool = False,
         retain_trailing_prompt: bool = False,
-        operation_timeout_ns: Optional[int] = None,
+        operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Send a prompted input on the cli connection.

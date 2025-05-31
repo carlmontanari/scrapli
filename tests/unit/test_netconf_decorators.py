@@ -1,4 +1,3 @@
-from typing import Optional
 from unittest.mock import Mock
 
 import pytest
@@ -15,7 +14,7 @@ def test_handle_operation_timeout_unmodified():
     n.ffi_mapping = Mock()
 
     @handle_operation_timeout
-    def fooer(cls, *, operation_timeout_ns: Optional[int] = None) -> str:
+    def fooer(cls, *, operation_timeout_ns: int | None = None) -> str:
         return "foo'd"
 
     n.fooer = fooer
@@ -34,7 +33,7 @@ async def test_handle_operation_timeout_async_unmodified():
     n.ffi_mapping = Mock()
 
     @handle_operation_timeout_async
-    async def fooer(cls, *, operation_timeout_ns: Optional[int] = None) -> str:
+    async def fooer(cls, *, operation_timeout_ns: int | None = None) -> str:
         return "foo'd"
 
     n.fooer = fooer
@@ -54,7 +53,7 @@ def test_handle_operation_timeout_modified():
     n.ptr = 1
 
     @handle_operation_timeout
-    def fooer(cls, *, operation_timeout_ns: Optional[int] = None) -> str:
+    def fooer(cls, *, operation_timeout_ns: int | None = None) -> str:
         return "foo'd"
 
     n.fooer = fooer
@@ -75,7 +74,7 @@ async def test_handle_operation_timeout_async_modified():
     n.ptr = 1
 
     @handle_operation_timeout_async
-    async def fooer(cls, *, operation_timeout_ns: Optional[int] = None) -> str:
+    async def fooer(cls, *, operation_timeout_ns: int | None = None) -> str:
         return "foo'd"
 
     n.fooer = fooer

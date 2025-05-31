@@ -7,7 +7,7 @@ from ctypes import (
     c_uint8,
     c_uint64,
 )
-from typing import Callable
+from collections.abc import Callable
 
 from scrapli.ffi_types import (
     DriverPointer,
