@@ -1,5 +1,6 @@
 """scrapli.ffi_mapping"""
 
+from collections.abc import Callable
 from ctypes import (
     CDLL,
     c_bool,
@@ -8,7 +9,6 @@ from ctypes import (
     c_uint8,
     c_uint32,
 )
-from collections.abc import Callable
 
 from scrapli.ffi import get_libscrapli_path
 from scrapli.ffi_mapping_cli import LibScrapliCliMapping

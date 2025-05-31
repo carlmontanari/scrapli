@@ -1,5 +1,6 @@
 """scrapli.ffi_mapping_options"""
 
+from collections.abc import Callable
 from ctypes import (
     CDLL,
     c_char_p,
@@ -7,7 +8,6 @@ from ctypes import (
     c_uint8,
     c_uint64,
 )
-from collections.abc import Callable
 
 from scrapli.ffi_types import (
     DriverPointer,
