@@ -29,6 +29,10 @@ jobs:
         run: |
           python -m pip install -r requirements-dev.txt
 
+      - name: run the formatters in check mode
+        run: |
+          make fmt-check
+
       - name: run the linters
         run: |
           make lint

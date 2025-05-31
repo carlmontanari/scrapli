@@ -1,5 +1,6 @@
 """scrapli.ffi_mapping_cli"""
 
+from collections.abc import Callable
 from ctypes import (
     CDLL,
     c_bool,
@@ -7,7 +8,6 @@ from ctypes import (
     c_int,
     c_uint8,
 )
-from collections.abc import Callable
 
 from _ctypes import POINTER
 
