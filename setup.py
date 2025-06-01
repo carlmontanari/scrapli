@@ -34,8 +34,8 @@ WHEEL_TARGETS = {
     "aarch64-macos": "macosx_11_0_arm64",
     "x86_64-linux-gnu": "manylinux_x86_64",
     "x86_64-linux-musl": "musllinux_x86_64",
-    "aarch64-linux-gnu": "manylinux_arm64",
-    "aarch64-linux-musl": "musllinux_arm64",
+    "aarch64-linux-gnu": "manylinux2014_aarch64",
+    "aarch64-linux-musl": "musllinux_1_1_aarch64",
 }
 
 

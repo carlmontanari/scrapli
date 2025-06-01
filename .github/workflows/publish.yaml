@@ -20,6 +20,10 @@ jobs:
           source .github/vars.env
           echo "PYTHON_VERSION=$PYTHON_VERSION" >> "$GITHUB_ENV"
 
+      - name: validate twine/pypi token set
+        run: |
+          echo "${{ secrets.PYPI_SCRAPLI_TOKEN }}" | wc -c
+
       - name: set up python
         uses: actions/setup-python@v5
         with:
@@ -50,4 +54,4 @@ jobs:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_SCRAPLI_TOKEN }}
         run: |
-          python -m twine upload dist/*
+          python -m twine upload --verbose dist/*
