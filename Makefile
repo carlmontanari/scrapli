@@ -30,7 +30,7 @@ test-functional-ci: ## Run functional tests against "ci" test topology
 	python -m pytest tests/functional/ -v $(ARGS)
 
 run-clab: ## Runs the clab functional testing topo; uses the clab launcher to run nicely on darwin
-	rm -r .clab/*
+	rm -r .clab/* || true
 	docker network rm clab || true
 	docker network create \
 		--driver bridge \
@@ -39,7 +39,7 @@ run-clab: ## Runs the clab functional testing topo; uses the clab launcher to ru
 		--ipv6 \
 		--subnet=2001:172:20:20::/64 \
 		--gateway=2001:172:20:20::1 \
-		--opt com.docker.network.driver.mtu=65535 \
+		--opt com.docker.network.driver.mtu=65535
 		--label containerlab \
 		clab
 	docker run \
@@ -55,4 +55,4 @@ run-clab: ## Runs the clab functional testing topo; uses the clab launcher to ru
 		-v "$$(pwd):$$(pwd)" \
 		-e "WORKDIR=$$(pwd)/.clab" \
 		-e "HOST_ARCH=$$(uname -m)" \
-		ghcr.io/scrapli/scrapli_clab/launcher:0.0.1
+		ghcr.io/scrapli/scrapli_clab/launcher:0.0.2
