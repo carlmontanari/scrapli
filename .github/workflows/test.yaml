@@ -81,25 +81,39 @@ jobs:
         run: |
           source .github/vars.env
           echo "PYTHON_VERSION=$PYTHON_VERSION" >> "$GITHUB_ENV"
-          echo "CONTAINERLAB_VERSION=$CONTAINERLAB_VERSION" >> "$GITHUB_ENV"
+          echo "SCRAPLI_CLAB_VERSION=$SCRAPLI_CLAB_VERSION" >> "$GITHUB_ENV"
 
       - name: set up python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: install containerlab
+      - name: run scrapli-clab
         run: |
-          bash -c "$(curl -sL https://get.containerlab.dev)" -- -v ${{ env.CONTAINERLAB_VERSION }}
-
-      - name: build netopeer server image
-        run: |
-          make build-netopeer-server
-
-      - name: run containerlab topology
-        run: |
-          sudo clab deploy -t topo.ci.amd64.yaml
-        working-directory: tests/functional/clab
+          mkdir .clab
+          docker network create \
+          		--driver bridge \
+          		--subnet=172.20.20.0/24 \
+          		--gateway=172.20.20.1 \
+          		--ipv6 \
+          		--subnet=2001:172:20:20::/64 \
+          		--gateway=2001:172:20:20::1 \
+          		--opt com.docker.network.driver.mtu=65535 \
+          		--label containerlab \
+          		clab
+          docker run \
+          		-d \
+          		--rm \
+          		--name clab-launcher \
+          		--privileged \
+          		--pid=host \
+          		--stop-signal=SIGINT \
+          		-v /var/run/docker.sock:/var/run/docker.sock \
+          		-v /run/netns:/run/netns \
+          		-v "$(pwd):$(pwd)" \
+          		-e "WORKDIR=$(pwd)/.clab" \
+          		-e "HOST_ARCH=$(uname -m)" \
+          		"ghcr.io/scrapli/scrapli_clab/launcher:${{ env.SCRAPLI_CLAB_VERSION }}"
 
       - name: install python dev tools
         run: |
@@ -113,8 +127,8 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_e2e }}
 
-      - name: wait for srl node to be available
-        working-directory: tests/functional/clab
+      - name: wait for test nodes to be available
+        working-directory: .clab
         run: |
           ./wait.sh
 
