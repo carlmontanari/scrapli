@@ -136,6 +136,8 @@ jobs:
         working-directory: .clab
         run: |
           ./wait.sh
+        # wait.sh should timeout but seems like it sometimes gets hung in actions
+        timeout-minutes: 5
 
       - name: functional tests
         # skip the "enormous" output test as its super slow in gh runners
