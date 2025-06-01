@@ -78,7 +78,5 @@ private/
 # log output
 *.log
 
-# functional testing things
-tests/functional/clab/clab-libscrapli
-tests/functional/clab/*.bak
-tests/functional/clab/launcher/containerlab
+# where we mount stuff when running this
+.clab
