@@ -78,5 +78,5 @@ private/
 # log output
 *.log
 
-# where we mount stuff when running this
+# where we mount stuff when running clab bits
 .clab
