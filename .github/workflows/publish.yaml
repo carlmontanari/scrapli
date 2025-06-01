@@ -25,6 +25,11 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
+      - name: setup publish env
+        run: |
+            python -m pip install --upgrade pip
+            python -m pip install setuptools wheel build twine
+
       - name: package sdist
         run: |
           python -m build --sdist
