@@ -172,6 +172,11 @@ class Libscrapli:
 
     @classmethod
     def _get_libscrapli_asset_filename(cls) -> str:
+        zig_triple = os.environ.get(LIBSCRPALI_ZIG_TRIPLE_ENV, None)
+        if zig_triple is not None:
+            ext = "so" if "linux" in zig_triple else "dylib"
+            return f"libscrapli-{zig_triple}.{ext}.{LIBSCRAPLI_VERSION}"
+
         _base = f"libscrapli-{cls._get_zig_style_arch()}"
 
         if sys.platform == "linux":
@@ -258,7 +263,7 @@ class Libscrapli:
 
         with urlopen(asset_url) as response:
             if response.status != HTTPStatus.OK:
-                raise OSError(f"failed downloading asset file at ulr '{asset_url}'")
+                raise OSError(f"failed downloading asset file at url '{asset_url}'")
             with open(lib_dest, mode="wb") as f:
                 shutil.copyfileobj(response, f)
 
