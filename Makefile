@@ -29,19 +29,8 @@ test-functional: ## Run functional tests
 test-functional-ci: ## Run functional tests against "ci" test topology
 	python -m pytest tests/functional/ -v $(ARGS)
 
-build-netopeer-server: ## Builds the netopeer server image
-	docker build \
-		-f tests/functional/clab/netopeer/Dockerfile \
-		-t libscrapli-netopeer2:latest \
-		tests/functional/clab/netopeer
-
-build-clab-launcher: ## Builds the clab launcher image
-	docker build \
-		-f tests/functional/clab/launcher/Dockerfile \
-		-t clab-launcher:latest \
-		tests/functional/clab/launcher
-
 run-clab: ## Runs the clab functional testing topo; uses the clab launcher to run nicely on darwin
+	rm -r .clab/*
 	docker network rm clab || true
 	docker network create \
 		--driver bridge \
@@ -57,12 +46,13 @@ run-clab: ## Runs the clab functional testing topo; uses the clab launcher to ru
 		-d \
 		--rm \
 		--name clab-launcher \
+		--platform=linux/arm64 \
 		--privileged \
 		--pid=host \
 		--stop-signal=SIGINT \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v /run/netns:/run/netns \
-		-v "$$(pwd)/tests/functional/clab:$$(pwd)/tests/functional/clab" \
-		-e "LAUNCHER_WORKDIR=$$(pwd)/tests/functional/clab" \
+		-v "$$(pwd):$$(pwd)" \
+		-e "WORKDIR=$$(pwd)/.clab" \
 		-e "HOST_ARCH=$$(uname -m)" \
-		clab-launcher:latest
+		ghcr.io/scrapli/scrapli_clab/launcher:0.0.1
