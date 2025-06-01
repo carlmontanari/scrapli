@@ -32,8 +32,8 @@ WHEEL_TARGETS = {
     # zig-triple <-> wheel
     "x86_64-macos": "macosx_11_0_x86_64",
     "aarch64-macos": "macosx_11_0_arm64",
-    "x86_64-linux-gnu": "manylinux_x86_64",
-    "x86_64-linux-musl": "musllinux_x86_64",
+    "x86_64-linux-gnu": "manylinux2010_x86_64",
+    "x86_64-linux-musl": "musllinux_1_1_x86_64",
     "aarch64-linux-gnu": "manylinux2014_aarch64",
     "aarch64-linux-musl": "musllinux_1_1_aarch64",
 }
