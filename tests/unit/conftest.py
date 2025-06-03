@@ -8,7 +8,7 @@ from scrapli import (
     LookupKeyValue,
     Netconf,
     SessionOptions,
-    TransportOptions,
+    TransportBinOptions,
     TransportTestOptions,
 )
 from scrapli.cli_result import Result
@@ -39,11 +39,11 @@ def cli(request: pytest.FixtureRequest) -> Cli:
         session_options = SessionOptions(
             recorder_path=f,
         )
-        transport_options = TransportOptions()
+        transport_options = TransportBinOptions()
     else:
         port = SSH_PORT
         session_options = SessionOptions(read_size=1)
-        transport_options = TransportOptions(test=TransportTestOptions(f=f))
+        transport_options = TransportTestOptions(f=f)
 
     return Cli(
         definition_file_or_name="arista_eos",
@@ -110,11 +110,11 @@ def netconf(request: pytest.FixtureRequest) -> Netconf:
         session_options = SessionOptions(
             recorder_path=f,
         )
-        transport_options = TransportOptions()
+        transport_options = TransportBinOptions()
     else:
         port = NETCONF_PORT
         session_options = SessionOptions(read_size=1, operation_max_search_depth=32)
-        transport_options = TransportOptions(test=TransportTestOptions(f=f))
+        transport_options = TransportTestOptions(f=f)
 
     return Netconf(
         host=HOST,
@@ -143,11 +143,11 @@ def netconf_srl(request: pytest.FixtureRequest) -> Netconf:
         session_options = SessionOptions(
             recorder_path=f,
         )
-        transport_options = TransportOptions()
+        transport_options = TransportBinOptions()
     else:
         port = NETCONF_PORT
         session_options = SessionOptions(read_size=1, operation_max_search_depth=32)
-        transport_options = TransportOptions(test=TransportTestOptions(f=f))
+        transport_options = TransportTestOptions(f=f)
 
     return Netconf(
         host=HOST,

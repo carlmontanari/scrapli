@@ -1,8 +1,8 @@
 """scrapli.ffi_types"""
 
 from ctypes import (
-    CFUNCTYPE,
     POINTER,
+    PYFUNCTYPE,
     Structure,
     c_bool,
     c_char_p,
@@ -156,7 +156,9 @@ def to_c_string(s: str) -> c_char_p:
     return c_char_p(s.encode(encoding="utf-8"))
 
 
-LogFuncCallback: TypeAlias = CFUNCTYPE(None, c_uint8, POINTER(ZigSlice))  # type: ignore[valid-type]
+# PYFUNCTYPE holds the gil during the call which *seems* to matter/be important since
+# the zig bits will be tickling the logger (via the callback)
+LogFuncCallback: TypeAlias = PYFUNCTYPE(None, c_uint8, POINTER(ZigSlice))  # type: ignore[valid-type]
 
 
 def ffi_logger_wrapper(logger: Logger) -> LogFuncCallback:
@@ -181,7 +183,7 @@ def ffi_logger_wrapper(logger: Logger) -> LogFuncCallback:
             case 1:
                 logger.info(message.contents.get_decoded_contents())
             case 2:
-                logger.warn(message.contents.get_decoded_contents())
+                logger.warning(message.contents.get_decoded_contents())
             case 3:
                 logger.critical(message.contents.get_decoded_contents())
             case 4:

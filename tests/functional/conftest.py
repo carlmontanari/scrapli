@@ -12,7 +12,6 @@ from scrapli import (
     Netconf,
     SessionOptions,
     TransportBinOptions,
-    TransportOptions,
     TransportSsh2Options,
 )
 from scrapli.cli_result import Result
@@ -77,9 +76,9 @@ def cli(platform, transport) -> Cli:
         )
 
     if transport == "bin":
-        transport_options = TransportOptions(TransportBinOptions())
+        transport_options = TransportBinOptions()
     else:
-        transport_options = TransportOptions(TransportSsh2Options())
+        transport_options = TransportSsh2Options()
 
     return Cli(
         definition_file_or_name=definition_file_or_name,
@@ -160,9 +159,9 @@ def netconf(platform, transport) -> Netconf:
         )
 
     if transport == "bin":
-        transport_options = TransportOptions(TransportBinOptions())
+        transport_options = TransportBinOptions()
     else:
-        transport_options = TransportOptions(TransportSsh2Options())
+        transport_options = TransportSsh2Options()
 
     return Netconf(
         host=host,
