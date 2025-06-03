@@ -36,6 +36,7 @@ from scrapli.helper import (
 from scrapli.netconf_decorators import handle_operation_timeout, handle_operation_timeout_async
 from scrapli.netconf_result import Result
 from scrapli.session import Options as SessionOptions
+from scrapli.transport import BinOptions as TransportBinOptions
 from scrapli.transport import Options as TransportOptions
 
 
@@ -304,9 +305,11 @@ class Netconf:
         self.options = options or Options()
         self.auth_options = auth_options or AuthOptions()
         self.session_options = session_options or SessionOptions()
-        self.transport_options = transport_options or TransportOptions()
+        self.transport_options = transport_options or TransportBinOptions()
 
         self.ptr: DriverPointer | None = None
+        self.poll_fd: int = 0
+
         self._session_id: int | None = None
 
     def __enter__(self: "Netconf") -> "Netconf":
@@ -461,7 +464,7 @@ class Netconf:
             logger_callback=self.logger_callback,
             host=self._host,
             port=c_int(self.port),
-            transport_kind=c_char_p(self.transport_options.get_transport_kind()),
+            transport_kind=c_char_p(self.transport_options.transport_kind.encode(encoding="utf-8")),
         )
         if ptr == 0:  # type: ignore[comparison-overlap]
             raise AllocationException("failed to allocate netconf")
@@ -473,7 +476,7 @@ class Netconf:
                 ptr=self._ptr_or_exception(),
             )
         )
-        if poll_fd == 0:
+        if poll_fd <= 0:
             raise AllocationException("failed to allocate netconf")
 
         self.poll_fd = poll_fd
@@ -487,7 +490,7 @@ class Netconf:
         self,
         *,
         operation_id: OperationIdPointer,
-    ) -> c_uint:
+    ) -> None:
         self._alloc()
 
         self.options.apply(self.ffi_mapping, self._ptr_or_exception())
@@ -503,8 +506,6 @@ class Netconf:
             self._free()
 
             raise OpenException("failed to submit open operation")
-
-        return c_uint(operation_id.contents.value)
 
     def open(
         self,
@@ -524,9 +525,9 @@ class Netconf:
         """
         operation_id = OperationIdPointer(c_uint(0))
 
-        operation_id = self._open(operation_id=operation_id)
+        self._open(operation_id=operation_id)
 
-        return self._get_result(operation_id=operation_id)
+        return self._get_result(operation_id=operation_id.contents.value)
 
     async def open_async(self) -> Result:
         """
@@ -544,16 +545,16 @@ class Netconf:
         """
         operation_id = OperationIdPointer(c_uint(0))
 
-        operation_id = self._open(operation_id=operation_id)
+        self._open(operation_id=operation_id)
 
-        return await self._get_result_async(operation_id=operation_id)
+        return await self._get_result_async(operation_id=operation_id.contents.value)
 
     def _close(
         self,
         *,
         operation_id: OperationIdPointer,
         force: c_bool,
-    ) -> c_uint:
+    ) -> None:
         status = self.ffi_mapping.netconf_mapping.close(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
@@ -561,8 +562,6 @@ class Netconf:
         )
         if status != 0:
             raise CloseException("submitting close operation")
-
-        return c_uint(operation_id.contents.value)
 
     def close(
         self,
@@ -586,9 +585,9 @@ class Netconf:
         operation_id = OperationIdPointer(c_uint(0))
         _force = c_bool(force)
 
-        operation_id = self._close(operation_id=operation_id, force=_force)
+        self._close(operation_id=operation_id, force=_force)
 
-        result = self._get_result(operation_id=operation_id)
+        result = self._get_result(operation_id=operation_id.contents.value)
 
         self._free()
 
@@ -616,9 +615,9 @@ class Netconf:
         operation_id = OperationIdPointer(c_uint(0))
         _force = c_bool(force)
 
-        operation_id = self._close(operation_id=operation_id, force=_force)
+        self._close(operation_id=operation_id, force=_force)
 
-        result = await self._get_result_async(operation_id=operation_id)
+        result = await self._get_result_async(operation_id=operation_id.contents.value)
 
         self._free()
 

@@ -7,7 +7,6 @@ from ctypes import (
     c_char_p,
     c_int,
     c_uint8,
-    c_uint32,
 )
 
 from scrapli.ffi import get_libscrapli_path
@@ -43,12 +42,12 @@ class LibScrapliSharedMapping:
             [
                 DriverPointer,
             ],
-            c_uint32,
+            c_int,
         ] = lib.ls_shared_get_poll_fd
         lib.ls_shared_get_poll_fd.argtypes = [
             DriverPointer,
         ]
-        lib.ls_cli_alloc.restype = c_uint32
+        lib.ls_cli_alloc.restype = c_int
 
         self._free: Callable[
             [
@@ -91,7 +90,7 @@ class LibScrapliSharedMapping:
         ]
         lib.ls_shared_write_session.restype = c_uint8
 
-    def get_poll_fd(self, ptr: DriverPointer) -> c_uint32:
+    def get_poll_fd(self, ptr: DriverPointer) -> c_int:
         """
         Get the operation poll fd from the driver at ptr.
 

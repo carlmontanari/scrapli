@@ -7,7 +7,7 @@ from scrapli import (
     AuthOptions,
     Netconf,
     SessionOptions,
-    TransportOptions,
+    TransportBinOptions,
     TransportTestOptions,
 )
 from scrapli.netconf import DatastoreType
@@ -520,10 +520,10 @@ def test_get_next_subscription(request):
         session_options = SessionOptions(
             recorder_path=f,
         )
-        transport_options = TransportOptions()
+        transport_options = TransportBinOptions()
     else:
         session_options = SessionOptions(read_size=1, operation_max_search_depth=32)
-        transport_options = TransportOptions(test=TransportTestOptions(f=f))
+        transport_options = TransportTestOptions(f=f)
 
     netconf = Netconf(
         # you may want to use: devnetsandboxiosxe.cisco.com -- have to login to get creds
