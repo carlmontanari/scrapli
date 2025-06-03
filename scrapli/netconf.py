@@ -1,6 +1,5 @@
 """scrapli.netconf"""
 
-from collections.abc import Callable
 from ctypes import c_bool, c_char_p, c_int, c_uint, c_uint64
 from dataclasses import dataclass, field
 from enum import Enum
@@ -22,13 +21,12 @@ from scrapli.exceptions import (
 )
 from scrapli.ffi_mapping import LibScrapliMapping
 from scrapli.ffi_types import (
-    CancelPointer,
     DriverPointer,
     IntPointer,
-    LogFuncCallback,
     OperationIdPointer,
     U64Pointer,
     ZigSlice,
+    ffi_logger_wrapper,
     to_c_string,
 )
 from scrapli.helper import (
@@ -281,7 +279,6 @@ class Netconf:
         self,
         host: str,
         *,
-        logger_callback: Callable[[int, str], None] | None = None,
         port: int = 830,
         options: Options | None = None,
         auth_options: AuthOptions | None = None,
@@ -294,17 +291,13 @@ class Netconf:
             logger_name += f":{logging_uid}"
 
         self.logger = getLogger(logger_name)
+        self.logger_callback = ffi_logger_wrapper(logger=self.logger)
         self._logging_uid = logging_uid
 
         self.ffi_mapping = LibScrapliMapping()
 
         self.host = host
         self._host = to_c_string(host)
-
-        self.logger_callback = (
-            LogFuncCallback(logger_callback) if logger_callback else LogFuncCallback(0)
-        )
-        self._logger_callback = logger_callback
 
         self.port = port
 
@@ -447,7 +440,6 @@ class Netconf:
         # will never be mutated during an objects lifetime, which *should* be the case. probably.
         return Netconf(
             host=self.host,
-            logger_callback=self._logger_callback,
             port=self.port,
             options=self.options,
             auth_options=self.auth_options,
@@ -491,7 +483,11 @@ class Netconf:
     ) -> None:
         self.ffi_mapping.shared_mapping.free(ptr=self._ptr_or_exception())
 
-    def _open(self) -> c_uint:
+    def _open(
+        self,
+        *,
+        operation_id: OperationIdPointer,
+    ) -> c_uint:
         self._alloc()
 
         self.options.apply(self.ffi_mapping, self._ptr_or_exception())
@@ -499,20 +495,15 @@ class Netconf:
         self.session_options.apply(self.ffi_mapping, self._ptr_or_exception())
         self.transport_options.apply(self.ffi_mapping, self._ptr_or_exception())
 
-        operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
-
         status = self.ffi_mapping.netconf_mapping.open(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
-            cancel=cancel,
         )
         if status != 0:
             self._free()
 
             raise OpenException("failed to submit open operation")
 
-        # cast it again, for mypy reasons
         return c_uint(operation_id.contents.value)
 
     def open(
@@ -531,7 +522,9 @@ class Netconf:
             OpenException: if the operation fails
 
         """
-        operation_id = self._open()
+        operation_id = OperationIdPointer(c_uint(0))
+
+        operation_id = self._open(operation_id=operation_id)
 
         return self._get_result(operation_id=operation_id)
 
@@ -549,23 +542,22 @@ class Netconf:
             OpenException: if the operation fails
 
         """
-        operation_id = self._open()
+        operation_id = OperationIdPointer(c_uint(0))
+
+        operation_id = self._open(operation_id=operation_id)
 
         return await self._get_result_async(operation_id=operation_id)
 
     def _close(
         self,
-        force: bool,
+        *,
+        operation_id: OperationIdPointer,
+        force: c_bool,
     ) -> c_uint:
-        operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
-        _force = c_bool(force)
-
         status = self.ffi_mapping.netconf_mapping.close(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
-            cancel=cancel,
-            force=_force,
+            force=force,
         )
         if status != 0:
             raise CloseException("submitting close operation")
@@ -591,7 +583,10 @@ class Netconf:
             CloseException: if the operation fails
 
         """
-        operation_id = self._close(force=force)
+        operation_id = OperationIdPointer(c_uint(0))
+        _force = c_bool(force)
+
+        operation_id = self._close(operation_id=operation_id, force=_force)
 
         result = self._get_result(operation_id=operation_id)
 
@@ -618,7 +613,10 @@ class Netconf:
             CloseException: if the operation fails
 
         """
-        operation_id = self._close(force=force)
+        operation_id = OperationIdPointer(c_uint(0))
+        _force = c_bool(force)
+
+        operation_id = self._close(operation_id=operation_id, force=_force)
 
         result = await self._get_result_async(operation_id=operation_id)
 
@@ -905,7 +903,6 @@ class Netconf:
         self,
         *,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         payload: c_char_p,
         base_namespace_prefix: c_char_p,
         extra_namespaces: c_char_p,
@@ -913,7 +910,6 @@ class Netconf:
         status = self.ffi_mapping.netconf_mapping.raw_rpc(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
-            cancel=cancel,
             payload=payload,
             base_namespace_prefix=base_namespace_prefix,
             extra_namespaces=extra_namespaces,
@@ -955,7 +951,6 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _payload = to_c_string(payload)
         _base_namespace_prefix = to_c_string(base_namespace_prefix)
@@ -969,7 +964,6 @@ class Netconf:
 
         operation_id = self._raw_rpc(
             operation_id=operation_id,
-            cancel=cancel,
             payload=_payload,
             base_namespace_prefix=_base_namespace_prefix,
             extra_namespaces=_extra_namespaces,
@@ -1009,7 +1003,6 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _payload = to_c_string(payload)
         _base_namespace_prefix = to_c_string(base_namespace_prefix)
@@ -1023,7 +1016,6 @@ class Netconf:
 
         operation_id = self._raw_rpc(
             operation_id=operation_id,
-            cancel=cancel,
             payload=_payload,
             base_namespace_prefix=_base_namespace_prefix,
             extra_namespaces=_extra_namespaces,
@@ -1035,7 +1027,6 @@ class Netconf:
         self,
         *,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         source: c_char_p,
         filter_: c_char_p,
         filter_type: c_char_p,
@@ -1046,7 +1037,6 @@ class Netconf:
         status = self.ffi_mapping.netconf_mapping.get_config(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
-            cancel=cancel,
             source=source,
             filter_=filter_,
             filter_type=filter_type,
@@ -1095,7 +1085,6 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _source = to_c_string(source)
         _filter = to_c_string(filter_)
@@ -1106,7 +1095,6 @@ class Netconf:
 
         operation_id = self._get_config(
             operation_id=operation_id,
-            cancel=cancel,
             source=_source,
             filter_=_filter,
             filter_type=_filter_type,
@@ -1153,7 +1141,6 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _source = to_c_string(source)
         _filter = to_c_string(filter_)
@@ -1164,7 +1151,6 @@ class Netconf:
 
         operation_id = self._get_config(
             operation_id=operation_id,
-            cancel=cancel,
             source=_source,
             filter_=_filter,
             filter_type=_filter_type,
@@ -1179,14 +1165,12 @@ class Netconf:
         self,
         *,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         config: c_char_p,
         target: c_char_p,
     ) -> c_uint:
         status = self.ffi_mapping.netconf_mapping.edit_config(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
-            cancel=cancel,
             config=config,
             target=target,
         )
@@ -1223,14 +1207,12 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _config = to_c_string(config)
         _target = to_c_string(target)
 
         operation_id = self._edit_config(
             operation_id=operation_id,
-            cancel=cancel,
             config=_config,
             target=_target,
         )
@@ -1265,14 +1247,12 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _config = to_c_string(config)
         _target = to_c_string(target)
 
         operation_id = self._edit_config(
             operation_id=operation_id,
-            cancel=cancel,
             config=_config,
             target=_target,
         )
@@ -1283,14 +1263,12 @@ class Netconf:
         self,
         *,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         target: c_char_p,
         source: c_char_p,
     ) -> c_uint:
         status = self.ffi_mapping.netconf_mapping.copy_config(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
-            cancel=cancel,
             target=target,
             source=source,
         )
@@ -1327,14 +1305,12 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _target = to_c_string(target)
         _source = to_c_string(source)
 
         operation_id = self._copy_config(
             operation_id=operation_id,
-            cancel=cancel,
             target=_target,
             source=_source,
         )
@@ -1369,14 +1345,12 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _target = to_c_string(target)
         _source = to_c_string(source)
 
         operation_id = self._copy_config(
             operation_id=operation_id,
-            cancel=cancel,
             target=_target,
             source=_source,
         )
@@ -1387,13 +1361,11 @@ class Netconf:
         self,
         *,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         target: c_char_p,
     ) -> c_uint:
         status = self.ffi_mapping.netconf_mapping.delete_config(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
-            cancel=cancel,
             target=target,
         )
         if status != 0:
@@ -1427,13 +1399,11 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _target = to_c_string(target)
 
         operation_id = self._delete_config(
             operation_id=operation_id,
-            cancel=cancel,
             target=_target,
         )
 
@@ -1465,13 +1435,11 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _target = to_c_string(target)
 
         operation_id = self._delete_config(
             operation_id=operation_id,
-            cancel=cancel,
             target=_target,
         )
 
@@ -1481,13 +1449,11 @@ class Netconf:
         self,
         *,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         target: c_char_p,
     ) -> c_uint:
         status = self.ffi_mapping.netconf_mapping.lock(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
-            cancel=cancel,
             target=target,
         )
         if status != 0:
@@ -1521,13 +1487,11 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _target = to_c_string(target)
 
         operation_id = self._lock(
             operation_id=operation_id,
-            cancel=cancel,
             target=_target,
         )
 
@@ -1559,13 +1523,11 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _target = to_c_string(target)
 
         operation_id = self._lock(
             operation_id=operation_id,
-            cancel=cancel,
             target=_target,
         )
 
@@ -1575,13 +1537,11 @@ class Netconf:
         self,
         *,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         target: c_char_p,
     ) -> c_uint:
         status = self.ffi_mapping.netconf_mapping.unlock(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
-            cancel=cancel,
             target=target,
         )
         if status != 0:
@@ -1615,13 +1575,11 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _target = to_c_string(target)
 
         operation_id = self._unlock(
             operation_id=operation_id,
-            cancel=cancel,
             target=_target,
         )
 
@@ -1653,13 +1611,11 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _target = to_c_string(target)
 
         operation_id = self._unlock(
             operation_id=operation_id,
-            cancel=cancel,
             target=_target,
         )
 
@@ -1669,7 +1625,6 @@ class Netconf:
         self,
         *,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         filter_: c_char_p,
         filter_type: c_char_p,
         filter_namespace_prefix: c_char_p,
@@ -1679,7 +1634,6 @@ class Netconf:
         status = self.ffi_mapping.netconf_mapping.get(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
-            cancel=cancel,
             filter_=filter_,
             filter_type=filter_type,
             filter_namespace_prefix=filter_namespace_prefix,
@@ -1725,7 +1679,6 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _filter = to_c_string(filter_)
         _filter_type = to_c_string(filter_type)
@@ -1735,7 +1688,6 @@ class Netconf:
 
         operation_id = self._get(
             operation_id=operation_id,
-            cancel=cancel,
             filter_=_filter,
             filter_type=_filter_type,
             filter_namespace_prefix=_filter_namespace_prefix,
@@ -1779,7 +1731,6 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _filter = to_c_string(filter_)
         _filter_type = to_c_string(filter_type)
@@ -1789,7 +1740,6 @@ class Netconf:
 
         operation_id = self._get(
             operation_id=operation_id,
-            cancel=cancel,
             filter_=_filter,
             filter_type=_filter_type,
             filter_namespace_prefix=_filter_namespace_prefix,
@@ -1803,12 +1753,10 @@ class Netconf:
         self,
         *,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
     ) -> c_uint:
         status = self.ffi_mapping.netconf_mapping.close_session(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
-            cancel=cancel,
         )
         if status != 0:
             raise SubmitOperationException("submitting close-session operation failed")
@@ -1839,11 +1787,9 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         operation_id = self._close_session(
             operation_id=operation_id,
-            cancel=cancel,
         )
 
         return self._get_result(operation_id=operation_id)
@@ -1872,11 +1818,9 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         operation_id = self._close_session(
             operation_id=operation_id,
-            cancel=cancel,
         )
 
         return await self._get_result_async(operation_id=operation_id)
@@ -1885,13 +1829,11 @@ class Netconf:
         self,
         *,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         session_id: int,
     ) -> c_uint:
         status = self.ffi_mapping.netconf_mapping.kill_session(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
-            cancel=cancel,
             session_id=c_int(session_id),
         )
         if status != 0:
@@ -1925,11 +1867,9 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         operation_id = self._kill_session(
             operation_id=operation_id,
-            cancel=cancel,
             session_id=session_id,
         )
 
@@ -1961,11 +1901,9 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         operation_id = self._kill_session(
             operation_id=operation_id,
-            cancel=cancel,
             session_id=session_id,
         )
 
@@ -1975,12 +1913,10 @@ class Netconf:
         self,
         *,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
     ) -> c_uint:
         status = self.ffi_mapping.netconf_mapping.commit(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
-            cancel=cancel,
         )
         if status != 0:
             raise SubmitOperationException("submitting commit operation failed")
@@ -2011,11 +1947,9 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         operation_id = self._commit(
             operation_id=operation_id,
-            cancel=cancel,
         )
 
         return self._get_result(operation_id=operation_id)
@@ -2044,11 +1978,9 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         operation_id = self._commit(
             operation_id=operation_id,
-            cancel=cancel,
         )
 
         return await self._get_result_async(operation_id=operation_id)
@@ -2057,12 +1989,10 @@ class Netconf:
         self,
         *,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
     ) -> c_uint:
         status = self.ffi_mapping.netconf_mapping.discard(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
-            cancel=cancel,
         )
         if status != 0:
             raise SubmitOperationException("submitting discard operation failed")
@@ -2093,11 +2023,9 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         operation_id = self._discard(
             operation_id=operation_id,
-            cancel=cancel,
         )
 
         return self._get_result(operation_id=operation_id)
@@ -2126,11 +2054,9 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         operation_id = self._discard(
             operation_id=operation_id,
-            cancel=cancel,
         )
 
         return await self._get_result_async(operation_id=operation_id)
@@ -2139,12 +2065,10 @@ class Netconf:
         self,
         *,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
     ) -> c_uint:
         status = self.ffi_mapping.netconf_mapping.cancel_commit(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
-            cancel=cancel,
         )
         if status != 0:
             raise SubmitOperationException("submitting cancel-commit operation failed")
@@ -2175,11 +2099,9 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         operation_id = self._cancel_commit(
             operation_id=operation_id,
-            cancel=cancel,
         )
 
         return self._get_result(operation_id=operation_id)
@@ -2208,11 +2130,9 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         operation_id = self._cancel_commit(
             operation_id=operation_id,
-            cancel=cancel,
         )
 
         return await self._get_result_async(operation_id=operation_id)
@@ -2221,13 +2141,11 @@ class Netconf:
         self,
         *,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         source: c_char_p,
     ) -> c_uint:
         status = self.ffi_mapping.netconf_mapping.validate(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
-            cancel=cancel,
             source=source,
         )
         if status != 0:
@@ -2261,13 +2179,11 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _source = to_c_string(source)
 
         operation_id = self._validate(
             operation_id=operation_id,
-            cancel=cancel,
             source=_source,
         )
 
@@ -2299,13 +2215,11 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _source = to_c_string(source)
 
         operation_id = self._validate(
             operation_id=operation_id,
-            cancel=cancel,
             source=_source,
         )
 
@@ -2315,7 +2229,6 @@ class Netconf:
         self,
         *,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         identifier: c_char_p,
         version: c_char_p,
         format_: c_char_p,
@@ -2323,7 +2236,6 @@ class Netconf:
         status = self.ffi_mapping.netconf_mapping.get_schema(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
-            cancel=cancel,
             identifier=identifier,
             version=version,
             format_=format_,
@@ -2363,7 +2275,6 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _identifier = to_c_string(identifier)
         _version = to_c_string(version)
@@ -2371,7 +2282,6 @@ class Netconf:
 
         operation_id = self._get_schema(
             operation_id=operation_id,
-            cancel=cancel,
             identifier=_identifier,
             version=_version,
             format_=_format,
@@ -2409,7 +2319,6 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _identifier = to_c_string(identifier)
         _version = to_c_string(version)
@@ -2417,7 +2326,6 @@ class Netconf:
 
         operation_id = self._get_schema(
             operation_id=operation_id,
-            cancel=cancel,
             identifier=_identifier,
             version=_version,
             format_=_format,
@@ -2429,7 +2337,6 @@ class Netconf:
         self,
         *,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         source: c_char_p,
         filter_: c_char_p,
         filter_type: c_char_p,
@@ -2444,7 +2351,6 @@ class Netconf:
         status = self.ffi_mapping.netconf_mapping.get_data(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
-            cancel=cancel,
             source=source,
             filter_=filter_,
             filter_type=filter_type,
@@ -2505,7 +2411,6 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _source = to_c_string(source)
         _filter = to_c_string(filter_)
@@ -2518,7 +2423,6 @@ class Netconf:
 
         operation_id = self._get_data(
             operation_id=operation_id,
-            cancel=cancel,
             source=_source,
             filter_=_filter,
             filter_type=_filter_type,
@@ -2577,7 +2481,6 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _source = to_c_string(source)
         _filter = to_c_string(filter_)
@@ -2590,7 +2493,6 @@ class Netconf:
 
         operation_id = self._get_data(
             operation_id=operation_id,
-            cancel=cancel,
             source=_source,
             filter_=_filter,
             filter_type=_filter_type,
@@ -2609,14 +2511,12 @@ class Netconf:
         self,
         *,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         content: c_char_p,
         target: c_char_p,
     ) -> c_uint:
         status = self.ffi_mapping.netconf_mapping.edit_data(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
-            cancel=cancel,
             content=content,
             target=target,
         )
@@ -2653,14 +2553,12 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _content = to_c_string(content)
         _target = to_c_string(target)
 
         operation_id = self._edit_data(
             operation_id=operation_id,
-            cancel=cancel,
             content=_content,
             target=_target,
         )
@@ -2695,14 +2593,12 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _content = to_c_string(content)
         _target = to_c_string(target)
 
         operation_id = self._edit_data(
             operation_id=operation_id,
-            cancel=cancel,
             content=_content,
             target=_target,
         )
@@ -2713,13 +2609,11 @@ class Netconf:
         self,
         *,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         action: c_char_p,
     ) -> c_uint:
         status = self.ffi_mapping.netconf_mapping.action(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
-            cancel=cancel,
             action=action,
         )
         if status != 0:
@@ -2753,13 +2647,11 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _action = to_c_string(action)
 
         operation_id = self._action(
             operation_id=operation_id,
-            cancel=cancel,
             action=_action,
         )
 
@@ -2791,13 +2683,11 @@ class Netconf:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _action = to_c_string(action)
 
         operation_id = self._action(
             operation_id=operation_id,
-            cancel=cancel,
             action=_action,
         )
 

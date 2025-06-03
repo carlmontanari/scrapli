@@ -14,6 +14,7 @@ from ctypes import (
     c_void_p,
     cast,
 )
+from logging import Logger
 from typing import TypeAlias
 
 DriverPointer = c_void_p
@@ -28,6 +29,10 @@ StringPointer: TypeAlias = POINTER(c_char_p)  # type: ignore[valid-type]
 IntPointer: TypeAlias = POINTER(c_int)  # type: ignore[valid-type]
 U64Pointer: TypeAlias = POINTER(c_uint64)  # type: ignore[valid-type]
 BoolPointer: TypeAlias = POINTER(c_bool)  # type: ignore[valid-type]
+
+# cancellation is handled via timeout in python (vs context cancellation in go), so just have
+# an always false cancellation pointer
+CANCEL = CancelPointer(c_bool(False))
 
 
 class ZigU64Slice(Structure):
@@ -152,3 +157,36 @@ def to_c_string(s: str) -> c_char_p:
 
 
 LogFuncCallback: TypeAlias = CFUNCTYPE(None, c_uint8, POINTER(ZigSlice))  # type: ignore[valid-type]
+
+
+def ffi_logger_wrapper(logger: Logger) -> LogFuncCallback:
+    """
+    Closure that accepts logger instance and returns a ffi logger callback
+
+    Args:
+        logger: the logger to wrap for use in the zig bits
+
+    Returns:
+        LogFuncCallback: the logger callback
+
+    Raises:
+        N/A
+
+    """
+
+    def _cb(level: c_uint8, message: ZigSlicePointer) -> None:
+        match level:
+            case 0:
+                logger.debug(message.contents.get_decoded_contents())
+            case 1:
+                logger.info(message.contents.get_decoded_contents())
+            case 2:
+                logger.warn(message.contents.get_decoded_contents())
+            case 3:
+                logger.critical(message.contents.get_decoded_contents())
+            case 4:
+                logger.fatal(message.contents.get_decoded_contents())
+            case _:
+                return
+
+    return LogFuncCallback(_cb)

@@ -1,7 +1,6 @@
 """scrapli.cli"""
 
 import importlib.resources
-from collections.abc import Callable
 from ctypes import (
     c_bool,
     c_char_p,
@@ -31,14 +30,13 @@ from scrapli.exceptions import (
 )
 from scrapli.ffi_mapping import LibScrapliMapping
 from scrapli.ffi_types import (
-    CancelPointer,
     DriverPointer,
     IntPointer,
-    LogFuncCallback,
     OperationIdPointer,
     U64Pointer,
     ZigSlice,
     ZigU64Slice,
+    ffi_logger_wrapper,
     to_c_string,
 )
 from scrapli.helper import (
@@ -93,7 +91,6 @@ class Cli:
         definition_file_or_name: str,
         host: str,
         *,
-        logger_callback: Callable[[int, str], None] | None = None,
         port: int = 22,
         auth_options: AuthOptions | None = None,
         session_options: SessionOptions | None = None,
@@ -105,6 +102,7 @@ class Cli:
             logger_name += f":{logging_uid}"
 
         self.logger = getLogger(logger_name)
+        self.logger_callback = ffi_logger_wrapper(logger=self.logger)
         self._logging_uid = logging_uid
 
         self.ffi_mapping = LibScrapliMapping()
@@ -117,12 +115,7 @@ class Cli:
         # why. in this case we also just store the host since thats cheap and we need it as a string
         # in places too
         self.host = host
-        self._host = to_c_string(host)
-
-        self.logger_callback = (
-            LogFuncCallback(logger_callback) if logger_callback else LogFuncCallback(0)
-        )
-        self._logger_callback = logger_callback
+        self._host = to_c_string(s=host)
 
         self.port = port
 
@@ -264,7 +257,6 @@ class Cli:
         return Cli(
             host=self.host,
             definition_file_or_name=self.definition_file_or_name,
-            logger_callback=self._logger_callback,
             port=self.port,
             auth_options=self.auth_options,
             session_options=self.session_options,
@@ -393,9 +385,9 @@ class Cli:
 
     def _open(
         self,
+        *,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
-    ) -> c_uint:
+    ) -> None:
         self._alloc()
 
         self.auth_options.apply(self.ffi_mapping, self._ptr_or_exception())
@@ -405,14 +397,11 @@ class Cli:
         status = self.ffi_mapping.cli_mapping.open(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
-            cancel=cancel,
         )
         if status != 0:
             self._free()
 
             raise OpenException("failed to submit open operation")
-
-        return c_uint(operation_id.contents.value)
 
     def open(
         self,
@@ -431,11 +420,10 @@ class Cli:
 
         """
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
-        operation_id = self._open(operation_id=operation_id, cancel=cancel)
+        self._open(operation_id=operation_id)
 
-        return self._get_result(operation_id=operation_id)
+        return self._get_result(operation_id=operation_id.contents.value)
 
     async def open_async(self) -> Result:
         """
@@ -452,23 +440,22 @@ class Cli:
 
         """
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
-        operation_id = self._open(operation_id=operation_id, cancel=cancel)
+        self._open(operation_id=operation_id)
 
-        return await self._get_result_async(operation_id=operation_id)
+        return await self._get_result_async(operation_id=operation_id.contents.value)
 
-    def _close(self) -> c_uint:
-        operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
-
+    def _close(
+        self,
+        *,
+        operation_id: OperationIdPointer,
+    ) -> None:
         status = self.ffi_mapping.cli_mapping.close(
-            ptr=self._ptr_or_exception(), operation_id=operation_id, cancel=cancel
+            ptr=self._ptr_or_exception(),
+            operation_id=operation_id,
         )
         if status != 0:
             raise CloseException("submitting close operation")
-
-        return c_uint(operation_id.contents.value)
 
     def close(
         self,
@@ -487,9 +474,11 @@ class Cli:
             CloseException: if the operation fails
 
         """
-        operation_id = self._close()
+        operation_id = OperationIdPointer(c_uint(0))
 
-        result = self._get_result(operation_id=operation_id)
+        self._close(operation_id=operation_id)
+
+        result = self._get_result(operation_id=operation_id.contents.value)
 
         self._free()
 
@@ -512,9 +501,11 @@ class Cli:
             CloseException: if the operation fails
 
         """
-        operation_id = self._close()
+        operation_id = OperationIdPointer(c_uint(0))
 
-        result = await self._get_result_async(operation_id=operation_id)
+        self._close(operation_id=operation_id)
+
+        result = await self._get_result_async(operation_id=operation_id.contents.value)
 
         self._free()
 
@@ -658,13 +649,11 @@ class Cli:
         self,
         *,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         requested_mode: c_char_p,
     ) -> c_uint:
         status = self.ffi_mapping.cli_mapping.enter_mode(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
-            cancel=cancel,
             requested_mode=requested_mode,
         )
         if status != 0:
@@ -698,12 +687,12 @@ class Cli:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _requested_mode = to_c_string(requested_mode)
 
         operation_id = self._enter_mode(
-            operation_id=operation_id, cancel=cancel, requested_mode=_requested_mode
+            operation_id=operation_id,
+            requested_mode=_requested_mode,
         )
 
         return self._get_result(operation_id=operation_id)
@@ -734,12 +723,12 @@ class Cli:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _requested_mode = to_c_string(requested_mode)
 
         operation_id = self._enter_mode(
-            operation_id=operation_id, cancel=cancel, requested_mode=_requested_mode
+            operation_id=operation_id,
+            requested_mode=_requested_mode,
         )
 
         return await self._get_result_async(operation_id=operation_id)
@@ -748,12 +737,10 @@ class Cli:
         self,
         *,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
     ) -> c_uint:
         status = self.ffi_mapping.cli_mapping.get_prompt(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
-            cancel=cancel,
         )
         if status != 0:
             raise SubmitOperationException("submitting get prompt operation failed")
@@ -784,9 +771,8 @@ class Cli:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
-        operation_id = self._get_prompt(operation_id=operation_id, cancel=cancel)
+        operation_id = self._get_prompt(operation_id=operation_id)
 
         return self._get_result(operation_id=operation_id)
 
@@ -814,9 +800,8 @@ class Cli:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
-        operation_id = self._get_prompt(operation_id=operation_id, cancel=cancel)
+        operation_id = self._get_prompt(operation_id=operation_id)
 
         return await self._get_result_async(operation_id=operation_id)
 
@@ -824,7 +809,6 @@ class Cli:
         self,
         *,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         input_: c_char_p,
         requested_mode: c_char_p,
         input_handling: c_char_p,
@@ -834,7 +818,6 @@ class Cli:
         status = self.ffi_mapping.cli_mapping.send_input(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
-            cancel=cancel,
             input_=input_,
             requested_mode=requested_mode,
             input_handling=input_handling,
@@ -880,7 +863,6 @@ class Cli:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _input = to_c_string(input_)
         _requested_mode = to_c_string(requested_mode)
@@ -888,7 +870,6 @@ class Cli:
 
         operation_id = self._send_input(
             operation_id=operation_id,
-            cancel=cancel,
             input_=_input,
             requested_mode=_requested_mode,
             input_handling=_input_handling,
@@ -932,7 +913,6 @@ class Cli:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _input = to_c_string(input_)
         _requested_mode = to_c_string(requested_mode)
@@ -940,7 +920,6 @@ class Cli:
 
         operation_id = self._send_input(
             operation_id=operation_id,
-            cancel=cancel,
             input_=_input,
             requested_mode=_requested_mode,
             input_handling=_input_handling,
@@ -986,8 +965,6 @@ class Cli:
         # meaning all the "inputs" combined, not individually
         _ = operation_timeout_ns
 
-        cancel = CancelPointer(c_bool(False))
-
         result: Result | None = None
 
         for input_ in inputs:
@@ -999,7 +976,6 @@ class Cli:
 
             operation_id = self._send_input(
                 operation_id=operation_id,
-                cancel=cancel,
                 input_=_input,
                 requested_mode=_requested_mode,
                 input_handling=_input_handling,
@@ -1055,8 +1031,6 @@ class Cli:
         # meaning all the "inputs" combined, not individually
         _ = operation_timeout_ns
 
-        cancel = CancelPointer(c_bool(False))
-
         result: Result | None = None
 
         for input_ in inputs:
@@ -1068,7 +1042,6 @@ class Cli:
 
             operation_id = self._send_input(
                 operation_id=operation_id,
-                cancel=cancel,
                 input_=_input,
                 requested_mode=_requested_mode,
                 input_handling=_input_handling,
@@ -1179,7 +1152,6 @@ class Cli:
         self,
         *,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         input_: c_char_p,
         prompt: c_char_p,
         prompt_pattern: c_char_p,
@@ -1193,7 +1165,6 @@ class Cli:
         status = self.ffi_mapping.cli_mapping.send_prompted_input(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
-            cancel=cancel,
             input_=input_,
             prompt=prompt,
             prompt_pattern=prompt_pattern,
@@ -1252,7 +1223,6 @@ class Cli:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _input = to_c_string(input_)
         _prompt = to_c_string(prompt)
@@ -1264,7 +1234,6 @@ class Cli:
 
         operation_id = self._send_prompted_input(
             operation_id=operation_id,
-            cancel=cancel,
             input_=_input,
             prompt=_prompt,
             prompt_pattern=_prompt_pattern,
@@ -1321,7 +1290,6 @@ class Cli:
         _ = operation_timeout_ns
 
         operation_id = OperationIdPointer(c_uint(0))
-        cancel = CancelPointer(c_bool(False))
 
         _input = to_c_string(input_)
         _prompt = to_c_string(prompt)
@@ -1333,7 +1301,6 @@ class Cli:
 
         operation_id = self._send_prompted_input(
             operation_id=operation_id,
-            cancel=cancel,
             input_=_input,
             prompt=_prompt,
             prompt_pattern=_prompt_pattern,
