@@ -12,6 +12,7 @@ from ctypes import (
 from _ctypes import POINTER
 
 from scrapli.ffi_types import (
+    CANCEL,
     CancelPointer,
     DriverPointer,
     IntPointer,
@@ -171,7 +172,13 @@ class LibScrapliCliMapping:
         lib.ls_cli_fetch_operation.restype = c_uint8
 
         self._enter_mode: Callable[
-            [DriverPointer, OperationIdPointer, CancelPointer, c_char_p], int
+            [
+                DriverPointer,
+                OperationIdPointer,
+                CancelPointer,
+                c_char_p,
+            ],
+            int,
         ] = lib.ls_cli_enter_mode
         lib.ls_cli_enter_mode.argtypes = [
             DriverPointer,
@@ -181,9 +188,14 @@ class LibScrapliCliMapping:
         ]
         lib.ls_cli_enter_mode.restype = c_uint8
 
-        self._get_prompt: Callable[[DriverPointer, OperationIdPointer, CancelPointer], int] = (
-            lib.ls_cli_get_prompt
-        )
+        self._get_prompt: Callable[
+            [
+                DriverPointer,
+                OperationIdPointer,
+                CancelPointer,
+            ],
+            int,
+        ] = lib.ls_cli_get_prompt
         lib.ls_cli_get_prompt.argtypes = [
             DriverPointer,
             OperationIdPointer,
@@ -337,7 +349,9 @@ class LibScrapliCliMapping:
         )
 
     def open(
-        self, ptr: DriverPointer, operation_id: OperationIdPointer, cancel: CancelPointer
+        self,
+        ptr: DriverPointer,
+        operation_id: OperationIdPointer,
     ) -> int:
         """
         Open the driver at ptr.
@@ -347,7 +361,6 @@ class LibScrapliCliMapping:
         Args:
             ptr: the ptr to the libscrapli cli object.
             operation_id: c_int pointer that is filled with the operation id to poll for completion.
-            cancel: bool pointer that can be set to true to cancel the operation.
 
         Returns:
             int: return code, non-zero value indicates an error. technically a c_uint8 converted by
@@ -357,13 +370,16 @@ class LibScrapliCliMapping:
             N/A
 
         """
-        return self._open(ptr, operation_id, cancel)
+        return self._open(
+            ptr,
+            operation_id,
+            CANCEL,
+        )
 
     def close(
         self,
         ptr: DriverPointer,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
     ) -> int:
         """
         Close the driver at ptr.
@@ -373,7 +389,6 @@ class LibScrapliCliMapping:
         Args:
             ptr: the ptr to the libscrapli cli object.
             operation_id: c_int pointer that is filled with the operation id to poll for completion.
-            cancel: bool pointer that can be set to true to cancel the operation.
 
         Returns:
             int: return code, non-zero value indicates an error. technically a c_uint8 converted by
@@ -386,7 +401,7 @@ class LibScrapliCliMapping:
         return self._close(
             ptr,
             operation_id,
-            cancel,
+            CANCEL,
         )
 
     def fetch_sizes(
@@ -491,7 +506,6 @@ class LibScrapliCliMapping:
         *,
         ptr: DriverPointer,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         requested_mode: c_char_p,
     ) -> int:
         """
@@ -502,7 +516,6 @@ class LibScrapliCliMapping:
         Args:
             ptr: ptr to the cli object
             operation_id: int pointer to fill with the id of the submitted operation
-            cancel: bool pointer that can be set to true to cancel the operation
             requested_mode: string name of the mode to enter
 
         Returns:
@@ -513,10 +526,18 @@ class LibScrapliCliMapping:
             N/A
 
         """
-        return self._enter_mode(ptr, operation_id, cancel, requested_mode)
+        return self._enter_mode(
+            ptr,
+            operation_id,
+            CANCEL,
+            requested_mode,
+        )
 
     def get_prompt(
-        self, *, ptr: DriverPointer, operation_id: OperationIdPointer, cancel: CancelPointer
+        self,
+        *,
+        ptr: DriverPointer,
+        operation_id: OperationIdPointer,
     ) -> int:
         """
         Get the current prompt for the cli object.
@@ -526,7 +547,6 @@ class LibScrapliCliMapping:
         Args:
             ptr: ptr to the cli object
             operation_id: int pointer to fill with the id of the submitted operation
-            cancel: bool pointer that can be set to true to cancel the operation
 
         Returns:
             int: return code, non-zero value indicates an error. technically a c_uint8 converted by
@@ -536,14 +556,17 @@ class LibScrapliCliMapping:
             N/A
 
         """
-        return self._get_prompt(ptr, operation_id, cancel)
+        return self._get_prompt(
+            ptr,
+            operation_id,
+            CANCEL,
+        )
 
     def send_input(
         self,
         *,
         ptr: DriverPointer,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         input_: c_char_p,
         requested_mode: c_char_p,
         input_handling: c_char_p,
@@ -558,7 +581,6 @@ class LibScrapliCliMapping:
         Args:
             ptr: ptr to the cli object
             operation_id: int pointer to fill with the id of the submitted operation
-            cancel: bool pointer that can be set to true to cancel the operation
             input_: the input to send
             requested_mode: string name of the mode to send the input in
             input_handling: string mapping to input handling enum that governs how the input is
@@ -577,7 +599,7 @@ class LibScrapliCliMapping:
         return self._send_input(
             ptr,
             operation_id,
-            cancel,
+            CANCEL,
             input_,
             requested_mode,
             input_handling,
@@ -590,7 +612,6 @@ class LibScrapliCliMapping:
         *,
         ptr: DriverPointer,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         input_: c_char_p,
         prompt: c_char_p,
         prompt_pattern: c_char_p,
@@ -609,7 +630,6 @@ class LibScrapliCliMapping:
         Args:
             ptr: ptr to the cli object
             operation_id: int pointer to fill with the id of the submitted operation
-            cancel: bool pointer that can be set to true to cancel the operation
             input_: the input to send
             prompt: the prompt to expect
             prompt_pattern: the prompt pattern to expect
@@ -633,7 +653,7 @@ class LibScrapliCliMapping:
         return self._send_prompted_input(
             ptr,
             operation_id,
-            cancel,
+            CANCEL,
             input_,
             prompt,
             prompt_pattern,

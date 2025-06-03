@@ -13,6 +13,7 @@ from ctypes import (
 from _ctypes import POINTER
 
 from scrapli.ffi_types import (
+    CANCEL,
     CancelPointer,
     DriverPointer,
     IntPointer,
@@ -606,7 +607,9 @@ class LibScrapliNetconfMapping:
         return self._alloc(logger_callback, host, port, transport_kind)
 
     def open(
-        self, ptr: DriverPointer, operation_id: OperationIdPointer, cancel: CancelPointer
+        self,
+        ptr: DriverPointer,
+        operation_id: OperationIdPointer,
     ) -> int:
         """
         Open the driver at ptr.
@@ -616,7 +619,6 @@ class LibScrapliNetconfMapping:
         Args:
             ptr: the ptr to the libscrapli netconf object.
             operation_id: c_int pointer that is filled with the operation id to poll for completion.
-            cancel: bool pointer that can be set to true to cancel the operation.
 
         Returns:
             int: return code, non-zero value indicates an error. technically a c_uint8 converted by
@@ -626,13 +628,16 @@ class LibScrapliNetconfMapping:
             N/A
 
         """
-        return self._open(ptr, operation_id, cancel)
+        return self._open(
+            ptr,
+            operation_id,
+            CANCEL,
+        )
 
     def close(
         self,
         ptr: DriverPointer,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         force: c_bool,
     ) -> int:
         """
@@ -643,7 +648,6 @@ class LibScrapliNetconfMapping:
         Args:
             ptr: the ptr to the libscrapli netconf object.
             operation_id: c_int pointer that is filled with the operation id to poll for completion.
-            cancel: bool pointer that can be set to true to cancel the operation.
             force: bool indicating if the connection should skip sending close-session rpc or not
 
         Returns:
@@ -657,7 +661,7 @@ class LibScrapliNetconfMapping:
         return self._close(
             ptr,
             operation_id,
-            cancel,
+            CANCEL,
             force,
         )
 
@@ -938,7 +942,6 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         payload: c_char_p,
         base_namespace_prefix: c_char_p,
         extra_namespaces: c_char_p,
@@ -951,7 +954,6 @@ class LibScrapliNetconfMapping:
         Args:
             ptr: ptr to the netconf object
             operation_id: int pointer to fill with the id of the submitted operation
-            cancel: bool pointer that can be set to true to cancel the operation
             payload: the payload to write into the outer rpc element
             base_namespace_prefix: prefix to use for hte base/default netconf base namespace
             extra_namespaces: extra namespace::prefix pairs (using "::" as split there), and
@@ -970,7 +972,7 @@ class LibScrapliNetconfMapping:
         return self._raw_rpc(
             ptr,
             operation_id,
-            cancel,
+            CANCEL,
             payload,
             base_namespace_prefix,
             extra_namespaces,
@@ -981,7 +983,6 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         source: c_char_p,
         filter_: c_char_p,
         filter_type: c_char_p,
@@ -997,7 +998,6 @@ class LibScrapliNetconfMapping:
         Args:
             ptr: ptr to the netconf object
             operation_id: int pointer to fill with the id of the submitted operation
-            cancel: bool pointer that can be set to true to cancel the operation
             source: source data store to get config from
             filter_: filter to apply
             filter_type: filter type (subtree|xpath)
@@ -1016,7 +1016,7 @@ class LibScrapliNetconfMapping:
         return self._get_config(
             ptr,
             operation_id,
-            cancel,
+            CANCEL,
             source,
             filter_,
             filter_type,
@@ -1030,7 +1030,6 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         config: c_char_p,
         target: c_char_p,
     ) -> int:
@@ -1042,7 +1041,6 @@ class LibScrapliNetconfMapping:
         Args:
             ptr: ptr to the netconf object
             operation_id: int pointer to fill with the id of the submitted operation
-            cancel: bool pointer that can be set to true to cancel the operation
             config: the config to send
             target: the target datastore
 
@@ -1057,7 +1055,7 @@ class LibScrapliNetconfMapping:
         return self._edit_config(
             ptr,
             operation_id,
-            cancel,
+            CANCEL,
             config,
             target,
         )
@@ -1067,7 +1065,6 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         target: c_char_p,
         source: c_char_p,
     ) -> int:
@@ -1079,7 +1076,6 @@ class LibScrapliNetconfMapping:
         Args:
             ptr: ptr to the netconf object
             operation_id: int pointer to fill with the id of the submitted operation
-            cancel: bool pointer that can be set to true to cancel the operation
             target: the target/destination datastore to copy to
             source: the source datastore to copy from
 
@@ -1094,7 +1090,7 @@ class LibScrapliNetconfMapping:
         return self._copy_config(
             ptr,
             operation_id,
-            cancel,
+            CANCEL,
             target,
             source,
         )
@@ -1104,7 +1100,6 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         target: c_char_p,
     ) -> int:
         """
@@ -1115,7 +1110,6 @@ class LibScrapliNetconfMapping:
         Args:
             ptr: ptr to the netconf object
             operation_id: int pointer to fill with the id of the submitted operation
-            cancel: bool pointer that can be set to true to cancel the operation
             target: the target/destination datastore to delete
 
         Returns:
@@ -1129,7 +1123,7 @@ class LibScrapliNetconfMapping:
         return self._delete_config(
             ptr,
             operation_id,
-            cancel,
+            CANCEL,
             target,
         )
 
@@ -1138,7 +1132,6 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         target: c_char_p,
     ) -> int:
         """
@@ -1149,7 +1142,6 @@ class LibScrapliNetconfMapping:
         Args:
             ptr: ptr to the netconf object
             operation_id: int pointer to fill with the id of the submitted operation
-            cancel: bool pointer that can be set to true to cancel the operation
             target: the target/destination datastore to lock
 
         Returns:
@@ -1163,7 +1155,7 @@ class LibScrapliNetconfMapping:
         return self._lock(
             ptr,
             operation_id,
-            cancel,
+            CANCEL,
             target,
         )
 
@@ -1172,7 +1164,6 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         target: c_char_p,
     ) -> int:
         """
@@ -1183,7 +1174,6 @@ class LibScrapliNetconfMapping:
         Args:
             ptr: ptr to the netconf object
             operation_id: int pointer to fill with the id of the submitted operation
-            cancel: bool pointer that can be set to true to cancel the operation
             target: the target/destination datastore to lock
 
         Returns:
@@ -1197,7 +1187,7 @@ class LibScrapliNetconfMapping:
         return self._unlock(
             ptr,
             operation_id,
-            cancel,
+            CANCEL,
             target,
         )
 
@@ -1206,7 +1196,6 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         filter_: c_char_p,
         filter_type: c_char_p,
         filter_namespace_prefix: c_char_p,
@@ -1221,7 +1210,6 @@ class LibScrapliNetconfMapping:
         Args:
             ptr: ptr to the netconf object
             operation_id: int pointer to fill with the id of the submitted operation
-            cancel: bool pointer that can be set to true to cancel the operation
             filter_: filter to apply
             filter_type: filter type (subtree|xpath)
             filter_namespace_prefix: optional prefix for filter namespace
@@ -1239,7 +1227,7 @@ class LibScrapliNetconfMapping:
         return self._get(
             ptr,
             operation_id,
-            cancel,
+            CANCEL,
             filter_,
             filter_type,
             filter_namespace_prefix,
@@ -1252,7 +1240,6 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
     ) -> int:
         """
         Execute a close-config rpc operation.
@@ -1262,7 +1249,6 @@ class LibScrapliNetconfMapping:
         Args:
             ptr: ptr to the netconf object
             operation_id: int pointer to fill with the id of the submitted operation
-            cancel: bool pointer that can be set to true to cancel the operation
 
         Returns:
             int: return code, non-zero value indicates an error. technically a c_uint8 converted by
@@ -1275,7 +1261,7 @@ class LibScrapliNetconfMapping:
         return self._close_session(
             ptr,
             operation_id,
-            cancel,
+            CANCEL,
         )
 
     def kill_session(
@@ -1283,7 +1269,6 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         session_id: c_int,
     ) -> int:
         """
@@ -1294,7 +1279,6 @@ class LibScrapliNetconfMapping:
         Args:
             ptr: ptr to the netconf object
             operation_id: int pointer to fill with the id of the submitted operation
-            cancel: bool pointer that can be set to true to cancel the operation
             session_id: the session id to kill
 
         Returns:
@@ -1308,7 +1292,7 @@ class LibScrapliNetconfMapping:
         return self._kill_session(
             ptr,
             operation_id,
-            cancel,
+            CANCEL,
             session_id,
         )
 
@@ -1317,7 +1301,6 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
     ) -> int:
         """
         Execute a commit rpc operation.
@@ -1327,7 +1310,6 @@ class LibScrapliNetconfMapping:
         Args:
             ptr: ptr to the netconf object
             operation_id: int pointer to fill with the id of the submitted operation
-            cancel: bool pointer that can be set to true to cancel the operation
 
         Returns:
             int: return code, non-zero value indicates an error. technically a c_uint8 converted by
@@ -1340,7 +1322,7 @@ class LibScrapliNetconfMapping:
         return self._commit(
             ptr,
             operation_id,
-            cancel,
+            CANCEL,
         )
 
     def discard(
@@ -1348,7 +1330,6 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
     ) -> int:
         """
         Execute a discard rpc operation.
@@ -1358,7 +1339,6 @@ class LibScrapliNetconfMapping:
         Args:
             ptr: ptr to the netconf object
             operation_id: int pointer to fill with the id of the submitted operation
-            cancel: bool pointer that can be set to true to cancel the operation
 
         Returns:
             int: return code, non-zero value indicates an error. technically a c_uint8 converted by
@@ -1371,7 +1351,7 @@ class LibScrapliNetconfMapping:
         return self._discard(
             ptr,
             operation_id,
-            cancel,
+            CANCEL,
         )
 
     def cancel_commit(
@@ -1379,7 +1359,6 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
     ) -> int:
         """
         Execute a cancel-commit rpc operation.
@@ -1389,7 +1368,6 @@ class LibScrapliNetconfMapping:
         Args:
             ptr: ptr to the netconf object
             operation_id: int pointer to fill with the id of the submitted operation
-            cancel: bool pointer that can be set to true to cancel the operation
 
         Returns:
             int: return code, non-zero value indicates an error. technically a c_uint8 converted by
@@ -1402,7 +1380,7 @@ class LibScrapliNetconfMapping:
         return self._cancel_commit(
             ptr,
             operation_id,
-            cancel,
+            CANCEL,
         )
 
     def validate(
@@ -1410,7 +1388,6 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         source: c_char_p,
     ) -> int:
         """
@@ -1421,7 +1398,6 @@ class LibScrapliNetconfMapping:
         Args:
             ptr: ptr to the netconf object
             operation_id: int pointer to fill with the id of the submitted operation
-            cancel: bool pointer that can be set to true to cancel the operation
             source: datastore to validate
 
         Returns:
@@ -1435,7 +1411,7 @@ class LibScrapliNetconfMapping:
         return self._validate(
             ptr,
             operation_id,
-            cancel,
+            CANCEL,
             source,
         )
 
@@ -1444,7 +1420,6 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         identifier: c_char_p,
         version: c_char_p,
         format_: c_char_p,
@@ -1457,7 +1432,6 @@ class LibScrapliNetconfMapping:
         Args:
             ptr: ptr to the netconf object
             operation_id: int pointer to fill with the id of the submitted operation
-            cancel: bool pointer that can be set to true to cancel the operation
             identifier: schema identifier to get
             version: optional schema version to request
             format_: schema format to apply
@@ -1473,7 +1447,7 @@ class LibScrapliNetconfMapping:
         return self._get_schema(
             ptr,
             operation_id,
-            cancel,
+            CANCEL,
             identifier,
             version,
             format_,
@@ -1484,7 +1458,6 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         source: c_char_p,
         filter_: c_char_p,
         filter_type: c_char_p,
@@ -1504,7 +1477,6 @@ class LibScrapliNetconfMapping:
         Args:
             ptr: ptr to the netconf object
             operation_id: int pointer to fill with the id of the submitted operation
-            cancel: bool pointer that can be set to true to cancel the operation
             source: source datastore to get data from
             filter_: filter to apply to the get-config (or not if empty string)
             filter_type: type of filter to apply, subtree|xpath
@@ -1527,7 +1499,7 @@ class LibScrapliNetconfMapping:
         return self._get_data(
             ptr,
             operation_id,
-            cancel,
+            CANCEL,
             source,
             filter_,
             filter_type,
@@ -1545,7 +1517,6 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         target: c_char_p,
         content: c_char_p,
     ) -> int:
@@ -1557,7 +1528,6 @@ class LibScrapliNetconfMapping:
         Args:
             ptr: ptr to the netconf object
             operation_id: int pointer to fill with the id of the submitted operation
-            cancel: bool pointer that can be set to true to cancel the operation
             target: datastore to target
             content: full payload content to send
 
@@ -1572,7 +1542,7 @@ class LibScrapliNetconfMapping:
         return self._edit_data(
             ptr,
             operation_id,
-            cancel,
+            CANCEL,
             target,
             content,
         )
@@ -1582,7 +1552,6 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id: OperationIdPointer,
-        cancel: CancelPointer,
         action: c_char_p,
     ) -> int:
         """
@@ -1593,7 +1562,6 @@ class LibScrapliNetconfMapping:
         Args:
             ptr: ptr to the netconf object
             operation_id: int pointer to fill with the id of the submitted operation
-            cancel: bool pointer that can be set to true to cancel the operation
             action: the action to send
 
         Returns:
@@ -1607,6 +1575,6 @@ class LibScrapliNetconfMapping:
         return self._action(
             ptr,
             operation_id,
-            cancel,
+            CANCEL,
             action,
         )
