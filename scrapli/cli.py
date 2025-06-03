@@ -45,6 +45,7 @@ from scrapli.helper import (
     wait_for_available_operation_result_async,
 )
 from scrapli.session import Options as SessionOptions
+from scrapli.transport import BinOptions as TransportBinOptions
 from scrapli.transport import Options as TransportOptions
 
 CLI_DEFINITIONS_PATH_OVERRIDE_ENV = "SCRAPLI_DEFINITIONS_PATH"
@@ -121,7 +122,7 @@ class Cli:
 
         self.auth_options = auth_options or AuthOptions()
         self.session_options = session_options or SessionOptions()
-        self.transport_options = transport_options or TransportOptions()
+        self.transport_options = transport_options or TransportBinOptions()
 
         self.ptr: DriverPointer | None = None
         self.poll_fd: int = 0
@@ -299,7 +300,7 @@ class Cli:
             logger_callback=self.logger_callback,
             host=self._host,
             port=c_int(self.port),
-            transport_kind=c_char_p(self.transport_options.get_transport_kind()),
+            transport_kind=c_char_p(self.transport_options.transport_kind.encode(encoding="utf-8")),
         )
         if ptr == 0:  # type: ignore[comparison-overlap]
             raise AllocationException("failed to allocate cli")
@@ -311,7 +312,7 @@ class Cli:
                 ptr=self._ptr_or_exception(),
             )
         )
-        if poll_fd == 0:
+        if poll_fd <= 0:
             raise AllocationException("failed to allocate cli")
 
         self.poll_fd = poll_fd

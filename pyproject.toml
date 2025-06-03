@@ -110,3 +110,6 @@ convention = "google"
 
 [tool.pytest.ini_options]
 asyncio_default_fixture_loop_scope = "function"
+log_cli = true
+log_cli_level = "CRITICAL"
+log_cli_format = "%(asctime)s [%(levelname)s] %(message)s"
