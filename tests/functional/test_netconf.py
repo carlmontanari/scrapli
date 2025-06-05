@@ -661,10 +661,15 @@ def test_kill_session(netconf, netconf_assert_result):
     # connections at the same time and i never looked closer... so this is just tested with srl
     netconf_2 = copy(netconf)
 
-    netconf.open()
-    netconf_2.open()
-
-    netconf_assert_result(actual=netconf.kill_session(session_id=netconf_2.session_id))
+    with netconf as n:
+        # do not forget to free the killed coonnection otherwise we would end up SEGFAULT'ing when
+        # the ffi driver tries to call logger functions and the logger will have already been gc'd
+        # in python side (the n2 connection will eventually timeout and that will have happened
+        # outside scope of this func so python will have gc'd, so when it tries to log the
+        # warn/crit about going down thats where we would segfault)
+        netconf_2.open()
+        netconf_assert_result(actual=n.kill_session(session_id=netconf_2.session_id))
+        netconf_2._free()
 
 
 @pytest.mark.asyncio
@@ -676,10 +681,10 @@ def test_kill_session(netconf, netconf_assert_result):
 async def test_kill_session_async(netconf, netconf_assert_result):
     netconf_2 = copy(netconf)
 
-    await netconf.open_async()
-    await netconf_2.open_async()
-
-    actual = await netconf.kill_session_async(session_id=netconf_2.session_id)
+    async with netconf as n:
+        await netconf_2.open_async()
+        actual = await n.kill_session_async(session_id=netconf_2.session_id)
+        netconf_2._free()
 
     netconf_assert_result(actual=actual)
 
