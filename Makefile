@@ -39,7 +39,7 @@ run-clab: ## Runs the clab functional testing topo; uses the clab launcher to ru
 		--ipv6 \
 		--subnet=2001:172:20:20::/64 \
 		--gateway=2001:172:20:20::1 \
-		--opt com.docker.network.driver.mtu=65535
+		--opt com.docker.network.driver.mtu=65535 \
 		--label containerlab \
 		clab
 	docker run \
