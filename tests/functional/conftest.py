@@ -143,7 +143,7 @@ def netconf(platform, transport) -> Netconf:
             password="admin",
         )
     elif platform == "nokia_srl":
-        host = "localhost" if sys.platform == "darwin" else "172.20.20.16"
+        host = "localhost" if IS_DARWIN else "172.20.20.16"
         port = 21830 if IS_DARWIN else NETCONF_PORT
         auth_options = AuthOptions(
             username="admin",
@@ -151,7 +151,7 @@ def netconf(platform, transport) -> Netconf:
         )
     else:
         # netopeer server
-        host = "localhost" if sys.platform == "darwin" else "172.20.20.18"
+        host = "localhost" if IS_DARWIN else "172.20.20.18"
         port = 23830 if IS_DARWIN else NETCONF_PORT
         auth_options = AuthOptions(
             username="root",
@@ -167,6 +167,28 @@ def netconf(platform, transport) -> Netconf:
         host=host,
         port=port,
         auth_options=auth_options,
+        transport_options=transport_options,
+    )
+
+
+@pytest.fixture(scope="function")
+def netconf_srl(transport) -> Netconf:
+    """Fixture to provide a Netconf instance (srl not netopeer) for functional testing"""
+    host = "localhost" if IS_DARWIN else "172.20.20.16"
+    port = 21830 if IS_DARWIN else NETCONF_PORT
+
+    if transport == "bin":
+        transport_options = TransportBinOptions()
+    else:
+        transport_options = TransportSsh2Options()
+
+    return Netconf(
+        host=host,
+        port=port,
+        auth_options=AuthOptions(
+            username="admin",
+            password="NokiaSrl1!",
+        ),
         transport_options=transport_options,
     )
 
