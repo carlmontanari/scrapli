@@ -172,28 +172,6 @@ def netconf(platform, transport) -> Netconf:
 
 
 @pytest.fixture(scope="function")
-def netconf_srl(transport) -> Netconf:
-    """Fixture to provide a Netconf instance (srl not netopeer) for functional testing"""
-    host = "localhost" if IS_DARWIN else "172.20.20.16"
-    port = 21830 if IS_DARWIN else NETCONF_PORT
-
-    if transport == "bin":
-        transport_options = TransportBinOptions()
-    else:
-        transport_options = TransportSsh2Options()
-
-    return Netconf(
-        host=host,
-        port=port,
-        auth_options=AuthOptions(
-            username="admin",
-            password="NokiaSrl1!",
-        ),
-        transport_options=transport_options,
-    )
-
-
-@pytest.fixture(scope="function")
 def netconf_assert_result(
     request: pytest.FixtureRequest, clean_netconf_output: Callable[[str], str]
 ) -> Callable[[Result], None]:
