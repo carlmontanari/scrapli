@@ -633,10 +633,19 @@ async def test_get_async(filter_, netconf, netconf_assert_result):
         netconf_assert_result(actual=actual)
 
 
-KILL_SESSION_ARGNAMES = ("transport",)
+KILL_SESSION_ARGNAMES = (
+    "platform",
+    "transport",
+)
 KILL_SESSION_ARGVALUES = (
-    ("bin",),
-    ("ssh2",),
+    (
+        "nokia_srl",
+        "bin",
+    ),
+    (
+        "nokia_srl",
+        "ssh2",
+    ),
 )
 KILL_SESSION_IDS = (
     "nokia-srl-bin-simple",
@@ -649,12 +658,12 @@ KILL_SESSION_IDS = (
     argvalues=KILL_SESSION_ARGVALUES,
     ids=KILL_SESSION_IDS,
 )
-def test_kill_session(netconf_srl, netconf_assert_result):
+def test_kill_session(netconf, netconf_assert_result):
     # had some issues with (maybe my jank patch) netopeer -- it didnt wanna let me open two
     # connections at the same time and i never looked closer... so this is just tested with srl
-    netconf_2 = copy(netconf_srl)
+    netconf_2 = copy(netconf)
 
-    with netconf_srl as n:
+    with netconf as n:
         # do not forget to free the killed coonnection otherwise we would end up SEGFAULT'ing when
         # the ffi driver tries to call logger functions and the logger will have already been gc'd
         # in python side (the n2 connection will eventually timeout and that will have happened
@@ -671,10 +680,10 @@ def test_kill_session(netconf_srl, netconf_assert_result):
     argvalues=KILL_SESSION_ARGVALUES,
     ids=KILL_SESSION_IDS,
 )
-async def test_kill_session_async(netconf_srl, netconf_assert_result):
-    netconf_2 = copy(netconf_srl)
+async def test_kill_session_async(netconf, netconf_assert_result):
+    netconf_2 = copy(netconf)
 
-    async with netconf_srl as n:
+    async with netconf as n:
         await netconf_2.open_async()
         actual = await n.kill_session_async(session_id=netconf_2.session_id)
         netconf_2._free()
