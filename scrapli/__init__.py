@@ -13,6 +13,7 @@ from scrapli.transport import TelnetOptions as TransportTelnetOptions
 from scrapli.transport import TestOptions as TransportTestOptions
 
 __version__ = "2.0.0-alpha.5"
+__calendar_version__ = "2025.6.6"
 __definitions_version__ = "471f12e"
 
 __all__ = (
