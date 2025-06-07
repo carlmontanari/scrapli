@@ -345,6 +345,8 @@ def test_kill_session(netconf_srl, netconf_assert_result):
 
     netconf_assert_result(actual=actual)
 
+    n2._free()
+
 
 @pytest.mark.asyncio
 async def test_kill_session_async(netconf_srl, netconf_assert_result):
@@ -359,6 +361,8 @@ async def test_kill_session_async(netconf_srl, netconf_assert_result):
     await n1.close_async()
 
     netconf_assert_result(actual=actual)
+
+    n2._free()
 
 
 def test_lock(netconf, netconf_assert_result):
