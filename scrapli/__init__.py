@@ -12,7 +12,7 @@ from scrapli.transport import Ssh2Options as TransportSsh2Options
 from scrapli.transport import TelnetOptions as TransportTelnetOptions
 from scrapli.transport import TestOptions as TransportTestOptions
 
-__version__ = "2.0.0-alpha.6"
+__version__ = "2.0.0-alpha.4"
 __calendar_version__ = "2025.6.7"
 __definitions_version__ = "471f12e"
 
