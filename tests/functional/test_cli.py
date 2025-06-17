@@ -1,5 +1,7 @@
 import pytest
 
+from scrapli import Cli, ReadCallback
+
 GET_PROMPT_ARGNAMES = (
     "platform",
     "transport",
@@ -691,6 +693,145 @@ async def test_send_prompted_input_async(
             prompt_pattern="",
             requested_mode=requested_mode,
             response=response,
+        )
+
+        cli_assert_result(actual=actual)
+
+
+def eos_cb1(c: Cli) -> None:
+    c.write_and_return("show version | i Kernel")
+
+
+def eos_cb2(c: Cli) -> None:
+    return
+
+
+def srl_cb1(c: Cli) -> None:
+    c.write_and_return("show version | grep Arch")
+
+
+def srl_cb2(c: Cli) -> None:
+    return
+
+
+READ_WITH_CALLBACKS_ARGNAMES = (
+    "initial_input",
+    "callbacks",
+    "platform",
+    "transport",
+)
+READ_WITH_CALLBACKS_ARGVALUES = (
+    (
+        "show version | i Kernel",
+        [
+            ReadCallback(
+                name="cb1",
+                contains="eos1#",
+                callback=eos_cb1,
+                once=True,
+            ),
+            ReadCallback(
+                name="cb2",
+                contains="eos1#",
+                callback=eos_cb2,
+                completes=True,
+            ),
+        ],
+        "arista_eos",
+        "bin",
+    ),
+    (
+        "show version | i Kernel",
+        [
+            ReadCallback(
+                name="cb1",
+                contains="eos1#",
+                callback=eos_cb1,
+                once=True,
+            ),
+            ReadCallback(
+                name="cb2",
+                contains="eos1#",
+                callback=eos_cb2,
+                completes=True,
+            ),
+        ],
+        "arista_eos",
+        "ssh2",
+    ),
+    (
+        "show version | grep Arch",
+        [
+            ReadCallback(
+                name="cb1",
+                contains="A:srl#",
+                callback=srl_cb1,
+                once=True,
+            ),
+            ReadCallback(
+                name="cb2",
+                contains="A:srl#",
+                callback=srl_cb2,
+                completes=True,
+            ),
+        ],
+        "nokia_srl",
+        "bin",
+    ),
+    (
+        "show version | grep Arch",
+        [
+            ReadCallback(
+                name="cb1",
+                contains="A:srl#",
+                callback=srl_cb1,
+                once=True,
+            ),
+            ReadCallback(
+                name="cb2",
+                contains="A:srl#",
+                callback=srl_cb2,
+                completes=True,
+            ),
+        ],
+        "nokia_srl",
+        "ssh2",
+    ),
+)
+READ_WITH_CALLBACKS_IDS = (
+    "arista-eos-bin",
+    "arista-eos-ssh2",
+    "nokia-srl-bin",
+    "nokia-srl-ssh2",
+)
+
+
+@pytest.mark.parametrize(
+    argnames=READ_WITH_CALLBACKS_ARGNAMES,
+    argvalues=READ_WITH_CALLBACKS_ARGVALUES,
+    ids=READ_WITH_CALLBACKS_IDS,
+)
+def test_read_with_callbacks(initial_input, callbacks, cli, cli_assert_result):
+    with cli as c:
+        cli_assert_result(
+            actual=c.read_with_callbacks(
+                initial_input=initial_input,
+                callbacks=callbacks,
+            )
+        )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    argnames=READ_WITH_CALLBACKS_ARGNAMES,
+    argvalues=READ_WITH_CALLBACKS_ARGVALUES,
+    ids=READ_WITH_CALLBACKS_IDS,
+)
+async def test_read_with_callbacks_async(initial_input, callbacks, cli, cli_assert_result):
+    async with cli as c:
+        actual = await c.read_with_callbacks_async(
+            initial_input=initial_input,
+            callbacks=callbacks,
         )
 
         cli_assert_result(actual=actual)

@@ -24,11 +24,11 @@ OperationId = c_uint
 # so... we'll just tell mypy to chill out on these
 OperationIdPointer: TypeAlias = POINTER(OperationId)  # type: ignore[valid-type]
 CancelPointer: TypeAlias = POINTER(c_bool)  # type: ignore[valid-type]
+BoolPointer: TypeAlias = POINTER(c_bool)  # type: ignore[valid-type]
 ZigSlicePointer: TypeAlias = POINTER("ZigSlice")  # type: ignore[valid-type, call-overload]
 StringPointer: TypeAlias = POINTER(c_char_p)  # type: ignore[valid-type]
 IntPointer: TypeAlias = POINTER(c_int)  # type: ignore[valid-type]
 U64Pointer: TypeAlias = POINTER(c_uint64)  # type: ignore[valid-type]
-BoolPointer: TypeAlias = POINTER(c_bool)  # type: ignore[valid-type]
 
 # cancellation is handled via timeout in python (vs context cancellation in go), so just have
 # an always false cancellation pointer
