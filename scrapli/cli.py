@@ -1,17 +1,21 @@
 """scrapli.cli"""
 
 import importlib.resources
+from collections.abc import Awaitable, Callable
 from ctypes import (
     c_bool,
     c_char_p,
     c_int,
     c_uint,
     c_uint64,
+    pointer,
 )
+from dataclasses import dataclass
 from enum import Enum
 from logging import getLogger
 from os import environ
 from pathlib import Path
+from time import time_ns
 from types import TracebackType
 from typing import Any
 
@@ -70,6 +74,50 @@ class InputHandling(str, Enum):
     EXACT = "exact"
     FUZZY = "fuzzy"
     IGNORE = "ignore"
+
+
+@dataclass
+class ReadCallback:
+    """
+    ReadCallback represents a callback and how it should be executed in a read_with_callbacks op.
+
+    Args:
+        name: friendly name for the callback
+        contains: string that when contained in the buf being processed indicates this callback
+            should be executed
+        contains_pattern: string representing a pcre2 pattern that, if found in the buf being
+            processed indicates this callback should be executed -- note: ignored if contains is set
+        not_contains: a string that if found in the buf being processed nullifies the containment
+            check
+        once: bool indicating if this is an "only once" callback or if it can be executed multiple
+            times
+        completes: bool indicated if, after execution, this callback should "complete" (end) the
+            read_with_callbacks operation
+        callback: the callback func to execute
+
+    Returns:
+        None
+
+    Raises:
+        N/A
+
+    """
+
+    name: str
+    contains: str = ""
+    contains_pattern: str = ""
+    not_contains: str = ""
+    once: bool = False
+    completes: bool = False
+    callback: Callable[["Cli"], None] | None = None
+    callback_async: Callable[["Cli"], Awaitable[None]] | None = None
+
+    def __post_init__(self) -> None:
+        if not self.contains and not self.contains_pattern:
+            raise OperationException("one of 'contains' or 'contains_pattern' must be set")
+
+        if self.callback is None and self.callback_async is None:
+            raise OperationException("one of 'callback' or 'callback_async' must be set")
 
 
 class Cli:
@@ -511,6 +559,60 @@ class Cli:
         self._free()
 
         return result
+
+    def write(self, input_: str) -> None:
+        """
+        Write the given input.
+
+        Args:
+            input_: the input to write
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        _input = to_c_string(s=input_)
+
+        status = self.ffi_mapping.session_mapping.write(
+            ptr=self._ptr_or_exception(),
+            input_=_input,
+            redacted=c_bool(False),
+        )
+        if status != 0:
+            raise SubmitOperationException("executing write and return operation failed")
+
+        _ = _input
+
+    def write_and_return(self, input_: str) -> None:
+        """
+        Write the given input then send a return character.
+
+        Args:
+            input_: the input to write
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        _input = to_c_string(s=input_)
+
+        status = self.ffi_mapping.session_mapping.write_and_return(
+            ptr=self._ptr_or_exception(),
+            input_=_input,
+            redacted=c_bool(False),
+        )
+        if status != 0:
+            raise SubmitOperationException("executing write and return operation failed")
+
+        _ = _input
 
     def _get_result(
         self,
@@ -1314,6 +1416,202 @@ class Cli:
         )
 
         return await self._get_result_async(operation_id=operation_id)
+
+    @handle_operation_timeout
+    def read_with_callbacks(
+        self,
+        callbacks: list[ReadCallback],
+        *,
+        initial_input: str = "",
+        operation_timeout_ns: int | None = None,
+    ) -> Result:
+        """
+        Read from the device and react to the output with some callback.
+
+        Args:
+            callbacks: a list of callbacks to process when reading from the session
+            initial_input: an initial input to send
+            operation_timeout_ns: operation timeout in ns for this operation
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+        start_time = time_ns()
+
+        if initial_input:
+            self.write_and_return(input_=initial_input)
+
+        pos = 0
+
+        result = ""
+        result_raw = b""
+
+        executed_callbacks = set()
+
+        while True:
+            operation_id = OperationIdPointer(c_uint(0))
+
+            status = self.ffi_mapping.cli_mapping.read_any(
+                ptr=self._ptr_or_exception(),
+                operation_id=operation_id,
+            )
+            if status != 0:
+                raise SubmitOperationException("submitting read any operation failed")
+
+            intermediate_result = self._get_result(operation_id=operation_id.contents.value)
+
+            result += intermediate_result.result
+            result_raw += intermediate_result.result_raw
+
+            for callback in callbacks:
+                if callback.name in executed_callbacks and callback.once:
+                    continue
+
+                execute = pointer(c_bool(False))
+
+                status = self.ffi_mapping.cli_mapping.read_callback_should_execute(
+                    buf=to_c_string(result[pos:]),
+                    name=to_c_string(callback.name),
+                    contains=to_c_string(callback.contains),
+                    contains_pattern=to_c_string(callback.contains_pattern),
+                    not_contains=to_c_string(callback.not_contains),
+                    execute=execute,
+                )
+                if status != 0:
+                    raise OperationException("failed checking if callback should execute")
+
+                if execute.contents.value is False:
+                    continue
+
+                executed_callbacks.add(callback.name)
+
+                pos = len(result)
+
+                if callback.callback is None:
+                    raise OperationException("callback is None, cannot proceed")
+                else:
+                    callback.callback(self)
+
+                if callback.completes is True:
+                    return Result(
+                        inputs=initial_input,
+                        host=self.host,
+                        port=self.port,
+                        start_time=start_time,
+                        splits=[time_ns()],
+                        results_raw=result_raw,
+                        results=result,
+                        results_failed_indicator="",
+                        textfsm_platform=self.ntc_templates_platform,
+                        genie_platform=self.genie_platform,
+                    )
+
+    @handle_operation_timeout_async
+    async def read_with_callbacks_async(
+        self,
+        callbacks: list[ReadCallback],
+        *,
+        initial_input: str = "",
+        operation_timeout_ns: int | None = None,
+    ) -> Result:
+        """
+        Read from the device and react to the output with some callback.
+
+        Args:
+            callbacks: a list of callbacks to process when reading from the session
+            initial_input: an initial input to send
+            operation_timeout_ns: operation timeout in ns for this operation
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+        start_time = time_ns()
+
+        if initial_input:
+            self.write_and_return(input_=initial_input)
+
+        pos = 0
+
+        result = ""
+        result_raw = b""
+
+        executed_callbacks = set()
+
+        while True:
+            operation_id = OperationIdPointer(c_uint(0))
+
+            status = self.ffi_mapping.cli_mapping.read_any(
+                ptr=self._ptr_or_exception(),
+                operation_id=operation_id,
+            )
+            if status != 0:
+                raise SubmitOperationException("submitting read any operation failed")
+
+            intermediate_result = await self._get_result_async(
+                operation_id=operation_id.contents.value
+            )
+
+            result += intermediate_result.result
+            result_raw += intermediate_result.result_raw
+
+            for callback in callbacks:
+                if callback.name in executed_callbacks and callback.once:
+                    continue
+
+                execute = pointer(c_bool(False))
+
+                status = self.ffi_mapping.cli_mapping.read_callback_should_execute(
+                    buf=to_c_string(result[pos:]),
+                    name=to_c_string(callback.name),
+                    contains=to_c_string(callback.contains),
+                    contains_pattern=to_c_string(callback.contains_pattern),
+                    not_contains=to_c_string(callback.not_contains),
+                    execute=execute,
+                )
+                if status != 0:
+                    raise OperationException("failed checking if callback should execute")
+
+                if execute.contents.value is False:
+                    continue
+
+                executed_callbacks.add(callback.name)
+
+                pos = len(result)
+
+                if callback.callback is None:
+                    raise OperationException("callback is None, cannot proceed")
+                else:
+                    callback.callback(self)
+
+                if callback.completes is True:
+                    return Result(
+                        inputs=initial_input,
+                        host=self.host,
+                        port=self.port,
+                        start_time=start_time,
+                        splits=[time_ns()],
+                        results_raw=result_raw,
+                        results=result,
+                        results_failed_indicator="",
+                        textfsm_platform=self.ntc_templates_platform,
+                        genie_platform=self.genie_platform,
+                    )
 
     @staticmethod
     def ___getwide___() -> None:  # pragma: no cover

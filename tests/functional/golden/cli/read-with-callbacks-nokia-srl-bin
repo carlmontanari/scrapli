@@ -1,0 +1,7 @@
+show version | grep Arch
+Architecture         : aarch64
+--{ + running }--[  ]--
+A:srl# show version | grep Arch
+Architecture         : aarch64
+--{ + running }--[  ]--
+A:srl# 

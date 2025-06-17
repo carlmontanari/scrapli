@@ -13,6 +13,7 @@ from _ctypes import POINTER
 
 from scrapli.ffi_types import (
     CANCEL,
+    BoolPointer,
     CancelPointer,
     DriverPointer,
     IntPointer,
@@ -260,6 +261,42 @@ class LibScrapliCliMapping:
             c_bool,
         ]
         lib.ls_cli_send_prompted_input.restype = c_uint8
+
+        self._read_any: Callable[
+            [
+                DriverPointer,
+                OperationIdPointer,
+                CancelPointer,
+            ],
+            int,
+        ] = lib.ls_cli_read_any
+        lib.ls_cli_read_any.argtypes = [
+            DriverPointer,
+            OperationIdPointer,
+            CancelPointer,
+        ]
+        lib.ls_cli_read_any.restype = c_uint8
+
+        self._read_callback_should_execute: Callable[
+            [
+                c_char_p,
+                c_char_p,
+                c_char_p,
+                c_char_p,
+                c_char_p,
+                BoolPointer,
+            ],
+            int,
+        ] = lib.ls_cli_read_callback_should_execute
+        lib.ls_cli_read_callback_should_execute.argtypes = [
+            c_char_p,
+            c_char_p,
+            c_char_p,
+            c_char_p,
+            c_char_p,
+            POINTER(c_bool),
+        ]
+        lib.ls_cli_read_callback_should_execute.restype = c_uint8
 
     def alloc(
         self,
@@ -663,4 +700,71 @@ class LibScrapliCliMapping:
             input_handling,
             hidden_response,
             retain_trailing_prompt,
+        )
+
+    def read_any(self, ptr: DriverPointer, operation_id: OperationIdPointer) -> int:
+        """
+        Read any available data from the session, up to the normal timeout behavior.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: the ptr to the libscrapli cli/netconf object.
+            operation_id: int pointer to fill with the id of the submitted operation
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._read_any(
+            ptr,
+            operation_id,
+            CANCEL,
+        )
+
+    def read_callback_should_execute(
+        self,
+        buf: c_char_p,
+        name: c_char_p,
+        contains: c_char_p,
+        contains_pattern: c_char_p,
+        not_contains: c_char_p,
+        execute: BoolPointer,
+    ) -> int:
+        """
+        Decide if a callback should execute for read_with_callbacks operations.
+
+        Should (generally) not be called directly/by users.
+
+        Done in zig due to regex checks and wanting to ensure we always use pcre2 (vs go re, py re).
+
+        Args:
+            buf: the buf to use to check if the callback should execute
+            name: the name of the callback
+            contains: the contains string to check for in the buf -- if found, the callback should
+                execute
+            contains_pattern: a string pattern that, if found, indicates the callback should execute
+            not_contains: string that contains data that should not be in the buf for hte callback
+                to execute
+            execute: bool pointer to update w/ execution state
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._read_callback_should_execute(
+            buf,
+            name,
+            contains,
+            contains_pattern,
+            not_contains,
+            execute,
         )

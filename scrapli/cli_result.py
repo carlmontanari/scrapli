@@ -141,6 +141,23 @@ class Result:
         """
         return "\n".join(self.results)
 
+    @property
+    def result_raw(self) -> bytes:
+        """
+        Returns the results (raw) joined on newline chars. Note this does *not* include inputs sent.
+
+        Args:
+            N/A
+
+        Returns:
+            bytes: joined results
+
+        Raises:
+            N/A
+
+        """
+        return b"\n".join(self.results_raw)
+
     def textfsm_parse(
         self,
         index: int = 0,

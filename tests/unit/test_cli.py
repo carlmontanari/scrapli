@@ -1,6 +1,6 @@
 import pytest
 
-from scrapli.cli import InputHandling
+from scrapli.cli import Cli, InputHandling, ReadCallback
 
 
 def test_get_prompt(cli, cli_assert_result):
@@ -359,6 +359,71 @@ async def test_send_prompted_input_async(
             prompt_pattern=prompt_pattern,
             response=response,
             requested_mode=requested_mode,
+        )
+
+        cli_assert_result(actual=actual)
+
+
+def cb1(c: Cli) -> None:
+    c.write_and_return("show version")
+
+
+def cb2(c: Cli) -> None:
+    return
+
+
+READ_WITH_CALLBACKS_ARGNAMES = (
+    "initial_input",
+    "callbacks",
+)
+READ_WITH_CALLBACKS_ARGVALUES = (
+    (
+        "show version",
+        [
+            ReadCallback(
+                name="cb1",
+                contains="eos1#",
+                callback=cb1,
+                once=True,
+            ),
+            ReadCallback(
+                name="cb2",
+                contains="eos1#",
+                callback=cb2,
+                completes=True,
+            ),
+        ],
+    ),
+)
+READ_WITH_CALLBACKS_IDS = ("simple",)
+
+
+@pytest.mark.parametrize(
+    argnames=READ_WITH_CALLBACKS_ARGNAMES,
+    argvalues=READ_WITH_CALLBACKS_ARGVALUES,
+    ids=READ_WITH_CALLBACKS_IDS,
+)
+def test_read_with_callbacks(initial_input, callbacks, cli, cli_assert_result):
+    with cli as c:
+        cli_assert_result(
+            actual=c.read_with_callbacks(
+                initial_input=initial_input,
+                callbacks=callbacks,
+            )
+        )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    argnames=READ_WITH_CALLBACKS_ARGNAMES,
+    argvalues=READ_WITH_CALLBACKS_ARGVALUES,
+    ids=READ_WITH_CALLBACKS_IDS,
+)
+async def test_read_with_callbacks_async(initial_input, callbacks, cli, cli_assert_result):
+    async with cli as c:
+        actual = await c.read_with_callbacks_async(
+            initial_input=initial_input,
+            callbacks=callbacks,
         )
 
         cli_assert_result(actual=actual)
