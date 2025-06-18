@@ -68,7 +68,7 @@ def cli(platform, transport) -> Cli:
         )
     else:
         definition_file_or_name = "nokia_srlinux"
-        host = "localhost" if sys.platform == "darwin" else "172.20.20.16"
+        host = "localhost" if IS_DARWIN else "172.20.20.16"
         port = 21022 if IS_DARWIN else SSH_PORT
         auth_options = AuthOptions(
             username="admin",
