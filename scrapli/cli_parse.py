@@ -93,7 +93,7 @@ def textfsm_parse(
             originating textfsm.parser.TextFSMError exception.
 
     """
-    import textfsm
+    import textfsm  # noqa: PLC0415
 
     if isinstance(template, str):
         if template.startswith("http://") or template.startswith("https://"):
