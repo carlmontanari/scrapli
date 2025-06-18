@@ -46,6 +46,11 @@ def slow_tests() -> tuple[str, ...]:
     return SLOW_TESTS
 
 
+@pytest.fixture(scope="session")
+def eos_available() -> tuple[str, ...]:
+    return EOS_AVAILABLE
+
+
 def _original_name_to_filename(originalname: str) -> str:
     return originalname.removeprefix("test_").replace("_", "-")
 

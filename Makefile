@@ -55,4 +55,4 @@ run-clab: ## Runs the clab functional testing topo; uses the clab launcher to ru
 		-v "$$(pwd):$$(pwd)" \
 		-e "WORKDIR=$$(pwd)/.clab" \
 		-e "HOST_ARCH=$$(uname -m)" \
-		ghcr.io/scrapli/scrapli_clab/launcher:0.0.2
+		ghcr.io/scrapli/scrapli_clab/launcher:0.0.3
