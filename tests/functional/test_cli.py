@@ -707,7 +707,7 @@ def eos_cb2(c: Cli) -> None:
 
 
 def srl_cb1(c: Cli) -> None:
-    c.write_and_return("show version | grep Arch")
+    c.write_and_return("show version | grep OS")
 
 
 def srl_cb2(c: Cli) -> None:
@@ -760,7 +760,7 @@ READ_WITH_CALLBACKS_ARGVALUES = (
         "ssh2",
     ),
     (
-        "show version | grep Arch",
+        "show version | grep OS",
         [
             ReadCallback(
                 name="cb1",
@@ -779,7 +779,7 @@ READ_WITH_CALLBACKS_ARGVALUES = (
         "bin",
     ),
     (
-        "show version | grep Arch",
+        "show version | grep OS",
         [
             ReadCallback(
                 name="cb1",

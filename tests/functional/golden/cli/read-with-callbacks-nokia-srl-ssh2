@@ -1,7 +1,7 @@
-show version | grep Arch
-Architecture         : aarch64
+show version | grep OS
+OS                   : SR Linux
 --{ + running }--[  ]--
-A:srl# show version | grep Arch
-Architecture         : aarch64
+A:srl# show version | grep OS
+OS                   : SR Linux
 --{ + running }--[  ]--
 A:srl# 
