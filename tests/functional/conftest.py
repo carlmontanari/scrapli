@@ -51,6 +51,11 @@ def eos_available() -> tuple[str, ...]:
     return EOS_AVAILABLE
 
 
+@pytest.fixture(scope="session")
+def is_darwin() -> tuple[str, ...]:
+    return IS_DARWIN
+
+
 def _original_name_to_filename(originalname: str) -> str:
     return originalname.removeprefix("test_").replace("_", "-")
 

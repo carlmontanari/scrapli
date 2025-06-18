@@ -132,6 +132,10 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_e2e }}
 
+      - name: ensure key permissions for tests
+        run: |
+          chmod 0600 tests/functional/fixtures/scrapli-jumper-key
+
       - name: wait for test nodes to be available
         working-directory: .clab
         run: |
