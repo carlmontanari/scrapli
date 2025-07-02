@@ -1,0 +1,25 @@
+---
+prompt_pattern: '^.*[>#$]\s?+$'
+default_mode: 'exec'
+modes:
+  - name: 'exec'
+    prompt_pattern: '^(.*)[a-zA-Z0-9_\:\-\>]*[\#\$] ?$'
+failure_indicators:
+  - 'command is not complete'
+  - 'invalid token'
+on_open_instructions:
+  - enter_mode:
+      requested_mode: 'exec'
+  - send_input:
+      input: 'environment mode batch'
+  - send_input:
+      input: 'environment inhibit-alarms'
+  - send_input:
+      input: 'environment print no-more'
+  - send_input:
+      input: 'exit all'
+on_close_instructions:
+  - enter_mode:
+      requested_mode: 'exec'
+  - write:
+      input: 'logout'

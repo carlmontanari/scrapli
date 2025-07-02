@@ -1,0 +1,32 @@
+---
+prompt_pattern: '^.*[>#$]\s?+$'
+default_mode: 'exec'
+modes:
+  - name: 'exec'
+    prompt_pattern: '^[\w\.\-]+#\s*$$'
+    accessible_modes:
+      - name: 'configuration'
+        instructions:
+          - send_input:
+              input: 'configure'
+  - name: 'configuration'
+    prompt_pattern: '^[\w\.\-]+\(config\)#\s*$'
+    accessible_modes:
+      - name: 'exec'
+        instructions:
+          - send_input:
+              input: 'exit'
+failure_indicators:
+  - 'Error:'
+on_open_instructions:
+  - enter_mode:
+      requested_mode: 'configuration'
+  - send_input:
+      input: 'no terminal paging'
+  - enter_mode:
+      requested_mode: 'exec'
+on_close_instructions:
+  - enter_mode:
+      requested_mode: 'exec'
+  - write:
+      input: 'exit'

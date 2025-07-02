@@ -1,0 +1,40 @@
+---
+prompt_pattern: '^.*[>#$]\s?+$'
+default_mode: 'exec'
+modes:
+  - name: 'linux'
+    prompt_pattern: '^[\w.-]+@[\w.-]+:[\w\/~]+[#$]\s*$'
+    accessible_modes:
+      - name: 'exec'
+        instructions:
+          - send_input:
+              input: 'sonic-cli'
+  - name: 'exec'
+    prompt_pattern: '^[\w.-]+#\s*$'
+    accessible_modes:
+      - name: 'configuration'
+        instructions:
+          - send_input:
+              input: 'conifgure terminal'
+  - name: 'configuration'
+    prompt_pattern: '^[\w.-]+\(config(\S*)?\)#\s*$'
+    accessible_modes:
+      - name: 'exec'
+        instructions:
+          - send_input:
+              input: 'exit'
+failure_indicators:
+  - 'command not found'
+  - 'Permission denied'
+  - '% Error:'
+  - 'Warning: Idle timeout'
+on_open_instructions:
+  - enter_mode:
+      requested_mode: 'exec'
+  - send_input:
+      input: 'term length 0'
+on_close_instructions:
+  - enter_mode:
+      requested_mode: 'exec'
+  - write:
+      input: 'exit'

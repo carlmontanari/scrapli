@@ -1,0 +1,45 @@
+---
+prompt_pattern: '^.*[>#$%]\s?+$'
+default_mode: 'privileged_exec'
+modes:
+  - name: 'shell'
+    prompt_pattern: '^\[\w+\@\S+ \S+\] \$ ?$'
+    accessible_modes:
+      - name: 'cli'
+        instructions:
+          - send_input:
+              input: 'cli'
+  - name: 'cli'
+    prompt_pattern: '^\w+@\S+-cli> ?$'
+    accessible_modes:
+      - name: 'shell'
+        instructions:
+          - send_input:
+              input: 'exit'
+      - name: 'configuration'
+        instructions:
+          - send_input:
+              input: 'configure'
+  - name: 'configuration'
+    prompt_pattern: '^\w+@\S+-cli\(\S+\)% ?$'
+    accessible_modes:
+      - name: 'cli'
+        instructions:
+          - send_input:
+              input: 'exit'
+failure_indicators:
+  - '[error]'
+on_open_instructions:
+  - enter_mode:
+      requested_mode: 'cli'
+  - send_input:
+      input: 'set complete-on-space false'
+  - send_input:
+      input: 'set paginate false'
+  - send_input:
+      input: 'set screen width 512'
+on_close_instructions:
+  - enter_mode:
+      requested_mode: 'cli'
+  - write:
+      input: 'logout'

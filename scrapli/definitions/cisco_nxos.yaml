@@ -62,3 +62,5 @@ on_close_instructions:
       requested_mode: 'privileged_exec'
   - write:
       input: 'exit'
+ntc_templates_platform: 'cisco_nxos'
+genie_platform: 'nxos'

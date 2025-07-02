@@ -1,0 +1,42 @@
+---
+prompt_pattern: '^.*[>#$]\s?+$'
+default_mode: 'exec'
+modes:
+  - name: 'linux'
+    prompt_pattern: '^\S+@\S+:\S+:\S+[\$|#]\s*$'
+    accessible_modes:
+      - name: 'exec'
+        instructions:
+          - send_input:
+              input: 'vtysh'
+  - name: 'exec'
+    prompt_pattern: '^[\w\.\-]+#\s*$'
+    accessible_modes:
+      - name: 'linux'
+        instructions:
+          - send_input:
+              input: 'exit'
+      - name: 'configuration'
+        instructions:
+          - send_input:
+              input: 'conifgure terminal'
+  - name: 'configuration'
+    prompt_pattern: '^[\w\.\-]+\(config\)#\s*$'
+    accessible_modes:
+      - name: 'exec'
+        instructions:
+          - send_input:
+              input: 'exit'
+failure_indicators:
+  - 'Permission denied'
+  - 'ERROR:'
+  - '% Unknown command.'
+  - '% Command incomplete.'
+on_open_instructions:
+  - enter_mode:
+      requested_mode: 'exec'
+on_close_instructions:
+  - enter_mode:
+      requested_mode: 'exec'
+  - write:
+      input: 'exit'

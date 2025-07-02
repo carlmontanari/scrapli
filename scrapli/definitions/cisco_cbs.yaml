@@ -1,20 +1,18 @@
 ---
-prompt_pattern: '^[^<\r\n]{1,}[>#$]\s?$'
+prompt_pattern: '^.*[>#$]\s?+$'
 default_mode: 'privileged_exec'
 modes:
   - name: 'exec'
-    prompt_pattern: '^[\w.\-@()/: ]{1,63}>\s?$'
+    prompt_pattern: '^[a-zA-Z0-9-.]{1,58}>$'
     accessible_modes:
       - name: 'privileged_exec'
         instructions:
           - send_prompted_input:
               input: 'enable'
-              prompt_exact: 'Password:'
+              prompt_exact: '^(?:enable\s){0,1}Password:\s?$'
               response: '__lookup::enable'
   - name: 'privileged_exec'
-    prompt_pattern: '^[\w.\-@()/: ]{1,63}#\s?$'
-    prompt_excludes:
-      - '(config'
+    prompt_pattern: '^[a-zA-Z0-9-.]{1,58}#$'
     accessible_modes:
       - name: 'exec'
         instructions:
@@ -24,42 +22,29 @@ modes:
         instructions:
           - send_input:
               input: 'configure terminal'
-      - name: 'bash'
-        instructions:
-          - send_input:
-              input: 'bash'
   - name: 'configuration'
-    prompt_pattern: '^[\w.\-@()/: ]{1,63}\(config[\w.\-@/:+]{0,63}\)#\s?$'
+    prompt_pattern: '^[a-zA-Z0-9-.]{1,58}\([\w.\-@/:+]{1,32}\)#$'
     accessible_modes:
       - name: 'privileged_exec'
         instructions:
           - send_input:
               input: 'end'
-  - name: 'bash'
-    prompt_pattern: '^\[[\w.\-@()\/: ]{1,63}~\]\$'
-    accessible_modes:
-      - name: 'privileged_exec'
-        instructions:
-          - send_input:
-              input: 'exit'
 failure_indicators:
-  - '% Ambiguous command'
-  - '% Error'
   - '% Incomplete command'
-  - '% Invalid input'
-  - '% Cannot commit'
-  - '% Unavailable command'
-  - '% Duplicate sequence number'
+  - '% Unrecognized command'
+  - '% missing mandatory parameter'
+  - '% bad parameter value'
+  - '% Ambiguous command'
 on_open_instructions:
   - enter_mode:
       requested_mode: 'privileged_exec'
   - send_input:
-      input: 'term width 32767'
+      input: 'terminal datadump'
   - send_input:
-      input: 'term len 0'
+      input: 'terminal width 0'
 on_close_instructions:
   - enter_mode:
       requested_mode: 'privileged_exec'
   - write:
       input: 'exit'
-ntc_templates_platform: 'arista_eos'
+ntc_templates_platform: 'cisco_s300'

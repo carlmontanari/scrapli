@@ -1,20 +1,16 @@
 ---
-prompt_pattern: '^[^<\r\n]{1,}[>#$]\s?$'
+prompt_pattern: '^.*[>#$%]\s?+$'
 default_mode: 'privileged_exec'
 modes:
   - name: 'exec'
-    prompt_pattern: '^[\w.\-@()/: ]{1,63}>\s?$'
+    prompt_pattern: '^\S{1,48}>\s?$'
     accessible_modes:
       - name: 'privileged_exec'
         instructions:
-          - send_prompted_input:
+          - send_input:
               input: 'enable'
-              prompt_exact: 'Password:'
-              response: '__lookup::enable'
   - name: 'privileged_exec'
-    prompt_pattern: '^[\w.\-@()/: ]{1,63}#\s?$'
-    prompt_excludes:
-      - '(config'
+    prompt_pattern: '^\S{1,48}#$'
     accessible_modes:
       - name: 'exec'
         instructions:
@@ -23,43 +19,43 @@ modes:
       - name: 'configuration'
         instructions:
           - send_input:
-              input: 'configure terminal'
-      - name: 'bash'
+              input: 'config'
+      - name: 'diagnose'
         instructions:
           - send_input:
-              input: 'bash'
+              input: 'diagnose'
   - name: 'configuration'
-    prompt_pattern: '^[\w.\-@()/: ]{1,63}\(config[\w.\-@/:+]{0,63}\)#\s?$'
+    prompt_pattern: '^(.*)\(.*(config)\S*\)#$'
     accessible_modes:
       - name: 'privileged_exec'
         instructions:
           - send_input:
-              input: 'end'
-  - name: 'bash'
-    prompt_pattern: '^\[[\w.\-@()\/: ]{1,63}~\]\$'
+              input: 'quit'
+  - name: 'diagnose'
+    prompt_pattern: '.*\(diagnose\)\%\%$'
     accessible_modes:
       - name: 'privileged_exec'
         instructions:
           - send_input:
-              input: 'exit'
+              input: 'quit'
 failure_indicators:
   - '% Ambiguous command'
-  - '% Error'
   - '% Incomplete command'
-  - '% Invalid input'
-  - '% Cannot commit'
-  - '% Unavailable command'
-  - '% Duplicate sequence number'
+  - '% Invalid input detected'
+  - '% Unknown command'
+  - 'Error:'
 on_open_instructions:
   - enter_mode:
       requested_mode: 'privileged_exec'
-  - send_input:
-      input: 'term width 32767'
-  - send_input:
-      input: 'term len 0'
+  - write:
+      input: 'undo smart'
+  - write:
+      input: 'scroll'
 on_close_instructions:
   - enter_mode:
       requested_mode: 'privileged_exec'
   - write:
-      input: 'exit'
-ntc_templates_platform: 'arista_eos'
+      input: 'quit'
+  - write:
+      input: 'y'
+ntc_templates_platform: 'huawei_smartax'
