@@ -368,13 +368,21 @@ class LibScrapliAuthOptionsMapping:
         ]
         lib.ls_option_auth_set_lookup_key_value.restype = c_uint8
 
-        self._set_in_session_auth_bypass: Callable[[DriverPointer], int] = (
-            lib.ls_option_auth_in_session_auth_bypass
+        self._set_force_in_session_auth: Callable[[DriverPointer], int] = (
+            lib.ls_option_auth_force_in_session_auth
         )
-        lib.ls_option_auth_in_session_auth_bypass.argtypes = [
+        lib.ls_option_auth_force_in_session_auth.argtypes = [
             DriverPointer,
         ]
-        lib.ls_option_auth_in_session_auth_bypass.restype = c_uint8
+        lib.ls_option_auth_force_in_session_auth.restype = c_uint8
+
+        self._set_bypass_in_session_auth: Callable[[DriverPointer], int] = (
+            lib.ls_option_auth_bypass_in_session_auth
+        )
+        lib.ls_option_auth_bypass_in_session_auth.argtypes = [
+            DriverPointer,
+        ]
+        lib.ls_option_auth_bypass_in_session_auth.restype = c_uint8
 
         self._set_username_pattern: Callable[[DriverPointer, c_char_p], int] = (
             lib.ls_option_auth_username_pattern
@@ -511,7 +519,31 @@ class LibScrapliAuthOptionsMapping:
         """
         return self._set_lookup_key_value(ptr, key, value)
 
-    def set_in_session_auth_bypass(
+    def set_force_in_session_auth(
+        self,
+        ptr: DriverPointer,
+    ) -> int:
+        """
+        Force in session auth.
+
+        Should not be used/called directly.
+
+        Args:
+            ptr: ptr to the cli/netconf object
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._set_force_in_session_auth(
+            ptr,
+        )
+
+    def set_bypass_in_session_auth(
         self,
         ptr: DriverPointer,
     ) -> int:
@@ -531,7 +563,7 @@ class LibScrapliAuthOptionsMapping:
             N/A
 
         """
-        return self._set_in_session_auth_bypass(
+        return self._set_bypass_in_session_auth(
             ptr,
         )
 
