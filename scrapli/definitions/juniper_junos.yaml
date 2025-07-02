@@ -83,3 +83,4 @@ on_close_instructions:
       requested_mode: 'exec'
   - write:
       input: 'exit'
+ntc_templates_platform: 'juniper_junos'

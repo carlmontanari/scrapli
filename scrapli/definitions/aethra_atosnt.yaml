@@ -1,0 +1,9 @@
+---
+prompt_pattern: '^[a-z0-9.\-_@]{1,64}>>'
+default_mode: 'exec'
+modes:
+  - name: 'exec'
+    prompt_pattern: '^[a-z0-9.\-_@]{1,64}>>'
+on_close_instructions:
+  - write:
+      input: '\x04'

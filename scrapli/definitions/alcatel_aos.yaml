@@ -1,0 +1,9 @@
+---
+prompt_pattern: '^[a-zA-Z0-9.\-_@\/:]{1,63}[>|#]\s*'
+default_mode: 'exec'
+modes:
+  - name: 'exec'
+    prompt_pattern: '^[a-zA-Z0-9.\-_@\/:]{1,63}[>|#]\s*'
+on_close_instructions:
+  - write:
+      input: 'exit'
