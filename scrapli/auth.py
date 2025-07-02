@@ -63,8 +63,8 @@ class Options:
         lookups: a list of key/values that can be "looked up" from a connection -- used in
             conjunction with platform definition templating like `__lookup::enable` where "enable"
             is the key to "lookup" in the list of lookup key/values.
-        in_session_auth_bypass: whether to bypass attempting in session authentication -- only
-             applicable to "bin" and "telnet" transports.
+        force_in_session_auth: unconditionally force the in session auth process.
+        bypass_in_session_auth: skip in session auth even if transport (telnet/bin) expect it.
         username_pattern: the regex pattern to use to look for a username prompt
         password_pattern: the regex pattern to use to look for a password prompt
         private_key_passphrase_pattern: the regex pattern to use to look for a passphrase prompt
@@ -82,7 +82,8 @@ class Options:
     private_key_path: str | None = None
     private_key_passphrase: str | None = None
     lookups: list[LookupKeyValue] | None = None
-    in_session_auth_bypass: bool | None = None
+    force_in_session_auth: bool | None = None
+    bypass_in_session_auth: bool | None = None
     username_pattern: str | None = None
     password_pattern: str | None = None
     private_key_passphrase_pattern: str | None = None
@@ -154,10 +155,15 @@ class Options:
                 if status != 0:
                     raise OptionsException("failed to set auth lookup key/value")
 
-        if self.in_session_auth_bypass is not None:
-            status = ffi_mapping.options_mapping.auth.set_in_session_auth_bypass(ptr)
+        if self.force_in_session_auth is not None:
+            status = ffi_mapping.options_mapping.auth.set_force_in_session_auth(ptr)
             if status != 0:
-                raise OptionsException("failed to set session in session auth bypass")
+                raise OptionsException("failed to set force in session auth")
+
+        if self.bypass_in_session_auth is not None:
+            status = ffi_mapping.options_mapping.auth.set_bypass_in_session_auth(ptr)
+            if status != 0:
+                raise OptionsException("failed to set bypass in session auth")
 
         if self.username_pattern is not None:
             self._username_pattern = to_c_string(self.username_pattern)
@@ -209,7 +215,8 @@ class Options:
             f"private_key_path={self.private_key_path!r} "
             f"private_key_passphrase={self.private_key_passphrase!r} "
             f"lookups={self.lookups!r}) "
-            f"in_session_auth_bypass={self.in_session_auth_bypass!r}) "
+            f"force_in_session_auth={self.force_in_session_auth!r}) "
+            f"bypass_in_session_auth={self.bypass_in_session_auth!r}) "
             f"username_pattern={self.username_pattern!r}) "
             f"password_pattern={self.password_pattern!r}) "
             f"private_key_passphrase_pattern={self.private_key_passphrase_pattern!r}) "
