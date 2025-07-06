@@ -77,4 +77,6 @@ FAILED_WHEN_CONTAINS = [
     "No valid completions",
     "unknown command",
     "syntax error",
+    "missing mandatory argument",  # This and the next one are for QFX3000-M
+    "invalid numeric value",
 ]
