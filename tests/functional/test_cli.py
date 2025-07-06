@@ -4,8 +4,8 @@ from scrapli import (
     AuthOptions,
     Cli,
     LookupKeyValue,
-    SessionOptions,
     ReadCallback,
+    SessionOptions,
     TransportBinOptions,
     TransportSsh2Options,
 )
@@ -891,6 +891,7 @@ OPEN_WITH_KEY_IDS = (
     "arista-eos-bin-passhrase",
     "arista-eos-ssh2-passhrase",
 )
+
 
 @pytest.mark.parametrize(
     argnames=OPEN_WITH_KEY_ARGNAMES,
