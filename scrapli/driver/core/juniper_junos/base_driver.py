@@ -77,4 +77,6 @@ FAILED_WHEN_CONTAINS = [
     "No valid completions",
     "unknown command",
     "syntax error",
+    "missing mandatory argument",
+    "invalid numeric value",
 ]
