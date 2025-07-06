@@ -1,6 +1,14 @@
 import pytest
 
-from scrapli import Cli, ReadCallback
+from scrapli import (
+    AuthOptions,
+    Cli,
+    LookupKeyValue,
+    SessionOptions,
+    ReadCallback,
+    TransportBinOptions,
+    TransportSsh2Options,
+)
 
 GET_PROMPT_ARGNAMES = (
     "platform",
@@ -835,3 +843,73 @@ async def test_read_with_callbacks_async(initial_input, callbacks, cli, cli_asse
         )
 
         cli_assert_result(actual=actual)
+
+
+OPEN_WITH_KEY_ARGNAMES = (
+    "auth_options",
+    "transport_options",
+)
+OPEN_WITH_KEY_ARGVALUES = (
+    (
+        AuthOptions(
+            username="admin-sshkey",
+            private_key_path="tests/functional/fixtures/libscrapli_test_ssh_key",
+            lookups=[LookupKeyValue(key="enable", value="libscrapli")],
+        ),
+        TransportBinOptions(),
+    ),
+    (
+        AuthOptions(
+            username="admin-sshkey",
+            private_key_path="tests/functional/fixtures/libscrapli_test_ssh_key",
+            lookups=[LookupKeyValue(key="enable", value="libscrapli")],
+        ),
+        TransportSsh2Options(),
+    ),
+    (
+        AuthOptions(
+            username="admin-sshkey-passphrase",
+            private_key_path="tests/functional/fixtures/libscrapli_test_ssh_key_passphrase",
+            private_key_passphrase="libscrapli",
+            lookups=[LookupKeyValue(key="enable", value="libscrapli")],
+        ),
+        TransportBinOptions(),
+    ),
+    (
+        AuthOptions(
+            username="admin-sshkey-passphrase",
+            private_key_path="tests/functional/fixtures/libscrapli_test_ssh_key_passphrase",
+            private_key_passphrase="libscrapli",
+            lookups=[LookupKeyValue(key="enable", value="libscrapli")],
+        ),
+        TransportSsh2Options(),
+    ),
+)
+OPEN_WITH_KEY_IDS = (
+    "arista-eos-bin",
+    "arista-eos-ssh2",
+    "arista-eos-bin-passhrase",
+    "arista-eos-ssh2-passhrase",
+)
+
+@pytest.mark.parametrize(
+    argnames=OPEN_WITH_KEY_ARGNAMES,
+    argvalues=OPEN_WITH_KEY_ARGVALUES,
+    ids=OPEN_WITH_KEY_IDS,
+)
+def test_open_with_key(eos_available, is_darwin, auth_options, transport_options):
+    if eos_available is False:
+        # because we cant have this publicly in ci afaik
+        pytest.skip("eos not available, skipping...")
+
+    cli = Cli(
+        definition_file_or_name="arista_eos",
+        host="localhost" if is_darwin else "172.20.20.17",
+        port=22022 if is_darwin else 22,
+        auth_options=auth_options,
+        session_options=SessionOptions(),
+        transport_options=transport_options,
+    )
+
+    with cli as c:
+        c.get_prompt()
