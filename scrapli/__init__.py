@@ -11,9 +11,9 @@ from scrapli.transport import Ssh2Options as TransportSsh2Options
 from scrapli.transport import TelnetOptions as TransportTelnetOptions
 from scrapli.transport import TestOptions as TransportTestOptions
 
-__version__ = "2.0.0-alpha.4"
-__calendar_version__ = "2025.6.7"
-__definitions_version__ = "e20fe33"
+__version__ = "2.0.0-alpha.5"
+__calendar_version__ = "2025.7.12"
+__definitions_version__ = "c38ec6d"
 
 __all__ = (
     "AuthOptions",

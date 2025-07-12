@@ -69,6 +69,8 @@ failure_indicators:
   - 'No valid completions'
   - 'unknown command'
   - 'syntax error'
+  - 'missing mandatory argument'
+  - 'invalid numeric value'
 on_open_instructions:
   - enter_mode:
       requested_mode: 'exec'
