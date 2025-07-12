@@ -1,3 +1,0 @@
-show configuration | match 10.0.0.15
-                address 10.0.0.15/24;show configuration | match 10.0.0.15
-                address 10.0.0.15/24;

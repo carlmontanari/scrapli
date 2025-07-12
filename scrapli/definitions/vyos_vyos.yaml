@@ -1,0 +1,35 @@
+---
+prompt_pattern: '^.*[>#$]\s?+$'
+default_mode: 'privileged_exec'
+modes:
+  - name: 'privileged_exec'
+    prompt_pattern: '^[a-z0-9\.\--_()/:~]{1,1000}@[a-z0-9\.\--_()/:~]{1,1000}\$'
+    accessible_modes:
+      - name: 'configuration'
+        instructions:
+          - send_input:
+              input: 'configure'
+  - name: 'configuration'
+    prompt_pattern: '^[a-z0-9\.\--_()/:~]{1,1000}@[a-z0-9\.\--_()/:~]{1,1000}#'
+    accessible_modes:
+      - name: 'privileged_exec'
+        instructions:
+          - send_input:
+              input: 'exit'
+failure_indicators:
+  - 'Ambiguous command'
+  - 'Incomplete command'
+  - 'Invalid command'
+  - 'Invalid value'
+  - 'Need to specify the config node to set'
+  - 'Set failed'
+on_open_instructions:
+  - enter_mode:
+      requested_mode: 'privileged_exec'
+  - send_input:
+      input: 'stty cols 100000'
+on_close_instructions:
+  - enter_mode:
+      requested_mode: 'privileged_exec'
+  - write:
+      input: 'exit'

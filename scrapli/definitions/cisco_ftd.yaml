@@ -1,0 +1,42 @@
+---
+prompt_pattern: '^.*[>#$]\s?+$'
+default_mode: 'exec'
+modes:
+  - name: 'exec'
+    prompt_pattern: '^>\s*'
+    accessible_modes:
+      - name: 'expert'
+        instructions:
+          - send_input:
+              input: 'expert'
+  - name: 'expert'
+    prompt_pattern: '^[\w.-]{1,63}@[^$]+\$\s*$'
+    accessible_modes:
+      - name: 'exec'
+        instructions:
+          - send_input:
+              input: 'exit'
+      - name: 'root'
+        instructions:
+          - send_prompted_input:
+              input: 'sudo su -'
+              prompt_exact: '^Password:\s?$'
+              response: '__lookup::root'
+  - name: 'root'
+    prompt_pattern: '^root@[^#]+#\s*$'
+    accessible_modes:
+      - name: 'expert'
+        instructions:
+          - send_input:
+              input: 'exit'
+failure_indicators:
+  - 'Syntax error:'
+on_open_instructions:
+  - enter_mode:
+      requested_mode: 'exec'
+on_close_instructions:
+  - enter_mode:
+      requested_mode: 'privileged_exec'
+  - write:
+      input: 'logout'
+ntc_templates_platform: 'cisco_ftd'

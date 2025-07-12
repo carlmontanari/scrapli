@@ -1,7 +1,0 @@
-show configuration | match 10.0.0.15
-                address 10.0.0.15/24;
-
-admin@vr-vqfx>show configuration | match 10.0.0.15
-                address 10.0.0.15/24;
-
-admin@vr-vqfx>

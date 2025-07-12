@@ -1,0 +1,28 @@
+---
+prompt_pattern: '^.*[>#$]\s?+$'
+default_mode: 'exec'
+modes:
+  - name: 'exec'
+    prompt_pattern: '^\S+@\S+:\S+:\S+[\$|#]\s*$'
+    accessible_modes:
+      - name: 'root'
+        instructions:
+          - send_prompted_input:
+              input: 'sudo su'
+              prompt_exact: ':'
+              response: '__lookup::enable'
+  - name: 'root'
+    prompt_pattern: '^\S+@\S+:\S+:\S+#\s*$'
+    accessible_modes:
+      - name: 'exec'
+        instructions:
+          - send_input:
+              input: 'exit'
+failure_indicators:
+  - 'Permission denied'
+  - 'ERROR:'
+on_close_instructions:
+  - enter_mode:
+      requested_mode: 'root'
+  - write:
+      input: 'exit'

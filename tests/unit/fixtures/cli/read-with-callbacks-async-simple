@@ -1,0 +1,55 @@
+Warning: Permanently added '[localhost]:22022' (ED25519) to the list of known hosts.
+(admin@localhost) Password: 
+Last login: Tue Jun 17 00:16:45 2025 from 140.82.116.3
+Warning: the following filesystems have less than 10% free space left:
+/var/tmp                     0% (   0 bytes) Available
+Please remove configuration such as tracing and clean up the space.
+eos1>
+eos1>
+eos1>enable
+Password: 
+eos1#term width 32767
+Width set to 32767 columns.
+eos1#term len 0
+Pagination disabled.
+eos1#show version
+Arista cEOSLab
+Hardware version: 
+Serial number: EA9417C84E40631CB8B1DD4177E5D1A5
+Hardware MAC address: 001c.73f9.1f89
+System MAC address: 001c.73f9.1f89
+
+Software image version: 4.33.1F-39879738.4331F (engineering build)
+Architecture: x86_64
+Internal build version: 4.33.1F-39879738.4331F
+Internal build ID: 798d1a3d-9815-49ba-91a2-9043a969f565
+Image format version: 1.0
+Image optimization: None
+
+Kernel version: 6.10.14-linuxkit
+
+Uptime: 1 week, 5 days, 1 hour and 47 minutes
+Total memory: 24572172 kB
+Free memory: 11298064 kB
+
+eos1#show version
+Arista cEOSLab
+Hardware version: 
+Serial number: EA9417C84E40631CB8B1DD4177E5D1A5
+Hardware MAC address: 001c.73f9.1f89
+System MAC address: 001c.73f9.1f89
+
+Software image version: 4.33.1F-39879738.4331F (engineering build)
+Architecture: x86_64
+Internal build version: 4.33.1F-39879738.4331F
+Internal build ID: 798d1a3d-9815-49ba-91a2-9043a969f565
+Image format version: 1.0
+Image optimization: None
+
+Kernel version: 6.10.14-linuxkit
+
+Uptime: 1 week, 5 days, 1 hour and 47 minutes
+Total memory: 24572172 kB
+Free memory: 11298064 kB
+
+eos1#

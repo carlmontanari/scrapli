@@ -1,0 +1,33 @@
+---
+prompt_pattern: '^.*[>#$]\s?+$'
+default_mode: 'privileged_exec'
+modes:
+  - name: 'privileged_exec'
+    prompt_pattern: '^[\w.\-@/:]{1,63}#\s?$'
+    accessible_modes:
+      - name: 'configuration'
+        instructions:
+          - send_input:
+              input: 'configure terminal'
+  - name: 'configuration'
+    prompt_pattern: '^[\w.\-@/:]{1,63}\(config[\w.\-@/:]{0,32}\)#\s?$'
+    accessible_modes:
+      - name: 'privileged_exec'
+        instructions:
+          - send_input:
+              input: 'exit'
+failure_indicators:
+  - '% Command incomplete.'
+  - 'Invalid input:'
+  - 'doesn''t exist'
+on_open_instructions:
+  - enter_mode:
+      requested_mode: 'privileged_exec'
+  - send_input:
+      input: 'no page'
+on_close_instructions:
+  - enter_mode:
+      requested_mode: 'privileged_exec'
+  - write:
+      input: 'exit'
+ntc_templates_platform: 'aruba_aoscx'
