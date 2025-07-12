@@ -1,6 +1,7 @@
 """scrapli.helper"""
 
 from asyncio import get_event_loop
+from datetime import datetime
 from os import read
 from pathlib import Path
 from select import select
@@ -93,3 +94,58 @@ async def wait_for_available_operation_result_async(fd: int) -> None:
     await _wait_for_fd_readable(fd)
 
     read(fd, 1)
+
+
+def unix_nano_timestmap_to_iso(timestamp: int) -> str:
+    """
+    Convert a unix ns timestamp to iso format.
+
+    Args:
+        timestamp: the timestamp to convert
+
+    Returns:
+        str: converted timestamp
+
+    Raises:
+        N/A
+
+    """
+    return datetime.fromtimestamp(timestamp / 1_000_000_000).isoformat(timespec="milliseconds")
+
+
+def bulid_result_preview(result: str) -> str:
+    """
+    Build a preview of output for str method of result objects from the given result string.
+
+    Skips lines that are all the same char (like a banner line "****") and only shows a single line
+    plus a "... <truncated>" line indicating longer output.
+
+    Args:
+        result: the full result to build the preview for
+
+    Returns:
+        str: result preview
+
+    Raises:
+        N/A
+
+    """
+    lines = result.splitlines()
+
+    def boring_line(line: str) -> bool:
+        stripped = line.strip()
+
+        return not stripped or len(set(stripped)) == 1
+
+    preview_line = ""
+
+    for line in lines[:2]:
+        if not boring_line(line):
+            preview_line = line[:40].rstrip()
+            break
+
+    if len(result) > len(preview_line):
+        # spacing to make it look nice in result str method
+        return f"{preview_line}\n\t                 : ... <truncated>"
+
+    return preview_line

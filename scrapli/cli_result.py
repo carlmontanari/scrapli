@@ -4,6 +4,7 @@ from typing import Any, TextIO
 
 from scrapli.cli_parse import genie_parse, textfsm_get_template, textfsm_parse
 from scrapli.exceptions import ParsingException
+from scrapli.helper import bulid_result_preview, unix_nano_timestmap_to_iso
 
 OPERATION_DELIMITER = "__libscrapli__"
 
@@ -47,6 +48,30 @@ class Result:
         self.results_failed_indicator = results_failed_indicator
         self.textfsm_platform = textfsm_platform
         self.genie_platform = genie_platform
+
+    def __str__(self) -> str:
+        """
+        Magic str method for Result class
+
+        Args:
+            N/A
+
+        Returns:
+            str: str for class object
+
+        Raises:
+            N/A
+
+        """
+        return (
+            "<-----\n"
+            f"\tInput(s)         : {self.inputs}\n"
+            f"\tStart Time       : {unix_nano_timestmap_to_iso(timestamp=self.start_time)}\n"
+            f"\tEnd Time         : {unix_nano_timestmap_to_iso(timestamp=self.end_time)}\n"
+            f"\tElapsed Time (s) : {self.elapsed_time_seconds:.2f}s\n"
+            f"\tResult           : {bulid_result_preview(result=self.result)}\n"
+            "----->"
+        )
 
     def extend(self, result: "Result") -> None:
         """
