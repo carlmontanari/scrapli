@@ -81,7 +81,6 @@ jobs:
         run: |
           source .github/vars.env
           echo "PYTHON_VERSION=$PYTHON_VERSION" >> "$GITHUB_ENV"
-          echo "SCRAPLI_CLAB_VERSION=$SCRAPLI_CLAB_VERSION" >> "$GITHUB_ENV"
 
       - name: set up python
         uses: actions/setup-python@v5
@@ -104,15 +103,11 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_e2e }}
 
-      - name: ensure key permissions for tests
-        run: |
-          chmod 0600 tests/functional/fixtures/scrapli-jumper-key
-
       - name: wait for test nodes to be available
         working-directory: .clab
         run: |
           ./wait.sh
-        # wait.sh should timeout but seems like it sometimes gets hung in actions
+        # wait.sh should timeout but seems like it sometimes gets hung in actions sometimes
         timeout-minutes: 5
 
       - name: functional tests

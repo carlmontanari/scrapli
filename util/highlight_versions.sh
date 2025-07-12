@@ -32,9 +32,8 @@ locations=(
     "scrapli/__init__.py            ^__calendar_version__\\s=       calendar scrapli"
     "scrapli/__init__.py            ^__definitions_version__\\s=    definitions"
     ".github/vars.env               PYTHON_VERSION=                 ci primary python"
-    ".github/vars.env               SCRAPLI_CLAB_VERSION=.          ci clab setup"
     ".github/workflows/test.yaml    ^\s+version:\\s                 ci unit test pythons"
-    "Makefile                       ghcr.io/scrapli/                local clab setup"
+    "Makefile                       ghcr.io/scrapli/                local/ci clab setup"
 )
 
 for entry in "${locations[@]}"; do
