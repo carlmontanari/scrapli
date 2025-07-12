@@ -1,7 +1,9 @@
+import stat
 import subprocess
 import sys
 from collections.abc import Callable
 from difflib import SequenceMatcher
+from pathlib import Path
 
 import pytest
 
@@ -39,6 +41,12 @@ SLOW_TESTS = (
     "test_send_input_async[nokia-srl-bin-enormous-output]",
     "test_send_input_async[nokia-srl-ssh2-enormous-output]",
 )
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_sessionstart():
+    for path in Path("tests/functional/fixtures").glob("*key*"):
+        path.chmod(stat.S_IRUSR | stat.S_IWUSR)
 
 
 @pytest.fixture(scope="session")
