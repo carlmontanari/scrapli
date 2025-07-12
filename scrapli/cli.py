@@ -330,6 +330,8 @@ class Cli:
             with open(definition_file_or_name, "rb") as f:
                 self.definition_string = f.read()
 
+            return
+
         raise OptionsException(
             f"definition platform name or filename '{definition_file_or_name}' not found"
         )
