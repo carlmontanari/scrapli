@@ -215,7 +215,7 @@ class Result:
         if template is None:
             raise ParsingException("no template provided or available for input")
 
-        return textfsm_parse(template=template, output=self.result, to_dict=to_dict)
+        return textfsm_parse(template=template, output=self.results[index], to_dict=to_dict)
 
     def genie_parse(
         self,

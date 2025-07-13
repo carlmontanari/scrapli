@@ -929,6 +929,68 @@ class LibScrapliTransportSsh2OptionsMapping:
         ]
         lib.ls_option_transport_ssh2_libssh2trace.restype = c_uint8
 
+        self._set_libssh2_proxy_jump_host: Callable[[DriverPointer, c_char_p], int] = (
+            lib.ls_option_transport_ssh2_proxy_jump_host
+        )
+        lib.ls_option_transport_ssh2_proxy_jump_host.argtypes = [
+            DriverPointer,
+            c_char_p,
+        ]
+        lib.ls_option_transport_ssh2_proxy_jump_host.restype = c_uint8
+
+        self._set_libssh2_proxy_jump_port: Callable[[DriverPointer, c_int], int] = (
+            lib.ls_option_transport_ssh2_proxy_jump_port
+        )
+        lib.ls_option_transport_ssh2_proxy_jump_port.argtypes = [
+            DriverPointer,
+            c_int,
+        ]
+        lib.ls_option_transport_ssh2_proxy_jump_port.restype = c_uint8
+
+        self._set_libssh2_proxy_jump_username: Callable[[DriverPointer, c_char_p], int] = (
+            lib.ls_option_transport_ssh2_proxy_jump_username
+        )
+        lib.ls_option_transport_ssh2_proxy_jump_username.argtypes = [
+            DriverPointer,
+            c_char_p,
+        ]
+        lib.ls_option_transport_ssh2_proxy_jump_username.restype = c_uint8
+
+        self._set_libssh2_proxy_jump_password: Callable[[DriverPointer, c_char_p], int] = (
+            lib.ls_option_transport_ssh2_proxy_jump_password
+        )
+        lib.ls_option_transport_ssh2_proxy_jump_password.argtypes = [
+            DriverPointer,
+            c_char_p,
+        ]
+        lib.ls_option_transport_ssh2_proxy_jump_password.restype = c_uint8
+
+        self._set_libssh2_proxy_jump_private_key_path: Callable[[DriverPointer, c_char_p], int] = (
+            lib.ls_option_transport_ssh2_proxy_jump_private_key_path
+        )
+        lib.ls_option_transport_ssh2_proxy_jump_private_key_path.argtypes = [
+            DriverPointer,
+            c_char_p,
+        ]
+        lib.ls_option_transport_ssh2_proxy_jump_private_key_path.restype = c_uint8
+
+        self._set_libssh2_proxy_jump_private_key_passphrase: Callable[
+            [DriverPointer, c_char_p], int
+        ] = lib.ls_option_transport_ssh2_proxy_jump_private_key_passphrase
+        lib.ls_option_transport_ssh2_proxy_jump_private_key_passphrase.argtypes = [
+            DriverPointer,
+            c_char_p,
+        ]
+        lib.ls_option_transport_ssh2_proxy_jump_private_key_passphrase.restype = c_uint8
+
+        self._set_proxy_jump_libssh2_trace: Callable[[DriverPointer], int] = (
+            lib.ls_option_transport_ssh2_proxy_jump_libssh2trace
+        )
+        lib.ls_option_transport_ssh2_proxy_jump_libssh2trace.argtypes = [
+            DriverPointer,
+        ]
+        lib.ls_option_transport_ssh2_proxy_jump_libssh2trace.restype = c_uint8
+
     def set_known_hosts_path(self, ptr: DriverPointer, path: c_char_p) -> int:
         """
         Set ssh2 transport known hosts file path.
@@ -967,6 +1029,149 @@ class LibScrapliTransportSsh2OptionsMapping:
 
         """
         return self._set_libssh2_trace(ptr)
+
+    def set_proxy_jump_host(self, ptr: DriverPointer, host: c_char_p) -> int:
+        """
+        Set ssh2 transport proxy jump target host.
+
+        Should not be used/called directly.
+
+        Args:
+            ptr: ptr to the cli/netconf object
+            host: the host to proxy jump to
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._set_libssh2_proxy_jump_host(ptr, host)
+
+    def set_proxy_jump_port(self, ptr: DriverPointer, port: c_int) -> int:
+        """
+        Set ssh2 transport proxy jump target port.
+
+        Should not be used/called directly.
+
+        Args:
+            ptr: ptr to the cli/netconf object
+            port: the port of the host to proxy jump to
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._set_libssh2_proxy_jump_port(ptr, port)
+
+    def set_proxy_jump_username(self, ptr: DriverPointer, username: c_char_p) -> int:
+        """
+        Set ssh2 transport proxy jump target host username.
+
+        Should not be used/called directly.
+
+        Args:
+            ptr: ptr to the cli/netconf object
+            username: the username to use for auth with the target host
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._set_libssh2_proxy_jump_username(ptr, username)
+
+    def set_proxy_jump_password(self, ptr: DriverPointer, password: c_char_p) -> int:
+        """
+        Set ssh2 transport proxy jump target host password.
+
+        Should not be used/called directly.
+
+        Args:
+            ptr: ptr to the cli/netconf object
+            password: the password to use for auth with the target host
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._set_libssh2_proxy_jump_password(ptr, password)
+
+    def set_proxy_jump_private_key_path(
+        self, ptr: DriverPointer, private_key_path: c_char_p
+    ) -> int:
+        """
+        Set ssh2 transport proxy jump target host private key path.
+
+        Should not be used/called directly.
+
+        Args:
+            ptr: ptr to the cli/netconf object
+            private_key_path: the path to the private key to use for auth with the target host
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._set_libssh2_proxy_jump_private_key_path(ptr, private_key_path)
+
+    def set_proxy_jump_private_key_passphrase(
+        self, ptr: DriverPointer, private_key_passphrase: c_char_p
+    ) -> int:
+        """
+        Set ssh2 transport proxy jump target host private key passphrase.
+
+        Should not be used/called directly.
+
+        Args:
+            ptr: ptr to the cli/netconf object
+            private_key_passphrase: the private key passphrase to use for auth with the target host
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._set_libssh2_proxy_jump_private_key_passphrase(ptr, private_key_passphrase)
+
+    def set_proxy_jump_libssh2_trace(self, ptr: DriverPointer) -> int:
+        """
+        Set ssh2 transport libssh2 trace for the "inner" proxy jump connection.
+
+        Should not be used/called directly.
+
+        Args:
+            ptr: ptr to the cli/netconf object
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._set_proxy_jump_libssh2_trace(ptr)
 
 
 class LibScrapliTransportTelnetOptionsMapping:

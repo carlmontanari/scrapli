@@ -96,6 +96,23 @@ async def wait_for_available_operation_result_async(fd: int) -> None:
     read(fd, 1)
 
 
+def second_to_nano(d: int | float) -> int:
+    """
+    Convert a duration in seconds to nanoseconds
+
+    Args:
+        d: the duration in seconds to convert
+
+    Returns:
+        int: converted duration in nanoseconds
+
+    Raises:
+        N/A
+
+    """
+    return int(d / 1e-9)
+
+
 def unix_nano_timestmap_to_iso(timestamp: int) -> str:
     """
     Convert a unix ns timestamp to iso format.

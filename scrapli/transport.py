@@ -226,7 +226,15 @@ class Ssh2Options(Options):
     Options holds ssh2 transport options to pass to the ffi layer.
 
     Args:
+        known_hosts_path: path to known hosts file
         libssh2_trace: enable libssh2 tracing
+        proxy_jump_host: the end target host to proxy jump to
+        proxy_jump_port: port of the end target host to proxy jump to
+        proxy_jump_username: username for auth to end proxy jump host
+        proxy_jump_password: password for auth to end proxy jump host
+        proxy_jump_private_key_path: private key path for auth to end proxy jump host
+        proxy_jump_private_key_passphrase: private key passphrase for auth to end proxy jump host
+        proxy_jump_libssh2_trace: enable libssh2 tracing for the "inner" proxy jump session
 
     Returns:
         None
@@ -236,9 +244,20 @@ class Ssh2Options(Options):
 
     """
 
+    known_hosts_path: str | None = None
     libssh2_trace: bool | None = None
 
-    def apply(self, ffi_mapping: LibScrapliMapping, ptr: DriverPointer) -> None:
+    proxy_jump_host: str | None = None
+    proxy_jump_port: int | None = None
+    proxy_jump_username: str | None = None
+    proxy_jump_password: str | None = None
+    proxy_jump_private_key_path: str | None = None
+    proxy_jump_private_key_passphrase: str | None = None
+    proxy_jump_libssh2_trace: bool | None = None
+
+    def apply(  # noqa: C901,PLR0912
+        self, ffi_mapping: LibScrapliMapping, ptr: DriverPointer
+    ) -> None:
         """
         Applies the options to the given driver pointer.
 
@@ -255,10 +274,81 @@ class Ssh2Options(Options):
             OptionsException: if any option apply returns a non-zero return code.
 
         """
+        if self.known_hosts_path is not None:
+            status = ffi_mapping.options_mapping.transport_ssh2.set_known_hosts_path(
+                ptr,
+                to_c_string(self.known_hosts_path),
+            )
+            if status != 0:
+                raise OptionsException("failed to set ssh2 transport known hosts path")
+
         if self.libssh2_trace is not None:
             status = ffi_mapping.options_mapping.transport_ssh2.set_libssh2_trace(ptr)
             if status != 0:
                 raise OptionsException("failed to set ssh2 transport trace")
+
+        if self.proxy_jump_host is not None:
+            status = ffi_mapping.options_mapping.transport_ssh2.set_proxy_jump_host(
+                ptr,
+                to_c_string(self.proxy_jump_host),
+            )
+            if status != 0:
+                raise OptionsException("failed to set ssh2 transport proxy jump host")
+        else:
+            # if the proxy jump host is None no reason to check anything else, also the host
+            # *must* be applied first since we will check .? on the proxy jump object in the
+            # ffi option apply in zig, so we will crash if the host isnt set and something else
+            # is attempted to be set!
+            return
+
+        if self.proxy_jump_port is not None:
+            status = ffi_mapping.options_mapping.transport_ssh2.set_proxy_jump_port(
+                ptr,
+                c_int(self.proxy_jump_port),
+            )
+            if status != 0:
+                raise OptionsException("failed to set ssh2 transport proxy jump port")
+
+        if self.proxy_jump_username is not None:
+            status = ffi_mapping.options_mapping.transport_ssh2.set_proxy_jump_username(
+                ptr,
+                to_c_string(self.proxy_jump_username),
+            )
+            if status != 0:
+                raise OptionsException("failed to set ssh2 transport proxy jump username")
+
+        if self.proxy_jump_password is not None:
+            status = ffi_mapping.options_mapping.transport_ssh2.set_proxy_jump_password(
+                ptr,
+                to_c_string(self.proxy_jump_password),
+            )
+            if status != 0:
+                raise OptionsException("failed to set ssh2 transport proxy jump password")
+
+        if self.proxy_jump_private_key_path is not None:
+            status = ffi_mapping.options_mapping.transport_ssh2.set_proxy_jump_private_key_path(
+                ptr,
+                to_c_string(self.proxy_jump_private_key_path),
+            )
+            if status != 0:
+                raise OptionsException("failed to set ssh2 transport proxy jump private key path")
+
+        if self.proxy_jump_private_key_passphrase is not None:
+            status = (
+                ffi_mapping.options_mapping.transport_ssh2.set_proxy_jump_private_key_passphrase(
+                    ptr,
+                    to_c_string(self.proxy_jump_private_key_passphrase),
+                )
+            )
+            if status != 0:
+                raise OptionsException(
+                    "failed to set ssh2 transport proxy jump private key passphrase"
+                )
+
+        if self.proxy_jump_libssh2_trace is not None:
+            status = ffi_mapping.options_mapping.transport_ssh2.set_proxy_jump_libssh2_trace(ptr)
+            if status != 0:
+                raise OptionsException("failed to set ssh2 transport proxy jump trace")
 
 
 @dataclass
