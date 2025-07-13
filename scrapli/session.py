@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from scrapli.exceptions import OptionsException
 from scrapli.ffi_mapping import LibScrapliMapping
 from scrapli.ffi_types import DriverPointer, to_c_string
+from scrapli.helper import second_to_nano
 
 
 @dataclass
@@ -42,7 +43,7 @@ class Options:
     def __post_init__(self) -> None:
         if self.operation_timeout_s is not None or self.operation_timeout_ns is not None:
             if self.operation_timeout_ns is None and self.operation_timeout_s is not None:
-                self.operation_timeout_ns = int(self.operation_timeout_s / 1e-9)
+                self.operation_timeout_ns = second_to_nano(d=self.operation_timeout_s)
 
     def apply(self, ffi_mapping: LibScrapliMapping, ptr: DriverPointer) -> None:  # noqa: C901
         """
