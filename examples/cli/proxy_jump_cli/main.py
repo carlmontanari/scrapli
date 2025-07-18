@@ -1,4 +1,4 @@
-"""examples.cli.proxy_jump.main"""
+"""examples.cli.proxy_jump_cli.main"""
 
 import os
 import sys
