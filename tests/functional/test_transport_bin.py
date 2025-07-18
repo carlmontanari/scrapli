@@ -34,7 +34,7 @@ PROXY_JUMP_IDS = (
     argvalues=PROXY_JUMP_ARGVALUES,
     ids=PROXY_JUMP_IDS,
 )
-def test_proxy_jump(platform, input_, is_darwin, eos_available, cli_assert_result):
+def test_proxy_jump_bin(platform, input_, is_darwin, eos_available, cli_assert_result):
     if platform == "arista_eos":
         if eos_available is False:
             # because we cant have this publicly in ci afaik
@@ -105,7 +105,7 @@ PROXY_JUMP_NETCONF_IDS = (
     argvalues=PROXY_JUMP_NETCONF_ARGVALUES,
     ids=PROXY_JUMP_NETCONF_IDS,
 )
-def test_proxy_jump_netconf(platform, filter_, is_darwin, eos_available, netconf_assert_result):
+def test_proxy_jump_netconf_bin(platform, filter_, is_darwin, eos_available, netconf_assert_result):
     if platform == "arista_eos":
         if eos_available is False:
             # because we cant have this publicly in ci afaik
