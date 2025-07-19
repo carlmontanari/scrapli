@@ -2,7 +2,7 @@ from copy import copy
 
 import pytest
 
-from scrapli.netconf import DatastoreType
+from scrapli.netconf import DatastoreType, FilterType
 
 ACTION_ARGNAMES = (
     "action",
@@ -577,27 +577,44 @@ async def test_get_schema_async(identifier, netconf, netconf_assert_result):
 
 GET_ARGNAMES = (
     "filter_",
+    "filter_type",
     "platform",
     "transport",
 )
 GET_ARGVALUES = (
     (
         "",
+        FilterType.SUBTREE,
         "netopeer",
         "bin",
     ),
     (
         "",
+        FilterType.SUBTREE,
         "netopeer",
         "ssh2",
     ),
     (
-        "<interfaces><interface><name>Management0</name><state></state></interface></interfaces>",
+        '<system xmlns="urn:some:data"><interfaces><name>eth0</name><name/></interfaces></system>',
+        FilterType.SUBTREE,
         "netopeer",
         "bin",
     ),
     (
-        "<interfaces><interface><name>Management0</name><state></state></interface></interfaces>",
+        '<system xmlns="urn:some:data"><interfaces><name>eth0</name><name/></interfaces></system>',
+        FilterType.SUBTREE,
+        "netopeer",
+        "ssh2",
+    ),
+    (
+        "//interfaces[name='eth0']/name",
+        FilterType.XPATH,
+        "netopeer",
+        "bin",
+    ),
+    (
+        "//interfaces[name='eth0']/name",
+        FilterType.XPATH,
         "netopeer",
         "ssh2",
     ),
@@ -607,6 +624,8 @@ GET_IDS = (
     "netopeer-ssh2-simple",
     "netopeer-bin-filtered",
     "netopeer-ssh2-filtered",
+    "netopeer-bin-filtered-xpath",
+    "netopeer-ssh2-filtered-xpath",
 )
 
 
@@ -615,9 +634,9 @@ GET_IDS = (
     argvalues=GET_ARGVALUES,
     ids=GET_IDS,
 )
-def test_get(filter_, netconf, netconf_assert_result):
+def test_get(filter_, filter_type, netconf, netconf_assert_result):
     with netconf as n:
-        netconf_assert_result(actual=n.get(filter_=filter_))
+        netconf_assert_result(actual=n.get(filter_=filter_, filter_type=filter_type))
 
 
 @pytest.mark.asyncio
@@ -626,9 +645,9 @@ def test_get(filter_, netconf, netconf_assert_result):
     argvalues=GET_ARGVALUES,
     ids=GET_IDS,
 )
-async def test_get_async(filter_, netconf, netconf_assert_result):
+async def test_get_async(filter_, filter_type, netconf, netconf_assert_result):
     async with netconf as n:
-        actual = await n.get_async(filter_=filter_)
+        actual = await n.get_async(filter_=filter_, filter_type=filter_type)
 
         netconf_assert_result(actual=actual)
 
