@@ -1,4 +1,4 @@
-"""examples.cli.custom_definition"""
+"""examples.cli.custom_definition.main"""
 
 import os
 import sys

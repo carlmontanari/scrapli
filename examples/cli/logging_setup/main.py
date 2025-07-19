@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %
 
 
 def main() -> None:
-    """A simple program to demonstration sending "configurations"."""
+    """A simple script showing a basic logger setup."""
     cli = Cli(
         definition_file_or_name=PLATFORM,
         host=HOST,
