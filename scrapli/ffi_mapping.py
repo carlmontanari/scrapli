@@ -38,6 +38,13 @@ class LibScrapliSharedMapping:
     """
 
     def __init__(self, lib: CDLL) -> None:
+        self._assert_no_leaks: Callable[
+            [],
+            bool,
+        ] = lib.ls_assert_no_leaks
+        lib.ls_assert_no_leaks.argtypes = []
+        lib.ls_assert_no_leaks.restype = c_bool
+
         self._get_poll_fd: Callable[
             [
                 DriverPointer,
@@ -59,6 +66,24 @@ class LibScrapliSharedMapping:
             DriverPointer,
         ]
         lib.ls_shared_free.restype = None
+
+    def assert_no_leaks(self) -> bool:
+        """
+        Assert no memory leaks -- only works with debug libscrapli build.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            N/A
+
+        Returns:
+            bool: True if leaks, otherwise False
+
+        Raises:
+            N/A
+
+        """
+        return bool(self._assert_no_leaks())
 
     def get_poll_fd(self, ptr: DriverPointer) -> c_int:
         """

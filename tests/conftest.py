@@ -2,6 +2,8 @@ import re
 
 import pytest
 
+from scrapli.ffi_mapping import LibScrapliMapping
+
 
 def pytest_addoption(parser):
     parser.addoption(
@@ -24,6 +26,16 @@ def pytest_addoption(parser):
         default=False,
         help="skip slow tests -- like really huge outputs",
     )
+
+
+@pytest.fixture(scope="session", autouse=True)
+def assert_no_leaks():
+    # only works (well... it wont fail, but only will report accurately) when used w/ *non-release*
+    # build *or* when `LIBSCRAPLI_DEBUG` env var is set to any value (just has to be present) as
+    # this will cuase us to use the debug allocator rather than c allocator.
+    yield
+
+    assert LibScrapliMapping().shared_mapping.assert_no_leaks() is True
 
 
 CLI_USER_AT_HOST_PATTERN = re.compile(r"\b\w+@\w+\b")
