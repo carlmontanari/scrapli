@@ -1,0 +1,9 @@
+---
+prompt_pattern: '^.*[>#$]\s?+$'
+default_mode: 'cli'
+modes:
+  - name: 'cli'
+    prompt_pattern: '^.*[>#$]\s?+$'
+on_close_instructions:
+  - write:
+      input: 'exit'

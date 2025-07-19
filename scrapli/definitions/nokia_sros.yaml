@@ -1,0 +1,31 @@
+---
+prompt_pattern: '.*\[.*?\]\n.*#'
+default_mode: 'exec'
+modes:
+  - name: 'exec'
+    prompt_pattern: '^\[.*?\]\n.*#'
+    accessible_modes:
+      - name: 'configuration'
+        instructions:
+          - send_input:
+              input: 'edit-config exclusive'
+  - name: 'configuration'
+    prompt_pattern: '.?\(.*?\)\[.*?\]\n.*#'
+    accessible_modes:
+      - name: 'exec'
+        instructions:
+          - send_input:
+              input: 'quit-config'
+failure_indicators:
+  - 'MINOR:'
+  - 'MAJOR:'
+on_open_instructions:
+  - enter_mode:
+      requested_mode: 'exec'
+  - send_input:
+      input: 'environment no more'
+on_close_instructions:
+  - enter_mode:
+      requested_mode: 'exec'
+  - write:
+      input: 'logout'

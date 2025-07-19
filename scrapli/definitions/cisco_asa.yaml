@@ -1,0 +1,48 @@
+---
+prompt_pattern: '^.*[>#$]\s?+$'
+default_mode: 'privileged_exec'
+modes:
+  - name: 'exec'
+    prompt_pattern: '^[\w\./-]{1,63}>\s?$'
+    accessible_modes:
+      - name: 'privileged_exec'
+        instructions:
+          - send_prompted_input:
+              input: 'enable'
+              prompt_pattern: '^(P|p)assword:\s?$'
+              response: '__lookup::enable'
+  - name: 'privileged_exec'
+    prompt_pattern: '^[\w\./-]{1,63}#\s?$'
+    accessible_modes:
+      - name: 'exec'
+        instructions:
+          - send_input:
+              input: 'disable'
+      - name: 'configuration'
+        instructions:
+          - send_input:
+              input: 'configure terminal'
+  - name: 'configuration'
+    prompt_pattern: '^[\w\./-]{1,63}\([\w-]{0,32}\)#\s?$'
+    accessible_modes:
+      - name: 'privileged_exec'
+        instructions:
+          - send_input:
+              input: 'exit'
+failure_indicators:
+  - '% Ambiguous command'
+  - '% Incomplete command'
+  - '% Invalid input detected'
+  - '% Unknown command'
+on_open_instructions:
+  - enter_mode:
+      requested_mode: 'privileged_exec'
+  - send_input:
+      input: 'terminal pager 0'
+on_close_instructions:
+  - enter_mode:
+      requested_mode: 'privileged_exec'
+  - write:
+      input: 'logout'
+ntc_templates_platform: 'cisco_asa'
+genie_platform: 'asa'

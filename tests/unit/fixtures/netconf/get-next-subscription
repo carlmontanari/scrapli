@@ -1,0 +1,43 @@
+Warning: Permanently added '[devnetsandboxiosxe.cisco.com]:830' (RSA) to the list of known hosts.
+camontan@devnetsandboxiosxe.cisco.com's password: 
+<?xml version="1.0" encoding="UTF-8"?>
+<hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+<capabilities>
+<capability>urn:ietf:params:netconf:base:1.0</capability>
+<capability>urn:ietf:params:netconf:base:1.1</capability>
+<capability>urn:ietf:params:netconf:capability:writable-running:1.0</capability>
+<capability>urn:ietf:params:netconf:capability:rollback-on-error:1.0</capability>
+<capability>urn:ietf:params:netconf:capability:validate:1.0</capability>
+<capability>urn:ietf:params:netconf:capability:validate:1.1</capability>
+<capability>urn:ietf:params:netconf:capability:xpath:1.0</capability>
+<capability>urn:ietf:params:netconf:capability:notification:1.0</capability>
+<capability>urn:ietf:params:netconf:capability:interleave:1.0</capability>
+<capability>urn:ietf:params:netconf:capability:with-defaults:1.0?basic-mode=explicit&amp;also-supported=report-all-tagged,report-all</capability>
+<capability>urn:ietf:params:netconf:capability:with-operational-defaults:1.0?basic-mode=explicit&amp;also-supported=report-all-tagged,report-all</capability>
+<capability>urn:ietf:params:netconf:capability:yang-library:1.0?revision=2019-01-04&amp;module-set-id=72c44eca39742896115d6c2b36780562</capability>
+<capability>urn:ietf:params:netconf:capability:yang-library:1.1?revision=2019-01-04&amp;content-id=72c44eca39742896115d6c2b36780562</capability>
+</capabilities>
+<session-id>88</session-id></hello>]]>]]>
+#1101
+<?xml version="1.0" encoding="UTF-8"?>
+<notification xmlns="urn:ietf:params:xml:ns:netconf:notification:1.0"><eventTime>2025-05-25T01:10:45.25Z</eventTime><push-update xmlns="urn:ietf:params:xml:ns:yang:ietf-yang-push"><subscription-id>2147483660</subscription-id><datastore-contents-xml><mdt-oper-data xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-mdt-oper"><mdt-subscriptions><subscription-id>2147483660</subscription-id><base><stream>yang-push</stream><source-vrf></source-vrf><period>1000</period><xpath>/mdt-oper:mdt-oper-data/mdt-subscriptions</xpath></base><type>sub-type-dynamic</type><state>sub-state-valid</state><comments>Subscription validated</comments><mdt-receivers><address>11.11.111.11</address><port>63966</port><protocol>netconf</protocol><state>rcvr-state-connected</state><comments></comments><profile></profile><last-state-change-time>2025-05-25T01:10:45.244237+00:00</last-state-change-time></mdt-receivers><last-state-change-time>2025-05-25T01:10:45.242640+00:00</last-state-change-time></mdt-subscriptions></mdt-oper-data></datastore-contents-xml></push-update></notification>
+
+##
+
+#422
+<?xml version="1.0" encoding="UTF-8"?>
+<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><subscription-result xmlns='urn:ietf:params:xml:ns:yang:ietf-event-notifications' xmlns:notif-bis="urn:ietf:params:xml:ns:yang:ietf-event-notifications">notif-bis:ok</subscription-result>
+<subscription-id xmlns='urn:ietf:params:xml:ns:yang:ietf-event-notifications'>2147483660</subscription-id>
+</rpc-reply>
+##
+
+#1101
+<?xml version="1.0" encoding="UTF-8"?>
+<notification xmlns="urn:ietf:params:xml:ns:netconf:notification:1.0"><eventTime>2025-05-25T01:10:55.25Z</eventTime><push-update xmlns="urn:ietf:params:xml:ns:yang:ietf-yang-push"><subscription-id>2147483660</subscription-id><datastore-contents-xml><mdt-oper-data xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-mdt-oper"><mdt-subscriptions><subscription-id>2147483660</subscription-id><base><stream>yang-push</stream><source-vrf></source-vrf><period>1000</period><xpath>/mdt-oper:mdt-oper-data/mdt-subscriptions</xpath></base><type>sub-type-dynamic</type><state>sub-state-valid</state><comments>Subscription validated</comments><mdt-receivers><address>11.11.111.11</address><port>63966</port><protocol>netconf</protocol><state>rcvr-state-connected</state><comments></comments><profile></profile><last-state-change-time>2025-05-25T01:10:45.244237+00:00</last-state-change-time></mdt-receivers><last-state-change-time>2025-05-25T01:10:45.242640+00:00</last-state-change-time></mdt-subscriptions></mdt-oper-data></datastore-contents-xml></push-update></notification>
+
+##
+
+#132
+<?xml version="1.0" encoding="UTF-8"?>
+<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="102"><ok/></rpc-reply>
+##

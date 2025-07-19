@@ -1,0 +1,46 @@
+---
+prompt_pattern: '^.*[>#$]\s?+$'
+default_mode: 'privileged_exec'
+modes:
+  - name: 'exec'
+    prompt_pattern: '^[a-z0-9.\-_@()/:]{1,63}:(user|oper|puser|3|4|6)#$'
+    accessible_modes:
+      - name: 'privileged_exec'
+        instructions:
+          - send_prompted_input:
+              input: 'enable admin'
+              prompt_pattern: '^[pP]ass[wW]ord:$'
+              response: '__lookup::enable'
+  - name: 'privileged_exec'
+    prompt_pattern: '^[a-z0-9.\-_@/:]{1,63}:(admin|5)#$'
+    accessible_modes:
+      - name: 'exec'
+        instructions:
+          - send_input:
+              input: 'disable'
+      - name: 'configuration'
+        instructions:
+          - send_input:
+              input: 'configure terminal'
+  - name: 'configuration'
+    prompt_pattern: '^[a-z0-9.\-_@/:]{1,63}:(admin|5)#$'
+    accessible_modes:
+      - name: 'privileged_exec'
+        instructions:
+          - send_input:
+              input: 'end'
+failure_indicators:
+  - 'Next possible completions:'
+  - 'Available commands:'
+on_open_instructions:
+  - enter_mode:
+      requested_mode: 'privileged_exec'
+  - send_input:
+      input: 'enable clipaging'
+on_close_instructions:
+  - enter_mode:
+      requested_mode: 'privileged_exec'
+  - write:
+      input: 'disable clipaging'
+  - write:
+      input: 'exit'

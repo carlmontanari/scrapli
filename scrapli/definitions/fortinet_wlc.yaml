@@ -1,0 +1,33 @@
+---
+prompt_pattern: '^.*[>#$]\s?+$'
+default_mode: 'privileged_exec'
+modes:
+  - name: 'privileged_exec'
+    prompt_pattern: '^[a-z0-9-]{1,48}\(\d{1,2}\)#\s*$'
+    accessible_modes:
+      - name: 'configuration'
+        instructions:
+          - send_input:
+              input: 'configure terminal'
+  - name: 'configuration'
+    prompt_pattern: '^[a-z0-9-]{1,48}\(\d{1,2}\)\(conf[a-z0-9.\-@/:\+]{0,32}\)#\s*$'
+    accessible_modes:
+      - name: 'privileged_exec'
+        instructions:
+          - send_input:
+              input: 'end'
+failure_indicators:
+  - 'is not unique'
+  - 'Unrecognized command'
+  - 'Insufficient parameters for command'
+  - 'Error:'
+on_open_instructions:
+  - enter_mode:
+      requested_mode: 'privileged_exec'
+  - send_input:
+      input: 'screen-length disable'
+on_close_instructions:
+  - enter_mode:
+      requested_mode: 'privileged_exec'
+  - write:
+      input: 'quit'

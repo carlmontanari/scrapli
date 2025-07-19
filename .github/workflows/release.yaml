@@ -1,0 +1,15 @@
+---
+name: release
+
+on:
+  release:
+    types:
+      - created
+
+jobs:
+  publish:
+    uses: ./.github/workflows/publish.yaml
+
+  validate:
+    needs: publish
+    uses: ./.github/workflows/validate.yaml

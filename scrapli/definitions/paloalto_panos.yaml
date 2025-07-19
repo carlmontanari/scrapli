@@ -1,0 +1,36 @@
+---
+prompt_pattern: '^.*[>#$]\s?+$'
+default_mode: 'exec'
+modes:
+  - name: 'exec'
+    prompt_pattern: '^[\w\._-]+@[\w\.\(\)_-]+>\s?$'
+    accessible_modes:
+      - name: 'configuration'
+        instructions:
+          - send_input:
+              input: 'configure'
+  - name: 'configuration'
+    prompt_pattern: '^[\w\._-]+@[\w\.\(\)_-]+#\s?$'
+    accessible_modes:
+      - name: 'exec'
+        instructions:
+          - send_input:
+              input: 'exit'
+failure_indicators:
+  - 'Unknown command:'
+  - 'Invalid syntax.'
+  - 'Server error'
+  - 'Validation Error:'
+on_open_instructions:
+  - enter_mode:
+      requested_mode: 'exec'
+  - send_input:
+      input: 'set cli scripting-mode on'
+  - send_input:
+      input: 'set cli pager off'
+on_close_instructions:
+  - enter_mode:
+      requested_mode: 'exec'
+  - write:
+      input: 'exit'
+ntc_templates_platform: 'paloalto_panos'

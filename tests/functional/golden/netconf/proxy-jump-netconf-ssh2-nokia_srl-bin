@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rpc-reply message-id="101" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+    <data>
+        <system xmlns="urn:nokia.com:srlinux:general:system">
+            <ssh-server xmlns="urn:nokia.com:srlinux:linux:ssh">
+                <name>mgmt</name>
+                <admin-state>enable</admin-state>
+                <oper-state>up</oper-state>
+                <network-instance>mgmt</network-instance>
+                <port>22</port>
+                <disable-shell>false</disable-shell>
+                <timeout>0</timeout>
+                <rate-limit>20</rate-limit>
+                <protocol-version>2</protocol-version>
+                <use-credentialz>true</use-credentialz>
+                <host-key>
+                    <preserve>true</preserve>
+                </host-key>
+            </ssh-server>
+        </system>
+    </data>
+</rpc-reply>

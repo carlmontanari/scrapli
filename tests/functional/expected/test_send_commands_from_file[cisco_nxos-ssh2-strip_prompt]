@@ -1,3 +1,0 @@
-show run | i scp-server
-feature scp-servershow run | i scp-server
-feature scp-server
