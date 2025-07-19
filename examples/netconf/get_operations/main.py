@@ -31,7 +31,10 @@ def main() -> None:
         print(result.result[0:250])
 
         # we can also do "get" rpcs of course... here we'll just provide some simple filter for
-        # snagging acl info; you can provide a filter to get_config in the same fashion
+        # snagging acl info; you can provide a filter to get_config in the same fashion.
+        # default filter type is subtree, srlinux doesnt support xpath, so cant check that here,
+        # but you can go head over to the functional tests to see that... but... basically just set
+        # the filter_type and then pass a valid xpath filter
         result = nc.get(filter_="""<acl xmlns="urn:nokia.com:srlinux:acl:acl"></acl>""")
 
         print(result.result[0:250])
