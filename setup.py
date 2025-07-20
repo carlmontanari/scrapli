@@ -16,7 +16,7 @@ from setuptools.command.bdist_wheel import bdist_wheel
 from setuptools.command.editable_wheel import editable_wheel
 from setuptools.command.sdist import sdist
 
-LIBSCRAPLI_VERSION = "0.0.1-beta.2"
+LIBSCRAPLI_VERSION = "0.0.1-beta.4"
 LIBSCRAPLI_REPO = "https://github.com/scrapli/libscrapli"
 LIBSCRAPLI_BUILD_PATH_ENV = "LIBSCRAPLI_BUILD_PATH"
 LIBSCRPALI_ZIG_TRIPLE_ENV = "LIBSCRAPLI_ZIG_TRIPLE"
