@@ -11,6 +11,11 @@ PORT = int(os.getenv("SCRAPLI_PORT") or 21830 if IS_DARWIN else 830)
 USERNAME = os.getenv("SCRAPLI_USERNAME", "admin")
 PASSWORD = os.getenv("SCRAPLI_USERNAME", "NokiaSrl1!")
 
+NETOPEER_HOST = "localhost" if IS_DARWIN else "172.20.20.18"
+NETOPEER_PORT = 23830 if IS_DARWIN else 830
+NETOPEER_USERNAME = "root"
+NETOPEER_PASSWORD = "password"
+
 
 def main() -> None:
     """A program to demonstrate *get* operations (of all kinds!) with netconf."""
@@ -38,6 +43,28 @@ def main() -> None:
         result = nc.get(filter_="""<acl xmlns="urn:nokia.com:srlinux:acl:acl"></acl>""")
 
         print(result.result[0:250])
+
+        # you may also just wanna snag the schema:
+        result = nc.get_schema(identifier="ietf-yang-types")
+
+        # also large output, you get the idea...
+        print(result.result[0:250])
+
+    # for get-data we can use the netopeer server instead
+    netconf = Netconf(
+        host=NETOPEER_HOST,
+        port=NETOPEER_PORT,
+        auth_options=AuthOptions(
+            username=NETOPEER_USERNAME,
+            password=NETOPEER_PASSWORD,
+        ),
+    )
+
+    with netconf as nc:
+        # get-data works as you'd expect, basically same as other gets...
+        result = nc.get_data(filter_="""<system xmlns="urn:some:data"></system>""")
+
+        print(result.result)
 
 
 if __name__ == "__main__":

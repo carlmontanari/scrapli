@@ -1,1 +1,3 @@
-TODO: show the subscription stuff via both ways (create/establish if possbile)
+# Get Operations
+
+This example shows, `get`, `get-config`, `get-schema` and `get-data` rpcs.
