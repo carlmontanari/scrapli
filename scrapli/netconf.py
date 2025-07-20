@@ -840,7 +840,7 @@ class Netconf:
             notification_size=notification_size,
         )
 
-        if notification_size.contents == 0:
+        if notification_size.contents.value == 0:
             raise NoMessagesException("no notification messages available")
 
         notification_slice = ZigSlice(size=notification_size.contents)
@@ -881,7 +881,7 @@ class Netconf:
             subscription_size=subscription_size,
         )
 
-        if subscription_size.contents == 0:
+        if subscription_size.contents.value == 0:
             raise NoMessagesException(
                 f"no subscription messages available for subscription id {subscription_id}",
             )
