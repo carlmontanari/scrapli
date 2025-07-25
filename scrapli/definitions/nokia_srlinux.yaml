@@ -5,6 +5,10 @@ default_mode: 'exec'
 modes:
   - name: 'bash'
     prompt_pattern: '^.*[>#$]\s?+$'
+    prompt_excludes:
+      # ensure bash doesnt match on exec/config. technically this could be in a bash prompt
+      # but seems pretty unlikely
+      - '--{'
     accessible_modes:
       - name: 'exec'
         instructions:
