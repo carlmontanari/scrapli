@@ -13,7 +13,7 @@ from scrapli.transport import TestOptions as TransportTestOptions
 
 __version__ = "2.0.0-alpha.5"
 __calendar_version__ = "2025.7.12"
-__definitions_version__ = "c38ec6d"
+__definitions_version__ = "1a3d771"
 
 __all__ = (
     "AuthOptions",
