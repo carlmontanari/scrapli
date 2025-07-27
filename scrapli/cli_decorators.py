@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Concatenate, ParamSpec
 
 from scrapli.cli_result import Result
 from scrapli.exceptions import OptionsException
+from scrapli.session import DEFAULT_OPERATION_TIMEOUT_NS
 
 if TYPE_CHECKING:
     from scrapli.cli import Cli
@@ -65,14 +66,18 @@ def handle_operation_timeout(
         if status != 0:
             raise OptionsException("failed to set session operation timeout")
 
-        res = wrapped(inst, *args, **kwargs)
-
-        status = inst.ffi_mapping.options_mapping.session.set_operation_timeout_ns(
-            inst._ptr_or_exception(),
-            c_uint64(operation_timeout_ns),
-        )
-        if status != 0:
-            raise OptionsException("failed to set session operation timeout")
+        try:
+            res = wrapped(inst, *args, **kwargs)
+        except Exception as exc:
+            raise exc
+        finally:
+            # unconditionally reset the timeout
+            status = inst.ffi_mapping.options_mapping.session.set_operation_timeout_ns(
+                inst._ptr_or_exception(),
+                c_uint64(inst.session_options.operation_timeout_ns or DEFAULT_OPERATION_TIMEOUT_NS),
+            )
+            if status != 0:
+                raise OptionsException("failed to set session operation timeout")
 
         return res
 
@@ -132,14 +137,18 @@ def handle_operation_timeout_async(
         if status != 0:
             raise OptionsException("failed to set session operation timeout")
 
-        res = await wrapped(inst, *args, **kwargs)
-
-        status = inst.ffi_mapping.options_mapping.session.set_operation_timeout_ns(
-            inst._ptr_or_exception(),
-            c_uint64(operation_timeout_ns),
-        )
-        if status != 0:
-            raise OptionsException("failed to set session operation timeout")
+        try:
+            res = await wrapped(inst, *args, **kwargs)
+        except Exception as exc:
+            raise exc
+        finally:
+            # unconditionally reset the timeout
+            status = inst.ffi_mapping.options_mapping.session.set_operation_timeout_ns(
+                inst._ptr_or_exception(),
+                c_uint64(inst.session_options.operation_timeout_ns or DEFAULT_OPERATION_TIMEOUT_NS),
+            )
+            if status != 0:
+                raise OptionsException("failed to set session operation timeout")
 
         return res
 
