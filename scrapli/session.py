@@ -8,6 +8,8 @@ from scrapli.ffi_mapping import LibScrapliMapping
 from scrapli.ffi_types import DriverPointer, to_c_string
 from scrapli.helper import second_to_nano
 
+DEFAULT_OPERATION_TIMEOUT_NS = 10_000_000_000
+
 
 @dataclass
 class Options:
