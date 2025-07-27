@@ -95,7 +95,7 @@ def trigger_thread() -> str:
     )
 
     with cli as c:
-        # we really jsut wanna log in/out but we may as well do something while we are in there
+        # we really just wanna log in/out but we may as well do something while we are in there
         result = c.send_input(input_="show version")
 
         return result.result
