@@ -33,6 +33,8 @@ class Options:
     """
 
     read_size: int | None = None
+    read_min_delay_ns: int | None = None
+    read_max_delay_ns: int | None = None
     return_char: str | None = None
     operation_timeout_s: int | None = None
     operation_timeout_ns: int | None = None
@@ -47,7 +49,9 @@ class Options:
             if self.operation_timeout_ns is None and self.operation_timeout_s is not None:
                 self.operation_timeout_ns = second_to_nano(d=self.operation_timeout_s)
 
-    def apply(self, ffi_mapping: LibScrapliMapping, ptr: DriverPointer) -> None:  # noqa: C901
+    def apply(  # noqa: C901,PLR0912
+        self, ffi_mapping: LibScrapliMapping, ptr: DriverPointer
+    ) -> None:
         """
         Applies the options to the given driver pointer.
 
@@ -70,6 +74,20 @@ class Options:
             )
             if status != 0:
                 raise OptionsException("failed to set session read size")
+
+        if self.read_min_delay_ns is not None:
+            status = ffi_mapping.options_mapping.session.set_read_min_delay_ns(
+                ptr, c_uint64(self.read_min_delay_ns)
+            )
+            if status != 0:
+                raise OptionsException("failed to set session read min delay")
+
+        if self.read_max_delay_ns is not None:
+            status = ffi_mapping.options_mapping.session.set_read_max_delay_ns(
+                ptr, c_uint64(self.read_max_delay_ns)
+            )
+            if status != 0:
+                raise OptionsException("failed to set session read max delay")
 
         if self.return_char is not None:
             self._return_char = to_c_string(self.return_char)

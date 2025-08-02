@@ -8,10 +8,10 @@ PURPLE=$(printf '\033[1;35m')
 CYAN=$(printf '\033[1;36m')
 NC=$(printf '\033[0m')
 
-PATTERN_SEMVER='[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?'
+PATTERN_SEMVER='\d+\.\d+\.\d+(-[a-zA-Z0-9.]+)?'
 PATTERN_CALVER='\d{4}\.\d{1,2}\.\d{1,2}'
 PATTERN_PYTHON='3\.\d+'
-PATTERN_PYVER='py[0-9]+'
+PATTERN_PYVER='py\d+'
 PATTERN_HASH='[a-f0-9]{7,}'
 
 PATTERN_VERSIONS="${PATTERN_SEMVER}|${PATTERN_CALVER}|${PATTERN_PYTHON}|${PATTERN_PYVER}|${PATTERN_HASH}"
