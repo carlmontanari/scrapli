@@ -137,10 +137,10 @@ class Cli:
 
     def __init__(  # noqa: PLR0913
         self,
-        definition_file_or_name: str,
         host: str,
         *,
-        port: int = 22,
+        port: int = 0,  # 0 will let libscrapli auto pick 22 or 23 based on transport
+        definition_file_or_name: str | None = None,
         auth_options: AuthOptions | None = None,
         session_options: SessionOptions | None = None,
         transport_options: TransportOptions | None = None,
@@ -156,8 +156,8 @@ class Cli:
 
         self.ffi_mapping = LibScrapliMapping()
 
-        self.definition_file_or_name = definition_file_or_name
-        self._load_definition(definition_file_or_name=definition_file_or_name)
+        self.definition_file_or_name = definition_file_or_name or "default"
+        self._load_definition()
 
         # note: many places have encodings done prior to function calls such that the encoded
         # result is not gc'd prior to being used in zig-land, so it looks a bit weird, but thats
@@ -313,12 +313,12 @@ class Cli:
             logging_uid=self._logging_uid,
         )
 
-    def _load_definition(self, definition_file_or_name: str) -> None:
+    def _load_definition(self) -> None:
         if CLI_DEFINITIONS_PATH_OVERRIDE is not None:
-            definition_path = f"{CLI_DEFINITIONS_PATH_OVERRIDE}/{definition_file_or_name}.yaml"
+            definition_path = f"{CLI_DEFINITIONS_PATH_OVERRIDE}/{self.definition_file_or_name}.yaml"
         else:
             definitions_path = importlib.resources.files("scrapli.definitions")
-            definition_path = f"{definitions_path}/{definition_file_or_name}.yaml"
+            definition_path = f"{definitions_path}/{self.definition_file_or_name}.yaml"
 
         if Path(definition_path).exists():
             with open(definition_path, "rb") as f:
@@ -326,14 +326,14 @@ class Cli:
 
             return
 
-        if Path(definition_file_or_name).exists():
-            with open(definition_file_or_name, "rb") as f:
+        if Path(self.definition_file_or_name).exists():
+            with open(self.definition_file_or_name, "rb") as f:
                 self.definition_string = f.read()
 
             return
 
         raise OptionsException(
-            f"definition platform name or filename '{definition_file_or_name}' not found"
+            f"definition platform name or filename '{self.definition_file_or_name}' not found"
         )
 
     def _ptr_or_exception(self) -> DriverPointer:
