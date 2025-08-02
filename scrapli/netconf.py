@@ -280,7 +280,7 @@ class Netconf:
         self,
         host: str,
         *,
-        port: int = 830,
+        port: int = 0,  # 0 will let libscrapli auto pick 830
         options: Options | None = None,
         auth_options: AuthOptions | None = None,
         session_options: SessionOptions | None = None,
