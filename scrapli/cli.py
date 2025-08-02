@@ -51,6 +51,7 @@ from scrapli.helper import (
 from scrapli.session import Options as SessionOptions
 from scrapli.transport import BinOptions as TransportBinOptions
 from scrapli.transport import Options as TransportOptions
+from scrapli.transport import TelnetOptions as TransportTelnetOptions
 
 CLI_DEFINITIONS_PATH_OVERRIDE_ENV = "SCRAPLI_DEFINITIONS_PATH"
 CLI_DEFINITIONS_PATH_OVERRIDE = environ.get(CLI_DEFINITIONS_PATH_OVERRIDE_ENV)
@@ -139,7 +140,7 @@ class Cli:
         self,
         host: str,
         *,
-        port: int = 0,  # 0 will let libscrapli auto pick 22 or 23 based on transport
+        port: int | None = None,
         definition_file_or_name: str | None = None,
         auth_options: AuthOptions | None = None,
         session_options: SessionOptions | None = None,
@@ -166,7 +167,10 @@ class Cli:
         self.host = host
         self._host = to_c_string(s=host)
 
-        self.port = port
+        if port is not None:
+            self.port = port
+        else:
+            self.port = 23 if isinstance(transport_options, TransportTelnetOptions) else 22
 
         self.auth_options = auth_options or AuthOptions()
         self.session_options = session_options or SessionOptions()
