@@ -284,6 +284,9 @@ class LibScrapliNetconfMapping:
                 CancelPointer,
                 c_char_p,
                 c_char_p,
+                c_char_p,
+                c_char_p,
+                c_char_p,
             ],
             int,
         ] = lib.ls_netconf_edit_config
@@ -291,6 +294,9 @@ class LibScrapliNetconfMapping:
             DriverPointer,
             OperationIdPointer,
             CancelPointer,
+            c_char_p,
+            c_char_p,
+            c_char_p,
             c_char_p,
             c_char_p,
         ]
@@ -458,6 +464,7 @@ class LibScrapliNetconfMapping:
                 DriverPointer,
                 OperationIdPointer,
                 CancelPointer,
+                c_char_p,
             ],
             int,
         ] = lib.ls_netconf_cancel_commit
@@ -465,6 +472,7 @@ class LibScrapliNetconfMapping:
             DriverPointer,
             OperationIdPointer,
             CancelPointer,
+            c_char_p,
         ]
         lib.ls_netconf_cancel_commit.restype = c_uint8
 
@@ -548,6 +556,7 @@ class LibScrapliNetconfMapping:
                 CancelPointer,
                 c_char_p,
                 c_char_p,
+                c_char_p,
             ],
             int,
         ] = lib.ls_netconf_edit_data
@@ -555,6 +564,7 @@ class LibScrapliNetconfMapping:
             DriverPointer,
             OperationIdPointer,
             CancelPointer,
+            c_char_p,
             c_char_p,
             c_char_p,
         ]
@@ -1032,6 +1042,9 @@ class LibScrapliNetconfMapping:
         operation_id: OperationIdPointer,
         config: c_char_p,
         target: c_char_p,
+        default_operation: c_char_p,
+        test_option: c_char_p,
+        error_option: c_char_p,
     ) -> int:
         """
         Execute an edit-config rpc operation.
@@ -1043,6 +1056,9 @@ class LibScrapliNetconfMapping:
             operation_id: int pointer to fill with the id of the submitted operation
             config: the config to send
             target: the target datastore
+            default_operation: string that looks like default operation enum (or empty)
+            test_option: test option (or empty str)
+            error_option: error option (or empty str)
 
         Returns:
             int: return code, non-zero value indicates an error. technically a c_uint8 converted by
@@ -1058,6 +1074,9 @@ class LibScrapliNetconfMapping:
             CANCEL,
             config,
             target,
+            default_operation,
+            test_option,
+            error_option,
         )
 
     def copy_config(
@@ -1359,6 +1378,7 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id: OperationIdPointer,
+        persist_id: c_char_p,
     ) -> int:
         """
         Execute a cancel-commit rpc operation.
@@ -1368,6 +1388,7 @@ class LibScrapliNetconfMapping:
         Args:
             ptr: ptr to the netconf object
             operation_id: int pointer to fill with the id of the submitted operation
+            persist_id: optional string persist-id to set on the cancel commit message
 
         Returns:
             int: return code, non-zero value indicates an error. technically a c_uint8 converted by
@@ -1381,6 +1402,7 @@ class LibScrapliNetconfMapping:
             ptr,
             operation_id,
             CANCEL,
+            persist_id,
         )
 
     def validate(
@@ -1519,6 +1541,7 @@ class LibScrapliNetconfMapping:
         operation_id: OperationIdPointer,
         target: c_char_p,
         content: c_char_p,
+        default_operation: c_char_p,
     ) -> int:
         """
         Execute a edit-data rpc operation.
@@ -1530,6 +1553,7 @@ class LibScrapliNetconfMapping:
             operation_id: int pointer to fill with the id of the submitted operation
             target: datastore to target
             content: full payload content to send
+            default_operation: string that looks like default operation enum (or empty)
 
         Returns:
             int: return code, non-zero value indicates an error. technically a c_uint8 converted by
@@ -1545,6 +1569,7 @@ class LibScrapliNetconfMapping:
             CANCEL,
             target,
             content,
+            default_operation,
         )
 
     def action(
