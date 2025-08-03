@@ -166,6 +166,65 @@ class ConfigFilter(str, Enum):
     FALSE = "false"
 
 
+class DefaultOperation(str, Enum):
+    """
+    Enum representing valid default operation values
+
+    Args:
+        N/A
+
+    Returns:
+        None
+
+    Raises:
+        N/A
+
+    """
+
+    MERGE = "merge"
+    REPLACE = "replace"
+    NONE = "none"
+
+
+class TestOption(str, Enum):
+    """
+    Enum representing valid test option values
+
+    Args:
+        N/A
+
+    Returns:
+        None
+
+    Raises:
+        N/A
+
+    """
+
+    TEST_THEN_SET = "test-then-set"
+    SET = "set"
+
+
+class ErrorOption(str, Enum):
+    """
+    Enum representing valid error option values
+
+    Args:
+        N/A
+
+    Returns:
+        None
+
+    Raises:
+        N/A
+
+    """
+
+    STOP_ON_ERROR = "stop-on-error"
+    CONTINUE_ON_ERROR = "continue-on-error"
+    ROLLBACK_ON_ERROR = "rollback-on-error"
+
+
 @dataclass
 class Options:
     """
@@ -1160,18 +1219,24 @@ class Netconf:
 
         return await self._get_result_async(operation_id=operation_id)
 
-    def _edit_config(
+    def _edit_config(  # noqa: PLR0913
         self,
         *,
         operation_id: OperationIdPointer,
         config: c_char_p,
         target: c_char_p,
+        default_operation: c_char_p,
+        test_option: c_char_p,
+        error_option: c_char_p,
     ) -> c_uint:
         status = self.ffi_mapping.netconf_mapping.edit_config(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
             config=config,
             target=target,
+            default_operation=default_operation,
+            test_option=test_option,
+            error_option=error_option,
         )
         if status != 0:
             raise SubmitOperationException("submitting edit-config operation failed")
@@ -1179,11 +1244,14 @@ class Netconf:
         return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
-    def edit_config(
+    def edit_config(  # noqa: PLR0913
         self,
         *,
         config: str = "",
         target: DatastoreType = DatastoreType.RUNNING,
+        default_operation: DefaultOperation | None = None,
+        test_option: TestOption | None = None,
+        error_option: ErrorOption | None = None,
         operation_timeout_ns: int | None = None,
     ) -> Result:
         """
@@ -1192,6 +1260,9 @@ class Netconf:
         Args:
             config: string config payload to send
             target: target datastore as DatastoreType enum
+            default_operation: value (or none) for default operation field
+            test_option: the value (or none) for the test option field
+            error_option: the value (or none) for the error option field
             operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
@@ -1210,20 +1281,30 @@ class Netconf:
         _config = to_c_string(config)
         _target = to_c_string(target)
 
+        _default_operation = to_c_string(default_operation or "")
+        _test_option = to_c_string(test_option or "")
+        _error_option = to_c_string(error_option or "")
+
         operation_id = self._edit_config(
             operation_id=operation_id,
             config=_config,
             target=_target,
+            default_operation=_default_operation,
+            test_option=_test_option,
+            error_option=_error_option,
         )
 
         return self._get_result(operation_id=operation_id)
 
     @handle_operation_timeout_async
-    async def edit_config_async(
+    async def edit_config_async(  # noqa: PLR0913
         self,
         *,
         config: str = "",
         target: DatastoreType = DatastoreType.RUNNING,
+        default_operation: DefaultOperation | None = None,
+        test_option: TestOption | None = None,
+        error_option: ErrorOption | None = None,
         operation_timeout_ns: int | None = None,
     ) -> Result:
         """
@@ -1232,6 +1313,9 @@ class Netconf:
         Args:
             config: string config payload to send
             target: target datastore as DatastoreType enum
+            default_operation: value (or none) for default operation field
+            test_option: the value (or none) for the test option field
+            error_option: the value (or none) for the error option field
             operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
@@ -1250,10 +1334,17 @@ class Netconf:
         _config = to_c_string(config)
         _target = to_c_string(target)
 
+        _default_operation = to_c_string(default_operation or "")
+        _test_option = to_c_string(test_option or "")
+        _error_option = to_c_string(error_option or "")
+
         operation_id = self._edit_config(
             operation_id=operation_id,
             config=_config,
             target=_target,
+            default_operation=_default_operation,
+            test_option=_test_option,
+            error_option=_error_option,
         )
 
         return await self._get_result_async(operation_id=operation_id)
@@ -2063,11 +2154,13 @@ class Netconf:
     def _cancel_commit(
         self,
         *,
+        persist_id: c_char_p,
         operation_id: OperationIdPointer,
     ) -> c_uint:
         status = self.ffi_mapping.netconf_mapping.cancel_commit(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
+            persist_id=persist_id,
         )
         if status != 0:
             raise SubmitOperationException("submitting cancel-commit operation failed")
@@ -2078,12 +2171,14 @@ class Netconf:
     def cancel_commit(
         self,
         *,
+        persist_id: str | None = None,
         operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute a cancel-commit rpc operation.
 
         Args:
+            persist_id: optional persist-id value
             operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
@@ -2099,8 +2194,11 @@ class Netconf:
 
         operation_id = OperationIdPointer(c_uint(0))
 
+        _persist_id = to_c_string(persist_id or "")
+
         operation_id = self._cancel_commit(
             operation_id=operation_id,
+            persist_id=_persist_id,
         )
 
         return self._get_result(operation_id=operation_id)
@@ -2109,12 +2207,14 @@ class Netconf:
     async def cancel_commit_async(
         self,
         *,
+        persist_id: str | None = None,
         operation_timeout_ns: int | None = None,
     ) -> Result:
         """
         Execute a cancel-commit rpc operation.
 
         Args:
+            persist_id: optional persist-id value
             operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
@@ -2130,8 +2230,11 @@ class Netconf:
 
         operation_id = OperationIdPointer(c_uint(0))
 
+        _persist_id = to_c_string(persist_id or "")
+
         operation_id = self._cancel_commit(
             operation_id=operation_id,
+            persist_id=_persist_id,
         )
 
         return await self._get_result_async(operation_id=operation_id)
@@ -2512,12 +2615,14 @@ class Netconf:
         operation_id: OperationIdPointer,
         content: c_char_p,
         target: c_char_p,
+        default_operation: c_char_p,
     ) -> c_uint:
         status = self.ffi_mapping.netconf_mapping.edit_data(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
             content=content,
             target=target,
+            default_operation=default_operation,
         )
         if status != 0:
             raise SubmitOperationException("submitting copy-config operation failed")
@@ -2530,6 +2635,7 @@ class Netconf:
         content: str,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
+        default_operation: DefaultOperation | None = None,
         operation_timeout_ns: int | None = None,
     ) -> Result:
         """
@@ -2538,6 +2644,7 @@ class Netconf:
         Args:
             content: full payload content to send
             target: datastore to target
+            default_operation: value (or none) for default operation field
             operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
@@ -2556,10 +2663,13 @@ class Netconf:
         _content = to_c_string(content)
         _target = to_c_string(target)
 
+        _default_operation = to_c_string(default_operation or "")
+
         operation_id = self._edit_data(
             operation_id=operation_id,
             content=_content,
             target=_target,
+            default_operation=_default_operation,
         )
 
         return self._get_result(operation_id=operation_id)
@@ -2570,6 +2680,7 @@ class Netconf:
         content: str,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
+        default_operation: DefaultOperation | None = None,
         operation_timeout_ns: int | None = None,
     ) -> Result:
         """
@@ -2578,6 +2689,7 @@ class Netconf:
         Args:
             content: full payload content to send
             target: datastore to target
+            default_operation: value (or none) for default operation field
             operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
@@ -2596,10 +2708,13 @@ class Netconf:
         _content = to_c_string(content)
         _target = to_c_string(target)
 
+        _default_operation = to_c_string(default_operation or "")
+
         operation_id = self._edit_data(
             operation_id=operation_id,
             content=_content,
             target=_target,
+            default_operation=_default_operation,
         )
 
         return await self._get_result_async(operation_id=operation_id)
