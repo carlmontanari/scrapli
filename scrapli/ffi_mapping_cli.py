@@ -50,6 +50,7 @@ class LibScrapliCliMapping:
                 c_char_p,
                 LogFuncCallback,
                 c_char_p,
+                c_char_p,
                 c_int,
                 c_char_p,
             ],
@@ -58,6 +59,7 @@ class LibScrapliCliMapping:
         lib.ls_cli_alloc.argtypes = [
             c_char_p,
             LogFuncCallback,
+            c_char_p,
             c_char_p,
             c_int,
             c_char_p,
@@ -303,6 +305,7 @@ class LibScrapliCliMapping:
         *,
         definition_string: c_char_p,
         logger_callback: LogFuncCallback,
+        logger_level: c_char_p,
         host: c_char_p,
         port: c_int,
         transport_kind: c_char_p,
@@ -315,6 +318,9 @@ class LibScrapliCliMapping:
         Args:
             definition_string: yaml definition string
             logger_callback: pointer to logger callback function
+            logger_level: string matching one of the valid libscrapli log levels; passed here to
+                ensure that we dont waste allocations formatting string messages for levels that
+                will not be printed/used in python-land
             host: host to connect to
             port: port at which to connect
             transport_kind: transport kind to use
@@ -327,7 +333,14 @@ class LibScrapliCliMapping:
             N/A
 
         """
-        return self._alloc(definition_string, logger_callback, host, port, transport_kind)
+        return self._alloc(
+            definition_string,
+            logger_callback,
+            logger_level,
+            host,
+            port,
+            transport_kind,
+        )
 
     def get_ntc_templates_platform(
         self,

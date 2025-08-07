@@ -40,6 +40,7 @@ from scrapli.ffi_types import (
     U64Pointer,
     ZigSlice,
     ZigU64Slice,
+    ffi_logger_level,
     ffi_logger_wrapper,
     to_c_string,
 )
@@ -352,6 +353,7 @@ class Cli:
         ptr = self.ffi_mapping.cli_mapping.alloc(
             definition_string=c_char_p(self.definition_string),
             logger_callback=self.logger_callback,
+            logger_level=ffi_logger_level(logger=self.logger),
             host=self._host,
             port=c_int(self.port),
             transport_kind=c_char_p(self.transport_options.transport_kind.encode(encoding="utf-8")),

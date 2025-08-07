@@ -48,6 +48,7 @@ class LibScrapliNetconfMapping:
             [
                 LogFuncCallback,
                 c_char_p,
+                c_char_p,
                 c_int,
                 c_char_p,
             ],
@@ -55,6 +56,7 @@ class LibScrapliNetconfMapping:
         ] = lib.ls_netconf_alloc
         lib.ls_netconf_alloc.argtypes = [
             LogFuncCallback,
+            c_char_p,
             c_char_p,
             c_int,
             c_char_p,
@@ -591,6 +593,7 @@ class LibScrapliNetconfMapping:
         self,
         *,
         logger_callback: LogFuncCallback,
+        logger_level: c_char_p,
         host: c_char_p,
         port: c_int,
         transport_kind: c_char_p,
@@ -602,6 +605,9 @@ class LibScrapliNetconfMapping:
 
         Args:
             logger_callback: pointer to logger callback function
+            logger_level: string matching one of the valid libscrapli log levels; passed here to
+                ensure that we dont waste allocations formatting string messages for levels that
+                will not be printed/used in python-land
             host: host to connect to
             port: port at which to connect
             transport_kind: transport kind to use
@@ -614,7 +620,7 @@ class LibScrapliNetconfMapping:
             N/A
 
         """
-        return self._alloc(logger_callback, host, port, transport_kind)
+        return self._alloc(logger_callback, logger_level, host, port, transport_kind)
 
     def open(
         self,

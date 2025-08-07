@@ -26,6 +26,7 @@ from scrapli.ffi_types import (
     OperationIdPointer,
     U64Pointer,
     ZigSlice,
+    ffi_logger_level,
     ffi_logger_wrapper,
     to_c_string,
 )
@@ -521,6 +522,7 @@ class Netconf:
     ) -> None:
         ptr = self.ffi_mapping.netconf_mapping.alloc(
             logger_callback=self.logger_callback,
+            logger_level=ffi_logger_level(logger=self.logger),
             host=self._host,
             port=c_int(self.port),
             transport_kind=c_char_p(self.transport_options.transport_kind.encode(encoding="utf-8")),
