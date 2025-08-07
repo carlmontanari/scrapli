@@ -14,7 +14,7 @@ from ctypes import (
     c_void_p,
     cast,
 )
-from logging import Logger
+from logging import CRITICAL, DEBUG, FATAL, INFO, NOTSET, WARN, Logger
 from typing import TypeAlias
 
 DriverPointer = c_void_p
@@ -179,16 +179,51 @@ def ffi_logger_wrapper(logger: Logger) -> LogFuncCallback:
     def _cb(level: c_uint8, message: ZigSlicePointer) -> None:
         match level:
             case 0:
-                logger.debug(message.contents.get_decoded_contents())
+                # no "trace" level in std logger, so just format to be clear which ones are trace
+                logger.debug("TRACE: %s", message.contents.get_decoded_contents())
             case 1:
-                logger.info(message.contents.get_decoded_contents())
+                logger.debug(message.contents.get_decoded_contents())
             case 2:
-                logger.warning(message.contents.get_decoded_contents())
+                logger.info(message.contents.get_decoded_contents())
             case 3:
-                logger.critical(message.contents.get_decoded_contents())
+                logger.warning(message.contents.get_decoded_contents())
             case 4:
+                logger.critical(message.contents.get_decoded_contents())
+            case 5:
                 logger.fatal(message.contents.get_decoded_contents())
             case _:
                 return
 
     return LogFuncCallback(_cb)
+
+
+def ffi_logger_level(logger: Logger) -> c_char_p:  # noqa: PLR0911
+    """
+    Returns a c string matching a libscrapli log level based on the given loggers configuration
+
+    Args:
+        logger: the logger we are getting the level from
+
+    Returns:
+        c_char_p: the level as a c string
+
+    Raises:
+        N/A
+
+    """
+    level = logger.level
+
+    if level == NOTSET:
+        return c_char_p(b"trace")
+    elif level == DEBUG:
+        return c_char_p(b"debug")
+    elif level == INFO:
+        return c_char_p(b"info")
+    elif level == WARN:
+        return c_char_p(b"warn")
+    elif level == CRITICAL:
+        return c_char_p(b"critical")
+    elif level == FATAL:
+        return c_char_p(b"fatal")
+    else:
+        return c_char_p(b"warn")

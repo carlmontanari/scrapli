@@ -14,7 +14,8 @@ USERNAME = os.getenv("SCRAPLI_USERNAME", "admin")
 PASSWORD = os.getenv("SCRAPLI_USERNAME", "NokiaSrl1!")
 
 
-# nothing special here at all, setup a logging handler just like normal python!
+# nothing crazy here at all, setup a logging handler just like normal python!
+# the only special case is if you want "trace" logs, use logging.NOTSET level
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 
 
