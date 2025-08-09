@@ -23,6 +23,12 @@ rm -f scrapli/definitions/*.yaml
 echo "updating definitions..."
 cp "$TMP_DIR"/definitions/*.yaml scrapli/definitions/
 
+echo "removing old definition options..."
+find scrapli/definition_options -type f -name "*.py" ! -name "__init__.py" -delete
+
+echo "updating definition options..."
+cp "$TMP_DIR"/options/*.py scrapli/definition_options/
+
 rm -rf "$TMP_DIR"
 
 sed -i.bak -E "s|(__definitions_version__ = )(.*)|\1\"${TARGET_DEFINITIONS_TAG#v}\"|g" scrapli/__init__.py

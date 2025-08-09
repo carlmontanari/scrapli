@@ -12,7 +12,7 @@ modes:
               prompt_exact: '^[pP]assword:\s?$'
               response: '__lookup::enable'
   - name: 'privileged_exec'
-    prompt_pattern: '^[a-z0-9 .\-_@/:]{1,63}#$'
+    prompt_pattern: '^[a-z0-9 .\-_@()/:]{1,63}#$'
     accessible_modes:
       - name: 'exec'
         instructions:
@@ -23,7 +23,7 @@ modes:
           - send_input:
               input: 'configure terminal'
   - name: 'configuration'
-    prompt_pattern: '^[a-z0-9 .\-_@/:]{1,63}\(conf[a-z0-9.\-@/:\+]{0,32}\)#$'
+    prompt_pattern: '^[a-z0-9 .\-_@()/:]{1,63}\(conf[a-z0-9.\-@/:\+]{0,32}\)#$'
     accessible_modes:
       - name: 'privileged_exec'
         instructions:

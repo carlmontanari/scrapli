@@ -12,6 +12,7 @@ from ctypes import (
 )
 from dataclasses import dataclass
 from enum import Enum
+from importlib import import_module
 from logging import getLogger
 from os import environ
 from pathlib import Path
@@ -147,6 +148,7 @@ class Cli:
         session_options: SessionOptions | None = None,
         transport_options: TransportOptions | None = None,
         logging_uid: str | None = None,
+        skip_static_options: bool = False,
     ) -> None:
         logger_name = f"{__name__}.{host}:{port}"
         if logging_uid is not None:
@@ -159,6 +161,7 @@ class Cli:
         self.ffi_mapping = LibScrapliMapping()
 
         self.definition_file_or_name = definition_file_or_name or "default"
+        self._platform_name = ""
         self._load_definition()
 
         # note: many places have encodings done prior to function calls such that the encoded
@@ -182,6 +185,31 @@ class Cli:
 
         self._ntc_templates_platform: str | None = None
         self._genie_platform: str | None = None
+
+        # for platforms that have... quirks, its difficult to fully encapsulate setting up a
+        # connection in purely yaml... so... there are py/go "extensions" in the
+        # scrapli_definitions project that are pulled into scrapli/scrapligo in order to facilitate
+        # these quirks -- this includes options, things like mikrotik that *really* wants you to
+        # modify a username with some extra chars to change how the device behaves, here is where
+        # we apply those options. obviously this can be skipped with the appropriate option.
+        if skip_static_options:
+            return
+
+        try:
+            platform_options_module = import_module(
+                f"scrapli.definition_options.{self._platform_name}"
+            )
+        except ModuleNotFoundError:
+            # obviously not every platform
+            return
+
+        platform_options_applier = getattr(
+            platform_options_module, f"{self._platform_name}_post_init"
+        )
+        if platform_options_applier is None:
+            return
+
+        platform_options_applier(c=self)
 
     def __enter__(self: "Cli") -> "Cli":
         """
@@ -320,20 +348,30 @@ class Cli:
 
     def _load_definition(self) -> None:
         if CLI_DEFINITIONS_PATH_OVERRIDE is not None:
-            definition_path = f"{CLI_DEFINITIONS_PATH_OVERRIDE}/{self.definition_file_or_name}.yaml"
+            definition_path = Path(
+                f"{CLI_DEFINITIONS_PATH_OVERRIDE}/{self.definition_file_or_name}.yaml"
+            )
         else:
             definitions_path = importlib.resources.files("scrapli.definitions")
-            definition_path = f"{definitions_path}/{self.definition_file_or_name}.yaml"
+            definition_path = Path(f"{definitions_path}/{self.definition_file_or_name}.yaml")
 
-        if Path(definition_path).exists():
+        if definition_path.exists():
+            self._platform_name = self.definition_file_or_name
+
             with open(definition_path, "rb") as f:
                 self.definition_string = f.read()
 
             return
 
-        if Path(self.definition_file_or_name).exists():
+        maybe_definition_file = Path(self.definition_file_or_name)
+
+        if maybe_definition_file.exists():
             with open(self.definition_file_or_name, "rb") as f:
                 self.definition_string = f.read()
+
+            self._platform_name = maybe_definition_file.name.removesuffix(
+                maybe_definition_file.suffix
+            )
 
             return
 

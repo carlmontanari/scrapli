@@ -1,0 +1,9 @@
+---
+prompt_pattern: '\[[a-z0-9@.\-_+\s]{1,48}@[a-z0-9.\-_\s]{1,64}\].{1,16}>'
+default_mode: 'cli'
+modes:
+  - name: 'cli'
+    prompt_pattern: '\[[a-z0-9@.\-_+\s]{1,48}@[a-z0-9.\-_\s]{1,64}\].{1,16}>'
+on_close_instructions:
+  - write:
+      input: 'quit'
