@@ -1,4 +1,4 @@
-acl {
+    acl {
         acl-filter cpm type ipv4 {
             statistics-per-entry true
             entry 10 {
