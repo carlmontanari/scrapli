@@ -1,4 +1,4 @@
-system {
+    system {
         control-plane-traffic {
             input {
                 acl {
