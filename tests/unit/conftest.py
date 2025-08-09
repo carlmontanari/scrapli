@@ -113,7 +113,12 @@ def netconf(request: pytest.FixtureRequest) -> Netconf:
         transport_options = TransportBinOptions()
     else:
         port = NETCONF_PORT
-        session_options = SessionOptions(read_size=1, operation_max_search_depth=32)
+        session_options = SessionOptions(
+            read_size=1,
+            operation_max_search_depth=32,
+            # because gh runners are horrendously slow and we read 1 byte at a time
+            operation_timeout_s=20,
+        )
         transport_options = TransportTestOptions(f=f)
 
     return Netconf(
