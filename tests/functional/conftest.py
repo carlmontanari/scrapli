@@ -17,6 +17,7 @@ from scrapli import (
     TransportSsh2Options,
 )
 from scrapli.cli_result import Result
+from scrapli.netconf import Options as NetconfOptions
 
 IS_DARWIN = sys.platform == "darwin"
 EOS_AVAILABLE = "ceos" in subprocess.getoutput("docker ps")
@@ -156,6 +157,7 @@ def netconf(platform, transport) -> Netconf:
 
         host = "localhost" if IS_DARWIN else "172.20.20.17"
         port = 22830 if IS_DARWIN else NETCONF_PORT
+        options = NetconfOptions()
         auth_options = AuthOptions(
             username="admin",
             password="admin",
@@ -163,6 +165,7 @@ def netconf(platform, transport) -> Netconf:
     elif platform == "nokia_srl":
         host = "localhost" if IS_DARWIN else "172.20.20.16"
         port = 21830 if IS_DARWIN else NETCONF_PORT
+        options = NetconfOptions()
         auth_options = AuthOptions(
             username="admin",
             password="NokiaSrl1!",
@@ -171,6 +174,7 @@ def netconf(platform, transport) -> Netconf:
         # netopeer server
         host = "localhost" if IS_DARWIN else "172.20.20.18"
         port = 23830 if IS_DARWIN else NETCONF_PORT
+        options = NetconfOptions(close_force=True)
         auth_options = AuthOptions(
             username="root",
             password="password",
@@ -184,6 +188,7 @@ def netconf(platform, transport) -> Netconf:
     return Netconf(
         host=host,
         port=port,
+        options=options,
         auth_options=auth_options,
         transport_options=transport_options,
     )
