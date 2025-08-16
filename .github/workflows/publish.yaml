@@ -2,7 +2,10 @@
 name: publish
 
 on:
-  workflow_call: {}
+  workflow_call:
+    secrets:
+      PYPI_SCRAPLI_TOKEN:
+        required: true
   workflow_dispatch: {}
 
 

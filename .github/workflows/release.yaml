@@ -9,6 +9,8 @@ on:
 jobs:
   publish:
     uses: ./.github/workflows/publish.yaml
+    secrets:
+      PYPI_SCRAPLI_TOKEN: ${{ secrets.PYPI_SCRAPLI_TOKEN }}
 
   validate:
     needs: publish
