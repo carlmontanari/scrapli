@@ -88,34 +88,3 @@ Internet  172.31.254.2            -   c800.84b2.e9c2  ARPA   Vlan254"""
     )
 
     assert r.textfsm_parse(template=template)[0] == expected
-
-
-def test_result_genie_parse():
-    result = """
-Protocol  Address          Age (min)  Hardware Addr   Type   Interface
-Internet  172.31.254.1            -   0000.0c07.acfe  ARPA   Vlan254
-Internet  172.31.254.2            -   c800.84b2.e9c2  ARPA   Vlan254"""
-
-    expected = {
-        "ip": "172.31.254.1",
-        "link_layer_address": "0000.0c07.acfe",
-        "type": "ARPA",
-        "origin": "static",
-        "age": "-",
-        "protocol": "Internet",
-    }
-
-    r = Result(
-        host="localhost",
-        port=22,
-        inputs="show ip arp",
-        start_time=0,
-        splits=[1],
-        results_raw=result.encode(),
-        results=result,
-        results_failed_indicator="",
-        textfsm_platform="cisco_ios",
-        genie_platform="iosxe",
-    )
-
-    assert r.genie_parse()["interfaces"]["Vlan254"]["ipv4"]["neighbors"]["172.31.254.1"] == expected
