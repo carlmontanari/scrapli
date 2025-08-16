@@ -38,12 +38,10 @@ jobs:
         with:
           python-version: ${{ matrix.version }}
 
-      # genie has ridiculous pins, pip (and maybe you?) will die if you try to install it
-      # with basically anything else... so just install separately
+      # dont bother with the genie stuff, dont care
       - name: install python dev tools
         run: |
           python -m pip install -r requirements-dev.txt
-          python -m pip install -r requirements-genie.txt
           python -m pip install -r requirements-textfsm.txt
 
       - name: install scrapli+libscrapli

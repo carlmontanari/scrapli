@@ -2,9 +2,9 @@
 name: publish
 
 on:
-  release:
-    types:
-      - created
+  workflow_call: {}
+  workflow_dispatch: {}
+
 
 jobs:
   # publish to the og scrapli pypi project, using calver

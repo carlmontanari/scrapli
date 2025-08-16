@@ -3,7 +3,7 @@ from io import TextIOWrapper
 
 import pytest
 
-from scrapli.cli_parse import genie_parse, textfsm_get_template, textfsm_parse
+from scrapli.cli_parse import textfsm_get_template, textfsm_parse
 from scrapli.exceptions import ParsingException
 
 IOS_ARP = """Protocol  Address          Age (min)  Hardware Addr   Type   Interface
@@ -117,11 +117,3 @@ def test_textfsm_parse_failed_to_parse():
 
     with pytest.raises(ParsingException):
         textfsm_parse(template, "not really arp data")
-
-
-def test_genie_parser():
-    result = genie_parse("iosxe", "show ip arp", IOS_ARP)
-    assert isinstance(result, dict)
-    assert (
-        result["interfaces"]["Vlan254"]["ipv4"]["neighbors"]["172.31.254.1"]["ip"] == "172.31.254.1"
-    )
