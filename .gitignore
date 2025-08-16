@@ -53,11 +53,10 @@ ENV/
 env.bak/
 venv.bak/
 
-# pycharm
+# editors
 .idea
-
-# vscode
 .vscode/
+.zed
 
 # mypy
 .mypy_cache/
@@ -80,3 +79,7 @@ private/
 
 # where we mount stuff when running clab bits
 .clab
+
+# main doc page since we wont check that in && tmp dir that htmltest uses
+public/
+tmp/

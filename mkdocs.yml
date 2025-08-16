@@ -1,0 +1,65 @@
+---
+site_name: Scrapli
+site_description: Fast, flexible, powerful. CLI+NETCONF clients in Python/Go/Zig.
+site_author: Carl Montanari
+site_url: https://carlmontanari.github.io/
+
+repo_name: carlmontanari/scrapli
+repo_url: https://github.com/carlmontanari/scrapli
+edit_uri: "edit/main/docs/"
+
+docs_dir: docs
+site_dir: public
+
+strict: true
+
+theme:
+    name: material
+    language: en
+    palette:
+        - scheme: slate
+          primary: 'green'
+          accent: 'amber'
+          toggle:
+                icon: material/brightness-7
+                name: Switch to dark mode
+
+        - scheme: default
+          primary: 'green'
+          accent: 'amber'
+          toggle:
+                icon: material/brightness-3
+                name: Switch to light mode
+    font:
+      text: Google Sans
+      code: JetBrains Mono
+    icon:
+      logo: fontawesome/brands/pagelines
+      repo: fontawesome/brands/gitlab
+    favicon: fontawesome/brands/pagelines
+    features:
+        - navigation.tabs
+        - navigation.tabs.sticky
+        - search.highlight
+        - search.share
+        - content.code.copy
+
+plugins:
+  - search:
+      separator: '[\s\-\.]+'
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+
+nav:
+    - Scrapli: index.md
+    - Installation: installation.md
