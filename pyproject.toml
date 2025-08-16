@@ -3,10 +3,10 @@ build-backend = "setuptools.build_meta"
 requires = ["setuptools", "wheel", "ziglang==0.14.1"]
 
 [project]
-name = "scrapli"
+name = "scrapli2"
 description = "Fast, flexible, sync/async, Python 3.10+ screen scraping client specifically for network devices"
 readme = "README.md"
-keywords = ["netconf", "network", "ssh", "telnet", "async"]
+keywords = ["netconf", "network", "cli", "ssh", "telnet", "async"]
 license = "MIT"
 authors = [{ name = "Carl Montanari", email = "carl.r.montanari@gmail.com" }]
 requires-python = ">=3.10"

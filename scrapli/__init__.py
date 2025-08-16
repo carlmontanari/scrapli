@@ -11,8 +11,11 @@ from scrapli.transport import Ssh2Options as TransportSsh2Options
 from scrapli.transport import TelnetOptions as TransportTelnetOptions
 from scrapli.transport import TestOptions as TransportTestOptions
 
-__version__ = "2.0.0-alpha.5"
-__calendar_version__ = "2025.7.12"
+# set in ci on release
+__version__ = "0.0.0"
+__semver_version__ = "0.0.0"
+__calendar_version__ = "0.0.0"
+
 __definitions_version__ = "36b16eb"
 
 __all__ = (

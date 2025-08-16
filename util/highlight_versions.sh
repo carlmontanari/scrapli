@@ -29,6 +29,7 @@ locations=(
     "pyproject.toml                 ^\\s*target-version\\s=         black target"
     "scrapli/ffi.py                 ^LIBSCRAPLI_VERSION\\s=         libscrapli"
     "scrapli/__init__.py            ^__version__\\s=                scrapli"
+    "scrapli/__init__.py            ^__semver_version__\\s=         semver scrapli"
     "scrapli/__init__.py            ^__calendar_version__\\s=       calendar scrapli"
     "scrapli/__init__.py            ^__definitions_version__\\s=    definitions"
     ".github/vars.env               PYTHON_VERSION=                 ci primary python"
