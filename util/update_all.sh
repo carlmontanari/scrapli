@@ -108,17 +108,6 @@ while true; do
     fi
 done
 
-echo "current scrapli version is: $CURRENT_SCRAPLI_VERSION"
-read -p "enter new version (or enter for current): " input
-if [[ -z "$input" ]]; then
-    echo "keeping current scrapli version"
-    TARGET_SCRAPLI_VERSION=""
-    echo
-else
-    TARGET_SCRAPLI_VERSION="$input"
-    echo "using scrapli version $TARGET_SCRAPLI_VERSION"
-fi
-
 if [[ -n "$TARGET_LIBSCRAPLI_TAG" ]]; then
     echo "updating libscrapli tag to: ${TARGET_LIBSCRAPLI_TAG}"
     ./util/update_libscrapli_tag.sh "$TARGET_LIBSCRAPLI_TAG"
@@ -127,11 +116,6 @@ fi
 if [[ -n "$TARGET_DEFINITION_TAG" ]]; then
     echo "updating scrapli-definitions to: ${TARGET_DEFINITION_TAG}"
     ./util/update_scrapli_definitions.sh "$TARGET_DEFINITION_TAG"
-fi
-
-if [[ -n "$TARGET_SCRAPLI_VERSION" ]]; then
-    echo "updating scrapli version to: ${TARGET_SCRAPLI_VERSION}"
-    ./util/update_scrapli_version.sh "$TARGET_SCRAPLI_VERSION"
 fi
 
 echo

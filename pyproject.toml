@@ -23,7 +23,6 @@ classifiers = [
 ]
 dynamic = ["dependencies", "optional-dependencies", "version"]
 [project.urls]
-Changelog = "https://carlmontanari.github.io/scrapli/changelog"
 Docs = "https://carlmontanari.github.io/scrapli/"
 Homepage = "https://github.com/carlmontanari/scrapli"
 
