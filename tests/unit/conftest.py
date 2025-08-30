@@ -117,7 +117,7 @@ def netconf(request: pytest.FixtureRequest) -> Netconf:
             read_size=1,
             operation_max_search_depth=32,
             # because gh runners are horrendously slow and we read 1 byte at a time
-            operation_timeout_s=20,
+            operation_timeout_s=30,
         )
         transport_options = TransportTestOptions(f=f)
 
