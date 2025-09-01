@@ -177,6 +177,10 @@ def ffi_logger_wrapper(logger: Logger) -> LogFuncCallback:
     """
 
     def _cb(level: c_uint8, message: ZigSlicePointer) -> None:
+        # TODO theres some lifetime issue w/ this.... we can segfault at close/free of the
+        # libscrapli stuff i think
+        # TODO testing just returning/bailing
+        return
         match level:
             case 0:
                 # no "trace" level in std logger, so just format to be clear which ones are trace
