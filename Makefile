@@ -87,12 +87,5 @@ run-clab-ci: ## Runs the clab functional testing topo with the ci specific topol
         ghcr.io/scrapli/scrapli_clab/launcher:0.0.7
 
 .PHONY: docs
-docs:  ## Regenerate docs
-	python -m mkdocs build --clean
-
-test-docs:  ## Run doc testing
-	python -m mkdocs build --clean
-	htmltest -c docs/htmltest.yml -s
-
-deploy_docs:  ## Deploy docs to github
-	mkdocs gh-deploy
+docs:  ## Serve docs locally.
+	python -m mkdocs serve --clean --strict

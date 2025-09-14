@@ -6,7 +6,7 @@ site_url: https://carlmontanari.github.io/
 
 repo_name: carlmontanari/scrapli
 repo_url: https://github.com/carlmontanari/scrapli
-edit_uri: "edit/main/docs/"
+edit_uri: edit/main/docs/
 
 docs_dir: docs
 site_dir: public
@@ -18,15 +18,15 @@ theme:
     language: en
     palette:
         - scheme: slate
-          primary: 'green'
-          accent: 'amber'
+          primary: green
+          accent: amber
           toggle:
                 icon: material/brightness-7
                 name: Switch to dark mode
 
         - scheme: default
-          primary: 'green'
-          accent: 'amber'
+          primary: green
+          accent: amber
           toggle:
                 icon: material/brightness-3
                 name: Switch to light mode
@@ -34,19 +34,30 @@ theme:
       text: Google Sans
       code: JetBrains Mono
     icon:
-      logo: fontawesome/brands/pagelines
-      repo: fontawesome/brands/gitlab
-    favicon: fontawesome/brands/pagelines
+      logo: material/rabbit-variant
+      repo: material/github
+    favicon: material/rabbit-variant
     features:
         - navigation.tabs
         - navigation.tabs.sticky
         - search.highlight
         - search.share
         - content.code.copy
+        - content.code.annotate
 
 plugins:
   - search:
       separator: '[\s\-\.]+'
+  - spellcheck:
+      backends:
+      - codespell:
+          dictionaries: [clear, rare, informal, usage, code, names]
+      known_words: known_words.txt
+      ignore_code: yes
+      min_length: 2
+      max_capital: 1
+      allow_unicode: no
+      strict_only: yes
 
 markdown_extensions:
   - pymdownx.highlight:
@@ -55,11 +66,19 @@ markdown_extensions:
       pygments_lang_class: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
-  - pymdownx.superfences
   - admonition
   - pymdownx.details
   - pymdownx.superfences
+  - attr_list
+  - md_in_html
 
 nav:
-    - Scrapli: index.md
+    - Home: index.md
     - Installation: installation.md
+    - Examples:
+      - Python: examples/python.md
+      - Go: examples/go.md
+      - Zig: examples/zig.md
+    - Library Details: details.md
+    - Legacy Migration: migration.md
+    - Community: community.md
