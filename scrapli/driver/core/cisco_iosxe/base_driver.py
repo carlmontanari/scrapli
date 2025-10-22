@@ -5,7 +5,7 @@ from scrapli.driver.network.base_driver import PrivilegeLevel
 PRIVS = {
     "exec": (
         PrivilegeLevel(
-            pattern=r"^[\w.\-@/:]{1,63}>$",
+            pattern=r"^[\w.\-@/:]{1,63}>\s*$",
             name="exec",
             previous_priv="",
             deescalate="",
@@ -16,7 +16,7 @@ PRIVS = {
     ),
     "privilege_exec": (
         PrivilegeLevel(
-            pattern=r"^[\w.\-@/:]{1,63}#$",
+            pattern=r"^[\w.\-@/:]{1,63}#\s*$",
             name="privilege_exec",
             previous_priv="exec",
             deescalate="disable",
@@ -27,7 +27,7 @@ PRIVS = {
     ),
     "configuration": (
         PrivilegeLevel(
-            pattern=r"^[\w.\-@/:]{1,63}\([\w.\-@/:+]{0,32}\)#$",
+            pattern=r"^[\w.\-@/:]{1,63}\([\w.\-@/:+]{0,32}\)#\s*$",
             name="configuration",
             previous_priv="privilege_exec",
             deescalate="end",
@@ -39,7 +39,7 @@ PRIVS = {
     ),
     "tclsh": (
         PrivilegeLevel(
-            pattern=r"^([\w.\-@/+>:]+\(tcl\)[>#]|\+>)$",
+            pattern=r"^([\w.\-@/+>:]+\(tcl\)[>#]|\+>)\s*$",
             name="tclsh",
             previous_priv="privilege_exec",
             deescalate="tclquit",
