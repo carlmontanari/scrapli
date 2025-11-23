@@ -7,6 +7,7 @@ from ctypes import (
     c_char_p,
     c_int,
     c_uint8,
+    c_uint64,
     c_void_p,
 )
 
@@ -212,6 +213,19 @@ class LibScrapliSessionMapping:
         ]
         lib.ls_session_write_and_return.restype = c_uint8
 
+        self._set_operation_timeout_ns: Callable[
+            [
+                DriverPointer,
+                c_uint64,
+            ],
+            int,
+        ] = lib.ls_session_operation_timeout_ns
+        lib.ls_session_operation_timeout_ns.argtypes = [
+            DriverPointer,
+            c_uint64,
+        ]
+        lib.ls_session_operation_timeout_ns.restype = c_uint8
+
     def read(self, ptr: DriverPointer, buf: StringPointer, read_size: IntPointer) -> int:
         """
         Read from the session of driver at ptr.
@@ -274,6 +288,28 @@ class LibScrapliSessionMapping:
 
         """
         return self._write_and_return(ptr, input_, redacted)
+
+    def set_operation_timeout_ns(
+        self, ptr: DriverPointer, set_operation_timeout_ns: c_uint64
+    ) -> int:
+        """
+        Set the session operation timeout in ns.
+
+        Should not be used/called directly.
+
+        Args:
+            ptr: ptr to the cli/netconf object
+            set_operation_timeout_ns: operation timeout in ns
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._set_operation_timeout_ns(ptr, set_operation_timeout_ns)
 
 
 class LibScrapliMapping:

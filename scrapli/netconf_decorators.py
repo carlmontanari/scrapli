@@ -59,7 +59,7 @@ def handle_operation_timeout(
             # ignore an invalid type for the timeout
             return wrapped(inst, *args, **kwargs)
 
-        status = inst.ffi_mapping.options_mapping.session.set_operation_timeout_ns(
+        status = inst.ffi_mapping.session_mapping.set_operation_timeout_ns(
             inst._ptr_or_exception(),
             c_uint64(operation_timeout_ns),
         )
@@ -71,7 +71,7 @@ def handle_operation_timeout(
         except Exception as exc:
             raise exc
         finally:
-            status = inst.ffi_mapping.options_mapping.session.set_operation_timeout_ns(
+            status = inst.ffi_mapping.session_mapping.set_operation_timeout_ns(
                 inst._ptr_or_exception(),
                 c_uint64(inst.session_options.operation_timeout_ns or DEFAULT_OPERATION_TIMEOUT_NS),
             )
@@ -129,7 +129,7 @@ def handle_operation_timeout_async(
             # ignore an invalid type for the timeout
             return await wrapped(inst, *args, **kwargs)
 
-        status = inst.ffi_mapping.options_mapping.session.set_operation_timeout_ns(
+        status = inst.ffi_mapping.session_mapping.set_operation_timeout_ns(
             inst._ptr_or_exception(),
             c_uint64(operation_timeout_ns),
         )
@@ -141,7 +141,7 @@ def handle_operation_timeout_async(
         except Exception as exc:
             raise exc
         finally:
-            status = inst.ffi_mapping.options_mapping.session.set_operation_timeout_ns(
+            status = inst.ffi_mapping.session_mapping.set_operation_timeout_ns(
                 inst._ptr_or_exception(),
                 c_uint64(inst.session_options.operation_timeout_ns or DEFAULT_OPERATION_TIMEOUT_NS),
             )
