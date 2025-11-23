@@ -35,7 +35,7 @@ def assert_no_leaks():
     # this will cuase us to use the debug allocator rather than c allocator.
     yield
 
-    assert LibScrapliMapping().shared_mapping.assert_no_leaks() is True
+    assert LibScrapliMapping().assert_no_leaks() is True
 
 
 CLI_USER_AT_HOST_PATTERN = re.compile(r"\b\w+@\w+\b")

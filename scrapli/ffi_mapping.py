@@ -7,12 +7,12 @@ from ctypes import (
     c_char_p,
     c_int,
     c_uint8,
+    c_void_p,
 )
 
 from scrapli.ffi import get_libscrapli_path
 from scrapli.ffi_mapping_cli import LibScrapliCliMapping
 from scrapli.ffi_mapping_netconf import LibScrapliNetconfMapping
-from scrapli.ffi_mapping_options import LibScrapliOptionsMapping
 from scrapli.ffi_types import (
     DriverPointer,
     IntPointer,
@@ -38,13 +38,6 @@ class LibScrapliSharedMapping:
     """
 
     def __init__(self, lib: CDLL) -> None:
-        self._assert_no_leaks: Callable[
-            [],
-            bool,
-        ] = lib.ls_assert_no_leaks
-        lib.ls_assert_no_leaks.argtypes = []
-        lib.ls_assert_no_leaks.restype = c_bool
-
         self._get_poll_fd: Callable[
             [
                 DriverPointer,
@@ -67,23 +60,21 @@ class LibScrapliSharedMapping:
         ]
         lib.ls_shared_free.restype = None
 
-    def assert_no_leaks(self) -> bool:
-        """
-        Assert no memory leaks -- only works with debug libscrapli build.
+        self._alloc_driver_options: Callable[
+            [],
+            c_void_p,
+        ] = lib.ls_alloc_driver_options
+        lib.ls_alloc_driver_options.argtypes = []
+        lib.ls_alloc_driver_options.restype = c_void_p
 
-        Should (generally) not be called directly/by users.
-
-        Args:
-            N/A
-
-        Returns:
-            bool: True if leaks, otherwise False
-
-        Raises:
-            N/A
-
-        """
-        return bool(self._assert_no_leaks())
+        self._free_driver_options: Callable[
+            [
+                c_void_p,
+            ],
+            None,
+        ] = lib.ls_free_driver_options
+        lib.ls_free_driver_options.argtypes = [c_void_p]
+        lib.ls_free_driver_options.restype = None
 
     def get_poll_fd(self, ptr: DriverPointer) -> c_int:
         """
@@ -120,6 +111,42 @@ class LibScrapliSharedMapping:
 
         """
         return self._free(ptr)
+
+    def alloc_driver_options(self) -> c_void_p:
+        """
+        Allocates a cli/netconf driver options struct in the zig ffi bits.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            N/A
+
+        Returns:
+            c_void_p: pointer to the allocated options struct.
+
+        Raises:
+            N/A
+
+        """
+        return self._alloc_driver_options()
+
+    def free_driver_options(self, options_ptr: c_void_p) -> None:
+        """
+        Frees a cli/netconf driver options struct in the zig ffi bits.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            options_ptr: pointer to the struct to free.
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        """
+        return self._free_driver_options(options_ptr)
 
 
 class LibScrapliSessionMapping:
@@ -275,8 +302,33 @@ class LibScrapliMapping:
 
     def __init__(self) -> None:
         self.lib = CDLL(get_libscrapli_path())
+
+        self._assert_no_leaks: Callable[
+            [],
+            bool,
+        ] = self.lib.ls_assert_no_leaks
+        self.lib.ls_assert_no_leaks.argtypes = []
+        self.lib.ls_assert_no_leaks.restype = c_bool
+
         self.shared_mapping = LibScrapliSharedMapping(self.lib)
         self.session_mapping = LibScrapliSessionMapping(self.lib)
         self.cli_mapping = LibScrapliCliMapping(self.lib)
         self.netconf_mapping = LibScrapliNetconfMapping(self.lib)
-        self.options_mapping = LibScrapliOptionsMapping(self.lib)
+
+    def assert_no_leaks(self) -> bool:
+        """
+        Assert no memory leaks -- only works with debug libscrapli build.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            N/A
+
+        Returns:
+            bool: True if leaks, otherwise False
+
+        Raises:
+            N/A
+
+        """
+        return bool(self._assert_no_leaks())

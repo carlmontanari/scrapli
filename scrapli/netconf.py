@@ -1,6 +1,18 @@
 """scrapli.netconf"""
 
-from ctypes import c_bool, c_char_p, c_int, c_uint, c_uint64
+from ctypes import (
+    POINTER,
+    _Pointer,
+    c_bool,
+    c_char_p,
+    c_int,
+    c_size_t,
+    c_uint,
+    c_uint64,
+    c_void_p,
+    cast,
+    pointer,
+)
 from dataclasses import dataclass, field
 from enum import Enum
 from logging import getLogger
@@ -16,10 +28,10 @@ from scrapli.exceptions import (
     NotOpenedException,
     OpenException,
     OperationException,
-    OptionsException,
     SubmitOperationException,
 )
 from scrapli.ffi_mapping import LibScrapliMapping
+from scrapli.ffi_options import DriverOptions
 from scrapli.ffi_types import (
     DriverPointer,
     IntPointer,
@@ -256,45 +268,38 @@ class Options:
     _error_tag: c_char_p | None = field(init=False, default=None, repr=False)
     _preferred_version: c_char_p | None = field(init=False, default=None, repr=False)
 
-    def apply(self, ffi_mapping: LibScrapliMapping, ptr: DriverPointer) -> None:
+    def apply(self, *, options: _Pointer[DriverOptions]) -> None:
         """
-        Applies the options to the given driver pointer.
+        Applies the options to the given options struct.
 
         Should not be called directly/by users.
 
         Args:
-            ffi_mapping: the handle to the ffi mapping singleton
-            ptr: the pointer to the underlying cli or netconf object
+            options: the options struct to write set options to
 
         Returns:
             None
 
         Raises:
-            OptionsException: if any option apply returns a non-zero return code.
+            N/A
 
         """
         if self.error_tag is not None:
             self._error_tag = to_c_string(self.error_tag)
 
-            status = ffi_mapping.options_mapping.netconf.set_error_tag(ptr, self._error_tag)
-            if status != 0:
-                raise OptionsException("failed to set netconf error tag")
+            options.contents.netconf.error_tag = self._error_tag
+            options.contents.netconf.error_tag_len = c_size_t(len(self.error_tag))
 
         if self.preferred_version is not None:
             self._preferred_version = to_c_string(self.preferred_version)
 
-            status = ffi_mapping.options_mapping.netconf.set_preferred_version(
-                ptr, self._preferred_version
-            )
-            if status != 0:
-                raise OptionsException("failed to set netconf preferred version")
+            options.contents.netconf.preferred_version = self._preferred_version
+            options.contents.netconf.preferred_version_len = c_size_t(len(self.preferred_version))
 
         if self.message_poll_interval_ns is not None:
-            status = ffi_mapping.options_mapping.netconf.set_message_poll_interva_ns(
-                ptr, c_int(self.message_poll_interval_ns)
+            options.contents.netconf.message_poll_interval_ns = pointer(
+                c_uint64(self.message_poll_interval_ns)
             )
-            if status != 0:
-                raise OptionsException("failed to set netconf message poll interval")
 
     def __repr__(self) -> str:
         """
@@ -494,7 +499,7 @@ class Netconf:
             f"port={self.port!r}, "
             f"options={self.options!r} "
             f"auth_options={self.auth_options!r} "
-            f"session_options={self.auth_options!r} "
+            f"session_options={self.session_options!r} "
             f"transport_options={self.transport_options!r}) "
         )
 
@@ -519,16 +524,15 @@ class Netconf:
 
     def _alloc(
         self,
+        *,
+        options_ptr: c_void_p,
     ) -> None:
         ptr = self.ffi_mapping.netconf_mapping.alloc(
-            logger_callback=self.logger_callback,
-            logger_level=ffi_logger_level(logger=self.logger),
             host=self._host,
-            port=c_int(self.port),
-            transport_kind=c_char_p(self.transport_options.transport_kind.encode(encoding="utf-8")),
+            options_ptr=options_ptr,
         )
         if ptr == 0:  # type: ignore[comparison-overlap]
-            raise AllocationException("failed to allocate netconf")
+            raise AllocationException("failed to allocate cli")
 
         self.ptr = ptr
 
@@ -552,12 +556,25 @@ class Netconf:
         *,
         operation_id: OperationIdPointer,
     ) -> None:
-        self._alloc()
+        options_ptr = self.ffi_mapping.shared_mapping.alloc_driver_options()
+        options = cast(options_ptr, POINTER(DriverOptions))
 
-        self.options.apply(self.ffi_mapping, self._ptr_or_exception())
-        self.auth_options.apply(self.ffi_mapping, self._ptr_or_exception())
-        self.session_options.apply(self.ffi_mapping, self._ptr_or_exception())
-        self.transport_options.apply(self.ffi_mapping, self._ptr_or_exception())
+        options.contents.apply(
+            logger_callback=self.logger_callback,
+            logger_level=ffi_logger_level(logger=self.logger),
+            port=self.port,
+            transport_kind=c_char_p(self.transport_options.transport_kind.encode(encoding="utf-8")),
+        )
+
+        self.options.apply(options=options)
+        self.auth_options.apply(options=options)
+        self.session_options.apply(options=options)
+        self.transport_options.apply(options=options)
+
+        try:
+            self._alloc(options_ptr=options_ptr)
+        finally:
+            self.ffi_mapping.shared_mapping.free_driver_options(options_ptr=options_ptr)
 
         status = self.ffi_mapping.netconf_mapping.open(
             ptr=self._ptr_or_exception(),

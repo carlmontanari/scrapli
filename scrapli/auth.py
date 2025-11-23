@@ -1,14 +1,10 @@
 """scrapli.auth"""
 
-from ctypes import c_char_p
+from ctypes import _Pointer, c_bool, c_char_p, c_size_t, c_uint16, pointer
 from dataclasses import dataclass, field
 
-from scrapli.exceptions import OptionsException
-from scrapli.ffi_mapping import LibScrapliMapping
-from scrapli.ffi_types import (
-    DriverPointer,
-    to_c_string,
-)
+from scrapli.ffi_options import DriverOptions
+from scrapli.ffi_types import to_c_string
 
 
 @dataclass
@@ -96,101 +92,106 @@ class Options:
     _password_pattern: c_char_p | None = field(init=False, default=None, repr=False)
     _private_key_passphrase_pattern: c_char_p | None = field(init=False, default=None, repr=False)
 
-    def apply(  # noqa: C901, PLR0912
-        self, ffi_mapping: LibScrapliMapping, ptr: DriverPointer
-    ) -> None:
+    _lookup_map_keys: list[c_char_p] | None = field(init=False, default=None, repr=False)
+    _lookup_map_key_lens: list[c_uint16] | None = field(init=False, default=None, repr=False)
+    _lookup_map_vals: list[c_char_p] | None = field(init=False, default=None, repr=False)
+    _lookup_map_val_lens: list[c_uint16] | None = field(init=False, default=None, repr=False)
+
+    def apply(self, *, options: _Pointer[DriverOptions]) -> None:  # noqa: C901
         """
-        Applies the options to the given driver pointer.
+        Applies the options to the given options struct.
 
         Should not be called directly/by users.
 
         Args:
-            ffi_mapping: the handle to the ffi mapping singleton
-            ptr: the pointer to the underlying cli or netconf object
+            options: the options struct to write set options to
 
         Returns:
             None
 
         Raises:
-            OptionsException: if any option apply returns a non-zero return code.
+            N/A
 
         """
         if self.username is not None:
             self._username = to_c_string(self.username)
 
-            status = ffi_mapping.options_mapping.auth.set_username(ptr, self._username)
-            if status != 0:
-                raise OptionsException("failed to set auth username")
+            options.contents.auth.username = self._username
+            options.contents.auth.username_len = c_size_t(len(self.username))
 
         if self.password is not None:
             self._password = to_c_string(self.password)
 
-            status = ffi_mapping.options_mapping.auth.set_password(ptr, self._password)
-            if status != 0:
-                raise OptionsException("failed to set auth password")
+            options.contents.auth.password = self._password
+            options.contents.auth.password_len = c_size_t(len(self.password))
 
         if self.private_key_path is not None:
             self._private_key_path = to_c_string(self.private_key_path)
 
-            status = ffi_mapping.options_mapping.auth.set_private_key_path(
-                ptr, self._private_key_path
-            )
-            if status != 0:
-                raise OptionsException("failed to set auth private key path")
+            options.contents.auth.private_key_path = self._private_key_path
+            options.contents.auth.private_key_path_len = c_size_t(len(self.private_key_path))
 
         if self.private_key_passphrase is not None:
             self._private_key_passphrase = to_c_string(self.private_key_passphrase)
 
-            status = ffi_mapping.options_mapping.auth.set_private_key_passphrase(
-                ptr, self._private_key_passphrase
+            options.contents.auth.private_key_passphrase = self._private_key_passphrase
+            options.contents.auth.private_key_passphrase_len = c_size_t(
+                len(self.private_key_passphrase)
             )
-            if status != 0:
-                raise OptionsException("failed to set auth private key passphrase")
 
         if self.lookups is not None:
+            self._lookup_map_keys = []
+            self._lookup_map_key_lens = []
+            self._lookup_map_vals = []
+            self._lookup_map_val_lens = []
+
             for lookup in self.lookups:
-                status = ffi_mapping.options_mapping.auth.set_lookup_key_value(
-                    ptr, *lookup._get_c_strings()
-                )
-                if status != 0:
-                    raise OptionsException("failed to set auth lookup key/value")
+                k, v = lookup._get_c_strings()
+
+                self._lookup_map_keys.append(k)
+                self._lookup_map_key_lens.append(c_uint16(len(lookup.key)))
+                self._lookup_map_vals.append(v)
+                self._lookup_map_val_lens.append(c_uint16(len(lookup.value)))
+
+            options.contents.auth.lookups.keys = pointer(self._lookup_map_keys[0])
+            options.contents.auth.lookups.key_lens = pointer(self._lookup_map_key_lens[0])
+
+            options.contents.auth.lookups.vals = pointer(self._lookup_map_vals[0])
+            options.contents.auth.lookups.val_lens = pointer(self._lookup_map_val_lens[0])
+
+            options.contents.auth.lookups.count = c_size_t(len(self.lookups))
 
         if self.force_in_session_auth is not None:
-            status = ffi_mapping.options_mapping.auth.set_force_in_session_auth(ptr)
-            if status != 0:
-                raise OptionsException("failed to set force in session auth")
+            options.contents.auth.force_in_session_auth = pointer(
+                c_bool(self.force_in_session_auth)
+            )
 
         if self.bypass_in_session_auth is not None:
-            status = ffi_mapping.options_mapping.auth.set_bypass_in_session_auth(ptr)
-            if status != 0:
-                raise OptionsException("failed to set bypass in session auth")
+            options.contents.auth.bypass_in_session_auth = pointer(
+                c_bool(self.bypass_in_session_auth)
+            )
 
         if self.username_pattern is not None:
             self._username_pattern = to_c_string(self.username_pattern)
 
-            status = ffi_mapping.options_mapping.auth.set_username_pattern(
-                ptr, self._username_pattern
-            )
-            if status != 0:
-                raise OptionsException("failed to set auth username pattern")
+            options.contents.auth.username_pattern = self._username_pattern
+            options.contents.auth.username_pattern_len = c_size_t(len(self.username_pattern))
 
         if self.password_pattern is not None:
             self._password_pattern = to_c_string(self.password_pattern)
 
-            status = ffi_mapping.options_mapping.auth.set_password_pattern(
-                ptr, self._password_pattern
-            )
-            if status != 0:
-                raise OptionsException("failed to set auth password pattern")
+            options.contents.auth.password_pattern = self._password_pattern
+            options.contents.auth.password_pattern_len = c_size_t(len(self.password_pattern))
 
         if self.private_key_passphrase_pattern is not None:
             self._private_key_passphrase_pattern = to_c_string(self.private_key_passphrase_pattern)
 
-            status = ffi_mapping.options_mapping.auth.set_private_key_passphrase_pattern(
-                ptr, self._private_key_passphrase_pattern
+            options.contents.auth.private_key_passphrase_pattern = (
+                self._private_key_passphrase_pattern
             )
-            if status != 0:
-                raise OptionsException("failed to set auth private key passphrase pattern")
+            options.contents.auth.private_key_passphrase_pattern_len = c_size_t(
+                len(self.private_key_passphrase_pattern)
+            )
 
     def __repr__(self) -> str:
         """

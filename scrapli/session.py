@@ -1,11 +1,10 @@
 """scrapli.session"""
 
-from ctypes import c_char_p, c_uint64
+from ctypes import _Pointer, c_char_p, c_size_t, c_uint64, pointer
 from dataclasses import dataclass, field
 
-from scrapli.exceptions import OptionsException
-from scrapli.ffi_mapping import LibScrapliMapping
-from scrapli.ffi_types import DriverPointer, to_c_string
+from scrapli.ffi_options import DriverOptions
+from scrapli.ffi_types import to_c_string
 from scrapli.helper import second_to_nano
 
 DEFAULT_OPERATION_TIMEOUT_NS = 10_000_000_000
@@ -49,73 +48,52 @@ class Options:
             if self.operation_timeout_ns is None and self.operation_timeout_s is not None:
                 self.operation_timeout_ns = second_to_nano(d=self.operation_timeout_s)
 
-    def apply(  # noqa: C901,PLR0912
-        self, ffi_mapping: LibScrapliMapping, ptr: DriverPointer
-    ) -> None:
+    def apply(self, *, options: _Pointer[DriverOptions]) -> None:
         """
-        Applies the options to the given driver pointer.
+        Applies the options to the given options struct.
 
         Should not be called directly/by users.
 
         Args:
-            ffi_mapping: the handle to the ffi mapping singleton
-            ptr: the pointer to the underlying cli or netconf object
+            options: the options struct to write set options to
 
         Returns:
             None
 
         Raises:
-            OptionsException: if any option apply returns a non-zero return code.
+            N/A
 
         """
         if self.read_size is not None:
-            status = ffi_mapping.options_mapping.session.set_read_size(
-                ptr, c_uint64(self.read_size)
-            )
-            if status != 0:
-                raise OptionsException("failed to set session read size")
+            options.contents.session.read_size = pointer(c_uint64(self.read_size))
 
         if self.read_min_delay_ns is not None:
-            status = ffi_mapping.options_mapping.session.set_read_min_delay_ns(
-                ptr, c_uint64(self.read_min_delay_ns)
-            )
-            if status != 0:
-                raise OptionsException("failed to set session read min delay")
+            options.contents.session.read_min_delay_ns = pointer(c_uint64(self.read_min_delay_ns))
 
         if self.read_max_delay_ns is not None:
-            status = ffi_mapping.options_mapping.session.set_read_max_delay_ns(
-                ptr, c_uint64(self.read_max_delay_ns)
-            )
-            if status != 0:
-                raise OptionsException("failed to set session read max delay")
+            options.contents.session.read_max_delay_ns = pointer(c_uint64(self.read_max_delay_ns))
 
         if self.return_char is not None:
             self._return_char = to_c_string(self.return_char)
 
-            status = ffi_mapping.options_mapping.session.set_return_char(ptr, self._return_char)
-            if status != 0:
-                raise OptionsException("failed to set session return char")
+            options.contents.session.return_char = self._return_char
+            options.contents.session.return_char_len = c_size_t(len(self.return_char))
 
         if self.operation_timeout_ns is not None:
-            status = ffi_mapping.options_mapping.session.set_operation_timeout_ns(
-                ptr, c_uint64(self.operation_timeout_ns)
+            options.contents.session.operation_timeout_ns = pointer(
+                c_uint64(self.operation_timeout_ns)
             )
-            if status != 0:
-                raise OptionsException("failed to set session operation timeout")
 
         if self.operation_max_search_depth is not None:
-            status = ffi_mapping.options_mapping.session.set_operation_max_search_depth(
-                ptr, c_uint64(self.operation_max_search_depth)
+            options.contents.session.operation_max_search_depth = pointer(
+                c_uint64(self.operation_max_search_depth)
             )
-            if status != 0:
-                raise OptionsException("failed to set session operation max search depth")
 
         if self.recorder_path is not None:
             self._recorder_path = to_c_string(self.recorder_path)
 
-            status = ffi_mapping.options_mapping.session.set_recorder_path(ptr, self._recorder_path)
-            if status != 0:
-                raise OptionsException("failed to set session recorder path")
+            options.contents.session.recorder_path = self._recorder_path
+            options.contents.session.recorder_path_len = c_size_t(len(self.recorder_path))
 
     def __repr__(self) -> str:
         """

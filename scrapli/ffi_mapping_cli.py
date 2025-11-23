@@ -5,8 +5,8 @@ from ctypes import (
     CDLL,
     c_bool,
     c_char_p,
-    c_int,
     c_uint8,
+    c_void_p,
 )
 
 from _ctypes import POINTER
@@ -17,7 +17,6 @@ from scrapli.ffi_types import (
     CancelPointer,
     DriverPointer,
     IntPointer,
-    LogFuncCallback,
     OperationId,
     OperationIdPointer,
     U64Pointer,
@@ -48,21 +47,13 @@ class LibScrapliCliMapping:
         self._alloc: Callable[
             [
                 c_char_p,
-                LogFuncCallback,
-                c_char_p,
-                c_char_p,
-                c_int,
-                c_char_p,
+                c_void_p,
             ],
             DriverPointer,
         ] = lib.ls_cli_alloc
         lib.ls_cli_alloc.argtypes = [
             c_char_p,
-            LogFuncCallback,
-            c_char_p,
-            c_char_p,
-            c_int,
-            c_char_p,
+            c_void_p,
         ]
         lib.ls_cli_alloc.restype = DriverPointer
 
@@ -303,12 +294,8 @@ class LibScrapliCliMapping:
     def alloc(
         self,
         *,
-        definition_string: c_char_p,
-        logger_callback: LogFuncCallback,
-        logger_level: c_char_p,
         host: c_char_p,
-        port: c_int,
-        transport_kind: c_char_p,
+        options_ptr: c_void_p,
     ) -> DriverPointer:
         """
         Allocate a cli object.
@@ -316,14 +303,8 @@ class LibScrapliCliMapping:
         Should (generally) not be called directly/by users.
 
         Args:
-            definition_string: yaml definition string
-            logger_callback: pointer to logger callback function
-            logger_level: string matching one of the valid libscrapli log levels; passed here to
-                ensure that we dont waste allocations formatting string messages for levels that
-                will not be printed/used in python-land
             host: host to connect to
-            port: port at which to connect
-            transport_kind: transport kind to use
+            options_ptr: the pointer to the options struct
 
         Returns:
             int: return code, non-zero value indicates an error. technically a c_uint8 converted by
@@ -334,12 +315,8 @@ class LibScrapliCliMapping:
 
         """
         return self._alloc(
-            definition_string,
-            logger_callback,
-            logger_level,
             host,
-            port,
-            transport_kind,
+            options_ptr,
         )
 
     def get_ntc_templates_platform(

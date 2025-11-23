@@ -3,11 +3,14 @@
 import importlib.resources
 from collections.abc import Awaitable, Callable
 from ctypes import (
+    POINTER,
     c_bool,
     c_char_p,
     c_int,
     c_uint,
     c_uint64,
+    c_void_p,
+    cast,
     pointer,
 )
 from dataclasses import dataclass
@@ -34,6 +37,7 @@ from scrapli.exceptions import (
     SubmitOperationException,
 )
 from scrapli.ffi_mapping import LibScrapliMapping
+from scrapli.ffi_options import DriverOptions
 from scrapli.ffi_types import (
     DriverPointer,
     IntPointer,
@@ -329,7 +333,7 @@ class Cli:
             f"host={self.host!r}, "
             f"port={self.port!r}, "
             f"auth_options={self.auth_options!r} "
-            f"session_options={self.auth_options!r} "
+            f"session_options={self.session_options!r} "
             f"transport_options={self.transport_options!r}) "
         )
 
@@ -387,14 +391,12 @@ class Cli:
 
     def _alloc(
         self,
+        *,
+        options_ptr: c_void_p,
     ) -> None:
         ptr = self.ffi_mapping.cli_mapping.alloc(
-            definition_string=c_char_p(self.definition_string),
-            logger_callback=self.logger_callback,
-            logger_level=ffi_logger_level(logger=self.logger),
             host=self._host,
-            port=c_int(self.port),
-            transport_kind=c_char_p(self.transport_options.transport_kind.encode(encoding="utf-8")),
+            options_ptr=options_ptr,
         )
         if ptr == 0:  # type: ignore[comparison-overlap]
             raise AllocationException("failed to allocate cli")
@@ -483,16 +485,33 @@ class Cli:
         *,
         operation_id: OperationIdPointer,
     ) -> None:
-        self._alloc()
+        options_ptr = self.ffi_mapping.shared_mapping.alloc_driver_options()
+        options = cast(options_ptr, POINTER(DriverOptions))
 
-        self.auth_options.apply(self.ffi_mapping, self._ptr_or_exception())
-        self.session_options.apply(self.ffi_mapping, self._ptr_or_exception())
-        self.transport_options.apply(self.ffi_mapping, self._ptr_or_exception())
+        options.contents.apply(
+            logger_callback=self.logger_callback,
+            logger_level=ffi_logger_level(logger=self.logger),
+            port=self.port,
+            transport_kind=c_char_p(self.transport_options.transport_kind.encode(encoding="utf-8")),
+            cli_definition_string=c_char_p(self.definition_string),
+        )
+
+        self.auth_options.apply(options=options)
+        self.session_options.apply(options=options)
+        self.transport_options.apply(options=options)
+
+        # alloc will have duped all our fields from options, so that lives in zig managed heap
+        # memory, regardless what happens w/ alloc we need to free our heap alloc'd options struct
+        try:
+            self._alloc(options_ptr=options_ptr)
+        finally:
+            self.ffi_mapping.shared_mapping.free_driver_options(options_ptr=options_ptr)
 
         status = self.ffi_mapping.cli_mapping.open(
             ptr=self._ptr_or_exception(),
             operation_id=operation_id,
         )
+
         if status != 0:
             self._free()
 

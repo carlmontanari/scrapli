@@ -10,6 +10,7 @@ from ctypes import (
     c_size_t,
     c_uint,
     c_uint8,
+    c_uint16,
     c_uint64,
     c_void_p,
     cast,
@@ -28,6 +29,7 @@ BoolPointer: TypeAlias = POINTER(c_bool)  # type: ignore[valid-type]
 ZigSlicePointer: TypeAlias = POINTER("ZigSlice")  # type: ignore[valid-type, call-overload]
 StringPointer: TypeAlias = POINTER(c_char_p)  # type: ignore[valid-type]
 IntPointer: TypeAlias = POINTER(c_int)  # type: ignore[valid-type]
+U16Pointer: TypeAlias = POINTER(c_uint16)  # type: ignore[valid-type]
 U64Pointer: TypeAlias = POINTER(c_uint64)  # type: ignore[valid-type]
 
 # cancellation is handled via timeout in python (vs context cancellation in go), so just have

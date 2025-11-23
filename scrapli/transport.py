@@ -1,16 +1,12 @@
 """scrapli.transport"""
 
 from abc import ABC, abstractmethod
-from ctypes import c_char_p, c_int
+from ctypes import _Pointer, c_bool, c_char_p, c_size_t, pointer
 from dataclasses import dataclass, field
 from enum import Enum
 
-from scrapli.exceptions import OptionsException
-from scrapli.ffi_mapping import LibScrapliMapping
-from scrapli.ffi_types import (
-    DriverPointer,
-    to_c_string,
-)
+from scrapli.ffi_options import DriverOptions
+from scrapli.ffi_types import to_c_string
 
 
 class TransportKind(str, Enum):
@@ -80,21 +76,20 @@ class Options(ABC):
         return self._transport_kind
 
     @abstractmethod
-    def apply(self, ffi_mapping: LibScrapliMapping, ptr: DriverPointer) -> None:
+    def apply(self, *, options: _Pointer[DriverOptions]) -> None:
         """
-        Applies the options to the given driver pointer.
+        Applies the options to the given options struct.
 
         Should not be called directly/by users.
 
         Args:
-            ffi_mapping: the handle to the ffi mapping singleton
-            ptr: the pointer to the underlying cli or netconf object
+            options: the options struct to write set options to
 
         Returns:
             None
 
         Raises:
-            OptionsException: if any option apply returns a non-zero return code.
+            N/A
 
         """
         raise NotImplementedError
@@ -138,86 +133,66 @@ class BinOptions(Options):
     _ssh_config_path: c_char_p | None = field(init=False, default=None, repr=False)
     _known_hosts_path: c_char_p | None = field(init=False, default=None, repr=False)
 
-    def apply(  # noqa: C901, PLR0912
-        self, ffi_mapping: LibScrapliMapping, ptr: DriverPointer
-    ) -> None:
+    def apply(self, *, options: _Pointer[DriverOptions]) -> None:
         """
-        Applies the options to the given driver pointer.
+        Applies the options to the given options struct.
 
         Should not be called directly/by users.
 
         Args:
-            ffi_mapping: the handle to the ffi mapping singleton
-            ptr: the pointer to the underlying cli or netconf object
+            options: the options struct to write set options to
 
         Returns:
             None
 
         Raises:
-            OptionsException: if any option apply returns a non-zero return code.
+            N/A
 
         """
         if self.bin is not None:
             self._bin = to_c_string(self.bin)
 
-            status = ffi_mapping.options_mapping.transport_bin.set_bin(ptr, self._bin)
-            if status != 0:
-                raise OptionsException("failed to set bin transport bin")
+            options.contents.transport.bin.bin = self._bin
+            options.contents.transport.bin.bin_len = c_size_t(len(self.bin))
 
         if self.extra_open_args is not None:
             self._extra_open_args = to_c_string(" ".join(self.extra_open_args))
 
-            status = ffi_mapping.options_mapping.transport_bin.set_extra_open_args(
-                ptr, self._extra_open_args
-            )
-            if status != 0:
-                raise OptionsException("failed to set bin transport extra open args")
+            options.contents.transport.bin.extra_open_args = self._extra_open_args
+            options.contents.transport.bin.extra_open_args_len = c_size_t(len(self.extra_open_args))
 
         if self.override_open_args is not None:
             self._override_open_args = to_c_string(" ".join(self.override_open_args))
 
-            status = ffi_mapping.options_mapping.transport_bin.set_override_open_args(
-                ptr, self._override_open_args
+            options.contents.transport.bin.override_open_args = self._override_open_args
+            options.contents.transport.bin.override_open_args_len = c_size_t(
+                len(self.override_open_args)
             )
-            if status != 0:
-                raise OptionsException("failed to set bin transport override open args")
 
         if self.ssh_config_path is not None:
             self._ssh_config_path = to_c_string(self.ssh_config_path)
 
-            status = ffi_mapping.options_mapping.transport_bin.set_ssh_config_path(
-                ptr, self._ssh_config_path
-            )
-            if status != 0:
-                raise OptionsException("failed to set bin transport ssh config path")
+            options.contents.transport.bin.ssh_config_path = self._ssh_config_path
+            options.contents.transport.bin.ssh_config_path_len = c_size_t(len(self.ssh_config_path))
 
         if self.known_hosts_path is not None:
             self._known_hosts_path = to_c_string(self.known_hosts_path)
 
-            status = ffi_mapping.options_mapping.transport_bin.set_known_hosts_path(
-                ptr, self._known_hosts_path
+            options.contents.transport.bin.known_hosts_path = self._known_hosts_path
+            options.contents.transport.bin.known_hosts_path_len = c_size_t(
+                len(self.known_hosts_path)
             )
-            if status != 0:
-                raise OptionsException("failed to set bin transport ssh known hosts path")
 
         if self.enable_strict_key is not None:
-            status = ffi_mapping.options_mapping.transport_bin.set_enable_strict_key(ptr)
-            if status != 0:
-                raise OptionsException("failed to set bin transport enable strict key")
+            options.contents.transport.bin.enable_strict_key = pointer(
+                c_bool(self.enable_strict_key)
+            )
 
         if self.term_height is not None:
-            status = ffi_mapping.options_mapping.transport_bin.set_term_height(
-                ptr, c_int(self.term_height)
-            )
-            if status != 0:
-                raise OptionsException("failed to set bin transport term height")
+            options.contents.transport.bin.term_height = pointer(self.term_height)
 
         if self.term_width is not None:
-            status = ffi_mapping.options_mapping.transport_bin.set_term_width(
-                ptr, c_int(self.term_width)
-            )
-            if status != 0:
-                raise OptionsException("failed to set bin transport term width")
+            options.contents.transport.bin.term_width = pointer(self.term_width)
 
 
 @dataclass
@@ -255,45 +230,49 @@ class Ssh2Options(Options):
     proxy_jump_private_key_passphrase: str | None = None
     proxy_jump_libssh2_trace: bool | None = None
 
-    def apply(  # noqa: C901,PLR0912
-        self, ffi_mapping: LibScrapliMapping, ptr: DriverPointer
-    ) -> None:
+    _known_hosts_path: c_char_p | None = field(init=False, default=None, repr=False)
+    _proxy_jump_host: c_char_p | None = field(init=False, default=None, repr=False)
+    _proxy_jump_username: c_char_p | None = field(init=False, default=None, repr=False)
+    _proxy_jump_password: c_char_p | None = field(init=False, default=None, repr=False)
+    _proxy_jump_private_key_path: c_char_p | None = field(init=False, default=None, repr=False)
+    _proxy_jump_private_key_passphrase: c_char_p | None = field(
+        init=False, default=None, repr=False
+    )
+
+    def apply(self, *, options: _Pointer[DriverOptions]) -> None:
         """
-        Applies the options to the given driver pointer.
+        Applies the options to the given options struct.
 
         Should not be called directly/by users.
 
         Args:
-            ffi_mapping: the handle to the ffi mapping singleton
-            ptr: the pointer to the underlying cli or netconf object
+            options: the options struct to write set options to
 
         Returns:
             None
 
         Raises:
-            OptionsException: if any option apply returns a non-zero return code.
+            N/A
 
         """
         if self.known_hosts_path is not None:
-            status = ffi_mapping.options_mapping.transport_ssh2.set_known_hosts_path(
-                ptr,
-                to_c_string(self.known_hosts_path),
+            self._known_hosts_path = to_c_string(self.known_hosts_path)
+
+            options.contents.transport.ssh2.known_hosts_path = self._known_hosts_path
+            options.contents.transport.ssh2.known_hosts_path_len = c_size_t(
+                len(self.known_hosts_path)
             )
-            if status != 0:
-                raise OptionsException("failed to set ssh2 transport known hosts path")
 
         if self.libssh2_trace is not None:
-            status = ffi_mapping.options_mapping.transport_ssh2.set_libssh2_trace(ptr)
-            if status != 0:
-                raise OptionsException("failed to set ssh2 transport trace")
+            options.contents.transport.ssh2.libssh2_trace = pointer(c_bool(self.libssh2_trace))
 
         if self.proxy_jump_host is not None:
-            status = ffi_mapping.options_mapping.transport_ssh2.set_proxy_jump_host(
-                ptr,
-                to_c_string(self.proxy_jump_host),
+            self._proxy_jump_host = to_c_string(self.proxy_jump_host)
+
+            options.contents.transport.ssh2.proxy_jump_host = self._proxy_jump_host
+            options.contents.transport.ssh2.proxy_jump_host_len = c_size_t(
+                len(self.proxy_jump_host)
             )
-            if status != 0:
-                raise OptionsException("failed to set ssh2 transport proxy jump host")
         else:
             # if the proxy jump host is None no reason to check anything else, also the host
             # *must* be applied first since we will check .? on the proxy jump object in the
@@ -302,53 +281,50 @@ class Ssh2Options(Options):
             return
 
         if self.proxy_jump_port is not None:
-            status = ffi_mapping.options_mapping.transport_ssh2.set_proxy_jump_port(
-                ptr,
-                c_int(self.proxy_jump_port),
-            )
-            if status != 0:
-                raise OptionsException("failed to set ssh2 transport proxy jump port")
+            options.contents.transport.ssh2.proxy_jump_port = pointer(self.proxy_jump_port)
 
         if self.proxy_jump_username is not None:
-            status = ffi_mapping.options_mapping.transport_ssh2.set_proxy_jump_username(
-                ptr,
-                to_c_string(self.proxy_jump_username),
+            self._proxy_jump_username = to_c_string(self.proxy_jump_host)
+
+            options.contents.transport.ssh2.proxy_jump_username = self._proxy_jump_username
+            options.contents.transport.ssh2.proxy_jump_username_len = c_size_t(
+                len(self.proxy_jump_host)
             )
-            if status != 0:
-                raise OptionsException("failed to set ssh2 transport proxy jump username")
 
         if self.proxy_jump_password is not None:
-            status = ffi_mapping.options_mapping.transport_ssh2.set_proxy_jump_password(
-                ptr,
-                to_c_string(self.proxy_jump_password),
+            self._proxy_jump_password = to_c_string(self.proxy_jump_host)
+
+            options.contents.transport.ssh2.proxy_jump_password = self._proxy_jump_password
+            options.contents.transport.ssh2.proxy_jump_password_len = c_size_t(
+                len(self.proxy_jump_password)
             )
-            if status != 0:
-                raise OptionsException("failed to set ssh2 transport proxy jump password")
 
         if self.proxy_jump_private_key_path is not None:
-            status = ffi_mapping.options_mapping.transport_ssh2.set_proxy_jump_private_key_path(
-                ptr,
-                to_c_string(self.proxy_jump_private_key_path),
+            self._proxy_jump_private_key_path = to_c_string(self.proxy_jump_private_key_path)
+
+            options.contents.transport.ssh2.proxy_jump_private_key_path = (
+                self._proxy_jump_private_key_path
             )
-            if status != 0:
-                raise OptionsException("failed to set ssh2 transport proxy jump private key path")
+            options.contents.transport.ssh2.proxy_jump_private_key_path_len = c_size_t(
+                len(self.proxy_jump_private_key_path)
+            )
 
         if self.proxy_jump_private_key_passphrase is not None:
-            status = (
-                ffi_mapping.options_mapping.transport_ssh2.set_proxy_jump_private_key_passphrase(
-                    ptr,
-                    to_c_string(self.proxy_jump_private_key_passphrase),
-                )
+            self._proxy_jump_private_key_passphrase = to_c_string(
+                self.proxy_jump_private_key_passphrase
             )
-            if status != 0:
-                raise OptionsException(
-                    "failed to set ssh2 transport proxy jump private key passphrase"
-                )
+
+            options.contents.transport.ssh2.proxy_jump_private_key_prassphrase = (
+                self._proxy_jump_private_key_passphrase
+            )
+            options.contents.transport.ssh2.proxy_jump_private_key_prassphrase_len = c_size_t(
+                len(self.proxy_jump_private_key_passphrase)
+            )
 
         if self.proxy_jump_libssh2_trace is not None:
-            status = ffi_mapping.options_mapping.transport_ssh2.set_proxy_jump_libssh2_trace(ptr)
-            if status != 0:
-                raise OptionsException("failed to set ssh2 transport proxy jump trace")
+            options.contents.transport.ssh2.proxy_jump_libssh2_trace = pointer(
+                c_bool(self.proxy_jump_libssh2_trace)
+            )
 
 
 @dataclass
@@ -367,24 +343,23 @@ class TelnetOptions(Options):
 
     """
 
-    def apply(self, ffi_mapping: LibScrapliMapping, ptr: DriverPointer) -> None:
+    def apply(self, *, options: _Pointer[DriverOptions]) -> None:
         """
-        Applies the options to the given driver pointer.
+        Applies the options to the given options struct.
 
         Should not be called directly/by users.
 
         Args:
-            ffi_mapping: the handle to the ffi mapping singleton
-            ptr: the pointer to the underlying cli or netconf object
+            options: the options struct to write set options to
 
         Returns:
             None
 
         Raises:
-            OptionsException: if any option apply returns a non-zero return code.
+            N/A
 
         """
-        _, _ = ffi_mapping, ptr
+        _ = options
 
 
 @dataclass
@@ -407,26 +382,24 @@ class TestOptions(Options):
 
     _f: c_char_p | None = field(init=False, default=None, repr=False)
 
-    def apply(self, ffi_mapping: LibScrapliMapping, ptr: DriverPointer) -> None:
+    def apply(self, *, options: _Pointer[DriverOptions]) -> None:
         """
-        Applies the options to the given driver pointer.
+        Applies the options to the given options struct.
 
         Should not be called directly/by users.
 
         Args:
-            ffi_mapping: the handle to the ffi mapping singleton
-            ptr: the pointer to the underlying cli or netconf object
+            options: the options struct to write set options to
 
         Returns:
             None
 
         Raises:
-            OptionsException: if any option apply returns a non-zero return code.
+            N/A
 
         """
         if self.f is not None:
             self._f = to_c_string(self.f)
 
-            status = ffi_mapping.options_mapping.transport_test.set_f(ptr, self._f)
-            if status != 0:
-                raise OptionsException("failed to set test transport f")
+            options.contents.transport.test.f = self._f
+            options.contents.transport.test.f_len = c_size_t(len(self.f))
