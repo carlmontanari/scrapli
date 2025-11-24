@@ -1,27 +1,26 @@
 """scrapli.ffi_mapping_cli"""
 
+from _ctypes import POINTER
 from collections.abc import Callable
 from ctypes import (
     CDLL,
     c_bool,
     c_char_p,
     c_uint8,
+    c_uint32,
     c_void_p,
 )
-
-from _ctypes import POINTER
 
 from scrapli.ffi_types import (
     CANCEL,
     BoolPointer,
     CancelPointer,
     DriverPointer,
-    IntPointer,
     OperationId,
     OperationIdPointer,
+    U32Pointer,
     U64Pointer,
     ZigSlice,
-    ZigSlicePointer,
     ZigU64Slice,
 )
 
@@ -60,26 +59,26 @@ class LibScrapliCliMapping:
         self._get_ntc_templates_platform: Callable[
             [
                 DriverPointer,
-                ZigSlicePointer,
+                ZigSlice,
             ],
             int,
         ] = lib.ls_cli_get_ntc_templates_platform
         lib.ls_cli_get_ntc_templates_platform.argtypes = [
             DriverPointer,
-            POINTER(ZigSlice),
+            ZigSlice,
         ]
         lib.ls_cli_get_ntc_templates_platform.restype = c_uint8
 
         self._get_genie_platform: Callable[
             [
                 DriverPointer,
-                ZigSlicePointer,
+                ZigSlice,
             ],
             int,
         ] = lib.ls_cli_get_genie_platform
         lib.ls_cli_get_genie_platform.argtypes = [
             DriverPointer,
-            POINTER(ZigSlice),
+            ZigSlice,
         ]
         lib.ls_cli_get_genie_platform.restype = c_uint8
 
@@ -117,24 +116,24 @@ class LibScrapliCliMapping:
             [
                 DriverPointer,
                 OperationId,
-                IntPointer,
-                IntPointer,
-                IntPointer,
-                IntPointer,
-                IntPointer,
-                IntPointer,
+                U32Pointer,
+                U64Pointer,
+                U64Pointer,
+                U64Pointer,
+                U64Pointer,
+                U64Pointer,
             ],
             int,
         ] = lib.ls_cli_fetch_operation_sizes
         lib.ls_cli_fetch_operation_sizes.argtypes = [
             DriverPointer,
             OperationId,
-            IntPointer,
-            IntPointer,
-            IntPointer,
-            IntPointer,
-            IntPointer,
-            IntPointer,
+            U32Pointer,
+            U64Pointer,
+            U64Pointer,
+            U64Pointer,
+            U64Pointer,
+            U64Pointer,
         ]
         lib.ls_cli_fetch_operation_sizes.restype = c_uint8
 
@@ -142,13 +141,13 @@ class LibScrapliCliMapping:
             [
                 DriverPointer,
                 OperationId,
-                IntPointer,
+                U64Pointer,
                 ZigU64Slice,
-                ZigSlicePointer,
-                ZigSlicePointer,
-                ZigSlicePointer,
-                ZigSlicePointer,
-                ZigSlicePointer,
+                ZigSlice,
+                ZigSlice,
+                ZigSlice,
+                ZigSlice,
+                ZigSlice,
             ],
             int,
         ] = lib.ls_cli_fetch_operation
@@ -156,12 +155,12 @@ class LibScrapliCliMapping:
             DriverPointer,
             OperationId,
             U64Pointer,
-            POINTER(ZigU64Slice),
-            POINTER(ZigSlice),
-            POINTER(ZigSlice),
-            POINTER(ZigSlice),
-            POINTER(ZigSlice),
-            POINTER(ZigSlice),
+            POINTER(ZigU64Slice),  # TODO this one changes to a not poitner and shit goes kaboom?
+            ZigSlice,
+            ZigSlice,
+            ZigSlice,
+            ZigSlice,
+            ZigSlice,
         ]
         lib.ls_cli_fetch_operation.restype = c_uint8
 
@@ -323,7 +322,7 @@ class LibScrapliCliMapping:
         self,
         *,
         ptr: DriverPointer,
-        ntc_templates_platform: ZigSlicePointer,
+        ntc_templates_platform: ZigSlice,
     ) -> int:
         """
         Writes the ntc templates platform into the given slice pointer.
@@ -351,7 +350,7 @@ class LibScrapliCliMapping:
         self,
         *,
         ptr: DriverPointer,
-        genie_platform: ZigSlicePointer,
+        genie_platform: ZigSlice,
     ) -> int:
         """
         Writes the (cisco/pyats) genie platform into the given slice pointer.
@@ -378,7 +377,7 @@ class LibScrapliCliMapping:
     def open(
         self,
         ptr: DriverPointer,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
     ) -> int:
         """
         Open the driver at ptr.
@@ -387,7 +386,8 @@ class LibScrapliCliMapping:
 
         Args:
             ptr: the ptr to the libscrapli cli object.
-            operation_id: c_int pointer that is filled with the operation id to poll for completion.
+            operation_id_ptr: c_int pointer that is filled with the operation id to poll for
+                completion.
 
         Returns:
             int: return code, non-zero value indicates an error. technically a c_uint8 converted by
@@ -399,14 +399,14 @@ class LibScrapliCliMapping:
         """
         return self._open(
             ptr,
-            operation_id,
+            operation_id_ptr,
             CANCEL,
         )
 
     def close(
         self,
         ptr: DriverPointer,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
     ) -> int:
         """
         Close the driver at ptr.
@@ -415,7 +415,8 @@ class LibScrapliCliMapping:
 
         Args:
             ptr: the ptr to the libscrapli cli object.
-            operation_id: c_int pointer that is filled with the operation id to poll for completion.
+            operation_id_ptr: c_int pointer that is filled with the operation id to poll for
+                completion.
 
         Returns:
             int: return code, non-zero value indicates an error. technically a c_uint8 converted by
@@ -427,7 +428,7 @@ class LibScrapliCliMapping:
         """
         return self._close(
             ptr,
-            operation_id,
+            operation_id_ptr,
             CANCEL,
         )
 
@@ -435,13 +436,13 @@ class LibScrapliCliMapping:
         self,
         *,
         ptr: DriverPointer,
-        operation_id: OperationId,
-        operation_count: IntPointer,
-        inputs_size: IntPointer,
-        results_raw_size: IntPointer,
-        results_size: IntPointer,
-        results_failed_indicator_size: IntPointer,
-        err_size: IntPointer,
+        operation_id_value: c_uint32,
+        operation_count: U32Pointer,
+        inputs_size: U64Pointer,
+        results_raw_size: U64Pointer,
+        results_size: U64Pointer,
+        results_failed_indicator_size: U64Pointer,
+        err_size: U64Pointer,
     ) -> int:
         """
         Fetch the sizes of a cli operation's results.
@@ -450,7 +451,7 @@ class LibScrapliCliMapping:
 
         Args:
             ptr: ptr to the cli object
-            operation_id: operation id of which to poll
+            operation_id_value: operation id of which to fetch
             operation_count: int pointer to fill with the count of operations
             inputs_size: int pointer to fill with the operation's input size
             results_raw_size: int pointer to fill with the operation's result raw size
@@ -469,7 +470,7 @@ class LibScrapliCliMapping:
         """
         return self._fetch_sizes(
             ptr,
-            operation_id,
+            operation_id_value,
             operation_count,
             inputs_size,
             results_raw_size,
@@ -482,14 +483,14 @@ class LibScrapliCliMapping:
         self,
         *,
         ptr: DriverPointer,
-        operation_id: OperationId,
+        operation_id_value: c_uint32,
         start_time: U64Pointer,
         splits: ZigU64Slice,
-        inputs_slice: ZigSlicePointer,
-        results_raw_slice: ZigSlicePointer,
-        results_slice: ZigSlicePointer,
-        results_failed_indicator_slice: ZigSlicePointer,
-        err_slice: ZigSlicePointer,
+        inputs_slice: ZigSlice,
+        results_raw_slice: ZigSlice,
+        results_slice: ZigSlice,
+        results_failed_indicator_slice: ZigSlice,
+        err_slice: ZigSlice,
     ) -> int:
         """
         Fetch the result of a cli operation.
@@ -498,7 +499,7 @@ class LibScrapliCliMapping:
 
         Args:
             ptr: ptr to the cli object
-            operation_id: operation id of which to poll
+            operation_id_value: operation id of which to fetch
             start_time: int pointer to fill with the operation's start time
             splits: slice of u64 timestamps -- the end time (in unix ns) for each operation
             inputs_slice: pre allocated slice to fill with the operations input
@@ -518,7 +519,7 @@ class LibScrapliCliMapping:
         """
         return self._fetch(
             ptr,
-            operation_id,
+            operation_id_value,
             start_time,
             splits,
             inputs_slice,
@@ -532,7 +533,7 @@ class LibScrapliCliMapping:
         self,
         *,
         ptr: DriverPointer,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         requested_mode: c_char_p,
     ) -> int:
         """
@@ -542,7 +543,7 @@ class LibScrapliCliMapping:
 
         Args:
             ptr: ptr to the cli object
-            operation_id: int pointer to fill with the id of the submitted operation
+            operation_id_ptr: int pointer to fill with the id of the submitted operation
             requested_mode: string name of the mode to enter
 
         Returns:
@@ -555,7 +556,7 @@ class LibScrapliCliMapping:
         """
         return self._enter_mode(
             ptr,
-            operation_id,
+            operation_id_ptr,
             CANCEL,
             requested_mode,
         )
@@ -564,7 +565,7 @@ class LibScrapliCliMapping:
         self,
         *,
         ptr: DriverPointer,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
     ) -> int:
         """
         Get the current prompt for the cli object.
@@ -573,7 +574,7 @@ class LibScrapliCliMapping:
 
         Args:
             ptr: ptr to the cli object
-            operation_id: int pointer to fill with the id of the submitted operation
+            operation_id_ptr: int pointer to fill with the id of the submitted operation
 
         Returns:
             int: return code, non-zero value indicates an error. technically a c_uint8 converted by
@@ -585,7 +586,7 @@ class LibScrapliCliMapping:
         """
         return self._get_prompt(
             ptr,
-            operation_id,
+            operation_id_ptr,
             CANCEL,
         )
 
@@ -593,7 +594,7 @@ class LibScrapliCliMapping:
         self,
         *,
         ptr: DriverPointer,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         input_: c_char_p,
         requested_mode: c_char_p,
         input_handling: c_char_p,
@@ -607,7 +608,7 @@ class LibScrapliCliMapping:
 
         Args:
             ptr: ptr to the cli object
-            operation_id: int pointer to fill with the id of the submitted operation
+            operation_id_ptr: int pointer to fill with the id of the submitted operation
             input_: the input to send
             requested_mode: string name of the mode to send the input in
             input_handling: string mapping to input handling enum that governs how the input is
@@ -625,7 +626,7 @@ class LibScrapliCliMapping:
         """
         return self._send_input(
             ptr,
-            operation_id,
+            operation_id_ptr,
             CANCEL,
             input_,
             requested_mode,
@@ -638,7 +639,7 @@ class LibScrapliCliMapping:
         self,
         *,
         ptr: DriverPointer,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         input_: c_char_p,
         prompt: c_char_p,
         prompt_pattern: c_char_p,
@@ -656,7 +657,7 @@ class LibScrapliCliMapping:
 
         Args:
             ptr: ptr to the cli object
-            operation_id: int pointer to fill with the id of the submitted operation
+            operation_id_ptr: int pointer to fill with the id of the submitted operation
             input_: the input to send
             prompt: the prompt to expect
             prompt_pattern: the prompt pattern to expect
@@ -679,7 +680,7 @@ class LibScrapliCliMapping:
         """
         return self._send_prompted_input(
             ptr,
-            operation_id,
+            operation_id_ptr,
             CANCEL,
             input_,
             prompt,
@@ -692,7 +693,7 @@ class LibScrapliCliMapping:
             retain_trailing_prompt,
         )
 
-    def read_any(self, ptr: DriverPointer, operation_id: OperationIdPointer) -> int:
+    def read_any(self, ptr: DriverPointer, operation_id_ptr: OperationIdPointer) -> int:
         """
         Read any available data from the session, up to the normal timeout behavior.
 
@@ -700,7 +701,7 @@ class LibScrapliCliMapping:
 
         Args:
             ptr: the ptr to the libscrapli cli/netconf object.
-            operation_id: int pointer to fill with the id of the submitted operation
+            operation_id_ptr: pointer to fill with the id of the submitted operation
 
         Returns:
             int: return code, non-zero value indicates an error. technically a c_uint8 converted by
@@ -712,7 +713,7 @@ class LibScrapliCliMapping:
         """
         return self._read_any(
             ptr,
-            operation_id,
+            operation_id_ptr,
             CANCEL,
         )
 

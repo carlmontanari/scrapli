@@ -1,11 +1,11 @@
 """scrapli.transport"""
 
 from abc import ABC, abstractmethod
-from ctypes import _Pointer, c_bool, c_char_p, c_size_t, pointer
+from ctypes import c_bool, c_char_p, c_size_t, pointer
 from dataclasses import dataclass, field
 from enum import Enum
 
-from scrapli.ffi_options import DriverOptions
+from scrapli.ffi_options import DriverOptionsPointer
 from scrapli.ffi_types import to_c_string
 
 
@@ -76,7 +76,7 @@ class Options(ABC):
         return self._transport_kind
 
     @abstractmethod
-    def apply(self, *, options: _Pointer[DriverOptions]) -> None:
+    def apply(self, *, options: DriverOptionsPointer) -> None:
         """
         Applies the options to the given options struct.
 
@@ -133,7 +133,7 @@ class BinOptions(Options):
     _ssh_config_path: c_char_p | None = field(init=False, default=None, repr=False)
     _known_hosts_path: c_char_p | None = field(init=False, default=None, repr=False)
 
-    def apply(self, *, options: _Pointer[DriverOptions]) -> None:
+    def apply(self, *, options: DriverOptionsPointer) -> None:
         """
         Applies the options to the given options struct.
 
@@ -239,7 +239,7 @@ class Ssh2Options(Options):
         init=False, default=None, repr=False
     )
 
-    def apply(self, *, options: _Pointer[DriverOptions]) -> None:
+    def apply(self, *, options: DriverOptionsPointer) -> None:
         """
         Applies the options to the given options struct.
 
@@ -343,7 +343,7 @@ class TelnetOptions(Options):
 
     """
 
-    def apply(self, *, options: _Pointer[DriverOptions]) -> None:
+    def apply(self, *, options: DriverOptionsPointer) -> None:
         """
         Applies the options to the given options struct.
 
@@ -382,7 +382,7 @@ class TestOptions(Options):
 
     _f: c_char_p | None = field(init=False, default=None, repr=False)
 
-    def apply(self, *, options: _Pointer[DriverOptions]) -> None:
+    def apply(self, *, options: DriverOptionsPointer) -> None:
         """
         Applies the options to the given options struct.
 

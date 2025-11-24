@@ -17,7 +17,7 @@ from scrapli.ffi_mapping_netconf import LibScrapliNetconfMapping
 from scrapli.ffi_types import (
     DriverPointer,
     IntPointer,
-    StringPointer,
+    ZigSlicePointer,
 )
 
 
@@ -171,14 +171,14 @@ class LibScrapliSessionMapping:
         self._read: Callable[
             [
                 DriverPointer,
-                StringPointer,
+                ZigSlicePointer,
                 IntPointer,
             ],
             int,
         ] = lib.ls_session_read
         lib.ls_session_read.argtypes = [
             DriverPointer,
-            StringPointer,
+            ZigSlicePointer,
             IntPointer,
         ]
         lib.ls_session_read.restype = c_int
@@ -226,7 +226,8 @@ class LibScrapliSessionMapping:
         ]
         lib.ls_session_operation_timeout_ns.restype = c_uint8
 
-    def read(self, ptr: DriverPointer, buf: StringPointer, read_size: IntPointer) -> int:
+    # TODO this should have a test if it doesnt already cuz not sure i ever tried it
+    def read(self, ptr: DriverPointer, buf: ZigSlicePointer, read_size: IntPointer) -> int:
         """
         Read from the session of driver at ptr.
 

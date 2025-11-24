@@ -1,10 +1,21 @@
 """scrapli.ffi_options"""
 
-from ctypes import Structure, c_char_p, c_size_t, c_uint16, pointer
-from typing import Any, ClassVar
+from ctypes import POINTER, Structure, _Pointer, c_char_p, c_size_t, c_uint16, pointer
+from typing import TYPE_CHECKING, Any, ClassVar, TypeAlias
 
 from scrapli.exceptions import OptionsException
-from scrapli.ffi_types import BoolPointer, LogFuncCallback, StringPointer, U16Pointer, U64Pointer
+from scrapli.ffi_types import (
+    BoolPointer,
+    LogFuncCallback,
+    StringPointer,
+    U16Pointer,
+    U64Pointer,
+)
+
+if TYPE_CHECKING:
+    DriverOptionsPointer: TypeAlias = _Pointer["DriverOptions"]
+else:
+    DriverOptionsPointer: TypeAlias = POINTER("DriverOptions")
 
 
 class CLI(Structure):

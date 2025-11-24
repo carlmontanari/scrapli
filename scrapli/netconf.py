@@ -2,7 +2,6 @@
 
 from ctypes import (
     POINTER,
-    _Pointer,
     c_bool,
     c_char_p,
     c_int,
@@ -31,7 +30,7 @@ from scrapli.exceptions import (
     SubmitOperationException,
 )
 from scrapli.ffi_mapping import LibScrapliMapping
-from scrapli.ffi_options import DriverOptions
+from scrapli.ffi_options import DriverOptions, DriverOptionsPointer
 from scrapli.ffi_types import (
     DriverPointer,
     IntPointer,
@@ -268,7 +267,7 @@ class Options:
     _error_tag: c_char_p | None = field(init=False, default=None, repr=False)
     _preferred_version: c_char_p | None = field(init=False, default=None, repr=False)
 
-    def apply(self, *, options: _Pointer[DriverOptions]) -> None:
+    def apply(self, *, options: DriverOptionsPointer) -> None:
         """
         Applies the options to the given options struct.
 

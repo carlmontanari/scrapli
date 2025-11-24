@@ -1,9 +1,9 @@
 """scrapli.auth"""
 
-from ctypes import _Pointer, c_bool, c_char_p, c_size_t, c_uint16, pointer
+from ctypes import Array, c_bool, c_char_p, c_size_t, c_uint16, pointer
 from dataclasses import dataclass, field
 
-from scrapli.ffi_options import DriverOptions
+from scrapli.ffi_options import DriverOptionsPointer
 from scrapli.ffi_types import to_c_string
 
 
@@ -92,12 +92,12 @@ class Options:
     _password_pattern: c_char_p | None = field(init=False, default=None, repr=False)
     _private_key_passphrase_pattern: c_char_p | None = field(init=False, default=None, repr=False)
 
-    _lookup_map_keys: list[c_char_p] | None = field(init=False, default=None, repr=False)
-    _lookup_map_key_lens: list[c_uint16] | None = field(init=False, default=None, repr=False)
-    _lookup_map_vals: list[c_char_p] | None = field(init=False, default=None, repr=False)
-    _lookup_map_val_lens: list[c_uint16] | None = field(init=False, default=None, repr=False)
+    _lookup_map_keys: Array[c_char_p] | None = field(init=False, default=None, repr=False)
+    _lookup_map_key_lens: Array[c_uint16] | None = field(init=False, default=None, repr=False)
+    _lookup_map_vals: Array[c_char_p] | None = field(init=False, default=None, repr=False)
+    _lookup_map_val_lens: Array[c_uint16] | None = field(init=False, default=None, repr=False)
 
-    def apply(self, *, options: _Pointer[DriverOptions]) -> None:  # noqa: C901
+    def apply(self, *, options: DriverOptionsPointer) -> None:  # noqa: C901
         """
         Applies the options to the given options struct.
 
@@ -140,24 +140,27 @@ class Options:
             )
 
         if self.lookups is not None:
-            self._lookup_map_keys = []
-            self._lookup_map_key_lens = []
-            self._lookup_map_vals = []
-            self._lookup_map_val_lens = []
+            count = len(self.lookups)
 
-            for lookup in self.lookups:
+            self._lookup_map_keys = (c_char_p * count)()
+            self._lookup_map_key_lens = (c_uint16 * count)()
+            self._lookup_map_vals = (c_char_p * count)()
+            self._lookup_map_val_lens = (c_uint16 * count)()
+
+            for i, lookup in enumerate(self.lookups):
                 k, v = lookup._get_c_strings()
 
-                self._lookup_map_keys.append(k)
-                self._lookup_map_key_lens.append(c_uint16(len(lookup.key)))
-                self._lookup_map_vals.append(v)
-                self._lookup_map_val_lens.append(c_uint16(len(lookup.value)))
+                self._lookup_map_keys[i] = k
+                self._lookup_map_key_lens[i] = c_uint16(len(lookup.key))
 
-            options.contents.auth.lookups.keys = pointer(self._lookup_map_keys[0])
-            options.contents.auth.lookups.key_lens = pointer(self._lookup_map_key_lens[0])
+                self._lookup_map_vals[i] = v
+                self._lookup_map_val_lens[i] = c_uint16(len(lookup.value))
 
-            options.contents.auth.lookups.vals = pointer(self._lookup_map_vals[0])
-            options.contents.auth.lookups.val_lens = pointer(self._lookup_map_val_lens[0])
+            options.contents.auth.lookups.keys = self._lookup_map_keys
+            options.contents.auth.lookups.key_lens = self._lookup_map_key_lens
+
+            options.contents.auth.lookups.vals = self._lookup_map_vals
+            options.contents.auth.lookups.val_lens = self._lookup_map_val_lens
 
             options.contents.auth.lookups.count = c_size_t(len(self.lookups))
 

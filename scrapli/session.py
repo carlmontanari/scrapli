@@ -1,9 +1,9 @@
 """scrapli.session"""
 
-from ctypes import _Pointer, c_char_p, c_size_t, c_uint64, pointer
+from ctypes import c_char_p, c_size_t, c_uint64, pointer
 from dataclasses import dataclass, field
 
-from scrapli.ffi_options import DriverOptions
+from scrapli.ffi_options import DriverOptionsPointer
 from scrapli.ffi_types import to_c_string
 from scrapli.helper import second_to_nano
 
@@ -48,7 +48,7 @@ class Options:
             if self.operation_timeout_ns is None and self.operation_timeout_s is not None:
                 self.operation_timeout_ns = second_to_nano(d=self.operation_timeout_s)
 
-    def apply(self, *, options: _Pointer[DriverOptions]) -> None:
+    def apply(self, *, options: DriverOptionsPointer) -> None:
         """
         Applies the options to the given options struct.
 

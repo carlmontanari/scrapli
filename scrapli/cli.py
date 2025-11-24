@@ -6,8 +6,7 @@ from ctypes import (
     POINTER,
     c_bool,
     c_char_p,
-    c_int,
-    c_uint,
+    c_uint32,
     c_uint64,
     c_void_p,
     cast,
@@ -40,9 +39,7 @@ from scrapli.ffi_mapping import LibScrapliMapping
 from scrapli.ffi_options import DriverOptions
 from scrapli.ffi_types import (
     DriverPointer,
-    IntPointer,
     OperationIdPointer,
-    U64Pointer,
     ZigSlice,
     ZigU64Slice,
     ffi_logger_level,
@@ -436,7 +433,7 @@ class Cli:
         if self._ntc_templates_platform is not None:
             return self._ntc_templates_platform
 
-        ntc_templates_platform = ZigSlice(size=c_int(256))
+        ntc_templates_platform = ZigSlice(size=c_uint64(256))
 
         status = self.ffi_mapping.cli_mapping.get_ntc_templates_platform(
             ptr=self._ptr_or_exception(),
@@ -467,7 +464,7 @@ class Cli:
         if self._genie_platform is not None:
             return self._genie_platform
 
-        genie_platform = ZigSlice(size=c_int(256))
+        genie_platform = ZigSlice(size=c_uint64(256))
 
         status = self.ffi_mapping.cli_mapping.get_ntc_templates_platform(
             ptr=self._ptr_or_exception(),
@@ -483,7 +480,7 @@ class Cli:
     def _open(
         self,
         *,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
     ) -> None:
         options_ptr = self.ffi_mapping.shared_mapping.alloc_driver_options()
         options = cast(options_ptr, POINTER(DriverOptions))
@@ -509,7 +506,7 @@ class Cli:
 
         status = self.ffi_mapping.cli_mapping.open(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_ptr=operation_id_ptr,
         )
 
         if status != 0:
@@ -533,11 +530,11 @@ class Cli:
             OpenException: if the operation fails
 
         """
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = pointer(c_uint32(0))
 
-        self._open(operation_id=operation_id)
+        self._open(operation_id_ptr=operation_id_ptr)
 
-        return self._get_result(operation_id=operation_id.contents.value)
+        return self._get_result(operation_id_ptr=operation_id_ptr)
 
     async def open_async(self) -> Result:
         """
@@ -553,20 +550,20 @@ class Cli:
             OpenException: if the operation fails
 
         """
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = pointer(c_uint32(0))
 
-        self._open(operation_id=operation_id)
+        self._open(operation_id_ptr=operation_id_ptr)
 
-        return await self._get_result_async(operation_id=operation_id.contents.value)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
 
     def _close(
         self,
         *,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
     ) -> None:
         status = self.ffi_mapping.cli_mapping.close(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_ptr=operation_id_ptr,
         )
         if status != 0:
             raise CloseException("submitting close operation")
@@ -588,11 +585,11 @@ class Cli:
             CloseException: if the operation fails
 
         """
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = pointer(c_uint32(0))
 
-        self._close(operation_id=operation_id)
+        self._close(operation_id_ptr=operation_id_ptr)
 
-        result = self._get_result(operation_id=operation_id.contents.value)
+        result = self._get_result(operation_id_ptr=operation_id_ptr)
 
         self._free()
 
@@ -615,11 +612,11 @@ class Cli:
             CloseException: if the operation fails
 
         """
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = pointer(c_uint32(0))
 
-        self._close(operation_id=operation_id)
+        self._close(operation_id_ptr=operation_id_ptr)
 
-        result = await self._get_result_async(operation_id=operation_id.contents.value)
+        result = await self._get_result_async(operation_id_ptr=operation_id_ptr)
 
         self._free()
 
@@ -681,20 +678,22 @@ class Cli:
 
     def _get_result(
         self,
-        operation_id: c_uint,
+        operation_id_ptr: OperationIdPointer,
     ) -> Result:
         wait_for_available_operation_result(self.poll_fd)
 
-        operation_count = IntPointer(c_int())
-        inputs_size = IntPointer(c_int())
-        results_raw_size = IntPointer(c_int())
-        results_size = IntPointer(c_int())
-        results_failed_indicator_size = IntPointer(c_int())
-        err_size = IntPointer(c_int())
+        operation_id_value = c_uint32(operation_id_ptr.contents.value)
+
+        operation_count = pointer(c_uint32())
+        inputs_size = pointer(c_uint64())
+        results_raw_size = pointer(c_uint64())
+        results_size = pointer(c_uint64())
+        results_failed_indicator_size = pointer(c_uint64())
+        err_size = pointer(c_uint64())
 
         status = self.ffi_mapping.cli_mapping.fetch_sizes(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_value=operation_id_value,
             operation_count=operation_count,
             inputs_size=inputs_size,
             results_raw_size=results_raw_size,
@@ -705,8 +704,8 @@ class Cli:
         if status != 0:
             raise GetResultException("wait operation failed")
 
-        start_time = U64Pointer(c_uint64())
-        splits = ZigU64Slice(size=operation_count.contents)
+        start_time = pointer(c_uint64())
+        splits = ZigU64Slice(size=c_uint64(operation_count.contents.value))
 
         inputs_slice = ZigSlice(size=inputs_size.contents)
         results_raw_slice = ZigSlice(size=results_raw_size.contents)
@@ -717,7 +716,7 @@ class Cli:
 
         status = self.ffi_mapping.cli_mapping.fetch(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_value=operation_id_value,
             start_time=start_time,
             splits=splits,
             inputs_slice=inputs_slice,
@@ -748,20 +747,22 @@ class Cli:
 
     async def _get_result_async(
         self,
-        operation_id: c_uint,
+        operation_id_ptr: OperationIdPointer,
     ) -> Result:
         await wait_for_available_operation_result_async(fd=self.poll_fd)
 
-        operation_count = IntPointer(c_int())
-        inputs_size = IntPointer(c_int())
-        results_raw_size = IntPointer(c_int())
-        results_size = IntPointer(c_int())
-        results_failed_indicator_size = IntPointer(c_int())
-        err_size = IntPointer(c_int())
+        operation_id_value = c_uint32(operation_id_ptr.contents.value)
+
+        operation_count = pointer(c_uint32())
+        inputs_size = pointer(c_uint64())
+        results_raw_size = pointer(c_uint64())
+        results_size = pointer(c_uint64())
+        results_failed_indicator_size = pointer(c_uint64())
+        err_size = pointer(c_uint64())
 
         status = self.ffi_mapping.cli_mapping.fetch_sizes(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_value=operation_id_value,
             operation_count=operation_count,
             inputs_size=inputs_size,
             results_raw_size=results_raw_size,
@@ -772,19 +773,20 @@ class Cli:
         if status != 0:
             raise GetResultException("fetch operation sizes failed")
 
-        start_time = U64Pointer(c_uint64())
-        splits = ZigU64Slice(size=operation_count.contents)
+        start_time = pointer(c_uint64())
+        splits = ZigU64Slice(size=c_uint64(operation_count.contents.value))
 
         inputs_slice = ZigSlice(size=inputs_size.contents)
         results_raw_slice = ZigSlice(size=results_raw_size.contents)
         results_slice = ZigSlice(size=results_size.contents)
 
         results_failed_indicator_slice = ZigSlice(size=results_failed_indicator_size.contents)
+
         err_slice = ZigSlice(size=err_size.contents)
 
         status = self.ffi_mapping.cli_mapping.fetch(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_value=operation_id_value,
             start_time=start_time,
             splits=splits,
             inputs_slice=inputs_slice,
@@ -796,19 +798,21 @@ class Cli:
         if status != 0:
             raise GetResultException("fetch operation failed")
 
-        err_contents = err_slice.get_decoded_contents()
+        err_contents = err_slice.contents.value.get_decoded_contents()
         if err_contents:
             raise OperationException(err_contents)
 
+        failed_indicator = results_failed_indicator_slice.contents.value.get_decoded_contents()
+
         return Result(
-            inputs=inputs_slice.get_decoded_contents(),
+            inputs=inputs_slice.contents.value.get_decoded_contents(),
             host=self.host,
             port=self.port,
             start_time=start_time.contents.value,
             splits=splits.get_contents(),
-            results_raw=results_raw_slice.get_contents(),
-            results=results_slice.get_decoded_contents(),
-            results_failed_indicator=results_failed_indicator_slice.get_decoded_contents(),
+            results_raw=results_raw_slice.contents.value.get_contents(),
+            results=results_slice.contents.value.get_decoded_contents(),
+            results_failed_indicator=failed_indicator,
             textfsm_platform=self.ntc_templates_platform,
             genie_platform=self.genie_platform,
         )
@@ -816,18 +820,16 @@ class Cli:
     def _enter_mode(
         self,
         *,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         requested_mode: c_char_p,
-    ) -> c_uint:
+    ) -> None:
         status = self.ffi_mapping.cli_mapping.enter_mode(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_ptr=operation_id_ptr,
             requested_mode=requested_mode,
         )
         if status != 0:
             raise SubmitOperationException("submitting get prompt operation failed")
-
-        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def enter_mode(
@@ -854,16 +856,16 @@ class Cli:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = pointer(c_uint32(0))
 
         _requested_mode = to_c_string(requested_mode)
 
-        operation_id = self._enter_mode(
-            operation_id=operation_id,
+        self._enter_mode(
+            operation_id_ptr=operation_id_ptr,
             requested_mode=_requested_mode,
         )
 
-        return self._get_result(operation_id=operation_id)
+        return self._get_result(operation_id_ptr=operation_id_ptr)
 
     @handle_operation_timeout_async
     async def enter_mode_async(
@@ -890,30 +892,28 @@ class Cli:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = pointer(c_uint32(0))
 
         _requested_mode = to_c_string(requested_mode)
 
-        operation_id = self._enter_mode(
-            operation_id=operation_id,
+        self._enter_mode(
+            operation_id_ptr=operation_id_ptr,
             requested_mode=_requested_mode,
         )
 
-        return await self._get_result_async(operation_id=operation_id)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
 
     def _get_prompt(
         self,
         *,
-        operation_id: OperationIdPointer,
-    ) -> c_uint:
+        operation_id_ptr: OperationIdPointer,
+    ) -> None:
         status = self.ffi_mapping.cli_mapping.get_prompt(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_ptr=operation_id_ptr,
         )
         if status != 0:
             raise SubmitOperationException("submitting get prompt operation failed")
-
-        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def get_prompt(
@@ -938,11 +938,11 @@ class Cli:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = pointer(c_uint32(0))
 
-        operation_id = self._get_prompt(operation_id=operation_id)
+        self._get_prompt(operation_id_ptr=operation_id_ptr)
 
-        return self._get_result(operation_id=operation_id)
+        return self._get_result(operation_id_ptr=operation_id_ptr)
 
     @handle_operation_timeout_async
     async def get_prompt_async(
@@ -967,25 +967,25 @@ class Cli:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = pointer(c_uint32(0))
 
-        operation_id = self._get_prompt(operation_id=operation_id)
+        self._get_prompt(operation_id_ptr=operation_id_ptr)
 
-        return await self._get_result_async(operation_id=operation_id)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
 
     def _send_input(  # noqa: PLR0913
         self,
         *,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         input_: c_char_p,
         requested_mode: c_char_p,
         input_handling: c_char_p,
         retain_input: c_bool,
         retain_trailing_prompt: c_bool,
-    ) -> c_uint:
+    ) -> None:
         status = self.ffi_mapping.cli_mapping.send_input(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_ptr=operation_id_ptr,
             input_=input_,
             requested_mode=requested_mode,
             input_handling=input_handling,
@@ -994,8 +994,6 @@ class Cli:
         )
         if status != 0:
             raise SubmitOperationException("submitting send input operation failed")
-
-        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def send_input(  # noqa: PLR0913
@@ -1030,14 +1028,14 @@ class Cli:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = pointer(c_uint32(0))
 
         _input = to_c_string(input_)
         _requested_mode = to_c_string(requested_mode)
         _input_handling = to_c_string(input_handling)
 
-        operation_id = self._send_input(
-            operation_id=operation_id,
+        self._send_input(
+            operation_id_ptr=operation_id_ptr,
             input_=_input,
             requested_mode=_requested_mode,
             input_handling=_input_handling,
@@ -1045,7 +1043,7 @@ class Cli:
             retain_trailing_prompt=c_bool(retain_trailing_prompt),
         )
 
-        return self._get_result(operation_id=operation_id)
+        return self._get_result(operation_id_ptr=operation_id_ptr)
 
     @handle_operation_timeout_async
     async def send_input_async(  # noqa: PLR0913
@@ -1080,14 +1078,14 @@ class Cli:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = pointer(c_uint32(0))
 
         _input = to_c_string(input_)
         _requested_mode = to_c_string(requested_mode)
         _input_handling = to_c_string(input_handling)
 
-        operation_id = self._send_input(
-            operation_id=operation_id,
+        self._send_input(
+            operation_id_ptr=operation_id_ptr,
             input_=_input,
             requested_mode=_requested_mode,
             input_handling=_input_handling,
@@ -1095,7 +1093,7 @@ class Cli:
             retain_trailing_prompt=c_bool(retain_trailing_prompt),
         )
 
-        return await self._get_result_async(operation_id=operation_id)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
 
     @handle_operation_timeout
     def send_inputs(  # noqa: PLR0913
@@ -1136,14 +1134,14 @@ class Cli:
         result: Result | None = None
 
         for input_ in inputs:
-            operation_id = OperationIdPointer(c_uint(0))
+            operation_id_ptr = pointer(c_uint32(0))
 
             _input = to_c_string(input_)
             _requested_mode = to_c_string(requested_mode)
             _input_handling = to_c_string(input_handling)
 
-            operation_id = self._send_input(
-                operation_id=operation_id,
+            self._send_input(
+                operation_id_ptr=operation_id_ptr,
                 input_=_input,
                 requested_mode=_requested_mode,
                 input_handling=_input_handling,
@@ -1151,7 +1149,7 @@ class Cli:
                 retain_trailing_prompt=c_bool(retain_trailing_prompt),
             )
 
-            _result = self._get_result(operation_id=operation_id)
+            _result = self._get_result(operation_id_ptr=operation_id_ptr)
 
             if result is None:
                 result = _result
@@ -1202,14 +1200,14 @@ class Cli:
         result: Result | None = None
 
         for input_ in inputs:
-            operation_id = OperationIdPointer(c_uint(0))
+            operation_id_ptr = pointer(c_uint32(0))
 
             _input = to_c_string(input_)
             _requested_mode = to_c_string(requested_mode)
             _input_handling = to_c_string(input_handling)
 
-            operation_id = self._send_input(
-                operation_id=operation_id,
+            self._send_input(
+                operation_id_ptr=operation_id_ptr,
                 input_=_input,
                 requested_mode=_requested_mode,
                 input_handling=_input_handling,
@@ -1217,7 +1215,7 @@ class Cli:
                 retain_trailing_prompt=c_bool(retain_trailing_prompt),
             )
 
-            _result = await self._get_result_async(operation_id=operation_id)
+            _result = await self._get_result_async(operation_id_ptr=operation_id_ptr)
             if result is None:
                 result = _result
             else:
@@ -1319,7 +1317,7 @@ class Cli:
     def _send_prompted_input(  # noqa: PLR0913
         self,
         *,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         input_: c_char_p,
         prompt: c_char_p,
         prompt_pattern: c_char_p,
@@ -1329,10 +1327,10 @@ class Cli:
         requested_mode: c_char_p,
         input_handling: c_char_p,
         retain_trailing_prompt: c_bool,
-    ) -> c_uint:
+    ) -> c_uint32:
         status = self.ffi_mapping.cli_mapping.send_prompted_input(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_ptr=operation_id_ptr,
             input_=input_,
             prompt=prompt,
             prompt_pattern=prompt_pattern,
@@ -1346,7 +1344,7 @@ class Cli:
         if status != 0:
             raise SubmitOperationException("submitting send prompted input operation failed")
 
-        return c_uint(operation_id.contents.value)
+        return c_uint32(operation_id_ptr.contents.value)
 
     @handle_operation_timeout
     def send_prompted_input(  # noqa: PLR0913
@@ -1390,7 +1388,7 @@ class Cli:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = pointer(c_uint32(0))
 
         _input = to_c_string(input_)
         _prompt = to_c_string(prompt)
@@ -1400,8 +1398,8 @@ class Cli:
         _requested_mode = to_c_string(requested_mode)
         _input_handling = to_c_string(input_handling)
 
-        operation_id = self._send_prompted_input(
-            operation_id=operation_id,
+        self._send_prompted_input(
+            operation_id_ptr=operation_id_ptr,
             input_=_input,
             prompt=_prompt,
             prompt_pattern=_prompt_pattern,
@@ -1413,7 +1411,7 @@ class Cli:
             retain_trailing_prompt=c_bool(retain_trailing_prompt),
         )
 
-        return self._get_result(operation_id=operation_id)
+        return self._get_result(operation_id_ptr=operation_id_ptr)
 
     @handle_operation_timeout_async
     async def send_prompted_input_async(  # noqa: PLR0913
@@ -1457,7 +1455,7 @@ class Cli:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = pointer(c_uint32(0))
 
         _input = to_c_string(input_)
         _prompt = to_c_string(prompt)
@@ -1467,8 +1465,8 @@ class Cli:
         _requested_mode = to_c_string(requested_mode)
         _input_handling = to_c_string(input_handling)
 
-        operation_id = self._send_prompted_input(
-            operation_id=operation_id,
+        self._send_prompted_input(
+            operation_id_ptr=operation_id_ptr,
             input_=_input,
             prompt=_prompt,
             prompt_pattern=_prompt_pattern,
@@ -1480,7 +1478,7 @@ class Cli:
             retain_trailing_prompt=c_bool(retain_trailing_prompt),
         )
 
-        return await self._get_result_async(operation_id=operation_id)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
 
     @handle_operation_timeout
     def read_with_callbacks(
@@ -1522,16 +1520,16 @@ class Cli:
         executed_callbacks = set()
 
         while True:
-            operation_id = OperationIdPointer(c_uint(0))
+            operation_id_ptr = pointer(c_uint32(0))
 
             status = self.ffi_mapping.cli_mapping.read_any(
                 ptr=self._ptr_or_exception(),
-                operation_id=operation_id,
+                operation_id_ptr=operation_id_ptr,
             )
             if status != 0:
                 raise SubmitOperationException("submitting read any operation failed")
 
-            intermediate_result = self._get_result(operation_id=operation_id.contents.value)
+            intermediate_result = self._get_result(operation_id_ptr=operation_id_ptr)
 
             result += intermediate_result.result
             result_raw += intermediate_result.result_raw
@@ -1619,18 +1617,16 @@ class Cli:
         executed_callbacks = set()
 
         while True:
-            operation_id = OperationIdPointer(c_uint(0))
+            operation_id_ptr = pointer(c_uint32(0))
 
             status = self.ffi_mapping.cli_mapping.read_any(
                 ptr=self._ptr_or_exception(),
-                operation_id=operation_id,
+                operation_id_ptr=operation_id_ptr,
             )
             if status != 0:
                 raise SubmitOperationException("submitting read any operation failed")
 
-            intermediate_result = await self._get_result_async(
-                operation_id=operation_id.contents.value
-            )
+            intermediate_result = await self._get_result_async(operation_id_ptr=operation_id_ptr)
 
             result += intermediate_result.result
             result_raw += intermediate_result.result_raw
