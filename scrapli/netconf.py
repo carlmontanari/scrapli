@@ -6,7 +6,7 @@ from ctypes import (
     c_char_p,
     c_int,
     c_size_t,
-    c_uint,
+    c_uint32,
     c_uint64,
     c_void_p,
     cast,
@@ -553,7 +553,7 @@ class Netconf:
     def _open(
         self,
         *,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
     ) -> None:
         options_ptr = self.ffi_mapping.shared_mapping.alloc_driver_options()
         options = cast(options_ptr, POINTER(DriverOptions))
@@ -577,7 +577,7 @@ class Netconf:
 
         status = self.ffi_mapping.netconf_mapping.open(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_ptr=operation_id_ptr,
         )
         if status != 0:
             self._free()
@@ -600,11 +600,11 @@ class Netconf:
             OpenException: if the operation fails
 
         """
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
-        self._open(operation_id=operation_id)
+        self._open(operation_id_ptr=operation_id_ptr)
 
-        return self._get_result(operation_id=operation_id.contents.value)
+        return self._get_result(operation_id_ptr=operation_id_ptr)
 
     async def open_async(self) -> Result:
         """
@@ -620,21 +620,21 @@ class Netconf:
             OpenException: if the operation fails
 
         """
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
-        self._open(operation_id=operation_id)
+        self._open(operation_id_ptr=operation_id_ptr)
 
-        return await self._get_result_async(operation_id=operation_id.contents.value)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
 
     def _close(
         self,
         *,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         force: c_bool,
     ) -> None:
         status = self.ffi_mapping.netconf_mapping.close(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_ptr=operation_id_ptr,
             force=force,
         )
         if status != 0:
@@ -659,12 +659,12 @@ class Netconf:
             CloseException: if the operation fails
 
         """
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
         _force = c_bool(force)
 
-        self._close(operation_id=operation_id, force=_force)
+        self._close(operation_id_ptr=operation_id_ptr, force=_force)
 
-        result = self._get_result(operation_id=operation_id.contents.value)
+        result = self._get_result(operation_id_ptr=operation_id_ptr)
 
         self._free()
 
@@ -689,12 +689,12 @@ class Netconf:
             CloseException: if the operation fails
 
         """
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
         _force = c_bool(force)
 
-        self._close(operation_id=operation_id, force=_force)
+        self._close(operation_id_ptr=operation_id_ptr, force=_force)
 
-        result = await self._get_result_async(operation_id=operation_id.contents.value)
+        result = await self._get_result_async(operation_id_ptr=operation_id_ptr)
 
         self._free()
 
@@ -702,20 +702,22 @@ class Netconf:
 
     def _get_result(
         self,
-        operation_id: c_uint,
+        operation_id_ptr: OperationIdPointer,
     ) -> Result:
         wait_for_available_operation_result(self.poll_fd)
 
-        input_size = IntPointer(c_int())
-        result_raw_size = IntPointer(c_int())
-        result_size = IntPointer(c_int())
-        rpc_warnings_size = IntPointer(c_int())
-        rpc_errors_size = IntPointer(c_int())
-        err_size = IntPointer(c_int())
+        operation_id_value = c_uint32(operation_id_ptr.contents.value)
+
+        input_size = pointer(c_uint64())
+        result_raw_size = pointer(c_uint64())
+        result_size = pointer(c_uint64())
+        rpc_warnings_size = pointer(c_uint64())
+        rpc_errors_size = pointer(c_uint64())
+        err_size = pointer(c_uint64())
 
         status = self.ffi_mapping.netconf_mapping.fetch_sizes(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_value=operation_id_value,
             input_size=input_size,
             result_raw_size=result_raw_size,
             result_size=result_size,
@@ -739,7 +741,7 @@ class Netconf:
 
         status = self.ffi_mapping.netconf_mapping.fetch(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_value=operation_id_value,
             start_time=start_time,
             end_time=end_time,
             input_slice=input_slice,
@@ -770,20 +772,22 @@ class Netconf:
 
     async def _get_result_async(
         self,
-        operation_id: c_uint,
+        operation_id_ptr: OperationIdPointer,
     ) -> Result:
         await wait_for_available_operation_result_async(fd=self.poll_fd)
 
-        input_size = IntPointer(c_int())
-        result_raw_size = IntPointer(c_int())
-        result_size = IntPointer(c_int())
-        rpc_warnings_size = IntPointer(c_int())
-        rpc_errors_size = IntPointer(c_int())
-        err_size = IntPointer(c_int())
+        operation_id_value = c_uint32(operation_id_ptr.contents.value)
+
+        input_size = pointer(c_uint64())
+        result_raw_size = pointer(c_uint64())
+        result_size = pointer(c_uint64())
+        rpc_warnings_size = pointer(c_uint64())
+        rpc_errors_size = pointer(c_uint64())
+        err_size = pointer(c_uint64())
 
         status = self.ffi_mapping.netconf_mapping.fetch_sizes(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_value=operation_id_value,
             input_size=input_size,
             result_raw_size=result_raw_size,
             result_size=result_size,
@@ -807,7 +811,7 @@ class Netconf:
 
         status = self.ffi_mapping.netconf_mapping.fetch(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_value=operation_id_value,
             start_time=start_time,
             end_time=end_time,
             input_slice=input_slice,
@@ -978,22 +982,20 @@ class Netconf:
     def _raw_rpc(
         self,
         *,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         payload: c_char_p,
         base_namespace_prefix: c_char_p,
         extra_namespaces: c_char_p,
-    ) -> c_uint:
+    ) -> None:
         status = self.ffi_mapping.netconf_mapping.raw_rpc(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_ptr=operation_id_ptr,
             payload=payload,
             base_namespace_prefix=base_namespace_prefix,
             extra_namespaces=extra_namespaces,
         )
         if status != 0:
             raise SubmitOperationException("submitting raw rpc operation failed")
-
-        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def raw_rpc(
@@ -1026,7 +1028,7 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _payload = to_c_string(payload)
         _base_namespace_prefix = to_c_string(base_namespace_prefix)
@@ -1038,14 +1040,14 @@ class Netconf:
         else:
             _extra_namespaces = to_c_string("")
 
-        operation_id = self._raw_rpc(
-            operation_id=operation_id,
+        self._raw_rpc(
+            operation_id_ptr=operation_id_ptr,
             payload=_payload,
             base_namespace_prefix=_base_namespace_prefix,
             extra_namespaces=_extra_namespaces,
         )
 
-        return self._get_result(operation_id=operation_id)
+        return self._get_result(operation_id_ptr=operation_id_ptr)
 
     @handle_operation_timeout_async
     async def raw_rpc_async(
@@ -1078,7 +1080,7 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _payload = to_c_string(payload)
         _base_namespace_prefix = to_c_string(base_namespace_prefix)
@@ -1090,29 +1092,29 @@ class Netconf:
         else:
             _extra_namespaces = to_c_string("")
 
-        operation_id = self._raw_rpc(
-            operation_id=operation_id,
+        self._raw_rpc(
+            operation_id_ptr=operation_id_ptr,
             payload=_payload,
             base_namespace_prefix=_base_namespace_prefix,
             extra_namespaces=_extra_namespaces,
         )
 
-        return await self._get_result_async(operation_id=operation_id)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
 
     def _get_config(  # noqa: PLR0913,too-many-locals
         self,
         *,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         source: c_char_p,
         filter_: c_char_p,
         filter_type: c_char_p,
         filter_namespace_prefix: c_char_p,
         filter_namespace: c_char_p,
         defaults_type: c_char_p,
-    ) -> c_uint:
+    ) -> None:
         status = self.ffi_mapping.netconf_mapping.get_config(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_ptr=operation_id_ptr,
             source=source,
             filter_=filter_,
             filter_type=filter_type,
@@ -1122,8 +1124,6 @@ class Netconf:
         )
         if status != 0:
             raise SubmitOperationException("submitting get-config operation failed")
-
-        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def get_config(  # noqa: PLR0913
@@ -1160,7 +1160,7 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _source = to_c_string(source)
         _filter = to_c_string(filter_)
@@ -1169,8 +1169,8 @@ class Netconf:
         _filter_namespace = to_c_string(filter_namespace)
         _defaults_type = to_c_string(defaults_type)
 
-        operation_id = self._get_config(
-            operation_id=operation_id,
+        self._get_config(
+            operation_id_ptr=operation_id_ptr,
             source=_source,
             filter_=_filter,
             filter_type=_filter_type,
@@ -1179,7 +1179,7 @@ class Netconf:
             defaults_type=_defaults_type,
         )
 
-        return self._get_result(operation_id=operation_id)
+        return self._get_result(operation_id_ptr=operation_id_ptr)
 
     @handle_operation_timeout_async
     async def get_config_async(  # noqa: PLR0913
@@ -1216,7 +1216,7 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _source = to_c_string(source)
         _filter = to_c_string(filter_)
@@ -1225,8 +1225,8 @@ class Netconf:
         _filter_namespace = to_c_string(filter_namespace)
         _defaults_type = to_c_string(defaults_type)
 
-        operation_id = self._get_config(
-            operation_id=operation_id,
+        self._get_config(
+            operation_id_ptr=operation_id_ptr,
             source=_source,
             filter_=_filter,
             filter_type=_filter_type,
@@ -1235,21 +1235,21 @@ class Netconf:
             defaults_type=_defaults_type,
         )
 
-        return await self._get_result_async(operation_id=operation_id)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
 
     def _edit_config(  # noqa: PLR0913
         self,
         *,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         config: c_char_p,
         target: c_char_p,
         default_operation: c_char_p,
         test_option: c_char_p,
         error_option: c_char_p,
-    ) -> c_uint:
+    ) -> None:
         status = self.ffi_mapping.netconf_mapping.edit_config(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_ptr=operation_id_ptr,
             config=config,
             target=target,
             default_operation=default_operation,
@@ -1258,8 +1258,6 @@ class Netconf:
         )
         if status != 0:
             raise SubmitOperationException("submitting edit-config operation failed")
-
-        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def edit_config(  # noqa: PLR0913
@@ -1294,7 +1292,7 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _config = to_c_string(config)
         _target = to_c_string(target)
@@ -1303,8 +1301,8 @@ class Netconf:
         _test_option = to_c_string(test_option or "")
         _error_option = to_c_string(error_option or "")
 
-        operation_id = self._edit_config(
-            operation_id=operation_id,
+        self._edit_config(
+            operation_id_ptr=operation_id_ptr,
             config=_config,
             target=_target,
             default_operation=_default_operation,
@@ -1312,7 +1310,7 @@ class Netconf:
             error_option=_error_option,
         )
 
-        return self._get_result(operation_id=operation_id)
+        return self._get_result(operation_id_ptr=operation_id_ptr)
 
     @handle_operation_timeout_async
     async def edit_config_async(  # noqa: PLR0913
@@ -1347,7 +1345,7 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _config = to_c_string(config)
         _target = to_c_string(target)
@@ -1356,8 +1354,8 @@ class Netconf:
         _test_option = to_c_string(test_option or "")
         _error_option = to_c_string(error_option or "")
 
-        operation_id = self._edit_config(
-            operation_id=operation_id,
+        self._edit_config(
+            operation_id_ptr=operation_id_ptr,
             config=_config,
             target=_target,
             default_operation=_default_operation,
@@ -1365,25 +1363,23 @@ class Netconf:
             error_option=_error_option,
         )
 
-        return await self._get_result_async(operation_id=operation_id)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
 
     def _copy_config(
         self,
         *,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         target: c_char_p,
         source: c_char_p,
-    ) -> c_uint:
+    ) -> None:
         status = self.ffi_mapping.netconf_mapping.copy_config(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_ptr=operation_id_ptr,
             target=target,
             source=source,
         )
         if status != 0:
             raise SubmitOperationException("submitting copy-config operation failed")
-
-        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def copy_config(
@@ -1412,18 +1408,18 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _target = to_c_string(target)
         _source = to_c_string(source)
 
-        operation_id = self._copy_config(
-            operation_id=operation_id,
+        self._copy_config(
+            operation_id_ptr=operation_id_ptr,
             target=_target,
             source=_source,
         )
 
-        return self._get_result(operation_id=operation_id)
+        return self._get_result(operation_id_ptr=operation_id_ptr)
 
     @handle_operation_timeout_async
     async def copy_config_async(
@@ -1452,34 +1448,32 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _target = to_c_string(target)
         _source = to_c_string(source)
 
-        operation_id = self._copy_config(
-            operation_id=operation_id,
+        self._copy_config(
+            operation_id_ptr=operation_id_ptr,
             target=_target,
             source=_source,
         )
 
-        return await self._get_result_async(operation_id=operation_id)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
 
     def _delete_config(
         self,
         *,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         target: c_char_p,
-    ) -> c_uint:
+    ) -> None:
         status = self.ffi_mapping.netconf_mapping.delete_config(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_ptr=operation_id_ptr,
             target=target,
         )
         if status != 0:
             raise SubmitOperationException("submitting delete-config operation failed")
-
-        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def delete_config(
@@ -1506,16 +1500,16 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _target = to_c_string(target)
 
-        operation_id = self._delete_config(
-            operation_id=operation_id,
+        self._delete_config(
+            operation_id_ptr=operation_id_ptr,
             target=_target,
         )
 
-        return self._get_result(operation_id=operation_id)
+        return self._get_result(operation_id_ptr=operation_id_ptr)
 
     @handle_operation_timeout_async
     async def delete_config_async(
@@ -1542,32 +1536,30 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _target = to_c_string(target)
 
-        operation_id = self._delete_config(
-            operation_id=operation_id,
+        self._delete_config(
+            operation_id_ptr=operation_id_ptr,
             target=_target,
         )
 
-        return await self._get_result_async(operation_id=operation_id)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
 
     def _lock(
         self,
         *,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         target: c_char_p,
-    ) -> c_uint:
+    ) -> None:
         status = self.ffi_mapping.netconf_mapping.lock(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_ptr=operation_id_ptr,
             target=target,
         )
         if status != 0:
             raise SubmitOperationException("submitting lock operation failed")
-
-        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def lock(
@@ -1594,16 +1586,16 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _target = to_c_string(target)
 
-        operation_id = self._lock(
-            operation_id=operation_id,
+        self._lock(
+            operation_id_ptr=operation_id_ptr,
             target=_target,
         )
 
-        return self._get_result(operation_id=operation_id)
+        return self._get_result(operation_id_ptr=operation_id_ptr)
 
     @handle_operation_timeout_async
     async def lock_async(
@@ -1630,32 +1622,30 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _target = to_c_string(target)
 
-        operation_id = self._lock(
-            operation_id=operation_id,
+        self._lock(
+            operation_id_ptr=operation_id_ptr,
             target=_target,
         )
 
-        return await self._get_result_async(operation_id=operation_id)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
 
     def _unlock(
         self,
         *,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         target: c_char_p,
-    ) -> c_uint:
+    ) -> None:
         status = self.ffi_mapping.netconf_mapping.unlock(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_ptr=operation_id_ptr,
             target=target,
         )
         if status != 0:
             raise SubmitOperationException("submitting unlock operation failed")
-
-        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def unlock(
@@ -1682,16 +1672,16 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _target = to_c_string(target)
 
-        operation_id = self._unlock(
-            operation_id=operation_id,
+        self._unlock(
+            operation_id_ptr=operation_id_ptr,
             target=_target,
         )
 
-        return self._get_result(operation_id=operation_id)
+        return self._get_result(operation_id_ptr=operation_id_ptr)
 
     @handle_operation_timeout_async
     async def unlock_async(
@@ -1718,30 +1708,30 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _target = to_c_string(target)
 
-        operation_id = self._unlock(
-            operation_id=operation_id,
+        self._unlock(
+            operation_id_ptr=operation_id_ptr,
             target=_target,
         )
 
-        return await self._get_result_async(operation_id=operation_id)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
 
     def _get(  # noqa: PLR0913,too-many-locals
         self,
         *,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         filter_: c_char_p,
         filter_type: c_char_p,
         filter_namespace_prefix: c_char_p,
         filter_namespace: c_char_p,
         defaults_type: c_char_p,
-    ) -> c_uint:
+    ) -> None:
         status = self.ffi_mapping.netconf_mapping.get(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_ptr=operation_id_ptr,
             filter_=filter_,
             filter_type=filter_type,
             filter_namespace_prefix=filter_namespace_prefix,
@@ -1750,8 +1740,6 @@ class Netconf:
         )
         if status != 0:
             raise SubmitOperationException("submitting get operation failed")
-
-        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def get(  # noqa: PLR0913
@@ -1786,7 +1774,7 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _filter = to_c_string(filter_)
         _filter_type = to_c_string(filter_type)
@@ -1794,8 +1782,8 @@ class Netconf:
         _filter_namespace = to_c_string(filter_namespace)
         _defaults_type = to_c_string(defaults_type)
 
-        operation_id = self._get(
-            operation_id=operation_id,
+        self._get(
+            operation_id_ptr=operation_id_ptr,
             filter_=_filter,
             filter_type=_filter_type,
             filter_namespace_prefix=_filter_namespace_prefix,
@@ -1803,7 +1791,7 @@ class Netconf:
             defaults_type=_defaults_type,
         )
 
-        return self._get_result(operation_id=operation_id)
+        return self._get_result(operation_id_ptr=operation_id_ptr)
 
     @handle_operation_timeout_async
     async def get_async(  # noqa: PLR0913
@@ -1838,7 +1826,7 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _filter = to_c_string(filter_)
         _filter_type = to_c_string(filter_type)
@@ -1846,8 +1834,8 @@ class Netconf:
         _filter_namespace = to_c_string(filter_namespace)
         _defaults_type = to_c_string(defaults_type)
 
-        operation_id = self._get(
-            operation_id=operation_id,
+        self._get(
+            operation_id_ptr=operation_id_ptr,
             filter_=_filter,
             filter_type=_filter_type,
             filter_namespace_prefix=_filter_namespace_prefix,
@@ -1855,21 +1843,19 @@ class Netconf:
             defaults_type=_defaults_type,
         )
 
-        return await self._get_result_async(operation_id=operation_id)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
 
     def _close_session(
         self,
         *,
-        operation_id: OperationIdPointer,
-    ) -> c_uint:
+        operation_id_ptr: OperationIdPointer,
+    ) -> None:
         status = self.ffi_mapping.netconf_mapping.close_session(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_ptr=operation_id_ptr,
         )
         if status != 0:
             raise SubmitOperationException("submitting close-session operation failed")
-
-        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def close_session(
@@ -1894,13 +1880,13 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
-        operation_id = self._close_session(
-            operation_id=operation_id,
+        self._close_session(
+            operation_id_ptr=operation_id_ptr,
         )
 
-        return self._get_result(operation_id=operation_id)
+        return self._get_result(operation_id_ptr=operation_id_ptr)
 
     @handle_operation_timeout_async
     async def close_session_async(
@@ -1925,29 +1911,27 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
-        operation_id = self._close_session(
-            operation_id=operation_id,
+        self._close_session(
+            operation_id_ptr=operation_id_ptr,
         )
 
-        return await self._get_result_async(operation_id=operation_id)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
 
     def _kill_session(
         self,
         *,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         session_id: int,
-    ) -> c_uint:
+    ) -> None:
         status = self.ffi_mapping.netconf_mapping.kill_session(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_ptr=operation_id_ptr,
             session_id=c_int(session_id),
         )
         if status != 0:
             raise SubmitOperationException("submitting kill-session operation failed")
-
-        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def kill_session(
@@ -1974,14 +1958,14 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
-        operation_id = self._kill_session(
-            operation_id=operation_id,
+        self._kill_session(
+            operation_id_ptr=operation_id_ptr,
             session_id=session_id,
         )
 
-        return self._get_result(operation_id=operation_id)
+        return self._get_result(operation_id_ptr=operation_id_ptr)
 
     @handle_operation_timeout_async
     async def kill_session_async(
@@ -2008,28 +1992,26 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
-        operation_id = self._kill_session(
-            operation_id=operation_id,
+        self._kill_session(
+            operation_id_ptr=operation_id_ptr,
             session_id=session_id,
         )
 
-        return await self._get_result_async(operation_id=operation_id)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
 
     def _commit(
         self,
         *,
-        operation_id: OperationIdPointer,
-    ) -> c_uint:
+        operation_id_ptr: OperationIdPointer,
+    ) -> None:
         status = self.ffi_mapping.netconf_mapping.commit(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_ptr=operation_id_ptr,
         )
         if status != 0:
             raise SubmitOperationException("submitting commit operation failed")
-
-        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def commit(
@@ -2054,13 +2036,13 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
-        operation_id = self._commit(
-            operation_id=operation_id,
+        self._commit(
+            operation_id_ptr=operation_id_ptr,
         )
 
-        return self._get_result(operation_id=operation_id)
+        return self._get_result(operation_id_ptr=operation_id_ptr)
 
     @handle_operation_timeout_async
     async def commit_async(
@@ -2085,27 +2067,25 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
-        operation_id = self._commit(
-            operation_id=operation_id,
+        self._commit(
+            operation_id_ptr=operation_id_ptr,
         )
 
-        return await self._get_result_async(operation_id=operation_id)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
 
     def _discard(
         self,
         *,
-        operation_id: OperationIdPointer,
-    ) -> c_uint:
+        operation_id_ptr: OperationIdPointer,
+    ) -> None:
         status = self.ffi_mapping.netconf_mapping.discard(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_ptr=operation_id_ptr,
         )
         if status != 0:
             raise SubmitOperationException("submitting discard operation failed")
-
-        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def discard(
@@ -2130,13 +2110,13 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
-        operation_id = self._discard(
-            operation_id=operation_id,
+        self._discard(
+            operation_id_ptr=operation_id_ptr,
         )
 
-        return self._get_result(operation_id=operation_id)
+        return self._get_result(operation_id_ptr=operation_id_ptr)
 
     @handle_operation_timeout_async
     async def discard_async(
@@ -2161,29 +2141,27 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
-        operation_id = self._discard(
-            operation_id=operation_id,
+        self._discard(
+            operation_id_ptr=operation_id_ptr,
         )
 
-        return await self._get_result_async(operation_id=operation_id)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
 
     def _cancel_commit(
         self,
         *,
         persist_id: c_char_p,
-        operation_id: OperationIdPointer,
-    ) -> c_uint:
+        operation_id_ptr: OperationIdPointer,
+    ) -> None:
         status = self.ffi_mapping.netconf_mapping.cancel_commit(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_ptr=operation_id_ptr,
             persist_id=persist_id,
         )
         if status != 0:
             raise SubmitOperationException("submitting cancel-commit operation failed")
-
-        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def cancel_commit(
@@ -2210,16 +2188,16 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _persist_id = to_c_string(persist_id or "")
 
-        operation_id = self._cancel_commit(
-            operation_id=operation_id,
+        self._cancel_commit(
+            operation_id_ptr=operation_id_ptr,
             persist_id=_persist_id,
         )
 
-        return self._get_result(operation_id=operation_id)
+        return self._get_result(operation_id_ptr=operation_id_ptr)
 
     @handle_operation_timeout_async
     async def cancel_commit_async(
@@ -2246,32 +2224,30 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _persist_id = to_c_string(persist_id or "")
 
-        operation_id = self._cancel_commit(
-            operation_id=operation_id,
+        self._cancel_commit(
+            operation_id_ptr=operation_id_ptr,
             persist_id=_persist_id,
         )
 
-        return await self._get_result_async(operation_id=operation_id)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
 
     def _validate(
         self,
         *,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         source: c_char_p,
-    ) -> c_uint:
+    ) -> None:
         status = self.ffi_mapping.netconf_mapping.validate(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_ptr=operation_id_ptr,
             source=source,
         )
         if status != 0:
             raise SubmitOperationException("submitting validate operation failed")
-
-        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def validate(
@@ -2298,16 +2274,16 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _source = to_c_string(source)
 
-        operation_id = self._validate(
-            operation_id=operation_id,
+        self._validate(
+            operation_id_ptr=operation_id_ptr,
             source=_source,
         )
 
-        return self._get_result(operation_id=operation_id)
+        return self._get_result(operation_id_ptr=operation_id_ptr)
 
     @handle_operation_timeout_async
     async def validate_async(
@@ -2334,36 +2310,34 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _source = to_c_string(source)
 
-        operation_id = self._validate(
-            operation_id=operation_id,
+        self._validate(
+            operation_id_ptr=operation_id_ptr,
             source=_source,
         )
 
-        return await self._get_result_async(operation_id=operation_id)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
 
     def _get_schema(
         self,
         *,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         identifier: c_char_p,
         version: c_char_p,
         format_: c_char_p,
-    ) -> c_uint:
+    ) -> None:
         status = self.ffi_mapping.netconf_mapping.get_schema(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_ptr=operation_id_ptr,
             identifier=identifier,
             version=version,
             format_=format_,
         )
         if status != 0:
             raise SubmitOperationException("submitting get-schema operation failed")
-
-        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def get_schema(
@@ -2394,20 +2368,20 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _identifier = to_c_string(identifier)
         _version = to_c_string(version)
         _format = to_c_string(format_)
 
-        operation_id = self._get_schema(
-            operation_id=operation_id,
+        self._get_schema(
+            operation_id_ptr=operation_id_ptr,
             identifier=_identifier,
             version=_version,
             format_=_format,
         )
 
-        return self._get_result(operation_id=operation_id)
+        return self._get_result(operation_id_ptr=operation_id_ptr)
 
     @handle_operation_timeout_async
     async def get_schema_async(
@@ -2438,25 +2412,25 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _identifier = to_c_string(identifier)
         _version = to_c_string(version)
         _format = to_c_string(format_)
 
-        operation_id = self._get_schema(
-            operation_id=operation_id,
+        self._get_schema(
+            operation_id_ptr=operation_id_ptr,
             identifier=_identifier,
             version=_version,
             format_=_format,
         )
 
-        return await self._get_result_async(operation_id=operation_id)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
 
     def _get_data(  # noqa: PLR0913,too-many-locals
         self,
         *,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         source: c_char_p,
         filter_: c_char_p,
         filter_type: c_char_p,
@@ -2467,10 +2441,10 @@ class Netconf:
         max_depth: int,
         with_origin: bool,
         defaults_type: c_char_p,
-    ) -> c_uint:
+    ) -> None:
         status = self.ffi_mapping.netconf_mapping.get_data(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_ptr=operation_id_ptr,
             source=source,
             filter_=filter_,
             filter_type=filter_type,
@@ -2484,8 +2458,6 @@ class Netconf:
         )
         if status != 0:
             raise SubmitOperationException("submitting copy-config operation failed")
-
-        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def get_data(  # noqa: PLR0913
@@ -2530,7 +2502,7 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _source = to_c_string(source)
         _filter = to_c_string(filter_)
@@ -2541,8 +2513,8 @@ class Netconf:
         _origin_filters = to_c_string(origin_filters)
         _defaults_type = to_c_string(defaults_type)
 
-        operation_id = self._get_data(
-            operation_id=operation_id,
+        self._get_data(
+            operation_id_ptr=operation_id_ptr,
             source=_source,
             filter_=_filter,
             filter_type=_filter_type,
@@ -2555,7 +2527,7 @@ class Netconf:
             defaults_type=_defaults_type,
         )
 
-        return self._get_result(operation_id=operation_id)
+        return self._get_result(operation_id_ptr=operation_id_ptr)
 
     @handle_operation_timeout_async
     async def get_data_async(  # noqa: PLR0913
@@ -2600,7 +2572,7 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _source = to_c_string(source)
         _filter = to_c_string(filter_)
@@ -2611,8 +2583,8 @@ class Netconf:
         _origin_filters = to_c_string(origin_filters)
         _defaults_type = to_c_string(defaults_type)
 
-        operation_id = self._get_data(
-            operation_id=operation_id,
+        self._get_data(
+            operation_id_ptr=operation_id_ptr,
             source=_source,
             filter_=_filter,
             filter_type=_filter_type,
@@ -2625,27 +2597,25 @@ class Netconf:
             defaults_type=_defaults_type,
         )
 
-        return await self._get_result_async(operation_id=operation_id)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
 
     def _edit_data(
         self,
         *,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         content: c_char_p,
         target: c_char_p,
         default_operation: c_char_p,
-    ) -> c_uint:
+    ) -> None:
         status = self.ffi_mapping.netconf_mapping.edit_data(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_ptr=operation_id_ptr,
             content=content,
             target=target,
             default_operation=default_operation,
         )
         if status != 0:
             raise SubmitOperationException("submitting copy-config operation failed")
-
-        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def edit_data(
@@ -2676,21 +2646,21 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _content = to_c_string(content)
         _target = to_c_string(target)
 
         _default_operation = to_c_string(default_operation or "")
 
-        operation_id = self._edit_data(
-            operation_id=operation_id,
+        self._edit_data(
+            operation_id_ptr=operation_id_ptr,
             content=_content,
             target=_target,
             default_operation=_default_operation,
         )
 
-        return self._get_result(operation_id=operation_id)
+        return self._get_result(operation_id_ptr=operation_id_ptr)
 
     @handle_operation_timeout_async
     async def edit_data_async(
@@ -2721,37 +2691,35 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _content = to_c_string(content)
         _target = to_c_string(target)
 
         _default_operation = to_c_string(default_operation or "")
 
-        operation_id = self._edit_data(
-            operation_id=operation_id,
+        self._edit_data(
+            operation_id_ptr=operation_id_ptr,
             content=_content,
             target=_target,
             default_operation=_default_operation,
         )
 
-        return await self._get_result_async(operation_id=operation_id)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
 
     def _action(
         self,
         *,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         action: c_char_p,
-    ) -> c_uint:
+    ) -> None:
         status = self.ffi_mapping.netconf_mapping.action(
             ptr=self._ptr_or_exception(),
-            operation_id=operation_id,
+            operation_id_ptr=operation_id_ptr,
             action=action,
         )
         if status != 0:
             raise SubmitOperationException("submitting action operation failed")
-
-        return c_uint(operation_id.contents.value)
 
     @handle_operation_timeout
     def action(
@@ -2778,16 +2746,16 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _action = to_c_string(action)
 
-        operation_id = self._action(
-            operation_id=operation_id,
+        self._action(
+            operation_id_ptr=operation_id_ptr,
             action=_action,
         )
 
-        return self._get_result(operation_id=operation_id)
+        return self._get_result(operation_id_ptr=operation_id_ptr)
 
     @handle_operation_timeout_async
     async def action_async(
@@ -2814,13 +2782,13 @@ class Netconf:
         # only used in the decorator
         _ = operation_timeout_ns
 
-        operation_id = OperationIdPointer(c_uint(0))
+        operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _action = to_c_string(action)
 
-        operation_id = self._action(
-            operation_id=operation_id,
+        self._action(
+            operation_id_ptr=operation_id_ptr,
             action=_action,
         )
 
-        return await self._get_result_async(operation_id=operation_id)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr)

@@ -21,7 +21,7 @@ def test_handle_operation_timeout_unmodified():
 
     n.fooer(n)
 
-    assert n.ffi_mapping.options_mapping.session.set_operation_timeout_ns.called is False
+    assert n.ffi_mapping.session_mapping.set_operation_timeout_ns.called is False
 
 
 @pytest.mark.asyncio
@@ -40,7 +40,7 @@ async def test_handle_operation_timeout_async_unmodified():
 
     await n.fooer(n)
 
-    assert n.ffi_mapping.options_mapping.session.set_operation_timeout_ns.called is False
+    assert n.ffi_mapping.session_mapping.set_operation_timeout_ns.called is False
 
 
 def test_handle_operation_timeout_modified():
@@ -49,7 +49,7 @@ def test_handle_operation_timeout_modified():
     )
 
     n.ffi_mapping = Mock()
-    n.ffi_mapping.options_mapping.session.set_operation_timeout_ns = Mock(return_value=0)
+    n.ffi_mapping.session_mapping.set_operation_timeout_ns = Mock(return_value=0)
     n.ptr = 1
 
     @handle_operation_timeout
@@ -60,7 +60,7 @@ def test_handle_operation_timeout_modified():
 
     n.fooer(n, operation_timeout_ns=1)
 
-    assert n.ffi_mapping.options_mapping.session.set_operation_timeout_ns.called is True
+    assert n.ffi_mapping.session_mapping.set_operation_timeout_ns.called is True
 
 
 @pytest.mark.asyncio
@@ -70,7 +70,7 @@ async def test_handle_operation_timeout_async_modified():
     )
 
     n.ffi_mapping = Mock()
-    n.ffi_mapping.options_mapping.session.set_operation_timeout_ns = Mock(return_value=0)
+    n.ffi_mapping.session_mapping.set_operation_timeout_ns = Mock(return_value=0)
     n.ptr = 1
 
     @handle_operation_timeout_async
@@ -81,4 +81,4 @@ async def test_handle_operation_timeout_async_modified():
 
     await n.fooer(n, operation_timeout_ns=1)
 
-    assert n.ffi_mapping.options_mapping.session.set_operation_timeout_ns.called is True
+    assert n.ffi_mapping.session_mapping.set_operation_timeout_ns.called is True

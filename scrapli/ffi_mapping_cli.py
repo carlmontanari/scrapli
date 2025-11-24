@@ -436,7 +436,7 @@ class LibScrapliCliMapping:
         self,
         *,
         ptr: DriverPointer,
-        operation_id_value: c_uint32,
+        operation_id_value: OperationId,
         operation_count: U32Pointer,
         inputs_size: U64Pointer,
         results_raw_size: U64Pointer,

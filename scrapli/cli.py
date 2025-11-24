@@ -798,20 +798,20 @@ class Cli:
         if status != 0:
             raise GetResultException("fetch operation failed")
 
-        err_contents = err_slice.contents.value.get_decoded_contents()
+        err_contents = err_slice.get_decoded_contents()
         if err_contents:
             raise OperationException(err_contents)
 
-        failed_indicator = results_failed_indicator_slice.contents.value.get_decoded_contents()
+        failed_indicator = results_failed_indicator_slice.get_decoded_contents()
 
         return Result(
-            inputs=inputs_slice.contents.value.get_decoded_contents(),
+            inputs=inputs_slice.get_decoded_contents(),
             host=self.host,
             port=self.port,
             start_time=start_time.contents.value,
             splits=splits.get_contents(),
-            results_raw=results_raw_slice.contents.value.get_contents(),
-            results=results_slice.contents.value.get_decoded_contents(),
+            results_raw=results_raw_slice.get_contents(),
+            results=results_slice.get_decoded_contents(),
             results_failed_indicator=failed_indicator,
             textfsm_platform=self.ntc_templates_platform,
             genie_platform=self.genie_platform,

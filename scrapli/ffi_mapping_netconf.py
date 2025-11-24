@@ -1,5 +1,6 @@
 """scrapli.ffi_mapping_cli"""
 
+from _ctypes import POINTER
 from collections.abc import Callable
 from ctypes import (
     CDLL,
@@ -11,8 +12,6 @@ from ctypes import (
     c_void_p,
 )
 
-from _ctypes import POINTER
-
 from scrapli.ffi_types import (
     CANCEL,
     CancelPointer,
@@ -22,7 +21,6 @@ from scrapli.ffi_types import (
     OperationIdPointer,
     U64Pointer,
     ZigSlice,
-    ZigSlicePointer,
 )
 
 
@@ -93,24 +91,24 @@ class LibScrapliNetconfMapping:
             [
                 DriverPointer,
                 OperationId,
-                IntPointer,
-                IntPointer,
-                IntPointer,
-                IntPointer,
-                IntPointer,
-                IntPointer,
+                U64Pointer,
+                U64Pointer,
+                U64Pointer,
+                U64Pointer,
+                U64Pointer,
+                U64Pointer,
             ],
             int,
         ] = lib.ls_netconf_fetch_operation_sizes
         lib.ls_netconf_fetch_operation_sizes.argtypes = [
             DriverPointer,
             OperationId,
-            IntPointer,
-            IntPointer,
-            IntPointer,
-            IntPointer,
-            IntPointer,
-            IntPointer,
+            U64Pointer,
+            U64Pointer,
+            U64Pointer,
+            U64Pointer,
+            U64Pointer,
+            U64Pointer,
         ]
         lib.ls_netconf_fetch_operation_sizes.restype = c_uint8
 
@@ -120,12 +118,12 @@ class LibScrapliNetconfMapping:
                 OperationId,
                 U64Pointer,
                 U64Pointer,
-                ZigSlicePointer,
-                ZigSlicePointer,
-                ZigSlicePointer,
-                ZigSlicePointer,
-                ZigSlicePointer,
-                ZigSlicePointer,
+                ZigSlice,
+                ZigSlice,
+                ZigSlice,
+                ZigSlice,
+                ZigSlice,
+                ZigSlice,
             ],
             int,
         ] = lib.ls_netconf_fetch_operation
@@ -134,12 +132,12 @@ class LibScrapliNetconfMapping:
             OperationId,
             POINTER(c_uint64),
             POINTER(c_uint64),
-            POINTER(ZigSlice),
-            POINTER(ZigSlice),
-            POINTER(ZigSlice),
-            POINTER(ZigSlice),
-            POINTER(ZigSlice),
-            POINTER(ZigSlice),
+            ZigSlice,
+            ZigSlice,
+            ZigSlice,
+            ZigSlice,
+            ZigSlice,
+            ZigSlice,
         ]
         lib.ls_netconf_fetch_operation.restype = c_uint8
 
@@ -185,13 +183,13 @@ class LibScrapliNetconfMapping:
         self._get_next_notification: Callable[
             [
                 DriverPointer,
-                ZigSlicePointer,
+                ZigSlice,
             ],
             int,
         ] = lib.ls_netconf_next_notification_message
         lib.ls_netconf_next_notification_message.argtypes = [
             DriverPointer,
-            POINTER(ZigSlice),
+            ZigSlice,
         ]
         lib.ls_netconf_next_notification_message.restype = c_uint8
 
@@ -214,14 +212,14 @@ class LibScrapliNetconfMapping:
             [
                 DriverPointer,
                 c_uint64,
-                ZigSlicePointer,
+                ZigSlice,
             ],
             int,
         ] = lib.ls_netconf_next_subscription_message
         lib.ls_netconf_next_subscription_message.argtypes = [
             DriverPointer,
             c_uint64,
-            POINTER(ZigSlice),
+            ZigSlice,
         ]
         lib.ls_netconf_next_subscription_message.restype = c_uint8
 
@@ -614,7 +612,7 @@ class LibScrapliNetconfMapping:
     def open(
         self,
         ptr: DriverPointer,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
     ) -> int:
         """
         Open the driver at ptr.
@@ -623,7 +621,8 @@ class LibScrapliNetconfMapping:
 
         Args:
             ptr: the ptr to the libscrapli netconf object.
-            operation_id: c_int pointer that is filled with the operation id to poll for completion.
+            operation_id_ptr: c_int pointer that is filled with the operation id to poll for
+                completion.
 
         Returns:
             int: return code, non-zero value indicates an error. technically a c_uint8 converted by
@@ -635,14 +634,14 @@ class LibScrapliNetconfMapping:
         """
         return self._open(
             ptr,
-            operation_id,
+            operation_id_ptr,
             CANCEL,
         )
 
     def close(
         self,
         ptr: DriverPointer,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         force: c_bool,
     ) -> int:
         """
@@ -652,7 +651,8 @@ class LibScrapliNetconfMapping:
 
         Args:
             ptr: the ptr to the libscrapli netconf object.
-            operation_id: c_int pointer that is filled with the operation id to poll for completion.
+            operation_id_ptr: c_int pointer that is filled with the operation id to poll for
+                completion.
             force: bool indicating if the connection should skip sending close-session rpc or not
 
         Returns:
@@ -665,7 +665,7 @@ class LibScrapliNetconfMapping:
         """
         return self._close(
             ptr,
-            operation_id,
+            operation_id_ptr,
             CANCEL,
             force,
         )
@@ -674,13 +674,13 @@ class LibScrapliNetconfMapping:
         self,
         *,
         ptr: DriverPointer,
-        operation_id: OperationId,
-        input_size: IntPointer,
-        result_raw_size: IntPointer,
-        result_size: IntPointer,
-        rpc_warnings_size: IntPointer,
-        rpc_errors_size: IntPointer,
-        err_size: IntPointer,
+        operation_id_value: OperationId,
+        input_size: U64Pointer,
+        result_raw_size: U64Pointer,
+        result_size: U64Pointer,
+        rpc_warnings_size: U64Pointer,
+        rpc_errors_size: U64Pointer,
+        err_size: U64Pointer,
     ) -> int:
         """
         Fetch the sizes of a netconf operation's results.
@@ -689,7 +689,7 @@ class LibScrapliNetconfMapping:
 
         Args:
             ptr: ptr to the netconf object
-            operation_id: operation id of which to poll
+            operation_id_value: operation id of which to poll
             input_size: int pointer to fill with the operation's input size
             result_raw_size: int pointer to fill with the operation's result raw size
             result_size:  int pointer to fill with the operation's result size
@@ -707,7 +707,7 @@ class LibScrapliNetconfMapping:
         """
         return self._fetch_sizes(
             ptr,
-            operation_id,
+            operation_id_value,
             input_size,
             result_raw_size,
             result_size,
@@ -720,15 +720,15 @@ class LibScrapliNetconfMapping:
         self,
         *,
         ptr: DriverPointer,
-        operation_id: OperationId,
+        operation_id_value: OperationId,
         start_time: U64Pointer,
         end_time: U64Pointer,
-        input_slice: ZigSlicePointer,
-        result_raw_slice: ZigSlicePointer,
-        result_slice: ZigSlicePointer,
-        rpc_warnings_slice: ZigSlicePointer,
-        rpc_errors_slice: ZigSlicePointer,
-        err_slice: ZigSlicePointer,
+        input_slice: ZigSlice,
+        result_raw_slice: ZigSlice,
+        result_slice: ZigSlice,
+        rpc_warnings_slice: ZigSlice,
+        rpc_errors_slice: ZigSlice,
+        err_slice: ZigSlice,
     ) -> int:
         """
         Fetch the result of a cli operation.
@@ -737,7 +737,7 @@ class LibScrapliNetconfMapping:
 
         Args:
             ptr: ptr to the netconf object
-            operation_id: operation id of which to poll
+            operation_id_value: operation id of which to poll
             start_time: int pointer to fill with the operation's start time
             end_time: int pointer to fill with the operation's end time
             input_slice: pre allocated slice to fill with the operations input
@@ -757,7 +757,7 @@ class LibScrapliNetconfMapping:
         """
         return self._fetch(
             ptr,
-            operation_id,
+            operation_id_value,
             start_time,
             end_time,
             input_slice,
@@ -856,7 +856,7 @@ class LibScrapliNetconfMapping:
         self,
         *,
         ptr: DriverPointer,
-        notification_slice: ZigSlicePointer,
+        notification_slice: ZigSlice,
     ) -> int:
         """
         Get the next notification message.
@@ -916,7 +916,7 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         subscription_id: c_uint64,
-        subscription_slice: ZigSlicePointer,
+        subscription_slice: ZigSlice,
     ) -> int:
         """
         Get the next subscription message for the given id.
@@ -946,7 +946,7 @@ class LibScrapliNetconfMapping:
         self,
         *,
         ptr: DriverPointer,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         payload: c_char_p,
         base_namespace_prefix: c_char_p,
         extra_namespaces: c_char_p,
@@ -958,7 +958,7 @@ class LibScrapliNetconfMapping:
 
         Args:
             ptr: ptr to the netconf object
-            operation_id: int pointer to fill with the id of the submitted operation
+            operation_id_ptr: int pointer to fill with the id of the submitted operation
             payload: the payload to write into the outer rpc element
             base_namespace_prefix: prefix to use for hte base/default netconf base namespace
             extra_namespaces: extra namespace::prefix pairs (using "::" as split there), and
@@ -976,7 +976,7 @@ class LibScrapliNetconfMapping:
         """
         return self._raw_rpc(
             ptr,
-            operation_id,
+            operation_id_ptr,
             CANCEL,
             payload,
             base_namespace_prefix,
@@ -987,7 +987,7 @@ class LibScrapliNetconfMapping:
         self,
         *,
         ptr: DriverPointer,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         source: c_char_p,
         filter_: c_char_p,
         filter_type: c_char_p,
@@ -1002,7 +1002,7 @@ class LibScrapliNetconfMapping:
 
         Args:
             ptr: ptr to the netconf object
-            operation_id: int pointer to fill with the id of the submitted operation
+            operation_id_ptr: int pointer to fill with the id of the submitted operation
             source: source data store to get config from
             filter_: filter to apply
             filter_type: filter type (subtree|xpath)
@@ -1020,7 +1020,7 @@ class LibScrapliNetconfMapping:
         """
         return self._get_config(
             ptr,
-            operation_id,
+            operation_id_ptr,
             CANCEL,
             source,
             filter_,
@@ -1034,7 +1034,7 @@ class LibScrapliNetconfMapping:
         self,
         *,
         ptr: DriverPointer,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         config: c_char_p,
         target: c_char_p,
         default_operation: c_char_p,
@@ -1048,7 +1048,7 @@ class LibScrapliNetconfMapping:
 
         Args:
             ptr: ptr to the netconf object
-            operation_id: int pointer to fill with the id of the submitted operation
+            operation_id_ptr: int pointer to fill with the id of the submitted operation
             config: the config to send
             target: the target datastore
             default_operation: string that looks like default operation enum (or empty)
@@ -1065,7 +1065,7 @@ class LibScrapliNetconfMapping:
         """
         return self._edit_config(
             ptr,
-            operation_id,
+            operation_id_ptr,
             CANCEL,
             config,
             target,
@@ -1078,7 +1078,7 @@ class LibScrapliNetconfMapping:
         self,
         *,
         ptr: DriverPointer,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         target: c_char_p,
         source: c_char_p,
     ) -> int:
@@ -1089,7 +1089,7 @@ class LibScrapliNetconfMapping:
 
         Args:
             ptr: ptr to the netconf object
-            operation_id: int pointer to fill with the id of the submitted operation
+            operation_id_ptr: int pointer to fill with the id of the submitted operation
             target: the target/destination datastore to copy to
             source: the source datastore to copy from
 
@@ -1103,7 +1103,7 @@ class LibScrapliNetconfMapping:
         """
         return self._copy_config(
             ptr,
-            operation_id,
+            operation_id_ptr,
             CANCEL,
             target,
             source,
@@ -1113,7 +1113,7 @@ class LibScrapliNetconfMapping:
         self,
         *,
         ptr: DriverPointer,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         target: c_char_p,
     ) -> int:
         """
@@ -1123,7 +1123,7 @@ class LibScrapliNetconfMapping:
 
         Args:
             ptr: ptr to the netconf object
-            operation_id: int pointer to fill with the id of the submitted operation
+            operation_id_ptr: int pointer to fill with the id of the submitted operation
             target: the target/destination datastore to delete
 
         Returns:
@@ -1136,7 +1136,7 @@ class LibScrapliNetconfMapping:
         """
         return self._delete_config(
             ptr,
-            operation_id,
+            operation_id_ptr,
             CANCEL,
             target,
         )
@@ -1145,7 +1145,7 @@ class LibScrapliNetconfMapping:
         self,
         *,
         ptr: DriverPointer,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         target: c_char_p,
     ) -> int:
         """
@@ -1155,7 +1155,7 @@ class LibScrapliNetconfMapping:
 
         Args:
             ptr: ptr to the netconf object
-            operation_id: int pointer to fill with the id of the submitted operation
+            operation_id_ptr: int pointer to fill with the id of the submitted operation
             target: the target/destination datastore to lock
 
         Returns:
@@ -1168,7 +1168,7 @@ class LibScrapliNetconfMapping:
         """
         return self._lock(
             ptr,
-            operation_id,
+            operation_id_ptr,
             CANCEL,
             target,
         )
@@ -1177,7 +1177,7 @@ class LibScrapliNetconfMapping:
         self,
         *,
         ptr: DriverPointer,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         target: c_char_p,
     ) -> int:
         """
@@ -1187,7 +1187,7 @@ class LibScrapliNetconfMapping:
 
         Args:
             ptr: ptr to the netconf object
-            operation_id: int pointer to fill with the id of the submitted operation
+            operation_id_ptr: int pointer to fill with the id of the submitted operation
             target: the target/destination datastore to lock
 
         Returns:
@@ -1200,7 +1200,7 @@ class LibScrapliNetconfMapping:
         """
         return self._unlock(
             ptr,
-            operation_id,
+            operation_id_ptr,
             CANCEL,
             target,
         )
@@ -1209,7 +1209,7 @@ class LibScrapliNetconfMapping:
         self,
         *,
         ptr: DriverPointer,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         filter_: c_char_p,
         filter_type: c_char_p,
         filter_namespace_prefix: c_char_p,
@@ -1223,7 +1223,7 @@ class LibScrapliNetconfMapping:
 
         Args:
             ptr: ptr to the netconf object
-            operation_id: int pointer to fill with the id of the submitted operation
+            operation_id_ptr: int pointer to fill with the id of the submitted operation
             filter_: filter to apply
             filter_type: filter type (subtree|xpath)
             filter_namespace_prefix: optional prefix for filter namespace
@@ -1240,7 +1240,7 @@ class LibScrapliNetconfMapping:
         """
         return self._get(
             ptr,
-            operation_id,
+            operation_id_ptr,
             CANCEL,
             filter_,
             filter_type,
@@ -1253,7 +1253,7 @@ class LibScrapliNetconfMapping:
         self,
         *,
         ptr: DriverPointer,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
     ) -> int:
         """
         Execute a close-config rpc operation.
@@ -1262,7 +1262,7 @@ class LibScrapliNetconfMapping:
 
         Args:
             ptr: ptr to the netconf object
-            operation_id: int pointer to fill with the id of the submitted operation
+            operation_id_ptr: int pointer to fill with the id of the submitted operation
 
         Returns:
             int: return code, non-zero value indicates an error. technically a c_uint8 converted by
@@ -1274,7 +1274,7 @@ class LibScrapliNetconfMapping:
         """
         return self._close_session(
             ptr,
-            operation_id,
+            operation_id_ptr,
             CANCEL,
         )
 
@@ -1282,7 +1282,7 @@ class LibScrapliNetconfMapping:
         self,
         *,
         ptr: DriverPointer,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         session_id: c_int,
     ) -> int:
         """
@@ -1292,7 +1292,7 @@ class LibScrapliNetconfMapping:
 
         Args:
             ptr: ptr to the netconf object
-            operation_id: int pointer to fill with the id of the submitted operation
+            operation_id_ptr: int pointer to fill with the id of the submitted operation
             session_id: the session id to kill
 
         Returns:
@@ -1305,7 +1305,7 @@ class LibScrapliNetconfMapping:
         """
         return self._kill_session(
             ptr,
-            operation_id,
+            operation_id_ptr,
             CANCEL,
             session_id,
         )
@@ -1314,7 +1314,7 @@ class LibScrapliNetconfMapping:
         self,
         *,
         ptr: DriverPointer,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
     ) -> int:
         """
         Execute a commit rpc operation.
@@ -1323,7 +1323,7 @@ class LibScrapliNetconfMapping:
 
         Args:
             ptr: ptr to the netconf object
-            operation_id: int pointer to fill with the id of the submitted operation
+            operation_id_ptr: int pointer to fill with the id of the submitted operation
 
         Returns:
             int: return code, non-zero value indicates an error. technically a c_uint8 converted by
@@ -1335,7 +1335,7 @@ class LibScrapliNetconfMapping:
         """
         return self._commit(
             ptr,
-            operation_id,
+            operation_id_ptr,
             CANCEL,
         )
 
@@ -1343,7 +1343,7 @@ class LibScrapliNetconfMapping:
         self,
         *,
         ptr: DriverPointer,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
     ) -> int:
         """
         Execute a discard rpc operation.
@@ -1352,7 +1352,7 @@ class LibScrapliNetconfMapping:
 
         Args:
             ptr: ptr to the netconf object
-            operation_id: int pointer to fill with the id of the submitted operation
+            operation_id_ptr: int pointer to fill with the id of the submitted operation
 
         Returns:
             int: return code, non-zero value indicates an error. technically a c_uint8 converted by
@@ -1364,7 +1364,7 @@ class LibScrapliNetconfMapping:
         """
         return self._discard(
             ptr,
-            operation_id,
+            operation_id_ptr,
             CANCEL,
         )
 
@@ -1372,7 +1372,7 @@ class LibScrapliNetconfMapping:
         self,
         *,
         ptr: DriverPointer,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         persist_id: c_char_p,
     ) -> int:
         """
@@ -1382,7 +1382,7 @@ class LibScrapliNetconfMapping:
 
         Args:
             ptr: ptr to the netconf object
-            operation_id: int pointer to fill with the id of the submitted operation
+            operation_id_ptr: int pointer to fill with the id of the submitted operation
             persist_id: optional string persist-id to set on the cancel commit message
 
         Returns:
@@ -1395,7 +1395,7 @@ class LibScrapliNetconfMapping:
         """
         return self._cancel_commit(
             ptr,
-            operation_id,
+            operation_id_ptr,
             CANCEL,
             persist_id,
         )
@@ -1404,7 +1404,7 @@ class LibScrapliNetconfMapping:
         self,
         *,
         ptr: DriverPointer,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         source: c_char_p,
     ) -> int:
         """
@@ -1414,7 +1414,7 @@ class LibScrapliNetconfMapping:
 
         Args:
             ptr: ptr to the netconf object
-            operation_id: int pointer to fill with the id of the submitted operation
+            operation_id_ptr: int pointer to fill with the id of the submitted operation
             source: datastore to validate
 
         Returns:
@@ -1427,7 +1427,7 @@ class LibScrapliNetconfMapping:
         """
         return self._validate(
             ptr,
-            operation_id,
+            operation_id_ptr,
             CANCEL,
             source,
         )
@@ -1436,7 +1436,7 @@ class LibScrapliNetconfMapping:
         self,
         *,
         ptr: DriverPointer,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         identifier: c_char_p,
         version: c_char_p,
         format_: c_char_p,
@@ -1448,7 +1448,7 @@ class LibScrapliNetconfMapping:
 
         Args:
             ptr: ptr to the netconf object
-            operation_id: int pointer to fill with the id of the submitted operation
+            operation_id_ptr: int pointer to fill with the id of the submitted operation
             identifier: schema identifier to get
             version: optional schema version to request
             format_: schema format to apply
@@ -1463,7 +1463,7 @@ class LibScrapliNetconfMapping:
         """
         return self._get_schema(
             ptr,
-            operation_id,
+            operation_id_ptr,
             CANCEL,
             identifier,
             version,
@@ -1474,7 +1474,7 @@ class LibScrapliNetconfMapping:
         self,
         *,
         ptr: DriverPointer,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         source: c_char_p,
         filter_: c_char_p,
         filter_type: c_char_p,
@@ -1493,7 +1493,7 @@ class LibScrapliNetconfMapping:
 
         Args:
             ptr: ptr to the netconf object
-            operation_id: int pointer to fill with the id of the submitted operation
+            operation_id_ptr: int pointer to fill with the id of the submitted operation
             source: source datastore to get data from
             filter_: filter to apply to the get-config (or not if empty string)
             filter_type: type of filter to apply, subtree|xpath
@@ -1515,7 +1515,7 @@ class LibScrapliNetconfMapping:
         """
         return self._get_data(
             ptr,
-            operation_id,
+            operation_id_ptr,
             CANCEL,
             source,
             filter_,
@@ -1533,7 +1533,7 @@ class LibScrapliNetconfMapping:
         self,
         *,
         ptr: DriverPointer,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         target: c_char_p,
         content: c_char_p,
         default_operation: c_char_p,
@@ -1545,7 +1545,7 @@ class LibScrapliNetconfMapping:
 
         Args:
             ptr: ptr to the netconf object
-            operation_id: int pointer to fill with the id of the submitted operation
+            operation_id_ptr: int pointer to fill with the id of the submitted operation
             target: datastore to target
             content: full payload content to send
             default_operation: string that looks like default operation enum (or empty)
@@ -1560,7 +1560,7 @@ class LibScrapliNetconfMapping:
         """
         return self._edit_data(
             ptr,
-            operation_id,
+            operation_id_ptr,
             CANCEL,
             target,
             content,
@@ -1571,7 +1571,7 @@ class LibScrapliNetconfMapping:
         self,
         *,
         ptr: DriverPointer,
-        operation_id: OperationIdPointer,
+        operation_id_ptr: OperationIdPointer,
         action: c_char_p,
     ) -> int:
         """
@@ -1581,7 +1581,7 @@ class LibScrapliNetconfMapping:
 
         Args:
             ptr: ptr to the netconf object
-            operation_id: int pointer to fill with the id of the submitted operation
+            operation_id_ptr: int pointer to fill with the id of the submitted operation
             action: the action to send
 
         Returns:
@@ -1594,7 +1594,7 @@ class LibScrapliNetconfMapping:
         """
         return self._action(
             ptr,
-            operation_id,
+            operation_id_ptr,
             CANCEL,
             action,
         )
