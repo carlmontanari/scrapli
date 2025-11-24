@@ -73,6 +73,7 @@ async def test_cancel_commit_async(netconf, netconf_assert_result):
 def test_close_session(netconf, netconf_assert_result):
     netconf.open()
     netconf_assert_result(actual=netconf.close_session())
+    netconf._free()
 
 
 @pytest.mark.asyncio
@@ -80,6 +81,7 @@ async def test_close_session_async(netconf, netconf_assert_result):
     await netconf.open_async()
     actual = await netconf.close_session_async()
     netconf_assert_result(actual=actual)
+    netconf._free()
 
 
 def test_commit(netconf, netconf_assert_result):
