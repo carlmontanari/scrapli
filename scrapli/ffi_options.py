@@ -6,7 +6,9 @@ from typing import TYPE_CHECKING, Any, ClassVar, TypeAlias
 from scrapli.exceptions import OptionsException
 from scrapli.ffi_types import (
     BoolPointer,
-    LogFuncCallback,
+    LoggerCallback,
+    LoggerCallbackC,
+    RecorderCallbackC,
     StringPointer,
     U16Pointer,
     U64Pointer,
@@ -88,6 +90,7 @@ class Session(Structure):
         ("operation_max_search_depth", U64Pointer),
         ("record_destination", c_char_p),
         ("record_destination_len", c_size_t),
+        ("record_callback", RecorderCallbackC),
     ]
 
 
@@ -276,7 +279,7 @@ class DriverOptions(Structure):
     """
 
     _fields_: ClassVar[list[tuple[str, Any]]] = [
-        ("logger_callback", LogFuncCallback),
+        ("logger_callback", LoggerCallbackC),
         ("logger_level", c_char_p),
         ("logger_level_len", c_size_t),
         ("port", U16Pointer),
@@ -292,7 +295,7 @@ class DriverOptions(Structure):
     def apply(
         self,
         *,
-        logger_callback: LogFuncCallback,
+        logger_callback: LoggerCallback,
         logger_level: c_char_p,
         port: int,
         transport_kind: c_char_p,

@@ -1,6 +1,5 @@
 """scrapli.ffi_mapping_cli"""
 
-from _ctypes import POINTER
 from collections.abc import Callable
 from ctypes import (
     CDLL,
@@ -11,6 +10,8 @@ from ctypes import (
     c_uint64,
     c_void_p,
 )
+
+from _ctypes import POINTER
 
 from scrapli.ffi_types import (
     CANCEL,

@@ -16,8 +16,8 @@ from scrapli.ffi_mapping_cli import LibScrapliCliMapping
 from scrapli.ffi_mapping_netconf import LibScrapliNetconfMapping
 from scrapli.ffi_types import (
     DriverPointer,
-    IntPointer,
-    ZigSlicePointer,
+    U64Pointer,
+    ZigSlice,
 )
 
 
@@ -171,15 +171,15 @@ class LibScrapliSessionMapping:
         self._read: Callable[
             [
                 DriverPointer,
-                ZigSlicePointer,
-                IntPointer,
+                ZigSlice,
+                U64Pointer,
             ],
             int,
         ] = lib.ls_session_read
         lib.ls_session_read.argtypes = [
             DriverPointer,
-            ZigSlicePointer,
-            IntPointer,
+            ZigSlice,
+            U64Pointer,
         ]
         lib.ls_session_read.restype = c_int
 
@@ -213,6 +213,17 @@ class LibScrapliSessionMapping:
         ]
         lib.ls_session_write_and_return.restype = c_uint8
 
+        self._write_return: Callable[
+            [
+                DriverPointer,
+            ],
+            int,
+        ] = lib.ls_session_write_return
+        lib.ls_session_write_return.argtypes = [
+            DriverPointer,
+        ]
+        lib.ls_session_write_and_return.restype = c_uint8
+
         self._set_operation_timeout_ns: Callable[
             [
                 DriverPointer,
@@ -226,8 +237,7 @@ class LibScrapliSessionMapping:
         ]
         lib.ls_session_operation_timeout_ns.restype = c_uint8
 
-    # TODO this should have a test if it doesnt already cuz not sure i ever tried it
-    def read(self, ptr: DriverPointer, buf: ZigSlicePointer, read_size: IntPointer) -> int:
+    def read(self, ptr: DriverPointer, buf: ZigSlice, read_size: U64Pointer) -> int:
         """
         Read from the session of driver at ptr.
 
@@ -289,6 +299,25 @@ class LibScrapliSessionMapping:
 
         """
         return self._write_and_return(ptr, input_, redacted)
+
+    def write_return(self, ptr: DriverPointer) -> int:
+        """
+        Write a return to the session of driver at ptr.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: the ptr to the libscrapli cli/netconf object.
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._write_return(ptr)
 
     def set_operation_timeout_ns(
         self, ptr: DriverPointer, set_operation_timeout_ns: c_uint64

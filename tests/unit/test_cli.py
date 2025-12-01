@@ -1,6 +1,44 @@
+from time import sleep
+
 import pytest
 
 from scrapli.cli import Cli, InputHandling, ReadCallback
+
+READ_ARGNAMES = (
+    "size",
+    "input_",
+)
+READ_ARGVALUES = (
+    (
+        1_024,  # default size
+        "show version | i Kern",
+    ),
+    (
+        64,
+        "show version | i Kern",
+    ),
+)
+READ_IDS = (
+    "simple",
+    "user-sized",
+)
+
+
+@pytest.mark.parametrize(
+    argnames=READ_ARGNAMES,
+    argvalues=READ_ARGVALUES,
+    ids=READ_IDS,
+)
+def test_read(size, input_, cli, cli_assert_result):
+    with cli as c:
+        c.write_and_return(input_=input_)
+
+        sleep(1)
+
+        actual = c.read(size=size)
+
+        assert actual != b""
+        assert len(actual) > 0
 
 
 def test_get_prompt(cli, cli_assert_result):

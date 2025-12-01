@@ -1,6 +1,5 @@
 """scrapli.ffi_mapping_cli"""
 
-from _ctypes import POINTER
 from collections.abc import Callable
 from ctypes import (
     CDLL,
@@ -10,6 +9,8 @@ from ctypes import (
     c_uint32,
     c_void_p,
 )
+
+from _ctypes import POINTER
 
 from scrapli.ffi_types import (
     CANCEL,
@@ -155,7 +156,7 @@ class LibScrapliCliMapping:
             DriverPointer,
             OperationId,
             U64Pointer,
-            POINTER(ZigU64Slice),  # TODO this one changes to a not poitner and shit goes kaboom?
+            POINTER(ZigU64Slice),
             ZigSlice,
             ZigSlice,
             ZigSlice,

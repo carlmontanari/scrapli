@@ -42,8 +42,8 @@ from scrapli.ffi_types import (
     OperationIdPointer,
     ZigSlice,
     ZigU64Slice,
+    ffi_logger_callback_wrapper,
     ffi_logger_level,
-    ffi_logger_wrapper,
     to_c_string,
 )
 from scrapli.helper import (
@@ -93,6 +93,8 @@ class ReadCallback:
             processed indicates this callback should be executed -- note: ignored if contains is set
         not_contains: a string that if found in the buf being processed nullifies the containment
             check
+        search_depth: sets the depth back in the joined results to search -- if unset (0) then the
+            check to see if the callback should execute only searches the contents of the last read
         once: bool indicating if this is an "only once" callback or if it can be executed multiple
             times
         completes: bool indicated if, after execution, this callback should "complete" (end) the
@@ -111,6 +113,7 @@ class ReadCallback:
     contains: str = ""
     contains_pattern: str = ""
     not_contains: str = ""
+    search_depth: int = 0
     once: bool = False
     completes: bool = False
     callback: Callable[["Cli"], None] | None = None
@@ -156,7 +159,8 @@ class Cli:
             logger_name += f":{logging_uid}"
 
         self.logger = getLogger(logger_name)
-        self.logger_callback = ffi_logger_wrapper(logger=self.logger)
+        self.logger_callback = ffi_logger_callback_wrapper(logger=self.logger)
+
         self._logging_uid = logging_uid
 
         self.ffi_mapping = LibScrapliMapping()
@@ -201,7 +205,7 @@ class Cli:
                 f"scrapli.definition_options.{self._platform_name}"
             )
         except ModuleNotFoundError:
-            # obviously not every platform
+            # obviously not every platform has options
             return
 
         platform_options_applier = getattr(
@@ -622,6 +626,37 @@ class Cli:
 
         return result
 
+    def read(self, size: int = 1_024) -> bytes:
+        """
+        Read from the session -- bypasses the operation loop, use with caution.
+
+        Does not do I/O because its draining the already filled buffer and/or returning nothing if
+        there is nothing to read, hence no async vs sync version.
+
+        Args:
+            size: buffer size to pass to libscrapli to fill
+
+        Returns:
+            bytes: bytes object of what was read, will be empty if we read 0 bytes
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        buf = ZigSlice(size=c_uint64(size))
+        read_size = pointer(c_uint64())
+
+        status = self.ffi_mapping.session_mapping.read(
+            ptr=self._ptr_or_exception(),
+            buf=buf,
+            read_size=read_size,
+        )
+        if status != 0:
+            raise SubmitOperationException("executing read operation failed")
+
+        return buf.get_contents()[0 : read_size.contents.value]
+
     def write(self, input_: str) -> None:
         """
         Write the given input.
@@ -630,7 +665,7 @@ class Cli:
             input_: the input to write
 
         Returns:
-            Result: a Result object representing the operation
+            N/A
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
@@ -657,7 +692,7 @@ class Cli:
             input_: the input to write
 
         Returns:
-            Result: a Result object representing the operation
+            N/A
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
@@ -675,6 +710,27 @@ class Cli:
             raise SubmitOperationException("executing write and return operation failed")
 
         _ = _input
+
+    def write_return(self) -> None:
+        """
+        Write a return character.
+
+        Args:
+            N/A
+
+        Returns:
+            N/A
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            SubmitOperationException: if the operation fails
+
+        """
+        status = self.ffi_mapping.session_mapping.write_return(
+            ptr=self._ptr_or_exception(),
+        )
+        if status != 0:
+            raise SubmitOperationException("executing write return operation failed")
 
     def _get_result(
         self,
@@ -1540,8 +1596,10 @@ class Cli:
 
                 execute = pointer(c_bool(False))
 
+                search_start_idx = max(min(pos, len(result) - callback.search_depth), 0)
+
                 status = self.ffi_mapping.cli_mapping.read_callback_should_execute(
-                    buf=to_c_string(result[pos:]),
+                    buf=to_c_string(result[search_start_idx:]),
                     name=to_c_string(callback.name),
                     contains=to_c_string(callback.contains),
                     contains_pattern=to_c_string(callback.contains_pattern),

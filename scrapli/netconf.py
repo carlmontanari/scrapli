@@ -37,8 +37,8 @@ from scrapli.ffi_types import (
     OperationIdPointer,
     U64Pointer,
     ZigSlice,
+    ffi_logger_callback_wrapper,
     ffi_logger_level,
-    ffi_logger_wrapper,
     to_c_string,
 )
 from scrapli.helper import (
@@ -356,7 +356,7 @@ class Netconf:
             logger_name += f":{logging_uid}"
 
         self.logger = getLogger(logger_name)
-        self.logger_callback = ffi_logger_wrapper(logger=self.logger)
+        self.logger_callback = ffi_logger_callback_wrapper(logger=self.logger)
         self._logging_uid = logging_uid
 
         self.ffi_mapping = LibScrapliMapping()

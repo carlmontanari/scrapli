@@ -1,10 +1,11 @@
 """scrapli.session"""
 
+from collections.abc import Callable
 from ctypes import c_char_p, c_size_t, c_uint64, pointer
 from dataclasses import dataclass, field
 
 from scrapli.ffi_options import DriverOptionsPointer
-from scrapli.ffi_types import to_c_string
+from scrapli.ffi_types import RecorderCallback, recorder_callback_wrapper, to_c_string
 from scrapli.helper import second_to_nano
 
 DEFAULT_OPERATION_TIMEOUT_NS = 10_000_000_000
@@ -39,9 +40,11 @@ class Options:
     operation_timeout_ns: int | None = None
     operation_max_search_depth: int | None = None
     recorder_path: str | None = None
+    recorder_callback: Callable[[str], None] | None = None
 
     _return_char: c_char_p | None = field(init=False, default=None, repr=False)
     _recorder_path: c_char_p | None = field(init=False, default=None, repr=False)
+    _recorder_callback: RecorderCallback | None = field(init=False, default=None, repr=False)
 
     def __post_init__(self) -> None:
         if self.operation_timeout_s is not None or self.operation_timeout_ns is not None:
@@ -92,8 +95,12 @@ class Options:
         if self.recorder_path is not None:
             self._recorder_path = to_c_string(self.recorder_path)
 
-            options.contents.session.recorder_path = self._recorder_path
-            options.contents.session.recorder_path_len = c_size_t(len(self.recorder_path))
+            options.contents.session.record_destination = self._recorder_path
+            options.contents.session.record_destination_len = c_size_t(len(self.recorder_path))
+        elif self.recorder_callback is not None:
+            self._recorder_callback = recorder_callback_wrapper(self.recorder_callback)
+
+            options.contents.session.record_callback = self._recorder_callback
 
     def __repr__(self) -> str:
         """
@@ -118,4 +125,5 @@ class Options:
             f"operation_timeout_ns={self.operation_timeout_ns!r}) "
             f"operation_max_search_depth={self.operation_max_search_depth!r}) "
             f"recorder_path={self.recorder_path!r}) "
+            f"recorder_callback={self.recorder_callback!r}) "
         )

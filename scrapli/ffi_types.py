@@ -1,9 +1,13 @@
 """scrapli.ffi_types"""
 
+from collections.abc import Callable
 from ctypes import (
+    CFUNCTYPE,
     POINTER,
-    PYFUNCTYPE,
     Structure,
+)
+from ctypes import _CFuncPtr as FuncPtr  # type: ignore[attr-defined]
+from ctypes import (
     _Pointer,
     c_bool,
     c_char_p,
@@ -161,12 +165,6 @@ class ZigSlice(Structure):
         return self.get_contents().decode()
 
 
-if TYPE_CHECKING:
-    ZigSlicePointer: TypeAlias = _Pointer[ZigSlice]
-else:
-    ZigSlicePointer: TypeAlias = POINTER(ZigSlice)
-
-
 def to_c_string(s: str) -> c_char_p:
     """
     Accepts a string and converts it to a c_char_p.
@@ -184,12 +182,11 @@ def to_c_string(s: str) -> c_char_p:
     return c_char_p(s.encode(encoding="utf-8"))
 
 
-# PYFUNCTYPE holds the gil during the call which *seems* to matter/be important since
-# the zig bits will be tickling the logger (via the callback)
-LogFuncCallback: TypeAlias = PYFUNCTYPE(None, c_uint8, POINTER(ZigSlice))  # type: ignore[valid-type]
+LoggerCallbackC = CFUNCTYPE(None, c_uint8, StringPointer)
+LoggerCallback: TypeAlias = FuncPtr
 
 
-def ffi_logger_wrapper(logger: Logger) -> LogFuncCallback:
+def ffi_logger_callback_wrapper(logger: Logger) -> LoggerCallback:
     """
     Closure that accepts logger instance and returns a ffi logger callback
 
@@ -197,32 +194,32 @@ def ffi_logger_wrapper(logger: Logger) -> LogFuncCallback:
         logger: the logger to wrap for use in the zig bits
 
     Returns:
-        LogFuncCallback: the logger callback
+        LogerCallback: the logger callback
 
     Raises:
         N/A
 
     """
 
-    def _cb(level: c_uint8, message: ZigSlice) -> None:
+    def _cb(level: c_uint8, message: StringPointer) -> None:
         match level:
             case 0:
                 # no "trace" level in std logger, so just format to be clear which ones are trace
-                logger.debug("TRACE: %s", message.contents.get_decoded_contents())
+                logger.debug("TRACE: %s", message.contents.value.decode())
             case 1:
-                logger.debug(message.contents.get_decoded_contents())
+                logger.debug(message.contents.value.decode())
             case 2:
-                logger.info(message.contents.get_decoded_contents())
+                logger.info(message.contents.value.decode())
             case 3:
-                logger.warning(message.contents.get_decoded_contents())
+                logger.warning(message.contents.value.decode())
             case 4:
-                logger.critical(message.contents.get_decoded_contents())
+                logger.critical(message.contents.value.decode())
             case 5:
-                logger.fatal(message.contents.get_decoded_contents())
+                logger.fatal(message.contents.value.decode())
             case _:
                 return
 
-    return LogFuncCallback(_cb)
+    return LoggerCallbackC(_cb)
 
 
 def ffi_logger_level(logger: Logger) -> c_char_p:  # noqa: PLR0911
@@ -255,3 +252,36 @@ def ffi_logger_level(logger: Logger) -> c_char_p:  # noqa: PLR0911
         return c_char_p(b"fatal")
     else:
         return c_char_p(b"warn")
+
+
+RecorderCallbackC = CFUNCTYPE(None, StringPointer)
+RecorderCallback: TypeAlias = FuncPtr
+
+
+def recorder_callback_wrapper(cb: Callable[[str], None]) -> RecorderCallback:
+    """
+    Closure that accepts a session recorder callback and returns an ffi compatible wrapper
+
+    Args:
+        cb: the recorder to wrap for use in the zig bits
+
+    Returns:
+        RecorderCallback: the recorder callback
+
+    Raises:
+        N/A
+
+    """
+
+    def _cb(buf: StringPointer) -> None:
+        v = buf.contents.value
+        if not v:
+            # im unclear why this can be None when mypy doesnt think that
+            # the logger bits can be. i *know* that we return an exactly sized
+            # slice from the logger in zig and thats why we dont have to do
+            # any trimming of null chars in the logger one though
+            return
+
+        return cb(v.rstrip(b"\xaa").decode())
+
+    return RecorderCallbackC(_cb)
