@@ -3,14 +3,13 @@
 from collections.abc import Callable
 from ctypes import (
     CDLL,
+    POINTER,
     c_bool,
     c_char_p,
     c_uint8,
     c_uint32,
     c_void_p,
 )
-
-from _ctypes import POINTER
 
 from scrapli.ffi_types import (
     CANCEL,
