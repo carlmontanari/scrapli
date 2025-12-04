@@ -60,6 +60,31 @@ CLI_DEFINITIONS_PATH_OVERRIDE_ENV = "SCRAPLI_DEFINITIONS_PATH"
 CLI_DEFINITIONS_PATH_OVERRIDE = environ.get(CLI_DEFINITIONS_PATH_OVERRIDE_ENV)
 
 
+@dataclass
+class LoadedDefinition:
+    """
+    LoadedDefinition holds a platform name and the definition contents
+
+    Normally users will provide a filename or the name of a platform, this, however, gives users a
+    way to pass an already loaded definition string. The platform name is required for us to be able
+    to lookup the static options and augments.
+
+    Args:
+        platform_name: name of the platform, i.e. "cisco_iosxe", etc.
+        defintion: the loaded definition string
+
+    Returns:
+        None
+
+    Raises:
+        N/A
+
+    """
+
+    platform_name: str
+    definition: str
+
+
 class InputHandling(str, Enum):
     """
     Enum representing the input handling flavor.
@@ -147,7 +172,7 @@ class Cli:
         host: str,
         *,
         port: int | None = None,
-        definition_file_or_name: str | None = None,
+        definition_file_or_name: str | LoadedDefinition | None = None,
         auth_options: AuthOptions | None = None,
         session_options: SessionOptions | None = None,
         transport_options: TransportOptions | None = None,
@@ -165,9 +190,13 @@ class Cli:
 
         self.ffi_mapping = LibScrapliMapping()
 
-        self.definition_file_or_name = definition_file_or_name or "default"
-        self._platform_name = ""
-        self._load_definition()
+        if isinstance(definition_file_or_name, LoadedDefinition):
+            self._platform_name = definition_file_or_name.platform_name
+            self.definition_string = definition_file_or_name.definition.encode()
+        else:
+            self.definition_file_or_name = definition_file_or_name or "default"
+            self._platform_name = ""
+            self._load_definition()
 
         # note: many places have encodings done prior to function calls such that the encoded
         # result is not gc'd prior to being used in zig-land, so it looks a bit weird, but thats
