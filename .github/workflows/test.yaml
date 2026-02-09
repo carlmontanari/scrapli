@@ -20,12 +20,12 @@ jobs:
   unit:
     runs-on: ${{ matrix.os }}
     strategy:
-      max-parallel: 20
+      max-parallel: 15
       matrix:
         version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         # we want to ensure we are doing the unit tests on all our main targets
         # this ensures all the ctypes magic works on all the platforms we can run in ci at least
-        os: ["ubuntu-latest", "macos-latest", "ubuntu-24.04-arm", "macos-13"]
+        os: ["ubuntu-latest", "macos-latest", "ubuntu-24.04-arm"]
 
     steps:
       - name: checkout
