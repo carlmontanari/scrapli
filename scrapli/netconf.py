@@ -1,5 +1,6 @@
 """scrapli.netconf"""
 
+from collections.abc import Callable
 from ctypes import (
     POINTER,
     c_bool,
@@ -34,9 +35,11 @@ from scrapli.ffi_options import DriverOptions, DriverOptionsPointer
 from scrapli.ffi_types import (
     DriverPointer,
     IntPointer,
+    NetconfCapabilitesCallback,
     OperationIdPointer,
     U64Pointer,
     ZigSlice,
+    capabilities_callback_wrapper,
     ffi_logger_callback_wrapper,
     ffi_logger_level,
     to_c_string,
@@ -262,10 +265,14 @@ class Options:
     error_tag: str | None = None
     preferred_version: Version | None = None
     message_poll_interval_ns: int | None = None
+    capabilities_callback: Callable[[list[str]], list[str]] | None = None
     close_force: bool = False
 
     _error_tag: c_char_p | None = field(init=False, default=None, repr=False)
     _preferred_version: c_char_p | None = field(init=False, default=None, repr=False)
+    _capabilities_callback: NetconfCapabilitesCallback | None = field(
+        init=False, default=None, repr=False
+    )
 
     def apply(self, *, options: DriverOptionsPointer) -> None:
         """
@@ -299,6 +306,11 @@ class Options:
             options.contents.netconf.message_poll_interval_ns = pointer(
                 c_uint64(self.message_poll_interval_ns)
             )
+
+        if self.capabilities_callback is not None:
+            self._capabilities_callback = capabilities_callback_wrapper(self.capabilities_callback)
+
+            options.contents.netconf.capabilities_callback = self._capabilities_callback
 
     def __repr__(self) -> str:
         """

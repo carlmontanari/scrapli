@@ -1,5 +1,6 @@
 """scrapli.ffi_types"""
 
+import xml.etree.ElementTree as ET
 from collections.abc import Callable
 from ctypes import (
     CFUNCTYPE,
@@ -285,3 +286,51 @@ def recorder_callback_wrapper(cb: Callable[[str], None]) -> RecorderCallback:
         return cb(v.rstrip(b"\xaa").decode())
 
     return RecorderCallbackC(_cb)
+
+
+NetconfCapabilitesCallbackC = CFUNCTYPE(c_char_p, StringPointer)
+NetconfCapabilitesCallback: TypeAlias = FuncPtr
+
+
+def capabilities_callback_wrapper(
+    cb: Callable[[list[str]], list[str]],
+) -> NetconfCapabilitesCallback:
+    """
+    Closure that accepts a netconf capabillities callback and returns an ffi compatible wrapper
+
+    Args:
+        cb: the capabilities handler to wrap for use in the zig bits
+
+    Returns:
+        NetconfCapabilitesCallback: the capabilities callback
+
+    Raises:
+        N/A
+
+    """
+
+    def _cb(server_hello: StringPointer) -> c_char_p:
+        # mypy will be upset because its a pointer so could be none, but it wont. its ok mypy
+        server_capabilities: bytes = server_hello.contents.value or b""
+
+        root = ET.fromstring(server_capabilities)
+
+        caps = [
+            elem.text or ""
+            for elem in root.findall(
+                ".//nc:capability", {"nc": "urn:ietf:params:xml:ns:netconf:base:1.0"}
+            )
+        ]
+
+        user_capabilities = cb(caps)
+
+        out_elems = []
+
+        for cap in user_capabilities:
+            el = ET.Element("capability")
+            el.text = cap
+            out_elems.append(ET.tostring(el, encoding="unicode"))
+
+        return c_char_p("".join(out_elems).encode())
+
+    return NetconfCapabilitesCallbackC(_cb)

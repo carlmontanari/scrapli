@@ -8,6 +8,7 @@ from scrapli.ffi_types import (
     BoolPointer,
     LoggerCallback,
     LoggerCallbackC,
+    NetconfCapabilitesCallbackC,
     RecorderCallbackC,
     StringPointer,
     U16Pointer,
@@ -62,6 +63,7 @@ class Netconf(Structure):
         ("preferred_version", c_char_p),
         ("preferred_version_len", c_size_t),
         ("message_poll_interval", U64Pointer),
+        ("capabilities_callback", NetconfCapabilitesCallbackC),
     ]
 
 
