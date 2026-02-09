@@ -1,6 +1,6 @@
 [build-system]
 build-backend = "setuptools.build_meta"
-requires = ["setuptools", "wheel", "ziglang==0.14.1"]
+requires = ["setuptools", "wheel", "ziglang==0.15.2"]
 
 [project]
 name = "scrapli2"
