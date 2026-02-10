@@ -6,6 +6,7 @@ from ctypes import (
     POINTER,
     c_bool,
     c_char_p,
+    c_size_t,
     c_uint32,
     c_uint64,
     c_void_p,
@@ -466,7 +467,7 @@ class Cli:
         if self._ntc_templates_platform is not None:
             return self._ntc_templates_platform
 
-        ntc_templates_platform = ZigSlice(size=c_uint64(256))
+        ntc_templates_platform = pointer(ZigSlice(size=c_size_t(256)))
 
         status = self.ffi_mapping.cli_mapping.get_ntc_templates_platform(
             ptr=self._ptr_or_exception(),
@@ -475,7 +476,9 @@ class Cli:
         if status != 0:
             raise GetResultException("failed to retrieve ntc templates platform")
 
-        self._ntc_templates_platform = ntc_templates_platform.get_decoded_contents().strip("\x00")
+        self._ntc_templates_platform = ntc_templates_platform.contents.get_decoded_contents().strip(
+            "\x00"
+        )
 
         return self._ntc_templates_platform
 
@@ -497,7 +500,7 @@ class Cli:
         if self._genie_platform is not None:
             return self._genie_platform
 
-        genie_platform = ZigSlice(size=c_uint64(256))
+        genie_platform = pointer(ZigSlice(size=c_uint64(256)))
 
         status = self.ffi_mapping.cli_mapping.get_ntc_templates_platform(
             ptr=self._ptr_or_exception(),
@@ -506,7 +509,7 @@ class Cli:
         if status != 0:
             raise GetResultException("failed to retrieve genie templates platform")
 
-        self._genie_platform = genie_platform.get_decoded_contents().strip("\x00")
+        self._genie_platform = genie_platform.contents.get_decoded_contents().strip("\x00")
 
         return self._genie_platform
 
@@ -673,8 +676,8 @@ class Cli:
             SubmitOperationException: if the operation fails
 
         """
-        buf = ZigSlice(size=c_uint64(size))
-        read_size = pointer(c_uint64())
+        buf = pointer(ZigSlice(size=c_size_t(size)))
+        read_size = pointer(c_size_t())
 
         status = self.ffi_mapping.session_mapping.read(
             ptr=self._ptr_or_exception(),
@@ -684,7 +687,7 @@ class Cli:
         if status != 0:
             raise SubmitOperationException("executing read operation failed")
 
-        return buf.get_contents()[0 : read_size.contents.value]
+        return buf.contents.get_contents()[0 : read_size.contents.value]
 
     def write(self, input_: str) -> None:
         """
@@ -770,11 +773,11 @@ class Cli:
         operation_id_value = c_uint32(operation_id_ptr.contents.value)
 
         operation_count = pointer(c_uint32())
-        inputs_size = pointer(c_uint64())
-        results_raw_size = pointer(c_uint64())
-        results_size = pointer(c_uint64())
-        results_failed_indicator_size = pointer(c_uint64())
-        err_size = pointer(c_uint64())
+        inputs_size = pointer(c_size_t())
+        results_raw_size = pointer(c_size_t())
+        results_size = pointer(c_size_t())
+        results_failed_indicator_size = pointer(c_size_t())
+        err_size = pointer(c_size_t())
 
         status = self.ffi_mapping.cli_mapping.fetch_sizes(
             ptr=self._ptr_or_exception(),
@@ -790,14 +793,16 @@ class Cli:
             raise GetResultException("wait operation failed")
 
         start_time = pointer(c_uint64())
-        splits = ZigU64Slice(size=c_uint64(operation_count.contents.value))
+        splits = pointer(ZigU64Slice(size=c_uint64(operation_count.contents.value)))
 
-        inputs_slice = ZigSlice(size=inputs_size.contents)
-        results_raw_slice = ZigSlice(size=results_raw_size.contents)
-        results_slice = ZigSlice(size=results_size.contents)
+        inputs_slice = pointer(ZigSlice(size=inputs_size.contents))
+        results_raw_slice = pointer(ZigSlice(size=results_raw_size.contents))
+        results_slice = pointer(ZigSlice(size=results_size.contents))
 
-        results_failed_indicator_slice = ZigSlice(size=results_failed_indicator_size.contents)
-        err_slice = ZigSlice(size=err_size.contents)
+        results_failed_indicator_slice = pointer(
+            ZigSlice(size=results_failed_indicator_size.contents)
+        )
+        err_slice = pointer(ZigSlice(size=err_size.contents))
 
         status = self.ffi_mapping.cli_mapping.fetch(
             ptr=self._ptr_or_exception(),
@@ -813,19 +818,19 @@ class Cli:
         if status != 0:
             raise GetResultException("fetch operation failed")
 
-        err_contents = err_slice.get_decoded_contents()
+        err_contents = err_slice.contents.get_decoded_contents()
         if err_contents:
             raise OperationException(err_contents)
 
         return Result(
-            inputs=inputs_slice.get_decoded_contents(),
+            inputs=inputs_slice.contents.get_decoded_contents(),
             host=self.host,
             port=self.port,
             start_time=start_time.contents.value,
-            splits=splits.get_contents(),
-            results_raw=results_raw_slice.get_contents(),
-            results=results_slice.get_decoded_contents(),
-            results_failed_indicator=results_failed_indicator_slice.get_decoded_contents(),
+            splits=splits.contents.get_contents(),
+            results_raw=results_raw_slice.contents.get_contents(),
+            results=results_slice.contents.get_decoded_contents(),
+            results_failed_indicator=results_failed_indicator_slice.contents.get_decoded_contents(),
             textfsm_platform=self.ntc_templates_platform,
             genie_platform=self.genie_platform,
         )
@@ -839,11 +844,11 @@ class Cli:
         operation_id_value = c_uint32(operation_id_ptr.contents.value)
 
         operation_count = pointer(c_uint32())
-        inputs_size = pointer(c_uint64())
-        results_raw_size = pointer(c_uint64())
-        results_size = pointer(c_uint64())
-        results_failed_indicator_size = pointer(c_uint64())
-        err_size = pointer(c_uint64())
+        inputs_size = pointer(c_size_t())
+        results_raw_size = pointer(c_size_t())
+        results_size = pointer(c_size_t())
+        results_failed_indicator_size = pointer(c_size_t())
+        err_size = pointer(c_size_t())
 
         status = self.ffi_mapping.cli_mapping.fetch_sizes(
             ptr=self._ptr_or_exception(),
@@ -859,15 +864,16 @@ class Cli:
             raise GetResultException("fetch operation sizes failed")
 
         start_time = pointer(c_uint64())
-        splits = ZigU64Slice(size=c_uint64(operation_count.contents.value))
+        splits = pointer(ZigU64Slice(size=c_uint64(operation_count.contents.value)))
 
-        inputs_slice = ZigSlice(size=inputs_size.contents)
-        results_raw_slice = ZigSlice(size=results_raw_size.contents)
-        results_slice = ZigSlice(size=results_size.contents)
+        inputs_slice = pointer(ZigSlice(size=inputs_size.contents))
+        results_raw_slice = pointer(ZigSlice(size=results_raw_size.contents))
+        results_slice = pointer(ZigSlice(size=results_size.contents))
 
-        results_failed_indicator_slice = ZigSlice(size=results_failed_indicator_size.contents)
-
-        err_slice = ZigSlice(size=err_size.contents)
+        results_failed_indicator_slice = pointer(
+            ZigSlice(size=results_failed_indicator_size.contents)
+        )
+        err_slice = pointer(ZigSlice(size=err_size.contents))
 
         status = self.ffi_mapping.cli_mapping.fetch(
             ptr=self._ptr_or_exception(),
@@ -883,20 +889,20 @@ class Cli:
         if status != 0:
             raise GetResultException("fetch operation failed")
 
-        err_contents = err_slice.get_decoded_contents()
+        err_contents = err_slice.contents.get_decoded_contents()
         if err_contents:
             raise OperationException(err_contents)
 
-        failed_indicator = results_failed_indicator_slice.get_decoded_contents()
+        failed_indicator = results_failed_indicator_slice.contents.get_decoded_contents()
 
         return Result(
-            inputs=inputs_slice.get_decoded_contents(),
+            inputs=inputs_slice.contents.get_decoded_contents(),
             host=self.host,
             port=self.port,
             start_time=start_time.contents.value,
-            splits=splits.get_contents(),
-            results_raw=results_raw_slice.get_contents(),
-            results=results_slice.get_decoded_contents(),
+            splits=splits.contents.get_contents(),
+            results_raw=results_raw_slice.contents.get_contents(),
+            results=results_slice.contents.get_decoded_contents(),
             results_failed_indicator=failed_indicator,
             textfsm_platform=self.ntc_templates_platform,
             genie_platform=self.genie_platform,

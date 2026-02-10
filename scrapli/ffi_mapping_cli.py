@@ -20,8 +20,9 @@ from scrapli.ffi_types import (
     OperationIdPointer,
     U32Pointer,
     U64Pointer,
-    ZigSlice,
-    ZigU64Slice,
+    USizePointer,
+    ZigSlicePointer,
+    ZigU64SlicePointer,
 )
 
 
@@ -59,26 +60,26 @@ class LibScrapliCliMapping:
         self._get_ntc_templates_platform: Callable[
             [
                 DriverPointer,
-                ZigSlice,
+                ZigSlicePointer,
             ],
             int,
         ] = lib.ls_cli_get_ntc_templates_platform
         lib.ls_cli_get_ntc_templates_platform.argtypes = [
             DriverPointer,
-            ZigSlice,
+            ZigSlicePointer,
         ]
         lib.ls_cli_get_ntc_templates_platform.restype = c_uint8
 
         self._get_genie_platform: Callable[
             [
                 DriverPointer,
-                ZigSlice,
+                ZigSlicePointer,
             ],
             int,
         ] = lib.ls_cli_get_genie_platform
         lib.ls_cli_get_genie_platform.argtypes = [
             DriverPointer,
-            ZigSlice,
+            ZigSlicePointer,
         ]
         lib.ls_cli_get_genie_platform.restype = c_uint8
 
@@ -117,11 +118,11 @@ class LibScrapliCliMapping:
                 DriverPointer,
                 OperationId,
                 U32Pointer,
-                U64Pointer,
-                U64Pointer,
-                U64Pointer,
-                U64Pointer,
-                U64Pointer,
+                USizePointer,
+                USizePointer,
+                USizePointer,
+                USizePointer,
+                USizePointer,
             ],
             int,
         ] = lib.ls_cli_fetch_operation_sizes
@@ -129,11 +130,11 @@ class LibScrapliCliMapping:
             DriverPointer,
             OperationId,
             U32Pointer,
-            U64Pointer,
-            U64Pointer,
-            U64Pointer,
-            U64Pointer,
-            U64Pointer,
+            USizePointer,
+            USizePointer,
+            USizePointer,
+            USizePointer,
+            USizePointer,
         ]
         lib.ls_cli_fetch_operation_sizes.restype = c_uint8
 
@@ -142,12 +143,12 @@ class LibScrapliCliMapping:
                 DriverPointer,
                 OperationId,
                 U64Pointer,
-                ZigU64Slice,
-                ZigSlice,
-                ZigSlice,
-                ZigSlice,
-                ZigSlice,
-                ZigSlice,
+                ZigU64SlicePointer,
+                ZigSlicePointer,
+                ZigSlicePointer,
+                ZigSlicePointer,
+                ZigSlicePointer,
+                ZigSlicePointer,
             ],
             int,
         ] = lib.ls_cli_fetch_operation
@@ -155,12 +156,12 @@ class LibScrapliCliMapping:
             DriverPointer,
             OperationId,
             U64Pointer,
-            POINTER(ZigU64Slice),
-            ZigSlice,
-            ZigSlice,
-            ZigSlice,
-            ZigSlice,
-            ZigSlice,
+            ZigU64SlicePointer,
+            ZigSlicePointer,
+            ZigSlicePointer,
+            ZigSlicePointer,
+            ZigSlicePointer,
+            ZigSlicePointer,
         ]
         lib.ls_cli_fetch_operation.restype = c_uint8
 
@@ -322,7 +323,7 @@ class LibScrapliCliMapping:
         self,
         *,
         ptr: DriverPointer,
-        ntc_templates_platform: ZigSlice,
+        ntc_templates_platform: ZigSlicePointer,
     ) -> int:
         """
         Writes the ntc templates platform into the given slice pointer.
@@ -350,7 +351,7 @@ class LibScrapliCliMapping:
         self,
         *,
         ptr: DriverPointer,
-        genie_platform: ZigSlice,
+        genie_platform: ZigSlicePointer,
     ) -> int:
         """
         Writes the (cisco/pyats) genie platform into the given slice pointer.
@@ -438,11 +439,11 @@ class LibScrapliCliMapping:
         ptr: DriverPointer,
         operation_id_value: OperationId,
         operation_count: U32Pointer,
-        inputs_size: U64Pointer,
-        results_raw_size: U64Pointer,
-        results_size: U64Pointer,
-        results_failed_indicator_size: U64Pointer,
-        err_size: U64Pointer,
+        inputs_size: USizePointer,
+        results_raw_size: USizePointer,
+        results_size: USizePointer,
+        results_failed_indicator_size: USizePointer,
+        err_size: USizePointer,
     ) -> int:
         """
         Fetch the sizes of a cli operation's results.
@@ -485,12 +486,12 @@ class LibScrapliCliMapping:
         ptr: DriverPointer,
         operation_id_value: c_uint32,
         start_time: U64Pointer,
-        splits: ZigU64Slice,
-        inputs_slice: ZigSlice,
-        results_raw_slice: ZigSlice,
-        results_slice: ZigSlice,
-        results_failed_indicator_slice: ZigSlice,
-        err_slice: ZigSlice,
+        splits: ZigU64SlicePointer,
+        inputs_slice: ZigSlicePointer,
+        results_raw_slice: ZigSlicePointer,
+        results_slice: ZigSlicePointer,
+        results_failed_indicator_slice: ZigSlicePointer,
+        err_slice: ZigSlicePointer,
     ) -> int:
         """
         Fetch the result of a cli operation.

@@ -6,9 +6,6 @@ from ctypes import (
     CFUNCTYPE,
     POINTER,
     Structure,
-)
-from ctypes import _CFuncPtr as FuncPtr  # type: ignore[attr-defined]
-from ctypes import (
     _Pointer,
     c_bool,
     c_char_p,
@@ -20,7 +17,9 @@ from ctypes import (
     c_uint64,
     c_void_p,
     cast,
+    create_string_buffer,
 )
+from ctypes import _CFuncPtr as FuncPtr  # type: ignore[attr-defined]
 from logging import CRITICAL, DEBUG, FATAL, INFO, NOTSET, WARN, Logger
 from typing import TYPE_CHECKING, Any, ClassVar, TypeAlias
 
@@ -37,6 +36,7 @@ if TYPE_CHECKING:
     U16Pointer: TypeAlias = _Pointer[c_uint16]
     U32Pointer: TypeAlias = _Pointer[c_uint32]
     U64Pointer: TypeAlias = _Pointer[c_uint64]
+    USizePointer: TypeAlias = _Pointer[c_size_t]
 
     StringPointer: TypeAlias = _Pointer[c_char_p]
 
@@ -50,6 +50,7 @@ else:
     U16Pointer: TypeAlias = POINTER(c_uint16)
     U32Pointer: TypeAlias = POINTER(c_uint32)
     U64Pointer: TypeAlias = POINTER(c_uint64)
+    USizePointer: TypeAlias = POINTER(c_size_t)
 
     StringPointer: TypeAlias = POINTER(c_char_p)
 
@@ -103,6 +104,12 @@ class ZigU64Slice(Structure):
         return [self.ptr[i] for i in range(self.len)]
 
 
+if TYPE_CHECKING:
+    ZigU64SlicePointer: TypeAlias = _Pointer[ZigU64Slice]
+else:
+    ZigU64SlicePointer: TypeAlias = POINTER(ZigU64Slice)
+
+
 class ZigSlice(Structure):
     """
     A struct representing a slice of u8 (a string) in zig.
@@ -124,11 +131,10 @@ class ZigSlice(Structure):
             POINTER(c_uint8),
         ),
         ("len", c_size_t),
-        ("value", c_char_p),
     ]
 
-    def __init__(self, size: c_uint64):
-        self.ptr = cast((c_uint8 * size.value)(), POINTER(c_uint8))
+    def __init__(self, size: c_size_t | c_uint64):
+        self.ptr = cast(create_string_buffer(size.value), POINTER(c_uint8))
         self.len = size.value
 
         super().__init__()
@@ -164,6 +170,12 @@ class ZigSlice(Structure):
 
         """
         return self.get_contents().decode()
+
+
+if TYPE_CHECKING:
+    ZigSlicePointer: TypeAlias = _Pointer[ZigSlice]
+else:
+    ZigSlicePointer: TypeAlias = POINTER(ZigSlice)
 
 
 def to_c_string(s: str) -> c_char_p:

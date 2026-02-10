@@ -20,7 +20,8 @@ from scrapli.ffi_types import (
     OperationId,
     OperationIdPointer,
     U64Pointer,
-    ZigSlice,
+    USizePointer,
+    ZigSlicePointer,
 )
 
 
@@ -91,24 +92,24 @@ class LibScrapliNetconfMapping:
             [
                 DriverPointer,
                 OperationId,
-                U64Pointer,
-                U64Pointer,
-                U64Pointer,
-                U64Pointer,
-                U64Pointer,
-                U64Pointer,
+                USizePointer,
+                USizePointer,
+                USizePointer,
+                USizePointer,
+                USizePointer,
+                USizePointer,
             ],
             int,
         ] = lib.ls_netconf_fetch_operation_sizes
         lib.ls_netconf_fetch_operation_sizes.argtypes = [
             DriverPointer,
             OperationId,
-            U64Pointer,
-            U64Pointer,
-            U64Pointer,
-            U64Pointer,
-            U64Pointer,
-            U64Pointer,
+            USizePointer,
+            USizePointer,
+            USizePointer,
+            USizePointer,
+            USizePointer,
+            USizePointer,
         ]
         lib.ls_netconf_fetch_operation_sizes.restype = c_uint8
 
@@ -118,26 +119,26 @@ class LibScrapliNetconfMapping:
                 OperationId,
                 U64Pointer,
                 U64Pointer,
-                ZigSlice,
-                ZigSlice,
-                ZigSlice,
-                ZigSlice,
-                ZigSlice,
-                ZigSlice,
+                ZigSlicePointer,
+                ZigSlicePointer,
+                ZigSlicePointer,
+                ZigSlicePointer,
+                ZigSlicePointer,
+                ZigSlicePointer,
             ],
             int,
         ] = lib.ls_netconf_fetch_operation
         lib.ls_netconf_fetch_operation.argtypes = [
             DriverPointer,
             OperationId,
-            POINTER(c_uint64),
-            POINTER(c_uint64),
-            ZigSlice,
-            ZigSlice,
-            ZigSlice,
-            ZigSlice,
-            ZigSlice,
-            ZigSlice,
+            U64Pointer,
+            U64Pointer,
+            ZigSlicePointer,
+            ZigSlicePointer,
+            ZigSlicePointer,
+            ZigSlicePointer,
+            ZigSlicePointer,
+            ZigSlicePointer,
         ]
         lib.ls_netconf_fetch_operation.restype = c_uint8
 
@@ -183,13 +184,13 @@ class LibScrapliNetconfMapping:
         self._get_next_notification: Callable[
             [
                 DriverPointer,
-                ZigSlice,
+                ZigSlicePointer,
             ],
             int,
         ] = lib.ls_netconf_next_notification_message
         lib.ls_netconf_next_notification_message.argtypes = [
             DriverPointer,
-            ZigSlice,
+            ZigSlicePointer,
         ]
         lib.ls_netconf_next_notification_message.restype = c_uint8
 
@@ -204,7 +205,7 @@ class LibScrapliNetconfMapping:
         lib.ls_netconf_next_subscription_message_size.argtypes = [
             DriverPointer,
             c_uint64,
-            POINTER(c_uint64),
+            U64Pointer,
         ]
         lib.ls_netconf_next_subscription_message_size.restype = c_uint8
 
@@ -212,14 +213,14 @@ class LibScrapliNetconfMapping:
             [
                 DriverPointer,
                 c_uint64,
-                ZigSlice,
+                ZigSlicePointer,
             ],
             int,
         ] = lib.ls_netconf_next_subscription_message
         lib.ls_netconf_next_subscription_message.argtypes = [
             DriverPointer,
             c_uint64,
-            ZigSlice,
+            ZigSlicePointer,
         ]
         lib.ls_netconf_next_subscription_message.restype = c_uint8
 
@@ -675,12 +676,12 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id_value: OperationId,
-        input_size: U64Pointer,
-        result_raw_size: U64Pointer,
-        result_size: U64Pointer,
-        rpc_warnings_size: U64Pointer,
-        rpc_errors_size: U64Pointer,
-        err_size: U64Pointer,
+        input_size: USizePointer,
+        result_raw_size: USizePointer,
+        result_size: USizePointer,
+        rpc_warnings_size: USizePointer,
+        rpc_errors_size: USizePointer,
+        err_size: USizePointer,
     ) -> int:
         """
         Fetch the sizes of a netconf operation's results.
@@ -723,12 +724,12 @@ class LibScrapliNetconfMapping:
         operation_id_value: OperationId,
         start_time: U64Pointer,
         end_time: U64Pointer,
-        input_slice: ZigSlice,
-        result_raw_slice: ZigSlice,
-        result_slice: ZigSlice,
-        rpc_warnings_slice: ZigSlice,
-        rpc_errors_slice: ZigSlice,
-        err_slice: ZigSlice,
+        input_slice: ZigSlicePointer,
+        result_raw_slice: ZigSlicePointer,
+        result_slice: ZigSlicePointer,
+        rpc_warnings_slice: ZigSlicePointer,
+        rpc_errors_slice: ZigSlicePointer,
+        err_slice: ZigSlicePointer,
     ) -> int:
         """
         Fetch the result of a cli operation.
@@ -856,7 +857,7 @@ class LibScrapliNetconfMapping:
         self,
         *,
         ptr: DriverPointer,
-        notification_slice: ZigSlice,
+        notification_slice: ZigSlicePointer,
     ) -> int:
         """
         Get the next notification message.
@@ -916,7 +917,7 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         subscription_id: c_uint64,
-        subscription_slice: ZigSlice,
+        subscription_slice: ZigSlicePointer,
     ) -> int:
         """
         Get the next subscription message for the given id.

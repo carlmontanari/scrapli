@@ -720,12 +720,12 @@ class Netconf:
 
         operation_id_value = c_uint32(operation_id_ptr.contents.value)
 
-        input_size = pointer(c_uint64())
-        result_raw_size = pointer(c_uint64())
-        result_size = pointer(c_uint64())
-        rpc_warnings_size = pointer(c_uint64())
-        rpc_errors_size = pointer(c_uint64())
-        err_size = pointer(c_uint64())
+        input_size = pointer(c_size_t())
+        result_raw_size = pointer(c_size_t())
+        result_size = pointer(c_size_t())
+        rpc_warnings_size = pointer(c_size_t())
+        rpc_errors_size = pointer(c_size_t())
+        err_size = pointer(c_size_t())
 
         status = self.ffi_mapping.netconf_mapping.fetch_sizes(
             ptr=self._ptr_or_exception(),
@@ -743,13 +743,13 @@ class Netconf:
         start_time = U64Pointer(c_uint64())
         end_time = U64Pointer(c_uint64())
 
-        input_slice = ZigSlice(size=input_size.contents)
-        result_raw_slice = ZigSlice(size=result_raw_size.contents)
-        result_slice = ZigSlice(size=result_size.contents)
+        input_slice = pointer(ZigSlice(size=input_size.contents))
+        result_raw_slice = pointer(ZigSlice(size=result_raw_size.contents))
+        result_slice = pointer(ZigSlice(size=result_size.contents))
 
-        rpc_warnings_slice = ZigSlice(size=rpc_warnings_size.contents)
-        rpc_errors_slice = ZigSlice(size=rpc_errors_size.contents)
-        err_slice = ZigSlice(size=err_size.contents)
+        rpc_warnings_slice = pointer(ZigSlice(size=rpc_warnings_size.contents))
+        rpc_errors_slice = pointer(ZigSlice(size=rpc_errors_size.contents))
+        err_slice = pointer(ZigSlice(size=err_size.contents))
 
         status = self.ffi_mapping.netconf_mapping.fetch(
             ptr=self._ptr_or_exception(),
@@ -766,20 +766,20 @@ class Netconf:
         if status != 0:
             raise GetResultException("fetch operation failed")
 
-        err_contents = err_slice.get_decoded_contents()
+        err_contents = err_slice.contents.get_decoded_contents()
         if err_contents:
             raise OperationException(err_contents)
 
         return Result(
-            input_=input_slice.get_decoded_contents(),
+            input_=input_slice.contents.get_decoded_contents(),
             host=self.host,
             port=self.port,
             start_time=start_time.contents.value,
             end_time=end_time.contents.value,
-            result_raw=result_raw_slice.get_contents(),
-            result=result_slice.get_decoded_contents(),
-            rpc_warnings=rpc_warnings_slice.get_decoded_contents(),
-            rpc_errors=rpc_errors_slice.get_decoded_contents(),
+            result_raw=result_raw_slice.contents.get_contents(),
+            result=result_slice.contents.get_decoded_contents(),
+            rpc_warnings=rpc_warnings_slice.contents.get_decoded_contents(),
+            rpc_errors=rpc_errors_slice.contents.get_decoded_contents(),
         )
 
     async def _get_result_async(
@@ -790,12 +790,12 @@ class Netconf:
 
         operation_id_value = c_uint32(operation_id_ptr.contents.value)
 
-        input_size = pointer(c_uint64())
-        result_raw_size = pointer(c_uint64())
-        result_size = pointer(c_uint64())
-        rpc_warnings_size = pointer(c_uint64())
-        rpc_errors_size = pointer(c_uint64())
-        err_size = pointer(c_uint64())
+        input_size = pointer(c_size_t())
+        result_raw_size = pointer(c_size_t())
+        result_size = pointer(c_size_t())
+        rpc_warnings_size = pointer(c_size_t())
+        rpc_errors_size = pointer(c_size_t())
+        err_size = pointer(c_size_t())
 
         status = self.ffi_mapping.netconf_mapping.fetch_sizes(
             ptr=self._ptr_or_exception(),
@@ -813,13 +813,13 @@ class Netconf:
         start_time = U64Pointer(c_uint64())
         end_time = U64Pointer(c_uint64())
 
-        input_slice = ZigSlice(size=input_size.contents)
-        result_raw_slice = ZigSlice(size=result_raw_size.contents)
-        result_slice = ZigSlice(size=result_size.contents)
+        input_slice = pointer(ZigSlice(size=input_size.contents))
+        result_raw_slice = pointer(ZigSlice(size=result_raw_size.contents))
+        result_slice = pointer(ZigSlice(size=result_size.contents))
 
-        rpc_warnings_slice = ZigSlice(size=rpc_warnings_size.contents)
-        rpc_errors_slice = ZigSlice(size=rpc_errors_size.contents)
-        err_slice = ZigSlice(size=err_size.contents)
+        rpc_warnings_slice = pointer(ZigSlice(size=rpc_warnings_size.contents))
+        rpc_errors_slice = pointer(ZigSlice(size=rpc_errors_size.contents))
+        err_slice = pointer(ZigSlice(size=err_size.contents))
 
         status = self.ffi_mapping.netconf_mapping.fetch(
             ptr=self._ptr_or_exception(),
@@ -836,20 +836,20 @@ class Netconf:
         if status != 0:
             raise GetResultException("fetch operation failed")
 
-        err_contents = err_slice.get_decoded_contents()
+        err_contents = err_slice.contents.get_decoded_contents()
         if err_contents:
             raise OperationException(err_contents)
 
         return Result(
-            input_=input_slice.get_decoded_contents(),
+            input_=input_slice.contents.get_decoded_contents(),
             host=self.host,
             port=self.port,
             start_time=start_time.contents.value,
             end_time=end_time.contents.value,
-            result_raw=result_raw_slice.get_contents(),
-            result=result_slice.get_decoded_contents(),
-            rpc_warnings=rpc_warnings_slice.get_decoded_contents(),
-            rpc_errors=rpc_errors_slice.get_decoded_contents(),
+            result_raw=result_raw_slice.contents.get_contents(),
+            result=result_slice.contents.get_decoded_contents(),
+            rpc_warnings=rpc_warnings_slice.contents.get_decoded_contents(),
+            rpc_errors=rpc_errors_slice.contents.get_decoded_contents(),
         )
 
     @property
@@ -936,7 +936,7 @@ class Netconf:
         if notification_size.contents.value == 0:
             raise NoMessagesException("no notification messages available")
 
-        notification_slice = ZigSlice(size=notification_size.contents)
+        notification_slice = pointer(ZigSlice(size=notification_size.contents))
 
         status = self.ffi_mapping.netconf_mapping.get_next_notification(
             ptr=self._ptr_or_exception(),
@@ -945,7 +945,7 @@ class Netconf:
         if status != 0:
             raise SubmitOperationException("submitting getting next notification failed")
 
-        return notification_slice.get_decoded_contents()
+        return notification_slice.contents.get_decoded_contents()
 
     def get_next_subscription(
         self,
@@ -966,7 +966,7 @@ class Netconf:
             NoMessagesException: if there are no notifications to fetch
 
         """
-        subscription_size = U64Pointer(c_uint64())
+        subscription_size = pointer(c_uint64())
 
         self.ffi_mapping.netconf_mapping.get_next_subscription_size(
             ptr=self._ptr_or_exception(),
@@ -979,7 +979,7 @@ class Netconf:
                 f"no subscription messages available for subscription id {subscription_id}",
             )
 
-        subscription_slice = ZigSlice(size=subscription_size.contents)
+        subscription_slice = pointer(ZigSlice(size=subscription_size.contents))
 
         status = self.ffi_mapping.netconf_mapping.get_next_subscription(
             ptr=self._ptr_or_exception(),
@@ -989,7 +989,7 @@ class Netconf:
         if status != 0:
             raise SubmitOperationException("submitting getting next subscription failed")
 
-        return subscription_slice.get_decoded_contents()
+        return subscription_slice.contents.get_decoded_contents()
 
     def _raw_rpc(
         self,
