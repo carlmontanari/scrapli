@@ -217,20 +217,26 @@ def ffi_logger_callback_wrapper(logger: Logger) -> LoggerCallback:
     """
 
     def _cb(level: c_uint8, message: StringPointer) -> None:
+        v = message.contents.value
+        if v is None:
+            return
+
+        m = v.rstrip(b"\xaa").decode()
+
         match level:
             case 0:
                 # no "trace" level in std logger, so just format to be clear which ones are trace
-                logger.debug("TRACE: %s", message.contents.value.decode())
+                logger.debug("TRACE: %s", m)
             case 1:
-                logger.debug(message.contents.value.decode())
+                logger.debug(m)
             case 2:
-                logger.info(message.contents.value.decode())
+                logger.info(m)
             case 3:
-                logger.warning(message.contents.value.decode())
+                logger.warning(m)
             case 4:
-                logger.critical(message.contents.value.decode())
+                logger.critical(m)
             case 5:
-                logger.fatal(message.contents.value.decode())
+                logger.fatal(m)
             case _:
                 return
 

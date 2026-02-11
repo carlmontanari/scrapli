@@ -284,15 +284,15 @@ class Ssh2Options(Options):
             options.contents.transport.ssh2.proxy_jump_port = pointer(self.proxy_jump_port)
 
         if self.proxy_jump_username is not None:
-            self._proxy_jump_username = to_c_string(self.proxy_jump_host)
+            self._proxy_jump_username = to_c_string(self.proxy_jump_username)
 
             options.contents.transport.ssh2.proxy_jump_username = self._proxy_jump_username
             options.contents.transport.ssh2.proxy_jump_username_len = c_size_t(
-                len(self.proxy_jump_host)
+                len(self.proxy_jump_username)
             )
 
         if self.proxy_jump_password is not None:
-            self._proxy_jump_password = to_c_string(self.proxy_jump_host)
+            self._proxy_jump_password = to_c_string(self.proxy_jump_password)
 
             options.contents.transport.ssh2.proxy_jump_password = self._proxy_jump_password
             options.contents.transport.ssh2.proxy_jump_password_len = c_size_t(
@@ -322,7 +322,7 @@ class Ssh2Options(Options):
             )
 
         if self.proxy_jump_libssh2_trace is not None:
-            options.contents.transport.ssh2.proxy_jump_libssh2_trace = pointer(
+            options.contents.transport.ssh2.proxy_jump_libssh2trace = pointer(
                 c_bool(self.proxy_jump_libssh2_trace)
             )
 

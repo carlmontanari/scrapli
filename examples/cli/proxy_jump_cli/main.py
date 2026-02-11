@@ -33,6 +33,12 @@ def main() -> None:
     else:
         ssh_config_path = ssh_config_file_path_base + "_linux"
 
+    # NOTE: make sure you:
+    # chmod 600 tests/functional/fixtures/libscrapli_test_ssh_key
+    # chmod 600 tests/functional/fixtures/libscrapli_test_ssh_key_passphrase
+    # chmod 600 tests/functional/fixtures/scrapli-jumper-key
+    # since git wont track those permissions; this is handled in the test suite w/ a pytest hook
+    # but you'll need to do it if you want to test this
     bin_cli = Cli(
         definition_file_or_name=PLATFORM,
         # unlike other examples going by name since we have the config file here
