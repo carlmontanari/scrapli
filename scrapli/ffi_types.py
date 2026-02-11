@@ -6,6 +6,9 @@ from ctypes import (
     CFUNCTYPE,
     POINTER,
     Structure,
+)
+from ctypes import _CFuncPtr as FuncPtr  # type: ignore[attr-defined]
+from ctypes import (
     _Pointer,
     c_bool,
     c_char_p,
@@ -19,7 +22,6 @@ from ctypes import (
     cast,
     create_string_buffer,
 )
-from ctypes import _CFuncPtr as FuncPtr  # type: ignore[attr-defined]
 from logging import CRITICAL, DEBUG, FATAL, INFO, NOTSET, WARN, Logger
 from typing import TYPE_CHECKING, Any, ClassVar, TypeAlias
 
