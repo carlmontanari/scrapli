@@ -1,7 +1,7 @@
 """scrapli.transport"""
 
 from abc import ABC, abstractmethod
-from ctypes import c_bool, c_char_p, c_size_t, pointer
+from ctypes import c_bool, c_char_p, c_size_t, c_uint16, pointer
 from dataclasses import dataclass, field
 from enum import Enum
 
@@ -281,7 +281,9 @@ class Ssh2Options(Options):
             return
 
         if self.proxy_jump_port is not None:
-            options.contents.transport.ssh2.proxy_jump_port = pointer(self.proxy_jump_port)
+            options.contents.transport.ssh2.proxy_jump_port = pointer(
+                c_uint16(self.proxy_jump_port)
+            )
 
         if self.proxy_jump_username is not None:
             self._proxy_jump_username = to_c_string(self.proxy_jump_username)
