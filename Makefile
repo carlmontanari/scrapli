@@ -1,35 +1,47 @@
 .DEFAULT_GOAL := help
 
+## Show this help
 help:
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+	@awk -f util/makefile-doc.awk $(MAKEFILE_LIST)
 
-fmt: ## Run formatters
+##@ Development
+## Format all python files
+fmt:
 	python -m isort setup.py noxfile.py scrapli/ examples/ tests/
 	python -m black setup.py noxfile.py scrapli/ examples/ tests/
 
+## Format all python files in check mode (for ci)
 fmt-check:
 	python -m isort --check --diff setup.py noxfile.py scrapli/ examples/ tests/
 	python -m black --check --diff setup.py noxfile.py scrapli/ examples/ tests/
 
-lint: ## Run linters
+## Run linters
+lint:
 	python -m ruff check
 	python -m mypy --strict setup.py noxfile.py scrapli/ examples/
 
-test: ## Run unit tests
+##@ Testing
+## Run unit tests
+test:
 	python -m pytest tests/unit/ -v
 
-test-cov:  ## Run all tests with term and html coverage report
+## Run all tests with term and html coverage report
+test-cov:
 	python -m pytest tests/unit/ -v \
 	--cov=scrapli \
 	--cov-report html
 
-test-functional: ## Run functional tests
+## Run functional tests
+test-functional:
 	python -m pytest tests/functional/ -v
 
-test-functional-ci: ## Run functional tests against "ci" test topology
+## Run functional tests against "ci" test topology
+test-functional-ci:
 	python -m pytest tests/functional/ -v $(ARGS)
 
-run-clab: ## Runs the clab functional testing topo; uses the clab launcher to run nicely on darwin
+##@ Test Environment
+## Runs the clab functional testing topo; uses the clab launcher to run nicely on darwin
+run-clab:
 	rm -r .clab/* || true
 	docker network rm clab || true
 	docker network create \
@@ -57,7 +69,8 @@ run-clab: ## Runs the clab functional testing topo; uses the clab launcher to ru
 		-e "HOST_ARCH=$$(uname -m)" \
 		ghcr.io/scrapli/scrapli_clab/launcher:0.0.7
 
-run-clab-ci: ## Runs the clab functional testing topo with the ci specific topology - omits ceos
+## Runs the clab functional testing topo with the ci specific topology - omits ceos
+run-clab-ci:
 	mkdir .clab || true
 	rm -r .clab/* || true
 	docker network rm clab || true
@@ -86,6 +99,8 @@ run-clab-ci: ## Runs the clab functional testing topo with the ci specific topol
         -e "CLAB_TOPO=topo.ci.$$(uname -m).yaml" \
         ghcr.io/scrapli/scrapli_clab/launcher:0.0.7
 
+##@ Docs
+## Serve docs locally.
 .PHONY: docs
-docs:  ## Serve docs locally.
+docs:
 	python -m mkdocs serve --clean --strict
