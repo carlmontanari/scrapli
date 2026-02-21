@@ -197,7 +197,7 @@ def to_c_string(s: str) -> c_char_p:
     return c_char_p(s.encode(encoding="utf-8"))
 
 
-LoggerCallbackC = CFUNCTYPE(None, c_uint8, StringPointer)
+LoggerCallbackC = CFUNCTYPE(None, c_uint8, ZigSlicePointer)
 LoggerCallback: TypeAlias = FuncPtr
 
 
@@ -216,12 +216,12 @@ def ffi_logger_callback_wrapper(logger: Logger) -> LoggerCallback:
 
     """
 
-    def _cb(level: c_uint8, message: StringPointer) -> None:
-        v = message.contents.value
+    def _cb(level: c_uint8, message: ZigSlicePointer) -> None:
+        v = message.contents
         if v is None:
             return
 
-        m = v.rstrip(b"\xaa").decode()
+        m = v.get_decoded_contents()
 
         match level:
             case 0:
@@ -275,7 +275,7 @@ def ffi_logger_level(logger: Logger) -> c_char_p:  # noqa: PLR0911
         return c_char_p(b"warn")
 
 
-RecorderCallbackC = CFUNCTYPE(None, StringPointer)
+RecorderCallbackC = CFUNCTYPE(None, ZigSlicePointer)
 RecorderCallback: TypeAlias = FuncPtr
 
 
@@ -294,16 +294,12 @@ def recorder_callback_wrapper(cb: Callable[[str], None]) -> RecorderCallback:
 
     """
 
-    def _cb(buf: StringPointer) -> None:
-        v = buf.contents.value
+    def _cb(buf: ZigSlicePointer) -> None:
+        v = buf.contents
         if not v:
-            # im unclear why this can be None when mypy doesnt think that
-            # the logger bits can be. i *know* that we return an exactly sized
-            # slice from the logger in zig and thats why we dont have to do
-            # any trimming of null chars in the logger one though
             return
 
-        return cb(v.rstrip(b"\xaa").decode())
+        return cb(v.get_decoded_contents())
 
     return RecorderCallbackC(_cb)
 
