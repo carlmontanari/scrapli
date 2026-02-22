@@ -22,7 +22,7 @@ jobs:
           echo "PYTHON_VERSION=$PYTHON_VERSION" >> "$GITHUB_ENV"
 
       - name: set up python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -30,6 +30,6 @@ jobs:
         run: |
           python -m pip install -r requirements-docs.txt
 
-      - name: run the linters
+      - name: deploy the docs
         run: |
           mkdocs gh-deploy --force
