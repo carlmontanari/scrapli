@@ -9,10 +9,10 @@ jobs:
   validate-legacy:
     runs-on: ${{ matrix.os }}
     strategy:
-      max-parallel: 4
+      max-parallel: 3
       matrix:
         # test every target we can easily do in ci
-        os: ["ubuntu-latest", "macos-latest", "ubuntu-24.04-arm", "macos-13"]
+        os: ["ubuntu-latest", "macos-latest", "ubuntu-24.04-arm"]
 
     steps:
       - name: checkout
