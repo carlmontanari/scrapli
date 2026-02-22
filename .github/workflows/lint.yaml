@@ -1,0 +1,38 @@
+---
+name: lint
+
+on:
+  workflow_call: {}
+  workflow_dispatch: {}
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: load env vars for workflow run
+        run: |
+          source .github/vars.env
+          echo "PYTHON_VERSION=$PYTHON_VERSION" >> "$GITHUB_ENV"
+
+      - name: set up python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: install python dev tools
+        run: |
+          python -m pip install -r requirements-dev.txt
+
+      - name: run the formatters in check mode
+        run: |
+          make fmt-check
+
+      - name: run the linters
+        run: |
+          make lint

@@ -1,0 +1,21 @@
+---
+ceos:
+    username: admin
+    password: admin
+    platform: ceos
+    hostname: 172.20.20.17
+jumper:
+    username: 
+    password: 
+    platform: linux
+    hostname: 172.20.20.19
+netopeer:
+    username: 
+    password: 
+    platform: linux
+    hostname: 172.20.20.18
+srl:
+    username: admin
+    password: NokiaSrl1!
+    platform: srl
+    hostname: 172.20.20.16

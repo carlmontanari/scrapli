@@ -1,13 +1,33 @@
 """scrapli"""
 
-from scrapli.driver.base import AsyncDriver, Driver
-from scrapli.factory import AsyncScrapli, Scrapli
+from scrapli.auth import LookupKeyValue
+from scrapli.auth import Options as AuthOptions
+from scrapli.cli import Cli, ReadCallback
+from scrapli.netconf import Netconf
+from scrapli.netconf import Options as NetconfOptions
+from scrapli.session import Options as SessionOptions
+from scrapli.transport import BinOptions as TransportBinOptions
+from scrapli.transport import Ssh2Options as TransportSsh2Options
+from scrapli.transport import TelnetOptions as TransportTelnetOptions
+from scrapli.transport import TestOptions as TransportTestOptions
 
-__version__ = "2026.02.20"
+# set in ci on release
+__version__ = "0.0.0"
+__semver_version__ = "0.0.0"
+__calendar_version__ = "0.0.0"
+
+__definitions_version__ = "36b16eb"
 
 __all__ = (
-    "AsyncDriver",
-    "Driver",
-    "AsyncScrapli",
-    "Scrapli",
+    "AuthOptions",
+    "Cli",
+    "LookupKeyValue",
+    "Netconf",
+    "NetconfOptions",
+    "ReadCallback",
+    "SessionOptions",
+    "TransportBinOptions",
+    "TransportSsh2Options",
+    "TransportTelnetOptions",
+    "TransportTestOptions",
 )

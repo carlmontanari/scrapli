@@ -1,0 +1,56 @@
+---
+prompt_pattern: '^.*[>#$\]]\s?+$'
+default_mode: 'privileged_exec'
+modes:
+  - name: 'privileged_exec'
+    prompt_pattern: '^(?:hrp_[a|m|s])?<[a-z0-9.\-_@()/:]{1,48}>\s*$'
+    accessible_modes:
+      - name: 'configuration'
+        instructions:
+          - send_input:
+              input: 'system-view'
+  - name: 'configuration'
+    # On some versions of VRP running on the AR160 & AR650 router series (and possibly
+    # others), the router outputs the current OS version in the following format when
+    # calling the command 'display current-configuration':
+    #
+    # <HOSTNAME>display current-configuration
+    # [V200R009C00SPC500]
+    # #
+    # sysname HOSTNAME
+    # ...
+    #
+    # Since the version string is basically in the same format as the prompt in
+    # configuration mode, scrapli only reads until it sees this very string, and then
+    # stops reading since it assumes that a valid prompt has been found.
+    #
+    # The following pattern tries to prevent this from happening by using a regex negative
+    # lookahead to exclude '[V***R***C**]' from the prompt pattern, but still match
+    # a regular hostname.
+    prompt_pattern: '^(?!\[V\d{3}R\d{3}C\d{2,3}.*\])(?=(?:hrp_[a|m|s])?\[\~{0,1}\*{0,1}[a-z0-9.\-_@/:]{1,64}\]$).*$'
+    accessible_modes:
+      - name: 'privileged_exec'
+        instructions:
+          - send_input:
+              input: 'quit'
+failure_indicators:
+  - 'Error:'
+on_open_instructions:
+  - enter_mode:
+      requested_mode: 'privileged_exec'
+  - write:
+      # Attempt to set screen width as a fallback in case the device does not accept the
+      # ptyprocess/cols property when using system transport (observed on some firmware versions).
+      #
+      # On some devices, the command below might not exist (some switches running < V200R019);
+      # on others it asks for confirmation (Y/N), and other devices accept the command as-is.
+      #
+      # Use write() instead of send_command() or send_interactive() to fail silently should the
+      # command not exist.
+      input: 'screen-width 255\ny\n\n'
+on_close_instructions:
+  - enter_mode:
+      requested_mode: 'privileged_exec'
+  - write:
+      input: 'exit'
+ntc_templates_platform: 'huawei_vrp'

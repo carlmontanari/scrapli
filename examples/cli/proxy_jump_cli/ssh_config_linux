@@ -1,0 +1,16 @@
+Host *
+  # ignoring so we dont get hung being prompted to accept fingerprint during proxy jump
+  # tests -- note that you need to care about this as the bin transport only ignores this (by
+  # default) for the initial connection
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+
+Host jumper
+  HostName 172.20.20.19
+  User scrapli-key
+  IdentityFile tests/functional/fixtures/scrapli-jumper-key
+
+Host srl
+  HostName 172.20.20.16
+  User admin
+  ProxyJump jumper

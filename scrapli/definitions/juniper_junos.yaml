@@ -1,0 +1,88 @@
+---
+prompt_pattern: '^.*[>#$%]\s?+$'
+default_mode: 'exec'
+modes:
+  - name: 'exec'
+    prompt_pattern: '^({\w+(:(\w+){0,1}\d){0,1}}\n){0,1}[\w\-@()/:\.]{1,63}>\s?$'
+    accessible_modes:
+      - name: 'configuration'
+        instructions:
+          - send_input:
+              input: 'configure'
+      - name: 'configuration_exclusive'
+        instructions:
+          - send_input:
+              input: 'configure exclusive'
+      - name: 'configuration_private'
+        instructions:
+          - send_input:
+              input: 'configure private'
+      - name: 'shell'
+        instructions:
+          - send_input:
+              input: 'start shell'
+      - name: 'root_shell'
+        instructions:
+          - send_prompted_input:
+              input: 'start shell user root'
+              prompt_pattern: '^[pP]assword:\s?$'
+              response: '__lookup::root'
+  - name: 'configuration'
+    prompt_pattern: '^({\w+(:(\w+){0,1}\d){0,1}}\[edit\]\n){0,1}[\w\-@()/:\.]{1,63}#\s?$'
+    accessible_modes:
+      - name: 'exec'
+        instructions:
+          - send_input:
+              input: 'exit configuration-mode'
+  - name: 'configuration_exclusive'
+    prompt_pattern: '^({\w+(:(\w+){0,1}\d){0,1}}\[edit\]\n){0,1}[\w\-@()/:\.]{1,63}#\s?$'
+    accessible_modes:
+      - name: 'exec'
+        instructions:
+          - send_input:
+              input: 'exit configuration-mode'
+  - name: 'configuration_private'
+    prompt_pattern: '^({\w+(:(\w+){0,1}\d){0,1}}\[edit\]\n){0,1}[\w\-@()/:\.]{1,63}#\s?$'
+    accessible_modes:
+      - name: 'exec'
+        instructions:
+          - send_input:
+              input: 'exit configuration-mode'
+  - name: 'shell'
+    prompt_pattern: '^.*[%\$]\s?$'
+    prompt_excludes:
+      - 'root'
+    accessible_modes:
+      - name: 'exec'
+        instructions:
+          - send_input:
+              input: 'exit'
+  - name: 'root_shell'
+    prompt_pattern: '^.*root@(?:\S*:?\S*\s?)?[%\#]\s?$'
+    accessible_modes:
+      - name: 'exec'
+        instructions:
+          - send_input:
+              input: 'exit'
+failure_indicators:
+  - 'is ambiguous'
+  - 'No valid completions'
+  - 'unknown command'
+  - 'syntax error'
+  - 'missing mandatory argument'
+  - 'invalid numeric value'
+on_open_instructions:
+  - enter_mode:
+      requested_mode: 'exec'
+  - send_input:
+      input: 'set cli screen-width 511'
+  - send_input:
+      input: 'set cli screen-length 0'
+  - send_input:
+      input: 'set cli complete-on-space off'
+on_close_instructions:
+  - enter_mode:
+      requested_mode: 'exec'
+  - write:
+      input: 'exit'
+ntc_templates_platform: 'juniper_junos'

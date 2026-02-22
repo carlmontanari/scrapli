@@ -1,0 +1,65 @@
+Warning: Permanently added '[localhost]:21830' (ED25519) to the list of known hosts.
+................................................................
+:                  Welcome to Nokia SR Linux!                  :
+:              Open Network OS for the NetOps era.             :
+:                                                              :
+:    This is a freely distributed official container image.    :
+:                      Use it - Share it                       :
+:                                                              :
+: Get started: https://learn.srlinux.dev                       :
+: Container:   https://go.srlinux.dev/container-image          :
+: Docs:        https://doc.srlinux.dev/22-11                   :
+: Rel. notes:  https://doc.srlinux.dev/rn22-11-1               :
+: YANG:        https://yang.srlinux.dev/v22.11.1               :
+: Discord:     https://go.srlinux.dev/discord                  :
+: Contact:     https://go.srlinux.dev/contact-sales            :
+................................................................
+
+(admin@localhost) Password:
+<?xml version="1.0" encoding="UTF-8"?>
+<hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+    <capabilities>
+        <capability>urn:ietf:params:netconf:base:1.0</capability>
+        <capability>urn:ietf:params:netconf:base:1.1</capability>
+        <capability>urn:ietf:params:netconf:capability:candidate:1.0</capability>
+        <capability>urn:ietf:params:netconf:capability:confirmed-commit:1.1</capability>
+        <capability>urn:ietf:params:netconf:capability:rollback-on-error:1.0</capability>
+        <capability>urn:ietf:params:netconf:capability:validate:1.0</capability>
+        <capability>urn:ietf:params:netconf:capability:validate:1.1</capability>
+        <capability>urn:ietf:params:netconf:capability:startup:1.0</capability>
+        <capability>urn:ietf:params:netconf:capability:url:1.0?scheme=http,https,ftp,sftp,file</capability>
+        <capability>urn:ietf:params:netconf:capability:with-defaults:1.0?basic-mode=explicit&amp;also-supported=report-all</capability>
+        <capability>urn:ietf:params:netconf:capability:with-operational-defaults:1.0</capability>
+        <capability>urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring</capability>
+        <capability>urn:ietf:params:netconf:capability:yang-library:1.1?revision=2019-01-04&amp;content-id=1k9abr0x0yk1</capability>
+        <capability>urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring?module=ietf-netconf-monitoring&amp;revision=2010-10-04</capability>
+        <capability>urn:ietf:params:xml:ns:yang:ietf-yang-library?module=ietf-yang-library&amp;revision=2019-01-04</capability>
+        <capability>urn:nokia.com:srlinux:ietf:ietf-srl-deviations?module=ietf-srl-deviations&amp;revision=2024-06-24</capability>
+        <capability>urn:ietf:params:xml:ns:yang:ietf-origin?module=ietf-origin&amp;revision=2018-02-14</capability>
+    </capabilities>
+    <session-id>130</session-id>
+</hello>
+]]>]]>
+#116
+<?xml version="1.0" encoding="UTF-8"?>
+<rpc-reply message-id="101" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+
+#10
+    <ok/>
+
+#13
+</rpc-reply>
+
+##
+
+#116
+<?xml version="1.0" encoding="UTF-8"?>
+<rpc-reply message-id="102" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+
+#10
+    <ok/>
+
+#13
+</rpc-reply>
+
+##

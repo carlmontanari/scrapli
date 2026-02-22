@@ -1,0 +1,6 @@
+agent LicenseManager shutdown
+agent PowerFuse shutdown
+agent PowerManager shutdown
+agent Thermostat shutdown
+agent LedPolicy shutdown
+agent StandbyCpld shutdown

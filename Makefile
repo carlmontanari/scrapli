@@ -1,79 +1,106 @@
 .DEFAULT_GOAL := help
 
+## Show this help
 help:
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+	@awk -f util/makefile-doc.awk $(MAKEFILE_LIST)
 
-lint:  ## Run linters
-	python -m isort .
-	python -m black .
-	python -m pylint scrapli/
-	python -m pydocstyle .
-	python -m mypy --strict scrapli/
+##@ Development
+## Format all python files
+fmt:
+	python -m isort setup.py noxfile.py scrapli/ examples/ tests/
+	python -m black setup.py noxfile.py scrapli/ examples/ tests/
 
-darglint:  ## Run darglint (docstring/arg checker)
-	find scrapli -type f \( -iname "*.py" \) | xargs darglint -x
+## Format all python files in check mode (for ci)
+fmt-check:
+	python -m isort --check --diff setup.py noxfile.py scrapli/ examples/ tests/
+	python -m black --check --diff setup.py noxfile.py scrapli/ examples/ tests/
 
-test:  ## Run all tests
-	python -m pytest \
-	tests/
+## Run linters
+lint:
+	python -m ruff check
+	python -m mypy --strict setup.py noxfile.py scrapli/ examples/
 
-cov:  ## Run all tests with term and html coverage report
-	python -m pytest \
+##@ Testing
+## Run unit tests
+test:
+	python -m pytest tests/unit/ -v
+
+## Run all tests with term and html coverage report
+test-cov:
+	python -m pytest tests/unit/ -v \
 	--cov=scrapli \
-	--cov-report html \
-	--cov-report term \
-	tests/
+	--cov-report html
 
-test_unit:  ## Run all unit tests
-	python -m pytest \
-	tests/unit/
+## Run functional tests
+test-functional:
+	python -m pytest tests/functional/ -v
 
-cov_unit:  ## Run all unit tests with term and html coverage report
-	python -m pytest \
-	--cov=scrapli \
-	--cov-report html \
-	--cov-report term \
-	tests/unit/
+## Run functional tests against "ci" test topology
+test-functional-ci:
+	python -m pytest tests/functional/ -v $(ARGS)
 
-test_integration:  ## Run integration tests
-	python -m pytest \
-	tests/integration/
+##@ Test Environment
+## Runs the clab functional testing topo; uses the clab launcher to run nicely on darwin
+run-clab:
+	rm -r .clab/* || true
+	docker network rm clab || true
+	docker network create \
+		--driver bridge \
+		--subnet=172.20.20.0/24 \
+		--gateway=172.20.20.1 \
+		--ipv6 \
+		--subnet=2001:172:20:20::/64 \
+		--gateway=2001:172:20:20::1 \
+		--opt com.docker.network.driver.mtu=65535 \
+		--label containerlab \
+		clab
+	docker run \
+		-d \
+		--rm \
+		--name clab-launcher \
+		--platform=linux/arm64 \
+		--privileged \
+		--pid=host \
+		--stop-signal=SIGINT \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v /run/netns:/run/netns \
+		-v "$$(pwd):$$(pwd)" \
+		-e "WORKDIR=$$(pwd)/.clab" \
+		-e "HOST_ARCH=$$(uname -m)" \
+		ghcr.io/scrapli/scrapli_clab/launcher:0.0.7
 
-cov_integration:  ## Run integration with term and html coverage report
-	python -m pytest \
-	--cov=scrapli \
-	--cov-report html \
-	--cov-report term \
-	tests/integration/
+## Runs the clab functional testing topo with the ci specific topology - omits ceos
+run-clab-ci:
+	mkdir .clab || true
+	rm -r .clab/* || true
+	docker network rm clab || true
+	docker network create \
+	    --driver bridge \
+	    --subnet=172.20.20.0/24 \
+	    --gateway=172.20.20.1 \
+	    --ipv6 \
+	    --subnet=2001:172:20:20::/64 \
+	    --gateway=2001:172:20:20::1 \
+	    --opt com.docker.network.driver.mtu=65535 \
+	    --label containerlab \
+	    clab
+	docker run \
+        -d \
+        --rm \
+        --name clab-launcher \
+        --privileged \
+        --pid=host \
+        --stop-signal=SIGINT \
+        -v /var/run/docker.sock:/var/run/docker.sock \
+        -v /run/netns:/run/netns \
+        -v "$$(pwd):$$(pwd)" \
+        -e "WORKDIR=$$(pwd)/.clab" \
+        -e "HOST_ARCH=$$(uname -m)" \
+        -e "CLAB_TOPO=topo.ci.$$(uname -m).yaml" \
+        ghcr.io/scrapli/scrapli_clab/launcher:0.0.7
 
-test_functional:  ## Run functional tests
-	python -m pytest \
-	tests/functional/
-
-cov_functional:  ## Run functional tests with term and html coverage report
-	python -m pytest \
-	--cov=scrapli \
-	--cov-report html \
-	--cov-report term \
-	tests/functional/
-
+##@ Docs
+## Serve docs locally.
 .PHONY: docs
-docs:  ## Regenerate docs
-	python docs/generate.py
-
-test_docs:  ## Run doc testing
-	mkdocs build --clean --strict
-	htmltest -c docs/htmltest.yml -s
-	rm -rf tmp
-
-deploy_docs:  ## Deploy docs to github
-	mkdocs gh-deploy
-
-deploy_clab: ## Deploy functional clab test topology
-	cd .clab && sudo clab deploy -t topo-full.yaml
-
-destroy_clab: ## Destroy functional clab test topology
-	cd .clab && sudo clab destroy -t topo-full.yaml
-
-prepare_dev_env: ## Prepare a running clab environment with base configs for testing
-	python tests/prepare_devices.py cisco_iosxe,cisco_nxos,cisco_iosxr,arista_eos,juniper_junos
+docs:
+	python -m mkdocs serve --clean --strict

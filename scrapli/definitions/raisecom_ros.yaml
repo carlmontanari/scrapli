@@ -1,0 +1,45 @@
+---
+prompt_pattern: '^.*[>#$]\s?+$'
+default_mode: 'privileged_exec'
+modes:
+  - name: 'exec'
+    prompt_pattern: '^[a-z0-9.\-_@()/:]{1,63}>$'
+    accessible_modes:
+      - name: 'privileged_exec'
+        instructions:
+          - send_prompted_input:
+              input: 'enable'
+              prompt_exact: '[pP]assword:\s?$'
+              response: '__lookup::enable'
+  - name: 'privileged_exec'
+    prompt_pattern: '^[a-z0-9.\-_@/:]{1,63}#$'
+    accessible_modes:
+      - name: 'exec'
+        instructions:
+          - send_input:
+              input: 'disable'
+      - name: 'configuration'
+        instructions:
+          - send_input:
+              input: 'config'
+  - name: 'configuration'
+    prompt_pattern: '^[\w.\-@/:]{1,63}\([\w.\-@/:+]{0,32}\)#$'
+    accessible_modes:
+      - name: 'privileged_exec'
+        instructions:
+          - send_input:
+              input: 'end'
+failure_indicators:
+  - 'Error input in the position marked by ''^''.'
+  - 'Ambiguous input in the position marked by ''^'''
+  - '%  Incomplete command.'
+on_open_instructions:
+  - enter_mode:
+      requested_mode: 'privileged_exec'
+  - send_input:
+      input: 'terminal page-break disable'
+on_close_instructions:
+  - enter_mode:
+      requested_mode: 'privileged_exec'
+  - write:
+      input: 'exit'

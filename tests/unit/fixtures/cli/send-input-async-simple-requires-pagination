@@ -1,0 +1,99 @@
+Warning: Permanently added '[localhost]:22022' (ED25519) to the list of known hosts.
+(admin@localhost) Password: 
+Last login: Sat May 17 19:12:53 2025 from 192.168.65.1
+eos1>
+eos1>
+eos1>enable
+Password: 
+eos1#term width 32767
+Width set to 32767 columns.
+eos1#term len 0
+Pagination disabled.
+eos1#show running-config all | include snmp
+no snmp-server engineID local
+no snmp-server chassis-id
+no snmp-server contact
+no snmp-server location
+default snmp-server transport tcp
+no snmp-server vrf default local-interface
+snmp-server community snmp ro
+default snmp-server enable traps
+default snmp-server enable traps bgp
+default snmp-server enable traps bgp arista-backward-transition
+default snmp-server enable traps bgp arista-established
+default snmp-server enable traps bgp backward-transition
+default snmp-server enable traps bgp established
+default snmp-server enable traps bridge
+default snmp-server enable traps bridge arista-mac-age
+default snmp-server enable traps bridge arista-mac-learn
+default snmp-server enable traps bridge arista-mac-move
+default snmp-server enable traps capacity
+default snmp-server enable traps capacity arista-hardware-utilization-alert
+default snmp-server enable traps clb
+default snmp-server enable traps clb flow-at-or-above-limit
+default snmp-server enable traps clb flow-at-or-above-threshold-warning
+default snmp-server enable traps clb flow-below-limit
+default snmp-server enable traps clb flow-below-threshold-warning
+default snmp-server enable traps entity
+default snmp-server enable traps entity arista-ent-sensor-alarm
+default snmp-server enable traps entity ent-config-change
+default snmp-server enable traps entity ent-state-oper-disabled
+default snmp-server enable traps entity ent-state-oper-enabled
+default snmp-server enable traps entity ent-state-oper
+default snmp-server enable traps entity ent-state-oper interfaces
+default snmp-server enable traps external-alarm
+default snmp-server enable traps external-alarm arista-external-alarm-asserted-notif
+default snmp-server enable traps external-alarm arista-external-alarm-deasserted-notif
+default snmp-server enable traps isis
+default snmp-server enable traps isis adjacency-change
+default snmp-server enable traps isis area-mismatch
+default snmp-server enable traps isis attempt-to-exceed-max-sequence
+default snmp-server enable traps isis authentication-type-failure
+default snmp-server enable traps isis database-overload
+default snmp-server enable traps isis own-lsp-purge
+default snmp-server enable traps isis rejected-adjacency
+default snmp-server enable traps isis sequence-number-skip
+default snmp-server enable traps lldp
+default snmp-server enable traps lldp rem-tables-change
+default snmp-server enable traps mpls-ldp
+default snmp-server enable traps mpls-ldp mpls-ldp-session-down
+default snmp-server enable traps mpls-ldp mpls-ldp-session-up
+default snmp-server enable traps msdp
+default snmp-server enable traps msdp backward-transition
+default snmp-server enable traps msdp established
+default snmp-server enable traps ospf
+default snmp-server enable traps ospf if-auth-failure
+default snmp-server enable traps ospf if-config-error
+default snmp-server enable traps ospf if-state-change
+default snmp-server enable traps ospf nbr-state-change
+default snmp-server enable traps ospfv3
+default snmp-server enable traps ospfv3 if-config-error
+default snmp-server enable traps ospfv3 if-rx-bad-packet
+default snmp-server enable traps ospfv3 if-state-change
+default snmp-server enable traps ospfv3 nbr-restart-helper-status-change
+default snmp-server enable traps ospfv3 nbr-state-change
+default snmp-server enable traps ospfv3 nssa-translator-status-change
+default snmp-server enable traps ospfv3 restart-status-change
+default snmp-server enable traps pim
+default snmp-server enable traps pim neighbor-loss
+default snmp-server enable traps snmp
+default snmp-server enable traps snmp authentication
+default snmp-server enable traps snmp link-down
+default snmp-server enable traps snmp link-up
+default snmp-server enable traps snmpConfigManEvent
+default snmp-server enable traps snmpConfigManEvent arista-config-man-event
+default snmp-server enable traps switchover
+default snmp-server enable traps switchover arista-redundancy-switch-over-notif
+default snmp-server enable traps test
+default snmp-server enable traps test arista-test-notification
+default snmp-server enable traps vrrp
+default snmp-server enable traps vrrp trap-new-master
+no snmp-server objects mac-address-tables disable
+no snmp-server objects route-tables disable
+snmp-server vrf default
+snmp-server notification log entry limit 500
+snmp-server qos dscp 0
+snmp-server transmit max-size 65536
+no snmp-server ifmib ifspeed shape-rate
+   snmp trap link-change
+eos1#

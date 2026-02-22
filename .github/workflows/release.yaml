@@ -1,0 +1,17 @@
+---
+name: release
+
+on:
+  release:
+    types:
+      - created
+
+jobs:
+  publish:
+    uses: ./.github/workflows/publish.yaml
+    secrets:
+      PYPI_SCRAPLI_TOKEN: ${{ secrets.PYPI_SCRAPLI_TOKEN }}
+
+  validate:
+    needs: publish
+    uses: ./.github/workflows/validate.yaml

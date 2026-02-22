@@ -1,0 +1,376 @@
+{
+  "name": "libscrapli",
+  "type": "clab",
+  "clab": {
+    "config": {
+      "prefix": "clab",
+      "mgmt": {
+        "network": "clab",
+        "bridge": "clab",
+        "ipv4-subnet": "172.20.20.0/24",
+        "ipv4-gw": "172.20.20.1",
+        "ipv6-subnet": "2001:172:20:20::/64",
+        "ipv6-gw": "2001:172:20:20::1",
+        "mtu": 65535,
+        "external-access": true
+      }
+    }
+  },
+  "ssh-pub-keys": [],
+  "nodes": {
+    "ceos": {
+      "index": "0",
+      "shortname": "ceos",
+      "longname": "clab-libscrapli-ceos",
+      "fqdn": "ceos.libscrapli.io",
+      "group": "",
+      "labdir": "/Users/carl/dev/github/scrapli/.clab/clab-libscrapli/ceos",
+      "kind": "ceos",
+      "image": "ceos64:4.33.1F",
+      "mgmt-net": "",
+      "mgmt-intf": "Management0",
+      "mgmt-ipv4-address": "172.20.20.17",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "2001:172:20:20::17",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "00:1c:73:79:1e:db",
+      "labels": {
+        "clab-mgmt-net-bridge": "clab",
+        "clab-node-group": "",
+        "clab-node-kind": "ceos",
+        "clab-node-lab-dir": "/Users/carl/dev/github/scrapli/.clab/clab-libscrapli/ceos",
+        "clab-node-longname": "clab-libscrapli-ceos",
+        "clab-node-name": "ceos",
+        "clab-node-type": "",
+        "clab-owner": "",
+        "clab-topo-file": "/Users/carl/dev/github/scrapli/.clab/topo.arm64.yaml",
+        "containerlab": "libscrapli"
+      },
+      "port-bindings": [
+        {
+          "host-ip": "0.0.0.0",
+          "host-port": 22022,
+          "port": 22,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "::",
+          "host-port": 22022,
+          "port": 22,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "0.0.0.0",
+          "host-port": 22080,
+          "port": 80,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "::",
+          "host-port": 22080,
+          "port": 80,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "0.0.0.0",
+          "host-port": 22161,
+          "port": 161,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "::",
+          "host-port": 22161,
+          "port": 161,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "0.0.0.0",
+          "host-port": 22830,
+          "port": 830,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "::",
+          "host-port": 22830,
+          "port": 830,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "0.0.0.0",
+          "host-port": 22023,
+          "port": 23,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "::",
+          "host-port": 22023,
+          "port": 23,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "0.0.0.0",
+          "host-port": 22443,
+          "port": 443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "::",
+          "host-port": 22443,
+          "port": 443,
+          "protocol": "tcp"
+        }
+      ]
+    },
+    "jumper": {
+      "index": "1",
+      "shortname": "jumper",
+      "longname": "clab-libscrapli-jumper",
+      "fqdn": "jumper.libscrapli.io",
+      "group": "",
+      "labdir": "/Users/carl/dev/github/scrapli/.clab/clab-libscrapli/jumper",
+      "kind": "linux",
+      "image": "ghcr.io/scrapli/scrapli_clab/jumper:dev-latest",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.19",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "2001:172:20:20::19",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "clab",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/Users/carl/dev/github/scrapli/.clab/clab-libscrapli/jumper",
+        "clab-node-longname": "clab-libscrapli-jumper",
+        "clab-node-name": "jumper",
+        "clab-node-type": "",
+        "clab-owner": "",
+        "clab-topo-file": "/Users/carl/dev/github/scrapli/.clab/topo.arm64.yaml",
+        "containerlab": "libscrapli"
+      },
+      "port-bindings": [
+        {
+          "host-ip": "0.0.0.0",
+          "host-port": 24022,
+          "port": 22,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "::",
+          "host-port": 24022,
+          "port": 22,
+          "protocol": "tcp"
+        }
+      ]
+    },
+    "netopeer": {
+      "index": "2",
+      "shortname": "netopeer",
+      "longname": "clab-libscrapli-netopeer",
+      "fqdn": "netopeer.libscrapli.io",
+      "group": "",
+      "labdir": "/Users/carl/dev/github/scrapli/.clab/clab-libscrapli/netopeer",
+      "kind": "linux",
+      "image": "ghcr.io/scrapli/scrapli_clab/netopeer:0.0.7",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.18",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "2001:172:20:20::18",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "clab",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/Users/carl/dev/github/scrapli/.clab/clab-libscrapli/netopeer",
+        "clab-node-longname": "clab-libscrapli-netopeer",
+        "clab-node-name": "netopeer",
+        "clab-node-type": "",
+        "clab-owner": "",
+        "clab-topo-file": "/Users/carl/dev/github/scrapli/.clab/topo.arm64.yaml",
+        "containerlab": "libscrapli"
+      },
+      "port-bindings": [
+        {
+          "host-ip": "0.0.0.0",
+          "host-port": 23161,
+          "port": 161,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "::",
+          "host-port": 23161,
+          "port": 161,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "0.0.0.0",
+          "host-port": 23830,
+          "port": 830,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "::",
+          "host-port": 23830,
+          "port": 830,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "0.0.0.0",
+          "host-port": 23443,
+          "port": 443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "::",
+          "host-port": 23443,
+          "port": 443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "0.0.0.0",
+          "host-port": 23080,
+          "port": 80,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "::",
+          "host-port": 23080,
+          "port": 80,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "0.0.0.0",
+          "host-port": 23023,
+          "port": 23,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "::",
+          "host-port": 23023,
+          "port": 23,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "0.0.0.0",
+          "host-port": 23022,
+          "port": 22,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "::",
+          "host-port": 23022,
+          "port": 22,
+          "protocol": "tcp"
+        }
+      ]
+    },
+    "srl": {
+      "index": "3",
+      "shortname": "srl",
+      "longname": "clab-libscrapli-srl",
+      "fqdn": "srl.libscrapli.io",
+      "group": "",
+      "labdir": "/Users/carl/dev/github/scrapli/.clab/clab-libscrapli/srl",
+      "kind": "srl",
+      "image": "ghcr.io/nokia/srlinux:24.10.1-492-arm64",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.16",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "2001:172:20:20::16",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "1a:b0:03:00:00:00",
+      "labels": {
+        "clab-mgmt-net-bridge": "clab",
+        "clab-node-group": "",
+        "clab-node-kind": "srl",
+        "clab-node-lab-dir": "/Users/carl/dev/github/scrapli/.clab/clab-libscrapli/srl",
+        "clab-node-longname": "clab-libscrapli-srl",
+        "clab-node-name": "srl",
+        "clab-node-type": "ixrd2l",
+        "clab-owner": "",
+        "clab-topo-file": "/Users/carl/dev/github/scrapli/.clab/topo.arm64.yaml",
+        "containerlab": "libscrapli"
+      },
+      "port-bindings": [
+        {
+          "host-ip": "0.0.0.0",
+          "host-port": 21443,
+          "port": 443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "::",
+          "host-port": 21443,
+          "port": 443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "0.0.0.0",
+          "host-port": 21023,
+          "port": 23,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "::",
+          "host-port": 21023,
+          "port": 23,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "0.0.0.0",
+          "host-port": 21080,
+          "port": 80,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "::",
+          "host-port": 21080,
+          "port": 80,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "0.0.0.0",
+          "host-port": 21830,
+          "port": 830,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "::",
+          "host-port": 21830,
+          "port": 830,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "0.0.0.0",
+          "host-port": 21161,
+          "port": 161,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "::",
+          "host-port": 21161,
+          "port": 161,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "0.0.0.0",
+          "host-port": 21022,
+          "port": 22,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "::",
+          "host-port": 21022,
+          "port": 22,
+          "protocol": "tcp"
+        }
+      ]
+    }
+  },
+  "links": [
+  ]
+}

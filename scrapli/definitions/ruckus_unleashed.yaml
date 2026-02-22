@@ -1,0 +1,64 @@
+---
+prompt_pattern: '^.*[>#$]\s?+$'
+default_mode: 'privileged_exec'
+modes:
+  - name: 'exec'
+    prompt_pattern: '^[a-z0-9]{1,24}>\s*$'
+    accessible_modes:
+      - name: 'privileged_exec'
+        instructions:
+          - send_input:
+              input: 'enable force'
+  - name: 'privileged_exec'
+    prompt_pattern: '^[a-z0-9]{1,24}#\s*$'
+    accessible_modes:
+      - name: 'exec'
+        instructions:
+          - send_input:
+              input: 'disable'
+      - name: 'configuration'
+        instructions:
+          - send_input:
+              input: 'config'
+      - name: 'debug'
+        instructions:
+          - send_input:
+              input: 'debug'
+      - name: 'ap_mode'
+        instructions:
+          - send_input:
+              input: 'ap-mode'
+  - name: 'configuration'
+    prompt_pattern: '^[a-z0-9]{1,24}\(conf[a-z0-9\-]{0,24}\)#\s*$'
+    accessible_modes:
+      - name: 'privileged_exec'
+        instructions:
+          - send_input:
+              input: 'end'
+  - name: 'debug'
+    prompt_pattern: '^[a-z0-9]{1,24}\(debug\)#\s*$'
+    accessible_modes:
+      - name: 'privileged_exec'
+        instructions:
+          - send_input:
+              input: 'quit'
+  - name: 'ap_mode'
+    prompt_pattern: '^[a-z0-9]{1,24}\(ap-mode\)#\s*$'
+    accessible_modes:
+      - name: 'privileged_exec'
+        instructions:
+          - send_input:
+              input: 'quit'
+failure_indicators:
+  - 'The command is'
+  - 'is invalid'
+  - 'must consist'
+on_open_instructions:
+  - enter_mode:
+      requested_mode: 'privileged_exec'
+on_close_instructions:
+  - enter_mode:
+      requested_mode: 'privileged_exec'
+  - write:
+      input: 'exit'
+force_in_session_auth: true

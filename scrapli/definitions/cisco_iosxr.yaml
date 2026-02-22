@@ -1,0 +1,47 @@
+---
+prompt_pattern: '^.*[>#$]\s?+$'
+default_mode: 'privileged_exec'
+modes:
+  - name: 'privileged_exec'
+    prompt_pattern: '^[\w.\-@/:]{1,63}#\s?$'
+    accessible_modes:
+      - name: 'configuration'
+        instructions:
+          - send_input:
+              input: 'configure terminal'
+      - name: 'configuration_exclusive'
+        instructions:
+          - send_input:
+              input: 'configure exclusive'
+  - name: 'configuration'
+    prompt_pattern: '^[\w.\-@/:]{1,63}\(config[\w.\-@/:]{0,32}\)#\s?$'
+    accessible_modes:
+      - name: 'privileged_exec'
+        instructions:
+          - send_input:
+              input: 'end'
+  - name: 'configuration_exclusive'
+    prompt_pattern: '^[\w.\-@/:]{1,63}\(config[\w.\-@/:]{0,32}\)#\s?$'
+    accessible_modes:
+      - name: 'privileged_exec'
+        instructions:
+          - send_input:
+              input: 'end'
+failure_indicators:
+  - '% Ambiguous command'
+  - '% Incomplete command'
+  - '% Invalid input detected'
+on_open_instructions:
+  - enter_mode:
+      requested_mode: 'privileged_exec'
+  - send_input:
+      input: 'term width 512'
+  - send_input:
+      input: 'term len 0'
+on_close_instructions:
+  - enter_mode:
+      requested_mode: 'privileged_exec'
+  - write:
+      input: 'exit'
+ntc_templates_platform: 'cisco_iosxe'
+genie_platform: 'iosxe'

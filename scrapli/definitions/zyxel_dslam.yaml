@@ -1,0 +1,18 @@
+---
+prompt_pattern: '^.*[>#$]\s?+$'
+default_mode: 'exec'
+modes:
+  - name: 'exec'
+    prompt_pattern: '^(.*)[a-zA-Z0-9_\-]*[\>#]\s*$'
+failure_indicators:
+  - 'invalid command'
+  - 'command authorization fail'
+on_open_instructions:
+  - enter_mode:
+      requested_mode: 'exec'
+on_close_instructions:
+  - enter_mode:
+      requested_mode: 'exec'
+  - write:
+      input: 'exit'
+ntc_templates_platform: 'zyxel_dslam'

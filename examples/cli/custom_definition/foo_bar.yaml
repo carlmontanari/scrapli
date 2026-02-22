@@ -1,0 +1,46 @@
+---
+# https://regex101.com/r/4YNNII/2
+prompt_pattern: '(^.*[>#$]\s?+$)|(--.*--\s*\n[abcd]:\S+#\s*$)'
+default_mode: 'exec'
+modes:
+  - name: 'bash'
+    prompt_pattern: '^.*[>#$]\s?+$'
+    accessible_modes:
+      - name: 'exec'
+        instructions:
+          - send_input:
+              input: 'exit'
+  - name: 'exec'
+    # https://regex101.com/r/PGLSJJ/1
+    prompt_pattern: '^--{(\s\[[\w\s]+\]){0,5}[\+\*\s]{1,}running\s}--\[.+?\]--\s*\n[abcd]:\S+#\s*$'
+    accessible_modes:
+      - name: 'bash'
+        instructions:
+          - send_input:
+              input: 'bash'
+      - name: 'configuration'
+        instructions:
+          - send_input:
+              input: 'enter candidate private'
+  - name: 'configuration'
+    # https://regex101.com/r/JsaUZy/1
+    prompt_pattern: '^--{(\s\[[\w\s]+\]){0,5}[\+\*\!\s]{1,}candidate[\-\w\s]+}--\[.+?\]--\s*\n[abcd]:\S+#\s*$'
+    accessible_modes:
+      - name: 'exec'
+        instructions:
+          - send_input:
+              input: 'discard now'
+failure_indicators:
+  - 'Error:'
+on_open_instructions:
+  - enter_mode:
+      requested_mode: 'exec'
+  - send_input:
+      input: 'environment cli-engine type basic'
+  - send_input:
+      input: 'environment complete-on-space false'
+on_close_instructions:
+  - enter_mode:
+      requested_mode: 'exec'
+  - write:
+      input: 'quit'

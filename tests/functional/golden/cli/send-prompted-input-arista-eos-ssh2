@@ -1,0 +1,2 @@
+[user@host ~]$ read -p "Will you prompt me plz? " answer
+Will you prompt me plz? nou

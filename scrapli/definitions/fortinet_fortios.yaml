@@ -1,0 +1,20 @@
+---
+prompt_pattern: '^.*[>#$]\s?+$'
+default_mode: 'privileged_exec'
+modes:
+  - name: 'exec'
+    prompt_pattern: '[\w_-]+ (\([\w-]+\) )?[$#]'
+on_open_instructions:
+  - enter_mode:
+      requested_mode: 'privileged_exec'
+  - send_input:
+      input: 'config system console'
+  - send_input:
+      input: 'set output standard'
+  - send_input:
+      input: 'end'
+on_close_instructions:
+  - enter_mode:
+      requested_mode: 'privileged_exec'
+  - write:
+      input: 'exit'

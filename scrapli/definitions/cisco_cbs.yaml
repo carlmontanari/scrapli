@@ -1,0 +1,50 @@
+---
+prompt_pattern: '^.*[>#$]\s?+$'
+default_mode: 'privileged_exec'
+modes:
+  - name: 'exec'
+    prompt_pattern: '^[a-zA-Z0-9-.]{1,58}>$'
+    accessible_modes:
+      - name: 'privileged_exec'
+        instructions:
+          - send_prompted_input:
+              input: 'enable'
+              prompt_exact: '^(?:enable\s){0,1}Password:\s?$'
+              response: '__lookup::enable'
+  - name: 'privileged_exec'
+    prompt_pattern: '^[a-zA-Z0-9-.]{1,58}#$'
+    accessible_modes:
+      - name: 'exec'
+        instructions:
+          - send_input:
+              input: 'disable'
+      - name: 'configuration'
+        instructions:
+          - send_input:
+              input: 'configure terminal'
+  - name: 'configuration'
+    prompt_pattern: '^[a-zA-Z0-9-.]{1,58}\([\w.\-@/:+]{1,32}\)#$'
+    accessible_modes:
+      - name: 'privileged_exec'
+        instructions:
+          - send_input:
+              input: 'end'
+failure_indicators:
+  - '% Incomplete command'
+  - '% Unrecognized command'
+  - '% missing mandatory parameter'
+  - '% bad parameter value'
+  - '% Ambiguous command'
+on_open_instructions:
+  - enter_mode:
+      requested_mode: 'privileged_exec'
+  - send_input:
+      input: 'terminal datadump'
+  - send_input:
+      input: 'terminal width 0'
+on_close_instructions:
+  - enter_mode:
+      requested_mode: 'privileged_exec'
+  - write:
+      input: 'exit'
+ntc_templates_platform: 'cisco_s300'

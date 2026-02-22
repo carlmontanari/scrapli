@@ -1,0 +1,5 @@
+show version | i Kernel
+Kernel version: 6.12.67-linuxkit
+eos1#show version | i Kernel
+Kernel version: 6.12.67-linuxkit
+eos1#

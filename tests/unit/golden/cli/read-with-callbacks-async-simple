@@ -1,0 +1,41 @@
+show version
+Arista cEOSLab
+Hardware version: 
+Serial number: 8E24D9A3C03A00DC87B511DDC10D2F3F
+Hardware MAC address: 001c.73a0.0bf0
+System MAC address: 001c.73a0.0bf0
+
+Software image version: 4.33.1F-39879738.4331F (engineering build)
+Architecture: x86_64
+Internal build version: 4.33.1F-39879738.4331F
+Internal build ID: 798d1a3d-9815-49ba-91a2-9043a969f565
+Image format version: 1.0
+Image optimization: None
+
+Kernel version: 6.12.54-linuxkit
+
+Uptime: 5 hours and 2 minutes
+Total memory: 24571600 kB
+Free memory: 8859404 kB
+
+eos1#show version
+Arista cEOSLab
+Hardware version: 
+Serial number: 8E24D9A3C03A00DC87B511DDC10D2F3F
+Hardware MAC address: 001c.73a0.0bf0
+System MAC address: 001c.73a0.0bf0
+
+Software image version: 4.33.1F-39879738.4331F (engineering build)
+Architecture: x86_64
+Internal build version: 4.33.1F-39879738.4331F
+Internal build ID: 798d1a3d-9815-49ba-91a2-9043a969f565
+Image format version: 1.0
+Image optimization: None
+
+Kernel version: 6.12.54-linuxkit
+
+Uptime: 5 hours and 2 minutes
+Total memory: 24571600 kB
+Free memory: 8859404 kB
+
+eos1#

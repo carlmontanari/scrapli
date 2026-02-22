@@ -1,85 +1,84 @@
 ---
 site_name: Scrapli
-site_description: Fast, flexible, sync/async, Python 3.7+ screen scraping client specifically for network devices
+site_description: Fast, flexible, powerful. CLI+NETCONF clients in Python/Go/Zig.
 site_author: Carl Montanari
 site_url: https://carlmontanari.github.io/
 
 repo_name: carlmontanari/scrapli
 repo_url: https://github.com/carlmontanari/scrapli
-edit_uri: ''
+edit_uri: edit/main/docs/
+
+docs_dir: docs
+site_dir: public
+
+strict: true
 
 theme:
     name: material
+    language: en
     palette:
-      primary: 'black'
-      accent: 'teal'
+        - scheme: slate
+          primary: green
+          accent: amber
+          toggle:
+                icon: material/brightness-7
+                name: Switch to dark mode
+
+        - scheme: default
+          primary: green
+          accent: amber
+          toggle:
+                icon: material/brightness-3
+                name: Switch to light mode
+    font:
+      text: Google Sans
+      code: JetBrains Mono
     icon:
-      repo: fontawesome/brands/github-alt
-
-nav:
-  - Scrapli: index.md
-  - User Guide:
-    - Quick Start Guide: user_guide/quickstart.md
-    - Project Details: user_guide/project_details.md
-    - Versioning: user_guide/versioning.md
-    - Installation: user_guide/installation.md
-    - Basic Usage: user_guide/basic_usage.md
-    - Advanced Usage: user_guide/advanced_usage.md
-    - Linting and Testing: user_guide/linting_testing.md
-    - FAQ: user_guide/faq.md
-  - API Reference: reference/
-  - Changelog: changelog.md
-  - More Scrapli:
-    - Scrapli Netconf: more_scrapli/scrapli_netconf.md
-    - Scrapli Community: more_scrapli/scrapli_community.md
-    - Scrapli Cfg: more_scrapli/scrapli_cfg.md
-    - Scrapli Replay: more_scrapli/scrapli_replay.md
-    - Nornir Scrapli: more_scrapli/nornir_scrapli.md
-    - Scrapli SCP: more_scrapli/scrapli_scp.md
-  - Other:
-    - Contributing: about/contributing.md
-    - Code of Conduct: about/code_of_conduct.md
-    - Thank Yous: about/thank_you.md
-
-markdown_extensions:
-    - toc:
-        permalink: True
-    - admonition
-    - codehilite
-    - extra
-    - mdx_gh_links:
-        user: carlmontanari
-        repo: scrapli
-    - pymdownx.superfences
-    - pymdownx.highlight:
-        use_pygments: True
-        linenums: True
-
-extra:
-    social:
-        - icon: fontawesome/brands/github-alt
-          link: 'https://github.com/carlmontanari/'
-        - icon: fontawesome/brands/twitter
-          link: 'https://twitter.com/carlrmontanari'
-        - icon: fontawesome/brands/linkedin
-          link: 'https://www.linkedin.com/in/carl-montanari-47888931/'
-        - icon: fontawesome/solid/globe
-          link: 'https://montanari.io'
+      logo: material/rabbit-variant
+      repo: material/github
+    favicon: material/rabbit-variant
+    features:
+        - navigation.tabs
+        - navigation.tabs.sticky
+        - search.highlight
+        - search.share
+        - content.code.copy
+        - content.code.annotate
 
 plugins:
-    - search
-    - gen-files:
-        scripts:
-        - docs/generate.py
-    - mkdocstrings:
-        handlers:
-          python:
-            paths: [ scrapli ]
-            options:
-              show_signature_annotations: true
-    - section-index
-    - literate-nav:
-        nav_file: SUMMARY.md
+  - search:
+      separator: '[\s\-\.]+'
+  - spellcheck:
+      backends:
+      - codespell:
+          dictionaries: [clear, rare, informal, usage, code, names]
+      known_words: known_words.txt
+      ignore_code: yes
+      min_length: 2
+      max_capital: 1
+      allow_unicode: no
+      strict_only: yes
 
-watch:
-    - scrapli
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - attr_list
+  - md_in_html
+
+nav:
+    - Home: index.md
+    - Installation: installation.md
+    - Examples:
+      - Python: examples/python.md
+      - Go: examples/go.md
+      - Zig: examples/zig.md
+    - Library Details: details.md
+    - Legacy Migration: migration.md
+    - Community: community.md
