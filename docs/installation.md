@@ -63,13 +63,13 @@ pip install scrapli[full]
 Installation in a go project begins as you would expect. You can just use normal go toolchain things to include it in your project:
 
 ```
-go get github.com/scrapli/scrapligo
+go get github.com/scrapli/scrapligo/v2
 ```
 
 Or at a tag/commit:
 
 ```
-go get github.com/scrapli/scrapligo@v2.0.0
+go get github.com/scrapli/scrapligo/v2@v2.0.0
 ```
 
 This gets you the source code, however it does *not* install libscrapli for you as there is no "install" step like we have with Python (via setuptools). You have a few options for how you can handle getting libscrapli when using scrapligo:
@@ -100,10 +100,10 @@ Alternatively you can fetch the libscrapli build for your specific platform (fou
 
 ## Zig
 
-Using libscrapli in zig is like using any other 0.15.0+ zig library, you can simply `zig fetch` and save it to your `build.zig.zon`:
+Using libscrapli in zig is like using any other 0.16.0+ zig library, you can simply `zig fetch` and save it to your `build.zig.zon`:
 
 ```
-zig fetch --save=libscrapli https://github.com/scrapli/libscrapli/archive/refs/tags/v0.0.1-beta.15.tar.gz
+zig fetch --save=libscrapli https://github.com/scrapli/libscrapli/archive/refs/tags/v0.0.1-rc.1.tar.gz
 ```
 
 Then, in your `build.zig` you can use it as a dependency similar to this:

@@ -14,8 +14,8 @@ import (
 	"fmt"
 	"time"
 
-	scrapligocli "github.com/scrapli/scrapligo/cli" // (1)
-	scrapligooptions "github.com/scrapli/scrapligo/options" // (2)
+	scrapligocli "github.com/scrapli/scrapligo/v2/cli" // (1)
+	scrapligooptions "github.com/scrapli/scrapligo/v2/options" // (2)
 )
 
 func main() {
@@ -23,7 +23,7 @@ func main() {
 	defer cancel()
 
 	opts := []scrapligooptions.Option{ // (4)
-		scrapligooptions.WithDefintionFileOrName(scrapligocli.NokiaSrlinux),
+		scrapligooptions.WithDefinitionFileOrName(scrapligocli.NokiaSrlinux),
 		scrapligooptions.WithUsername("scrapli"),
 		scrapligooptions.WithPassword("verysecurepassword"),
 	}
@@ -74,8 +74,8 @@ import (
 	"fmt"
 	"time"
 
-	scrapligonetconf "github.com/scrapli/scrapligo/netconf" // (1)
-	scrapligooptions "github.com/scrapli/scrapligo/options" // (2)
+	scrapligonetconf "github.com/scrapli/scrapligo/v2/netconf" // (1)
+	scrapligooptions "github.com/scrapli/scrapligo/v2/options" // (2)
 )
 
 func main() {
