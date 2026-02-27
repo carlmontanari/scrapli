@@ -17,12 +17,12 @@ PASSWORD = os.getenv("SCRAPLI_USERNAME", "NokiaSrl1!")
 CTRL_C = "\x03"
 
 
-def logged_in_callback(_: Cli) -> None:
+def logged_in_callback(_: Cli, __: str, ___: str) -> None:
     """A callback to print a message when a user logs in"""
     print("a user has logged in!")
 
 
-def logged_out_callback(c: Cli) -> None:
+def logged_out_callback(c: Cli, _: str, __: str) -> None:
     """A callback to print a message when a user logs out, also cancels tailing logs"""
     print("a user has logged out!")
 

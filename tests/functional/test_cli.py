@@ -706,19 +706,19 @@ async def test_send_prompted_input_async(
         cli_assert_result(actual=actual)
 
 
-def eos_cb1(c: Cli) -> None:
+def eos_cb1(c: Cli, _: str, __: str) -> None:
     c.write_and_return("show version | i Kernel")
 
 
-def eos_cb2(c: Cli) -> None:
+def eos_cb2(c: Cli, _: str, __: str) -> None:
     return
 
 
-def srl_cb1(c: Cli) -> None:
+def srl_cb1(c: Cli, _: str, __: str) -> None:
     c.write_and_return("show version | grep OS")
 
 
-def srl_cb2(c: Cli) -> None:
+def srl_cb2(c: Cli, _: str, __: str) -> None:
     return
 
 
@@ -814,6 +814,22 @@ READ_WITH_CALLBACKS_IDS = (
 )
 
 
+async def a_eos_cb1(c: Cli, _: str, __: str) -> None:
+    c.write_and_return("show version | i Kernel")
+
+
+async def a_eos_cb2(c: Cli, _: str, __: str) -> None:
+    return
+
+
+async def a_srl_cb1(c: Cli, _: str, __: str) -> None:
+    c.write_and_return("show version | grep OS")
+
+
+async def a_srl_cb2(c: Cli, _: str, __: str) -> None:
+    return
+
+
 @pytest.mark.parametrize(
     argnames=READ_WITH_CALLBACKS_ARGNAMES,
     argvalues=READ_WITH_CALLBACKS_ARGVALUES,
@@ -829,11 +845,103 @@ def test_read_with_callbacks(initial_input, callbacks, cli, cli_assert_result):
         )
 
 
+ASYNC_READ_WITH_CALLBACKS_ARGNAMES = (
+    "initial_input",
+    "callbacks",
+    "platform",
+    "transport",
+)
+ASYNC_READ_WITH_CALLBACKS_ARGVALUES = (
+    (
+        "show version | i Kernel",
+        [
+            ReadCallback(
+                name="cb1",
+                contains="eos1#",
+                callback_async=a_eos_cb1,
+                once=True,
+            ),
+            ReadCallback(
+                name="cb2",
+                contains="eos1#",
+                callback_async=a_eos_cb2,
+                completes=True,
+            ),
+        ],
+        "arista_eos",
+        "bin",
+    ),
+    (
+        "show version | i Kernel",
+        [
+            ReadCallback(
+                name="cb1",
+                contains="eos1#",
+                callback_async=a_eos_cb1,
+                once=True,
+            ),
+            ReadCallback(
+                name="cb2",
+                contains="eos1#",
+                callback_async=a_eos_cb2,
+                completes=True,
+            ),
+        ],
+        "arista_eos",
+        "ssh2",
+    ),
+    (
+        "show version | grep OS",
+        [
+            ReadCallback(
+                name="cb1",
+                contains="A:srl#",
+                callback_async=a_srl_cb1,
+                once=True,
+            ),
+            ReadCallback(
+                name="cb2",
+                contains="A:srl#",
+                callback_async=a_srl_cb2,
+                completes=True,
+            ),
+        ],
+        "nokia_srl",
+        "bin",
+    ),
+    (
+        "show version | grep OS",
+        [
+            ReadCallback(
+                name="cb1",
+                contains="A:srl#",
+                callback_async=a_srl_cb1,
+                once=True,
+            ),
+            ReadCallback(
+                name="cb2",
+                contains="A:srl#",
+                callback_async=a_srl_cb2,
+                completes=True,
+            ),
+        ],
+        "nokia_srl",
+        "ssh2",
+    ),
+)
+ASYNC_READ_WITH_CALLBACKS_IDS = (
+    "arista-eos-bin",
+    "arista-eos-ssh2",
+    "nokia-srl-bin",
+    "nokia-srl-ssh2",
+)
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    argnames=READ_WITH_CALLBACKS_ARGNAMES,
-    argvalues=READ_WITH_CALLBACKS_ARGVALUES,
-    ids=READ_WITH_CALLBACKS_IDS,
+    argnames=ASYNC_READ_WITH_CALLBACKS_ARGNAMES,
+    argvalues=ASYNC_READ_WITH_CALLBACKS_ARGVALUES,
+    ids=ASYNC_READ_WITH_CALLBACKS_IDS,
 )
 async def test_read_with_callbacks_async(initial_input, callbacks, cli, cli_assert_result):
     async with cli as c:

@@ -402,11 +402,11 @@ async def test_send_prompted_input_async(
         cli_assert_result(actual=actual)
 
 
-def cb1(c: Cli) -> None:
+def cb1(c: Cli, _: str, __: str) -> None:
     c.write_and_return("show version")
 
 
-def cb2(c: Cli) -> None:
+def cb2(c: Cli, _: str, __: str) -> None:
     return
 
 
@@ -451,11 +451,45 @@ def test_read_with_callbacks(initial_input, callbacks, cli, cli_assert_result):
         )
 
 
+async def a_cb1(c: Cli, _: str, __: str) -> None:
+    c.write_and_return("show version")
+
+
+async def a_cb2(c: Cli, _: str, __: str) -> None:
+    return
+
+
+ASYNC_READ_WITH_CALLBACKS_ARGNAMES = (
+    "initial_input",
+    "callbacks",
+)
+ASYNC_READ_WITH_CALLBACKS_ARGVALUES = (
+    (
+        "show version",
+        [
+            ReadCallback(
+                name="cb1",
+                contains="eos1#",
+                callback_async=a_cb1,
+                once=True,
+            ),
+            ReadCallback(
+                name="cb2",
+                contains="eos1#",
+                callback_async=a_cb2,
+                completes=True,
+            ),
+        ],
+    ),
+)
+ASYNC_READ_WITH_CALLBACKS_IDS = ("simple",)
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    argnames=READ_WITH_CALLBACKS_ARGNAMES,
-    argvalues=READ_WITH_CALLBACKS_ARGVALUES,
-    ids=READ_WITH_CALLBACKS_IDS,
+    argnames=ASYNC_READ_WITH_CALLBACKS_ARGNAMES,
+    argvalues=ASYNC_READ_WITH_CALLBACKS_ARGVALUES,
+    ids=ASYNC_READ_WITH_CALLBACKS_IDS,
 )
 async def test_read_with_callbacks_async(initial_input, callbacks, cli, cli_assert_result):
     async with cli as c:

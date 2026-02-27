@@ -142,8 +142,8 @@ class ReadCallback:
     search_depth: int = 0
     once: bool = False
     completes: bool = False
-    callback: Callable[["Cli"], None] | None = None
-    callback_async: Callable[["Cli"], Awaitable[None]] | None = None
+    callback: Callable[["Cli", str, str], None] | None = None
+    callback_async: Callable[["Cli", str, str], Awaitable[None]] | None = None
 
     def __post_init__(self) -> None:
         if not self.contains and not self.contains_pattern:
@@ -1654,7 +1654,7 @@ class Cli:
                 if callback.callback is None:
                     raise OperationException("callback is None, cannot proceed")
                 else:
-                    callback.callback(self)
+                    callback.callback(self, result[search_start_idx:], result)
 
                 if callback.completes is True:
                     return Result(
@@ -1680,6 +1680,8 @@ class Cli:
     ) -> Result:
         """
         Read from the device and react to the output with some callback.
+
+        Note: must set `callback_async` not `callback`!
 
         Args:
             callbacks: a list of callbacks to process when reading from the session
@@ -1730,8 +1732,10 @@ class Cli:
 
                 execute = pointer(c_bool(False))
 
+                search_start_idx = max(min(pos, len(result) - callback.search_depth), 0)
+
                 status = self.ffi_mapping.cli_mapping.read_callback_should_execute(
-                    buf=to_c_string(result[pos:]),
+                    buf=to_c_string(result[search_start_idx:]),
                     name=to_c_string(callback.name),
                     contains=to_c_string(callback.contains),
                     contains_pattern=to_c_string(callback.contains_pattern),
@@ -1748,10 +1752,10 @@ class Cli:
 
                 pos = len(result)
 
-                if callback.callback is None:
-                    raise OperationException("callback is None, cannot proceed")
+                if callback.callback_async is None:
+                    raise OperationException("callback_async is None, cannot proceed")
                 else:
-                    callback.callback(self)
+                    await callback.callback_async(self, result[search_start_idx:], result)
 
                 if callback.completes is True:
                     return Result(
