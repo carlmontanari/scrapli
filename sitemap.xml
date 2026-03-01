@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+         <loc>https://carlmontanari.github.io/</loc>
+         <lastmod>2026-03-01</lastmod>
+    </url>
+    <url>
+         <loc>https://carlmontanari.github.io/community/</loc>
+         <lastmod>2026-03-01</lastmod>
+    </url>
+    <url>
+         <loc>https://carlmontanari.github.io/details/</loc>
+         <lastmod>2026-03-01</lastmod>
+    </url>
+    <url>
+         <loc>https://carlmontanari.github.io/installation/</loc>
+         <lastmod>2026-03-01</lastmod>
+    </url>
+    <url>
+         <loc>https://carlmontanari.github.io/migration/</loc>
+         <lastmod>2026-03-01</lastmod>
+    </url>
+    <url>
+         <loc>https://carlmontanari.github.io/examples/go/</loc>
+         <lastmod>2026-03-01</lastmod>
+    </url>
+    <url>
+         <loc>https://carlmontanari.github.io/examples/python/</loc>
+         <lastmod>2026-03-01</lastmod>
+    </url>
+    <url>
+         <loc>https://carlmontanari.github.io/examples/zig/</loc>
+         <lastmod>2026-03-01</lastmod>
+    </url>
+</urlset>
