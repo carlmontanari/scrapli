@@ -6,9 +6,6 @@ from ctypes import (
     CFUNCTYPE,
     POINTER,
     Structure,
-)
-from ctypes import _CFuncPtr as FuncPtr  # type: ignore[attr-defined]
-from ctypes import (
     _Pointer,
     c_bool,
     c_char_p,
@@ -21,7 +18,9 @@ from ctypes import (
     c_void_p,
     cast,
     create_string_buffer,
+    pointer,
 )
+from ctypes import _CFuncPtr as FuncPtr  # type: ignore[attr-defined]
 from logging import CRITICAL, DEBUG, FATAL, INFO, NOTSET, WARN, Logger
 from typing import TYPE_CHECKING, Any, ClassVar, TypeAlias
 
@@ -304,7 +303,7 @@ def recorder_callback_wrapper(cb: Callable[[str], None]) -> RecorderCallback:
     return RecorderCallbackC(_cb)
 
 
-NetconfCapabilitesCallbackC = CFUNCTYPE(c_char_p, StringPointer)
+NetconfCapabilitesCallbackC = CFUNCTYPE(c_void_p, ZigSlicePointer)
 NetconfCapabilitesCallback: TypeAlias = FuncPtr
 
 
@@ -325,11 +324,10 @@ def capabilities_callback_wrapper(
 
     """
 
-    def _cb(server_hello: StringPointer) -> c_char_p:
-        # mypy will be upset because its a pointer so could be none, but it wont. its ok mypy
-        server_capabilities: bytes = server_hello.contents.value or b""
+    def _cb(buf: ZigSlicePointer) -> int:
+        v = buf.contents
 
-        root = ET.fromstring(server_capabilities)
+        root = ET.fromstring(v.get_decoded_contents())
 
         caps = [
             elem.text or ""
@@ -347,6 +345,13 @@ def capabilities_callback_wrapper(
             el.text = cap
             out_elems.append(ET.tostring(el, encoding="unicode"))
 
-        return c_char_p("".join(out_elems).encode())
+        out_bytes = "".join(out_elems).encode()
+
+        slice = ZigSlice(size=c_size_t(len(out_bytes)))
+        slice.ptr = cast((c_uint8 * len(out_bytes))(*out_bytes), POINTER(c_uint8))
+
+        # ctypes expects an int that it will wrap in c_void_p for us (because of the typing above
+        # so... we'll just always return an int, it should really never not succeed?)
+        return cast(pointer(slice), c_void_p).value or 0
 
     return NetconfCapabilitesCallbackC(_cb)

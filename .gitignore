@@ -83,3 +83,6 @@ private/
 # main doc page since we wont check that in && tmp dir that htmltest uses
 public/
 tmp/
+
+# where we mount stuff when running clab bits
+.clab
