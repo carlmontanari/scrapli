@@ -777,7 +777,7 @@ class Netconf:
             start_time=start_time.contents.value,
             end_time=end_time.contents.value,
             result_raw=result_raw_slice.contents.get_contents(),
-            result=result_slice.contents.get_decoded_contents(),
+            _result=result_slice.contents.get_decoded_contents(),
             rpc_warnings=rpc_warnings_slice.contents.get_decoded_contents(),
             rpc_errors=rpc_errors_slice.contents.get_decoded_contents(),
         )
@@ -847,7 +847,7 @@ class Netconf:
             start_time=start_time.contents.value,
             end_time=end_time.contents.value,
             result_raw=result_raw_slice.contents.get_contents(),
-            result=result_slice.contents.get_decoded_contents(),
+            _result=result_slice.contents.get_decoded_contents(),
             rpc_warnings=rpc_warnings_slice.contents.get_decoded_contents(),
             rpc_errors=rpc_errors_slice.contents.get_decoded_contents(),
         )

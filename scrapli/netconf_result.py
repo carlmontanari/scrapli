@@ -33,7 +33,7 @@ class Result:
     start_time: int
     end_time: int
     result_raw: bytes
-    result: str
+    _result: str
     rpc_warnings: str
     rpc_errors: str
 
@@ -70,3 +70,30 @@ class Result:
 
         """
         return (self.end_time - self.start_time) / 1_000_000_000
+
+    @property
+    def result(self) -> str:
+        """
+        Returns the result, with the xml header stripped if present.
+
+        lxml will barf on `etree.fromstring` if/when an xml header with encoding is present, so we
+        will simply return the result stripping that if its there.
+
+        Args:
+            N/A
+
+        Returns:
+            str: joined results
+
+        Raises:
+            N/A
+
+        """
+        out = self._result.lstrip()
+
+        if out.startswith("<?xml"):
+            end = out.find("?>")
+            if end != -1:
+                return out[end + 2 :].lstrip()
+
+        return out
