@@ -140,6 +140,8 @@ class Auth(Structure):
         ("username_len", c_size_t),
         ("password", c_char_p),
         ("password_len", c_size_t),
+        ("private_key", c_char_p),
+        ("private_key_len", c_size_t),
         ("private_key_path", c_char_p),
         ("private_key_path_len", c_size_t),
         ("private_key_passphrase", c_char_p),
@@ -180,6 +182,8 @@ class TransportBin(Structure):
         ("override_open_args_len", c_size_t),
         ("ssh_config_path", c_char_p),
         ("ssh_config_path_len", c_size_t),
+        ("known_hosts", c_char_p),
+        ("known_hosts_len", c_size_t),
         ("known_hosts_path", c_char_p),
         ("known_hosts_path_len", c_size_t),
         ("enable_strict_key", BoolPointer),
@@ -204,6 +208,8 @@ class TransportSSH2(Structure):
     """
 
     _fields_: ClassVar[list[tuple[str, Any]]] = [
+        ("known_hosts", c_char_p),
+        ("known_hosts_len", c_size_t),
         ("known_hosts_path", c_char_p),
         ("known_hosts_path_len", c_size_t),
         ("libssh2trace", BoolPointer),

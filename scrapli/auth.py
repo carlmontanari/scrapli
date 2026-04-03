@@ -75,6 +75,7 @@ class Options:
 
     username: str | None = None
     password: str | None = None
+    private_key: str | None = None
     private_key_path: str | None = None
     private_key_passphrase: str | None = None
     lookups: list[LookupKeyValue] | None = None
@@ -86,6 +87,7 @@ class Options:
 
     _username: c_char_p | None = field(init=False, default=None, repr=False)
     _password: c_char_p | None = field(init=False, default=None, repr=False)
+    _private_key: c_char_p | None = field(init=False, default=None, repr=False)
     _private_key_path: c_char_p | None = field(init=False, default=None, repr=False)
     _private_key_passphrase: c_char_p | None = field(init=False, default=None, repr=False)
     _username_pattern: c_char_p | None = field(init=False, default=None, repr=False)
@@ -124,6 +126,12 @@ class Options:
 
             options.contents.auth.password = self._password
             options.contents.auth.password_len = c_size_t(len(self.password))
+
+        if self.private_key is not None:
+            self._private_key = to_c_string(self.private_key)
+
+            options.contents.auth.private_key = self._private_key
+            options.contents.auth.private_key_len = c_size_t(len(self.private_key))
 
         if self.private_key_path is not None:
             self._private_key_path = to_c_string(self.private_key_path)

@@ -122,6 +122,7 @@ class BinOptions(Options):
     extra_open_args: list[str] | None = None
     override_open_args: list[str] | None = None
     ssh_config_path: str | None = None
+    known_hosts: str | None = None
     known_hosts_path: str | None = None
     enable_strict_key: bool | None = None
     term_height: int | None = None
@@ -131,6 +132,7 @@ class BinOptions(Options):
     _extra_open_args: c_char_p | None = field(init=False, default=None, repr=False)
     _override_open_args: c_char_p | None = field(init=False, default=None, repr=False)
     _ssh_config_path: c_char_p | None = field(init=False, default=None, repr=False)
+    _known_hosts: c_char_p | None = field(init=False, default=None, repr=False)
     _known_hosts_path: c_char_p | None = field(init=False, default=None, repr=False)
 
     def apply(self, *, options: DriverOptionsPointer) -> None:
@@ -174,6 +176,12 @@ class BinOptions(Options):
 
             options.contents.transport.bin.ssh_config_path = self._ssh_config_path
             options.contents.transport.bin.ssh_config_path_len = c_size_t(len(self.ssh_config_path))
+
+        if self.known_hosts is not None:
+            self._known_hosts = to_c_string(self.known_hosts)
+
+            options.contents.transport.bin.known_hosts = self._known_hosts
+            options.contents.transport.bin.known_hosts_len = c_size_t(len(self.known_hosts))
 
         if self.known_hosts_path is not None:
             self._known_hosts_path = to_c_string(self.known_hosts_path)
@@ -219,6 +227,7 @@ class Ssh2Options(Options):
 
     """
 
+    known_hosts: str | None = None
     known_hosts_path: str | None = None
     libssh2_trace: bool | None = None
 
@@ -230,6 +239,7 @@ class Ssh2Options(Options):
     proxy_jump_private_key_passphrase: str | None = None
     proxy_jump_libssh2_trace: bool | None = None
 
+    _known_hosts: c_char_p | None = field(init=False, default=None, repr=False)
     _known_hosts_path: c_char_p | None = field(init=False, default=None, repr=False)
     _proxy_jump_host: c_char_p | None = field(init=False, default=None, repr=False)
     _proxy_jump_username: c_char_p | None = field(init=False, default=None, repr=False)
@@ -255,6 +265,12 @@ class Ssh2Options(Options):
             N/A
 
         """
+        if self.known_hosts is not None:
+            self._known_hosts = to_c_string(self.known_hosts)
+
+            options.contents.transport.ssh2.known_hosts = self._known_hosts
+            options.contents.transport.ssh2.known_hosts_len = c_size_t(len(self.known_hosts))
+
         if self.known_hosts_path is not None:
             self._known_hosts_path = to_c_string(self.known_hosts_path)
 
