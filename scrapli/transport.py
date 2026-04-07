@@ -156,17 +156,19 @@ class BinOptions(Options):
             options.contents.transport.bin.bin_len = c_size_t(len(self.bin))
 
         if self.extra_open_args is not None:
-            self._extra_open_args = to_c_string(" ".join(self.extra_open_args))
+            joined_extra_open_args = " ".join(self.extra_open_args)
+            self._extra_open_args = to_c_string(joined_extra_open_args)
 
             options.contents.transport.bin.extra_open_args = self._extra_open_args
-            options.contents.transport.bin.extra_open_args_len = c_size_t(len(self.extra_open_args))
+            options.contents.transport.bin.extra_open_args_len = c_size_t(len(joined_extra_open_args))
 
         if self.override_open_args is not None:
-            self._override_open_args = to_c_string(" ".join(self.override_open_args))
+            joined_override_open_args = " ".join(self.override_open_args)
+            self._override_open_args = to_c_string(joined_override_open_args)
 
             options.contents.transport.bin.override_open_args = self._override_open_args
             options.contents.transport.bin.override_open_args_len = c_size_t(
-                len(self.override_open_args)
+                len(joined_override_open_args)
             )
 
         if self.ssh_config_path is not None:
