@@ -160,7 +160,9 @@ class BinOptions(Options):
             self._extra_open_args = to_c_string(joined_extra_open_args)
 
             options.contents.transport.bin.extra_open_args = self._extra_open_args
-            options.contents.transport.bin.extra_open_args_len = c_size_t(len(joined_extra_open_args))
+            options.contents.transport.bin.extra_open_args_len = c_size_t(
+                len(joined_extra_open_args)
+            )
 
         if self.override_open_args is not None:
             joined_override_open_args = " ".join(self.override_open_args)
