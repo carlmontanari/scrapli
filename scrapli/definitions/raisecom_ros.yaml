@@ -31,6 +31,7 @@ modes:
               input: 'end'
 failure_indicators:
   - 'Error input in the position marked by ''^''.'
+  - 'Error input in the position market by ''^''.'
   - 'Ambiguous input in the position marked by ''^'''
   - '%  Incomplete command.'
 on_open_instructions:
