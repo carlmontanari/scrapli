@@ -1,0 +1,60 @@
+{
+  "root": {
+    "logger_level": "warn",
+    "transport_kind": "bin",
+    "port": 830
+  },
+  "cli": {
+    "definition_str": ""
+  },
+  "netconf": {
+    "error_tag": "<errrrrrro>",
+    "preferred_version": "1.0",
+    "message_poll_interval": 999999
+  },
+  "session": {
+    "read_size": null,
+    "read_min_delay_ns": null,
+    "read_max_delay_ns": null,
+    "return_char": "",
+    "operation_timeout_ns": null,
+    "operation_max_search_depth": null,
+    "record_destination": ""
+  },
+  "auth": {
+    "username": "",
+    "password": "",
+    "private_key_path": "",
+    "private_key_passphrase": "",
+    "force_in_session_auth": null,
+    "bypass_in_session_auth": null,
+    "username_pattern": "",
+    "password_pattern": "",
+    "private_key_passphrase_pattern": "",
+    "lookups": { "count": 0 }
+  },
+  "transportBin": {
+    "bin": "",
+    "extra_open_args": "",
+    "override_open_args": "",
+    "ssh_config_path": "",
+    "known_hosts_path": "",
+    "enable_strict_key": null,
+    "term_height": null,
+    "term_width": null
+  },
+  "transportSSH2": {
+    "known_hosts_path": "",
+    "libssh2trace": null,
+    "proxy_jump_host": "",
+    "proxy_jump_port": null,
+    "proxy_jump_username": "",
+    "proxy_jump_password": "",
+    "proxy_jump_private_key_path": "",
+    "proxy_jump_private_key_passphrase": "",
+    "proxy_jump_libssh2trace": null
+  },
+  "transportTest": {
+    "f": ""
+  }
+}

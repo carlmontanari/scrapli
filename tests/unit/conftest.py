@@ -202,3 +202,20 @@ def netconf_assert_result(
         # reply w/ an error saying no commit to cancel.
 
     return _netconf_assert_result
+
+
+@pytest.fixture(scope="function")
+def options_assert_result(request: pytest.FixtureRequest) -> Callable[[Result], None]:
+    def _options_assert_result(actual: str, f: str):
+        if request.config.getoption("--update"):
+            with open(file=f, mode="w") as _f:
+                _f.write(actual)
+
+            return
+
+        with open(file=f, mode="r", newline="") as _f:
+            golden = _f.read()
+
+        assert actual == golden
+
+    return _options_assert_result

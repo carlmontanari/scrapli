@@ -16,6 +16,7 @@ from scrapli.ffi_mapping_cli import LibScrapliCliMapping
 from scrapli.ffi_mapping_netconf import LibScrapliNetconfMapping
 from scrapli.ffi_types import (
     DriverPointer,
+    OptionsPointer,
     USizePointer,
     ZigSlicePointer,
 )
@@ -54,7 +55,7 @@ class LibScrapliSharedMapping:
             [
                 DriverPointer,
             ],
-            int,
+            None,
         ] = lib.ls_shared_free
         lib.ls_shared_free.argtypes = [
             DriverPointer,
@@ -77,6 +78,32 @@ class LibScrapliSharedMapping:
         lib.ls_free_driver_options.argtypes = [c_void_p]
         lib.ls_free_driver_options.restype = None
 
+        self._fetch_options_size: Callable[
+            [
+                OptionsPointer,
+                USizePointer,
+            ],
+            int,
+        ] = lib.ls_fetch_options_size
+        lib.ls_fetch_options_size.argtypes = [
+            OptionsPointer,
+            USizePointer,
+        ]
+        lib.ls_fetch_options_size.restype = c_uint8
+
+        self._fetch_options: Callable[
+            [
+                OptionsPointer,
+                ZigSlicePointer,
+            ],
+            None,
+        ] = lib.ls_fetch_options
+        lib.ls_fetch_options.argtypes = [
+            OptionsPointer,
+            ZigSlicePointer,
+        ]
+        lib.ls_fetch_options.restype = None
+
     def get_poll_fd(self, ptr: DriverPointer) -> c_int:
         """
         Get the operation poll fd from the driver at ptr.
@@ -95,7 +122,7 @@ class LibScrapliSharedMapping:
         """
         return self._get_poll_fd(ptr)
 
-    def free(self, ptr: DriverPointer) -> int:
+    def free(self, ptr: DriverPointer) -> None:
         """
         Free the driver at ptr.
 
@@ -105,7 +132,7 @@ class LibScrapliSharedMapping:
             ptr: the ptr to the libscrapli cli/netconf object.
 
         Returns:
-            c_uint8: return code, non-zero value indicates an error.
+            N/A
 
         Raises:
             N/A
@@ -148,6 +175,44 @@ class LibScrapliSharedMapping:
 
         """
         return self._free_driver_options(options_ptr)
+
+    def fetch_options_size(self, options_ptr: c_void_p, options_size: USizePointer) -> int:
+        """
+        Fetches the size of the options rendered as json.
+
+        Should (generally) not be called directly/by users. Mostly for testing purposes.
+
+        Args:
+            options_ptr: pointer to the options to get the size of.
+            options_size: pointer to write the size of the options into.
+
+        Returns:
+            int: return code, non-zero value indicates an error.
+
+        Raises:
+            N/A
+
+        """
+        return self._fetch_options_size(options_ptr, options_size)
+
+    def fetch_options(self, options_ptr: c_void_p, options: ZigSlicePointer) -> None:
+        """
+        Fetches the options as json, written into the slice pointer.
+
+        Should (generally) not be called directly/by users. Mostly for testing purposes.
+
+        Args:
+            options_ptr: pointer to the options to get the size of.
+            options: pointer to write the options into.
+
+        Returns:
+            N/A
+
+        Raises:
+            N/A
+
+        """
+        return self._fetch_options(options_ptr, options)
 
 
 class LibScrapliSessionMapping:
