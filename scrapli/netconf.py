@@ -28,6 +28,7 @@ from scrapli.exceptions import (
     NotOpenedException,
     OpenException,
     OperationException,
+    OptionsException,
     SubmitOperationException,
 )
 from scrapli.ffi_mapping import LibScrapliMapping
@@ -303,7 +304,7 @@ class Options:
             options.contents.netconf.preferred_version_len = c_size_t(len(self.preferred_version))
 
         if self.message_poll_interval_ns is not None:
-            options.contents.netconf.message_poll_interval_ns = pointer(
+            options.contents.netconf.message_poll_interval = pointer(
                 c_uint64(self.message_poll_interval_ns)
             )
 
@@ -595,6 +596,51 @@ class Netconf:
             self._free()
 
             raise OpenException("failed to submit open operation")
+
+    def _get_options(self) -> str:
+        """
+        Returns the options provided as a json string.
+
+        Args:
+            N/A
+
+        Returns:
+            str: the options as a json string
+
+        Raises:
+            OptionsException: if we fail to get the size of the options from libscrapli.
+
+        """
+        options_ptr = self.ffi_mapping.shared_mapping.alloc_driver_options()
+        options = cast(options_ptr, POINTER(DriverOptions))
+
+        options.contents.apply(
+            logger_callback=self.logger_callback,
+            logger_level=ffi_logger_level(logger=self.logger),
+            port=self.port,
+            transport_kind=c_char_p(self.transport_options.transport_kind.encode(encoding="utf-8")),
+        )
+
+        self.options.apply(options=options)
+        self.auth_options.apply(options=options)
+        self.session_options.apply(options=options)
+        self.transport_options.apply(options=options)
+
+        options_size = pointer(c_size_t())
+
+        status = self.ffi_mapping.shared_mapping.fetch_options_size(
+            options_ptr=options_ptr, options_size=options_size
+        )
+        if status != 0:
+            raise OptionsException("failed to retrieve options size")
+
+        options_slice = pointer(ZigSlice(size=options_size.contents))
+
+        self.ffi_mapping.shared_mapping.fetch_options(
+            options_ptr=options_ptr, options=options_slice
+        )
+
+        return options_slice.contents.get_decoded_contents()
 
     def open(
         self,

@@ -27,6 +27,7 @@ from logging import CRITICAL, DEBUG, FATAL, INFO, NOTSET, WARN, Logger
 from typing import TYPE_CHECKING, Any, ClassVar, TypeAlias
 
 DriverPointer = c_void_p
+OptionsPointer = c_void_p
 OperationId: TypeAlias = c_uint32
 
 if TYPE_CHECKING:
