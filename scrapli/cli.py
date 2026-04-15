@@ -449,6 +449,51 @@ class Cli:
     ) -> None:
         self.ffi_mapping.shared_mapping.free(ptr=self._ptr_or_exception())
 
+    def _get_options(self) -> str:
+        """
+        Returns the options provided as a json string.
+
+        Args:
+            N/A
+
+        Returns:
+            str: the options as a json string
+
+        Raises:
+            OptionsException: if we fail to get the size of the options from libscrapli.
+
+        """
+        options_ptr = self.ffi_mapping.shared_mapping.alloc_driver_options()
+        options = cast(options_ptr, POINTER(DriverOptions))
+
+        options.contents.apply(
+            logger_callback=self.logger_callback,
+            logger_level=ffi_logger_level(logger=self.logger),
+            port=self.port,
+            transport_kind=c_char_p(self.transport_options.transport_kind.encode(encoding="utf-8")),
+            cli_definition_string=c_char_p(self.definition_string),
+        )
+
+        self.auth_options.apply(options=options)
+        self.session_options.apply(options=options)
+        self.transport_options.apply(options=options)
+
+        options_size = pointer(c_size_t())
+
+        status = self.ffi_mapping.shared_mapping.fetch_options_size(
+            options_ptr=options_ptr, options_size=options_size
+        )
+        if status != 0:
+            raise OptionsException("failed to retrieve options size")
+
+        options_slice = pointer(ZigSlice(size=options_size.contents))
+
+        self.ffi_mapping.shared_mapping.fetch_options(
+            options_ptr=options_ptr, options=options_slice
+        )
+
+        return options_slice.contents.get_decoded_contents()
+
     @property
     def ntc_templates_platform(self) -> str:
         """

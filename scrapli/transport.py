@@ -193,10 +193,10 @@ class BinOptions(Options):
             )
 
         if self.term_height is not None:
-            options.contents.transport.bin.term_height = pointer(self.term_height)
+            options.contents.transport.bin.term_height = pointer(c_uint16(self.term_height))
 
         if self.term_width is not None:
-            options.contents.transport.bin.term_width = pointer(self.term_width)
+            options.contents.transport.bin.term_width = pointer(c_uint16(self.term_width))
 
 
 @dataclass
@@ -268,7 +268,7 @@ class Ssh2Options(Options):
             )
 
         if self.libssh2_trace is not None:
-            options.contents.transport.ssh2.libssh2_trace = pointer(c_bool(self.libssh2_trace))
+            options.contents.transport.ssh2.libssh2trace = pointer(c_bool(self.libssh2_trace))
 
         if self.proxy_jump_host is not None:
             self._proxy_jump_host = to_c_string(self.proxy_jump_host)
