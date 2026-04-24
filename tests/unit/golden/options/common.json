@@ -5,7 +5,9 @@
     "port": 1234
   },
   "cli": {
-    "definition_str": "LS0tCnByb21wdF9wYXR0ZXJuOiAnXi4qWz4jJF1ccz8rJCcKZGVmYXVsdF9tb2RlOiAnY2xpJwptb2RlczoKICAtIG5hbWU6ICdjbGknCiAgICBwcm9tcHRfcGF0dGVybjogJ14uKls+IyRdXHM/KyQnCm9uX2Nsb3NlX2luc3RydWN0aW9uczoKICAtIHdyaXRlOgogICAgICBpbnB1dDogJ2V4aXQnCg=="
+    "definition_str": "LS0tCnByb21wdF9wYXR0ZXJuOiAnXi4qWz4jJF1ccz8rJCcKZGVmYXVsdF9tb2RlOiAnY2xpJwptb2RlczoKICAtIG5hbWU6ICdjbGknCiAgICBwcm9tcHRfcGF0dGVybjogJ14uKls+IyRdXHM/KyQnCm9uX2Nsb3NlX2luc3RydWN0aW9uczoKICAtIHdyaXRlOgogICAgICBpbnB1dDogJ2V4aXQnCg==",
+    "normalize_line_feeds": "null",
+    "normalize_trailing_whitespace": "null"
   },
   "netconf": {
     "error_tag": "",

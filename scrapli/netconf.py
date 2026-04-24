@@ -640,6 +640,8 @@ class Netconf:
             options_ptr=options_ptr, options=options_slice
         )
 
+        self.ffi_mapping.shared_mapping.free_driver_options(options_ptr=options_ptr)
+
         return options_slice.contents.get_decoded_contents()
 
     def open(

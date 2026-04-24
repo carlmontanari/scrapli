@@ -37,7 +37,7 @@ from scrapli.exceptions import (
     SubmitOperationException,
 )
 from scrapli.ffi_mapping import LibScrapliMapping
-from scrapli.ffi_options import DriverOptions
+from scrapli.ffi_options import DriverOptions, DriverOptionsPointer
 from scrapli.ffi_types import (
     DriverPointer,
     OperationIdPointer,
@@ -153,6 +153,73 @@ class ReadCallback:
             raise OperationException("one of 'callback' or 'callback_async' must be set")
 
 
+@dataclass
+class Options:
+    r"""
+    Options holds cli related options to pass to the ffi layer.
+
+    Args:
+        normalize_line_feeds: disable normalizing \r\n -> \n.
+        normalize_trailing_whitespace: disable trimming trailing whitespace on lines.
+
+    Returns:
+        None
+
+    Raises:
+        N/A
+
+    """
+
+    normalize_line_feeds: bool | None = None
+    normalize_trailing_whitespace: bool | None = None
+
+    def apply(self, *, options: DriverOptionsPointer) -> None:
+        """
+        Applies the options to the given options struct.
+
+        Should not be called directly/by users.
+
+        Args:
+            options: the options struct to write set options to
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        """
+        if self.normalize_line_feeds is not None:
+            options.contents.cli.normalize_line_feeds = pointer(c_bool(self.normalize_line_feeds))
+
+        if self.normalize_trailing_whitespace is not None:
+            options.contents.cli.normalize_trailing_whitespace = pointer(
+                c_bool(self.normalize_trailing_whitespace)
+            )
+
+    def __repr__(self) -> str:
+        """
+        Magic repr method for Options object
+
+        Args:
+            N/A
+
+        Returns:
+            str: repr for Options object
+
+        Raises:
+            N/A
+
+        """
+        return (
+            # it will probably be "canonical" to import Options as CliOptions, so we'll make
+            # the repr do that too
+            f"Cli{self.__class__.__name__}("
+            f"normalize_line_feeds={self.normalize_line_feeds!r})"
+            f"normalize_trailing_whitespace={self.normalize_trailing_whitespace!r})"
+        )
+
+
 class Cli:
     """
     Cli represents a cli connection object.
@@ -174,6 +241,7 @@ class Cli:
         *,
         port: int | None = None,
         definition_file_or_name: str | LoadedDefinition | None = None,
+        cli_options: Options | None = None,
         auth_options: AuthOptions | None = None,
         session_options: SessionOptions | None = None,
         transport_options: TransportOptions | None = None,
@@ -211,6 +279,7 @@ class Cli:
         else:
             self.port = 23 if isinstance(transport_options, TransportTelnetOptions) else 22
 
+        self.cli_options = cli_options or Options()
         self.auth_options = auth_options or AuthOptions()
         self.session_options = session_options or SessionOptions()
         self.transport_options = transport_options or TransportBinOptions()
@@ -474,6 +543,7 @@ class Cli:
             cli_definition_string=c_char_p(self.definition_string),
         )
 
+        self.cli_options.apply(options=options)
         self.auth_options.apply(options=options)
         self.session_options.apply(options=options)
         self.transport_options.apply(options=options)
@@ -491,6 +561,8 @@ class Cli:
         self.ffi_mapping.shared_mapping.fetch_options(
             options_ptr=options_ptr, options=options_slice
         )
+
+        self.ffi_mapping.shared_mapping.free_driver_options(options_ptr=options_ptr)
 
         return options_slice.contents.get_decoded_contents()
 
@@ -574,6 +646,7 @@ class Cli:
             cli_definition_string=c_char_p(self.definition_string),
         )
 
+        self.cli_options.apply(options=options)
         self.auth_options.apply(options=options)
         self.session_options.apply(options=options)
         self.transport_options.apply(options=options)

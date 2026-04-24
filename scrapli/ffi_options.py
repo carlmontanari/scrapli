@@ -39,6 +39,8 @@ class CLI(Structure):
     _fields_: ClassVar[list[tuple[str, Any]]] = [
         ("definition_str", c_char_p),
         ("definition_str_len", c_size_t),
+        ("normalize_line_feeds", BoolPointer),
+        ("normalize_trailing_whitespace", BoolPointer),
     ]
 
 

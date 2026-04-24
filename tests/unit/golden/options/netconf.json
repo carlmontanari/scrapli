@@ -5,7 +5,9 @@
     "port": 830
   },
   "cli": {
-    "definition_str": ""
+    "definition_str": "",
+    "normalize_line_feeds": "null",
+    "normalize_trailing_whitespace": "null"
   },
   "netconf": {
     "error_tag": "<errrrrrro>",
