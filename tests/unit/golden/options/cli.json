@@ -28,6 +28,7 @@
     "password": "",
     "private_key_path": "",
     "private_key_passphrase": "",
+    "private_key_content": "",
     "force_in_session_auth": null,
     "bypass_in_session_auth": null,
     "username_pattern": "",
