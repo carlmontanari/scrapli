@@ -56,6 +56,7 @@ class Options:
         password: the password to use for the connection
         private_key_path: filepath to the ssh private key to use
         private_key_passphrase: the private key passphrase if set
+        private_key_content: the private key content to use -- only supported w/ ssh2 transport.
         lookups: a list of key/values that can be "looked up" from a connection -- used in
             conjunction with platform definition templating like `__lookup::enable` where "enable"
             is the key to "lookup" in the list of lookup key/values.
@@ -77,6 +78,7 @@ class Options:
     password: str | None = None
     private_key_path: str | None = None
     private_key_passphrase: str | None = None
+    private_key_content: str | None = None
     lookups: list[LookupKeyValue] | None = None
     force_in_session_auth: bool | None = None
     bypass_in_session_auth: bool | None = None
@@ -88,6 +90,7 @@ class Options:
     _password: c_char_p | None = field(init=False, default=None, repr=False)
     _private_key_path: c_char_p | None = field(init=False, default=None, repr=False)
     _private_key_passphrase: c_char_p | None = field(init=False, default=None, repr=False)
+    _private_key_content: c_char_p | None = field(init=False, default=None, repr=False)
     _username_pattern: c_char_p | None = field(init=False, default=None, repr=False)
     _password_pattern: c_char_p | None = field(init=False, default=None, repr=False)
     _private_key_passphrase_pattern: c_char_p | None = field(init=False, default=None, repr=False)
@@ -97,7 +100,7 @@ class Options:
     _lookup_map_vals: Array[c_char_p] | None = field(init=False, default=None, repr=False)
     _lookup_map_val_lens: Array[c_uint16] | None = field(init=False, default=None, repr=False)
 
-    def apply(self, *, options: DriverOptionsPointer) -> None:  # noqa: C901
+    def apply(self, *, options: DriverOptionsPointer) -> None:  # noqa: C901,PLR0915
         """
         Applies the options to the given options struct.
 
@@ -138,6 +141,12 @@ class Options:
             options.contents.auth.private_key_passphrase_len = c_size_t(
                 len(self.private_key_passphrase)
             )
+
+        if self.private_key_content is not None:
+            self._private_key_content = to_c_string(self.private_key_content)
+
+            options.contents.auth.private_key_content = self._private_key_content
+            options.contents.auth.private_key_content_len = c_size_t(len(self.private_key_content))
 
         if self.lookups is not None:
             count = len(self.lookups)
@@ -215,9 +224,10 @@ class Options:
             # the repr do that too
             f"Auth{self.__class__.__name__}("
             f"username={self.username!r}, "
-            "password=REDACTED, "
+            f"password={None if not self.password else 'REDACTED'}, "
             f"private_key_path={self.private_key_path!r} "
-            f"private_key_passphrase={self.private_key_passphrase!r} "
+            f"private_key_passphrase={None if not self.private_key_passphrase else 'REDACTED'} "
+            f"private_key_content={None if not self.private_key_content else 'REDACTED'} "
             f"lookups={self.lookups!r}) "
             f"force_in_session_auth={self.force_in_session_auth!r}) "
             f"bypass_in_session_auth={self.bypass_in_session_auth!r}) "

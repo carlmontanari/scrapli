@@ -146,6 +146,8 @@ class Auth(Structure):
         ("private_key_path_len", c_size_t),
         ("private_key_passphrase", c_char_p),
         ("private_key_passphrase_len", c_size_t),
+        ("private_key_content", c_char_p),
+        ("private_key_content_len", c_size_t),
         ("lookups", AuthLookups),
         ("force_in_session_auth", BoolPointer),
         ("bypass_in_session_auth", BoolPointer),
