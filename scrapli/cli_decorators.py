@@ -68,8 +68,8 @@ def handle_operation_timeout(
 
         try:
             res = wrapped(inst, *args, **kwargs)
-        except Exception as exc:
-            raise exc
+        except Exception:
+            raise
         finally:
             # unconditionally reset the timeout
             status = inst.ffi_mapping.session_mapping.set_operation_timeout_ns(
@@ -139,8 +139,8 @@ def handle_operation_timeout_async(
 
         try:
             res = await wrapped(inst, *args, **kwargs)
-        except Exception as exc:
-            raise exc
+        except Exception:
+            raise
         finally:
             # unconditionally reset the timeout
             status = inst.ffi_mapping.session_mapping.set_operation_timeout_ns(

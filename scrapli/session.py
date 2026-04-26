@@ -121,9 +121,9 @@ class Options:
             # the repr do that too
             f"Session{self.__class__.__name__}("
             f"read_size={self.read_size!r}, "
-            f"return_char={self.return_char!r}) "
-            f"operation_timeout_ns={self.operation_timeout_ns!r}) "
-            f"operation_max_search_depth={self.operation_max_search_depth!r}) "
-            f"recorder_path={self.recorder_path!r}) "
-            f"recorder_callback={self.recorder_callback!r}) "
+            f"return_char={self.return_char!r}, "
+            f"operation_timeout_ns={self.operation_timeout_ns!r}, "
+            f"operation_max_search_depth={self.operation_max_search_depth!r}, "
+            f"recorder_path={self.recorder_path!r}, "
+            f"recorder_callback={self.recorder_callback!r})"
         )

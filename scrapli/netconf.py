@@ -332,8 +332,8 @@ class Options:
             # the repr do that too
             f"Netconf{self.__class__.__name__}("
             f"error_tag={self.error_tag!r}, "
-            f"preferred_version={self.preferred_version!r} "
-            f"message_poll_interval_ns={self.message_poll_interval_ns!r})"
+            f"preferred_version={self.preferred_version!r}, "
+            f"message_poll_interval_ns={self.message_poll_interval_ns!r}, "
             f"close_force={self.close_force!r})"
         )
 
@@ -509,10 +509,10 @@ class Netconf:
             f"{self.__class__.__name__}("
             f"host={self.host!r}, "
             f"port={self.port!r}, "
-            f"options={self.options!r} "
-            f"auth_options={self.auth_options!r} "
-            f"session_options={self.session_options!r} "
-            f"transport_options={self.transport_options!r}) "
+            f"options={self.options!r}, "
+            f"auth_options={self.auth_options!r}, "
+            f"session_options={self.session_options!r}, "
+            f"transport_options={self.transport_options!r})"
         )
 
     def __copy__(self, memodict: dict[Any, Any] = {}) -> "Netconf":
@@ -976,10 +976,12 @@ class Netconf:
         """
         notification_size = U64Pointer(c_uint64())
 
-        self.ffi_mapping.netconf_mapping.get_next_notification_size(
+        status = self.ffi_mapping.netconf_mapping.get_next_notification_size(
             ptr=self._ptr_or_exception(),
             notification_size=notification_size,
         )
+        if status != 0:
+            raise SubmitOperationException("submitting getting next notification size failed")
 
         if notification_size.contents.value == 0:
             raise NoMessagesException("no notification messages available")
@@ -1016,11 +1018,13 @@ class Netconf:
         """
         subscription_size = pointer(c_uint64())
 
-        self.ffi_mapping.netconf_mapping.get_next_subscription_size(
+        status = self.ffi_mapping.netconf_mapping.get_next_subscription_size(
             ptr=self._ptr_or_exception(),
             subscription_id=c_uint64(subscription_id),
             subscription_size=subscription_size,
         )
+        if status != 0:
+            raise SubmitOperationException("submitting getting next subscription size failed")
 
         if subscription_size.contents.value == 0:
             raise NoMessagesException(

@@ -215,7 +215,7 @@ class Options:
             # it will probably be "canonical" to import Options as CliOptions, so we'll make
             # the repr do that too
             f"Cli{self.__class__.__name__}("
-            f"normalize_line_feeds={self.normalize_line_feeds!r})"
+            f"normalize_line_feeds={self.normalize_line_feeds!r}, "
             f"normalize_trailing_whitespace={self.normalize_trailing_whitespace!r})"
         )
 
@@ -260,6 +260,7 @@ class Cli:
         self.ffi_mapping = LibScrapliMapping()
 
         if isinstance(definition_file_or_name, LoadedDefinition):
+            self.definition_file_or_name = definition_file_or_name.platform_name
             self._platform_name = definition_file_or_name.platform_name
             self.definition_string = definition_file_or_name.definition.encode()
         else:
@@ -432,9 +433,9 @@ class Cli:
             f"definition_file_or_name={self.definition_file_or_name!r}, "
             f"host={self.host!r}, "
             f"port={self.port!r}, "
-            f"auth_options={self.auth_options!r} "
-            f"session_options={self.session_options!r} "
-            f"transport_options={self.transport_options!r}) "
+            f"auth_options={self.auth_options!r}, "
+            f"session_options={self.session_options!r}, "
+            f"transport_options={self.transport_options!r})"
         )
 
     def __copy__(self, memodict: dict[Any, Any] = {}) -> "Cli":
@@ -619,12 +620,12 @@ class Cli:
 
         genie_platform = pointer(ZigSlice(size=c_uint64(256)))
 
-        status = self.ffi_mapping.cli_mapping.get_ntc_templates_platform(
+        status = self.ffi_mapping.cli_mapping.get_genie_platform(
             ptr=self._ptr_or_exception(),
-            ntc_templates_platform=genie_platform,
+            genie_platform=genie_platform,
         )
         if status != 0:
-            raise GetResultException("failed to retrieve genie templates platform")
+            raise GetResultException("failed to retrieve genie platform")
 
         self._genie_platform = genie_platform.contents.get_decoded_contents().strip("\x00")
 
