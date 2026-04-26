@@ -976,12 +976,10 @@ class Netconf:
         """
         notification_size = U64Pointer(c_uint64())
 
-        status = self.ffi_mapping.netconf_mapping.get_next_notification_size(
+        self.ffi_mapping.netconf_mapping.get_next_notification_size(
             ptr=self._ptr_or_exception(),
             notification_size=notification_size,
         )
-        if status != 0:
-            raise SubmitOperationException("submitting getting next notification size failed")
 
         if notification_size.contents.value == 0:
             raise NoMessagesException("no notification messages available")
@@ -1018,13 +1016,11 @@ class Netconf:
         """
         subscription_size = pointer(c_uint64())
 
-        status = self.ffi_mapping.netconf_mapping.get_next_subscription_size(
+        self.ffi_mapping.netconf_mapping.get_next_subscription_size(
             ptr=self._ptr_or_exception(),
             subscription_id=c_uint64(subscription_id),
             subscription_size=subscription_size,
         )
-        if status != 0:
-            raise SubmitOperationException("submitting getting next subscription size failed")
 
         if subscription_size.contents.value == 0:
             raise NoMessagesException(
