@@ -174,8 +174,9 @@ class Libscrapli:
     def _get_libscrapli_asset_filename(cls) -> str:
         zig_triple = os.environ.get(LIBSCRPALI_ZIG_TRIPLE_ENV, None)
         if zig_triple is not None:
-            ext = "so" if "linux" in zig_triple else "dylib"
-            return f"libscrapli-{zig_triple}.{ext}.{LIBSCRAPLI_VERSION}"
+            if "linux" in zig_triple:
+                return f"libscrapli-{zig_triple}.so.{LIBSCRAPLI_VERSION}"
+            return f"libscrapli-{zig_triple}.{LIBSCRAPLI_VERSION}.dylib"
 
         _base = f"libscrapli-{cls._get_zig_style_arch()}"
 

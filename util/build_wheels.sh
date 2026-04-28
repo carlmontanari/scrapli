@@ -21,7 +21,6 @@ rm scrapli/lib/*.dylib || true
 rm scrapli/lib/*.so.* || true
 
 for target in \
-    x86_64-macos \
     aarch64-macos \
     x86_64-linux-gnu \
     x86_64-linux-musl \
