@@ -4,9 +4,8 @@ from typing import Any, TextIO
 
 from scrapli.cli_parse import genie_parse, textfsm_get_template, textfsm_parse
 from scrapli.exceptions import ParsingException
+from scrapli.ffi_types import LIBSCRAPLI_DELIMITER
 from scrapli.helper import bulid_result_preview, unix_nano_timestmap_to_iso
-
-OPERATION_DELIMITER = "__libscrapli__"
 
 
 class Result:
@@ -40,11 +39,11 @@ class Result:
     ) -> None:
         self.host = host
         self.port = port
-        self.inputs = inputs.split(OPERATION_DELIMITER)
+        self.inputs = inputs.split(LIBSCRAPLI_DELIMITER)
         self.start_time = start_time
         self.splits = splits
-        self.results_raw = results_raw.split(OPERATION_DELIMITER.encode())
-        self.results = results.split(OPERATION_DELIMITER)
+        self.results_raw = results_raw.split(LIBSCRAPLI_DELIMITER.encode())
+        self.results = results.split(LIBSCRAPLI_DELIMITER)
         self.results_failed_indicator = results_failed_indicator
         self.textfsm_platform = textfsm_platform
         self.genie_platform = genie_platform

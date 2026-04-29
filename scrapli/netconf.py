@@ -34,6 +34,7 @@ from scrapli.exceptions import (
 from scrapli.ffi_mapping import LibScrapliMapping
 from scrapli.ffi_options import DriverOptions, DriverOptionsPointer
 from scrapli.ffi_types import (
+    LIBSCRAPLI_DELIMITER,
     DriverPointer,
     IntPointer,
     NetconfCapabilitesCallback,
@@ -1095,7 +1096,7 @@ class Netconf:
 
         if extra_namespaces is not None:
             _extra_namespaces = to_c_string(
-                "__libscrapli__".join(["::".join(p) for p in extra_namespaces])
+                LIBSCRAPLI_DELIMITER.join(["::".join(p) for p in extra_namespaces])
             )
         else:
             _extra_namespaces = to_c_string("")
@@ -1147,7 +1148,7 @@ class Netconf:
 
         if extra_namespaces is not None:
             _extra_namespaces = to_c_string(
-                "__libscrapli__".join(["::".join(p) for p in extra_namespaces])
+                LIBSCRAPLI_DELIMITER.join(["::".join(p) for p in extra_namespaces])
             )
         else:
             _extra_namespaces = to_c_string("")
