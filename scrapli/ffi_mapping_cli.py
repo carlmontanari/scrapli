@@ -222,6 +222,31 @@ class LibScrapliCliMapping:
         ]
         lib.ls_cli_send_input.restype = c_uint8
 
+        self._send_inputs: Callable[
+            [
+                DriverPointer,
+                OperationIdPointer,
+                CancelPointer,
+                c_char_p,
+                c_char_p,
+                c_char_p,
+                c_bool,
+                c_bool,
+            ],
+            int,
+        ] = lib.ls_cli_send_inputs
+        lib.ls_cli_send_inputs.argtypes = [
+            DriverPointer,
+            OperationIdPointer,
+            CancelPointer,
+            c_char_p,
+            c_char_p,
+            c_char_p,
+            c_bool,
+            c_bool,
+        ]
+        lib.ls_cli_send_inputs.restype = c_uint8
+
         self._send_prompted_input: Callable[
             [
                 DriverPointer,
@@ -630,6 +655,51 @@ class LibScrapliCliMapping:
             operation_id_ptr,
             CANCEL,
             input_,
+            requested_mode,
+            input_handling,
+            retain_input,
+            retain_trailing_prompt,
+        )
+
+    def send_inputs(
+        self,
+        *,
+        ptr: DriverPointer,
+        operation_id_ptr: OperationIdPointer,
+        inputs: c_char_p,
+        requested_mode: c_char_p,
+        input_handling: c_char_p,
+        retain_input: c_bool,
+        retain_trailing_prompt: c_bool,
+    ) -> int:
+        """
+        Send some input to the cli object.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: ptr to the cli object
+            operation_id_ptr: int pointer to fill with the id of the submitted operation
+            inputs: the inputs to send, joined on the libscrapli delimiter
+            requested_mode: string name of the mode to send the input in
+            input_handling: string mapping to input handling enum that governs how the input is
+                handled
+            retain_input: boolean indicating whether to retain the input after entering
+            retain_trailing_prompt: boolean indicating whether to retain the trailing
+
+        Returns:
+            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
+                ctypes.
+
+        Raises:
+            N/A
+
+        """
+        return self._send_inputs(
+            ptr,
+            operation_id_ptr,
+            CANCEL,
+            inputs,
             requested_mode,
             input_handling,
             retain_input,

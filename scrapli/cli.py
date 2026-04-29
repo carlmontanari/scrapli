@@ -39,6 +39,7 @@ from scrapli.exceptions import (
 from scrapli.ffi_mapping import LibScrapliMapping
 from scrapli.ffi_options import DriverOptions, DriverOptionsPointer
 from scrapli.ffi_types import (
+    LIBSCRAPLI_DELIMITER,
     DriverPointer,
     OperationIdPointer,
     ZigSlice,
@@ -1305,6 +1306,28 @@ class Cli:
 
         return await self._get_result_async(operation_id_ptr=operation_id_ptr)
 
+    def _send_inputs(  # noqa: PLR0913
+        self,
+        *,
+        operation_id_ptr: OperationIdPointer,
+        inputs: c_char_p,
+        requested_mode: c_char_p,
+        input_handling: c_char_p,
+        retain_input: c_bool,
+        retain_trailing_prompt: c_bool,
+    ) -> None:
+        status = self.ffi_mapping.cli_mapping.send_inputs(
+            ptr=self._ptr_or_exception(),
+            operation_id_ptr=operation_id_ptr,
+            inputs=inputs,
+            requested_mode=requested_mode,
+            input_handling=input_handling,
+            retain_input=retain_input,
+            retain_trailing_prompt=retain_trailing_prompt,
+        )
+        if status != 0:
+            raise SubmitOperationException("submitting send input operation failed")
+
     @handle_operation_timeout
     def send_inputs(  # noqa: PLR0913
         self,
@@ -1341,35 +1364,22 @@ class Cli:
         # meaning all the "inputs" combined, not individually
         _ = operation_timeout_ns
 
-        result: Result | None = None
+        operation_id_ptr = pointer(c_uint32(0))
 
-        for input_ in inputs:
-            operation_id_ptr = pointer(c_uint32(0))
+        _inputs = to_c_string(LIBSCRAPLI_DELIMITER.join(inputs))
+        _requested_mode = to_c_string(requested_mode)
+        _input_handling = to_c_string(input_handling)
 
-            _input = to_c_string(input_)
-            _requested_mode = to_c_string(requested_mode)
-            _input_handling = to_c_string(input_handling)
+        self._send_inputs(
+            operation_id_ptr=operation_id_ptr,
+            inputs=_inputs,
+            requested_mode=_requested_mode,
+            input_handling=_input_handling,
+            retain_input=c_bool(retain_input),
+            retain_trailing_prompt=c_bool(retain_trailing_prompt),
+        )
 
-            self._send_input(
-                operation_id_ptr=operation_id_ptr,
-                input_=_input,
-                requested_mode=_requested_mode,
-                input_handling=_input_handling,
-                retain_input=c_bool(retain_input),
-                retain_trailing_prompt=c_bool(retain_trailing_prompt),
-            )
-
-            _result = self._get_result(operation_id_ptr=operation_id_ptr)
-
-            if result is None:
-                result = _result
-            else:
-                result.extend(result=_result)
-
-            if result.failed and stop_on_indicated_failure:
-                return result
-
-        return result  # type: ignore[return-value]
+        return self._get_result(operation_id_ptr=operation_id_ptr)
 
     @handle_operation_timeout_async
     async def send_inputs_async(  # noqa: PLR0913
@@ -1407,34 +1417,22 @@ class Cli:
         # meaning all the "inputs" combined, not individually
         _ = operation_timeout_ns
 
-        result: Result | None = None
+        operation_id_ptr = pointer(c_uint32(0))
 
-        for input_ in inputs:
-            operation_id_ptr = pointer(c_uint32(0))
+        _inputs = to_c_string(LIBSCRAPLI_DELIMITER.join(inputs))
+        _requested_mode = to_c_string(requested_mode)
+        _input_handling = to_c_string(input_handling)
 
-            _input = to_c_string(input_)
-            _requested_mode = to_c_string(requested_mode)
-            _input_handling = to_c_string(input_handling)
+        self._send_inputs(
+            operation_id_ptr=operation_id_ptr,
+            inputs=_inputs,
+            requested_mode=_requested_mode,
+            input_handling=_input_handling,
+            retain_input=c_bool(retain_input),
+            retain_trailing_prompt=c_bool(retain_trailing_prompt),
+        )
 
-            self._send_input(
-                operation_id_ptr=operation_id_ptr,
-                input_=_input,
-                requested_mode=_requested_mode,
-                input_handling=_input_handling,
-                retain_input=c_bool(retain_input),
-                retain_trailing_prompt=c_bool(retain_trailing_prompt),
-            )
-
-            _result = await self._get_result_async(operation_id_ptr=operation_id_ptr)
-            if result is None:
-                result = _result
-            else:
-                result.extend(result=_result)
-
-            if result.failed and stop_on_indicated_failure:
-                return result
-
-        return result  # type: ignore[return-value]
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
 
     def send_inputs_from_file(  # noqa: PLR0913
         self,
