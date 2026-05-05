@@ -11,4 +11,3 @@ fi
 LIBSCRAPLI_TAG="${LIBSCRAPLI_TAG#v}"
 
 sed -i.bak -E "s|(LIBSCRAPLI_VERSION = )(.*)|\1\"${LIBSCRAPLI_TAG}\"|g" scrapli/ffi.py
-sed -i.bak -E "s|(LIBSCRAPLI_VERSION = )(.*)|\1\"${LIBSCRAPLI_TAG}\"|g" setup.py

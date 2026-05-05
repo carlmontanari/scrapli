@@ -16,7 +16,29 @@ from setuptools.command.bdist_wheel import bdist_wheel
 from setuptools.command.editable_wheel import editable_wheel
 from setuptools.command.sdist import sdist
 
-LIBSCRAPLI_VERSION = "0.0.1-rc.13"
+
+def get_libscrapli_version() -> str:
+    """
+    Extract LIBSCRAPLI_VERSION from scrapli/ffi.py
+
+    Args:
+        N/A
+
+    Returns:
+        str: the parsed libscrapli verison
+
+    Raises:
+        RuntimeError: if LIBSCRAPLI_VERSION is not found
+
+    """
+    version_file = Path("scrapli/ffi.py").read_text()
+    match = re.search(r'^LIBSCRAPLI_VERSION = "([^"]+)"', version_file, re.M)
+    if match:
+        return match.group(1)
+    raise RuntimeError("Unable to find LIBSCRAPLI_VERSION in scrapli/ffi.py")
+
+
+LIBSCRAPLI_VERSION = get_libscrapli_version()
 LIBSCRAPLI_REPO = "https://github.com/scrapli/libscrapli"
 LIBSCRAPLI_BUILD_PATH_ENV = "LIBSCRAPLI_BUILD_PATH"
 LIBSCRPALI_ZIG_TRIPLE_ENV = "LIBSCRAPLI_ZIG_TRIPLE"
