@@ -140,7 +140,7 @@ class LibScrapliSharedMapping:
         """
         return self._free(ptr)
 
-    def alloc_driver_options(self) -> c_void_p:
+    def alloc_driver_options(self) -> OptionsPointer:
         """
         Allocates a cli/netconf driver options struct in the zig ffi bits.
 
@@ -158,7 +158,7 @@ class LibScrapliSharedMapping:
         """
         return self._alloc_driver_options()
 
-    def free_driver_options(self, options_ptr: c_void_p) -> None:
+    def free_driver_options(self, options_ptr: OptionsPointer) -> None:
         """
         Frees a cli/netconf driver options struct in the zig ffi bits.
 
@@ -176,7 +176,7 @@ class LibScrapliSharedMapping:
         """
         return self._free_driver_options(options_ptr)
 
-    def fetch_options_size(self, options_ptr: c_void_p, options_size: USizePointer) -> int:
+    def fetch_options_size(self, options_ptr: OptionsPointer, options_size: USizePointer) -> int:
         """
         Fetches the size of the options rendered as json.
 
@@ -195,7 +195,7 @@ class LibScrapliSharedMapping:
         """
         return self._fetch_options_size(options_ptr, options_size)
 
-    def fetch_options(self, options_ptr: c_void_p, options: ZigSlicePointer) -> None:
+    def fetch_options(self, options_ptr: OptionsPointer, options: ZigSlicePointer) -> None:
         """
         Fetches the options as json, written into the slice pointer.
 
