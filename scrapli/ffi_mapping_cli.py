@@ -3,7 +3,6 @@
 from collections.abc import Callable
 from ctypes import (
     CDLL,
-    POINTER,
     c_bool,
     c_char_p,
     c_uint8,
@@ -312,7 +311,7 @@ class LibScrapliCliMapping:
             c_char_p,
             c_char_p,
             c_char_p,
-            POINTER(c_bool),
+            BoolPointer,
         ]
         lib.ls_cli_read_callback_should_execute.restype = c_uint8
 
@@ -332,8 +331,7 @@ class LibScrapliCliMapping:
             options_ptr: the pointer to the options struct
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            DriverPointer: the pointer to the allocated cli object.
 
         Raises:
             N/A

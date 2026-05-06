@@ -49,7 +49,7 @@ class LibScrapliSharedMapping:
         lib.ls_shared_get_poll_fd.argtypes = [
             DriverPointer,
         ]
-        lib.ls_cli_alloc.restype = c_int
+        lib.ls_shared_get_poll_fd.restype = c_int
 
         self._free: Callable[
             [
@@ -114,7 +114,7 @@ class LibScrapliSharedMapping:
             ptr: the ptr to the libscrapli cli/netconf object.
 
         Returns:
-            c_uint32: the poll fd for the driver.
+            c_int: the poll fd for the driver.
 
         Raises:
             N/A
@@ -287,7 +287,7 @@ class LibScrapliSessionMapping:
         lib.ls_session_write_return.argtypes = [
             DriverPointer,
         ]
-        lib.ls_session_write_and_return.restype = c_uint8
+        lib.ls_session_write_return.restype = c_uint8
 
         self._set_operation_timeout_ns: Callable[
             [

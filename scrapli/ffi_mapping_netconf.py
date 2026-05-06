@@ -3,7 +3,6 @@
 from collections.abc import Callable
 from ctypes import (
     CDLL,
-    POINTER,
     c_bool,
     c_char_p,
     c_int,
@@ -164,7 +163,7 @@ class LibScrapliNetconfMapping:
         ] = lib.ls_netconf_get_subscription_id
         lib.ls_netconf_get_subscription_id.argtypes = [
             c_char_p,
-            POINTER(c_uint64),
+            U64Pointer,
         ]
         lib.ls_netconf_get_subscription_id.restype = c_uint8
 
@@ -177,7 +176,7 @@ class LibScrapliNetconfMapping:
         ] = lib.ls_netconf_next_notification_message_size
         lib.ls_netconf_next_notification_message_size.argtypes = [
             DriverPointer,
-            POINTER(c_uint64),
+            U64Pointer,
         ]
         lib.ls_netconf_next_notification_message_size.restype = c_uint8
 

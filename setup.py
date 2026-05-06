@@ -32,7 +32,7 @@ def get_libscrapli_version() -> str:
 
     """
     version_file = Path("scrapli/ffi.py").read_text()
-    match = re.search(r'^LIBSCRAPLI_VERSION = "([^"]+)"', version_file, re.M)
+    match = re.search(r'^LIBSCRAPLI_VERSION = "([^"]+)"', version_file, re.MULTILINE)
     if match:
         return match.group(1)
     raise RuntimeError("Unable to find LIBSCRAPLI_VERSION in scrapli/ffi.py")
