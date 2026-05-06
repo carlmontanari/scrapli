@@ -160,3 +160,9 @@ And create a cli driver for example:
 ```zig
 const d = try cli.Driver.init(allocator, host, .{})
 ```
+
+
+## Dynamically Linked Shared Objects
+
+Note that if you prefer to use a statically linked libscrapli shared object, these are built and
+released on the libscrapli release page.
