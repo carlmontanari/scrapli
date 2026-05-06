@@ -153,6 +153,31 @@ class ReadCallback:
         if self.callback is None and self.callback_async is None:
             raise OperationException("one of 'callback' or 'callback_async' must be set")
 
+    def __repr__(self) -> str:
+        """
+        Magic repr method for ReadCallback object
+
+        Args:
+            N/A
+
+        Returns:
+            str: repr for ReadCallback object
+
+        Raises:
+            N/A
+
+        """
+        return (
+            f"{self.__class__.__name__}("
+            f"name={self.name!r}, "
+            f"contains={self.contains!r}, "
+            f"contains_pattern={self.contains_pattern!r}, "
+            f"not_contains={self.not_contains!r}, "
+            f"search_depth={self.search_depth!r}, "
+            f"once={self.once!r}, "
+            f"completes={self.completes!r})"
+        )
+
 
 @dataclass
 class Options:
@@ -431,12 +456,15 @@ class Cli:
         """
         return (
             f"{self.__class__.__name__}("
-            f"definition_file_or_name={self.definition_file_or_name!r}, "
             f"host={self.host!r}, "
             f"port={self.port!r}, "
+            f"definition_file_or_name={self.definition_file_or_name!r}, "
+            f"cli_options={self.cli_options!r}, "
             f"auth_options={self.auth_options!r}, "
             f"session_options={self.session_options!r}, "
-            f"transport_options={self.transport_options!r})"
+            f"transport_options={self.transport_options!r}, "
+            f"logging_uid={self._logging_uid!r}, "
+            f"connected={self.ptr is not None})"
         )
 
     def __copy__(self, memodict: dict[Any, Any] = {}) -> "Cli":

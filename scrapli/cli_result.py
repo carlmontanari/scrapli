@@ -48,6 +48,27 @@ class Result:
         self.textfsm_platform = textfsm_platform
         self.genie_platform = genie_platform
 
+    def __repr__(self) -> str:
+        """
+        Magic repr method for Result class
+
+        Args:
+            N/A
+
+        Returns:
+            str: repr for class object
+
+        Raises:
+            N/A
+
+        """
+        return (
+            f"{self.__class__.__name__}("
+            f"host={self.host!r}, "
+            f"port={self.port!r}, "
+            f"failed={self.failed!r})"
+        )
+
     def __str__(self) -> str:
         """
         Magic str method for Result class
