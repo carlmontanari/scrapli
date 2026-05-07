@@ -15,6 +15,7 @@ from scrapli.ffi_types import (
     BoolPointer,
     CancelPointer,
     DriverPointer,
+    LibScrapliFFIResult,
     OperationId,
     OperationIdPointer,
     U32Pointer,
@@ -347,7 +348,7 @@ class LibScrapliCliMapping:
         *,
         ptr: DriverPointer,
         ntc_templates_platform: ZigSlicePointer,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Writes the ntc templates platform into the given slice pointer.
 
@@ -358,16 +359,17 @@ class LibScrapliCliMapping:
             ntc_templates_platform: slice to write the ntc templates platform into
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._get_ntc_templates_platform(
-            ptr,
-            ntc_templates_platform,
+        return LibScrapliFFIResult(
+            self._get_ntc_templates_platform(
+                ptr,
+                ntc_templates_platform,
+            )
         )
 
     def get_genie_platform(
@@ -375,7 +377,7 @@ class LibScrapliCliMapping:
         *,
         ptr: DriverPointer,
         genie_platform: ZigSlicePointer,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Writes the (cisco/pyats) genie platform into the given slice pointer.
 
@@ -386,23 +388,24 @@ class LibScrapliCliMapping:
             genie_platform: slice to write the ntc templates platform into
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._get_genie_platform(
-            ptr,
-            genie_platform,
+        return LibScrapliFFIResult(
+            self._get_genie_platform(
+                ptr,
+                genie_platform,
+            )
         )
 
     def open(
         self,
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Open the driver at ptr.
 
@@ -414,24 +417,25 @@ class LibScrapliCliMapping:
                 completion.
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._open(
-            ptr,
-            operation_id_ptr,
-            CANCEL,
+        return LibScrapliFFIResult(
+            self._open(
+                ptr,
+                operation_id_ptr,
+                CANCEL,
+            )
         )
 
     def close(
         self,
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Close the driver at ptr.
 
@@ -443,17 +447,18 @@ class LibScrapliCliMapping:
                 completion.
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._close(
-            ptr,
-            operation_id_ptr,
-            CANCEL,
+        return LibScrapliFFIResult(
+            self._close(
+                ptr,
+                operation_id_ptr,
+                CANCEL,
+            )
         )
 
     def fetch_sizes(
@@ -467,7 +472,7 @@ class LibScrapliCliMapping:
         results_size: USizePointer,
         results_failed_indicator_size: USizePointer,
         err_size: USizePointer,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Fetch the sizes of a cli operation's results.
 
@@ -485,22 +490,23 @@ class LibScrapliCliMapping:
             err_size: int pointer to fill with the operation's error size
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._fetch_sizes(
-            ptr,
-            operation_id_value,
-            operation_count,
-            inputs_size,
-            results_raw_size,
-            results_size,
-            results_failed_indicator_size,
-            err_size,
+        return LibScrapliFFIResult(
+            self._fetch_sizes(
+                ptr,
+                operation_id_value,
+                operation_count,
+                inputs_size,
+                results_raw_size,
+                results_size,
+                results_failed_indicator_size,
+                err_size,
+            )
         )
 
     def fetch(
@@ -515,7 +521,7 @@ class LibScrapliCliMapping:
         results_slice: ZigSlicePointer,
         results_failed_indicator_slice: ZigSlicePointer,
         err_slice: ZigSlicePointer,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Fetch the result of a cli operation.
 
@@ -534,23 +540,24 @@ class LibScrapliCliMapping:
             err_slice: pre allocated slice to fill with the operations error
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._fetch(
-            ptr,
-            operation_id_value,
-            start_time,
-            splits,
-            inputs_slice,
-            results_raw_slice,
-            results_slice,
-            results_failed_indicator_slice,
-            err_slice,
+        return LibScrapliFFIResult(
+            self._fetch(
+                ptr,
+                operation_id_value,
+                start_time,
+                splits,
+                inputs_slice,
+                results_raw_slice,
+                results_slice,
+                results_failed_indicator_slice,
+                err_slice,
+            )
         )
 
     def enter_mode(
@@ -559,7 +566,7 @@ class LibScrapliCliMapping:
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
         requested_mode: c_char_p,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Enter the given mode for the cli object.
 
@@ -571,18 +578,19 @@ class LibScrapliCliMapping:
             requested_mode: string name of the mode to enter
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._enter_mode(
-            ptr,
-            operation_id_ptr,
-            CANCEL,
-            requested_mode,
+        return LibScrapliFFIResult(
+            self._enter_mode(
+                ptr,
+                operation_id_ptr,
+                CANCEL,
+                requested_mode,
+            )
         )
 
     def get_prompt(
@@ -590,7 +598,7 @@ class LibScrapliCliMapping:
         *,
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Get the current prompt for the cli object.
 
@@ -601,17 +609,18 @@ class LibScrapliCliMapping:
             operation_id_ptr: int pointer to fill with the id of the submitted operation
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._get_prompt(
-            ptr,
-            operation_id_ptr,
-            CANCEL,
+        return LibScrapliFFIResult(
+            self._get_prompt(
+                ptr,
+                operation_id_ptr,
+                CANCEL,
+            )
         )
 
     def send_input(
@@ -624,7 +633,7 @@ class LibScrapliCliMapping:
         input_handling: c_char_p,
         retain_input: c_bool,
         retain_trailing_prompt: c_bool,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Send some input to the cli object.
 
@@ -641,22 +650,23 @@ class LibScrapliCliMapping:
             retain_trailing_prompt: boolean indicating whether to retain the trailing
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._send_input(
-            ptr,
-            operation_id_ptr,
-            CANCEL,
-            input_,
-            requested_mode,
-            input_handling,
-            retain_input,
-            retain_trailing_prompt,
+        return LibScrapliFFIResult(
+            self._send_input(
+                ptr,
+                operation_id_ptr,
+                CANCEL,
+                input_,
+                requested_mode,
+                input_handling,
+                retain_input,
+                retain_trailing_prompt,
+            )
         )
 
     def send_inputs(
@@ -669,7 +679,7 @@ class LibScrapliCliMapping:
         input_handling: c_char_p,
         retain_input: c_bool,
         retain_trailing_prompt: c_bool,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Send some input to the cli object.
 
@@ -686,22 +696,23 @@ class LibScrapliCliMapping:
             retain_trailing_prompt: boolean indicating whether to retain the trailing
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._send_inputs(
-            ptr,
-            operation_id_ptr,
-            CANCEL,
-            inputs,
-            requested_mode,
-            input_handling,
-            retain_input,
-            retain_trailing_prompt,
+        return LibScrapliFFIResult(
+            self._send_inputs(
+                ptr,
+                operation_id_ptr,
+                CANCEL,
+                inputs,
+                requested_mode,
+                input_handling,
+                retain_input,
+                retain_trailing_prompt,
+            )
         )
 
     def send_prompted_input(
@@ -718,7 +729,7 @@ class LibScrapliCliMapping:
         input_handling: c_char_p,
         hidden_response: c_bool,
         retain_trailing_prompt: c_bool,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Send some prompted input to the cli object.
 
@@ -740,29 +751,34 @@ class LibScrapliCliMapping:
             retain_trailing_prompt: boolean indicating whether to retain the trailing
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._send_prompted_input(
-            ptr,
-            operation_id_ptr,
-            CANCEL,
-            input_,
-            prompt,
-            prompt_pattern,
-            response,
-            abort_input,
-            requested_mode,
-            input_handling,
-            hidden_response,
-            retain_trailing_prompt,
+        return LibScrapliFFIResult(
+            self._send_prompted_input(
+                ptr,
+                operation_id_ptr,
+                CANCEL,
+                input_,
+                prompt,
+                prompt_pattern,
+                response,
+                abort_input,
+                requested_mode,
+                input_handling,
+                hidden_response,
+                retain_trailing_prompt,
+            )
         )
 
-    def read_any(self, ptr: DriverPointer, operation_id_ptr: OperationIdPointer) -> int:
+    def read_any(
+        self,
+        ptr: DriverPointer,
+        operation_id_ptr: OperationIdPointer,
+    ) -> LibScrapliFFIResult:
         """
         Read any available data from the session, up to the normal timeout behavior.
 
@@ -773,17 +789,18 @@ class LibScrapliCliMapping:
             operation_id_ptr: pointer to fill with the id of the submitted operation
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._read_any(
-            ptr,
-            operation_id_ptr,
-            CANCEL,
+        return LibScrapliFFIResult(
+            self._read_any(
+                ptr,
+                operation_id_ptr,
+                CANCEL,
+            )
         )
 
     def read_callback_should_execute(
@@ -794,7 +811,7 @@ class LibScrapliCliMapping:
         contains_pattern: c_char_p,
         not_contains: c_char_p,
         execute: BoolPointer,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Decide if a callback should execute for read_with_callbacks operations.
 
@@ -813,18 +830,19 @@ class LibScrapliCliMapping:
             execute: bool pointer to update w/ execution state
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._read_callback_should_execute(
-            buf,
-            name,
-            contains,
-            contains_pattern,
-            not_contains,
-            execute,
+        return LibScrapliFFIResult(
+            self._read_callback_should_execute(
+                buf,
+                name,
+                contains,
+                contains_pattern,
+                not_contains,
+                execute,
+            )
         )

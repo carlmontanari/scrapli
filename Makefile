@@ -16,7 +16,7 @@ fmt-check:
 	python -m black --check --diff setup.py noxfile.py scrapli/ examples/ tests/
 
 ## Run linters
-lint:
+lint: fmt
 	python -m ruff check
 	python -m mypy --strict setup.py noxfile.py scrapli/ examples/
 

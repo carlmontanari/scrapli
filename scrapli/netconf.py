@@ -22,14 +22,10 @@ from typing import Any
 from scrapli.auth import Options as AuthOptions
 from scrapli.exceptions import (
     AllocationException,
-    CloseException,
     GetResultException,
     NoMessagesException,
     NotOpenedException,
-    OpenException,
     OperationException,
-    OptionsException,
-    SubmitOperationException,
 )
 from scrapli.ffi_mapping import LibScrapliMapping
 from scrapli.ffi_options import DriverOptions, DriverOptionsPointer
@@ -37,6 +33,7 @@ from scrapli.ffi_types import (
     LIBSCRAPLI_DELIMITER,
     DriverPointer,
     IntPointer,
+    LibScrapliFFIResult,
     NetconfCapabilitesCallback,
     OperationIdPointer,
     U64Pointer,
@@ -545,7 +542,7 @@ class Netconf:
             options_ptr=options_ptr,
         )
         if ptr == 0:  # type: ignore[comparison-overlap]
-            raise AllocationException("failed to allocate cli")
+            raise AllocationException("failed to allocate netconf")
 
         self.ptr = ptr
 
@@ -555,7 +552,7 @@ class Netconf:
             )
         )
         if poll_fd <= 0:
-            raise AllocationException("failed to allocate netconf")
+            raise AllocationException("failed to allocate poll fd")
 
         self.poll_fd = poll_fd
 
@@ -563,40 +560,6 @@ class Netconf:
         self,
     ) -> None:
         self.ffi_mapping.shared_mapping.free(ptr=self._ptr_or_exception())
-
-    def _open(
-        self,
-        *,
-        operation_id_ptr: OperationIdPointer,
-    ) -> None:
-        options_ptr = self.ffi_mapping.shared_mapping.alloc_driver_options()
-        options = cast(options_ptr, POINTER(DriverOptions))
-
-        options.contents.apply(
-            logger_callback=self.logger_callback,
-            logger_level=ffi_logger_level(logger=self.logger),
-            port=self.port,
-            transport_kind=c_char_p(self.transport_options.transport_kind.encode(encoding="utf-8")),
-        )
-
-        self.options.apply(options=options)
-        self.auth_options.apply(options=options)
-        self.session_options.apply(options=options)
-        self.transport_options.apply(options=options)
-
-        try:
-            self._alloc(options_ptr=options_ptr)
-        finally:
-            self.ffi_mapping.shared_mapping.free_driver_options(options_ptr=options_ptr)
-
-        status = self.ffi_mapping.netconf_mapping.open(
-            ptr=self._ptr_or_exception(),
-            operation_id_ptr=operation_id_ptr,
-        )
-        if status != 0:
-            self._free()
-
-            raise OpenException("failed to submit open operation")
 
     def _get_options(self) -> str:
         """
@@ -629,11 +592,13 @@ class Netconf:
 
         options_size = pointer(c_size_t())
 
-        status = self.ffi_mapping.shared_mapping.fetch_options_size(
-            options_ptr=options_ptr, options_size=options_size
+        self.ffi_mapping.shared_mapping.fetch_options_size(
+            options_ptr=options_ptr,
+            options_size=options_size,
+        ).raise_if_error(
+            message="failed to retrieve options size",
+            default_exception=OperationException,
         )
-        if status != 0:
-            raise OptionsException("failed to retrieve options size")
 
         options_slice = pointer(ZigSlice(size=options_size.contents))
 
@@ -644,6 +609,41 @@ class Netconf:
         self.ffi_mapping.shared_mapping.free_driver_options(options_ptr=options_ptr)
 
         return options_slice.contents.get_decoded_contents()
+
+    def _open(
+        self,
+        *,
+        operation_id_ptr: OperationIdPointer,
+    ) -> None:
+        options_ptr = self.ffi_mapping.shared_mapping.alloc_driver_options()
+        options = cast(options_ptr, POINTER(DriverOptions))
+
+        options.contents.apply(
+            logger_callback=self.logger_callback,
+            logger_level=ffi_logger_level(logger=self.logger),
+            port=self.port,
+            transport_kind=c_char_p(self.transport_options.transport_kind.encode(encoding="utf-8")),
+        )
+
+        self.options.apply(options=options)
+        self.auth_options.apply(options=options)
+        self.session_options.apply(options=options)
+        self.transport_options.apply(options=options)
+
+        try:
+            self._alloc(options_ptr=options_ptr)
+        finally:
+            self.ffi_mapping.shared_mapping.free_driver_options(options_ptr=options_ptr)
+
+        status = self.ffi_mapping.netconf_mapping.open(
+            ptr=self._ptr_or_exception(),
+            operation_id_ptr=operation_id_ptr,
+        )
+
+        if status != LibScrapliFFIResult.SUCCESS:
+            self._free()
+
+            raise OperationException("failed to submit open operation")
 
     def open(
         self,
@@ -693,13 +693,14 @@ class Netconf:
         operation_id_ptr: OperationIdPointer,
         force: c_bool,
     ) -> None:
-        status = self.ffi_mapping.netconf_mapping.close(
+        self.ffi_mapping.netconf_mapping.close(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             force=force,
+        ).raise_if_error(
+            message="close operation failed",
+            default_exception=OperationException,
         )
-        if status != 0:
-            raise CloseException("submitting close operation")
 
     def close(
         self,
@@ -776,7 +777,7 @@ class Netconf:
         rpc_errors_size = pointer(c_size_t())
         err_size = pointer(c_size_t())
 
-        status = self.ffi_mapping.netconf_mapping.fetch_sizes(
+        self.ffi_mapping.netconf_mapping.fetch_sizes(
             ptr=self._ptr_or_exception(),
             operation_id_value=operation_id_value,
             input_size=input_size,
@@ -785,9 +786,10 @@ class Netconf:
             rpc_warnings_size=rpc_warnings_size,
             rpc_errors_size=rpc_errors_size,
             err_size=err_size,
+        ).raise_if_error(
+            message="fetching operation sizes failed",
+            default_exception=GetResultException,
         )
-        if status != 0:
-            raise GetResultException("wait operation failed")
 
         start_time = U64Pointer(c_uint64())
         end_time = U64Pointer(c_uint64())
@@ -800,7 +802,7 @@ class Netconf:
         rpc_errors_slice = pointer(ZigSlice(size=rpc_errors_size.contents))
         err_slice = pointer(ZigSlice(size=err_size.contents))
 
-        status = self.ffi_mapping.netconf_mapping.fetch(
+        self.ffi_mapping.netconf_mapping.fetch(
             ptr=self._ptr_or_exception(),
             operation_id_value=operation_id_value,
             start_time=start_time,
@@ -811,9 +813,10 @@ class Netconf:
             rpc_warnings_slice=rpc_warnings_slice,
             rpc_errors_slice=rpc_errors_slice,
             err_slice=err_slice,
+        ).raise_if_error(
+            message="fetching operation content failed",
+            default_exception=GetResultException,
         )
-        if status != 0:
-            raise GetResultException("fetch operation failed")
 
         err_contents = err_slice.contents.get_decoded_contents()
         if err_contents:
@@ -846,7 +849,7 @@ class Netconf:
         rpc_errors_size = pointer(c_size_t())
         err_size = pointer(c_size_t())
 
-        status = self.ffi_mapping.netconf_mapping.fetch_sizes(
+        self.ffi_mapping.netconf_mapping.fetch_sizes(
             ptr=self._ptr_or_exception(),
             operation_id_value=operation_id_value,
             input_size=input_size,
@@ -855,9 +858,10 @@ class Netconf:
             rpc_warnings_size=rpc_warnings_size,
             rpc_errors_size=rpc_errors_size,
             err_size=err_size,
+        ).raise_if_error(
+            message="fetching operation sizes failed",
+            default_exception=GetResultException,
         )
-        if status != 0:
-            raise GetResultException("fetch operation sizes failed")
 
         start_time = U64Pointer(c_uint64())
         end_time = U64Pointer(c_uint64())
@@ -870,7 +874,7 @@ class Netconf:
         rpc_errors_slice = pointer(ZigSlice(size=rpc_errors_size.contents))
         err_slice = pointer(ZigSlice(size=err_size.contents))
 
-        status = self.ffi_mapping.netconf_mapping.fetch(
+        self.ffi_mapping.netconf_mapping.fetch(
             ptr=self._ptr_or_exception(),
             operation_id_value=operation_id_value,
             start_time=start_time,
@@ -881,9 +885,10 @@ class Netconf:
             rpc_warnings_slice=rpc_warnings_slice,
             rpc_errors_slice=rpc_errors_slice,
             err_slice=err_slice,
+        ).raise_if_error(
+            message="fetching operation content failed",
+            default_exception=GetResultException,
         )
-        if status != 0:
-            raise GetResultException("fetch operation failed")
 
         err_contents = err_slice.contents.get_decoded_contents()
         if err_contents:
@@ -921,11 +926,12 @@ class Netconf:
 
         session_id = IntPointer(c_int())
 
-        status = self.ffi_mapping.netconf_mapping.get_session_id(
+        self.ffi_mapping.netconf_mapping.get_session_id(
             ptr=self._ptr_or_exception(), session_id=session_id
+        ).raise_if_error(
+            message="fetch session id failed",
+            default_exception=GetResultException,
         )
-        if status != 0:
-            raise GetResultException("fetch session id failed")
 
         self._session_id = session_id.contents.value
 
@@ -948,12 +954,13 @@ class Netconf:
         _payload = to_c_string(payload)
         subscription_id = U64Pointer(c_uint64())
 
-        status = self.ffi_mapping.netconf_mapping.get_subscription_id(
+        self.ffi_mapping.netconf_mapping.get_subscription_id(
             payload=_payload,
             subscription_id=subscription_id,
+        ).raise_if_error(
+            message="fetch subscriptiond id failed",
+            default_exception=GetResultException,
         )
-        if status != 0:
-            raise GetResultException("fetch subscriptiond id failed")
 
         return int(subscription_id.contents.value)
 
@@ -971,7 +978,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
             NoMessagesException: if there are no notifications to fetch
 
         """
@@ -987,12 +994,13 @@ class Netconf:
 
         notification_slice = pointer(ZigSlice(size=notification_size.contents))
 
-        status = self.ffi_mapping.netconf_mapping.get_next_notification(
+        self.ffi_mapping.netconf_mapping.get_next_notification(
             ptr=self._ptr_or_exception(),
             notification_slice=notification_slice,
+        ).raise_if_error(
+            message="submitting getting next notification failed",
+            default_exception=OperationException,
         )
-        if status != 0:
-            raise SubmitOperationException("submitting getting next notification failed")
 
         return notification_slice.contents.get_decoded_contents()
 
@@ -1011,7 +1019,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
             NoMessagesException: if there are no notifications to fetch
 
         """
@@ -1030,13 +1038,14 @@ class Netconf:
 
         subscription_slice = pointer(ZigSlice(size=subscription_size.contents))
 
-        status = self.ffi_mapping.netconf_mapping.get_next_subscription(
+        self.ffi_mapping.netconf_mapping.get_next_subscription(
             ptr=self._ptr_or_exception(),
             subscription_id=c_uint64(subscription_id),
             subscription_slice=subscription_slice,
+        ).raise_if_error(
+            message="submitting getting next subscription failed",
+            default_exception=OperationException,
         )
-        if status != 0:
-            raise SubmitOperationException("submitting getting next subscription failed")
 
         return subscription_slice.contents.get_decoded_contents()
 
@@ -1048,15 +1057,16 @@ class Netconf:
         base_namespace_prefix: c_char_p,
         extra_namespaces: c_char_p,
     ) -> None:
-        status = self.ffi_mapping.netconf_mapping.raw_rpc(
+        self.ffi_mapping.netconf_mapping.raw_rpc(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             payload=payload,
             base_namespace_prefix=base_namespace_prefix,
             extra_namespaces=extra_namespaces,
+        ).raise_if_error(
+            message="submitting raw rpc operation failed",
+            default_exception=OperationException,
         )
-        if status != 0:
-            raise SubmitOperationException("submitting raw rpc operation failed")
 
     @handle_operation_timeout
     def raw_rpc(
@@ -1083,7 +1093,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -1135,7 +1145,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -1173,7 +1183,7 @@ class Netconf:
         filter_namespace: c_char_p,
         defaults_type: c_char_p,
     ) -> None:
-        status = self.ffi_mapping.netconf_mapping.get_config(
+        self.ffi_mapping.netconf_mapping.get_config(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             source=source,
@@ -1182,9 +1192,10 @@ class Netconf:
             filter_namespace_prefix=filter_namespace_prefix,
             filter_namespace=filter_namespace,
             defaults_type=defaults_type,
+        ).raise_if_error(
+            message="submitting get-config operation failed",
+            default_exception=OperationException,
         )
-        if status != 0:
-            raise SubmitOperationException("submitting get-config operation failed")
 
     @handle_operation_timeout
     def get_config(  # noqa: PLR0913
@@ -1215,7 +1226,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -1271,7 +1282,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -1308,7 +1319,7 @@ class Netconf:
         test_option: c_char_p,
         error_option: c_char_p,
     ) -> None:
-        status = self.ffi_mapping.netconf_mapping.edit_config(
+        self.ffi_mapping.netconf_mapping.edit_config(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             config=config,
@@ -1316,9 +1327,10 @@ class Netconf:
             default_operation=default_operation,
             test_option=test_option,
             error_option=error_option,
+        ).raise_if_error(
+            message="submitting edit-config operation failed",
+            default_exception=OperationException,
         )
-        if status != 0:
-            raise SubmitOperationException("submitting edit-config operation failed")
 
     @handle_operation_timeout
     def edit_config(  # noqa: PLR0913
@@ -1347,7 +1359,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -1400,7 +1412,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -1433,14 +1445,15 @@ class Netconf:
         target: c_char_p,
         source: c_char_p,
     ) -> None:
-        status = self.ffi_mapping.netconf_mapping.copy_config(
+        self.ffi_mapping.netconf_mapping.copy_config(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             target=target,
             source=source,
+        ).raise_if_error(
+            message="submitting copy-config operation failed",
+            default_exception=OperationException,
         )
-        if status != 0:
-            raise SubmitOperationException("submitting copy-config operation failed")
 
     @handle_operation_timeout
     def copy_config(
@@ -1463,7 +1476,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -1503,7 +1516,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -1528,13 +1541,14 @@ class Netconf:
         operation_id_ptr: OperationIdPointer,
         target: c_char_p,
     ) -> None:
-        status = self.ffi_mapping.netconf_mapping.delete_config(
+        self.ffi_mapping.netconf_mapping.delete_config(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             target=target,
+        ).raise_if_error(
+            message="submitting delete-config operation failed",
+            default_exception=OperationException,
         )
-        if status != 0:
-            raise SubmitOperationException("submitting delete-config operation failed")
 
     @handle_operation_timeout
     def delete_config(
@@ -1555,7 +1569,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -1591,7 +1605,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -1614,13 +1628,14 @@ class Netconf:
         operation_id_ptr: OperationIdPointer,
         target: c_char_p,
     ) -> None:
-        status = self.ffi_mapping.netconf_mapping.lock(
+        self.ffi_mapping.netconf_mapping.lock(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             target=target,
+        ).raise_if_error(
+            message="submitting lock operation failed",
+            default_exception=OperationException,
         )
-        if status != 0:
-            raise SubmitOperationException("submitting lock operation failed")
 
     @handle_operation_timeout
     def lock(
@@ -1641,7 +1656,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -1677,7 +1692,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -1700,13 +1715,14 @@ class Netconf:
         operation_id_ptr: OperationIdPointer,
         target: c_char_p,
     ) -> None:
-        status = self.ffi_mapping.netconf_mapping.unlock(
+        self.ffi_mapping.netconf_mapping.unlock(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             target=target,
+        ).raise_if_error(
+            message="submitting unlock operation failed",
+            default_exception=OperationException,
         )
-        if status != 0:
-            raise SubmitOperationException("submitting unlock operation failed")
 
     @handle_operation_timeout
     def unlock(
@@ -1727,7 +1743,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -1763,7 +1779,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -1790,7 +1806,7 @@ class Netconf:
         filter_namespace: c_char_p,
         defaults_type: c_char_p,
     ) -> None:
-        status = self.ffi_mapping.netconf_mapping.get(
+        self.ffi_mapping.netconf_mapping.get(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             filter_=filter_,
@@ -1798,9 +1814,10 @@ class Netconf:
             filter_namespace_prefix=filter_namespace_prefix,
             filter_namespace=filter_namespace,
             defaults_type=defaults_type,
+        ).raise_if_error(
+            message="submitting get operation failed",
+            default_exception=OperationException,
         )
-        if status != 0:
-            raise SubmitOperationException("submitting get operation failed")
 
     @handle_operation_timeout
     def get(  # noqa: PLR0913
@@ -1829,7 +1846,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -1881,7 +1898,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -1911,12 +1928,13 @@ class Netconf:
         *,
         operation_id_ptr: OperationIdPointer,
     ) -> None:
-        status = self.ffi_mapping.netconf_mapping.close_session(
+        self.ffi_mapping.netconf_mapping.close_session(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+        ).raise_if_error(
+            message="submitting close-session operation failed",
+            default_exception=OperationException,
         )
-        if status != 0:
-            raise SubmitOperationException("submitting close-session operation failed")
 
     @handle_operation_timeout
     def close_session(
@@ -1935,7 +1953,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -1966,7 +1984,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -1986,13 +2004,14 @@ class Netconf:
         operation_id_ptr: OperationIdPointer,
         session_id: int,
     ) -> None:
-        status = self.ffi_mapping.netconf_mapping.kill_session(
+        self.ffi_mapping.netconf_mapping.kill_session(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             session_id=c_int(session_id),
+        ).raise_if_error(
+            message="submitting kill-session operation failed",
+            default_exception=OperationException,
         )
-        if status != 0:
-            raise SubmitOperationException("submitting kill-session operation failed")
 
     @handle_operation_timeout
     def kill_session(
@@ -2013,7 +2032,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -2047,7 +2066,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -2067,12 +2086,13 @@ class Netconf:
         *,
         operation_id_ptr: OperationIdPointer,
     ) -> None:
-        status = self.ffi_mapping.netconf_mapping.commit(
+        self.ffi_mapping.netconf_mapping.commit(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+        ).raise_if_error(
+            message="submitting commit operation failed",
+            default_exception=OperationException,
         )
-        if status != 0:
-            raise SubmitOperationException("submitting commit operation failed")
 
     @handle_operation_timeout
     def commit(
@@ -2091,7 +2111,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -2122,7 +2142,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -2141,12 +2161,13 @@ class Netconf:
         *,
         operation_id_ptr: OperationIdPointer,
     ) -> None:
-        status = self.ffi_mapping.netconf_mapping.discard(
+        self.ffi_mapping.netconf_mapping.discard(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+        ).raise_if_error(
+            message="submitting discard operation failed",
+            default_exception=OperationException,
         )
-        if status != 0:
-            raise SubmitOperationException("submitting discard operation failed")
 
     @handle_operation_timeout
     def discard(
@@ -2165,7 +2186,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -2196,7 +2217,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -2216,13 +2237,14 @@ class Netconf:
         persist_id: c_char_p,
         operation_id_ptr: OperationIdPointer,
     ) -> None:
-        status = self.ffi_mapping.netconf_mapping.cancel_commit(
+        self.ffi_mapping.netconf_mapping.cancel_commit(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             persist_id=persist_id,
+        ).raise_if_error(
+            message="submitting cancel-commit operation failed",
+            default_exception=OperationException,
         )
-        if status != 0:
-            raise SubmitOperationException("submitting cancel-commit operation failed")
 
     @handle_operation_timeout
     def cancel_commit(
@@ -2243,7 +2265,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -2279,7 +2301,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -2302,13 +2324,14 @@ class Netconf:
         operation_id_ptr: OperationIdPointer,
         source: c_char_p,
     ) -> None:
-        status = self.ffi_mapping.netconf_mapping.validate(
+        self.ffi_mapping.netconf_mapping.validate(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             source=source,
+        ).raise_if_error(
+            message="submitting validate operation failed",
+            default_exception=OperationException,
         )
-        if status != 0:
-            raise SubmitOperationException("submitting validate operation failed")
 
     @handle_operation_timeout
     def validate(
@@ -2329,7 +2352,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -2365,7 +2388,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -2390,15 +2413,16 @@ class Netconf:
         version: c_char_p,
         format_: c_char_p,
     ) -> None:
-        status = self.ffi_mapping.netconf_mapping.get_schema(
+        self.ffi_mapping.netconf_mapping.get_schema(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             identifier=identifier,
             version=version,
             format_=format_,
+        ).raise_if_error(
+            message="submitting get-schema operation failed",
+            default_exception=OperationException,
         )
-        if status != 0:
-            raise SubmitOperationException("submitting get-schema operation failed")
 
     @handle_operation_timeout
     def get_schema(
@@ -2423,7 +2447,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -2467,7 +2491,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -2503,7 +2527,7 @@ class Netconf:
         with_origin: bool,
         defaults_type: c_char_p,
     ) -> None:
-        status = self.ffi_mapping.netconf_mapping.get_data(
+        self.ffi_mapping.netconf_mapping.get_data(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             source=source,
@@ -2516,9 +2540,10 @@ class Netconf:
             max_depth=c_int(max_depth),
             with_origin=c_bool(with_origin),
             defaults_type=defaults_type,
+        ).raise_if_error(
+            message="submitting copy-config operation failed",
+            default_exception=OperationException,
         )
-        if status != 0:
-            raise SubmitOperationException("submitting copy-config operation failed")
 
     @handle_operation_timeout
     def get_data(  # noqa: PLR0913
@@ -2557,7 +2582,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -2627,7 +2652,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -2668,15 +2693,16 @@ class Netconf:
         target: c_char_p,
         default_operation: c_char_p,
     ) -> None:
-        status = self.ffi_mapping.netconf_mapping.edit_data(
+        self.ffi_mapping.netconf_mapping.edit_data(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             content=content,
             target=target,
             default_operation=default_operation,
+        ).raise_if_error(
+            message="submitting copy-config operation failed",
+            default_exception=OperationException,
         )
-        if status != 0:
-            raise SubmitOperationException("submitting copy-config operation failed")
 
     @handle_operation_timeout
     def edit_data(
@@ -2701,7 +2727,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -2746,7 +2772,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -2774,13 +2800,14 @@ class Netconf:
         operation_id_ptr: OperationIdPointer,
         action: c_char_p,
     ) -> None:
-        status = self.ffi_mapping.netconf_mapping.action(
+        self.ffi_mapping.netconf_mapping.action(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             action=action,
+        ).raise_if_error(
+            message="submitting action operation failed",
+            default_exception=OperationException,
         )
-        if status != 0:
-            raise SubmitOperationException("submitting action operation failed")
 
     @handle_operation_timeout
     def action(
@@ -2801,7 +2828,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator
@@ -2837,7 +2864,7 @@ class Netconf:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            SubmitOperationException: if the operation fails
+            OperationException: if the operation fails
 
         """
         # only used in the decorator

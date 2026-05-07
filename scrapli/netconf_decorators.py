@@ -6,6 +6,7 @@ from functools import update_wrapper
 from typing import TYPE_CHECKING, Concatenate, ParamSpec
 
 from scrapli.exceptions import OptionsException
+from scrapli.ffi_types import LibScrapliFFIResult
 from scrapli.netconf_result import Result
 from scrapli.session import DEFAULT_OPERATION_TIMEOUT_NS
 
@@ -63,7 +64,7 @@ def handle_operation_timeout(
             inst._ptr_or_exception(),
             c_uint64(operation_timeout_ns),
         )
-        if status != 0:
+        if status != LibScrapliFFIResult.SUCCESS:
             raise OptionsException("failed to set session operation timeout")
 
         try:
@@ -75,7 +76,7 @@ def handle_operation_timeout(
                 inst._ptr_or_exception(),
                 c_uint64(inst.session_options.operation_timeout_ns or DEFAULT_OPERATION_TIMEOUT_NS),
             )
-            if status != 0:
+            if status != LibScrapliFFIResult.SUCCESS:
                 raise OptionsException("failed to set session operation timeout")
 
         return res
@@ -133,7 +134,7 @@ def handle_operation_timeout_async(
             inst._ptr_or_exception(),
             c_uint64(operation_timeout_ns),
         )
-        if status != 0:
+        if status != LibScrapliFFIResult.SUCCESS:
             raise OptionsException("failed to set session operation timeout")
 
         try:
@@ -145,7 +146,7 @@ def handle_operation_timeout_async(
                 inst._ptr_or_exception(),
                 c_uint64(inst.session_options.operation_timeout_ns or DEFAULT_OPERATION_TIMEOUT_NS),
             )
-            if status != 0:
+            if status != LibScrapliFFIResult.SUCCESS:
                 raise OptionsException("failed to set session operation timeout")
 
         return res

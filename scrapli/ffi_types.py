@@ -23,8 +23,22 @@ from ctypes import (
     create_string_buffer,
     pointer,
 )
+from enum import IntEnum
 from logging import CRITICAL, DEBUG, FATAL, INFO, NOTSET, WARN, Logger
 from typing import TYPE_CHECKING, Any, ClassVar, TypeAlias
+
+from scrapli.exceptions import (
+    CancelledException,
+    DriverException,
+    EOFException,
+    InvalidArgumentException,
+    OperationException,
+    OutOfMememoryException,
+    ScrapliException,
+    SessionException,
+    TimeoutException,
+    TransportException,
+)
 
 DriverPointer = c_void_p
 OptionsPointer = c_void_p
@@ -64,6 +78,83 @@ LIBSCRAPLI_DELIMITER = "__libscrapli__"
 # cancellation is handled via timeout in python (vs context cancellation in go), so just have
 # an always false cancellation pointer
 CANCEL = CancelPointer(c_bool(False))
+
+
+class LibScrapliFFIResult(IntEnum):
+    """
+    Mapping to libscrapli ffi results/errors.
+
+    Many operations expose/return a uint8 where 0 is success, and any non-zero value indicates an
+    error of some kind. Typically the "real" errors are not happening at the ffi driver layer,
+    and instead are happening in the actual Cli/Netconf objects in zig and written into the error
+    results, however sometimes we can catch/see memory related errors etc. because of this enum so
+    we get a bit of extra debug/troubleshooting info.
+
+    Args:
+        N/A
+
+    Returns:
+        None
+
+    Raises:
+        N/A
+
+    """
+
+    SUCCESS = 0
+    UNKNOWN = 1
+    OUT_OF_MEMORY = 2
+    EOF = 3
+    CANCELLED = 4
+    TIMEOUT = 5
+    DRIVER = 6
+    SESSION = 7
+    TRANSPORT = 8
+    OPERATION = 9
+    INVALID_ARGUMENT = 10
+
+    def raise_if_error(  # noqa:C901
+        self,
+        message: str,
+        default_exception: type[Exception] = ScrapliException,
+    ) -> None:
+        """
+        Raises an exception from the result or returns cleanly for success
+
+        Args:
+            message: the message to push into the exception being raised.
+            default_exception: the exception to raise if the result is set to unknown.
+
+        Returns:
+            N/A
+
+        Raises:
+            ScrapliException: exception based on the result and default_exception provided.
+
+        """
+        match self:
+            case LibScrapliFFIResult.SUCCESS:
+                return
+            case LibScrapliFFIResult.OUT_OF_MEMORY:
+                raise OutOfMememoryException(message)
+            case LibScrapliFFIResult.EOF:
+                raise EOFException(message)
+            case LibScrapliFFIResult.CANCELLED:
+                raise CancelledException(message)
+            case LibScrapliFFIResult.TIMEOUT:
+                raise TimeoutException(message)
+            case LibScrapliFFIResult.DRIVER:
+                raise DriverException(message)
+            case LibScrapliFFIResult.SESSION:
+                raise SessionException(message)
+            case LibScrapliFFIResult.TRANSPORT:
+                raise TransportException(message)
+            case LibScrapliFFIResult.OPERATION:
+                raise OperationException(message)
+            case LibScrapliFFIResult.INVALID_ARGUMENT:
+                raise InvalidArgumentException(message)
+            case LibScrapliFFIResult.UNKNOWN | _:
+                raise default_exception(message)
 
 
 class ZigU64Slice(Structure):

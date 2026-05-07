@@ -17,20 +17,8 @@ class AllocationException(ScrapliException):
     """Exception raised when encountering errors allocating a cli/netconf object"""
 
 
-class OpenException(ScrapliException):
-    """Exception raised when encountering errors opening a cli/netconf object"""
-
-
-class CloseException(ScrapliException):
-    """Exception raised when encountering errors closing a cli/netconf object"""
-
-
 class GetResultException(ScrapliException):
     """Exception raised when encountering errors polling/fetching an operation result"""
-
-
-class SubmitOperationException(ScrapliException):
-    """Exception raised when encountering errors submitting an operation result"""
 
 
 class NotOpenedException(ScrapliException):
@@ -47,3 +35,35 @@ class ParsingException(ScrapliException):
 
 class NoMessagesException(ScrapliException):
     """Exception raised when attempting to request notifications or subscriptions and none exist"""
+
+
+class OutOfMememoryException(ScrapliException, MemoryError):
+    """Exception raised when allocations in libscrapli fail"""
+
+
+class EOFException(ScrapliException, EOFError):
+    """Exception raised when libscrapli returns an EOF"""
+
+
+class CancelledException(ScrapliException):
+    """Exception raised when libscrapli returns an error due to an operation being cancelled"""
+
+
+class TimeoutException(ScrapliException, TimeoutError):
+    """Exception raised when libscrapli returns an error due to an operation being timed out"""
+
+
+class DriverException(ScrapliException):
+    """Exception raised when libscrapli returns a driver error"""
+
+
+class SessionException(ScrapliException):
+    """Exception raised when libscrapli returns a session error"""
+
+
+class TransportException(ScrapliException):
+    """Exception raised when libscrapli returns a transport error"""
+
+
+class InvalidArgumentException(ScrapliException):
+    """Exception raised when libscrapli returns an invalid argument error"""

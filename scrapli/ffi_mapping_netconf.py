@@ -16,6 +16,7 @@ from scrapli.ffi_types import (
     CancelPointer,
     DriverPointer,
     IntPointer,
+    LibScrapliFFIResult,
     OperationId,
     OperationIdPointer,
     U64Pointer,
@@ -643,7 +644,7 @@ class LibScrapliNetconfMapping:
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
         force: c_bool,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Close the driver at ptr.
 
@@ -663,11 +664,13 @@ class LibScrapliNetconfMapping:
             N/A
 
         """
-        return self._close(
-            ptr,
-            operation_id_ptr,
-            CANCEL,
-            force,
+        return LibScrapliFFIResult(
+            self._close(
+                ptr,
+                operation_id_ptr,
+                CANCEL,
+                force,
+            )
         )
 
     def fetch_sizes(
@@ -681,7 +684,7 @@ class LibScrapliNetconfMapping:
         rpc_warnings_size: USizePointer,
         rpc_errors_size: USizePointer,
         err_size: USizePointer,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Fetch the sizes of a netconf operation's results.
 
@@ -698,22 +701,23 @@ class LibScrapliNetconfMapping:
             err_size: int pointer to fill with the operation's error size
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._fetch_sizes(
-            ptr,
-            operation_id_value,
-            input_size,
-            result_raw_size,
-            result_size,
-            rpc_warnings_size,
-            rpc_errors_size,
-            err_size,
+        return LibScrapliFFIResult(
+            self._fetch_sizes(
+                ptr,
+                operation_id_value,
+                input_size,
+                result_raw_size,
+                result_size,
+                rpc_warnings_size,
+                rpc_errors_size,
+                err_size,
+            )
         )
 
     def fetch(
@@ -729,7 +733,7 @@ class LibScrapliNetconfMapping:
         rpc_warnings_slice: ZigSlicePointer,
         rpc_errors_slice: ZigSlicePointer,
         err_slice: ZigSlicePointer,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Fetch the result of a cli operation.
 
@@ -748,24 +752,25 @@ class LibScrapliNetconfMapping:
             err_slice: pre allocated slice to fill with the operations error
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._fetch(
-            ptr,
-            operation_id_value,
-            start_time,
-            end_time,
-            input_slice,
-            result_raw_slice,
-            result_slice,
-            rpc_warnings_slice,
-            rpc_errors_slice,
-            err_slice,
+        return LibScrapliFFIResult(
+            self._fetch(
+                ptr,
+                operation_id_value,
+                start_time,
+                end_time,
+                input_slice,
+                result_raw_slice,
+                result_slice,
+                rpc_warnings_slice,
+                rpc_errors_slice,
+                err_slice,
+            )
         )
 
     def get_session_id(
@@ -773,7 +778,7 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         session_id: IntPointer,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Get the session id of the Netconf object/session.
 
@@ -784,16 +789,17 @@ class LibScrapliNetconfMapping:
             session_id: int pointer to fill with the session id
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._get_session_id(
-            ptr,
-            session_id,
+        return LibScrapliFFIResult(
+            self._get_session_id(
+                ptr,
+                session_id,
+            )
         )
 
     def get_subscription_id(
@@ -801,7 +807,7 @@ class LibScrapliNetconfMapping:
         *,
         payload: c_char_p,
         subscription_id: U64Pointer,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Get the subscription id from the given subscription response payload.
 
@@ -812,16 +818,17 @@ class LibScrapliNetconfMapping:
             subscription_id: int pointer to fill with the subscription id
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._get_subscription_id(
-            payload,
-            subscription_id,
+        return LibScrapliFFIResult(
+            self._get_subscription_id(
+                payload,
+                subscription_id,
+            )
         )
 
     def get_next_notification_size(
@@ -829,7 +836,7 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         notification_size: U64Pointer,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Get the size of the next notification message.
 
@@ -840,16 +847,17 @@ class LibScrapliNetconfMapping:
             notification_size: int pointer to fill with the session id
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._get_next_notification_size(
-            ptr,
-            notification_size,
+        return LibScrapliFFIResult(
+            self._get_next_notification_size(
+                ptr,
+                notification_size,
+            )
         )
 
     def get_next_notification(
@@ -857,7 +865,7 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         notification_slice: ZigSlicePointer,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Get the next notification message.
 
@@ -868,16 +876,17 @@ class LibScrapliNetconfMapping:
             notification_slice: pre populted slice to fill with the notification
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._get_next_notification(
-            ptr,
-            notification_slice,
+        return LibScrapliFFIResult(
+            self._get_next_notification(
+                ptr,
+                notification_slice,
+            )
         )
 
     def get_next_subscription_size(
@@ -886,7 +895,7 @@ class LibScrapliNetconfMapping:
         ptr: DriverPointer,
         subscription_id: c_uint64,
         subscription_size: U64Pointer,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Get the size of the next subscription message for the given id.
 
@@ -898,17 +907,18 @@ class LibScrapliNetconfMapping:
             subscription_size: int pointer to fill with the session id
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._get_next_subscription_size(
-            ptr,
-            subscription_id,
-            subscription_size,
+        return LibScrapliFFIResult(
+            self._get_next_subscription_size(
+                ptr,
+                subscription_id,
+                subscription_size,
+            )
         )
 
     def get_next_subscription(
@@ -917,7 +927,7 @@ class LibScrapliNetconfMapping:
         ptr: DriverPointer,
         subscription_id: c_uint64,
         subscription_slice: ZigSlicePointer,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Get the next subscription message for the given id.
 
@@ -929,17 +939,18 @@ class LibScrapliNetconfMapping:
             subscription_slice: pre populted slice to fill with the notification
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._get_next_subscription(
-            ptr,
-            subscription_id,
-            subscription_slice,
+        return LibScrapliFFIResult(
+            self._get_next_subscription(
+                ptr,
+                subscription_id,
+                subscription_slice,
+            )
         )
 
     def raw_rpc(
@@ -950,7 +961,7 @@ class LibScrapliNetconfMapping:
         payload: c_char_p,
         base_namespace_prefix: c_char_p,
         extra_namespaces: c_char_p,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Execute a "raw" / user defined rpc operation.
 
@@ -967,20 +978,21 @@ class LibScrapliNetconfMapping:
                 prefixed and then additional namespaces indicating desired targets must be added
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._raw_rpc(
-            ptr,
-            operation_id_ptr,
-            CANCEL,
-            payload,
-            base_namespace_prefix,
-            extra_namespaces,
+        return LibScrapliFFIResult(
+            self._raw_rpc(
+                ptr,
+                operation_id_ptr,
+                CANCEL,
+                payload,
+                base_namespace_prefix,
+                extra_namespaces,
+            )
         )
 
     def get_config(
@@ -994,7 +1006,7 @@ class LibScrapliNetconfMapping:
         filter_namespace_prefix: c_char_p,
         filter_namespace: c_char_p,
         defaults_type: c_char_p,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Execute a get-config rpc operation.
 
@@ -1011,23 +1023,24 @@ class LibScrapliNetconfMapping:
             defaults_type: defaults type setting
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._get_config(
-            ptr,
-            operation_id_ptr,
-            CANCEL,
-            source,
-            filter_,
-            filter_type,
-            filter_namespace_prefix,
-            filter_namespace,
-            defaults_type,
+        return LibScrapliFFIResult(
+            self._get_config(
+                ptr,
+                operation_id_ptr,
+                CANCEL,
+                source,
+                filter_,
+                filter_type,
+                filter_namespace_prefix,
+                filter_namespace,
+                defaults_type,
+            )
         )
 
     def edit_config(
@@ -1040,7 +1053,7 @@ class LibScrapliNetconfMapping:
         default_operation: c_char_p,
         test_option: c_char_p,
         error_option: c_char_p,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Execute an edit-config rpc operation.
 
@@ -1056,22 +1069,23 @@ class LibScrapliNetconfMapping:
             error_option: error option (or empty str)
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._edit_config(
-            ptr,
-            operation_id_ptr,
-            CANCEL,
-            config,
-            target,
-            default_operation,
-            test_option,
-            error_option,
+        return LibScrapliFFIResult(
+            self._edit_config(
+                ptr,
+                operation_id_ptr,
+                CANCEL,
+                config,
+                target,
+                default_operation,
+                test_option,
+                error_option,
+            )
         )
 
     def copy_config(
@@ -1081,7 +1095,7 @@ class LibScrapliNetconfMapping:
         operation_id_ptr: OperationIdPointer,
         target: c_char_p,
         source: c_char_p,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Execute a copy-config rpc operation.
 
@@ -1094,19 +1108,20 @@ class LibScrapliNetconfMapping:
             source: the source datastore to copy from
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._copy_config(
-            ptr,
-            operation_id_ptr,
-            CANCEL,
-            target,
-            source,
+        return LibScrapliFFIResult(
+            self._copy_config(
+                ptr,
+                operation_id_ptr,
+                CANCEL,
+                target,
+                source,
+            )
         )
 
     def delete_config(
@@ -1115,7 +1130,7 @@ class LibScrapliNetconfMapping:
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
         target: c_char_p,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Execute a delete-config rpc operation.
 
@@ -1127,18 +1142,19 @@ class LibScrapliNetconfMapping:
             target: the target/destination datastore to delete
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._delete_config(
-            ptr,
-            operation_id_ptr,
-            CANCEL,
-            target,
+        return LibScrapliFFIResult(
+            self._delete_config(
+                ptr,
+                operation_id_ptr,
+                CANCEL,
+                target,
+            )
         )
 
     def lock(
@@ -1147,7 +1163,7 @@ class LibScrapliNetconfMapping:
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
         target: c_char_p,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Execute a lock rpc operation.
 
@@ -1159,18 +1175,19 @@ class LibScrapliNetconfMapping:
             target: the target/destination datastore to lock
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._lock(
-            ptr,
-            operation_id_ptr,
-            CANCEL,
-            target,
+        return LibScrapliFFIResult(
+            self._lock(
+                ptr,
+                operation_id_ptr,
+                CANCEL,
+                target,
+            )
         )
 
     def unlock(
@@ -1179,7 +1196,7 @@ class LibScrapliNetconfMapping:
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
         target: c_char_p,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Execute an unlock rpc operation.
 
@@ -1191,18 +1208,19 @@ class LibScrapliNetconfMapping:
             target: the target/destination datastore to lock
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._unlock(
-            ptr,
-            operation_id_ptr,
-            CANCEL,
-            target,
+        return LibScrapliFFIResult(
+            self._unlock(
+                ptr,
+                operation_id_ptr,
+                CANCEL,
+                target,
+            )
         )
 
     def get(
@@ -1215,7 +1233,7 @@ class LibScrapliNetconfMapping:
         filter_namespace_prefix: c_char_p,
         filter_namespace: c_char_p,
         defaults_type: c_char_p,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Execute a get rpc operation.
 
@@ -1231,22 +1249,23 @@ class LibScrapliNetconfMapping:
             defaults_type: defaults type setting
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._get(
-            ptr,
-            operation_id_ptr,
-            CANCEL,
-            filter_,
-            filter_type,
-            filter_namespace_prefix,
-            filter_namespace,
-            defaults_type,
+        return LibScrapliFFIResult(
+            self._get(
+                ptr,
+                operation_id_ptr,
+                CANCEL,
+                filter_,
+                filter_type,
+                filter_namespace_prefix,
+                filter_namespace,
+                defaults_type,
+            )
         )
 
     def close_session(
@@ -1254,7 +1273,7 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Execute a close-config rpc operation.
 
@@ -1265,17 +1284,18 @@ class LibScrapliNetconfMapping:
             operation_id_ptr: int pointer to fill with the id of the submitted operation
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._close_session(
-            ptr,
-            operation_id_ptr,
-            CANCEL,
+        return LibScrapliFFIResult(
+            self._close_session(
+                ptr,
+                operation_id_ptr,
+                CANCEL,
+            )
         )
 
     def kill_session(
@@ -1284,7 +1304,7 @@ class LibScrapliNetconfMapping:
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
         session_id: c_int,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Execute a close-config rpc operation.
 
@@ -1296,18 +1316,19 @@ class LibScrapliNetconfMapping:
             session_id: the session id to kill
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._kill_session(
-            ptr,
-            operation_id_ptr,
-            CANCEL,
-            session_id,
+        return LibScrapliFFIResult(
+            self._kill_session(
+                ptr,
+                operation_id_ptr,
+                CANCEL,
+                session_id,
+            )
         )
 
     def commit(
@@ -1315,7 +1336,7 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Execute a commit rpc operation.
 
@@ -1326,17 +1347,18 @@ class LibScrapliNetconfMapping:
             operation_id_ptr: int pointer to fill with the id of the submitted operation
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._commit(
-            ptr,
-            operation_id_ptr,
-            CANCEL,
+        return LibScrapliFFIResult(
+            self._commit(
+                ptr,
+                operation_id_ptr,
+                CANCEL,
+            )
         )
 
     def discard(
@@ -1344,7 +1366,7 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Execute a discard rpc operation.
 
@@ -1355,17 +1377,18 @@ class LibScrapliNetconfMapping:
             operation_id_ptr: int pointer to fill with the id of the submitted operation
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._discard(
-            ptr,
-            operation_id_ptr,
-            CANCEL,
+        return LibScrapliFFIResult(
+            self._discard(
+                ptr,
+                operation_id_ptr,
+                CANCEL,
+            )
         )
 
     def cancel_commit(
@@ -1374,7 +1397,7 @@ class LibScrapliNetconfMapping:
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
         persist_id: c_char_p,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Execute a cancel-commit rpc operation.
 
@@ -1386,18 +1409,19 @@ class LibScrapliNetconfMapping:
             persist_id: optional string persist-id to set on the cancel commit message
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._cancel_commit(
-            ptr,
-            operation_id_ptr,
-            CANCEL,
-            persist_id,
+        return LibScrapliFFIResult(
+            self._cancel_commit(
+                ptr,
+                operation_id_ptr,
+                CANCEL,
+                persist_id,
+            )
         )
 
     def validate(
@@ -1406,7 +1430,7 @@ class LibScrapliNetconfMapping:
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
         source: c_char_p,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Execute a validate rpc operation.
 
@@ -1418,18 +1442,19 @@ class LibScrapliNetconfMapping:
             source: datastore to validate
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._validate(
-            ptr,
-            operation_id_ptr,
-            CANCEL,
-            source,
+        return LibScrapliFFIResult(
+            self._validate(
+                ptr,
+                operation_id_ptr,
+                CANCEL,
+                source,
+            )
         )
 
     def get_schema(
@@ -1440,7 +1465,7 @@ class LibScrapliNetconfMapping:
         identifier: c_char_p,
         version: c_char_p,
         format_: c_char_p,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Execute a get-schema rpc operation.
 
@@ -1454,20 +1479,21 @@ class LibScrapliNetconfMapping:
             format_: schema format to apply
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._get_schema(
-            ptr,
-            operation_id_ptr,
-            CANCEL,
-            identifier,
-            version,
-            format_,
+        return LibScrapliFFIResult(
+            self._get_schema(
+                ptr,
+                operation_id_ptr,
+                CANCEL,
+                identifier,
+                version,
+                format_,
+            )
         )
 
     def get_data(
@@ -1485,7 +1511,7 @@ class LibScrapliNetconfMapping:
         max_depth: c_int,
         with_origin: c_bool,
         defaults_type: c_char_p,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Execute a get-data rpc operation.
 
@@ -1506,27 +1532,28 @@ class LibScrapliNetconfMapping:
             defaults_type: defaults type to apply to the get-config, "unset" means dont apply one
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._get_data(
-            ptr,
-            operation_id_ptr,
-            CANCEL,
-            source,
-            filter_,
-            filter_type,
-            filter_namespace_prefix,
-            filter_namespace,
-            config_filter,
-            origin_filters,
-            max_depth,
-            with_origin,
-            defaults_type,
+        return LibScrapliFFIResult(
+            self._get_data(
+                ptr,
+                operation_id_ptr,
+                CANCEL,
+                source,
+                filter_,
+                filter_type,
+                filter_namespace_prefix,
+                filter_namespace,
+                config_filter,
+                origin_filters,
+                max_depth,
+                with_origin,
+                defaults_type,
+            )
         )
 
     def edit_data(
@@ -1537,7 +1564,7 @@ class LibScrapliNetconfMapping:
         target: c_char_p,
         content: c_char_p,
         default_operation: c_char_p,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Execute a edit-data rpc operation.
 
@@ -1551,20 +1578,21 @@ class LibScrapliNetconfMapping:
             default_operation: string that looks like default operation enum (or empty)
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._edit_data(
-            ptr,
-            operation_id_ptr,
-            CANCEL,
-            target,
-            content,
-            default_operation,
+        return LibScrapliFFIResult(
+            self._edit_data(
+                ptr,
+                operation_id_ptr,
+                CANCEL,
+                target,
+                content,
+                default_operation,
+            )
         )
 
     def action(
@@ -1573,7 +1601,7 @@ class LibScrapliNetconfMapping:
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
         action: c_char_p,
-    ) -> int:
+    ) -> LibScrapliFFIResult:
         """
         Execute an action rpc operation.
 
@@ -1585,16 +1613,17 @@ class LibScrapliNetconfMapping:
             action: the action to send
 
         Returns:
-            int: return code, non-zero value indicates an error. technically a c_uint8 converted by
-                ctypes.
+            LibScrapliFFIResult: return code wrapped in result enum.
 
         Raises:
             N/A
 
         """
-        return self._action(
-            ptr,
-            operation_id_ptr,
-            CANCEL,
-            action,
+        return LibScrapliFFIResult(
+            self._action(
+                ptr,
+                operation_id_ptr,
+                CANCEL,
+                action,
+            )
         )
