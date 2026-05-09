@@ -28,7 +28,7 @@ from scrapli.cli_decorators import handle_operation_timeout, handle_operation_ti
 from scrapli.cli_result import Result
 from scrapli.exceptions import (
     AllocationException,
-    GetResultException,
+    FFIException,
     NotOpenedException,
     OperationException,
     OptionsException,
@@ -38,7 +38,6 @@ from scrapli.ffi_options import DriverOptions, DriverOptionsPointer
 from scrapli.ffi_types import (
     LIBSCRAPLI_DELIMITER,
     DriverPointer,
-    LibScrapliFFIResult,
     OperationIdPointer,
     ZigSlice,
     ZigU64Slice,
@@ -581,15 +580,13 @@ class Cli:
         self.ffi_mapping.shared_mapping.fetch_options_size(
             options_ptr=options_ptr,
             options_size=options_size,
-        ).raise_if_error(
-            message="failed to retrieve options size",
-            default_exception=OperationException,
         )
 
         options_slice = pointer(ZigSlice(size=options_size.contents))
 
         self.ffi_mapping.shared_mapping.fetch_options(
-            options_ptr=options_ptr, options=options_slice
+            options_ptr=options_ptr,
+            options=options_slice,
         )
 
         self.ffi_mapping.shared_mapping.free_driver_options(options_ptr=options_ptr)
@@ -619,9 +616,6 @@ class Cli:
         self.ffi_mapping.cli_mapping.get_ntc_templates_platform(
             ptr=self._ptr_or_exception(),
             ntc_templates_platform=ntc_templates_platform,
-        ).raise_if_error(
-            message="failed to retrieve ntc templates platform",
-            default_exception=GetResultException,
         )
 
         self._ntc_templates_platform = ntc_templates_platform.contents.get_decoded_contents().strip(
@@ -653,9 +647,6 @@ class Cli:
         self.ffi_mapping.cli_mapping.get_genie_platform(
             ptr=self._ptr_or_exception(),
             genie_platform=genie_platform,
-        ).raise_if_error(
-            message="failed to retrieve genie platform",
-            default_exception=GetResultException,
         )
 
         self._genie_platform = genie_platform.contents.get_decoded_contents().strip("\x00")
@@ -690,15 +681,15 @@ class Cli:
         finally:
             self.ffi_mapping.shared_mapping.free_driver_options(options_ptr=options_ptr)
 
-        status = self.ffi_mapping.cli_mapping.open(
-            ptr=self._ptr_or_exception(),
-            operation_id_ptr=operation_id_ptr,
-        )
-
-        if status != LibScrapliFFIResult.SUCCESS:
+        try:
+            self.ffi_mapping.cli_mapping.open(
+                ptr=self._ptr_or_exception(),
+                operation_id_ptr=operation_id_ptr,
+            )
+        except FFIException:
             self._free()
 
-            raise OperationException("failed to submit open operation")
+            raise
 
     def open(
         self,
@@ -750,9 +741,6 @@ class Cli:
         self.ffi_mapping.cli_mapping.close(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
-        ).raise_if_error(
-            message="close operation failed",
-            default_exception=OperationException,
         )
 
     def close(
@@ -824,7 +812,7 @@ class Cli:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            OperationException: if the operation fails
+            FFIException: if the operation fails
 
         """
         buf = pointer(ZigSlice(size=c_size_t(size)))
@@ -834,9 +822,6 @@ class Cli:
             ptr=self._ptr_or_exception(),
             buf=buf,
             read_size=read_size,
-        ).raise_if_error(
-            message="executing read operation failed",
-            default_exception=OperationException,
         )
 
         return buf.contents.get_contents()[0 : read_size.contents.value]
@@ -853,7 +838,7 @@ class Cli:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            OperationException: if the operation fails
+            FFIException: if the operation fails
 
         """
         _input = to_c_string(s=input_)
@@ -862,9 +847,6 @@ class Cli:
             ptr=self._ptr_or_exception(),
             input_=_input,
             redacted=c_bool(False),
-        ).raise_if_error(
-            message="executing write operation failed",
-            default_exception=OperationException,
         )
 
         _ = _input
@@ -881,7 +863,7 @@ class Cli:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            OperationException: if the operation fails
+            FFIException: if the operation fails
 
         """
         _input = to_c_string(s=input_)
@@ -890,9 +872,6 @@ class Cli:
             ptr=self._ptr_or_exception(),
             input_=_input,
             redacted=c_bool(False),
-        ).raise_if_error(
-            message="executing write and return operation failed",
-            default_exception=OperationException,
         )
 
         _ = _input
@@ -909,14 +888,11 @@ class Cli:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            OperationException: if the operation fails
+            FFIException: if the operation fails
 
         """
         self.ffi_mapping.session_mapping.write_return(
             ptr=self._ptr_or_exception(),
-        ).raise_if_error(
-            message="executing write return operation failed",
-            default_exception=OperationException,
         )
 
     def _get_result(
@@ -943,9 +919,6 @@ class Cli:
             results_size=results_size,
             results_failed_indicator_size=results_failed_indicator_size,
             err_size=err_size,
-        ).raise_if_error(
-            message="fetching operation sizes failed",
-            default_exception=GetResultException,
         )
 
         start_time = pointer(c_uint64())
@@ -970,9 +943,6 @@ class Cli:
             results_slice=results_slice,
             results_failed_indicator_slice=results_failed_indicator_slice,
             err_slice=err_slice,
-        ).raise_if_error(
-            message="fetching operation content failed",
-            default_exception=GetResultException,
         )
 
         err_contents = err_slice.contents.get_decoded_contents()
@@ -1016,9 +986,6 @@ class Cli:
             results_size=results_size,
             results_failed_indicator_size=results_failed_indicator_size,
             err_size=err_size,
-        ).raise_if_error(
-            message="fetching operation sizes failed",
-            default_exception=GetResultException,
         )
 
         start_time = pointer(c_uint64())
@@ -1043,9 +1010,6 @@ class Cli:
             results_slice=results_slice,
             results_failed_indicator_slice=results_failed_indicator_slice,
             err_slice=err_slice,
-        ).raise_if_error(
-            message="fetching operation content failed",
-            default_exception=GetResultException,
         )
 
         err_contents = err_slice.contents.get_decoded_contents()
@@ -1067,21 +1031,6 @@ class Cli:
             genie_platform=self.genie_platform,
         )
 
-    def _enter_mode(
-        self,
-        *,
-        operation_id_ptr: OperationIdPointer,
-        requested_mode: c_char_p,
-    ) -> None:
-        self.ffi_mapping.cli_mapping.enter_mode(
-            ptr=self._ptr_or_exception(),
-            operation_id_ptr=operation_id_ptr,
-            requested_mode=requested_mode,
-        ).raise_if_error(
-            message="submitting enter mode operation failed",
-            default_exception=OperationException,
-        )
-
     @handle_operation_timeout
     def enter_mode(
         self,
@@ -1101,7 +1050,7 @@ class Cli:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            OperationException: if the operation fails
+            FFIException: if the operation fails
 
         """
         # only used in the decorator
@@ -1111,7 +1060,8 @@ class Cli:
 
         _requested_mode = to_c_string(requested_mode)
 
-        self._enter_mode(
+        self.ffi_mapping.cli_mapping.enter_mode(
+            ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             requested_mode=_requested_mode,
         )
@@ -1137,7 +1087,7 @@ class Cli:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            OperationException: if the operation fails
+            FFIException: if the operation fails
 
         """
         # only used in the decorator
@@ -1147,25 +1097,13 @@ class Cli:
 
         _requested_mode = to_c_string(requested_mode)
 
-        self._enter_mode(
+        self.ffi_mapping.cli_mapping.enter_mode(
+            ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             requested_mode=_requested_mode,
         )
 
         return await self._get_result_async(operation_id_ptr=operation_id_ptr)
-
-    def _get_prompt(
-        self,
-        *,
-        operation_id_ptr: OperationIdPointer,
-    ) -> None:
-        self.ffi_mapping.cli_mapping.get_prompt(
-            ptr=self._ptr_or_exception(),
-            operation_id_ptr=operation_id_ptr,
-        ).raise_if_error(
-            message="submitting get prompt operation failed",
-            default_exception=OperationException,
-        )
 
     @handle_operation_timeout
     def get_prompt(
@@ -1184,7 +1122,7 @@ class Cli:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            OperationException: if the operation fails
+            FFIException: if the operation fails
 
         """
         # only used in the decorator
@@ -1192,7 +1130,10 @@ class Cli:
 
         operation_id_ptr = pointer(c_uint32(0))
 
-        self._get_prompt(operation_id_ptr=operation_id_ptr)
+        self.ffi_mapping.cli_mapping.get_prompt(
+            ptr=self._ptr_or_exception(),
+            operation_id_ptr=operation_id_ptr,
+        )
 
         return self._get_result(operation_id_ptr=operation_id_ptr)
 
@@ -1213,7 +1154,7 @@ class Cli:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            OperationException: if the operation fails
+            FFIException: if the operation fails
 
         """
         # only used in the decorator
@@ -1221,32 +1162,12 @@ class Cli:
 
         operation_id_ptr = pointer(c_uint32(0))
 
-        self._get_prompt(operation_id_ptr=operation_id_ptr)
-
-        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
-
-    def _send_input(  # noqa: PLR0913
-        self,
-        *,
-        operation_id_ptr: OperationIdPointer,
-        input_: c_char_p,
-        requested_mode: c_char_p,
-        input_handling: c_char_p,
-        retain_input: c_bool,
-        retain_trailing_prompt: c_bool,
-    ) -> None:
-        self.ffi_mapping.cli_mapping.send_input(
+        self.ffi_mapping.cli_mapping.get_prompt(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
-            input_=input_,
-            requested_mode=requested_mode,
-            input_handling=input_handling,
-            retain_input=retain_input,
-            retain_trailing_prompt=retain_trailing_prompt,
-        ).raise_if_error(
-            message="submitting send input operation failed",
-            default_exception=OperationException,
         )
+
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
 
     @handle_operation_timeout
     def send_input(  # noqa: PLR0913
@@ -1275,7 +1196,7 @@ class Cli:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            OperationException: if the operation fails
+            FFIException: if the operation fails
 
         """
         # only used in the decorator
@@ -1287,7 +1208,8 @@ class Cli:
         _requested_mode = to_c_string(requested_mode)
         _input_handling = to_c_string(input_handling)
 
-        self._send_input(
+        self.ffi_mapping.cli_mapping.send_input(
+            ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             input_=_input,
             requested_mode=_requested_mode,
@@ -1325,7 +1247,7 @@ class Cli:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            OperationException: if the operation fails
+            FFIException: if the operation fails
 
         """
         # only used in the decorator
@@ -1337,7 +1259,8 @@ class Cli:
         _requested_mode = to_c_string(requested_mode)
         _input_handling = to_c_string(input_handling)
 
-        self._send_input(
+        self.ffi_mapping.cli_mapping.send_input(
+            ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             input_=_input,
             requested_mode=_requested_mode,
@@ -1347,29 +1270,6 @@ class Cli:
         )
 
         return await self._get_result_async(operation_id_ptr=operation_id_ptr)
-
-    def _send_inputs(  # noqa: PLR0913
-        self,
-        *,
-        operation_id_ptr: OperationIdPointer,
-        inputs: c_char_p,
-        requested_mode: c_char_p,
-        input_handling: c_char_p,
-        retain_input: c_bool,
-        retain_trailing_prompt: c_bool,
-    ) -> None:
-        self.ffi_mapping.cli_mapping.send_inputs(
-            ptr=self._ptr_or_exception(),
-            operation_id_ptr=operation_id_ptr,
-            inputs=inputs,
-            requested_mode=requested_mode,
-            input_handling=input_handling,
-            retain_input=retain_input,
-            retain_trailing_prompt=retain_trailing_prompt,
-        ).raise_if_error(
-            message="submitting send inputs operation failed",
-            default_exception=OperationException,
-        )
 
     @handle_operation_timeout
     def send_inputs(  # noqa: PLR0913
@@ -1400,7 +1300,7 @@ class Cli:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            OperationException: if the operation fails
+            FFIException: if the operation fails
 
         """
         # only used in the decorator; note that the timeout here is for the whole operation,
@@ -1413,7 +1313,8 @@ class Cli:
         _requested_mode = to_c_string(requested_mode)
         _input_handling = to_c_string(input_handling)
 
-        self._send_inputs(
+        self.ffi_mapping.cli_mapping.send_inputs(
+            ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             inputs=_inputs,
             requested_mode=_requested_mode,
@@ -1453,7 +1354,7 @@ class Cli:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            OperationException: if the operation fails
+            FFIException: if the operation fails
 
         """
         # only used in the decorator; note that the timeout here is for the whole operation,
@@ -1466,7 +1367,8 @@ class Cli:
         _requested_mode = to_c_string(requested_mode)
         _input_handling = to_c_string(input_handling)
 
-        self._send_inputs(
+        self.ffi_mapping.cli_mapping.send_inputs(
+            ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             inputs=_inputs,
             requested_mode=_requested_mode,
@@ -1505,7 +1407,7 @@ class Cli:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            OperationException: if the operation fails
+            FFIException: if the operation fails
 
         """
         with open(resolve_file(f), encoding="utf-8", mode="r") as _f:
@@ -1549,7 +1451,7 @@ class Cli:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            OperationException: if the operation fails
+            FFIException: if the operation fails
 
         """
         with open(resolve_file(f), encoding="utf-8", mode="r") as _f:
@@ -1563,37 +1465,6 @@ class Cli:
             retain_trailing_prompt=retain_trailing_prompt,
             stop_on_indicated_failure=stop_on_indicated_failure,
             operation_timeout_ns=operation_timeout_ns,
-        )
-
-    def _send_prompted_input(  # noqa: PLR0913
-        self,
-        *,
-        operation_id_ptr: OperationIdPointer,
-        input_: c_char_p,
-        prompt: c_char_p,
-        prompt_pattern: c_char_p,
-        response: c_char_p,
-        hidden_response: c_bool,
-        abort_input: c_char_p,
-        requested_mode: c_char_p,
-        input_handling: c_char_p,
-        retain_trailing_prompt: c_bool,
-    ) -> None:
-        self.ffi_mapping.cli_mapping.send_prompted_input(
-            ptr=self._ptr_or_exception(),
-            operation_id_ptr=operation_id_ptr,
-            input_=input_,
-            prompt=prompt,
-            prompt_pattern=prompt_pattern,
-            response=response,
-            hidden_response=hidden_response,
-            abort_input=abort_input,
-            requested_mode=requested_mode,
-            input_handling=input_handling,
-            retain_trailing_prompt=retain_trailing_prompt,
-        ).raise_if_error(
-            message="submitting send prompted input operation failed",
-            default_exception=OperationException,
         )
 
     @handle_operation_timeout
@@ -1632,7 +1503,7 @@ class Cli:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            OperationException: if the operation fails
+            FFIException: if the operation fails
 
         """
         # only used in the decorator
@@ -1648,16 +1519,17 @@ class Cli:
         _requested_mode = to_c_string(requested_mode)
         _input_handling = to_c_string(input_handling)
 
-        self._send_prompted_input(
+        self.ffi_mapping.cli_mapping.send_prompted_input(
+            ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             input_=_input,
             prompt=_prompt,
             prompt_pattern=_prompt_pattern,
             response=_response,
+            hidden_response=c_bool(hidden_response),
             abort_input=_abort_input,
             requested_mode=_requested_mode,
             input_handling=_input_handling,
-            hidden_response=c_bool(hidden_response),
             retain_trailing_prompt=c_bool(retain_trailing_prompt),
         )
 
@@ -1699,7 +1571,7 @@ class Cli:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            OperationException: if the operation fails
+            FFIException: if the operation fails
 
         """
         # only used in the decorator
@@ -1715,16 +1587,17 @@ class Cli:
         _requested_mode = to_c_string(requested_mode)
         _input_handling = to_c_string(input_handling)
 
-        self._send_prompted_input(
+        self.ffi_mapping.cli_mapping.send_prompted_input(
+            ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             input_=_input,
             prompt=_prompt,
             prompt_pattern=_prompt_pattern,
             response=_response,
+            hidden_response=c_bool(hidden_response),
             abort_input=_abort_input,
             requested_mode=_requested_mode,
             input_handling=_input_handling,
-            hidden_response=c_bool(hidden_response),
             retain_trailing_prompt=c_bool(retain_trailing_prompt),
         )
 
@@ -1751,7 +1624,7 @@ class Cli:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            OperationException: if the operation fails
+            FFIException: if the operation fails
 
         """
         # only used in the decorator
@@ -1775,9 +1648,6 @@ class Cli:
             self.ffi_mapping.cli_mapping.read_any(
                 ptr=self._ptr_or_exception(),
                 operation_id_ptr=operation_id_ptr,
-            ).raise_if_error(
-                message="submitting read any operation failed in callback loop",
-                default_exception=OperationException,
             )
 
             intermediate_result = self._get_result(operation_id_ptr=operation_id_ptr)
@@ -1800,9 +1670,6 @@ class Cli:
                     contains_pattern=to_c_string(callback.contains_pattern),
                     not_contains=to_c_string(callback.not_contains),
                     execute=execute,
-                ).raise_if_error(
-                    message="failed checking if callback should execute",
-                    default_exception=OperationException,
                 )
 
                 if execute.contents.value is False:
@@ -1854,7 +1721,7 @@ class Cli:
 
         Raises:
             NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
-            OperationException: if the operation fails
+            FFIException: if the operation fails
 
         """
         # only used in the decorator
@@ -1878,9 +1745,6 @@ class Cli:
             self.ffi_mapping.cli_mapping.read_any(
                 ptr=self._ptr_or_exception(),
                 operation_id_ptr=operation_id_ptr,
-            ).raise_if_error(
-                message="submitting read any operation failed in callback loop",
-                default_exception=OperationException,
             )
 
             intermediate_result = await self._get_result_async(operation_id_ptr=operation_id_ptr)
@@ -1903,9 +1767,6 @@ class Cli:
                     contains_pattern=to_c_string(callback.contains_pattern),
                     not_contains=to_c_string(callback.not_contains),
                     execute=execute,
-                ).raise_if_error(
-                    message="failed checking if callback should execute",
-                    default_exception=OperationException,
                 )
 
                 if execute.contents.value is False:

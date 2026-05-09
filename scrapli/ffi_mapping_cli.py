@@ -348,7 +348,7 @@ class LibScrapliCliMapping:
         *,
         ptr: DriverPointer,
         ntc_templates_platform: ZigSlicePointer,
-    ) -> LibScrapliFFIResult:
+    ) -> None:
         """
         Writes the ntc templates platform into the given slice pointer.
 
@@ -359,17 +359,19 @@ class LibScrapliCliMapping:
             ntc_templates_platform: slice to write the ntc templates platform into
 
         Returns:
-            LibScrapliFFIResult: return code wrapped in result enum.
-
-        Raises:
             N/A
 
+        Raises:
+            FFIException: if the platform cant be retreived
+
         """
-        return LibScrapliFFIResult(
+        LibScrapliFFIResult(
             self._get_ntc_templates_platform(
                 ptr,
                 ntc_templates_platform,
             )
+        ).raise_if_error(
+            message="failed to retrieve ntc templates platform",
         )
 
     def get_genie_platform(
@@ -377,7 +379,7 @@ class LibScrapliCliMapping:
         *,
         ptr: DriverPointer,
         genie_platform: ZigSlicePointer,
-    ) -> LibScrapliFFIResult:
+    ) -> None:
         """
         Writes the (cisco/pyats) genie platform into the given slice pointer.
 
@@ -388,24 +390,26 @@ class LibScrapliCliMapping:
             genie_platform: slice to write the ntc templates platform into
 
         Returns:
-            LibScrapliFFIResult: return code wrapped in result enum.
-
-        Raises:
             N/A
 
+        Raises:
+            FFIException: if the platform cant be retreived
+
         """
-        return LibScrapliFFIResult(
+        LibScrapliFFIResult(
             self._get_genie_platform(
                 ptr,
                 genie_platform,
             )
+        ).raise_if_error(
+            message="failed to retrieve genie platform",
         )
 
     def open(
         self,
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
-    ) -> LibScrapliFFIResult:
+    ) -> None:
         """
         Open the driver at ptr.
 
@@ -417,25 +421,27 @@ class LibScrapliCliMapping:
                 completion.
 
         Returns:
-            LibScrapliFFIResult: return code wrapped in result enum.
-
-        Raises:
             N/A
 
+        Raises:
+            FFIException: if the open operation isnt successfully submitted
+
         """
-        return LibScrapliFFIResult(
+        LibScrapliFFIResult(
             self._open(
                 ptr,
                 operation_id_ptr,
                 CANCEL,
             )
+        ).raise_if_error(
+            message="failed submitting open operation",
         )
 
     def close(
         self,
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
-    ) -> LibScrapliFFIResult:
+    ) -> None:
         """
         Close the driver at ptr.
 
@@ -447,18 +453,20 @@ class LibScrapliCliMapping:
                 completion.
 
         Returns:
-            LibScrapliFFIResult: return code wrapped in result enum.
-
-        Raises:
             N/A
 
+        Raises:
+            FFIException: if the close operation isnt successfully submitted
+
         """
-        return LibScrapliFFIResult(
+        LibScrapliFFIResult(
             self._close(
                 ptr,
                 operation_id_ptr,
                 CANCEL,
             )
+        ).raise_if_error(
+            message="failed submitting close operation",
         )
 
     def fetch_sizes(
@@ -472,7 +480,7 @@ class LibScrapliCliMapping:
         results_size: USizePointer,
         results_failed_indicator_size: USizePointer,
         err_size: USizePointer,
-    ) -> LibScrapliFFIResult:
+    ) -> None:
         """
         Fetch the sizes of a cli operation's results.
 
@@ -490,13 +498,13 @@ class LibScrapliCliMapping:
             err_size: int pointer to fill with the operation's error size
 
         Returns:
-            LibScrapliFFIResult: return code wrapped in result enum.
-
-        Raises:
             N/A
 
+        Raises:
+            FFIException: if the operation sizes cant be fetched
+
         """
-        return LibScrapliFFIResult(
+        LibScrapliFFIResult(
             self._fetch_sizes(
                 ptr,
                 operation_id_value,
@@ -507,6 +515,8 @@ class LibScrapliCliMapping:
                 results_failed_indicator_size,
                 err_size,
             )
+        ).raise_if_error(
+            message="fetching operation sizes failed",
         )
 
     def fetch(
@@ -521,7 +531,7 @@ class LibScrapliCliMapping:
         results_slice: ZigSlicePointer,
         results_failed_indicator_slice: ZigSlicePointer,
         err_slice: ZigSlicePointer,
-    ) -> LibScrapliFFIResult:
+    ) -> None:
         """
         Fetch the result of a cli operation.
 
@@ -540,13 +550,13 @@ class LibScrapliCliMapping:
             err_slice: pre allocated slice to fill with the operations error
 
         Returns:
-            LibScrapliFFIResult: return code wrapped in result enum.
-
-        Raises:
             N/A
 
+        Raises:
+            FFIException: if the operation results cant be fetched
+
         """
-        return LibScrapliFFIResult(
+        LibScrapliFFIResult(
             self._fetch(
                 ptr,
                 operation_id_value,
@@ -558,6 +568,8 @@ class LibScrapliCliMapping:
                 results_failed_indicator_slice,
                 err_slice,
             )
+        ).raise_if_error(
+            message="fetching operation content failed",
         )
 
     def enter_mode(
@@ -566,7 +578,7 @@ class LibScrapliCliMapping:
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
         requested_mode: c_char_p,
-    ) -> LibScrapliFFIResult:
+    ) -> None:
         """
         Enter the given mode for the cli object.
 
@@ -578,19 +590,21 @@ class LibScrapliCliMapping:
             requested_mode: string name of the mode to enter
 
         Returns:
-            LibScrapliFFIResult: return code wrapped in result enum.
-
-        Raises:
             N/A
 
+        Raises:
+            FFIException: if submitting the enter mode operation failed
+
         """
-        return LibScrapliFFIResult(
+        LibScrapliFFIResult(
             self._enter_mode(
                 ptr,
                 operation_id_ptr,
                 CANCEL,
                 requested_mode,
             )
+        ).raise_if_error(
+            message="submitting enter mode operation failed",
         )
 
     def get_prompt(
@@ -598,7 +612,7 @@ class LibScrapliCliMapping:
         *,
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
-    ) -> LibScrapliFFIResult:
+    ) -> None:
         """
         Get the current prompt for the cli object.
 
@@ -609,18 +623,20 @@ class LibScrapliCliMapping:
             operation_id_ptr: int pointer to fill with the id of the submitted operation
 
         Returns:
-            LibScrapliFFIResult: return code wrapped in result enum.
-
-        Raises:
             N/A
 
+        Raises:
+            FFIException: if submitting the get prompt operation failed
+
         """
-        return LibScrapliFFIResult(
+        LibScrapliFFIResult(
             self._get_prompt(
                 ptr,
                 operation_id_ptr,
                 CANCEL,
             )
+        ).raise_if_error(
+            message="submitting get prompt operation failed",
         )
 
     def send_input(
@@ -633,7 +649,7 @@ class LibScrapliCliMapping:
         input_handling: c_char_p,
         retain_input: c_bool,
         retain_trailing_prompt: c_bool,
-    ) -> LibScrapliFFIResult:
+    ) -> None:
         """
         Send some input to the cli object.
 
@@ -650,13 +666,13 @@ class LibScrapliCliMapping:
             retain_trailing_prompt: boolean indicating whether to retain the trailing
 
         Returns:
-            LibScrapliFFIResult: return code wrapped in result enum.
-
-        Raises:
             N/A
 
+        Raises:
+            FFIException: if submitting the send input operation failed
+
         """
-        return LibScrapliFFIResult(
+        LibScrapliFFIResult(
             self._send_input(
                 ptr,
                 operation_id_ptr,
@@ -667,6 +683,8 @@ class LibScrapliCliMapping:
                 retain_input,
                 retain_trailing_prompt,
             )
+        ).raise_if_error(
+            message="submitting send input operation failed",
         )
 
     def send_inputs(
@@ -679,7 +697,7 @@ class LibScrapliCliMapping:
         input_handling: c_char_p,
         retain_input: c_bool,
         retain_trailing_prompt: c_bool,
-    ) -> LibScrapliFFIResult:
+    ) -> None:
         """
         Send some input to the cli object.
 
@@ -696,13 +714,13 @@ class LibScrapliCliMapping:
             retain_trailing_prompt: boolean indicating whether to retain the trailing
 
         Returns:
-            LibScrapliFFIResult: return code wrapped in result enum.
-
-        Raises:
             N/A
 
+        Raises:
+            FFIException: if submitting the send inputs operation failed
+
         """
-        return LibScrapliFFIResult(
+        LibScrapliFFIResult(
             self._send_inputs(
                 ptr,
                 operation_id_ptr,
@@ -713,6 +731,8 @@ class LibScrapliCliMapping:
                 retain_input,
                 retain_trailing_prompt,
             )
+        ).raise_if_error(
+            message="submitting send inputs operation failed",
         )
 
     def send_prompted_input(
@@ -729,7 +749,7 @@ class LibScrapliCliMapping:
         input_handling: c_char_p,
         hidden_response: c_bool,
         retain_trailing_prompt: c_bool,
-    ) -> LibScrapliFFIResult:
+    ) -> None:
         """
         Send some prompted input to the cli object.
 
@@ -751,13 +771,13 @@ class LibScrapliCliMapping:
             retain_trailing_prompt: boolean indicating whether to retain the trailing
 
         Returns:
-            LibScrapliFFIResult: return code wrapped in result enum.
-
-        Raises:
             N/A
 
+        Raises:
+            FFIException: if submitting the send prompted input operation failed
+
         """
-        return LibScrapliFFIResult(
+        LibScrapliFFIResult(
             self._send_prompted_input(
                 ptr,
                 operation_id_ptr,
@@ -772,13 +792,15 @@ class LibScrapliCliMapping:
                 hidden_response,
                 retain_trailing_prompt,
             )
+        ).raise_if_error(
+            message="submitting send prompted input operation failed",
         )
 
     def read_any(
         self,
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
-    ) -> LibScrapliFFIResult:
+    ) -> None:
         """
         Read any available data from the session, up to the normal timeout behavior.
 
@@ -789,18 +811,20 @@ class LibScrapliCliMapping:
             operation_id_ptr: pointer to fill with the id of the submitted operation
 
         Returns:
-            LibScrapliFFIResult: return code wrapped in result enum.
-
-        Raises:
             N/A
 
+        Raises:
+            FFIException: if submitting the read any operation failed
+
         """
-        return LibScrapliFFIResult(
+        LibScrapliFFIResult(
             self._read_any(
                 ptr,
                 operation_id_ptr,
                 CANCEL,
             )
+        ).raise_if_error(
+            message="submitting read any operation failed",
         )
 
     def read_callback_should_execute(
@@ -811,7 +835,7 @@ class LibScrapliCliMapping:
         contains_pattern: c_char_p,
         not_contains: c_char_p,
         execute: BoolPointer,
-    ) -> LibScrapliFFIResult:
+    ) -> None:
         """
         Decide if a callback should execute for read_with_callbacks operations.
 
@@ -830,13 +854,13 @@ class LibScrapliCliMapping:
             execute: bool pointer to update w/ execution state
 
         Returns:
-            LibScrapliFFIResult: return code wrapped in result enum.
-
-        Raises:
             N/A
 
+        Raises:
+            FFIException: if submitting the read any operation failed
+
         """
-        return LibScrapliFFIResult(
+        LibScrapliFFIResult(
             self._read_callback_should_execute(
                 buf,
                 name,
@@ -845,4 +869,6 @@ class LibScrapliCliMapping:
                 not_contains,
                 execute,
             )
+        ).raise_if_error(
+            message="failed checking if callback should execute",
         )

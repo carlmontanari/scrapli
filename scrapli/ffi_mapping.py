@@ -181,7 +181,7 @@ class LibScrapliSharedMapping:
         self,
         options_ptr: OptionsPointer,
         options_size: USizePointer,
-    ) -> LibScrapliFFIResult:
+    ) -> None:
         """
         Fetches the size of the options rendered as json.
 
@@ -192,13 +192,20 @@ class LibScrapliSharedMapping:
             options_size: pointer to write the size of the options into.
 
         Returns:
-            LibScrapliFFIResult: return code wrapped in result enum.
-
-        Raises:
             N/A
 
+        Raises:
+            OptionsException: if we fail to get the size of the options from libscrapli.
+
         """
-        return LibScrapliFFIResult(self._fetch_options_size(options_ptr, options_size))
+        LibScrapliFFIResult(
+            self._fetch_options_size(
+                options_ptr,
+                options_size,
+            )
+        ).raise_if_error(
+            message="failed to retrieve options size",
+        )
 
     def fetch_options(self, options_ptr: OptionsPointer, options: ZigSlicePointer) -> None:
         """
@@ -312,7 +319,7 @@ class LibScrapliSessionMapping:
         ptr: DriverPointer,
         buf: ZigSlicePointer,
         read_size: USizePointer,
-    ) -> LibScrapliFFIResult:
+    ) -> None:
         """
         Read from the session of driver at ptr.
 
@@ -324,20 +331,24 @@ class LibScrapliSessionMapping:
             read_size: c_int pointer that is filled with number of bytes written into buf.
 
         Returns:
-            LibScrapliFFIResult: return code wrapped in result enum.
-
-        Raises:
             N/A
 
+        Raises:
+            OperationException: if the operation fails
+
         """
-        return LibScrapliFFIResult(self._read(ptr, buf, read_size))
+        LibScrapliFFIResult(
+            self._read(ptr, buf, read_size),
+        ).raise_if_error(
+            message="executing read operation failed",
+        )
 
     def write(
         self,
         ptr: DriverPointer,
         input_: c_char_p,
         redacted: c_bool,
-    ) -> LibScrapliFFIResult:
+    ) -> None:
         """
         Write to the session of driver at ptr.
 
@@ -349,20 +360,24 @@ class LibScrapliSessionMapping:
             redacted: bool indicated if the write contents should be redacted from logs.
 
         Returns:
-            LibScrapliFFIResult: return code wrapped in result enum.
-
-        Raises:
             N/A
 
+        Raises:
+            OperationException: if the operation fails
+
         """
-        return LibScrapliFFIResult(self._write(ptr, input_, redacted))
+        LibScrapliFFIResult(
+            self._write(ptr, input_, redacted),
+        ).raise_if_error(
+            message="executing write operation failed",
+        )
 
     def write_and_return(
         self,
         ptr: DriverPointer,
         input_: c_char_p,
         redacted: c_bool,
-    ) -> LibScrapliFFIResult:
+    ) -> None:
         """
         Write and then send a return to the session of driver at ptr.
 
@@ -374,15 +389,19 @@ class LibScrapliSessionMapping:
             redacted: bool indicated if the write contents should be redacted from logs.
 
         Returns:
-            LibScrapliFFIResult: return code wrapped in result enum.
-
-        Raises:
             N/A
 
-        """
-        return LibScrapliFFIResult(self._write_and_return(ptr, input_, redacted))
+        Raises:
+            OperationException: if the operation fails
 
-    def write_return(self, ptr: DriverPointer) -> LibScrapliFFIResult:
+        """
+        LibScrapliFFIResult(
+            self._write_and_return(ptr, input_, redacted),
+        ).raise_if_error(
+            message="executing write and return operation failed",
+        )
+
+    def write_return(self, ptr: DriverPointer) -> None:
         """
         Write a return to the session of driver at ptr.
 
@@ -392,17 +411,21 @@ class LibScrapliSessionMapping:
             ptr: the ptr to the libscrapli cli/netconf object.
 
         Returns:
-            LibScrapliFFIResult: return code wrapped in result enum.
-
-        Raises:
             N/A
 
+        Raises:
+            OperationException: if the operation fails
+
         """
-        return LibScrapliFFIResult(self._write_return(ptr))
+        LibScrapliFFIResult(
+            self._write_return(ptr),
+        ).raise_if_error(
+            message="executing write return operation failed",
+        )
 
     def set_operation_timeout_ns(
         self, ptr: DriverPointer, set_operation_timeout_ns: c_uint64
-    ) -> LibScrapliFFIResult:
+    ) -> None:
         """
         Set the session operation timeout in ns.
 
@@ -413,13 +436,17 @@ class LibScrapliSessionMapping:
             set_operation_timeout_ns: operation timeout in ns
 
         Returns:
-            LibScrapliFFIResult: return code wrapped in result enum.
-
-        Raises:
             N/A
 
+        Raises:
+            OptionsException: when encountering issue setting timeout
+
         """
-        return LibScrapliFFIResult(self._set_operation_timeout_ns(ptr, set_operation_timeout_ns))
+        LibScrapliFFIResult(
+            self._set_operation_timeout_ns(ptr, set_operation_timeout_ns),
+        ).raise_if_error(
+            message="failed to set session operation timeout",
+        )
 
 
 class LibScrapliMapping:

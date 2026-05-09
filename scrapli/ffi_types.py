@@ -31,10 +31,10 @@ from scrapli.exceptions import (
     CancelledException,
     DriverException,
     EOFException,
+    FFIException,
     InvalidArgumentException,
     OperationException,
     OutOfMememoryException,
-    ScrapliException,
     SessionException,
     TimeoutException,
     TransportException,
@@ -116,45 +116,43 @@ class LibScrapliFFIResult(IntEnum):
     def raise_if_error(  # noqa:C901
         self,
         message: str,
-        default_exception: type[Exception] = ScrapliException,
     ) -> None:
         """
         Raises an exception from the result or returns cleanly for success
 
         Args:
             message: the message to push into the exception being raised.
-            default_exception: the exception to raise if the result is set to unknown.
 
         Returns:
             N/A
 
         Raises:
-            ScrapliException: exception based on the result and default_exception provided.
+            FFIException: wrapping an exception based on the result.
 
         """
         match self:
             case LibScrapliFFIResult.SUCCESS:
                 return
             case LibScrapliFFIResult.OUT_OF_MEMORY:
-                raise OutOfMememoryException(message)
+                raise FFIException(OutOfMememoryException(message))
             case LibScrapliFFIResult.EOF:
-                raise EOFException(message)
+                raise FFIException(EOFException(message))
             case LibScrapliFFIResult.CANCELLED:
-                raise CancelledException(message)
+                raise FFIException(CancelledException(message))
             case LibScrapliFFIResult.TIMEOUT:
-                raise TimeoutException(message)
+                raise FFIException(TimeoutException(message))
             case LibScrapliFFIResult.DRIVER:
-                raise DriverException(message)
+                raise FFIException(DriverException(message))
             case LibScrapliFFIResult.SESSION:
-                raise SessionException(message)
+                raise FFIException(SessionException(message))
             case LibScrapliFFIResult.TRANSPORT:
-                raise TransportException(message)
+                raise FFIException(TransportException(message))
             case LibScrapliFFIResult.OPERATION:
-                raise OperationException(message)
+                raise FFIException(OperationException(message))
             case LibScrapliFFIResult.INVALID_ARGUMENT:
-                raise InvalidArgumentException(message)
+                raise FFIException(InvalidArgumentException(message))
             case LibScrapliFFIResult.UNKNOWN | _:
-                raise default_exception(message)
+                raise FFIException(message)
 
 
 class ZigU64Slice(Structure):

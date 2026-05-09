@@ -17,8 +17,8 @@ class AllocationException(ScrapliException):
     """Exception raised when encountering errors allocating a cli/netconf object"""
 
 
-class GetResultException(ScrapliException):
-    """Exception raised when encountering errors polling/fetching an operation result"""
+class FFIException(ScrapliException):
+    """Exception raised when encountering errors at the ffi boundary"""
 
 
 class NotOpenedException(ScrapliException):
