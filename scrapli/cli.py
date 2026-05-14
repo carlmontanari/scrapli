@@ -1795,6 +1795,43 @@ class Cli:
                         genie_platform=self.genie_platform,
                     )
 
+    def update_definition(self, definition_file_or_name: str | LoadedDefinition) -> None:
+        """
+        Update Definition for CLI
+
+        Args:
+            definition_file_or_name: new definition for cli
+
+        Returns:
+            None
+
+        """
+        if isinstance(definition_file_or_name, LoadedDefinition):
+            self.definition_file_or_name = definition_file_or_name.platform_name
+            self._platform_name = definition_file_or_name.platform_name
+            self.definition_string = definition_file_or_name.definition.encode()
+        else:
+            self.definition_file_or_name = definition_file_or_name or "default"
+            self._platform_name = ""
+            self._load_definition()
+
+        options_ptr = self.ffi_mapping.shared_mapping.alloc_driver_options()
+        options = cast(options_ptr, POINTER(DriverOptions))
+
+        options.contents.apply(
+            logger_callback=self.logger_callback,
+            logger_level=ffi_logger_level(logger=self.logger),
+            port=self.port,
+            transport_kind=c_char_p(self.transport_options.transport_kind.encode(encoding="utf-8")),
+            cli_definition_string=c_char_p(self.definition_string),
+        )
+
+        self.cli_options.apply(options=options)
+        self.ffi_mapping.cli_mapping.update_definition(
+            ptr=self._ptr_or_exception(),
+            options_ptr=options
+        )
+
     @staticmethod
     def ___getwide___() -> None:  # pragma: no cover
         """

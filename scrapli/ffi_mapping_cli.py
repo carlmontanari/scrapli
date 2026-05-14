@@ -316,6 +316,19 @@ class LibScrapliCliMapping:
         ]
         lib.ls_cli_read_callback_should_execute.restype = c_uint8
 
+        self._update_definition: Callable[
+            [
+                DriverPointer,
+                c_void_p,
+            ],
+            int,
+        ] = lib.ls_cli_update_definition
+        lib.ls_cli_update_definition.argtypes = [
+            DriverPointer,
+            c_void_p
+        ]
+        lib.ls_cli_update_definition.restype = c_uint8
+
     def alloc(
         self,
         *,
@@ -871,4 +884,14 @@ class LibScrapliCliMapping:
             )
         ).raise_if_error(
             message="failed checking if callback should execute",
+        )
+
+    def update_definition(
+        self,
+        ptr: DriverPointer,
+        options_ptr: c_void_p,
+    ):
+        return self._update_definition(
+            ptr,
+            options_ptr
         )
