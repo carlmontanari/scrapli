@@ -1831,6 +1831,7 @@ class Cli:
             ptr=self._ptr_or_exception(),
             options_ptr=options
         )
+        self.ffi_mapping.lib.ls_free_driver_options(options_ptr)
 
     @staticmethod
     def ___getwide___() -> None:  # pragma: no cover
