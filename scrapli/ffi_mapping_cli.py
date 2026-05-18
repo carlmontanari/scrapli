@@ -316,6 +316,19 @@ class LibScrapliCliMapping:
         ]
         lib.ls_cli_read_callback_should_execute.restype = c_uint8
 
+        self._replace_definition: Callable[
+            [
+                DriverPointer,
+                c_char_p,
+            ],
+            int,
+        ] = lib.ls_cli_replace_definition
+        lib.ls_cli_replace_definition.argtypes = [
+            DriverPointer,
+            c_char_p,
+        ]
+        lib.ls_cli_replace_definition.restype = c_uint8
+
     def alloc(
         self,
         *,
@@ -871,4 +884,37 @@ class LibScrapliCliMapping:
             )
         ).raise_if_error(
             message="failed checking if callback should execute",
+        )
+
+    def replace_definition(
+        self,
+        ptr: DriverPointer,
+        definition_string: c_char_p,
+    ) -> None:
+        """
+        Replace the "definition" of the driver at driver ptr.
+
+        Most importantly changes/updates the prompt pattern, but also updates the modes etc.
+        available in the driver.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: the ptr to the libscrapli cli/netconf object.
+            definition_string: string content of the definition to pass to zig.
+
+        Returns:
+            N/A
+
+        Raises:
+            FFIException: if replacing the definition failed
+
+        """
+        LibScrapliFFIResult(
+            self._replace_definition(
+                ptr,
+                definition_string,
+            )
+        ).raise_if_error(
+            message="failed replacing cli definition",
         )
