@@ -282,14 +282,7 @@ class Cli:
 
         self.ffi_mapping = LibScrapliMapping()
 
-        if isinstance(definition_file_or_name, LoadedDefinition):
-            self.definition_file_or_name = definition_file_or_name.platform_name
-            self._platform_name = definition_file_or_name.platform_name
-            self.definition_string = definition_file_or_name.definition.encode()
-        else:
-            self.definition_file_or_name = definition_file_or_name or "default"
-            self._platform_name = ""
-            self._load_definition()
+        self._process_definition_file_or_name(definition_file_or_name=definition_file_or_name)
 
         # note: many places have encodings done prior to function calls such that the encoded
         # result is not gc'd prior to being used in zig-land, so it looks a bit weird, but thats
@@ -476,6 +469,19 @@ class Cli:
             transport_options=self.transport_options,
             logging_uid=self._logging_uid,
         )
+
+    def _process_definition_file_or_name(
+        self,
+        definition_file_or_name: str | LoadedDefinition | None,
+    ) -> None:
+        if isinstance(definition_file_or_name, LoadedDefinition):
+            self.definition_file_or_name = definition_file_or_name.platform_name
+            self._platform_name = definition_file_or_name.platform_name
+            self.definition_string = definition_file_or_name.definition.encode()
+        else:
+            self.definition_file_or_name = definition_file_or_name or "default"
+            self._platform_name = ""
+            self._load_definition()
 
     def _load_definition(self) -> None:
         if CLI_DEFINITIONS_PATH_OVERRIDE is not None:
@@ -1794,6 +1800,30 @@ class Cli:
                         textfsm_platform=self.ntc_templates_platform,
                         genie_platform=self.genie_platform,
                     )
+
+    def replace_definition(self, definition_file_or_name: str) -> None:
+        """
+        Replace the "definition" of the driver.
+
+        Most importantly changes/updates the prompt pattern, but also updates the modes etc.
+        available in the driver.
+
+        Args:
+            definition_file_or_name: new definition for cli
+
+        Returns:
+            N/A
+
+        Raises:
+            FFIException: if replacing the definition failed
+
+        """
+        self._process_definition_file_or_name(definition_file_or_name=definition_file_or_name)
+
+        self.ffi_mapping.cli_mapping.replace_definition(
+            ptr=self._ptr_or_exception(),
+            definition_string=c_char_p(self.definition_string),
+        )
 
     @staticmethod
     def ___getwide___() -> None:  # pragma: no cover
