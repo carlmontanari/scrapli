@@ -232,6 +232,7 @@ class LibScrapliCliMapping:
                 c_char_p,
                 c_bool,
                 c_bool,
+                c_bool,
             ],
             int,
         ] = lib.ls_cli_send_inputs
@@ -242,6 +243,7 @@ class LibScrapliCliMapping:
             c_char_p,
             c_char_p,
             c_char_p,
+            c_bool,
             c_bool,
             c_bool,
         ]
@@ -710,6 +712,7 @@ class LibScrapliCliMapping:
         input_handling: c_char_p,
         retain_input: c_bool,
         retain_trailing_prompt: c_bool,
+        stop_on_indicated_failure: c_bool,
     ) -> None:
         """
         Send some input to the cli object.
@@ -725,6 +728,8 @@ class LibScrapliCliMapping:
                 handled
             retain_input: boolean indicating whether to retain the input after entering
             retain_trailing_prompt: boolean indicating whether to retain the trailing
+            stop_on_indicated_failure: indiciates if we should stop at first sign of a failure as
+                indicated by the "failed when" values (of the platform).
 
         Returns:
             N/A
@@ -743,6 +748,7 @@ class LibScrapliCliMapping:
                 input_handling,
                 retain_input,
                 retain_trailing_prompt,
+                stop_on_indicated_failure,
             )
         ).raise_if_error(
             message="submitting send inputs operation failed",

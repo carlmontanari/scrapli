@@ -1327,6 +1327,7 @@ class Cli:
             input_handling=_input_handling,
             retain_input=c_bool(retain_input),
             retain_trailing_prompt=c_bool(retain_trailing_prompt),
+            stop_on_indicated_failure=c_bool(stop_on_indicated_failure),
         )
 
         return self._get_result(operation_id_ptr=operation_id_ptr)
@@ -1381,6 +1382,7 @@ class Cli:
             input_handling=_input_handling,
             retain_input=c_bool(retain_input),
             retain_trailing_prompt=c_bool(retain_trailing_prompt),
+            stop_on_indicated_failure=c_bool(stop_on_indicated_failure),
         )
 
         return await self._get_result_async(operation_id_ptr=operation_id_ptr)
