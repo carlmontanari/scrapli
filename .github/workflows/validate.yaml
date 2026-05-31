@@ -161,7 +161,7 @@ jobs:
           start=$(date +%s)
 
           while true; do
-            if python -m pip install "scrapli==${{ env.RELEASE_VERSION }}"; then
+            if python -m pip install "scrapli2==${{ env.RELEASE_VERSION }}"; then
               break
             fi
 
