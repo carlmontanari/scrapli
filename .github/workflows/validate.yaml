@@ -67,7 +67,7 @@ jobs:
 
       - name: uninstall statically linked scrapli/libscrapli
         run: |
-          python -m pip uninstall "scrapli==${{ env.CALENDAR_VERSION }}"
+          python -m pip uninstall "scrapli==${{ env.CALENDAR_VERSION }}" --yes
 
       - name: install dynamically linked libscrapli dependencies
         run: |
@@ -126,7 +126,7 @@ jobs:
 
       - name: uninstall statically linked scrapli/libscrapli
         run: |
-          python -m pip uninstall scrapli2
+          python -m pip uninstall scrapli2 --yes
 
       - name: install dynamically linked libscrapli dependencies
         run: |
