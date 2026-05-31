@@ -16,10 +16,16 @@ from setuptools.command.bdist_wheel import bdist_wheel
 from setuptools.command.editable_wheel import editable_wheel
 from setuptools.command.sdist import sdist
 
+LIBSCRAPLI_VERSION_ENV = "LIBSCRAPLI_VERSION"
+
 
 def get_libscrapli_version() -> str:
     """
     Extract LIBSCRAPLI_VERSION from scrapli/ffi.py
+
+    Can be overridden with LIBSCRAPLI_VERSION env -- this value is only respected during setup.py
+    install things and otherwise you would want to use the `LIBSCRAPLI_PATH_OVERRIDE_ENV` setting by
+    setting the env var `LIBSCRAPLI_PATH`.
 
     Args:
         N/A
@@ -31,10 +37,16 @@ def get_libscrapli_version() -> str:
         RuntimeError: if LIBSCRAPLI_VERSION is not found
 
     """
+    provided_version = os.environ.get(LIBSCRAPLI_VERSION_ENV, None)
+    if provided_version is not None:
+        return provided_version
+
     version_file = Path("scrapli/ffi.py").read_text()
+
     match = re.search(r'^LIBSCRAPLI_VERSION = "([^"]+)"', version_file, re.MULTILINE)
     if match:
         return match.group(1)
+
     raise RuntimeError("Unable to find LIBSCRAPLI_VERSION in scrapli/ffi.py")
 
 
@@ -42,6 +54,7 @@ LIBSCRAPLI_VERSION = get_libscrapli_version()
 LIBSCRAPLI_REPO = "https://github.com/scrapli/libscrapli"
 LIBSCRAPLI_BUILD_PATH_ENV = "LIBSCRAPLI_BUILD_PATH"
 LIBSCRPALI_ZIG_TRIPLE_ENV = "LIBSCRAPLI_ZIG_TRIPLE"
+LIBSCRAPLI_DYNAMIC_ENV = "LIBSCRAPLI_DYNAMIC"
 
 # if set to anything, always build libscrapli, as in: dont just slurp down the artifacts
 # from a release
@@ -195,12 +208,15 @@ class Libscrapli:
     @classmethod
     def _get_libscrapli_asset_filename(cls) -> str:
         zig_triple = os.environ.get(LIBSCRPALI_ZIG_TRIPLE_ENV, None)
+        dynamic = os.environ.get(LIBSCRAPLI_DYNAMIC_ENV, None)
+        dynamic_str = "dynamic-" if dynamic is not None else ""
+
         if zig_triple is not None:
             if "linux" in zig_triple:
-                return f"libscrapli-{zig_triple}.so.{LIBSCRAPLI_VERSION}"
-            return f"libscrapli-{zig_triple}.{LIBSCRAPLI_VERSION}.dylib"
+                return f"libscrapli-{dynamic_str}{zig_triple}.so.{LIBSCRAPLI_VERSION}"
+            return f"libscrapli-{dynamic_str}{zig_triple}.{LIBSCRAPLI_VERSION}.dylib"
 
-        _base = f"libscrapli-{cls._get_zig_style_arch()}"
+        _base = f"libscrapli-{dynamic_str}{cls._get_zig_style_arch()}"
 
         if sys.platform == "linux":
             lib_filename = f"{_base}-{cls._get_zig_style_platform()}.so.{LIBSCRAPLI_VERSION}"
