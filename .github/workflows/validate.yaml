@@ -20,6 +20,20 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: set up python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: install dynamically linked libscrapli dependencies
+        run: |
+          if [ "${{ runner.os }}" == "macOS" ]; then
+            brew install coreutils pcre2 libssh2
+          elif [ "${{ runner.os }}" == "Linux" ]; then
+            sudo apt-get update
+            sudo apt-get install -y libpcre2-dev libssh2-1-dev
+          fi
+
       - name: set release version
         run: |
           set -euo pipefail
@@ -52,35 +66,19 @@ jobs:
           source .github/vars.env
           echo "PYTHON_VERSION=$PYTHON_VERSION" >> "$GITHUB_ENV"
 
-      - name: remove checked out scrapli
-        run: rm -rf scrapli
+      - name: install and test dynamic libscrapli (from source - no wheel provided for dynamic)
+        run: |
+          LIBSCRAPLI_DYNAMIC=true python -m pip install .
+          python -c "from scrapli.ffi_mapping import LibScrapliMapping; LibScrapliMapping()"
 
-      - name: set up python
-        uses: actions/setup-python@v6
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
+      - name: remove checked out scrapli and uninstall dynamically linked scrapli
+        run: |
+            rm -rf scrapli
+            pip uninstall scrapli scrapli2 --yes
 
       - name: install scrapli and load ffi mapping
         run: |
           python -m pip install "scrapli==${{ env.CALENDAR_VERSION }}"
-          python -c "from scrapli.ffi_mapping import LibScrapliMapping; LibScrapliMapping()"
-
-      - name: uninstall statically linked scrapli/libscrapli
-        run: |
-          python -m pip uninstall "scrapli==${{ env.CALENDAR_VERSION }}" --yes
-
-      - name: install dynamically linked libscrapli dependencies
-        run: |
-          if [ "${{ runner.os }}" == "macOS" ]; then
-            brew install coreutils pcre2 libssh2
-          elif [ "${{ runner.os }}" == "Linux" ]; then
-            sudo apt-get update
-            sudo apt-get install -y libpcre2-dev libssh2-1-dev
-          fi
-
-      - name: install and test dynamic libscrapli (from source - no wheel provided for dynamic)
-        run: |
-          LIBSCRAPLI_DYNAMIC=true python -m pip install .
           python -c "from scrapli.ffi_mapping import LibScrapliMapping; LibScrapliMapping()"
 
   validate:
@@ -97,6 +95,20 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: set up python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: install dynamically linked libscrapli dependencies
+        run: |
+          if [ "${{ runner.os }}" == "macOS" ]; then
+            brew install coreutils pcre2 libssh2
+          elif [ "${{ runner.os }}" == "Linux" ]; then
+            sudo apt-get update
+            sudo apt-get install -y libpcre2-dev libssh2-1-dev
+          fi
+
       - name: set release version
         run: |
           RELEASE_TAG=${{ github.ref_name }}
@@ -111,33 +123,17 @@ jobs:
           source .github/vars.env
           echo "PYTHON_VERSION=$PYTHON_VERSION" >> "$GITHUB_ENV"
 
-      - name: remove checked out scrapli
-        run: rm -rf scrapli
+      - name: install and test dynamic libscrapli (from source - no wheel provided for dynamic)
+        run: |
+          LIBSCRAPLI_DYNAMIC=true python -m pip install .
+          python -c "from scrapli.ffi_mapping import LibScrapliMapping; LibScrapliMapping()"
 
-      - name: set up python
-        uses: actions/setup-python@v6
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
+      - name: remove checked out scrapli and uninstall dynamically linked scrapli
+        run: |
+            rm -rf scrapli
+            pip uninstall scrapli scrapli2 --yes
 
       - name: install scrapli and load ffi mapping
         run: |
           python -m pip install "scrapli2==${{ env.RELEASE_VERSION }}"
-          python -c "from scrapli.ffi_mapping import LibScrapliMapping; LibScrapliMapping()"
-
-      - name: uninstall statically linked scrapli/libscrapli
-        run: |
-          python -m pip uninstall scrapli2 --yes
-
-      - name: install dynamically linked libscrapli dependencies
-        run: |
-          if [ "${{ runner.os }}" == "macOS" ]; then
-            brew install coreutils pcre2 libssh2
-          elif [ "${{ runner.os }}" == "Linux" ]; then
-            sudo apt-get update
-            sudo apt-get install -y libpcre2-dev libssh2-1-dev
-          fi
-
-      - name: install and test dynamic libscrapli (from source - no wheel provided for dynamic)
-        run: |
-          LIBSCRAPLI_DYNAMIC=true python -m pip install .
           python -c "from scrapli.ffi_mapping import LibScrapliMapping; LibScrapliMapping()"
