@@ -17,7 +17,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from logging import getLogger
 from types import TracebackType
-from typing import Any
 
 from scrapli.auth import Options as AuthOptions
 from scrapli.exceptions import (

@@ -21,7 +21,6 @@ from os import environ
 from pathlib import Path
 from time import time_ns
 from types import TracebackType
-from typing import Any
 
 from scrapli.auth import Options as AuthOptions
 from scrapli.cli_decorators import handle_operation_timeout, handle_operation_timeout_async
