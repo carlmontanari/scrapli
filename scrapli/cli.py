@@ -457,7 +457,7 @@ class Cli:
             f"connected={self.ptr is not None})"
         )
 
-    def __copy__(self, memodict: dict[Any, Any] = {}) -> "Cli":
+    def __copy__(self) -> "Cli":
         # reasonably safely copy of the object... *reasonably*... basically assumes that options
         # will never be mutated during an objects lifetime, which *should* be the case. probably.
         return Cli(

@@ -512,7 +512,7 @@ class Netconf:
             f"transport_options={self.transport_options!r})"
         )
 
-    def __copy__(self, memodict: dict[Any, Any] = {}) -> "Netconf":
+    def __copy__(self) -> "Netconf":
         # reasonably safely copy of the object... *reasonably*... basically assumes that options
         # will never be mutated during an objects lifetime, which *should* be the case. probably.
         return Netconf(
