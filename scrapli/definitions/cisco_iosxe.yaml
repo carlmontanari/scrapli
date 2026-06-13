@@ -1,5 +1,5 @@
 ---
-prompt_pattern: '^.*[>#$]\s?+$'
+prompt_pattern: '^\S{1,63}[>#$]\s?+$'
 default_mode: 'privileged_exec'
 modes:
   - name: 'exec'
@@ -47,6 +47,7 @@ failure_indicators:
   - '% Incomplete command'
   - '% Invalid input detected'
   - '% Unknown command'
+  - 'Command authorization failed'
 on_open_instructions:
   - enter_mode:
       requested_mode: 'privileged_exec'

@@ -16,7 +16,7 @@ __version__ = "0.0.0"
 __semver_version__ = "0.0.0"
 __calendar_version__ = "0.0.0"
 
-__definitions_version__ = "36b16eb"
+__definitions_version__ = "0.0.5"
 
 __all__ = (
     "AuthOptions",

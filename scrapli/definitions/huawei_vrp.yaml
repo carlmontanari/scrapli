@@ -32,7 +32,7 @@ modes:
       - name: 'privileged_exec'
         instructions:
           - send_input:
-              input: 'quit'
+              input: 'return'
 failure_indicators:
   - 'Error:'
 on_open_instructions:

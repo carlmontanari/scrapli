@@ -36,7 +36,7 @@ on_open_instructions:
       requested_mode: 'exec'
 on_close_instructions:
   - enter_mode:
-      requested_mode: 'privileged_exec'
+      requested_mode: 'exec'
   - write:
       input: 'logout'
 ntc_templates_platform: 'cisco_ftd'

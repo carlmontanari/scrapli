@@ -1,6 +1,6 @@
 ---
 prompt_pattern: '^.*[>#$%]\s?+$'
-default_mode: 'privileged_exec'
+default_mode: 'shell'
 modes:
   - name: 'shell'
     prompt_pattern: '^\[\w+\@\S+ \S+\] \$ ?$'
