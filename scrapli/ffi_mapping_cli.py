@@ -18,6 +18,7 @@ from scrapli.ffi_types import (
     LibScrapliFFIResult,
     OperationId,
     OperationIdPointer,
+    U8Pointer,
     U32Pointer,
     U64Pointer,
     USizePointer,
@@ -204,7 +205,7 @@ class LibScrapliCliMapping:
                 CancelPointer,
                 c_char_p,
                 c_char_p,
-                c_char_p,
+                U8Pointer,
                 c_bool,
                 c_bool,
             ],
@@ -216,7 +217,7 @@ class LibScrapliCliMapping:
             CancelPointer,
             c_char_p,
             c_char_p,
-            c_char_p,
+            U8Pointer,
             c_bool,
             c_bool,
         ]
@@ -229,7 +230,7 @@ class LibScrapliCliMapping:
                 CancelPointer,
                 c_char_p,
                 c_char_p,
-                c_char_p,
+                U8Pointer,
                 c_bool,
                 c_bool,
                 c_bool,
@@ -242,7 +243,7 @@ class LibScrapliCliMapping:
             CancelPointer,
             c_char_p,
             c_char_p,
-            c_char_p,
+            U8Pointer,
             c_bool,
             c_bool,
             c_bool,
@@ -260,7 +261,7 @@ class LibScrapliCliMapping:
                 c_char_p,
                 c_char_p,
                 c_char_p,
-                c_char_p,
+                U8Pointer,
                 c_bool,
                 c_bool,
             ],
@@ -276,7 +277,7 @@ class LibScrapliCliMapping:
             c_char_p,
             c_char_p,
             c_char_p,
-            c_char_p,
+            U8Pointer,
             c_bool,
             c_bool,
         ]
@@ -661,7 +662,7 @@ class LibScrapliCliMapping:
         operation_id_ptr: OperationIdPointer,
         input_: c_char_p,
         requested_mode: c_char_p,
-        input_handling: c_char_p,
+        input_handling: U8Pointer,
         retain_input: c_bool,
         retain_trailing_prompt: c_bool,
     ) -> None:
@@ -675,7 +676,7 @@ class LibScrapliCliMapping:
             operation_id_ptr: int pointer to fill with the id of the submitted operation
             input_: the input to send
             requested_mode: string name of the mode to send the input in
-            input_handling: string mapping to input handling enum that governs how the input is
+            input_handling: u8 mapping to input handling enum that governs how the input is
                 handled
             retain_input: boolean indicating whether to retain the input after entering
             retain_trailing_prompt: boolean indicating whether to retain the trailing
@@ -709,7 +710,7 @@ class LibScrapliCliMapping:
         operation_id_ptr: OperationIdPointer,
         inputs: c_char_p,
         requested_mode: c_char_p,
-        input_handling: c_char_p,
+        input_handling: U8Pointer,
         retain_input: c_bool,
         retain_trailing_prompt: c_bool,
         stop_on_indicated_failure: c_bool,
@@ -724,7 +725,7 @@ class LibScrapliCliMapping:
             operation_id_ptr: int pointer to fill with the id of the submitted operation
             inputs: the inputs to send, joined on the libscrapli delimiter
             requested_mode: string name of the mode to send the input in
-            input_handling: string mapping to input handling enum that governs how the input is
+            input_handling: u8 mapping to input handling enum that governs how the input is
                 handled
             retain_input: boolean indicating whether to retain the input after entering
             retain_trailing_prompt: boolean indicating whether to retain the trailing
@@ -765,7 +766,7 @@ class LibScrapliCliMapping:
         response: c_char_p,
         abort_input: c_char_p,
         requested_mode: c_char_p,
-        input_handling: c_char_p,
+        input_handling: U8Pointer,
         hidden_response: c_bool,
         retain_trailing_prompt: c_bool,
     ) -> None:
@@ -784,7 +785,7 @@ class LibScrapliCliMapping:
             abort_input: the input to send to abort the "prompted input" operation if an error
                 is encountered
             requested_mode: string name of the mode to send the input in
-            input_handling: string mapping to input handling enum that governs how the input is
+            input_handling: u8 mapping to input handling enum that governs how the input is
                 handled
             hidden_response: bool indicated if the response we write will be "hidden" on the device
             retain_trailing_prompt: boolean indicating whether to retain the trailing

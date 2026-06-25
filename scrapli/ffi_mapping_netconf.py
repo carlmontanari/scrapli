@@ -19,6 +19,7 @@ from scrapli.ffi_types import (
     LibScrapliFFIResult,
     OperationId,
     OperationIdPointer,
+    U8Pointer,
     U64Pointer,
     USizePointer,
     ZigSlicePointer,
@@ -250,12 +251,12 @@ class LibScrapliNetconfMapping:
                 DriverPointer,
                 OperationIdPointer,
                 CancelPointer,
+                U8Pointer,
+                c_char_p,
+                U8Pointer,
                 c_char_p,
                 c_char_p,
-                c_char_p,
-                c_char_p,
-                c_char_p,
-                c_char_p,
+                U8Pointer,
             ],
             int,
         ] = lib.ls_netconf_get_config
@@ -263,12 +264,12 @@ class LibScrapliNetconfMapping:
             DriverPointer,
             OperationIdPointer,
             CancelPointer,
+            U8Pointer,
+            c_char_p,
+            U8Pointer,
             c_char_p,
             c_char_p,
-            c_char_p,
-            c_char_p,
-            c_char_p,
-            c_char_p,
+            U8Pointer,
         ]
         lib.ls_netconf_get_config.restype = c_uint8
 
@@ -278,10 +279,10 @@ class LibScrapliNetconfMapping:
                 OperationIdPointer,
                 CancelPointer,
                 c_char_p,
-                c_char_p,
-                c_char_p,
-                c_char_p,
-                c_char_p,
+                U8Pointer,
+                U8Pointer,
+                U8Pointer,
+                U8Pointer,
             ],
             int,
         ] = lib.ls_netconf_edit_config
@@ -290,10 +291,10 @@ class LibScrapliNetconfMapping:
             OperationIdPointer,
             CancelPointer,
             c_char_p,
-            c_char_p,
-            c_char_p,
-            c_char_p,
-            c_char_p,
+            U8Pointer,
+            U8Pointer,
+            U8Pointer,
+            U8Pointer,
         ]
         lib.ls_netconf_edit_config.restype = c_uint8
 
@@ -302,8 +303,8 @@ class LibScrapliNetconfMapping:
                 DriverPointer,
                 OperationIdPointer,
                 CancelPointer,
-                c_char_p,
-                c_char_p,
+                U8Pointer,
+                U8Pointer,
             ],
             int,
         ] = lib.ls_netconf_copy_config
@@ -311,8 +312,8 @@ class LibScrapliNetconfMapping:
             DriverPointer,
             OperationIdPointer,
             CancelPointer,
-            c_char_p,
-            c_char_p,
+            U8Pointer,
+            U8Pointer,
         ]
         lib.ls_netconf_copy_config.restype = c_uint8
 
@@ -321,7 +322,7 @@ class LibScrapliNetconfMapping:
                 DriverPointer,
                 OperationIdPointer,
                 CancelPointer,
-                c_char_p,
+                U8Pointer,
             ],
             int,
         ] = lib.ls_netconf_delete_config
@@ -329,7 +330,7 @@ class LibScrapliNetconfMapping:
             DriverPointer,
             OperationIdPointer,
             CancelPointer,
-            c_char_p,
+            U8Pointer,
         ]
         lib.ls_netconf_delete_config.restype = c_uint8
 
@@ -338,7 +339,7 @@ class LibScrapliNetconfMapping:
                 DriverPointer,
                 OperationIdPointer,
                 CancelPointer,
-                c_char_p,
+                U8Pointer,
             ],
             int,
         ] = lib.ls_netconf_lock
@@ -346,7 +347,7 @@ class LibScrapliNetconfMapping:
             DriverPointer,
             OperationIdPointer,
             CancelPointer,
-            c_char_p,
+            U8Pointer,
         ]
         lib.ls_netconf_lock.restype = c_uint8
 
@@ -355,7 +356,7 @@ class LibScrapliNetconfMapping:
                 DriverPointer,
                 OperationIdPointer,
                 CancelPointer,
-                c_char_p,
+                U8Pointer,
             ],
             int,
         ] = lib.ls_netconf_unlock
@@ -363,7 +364,7 @@ class LibScrapliNetconfMapping:
             DriverPointer,
             OperationIdPointer,
             CancelPointer,
-            c_char_p,
+            U8Pointer,
         ]
         lib.ls_netconf_unlock.restype = c_uint8
 
@@ -373,10 +374,10 @@ class LibScrapliNetconfMapping:
                 OperationIdPointer,
                 CancelPointer,
                 c_char_p,
+                U8Pointer,
                 c_char_p,
                 c_char_p,
-                c_char_p,
-                c_char_p,
+                U8Pointer,
             ],
             int,
         ] = lib.ls_netconf_get
@@ -385,10 +386,10 @@ class LibScrapliNetconfMapping:
             OperationIdPointer,
             CancelPointer,
             c_char_p,
+            U8Pointer,
             c_char_p,
             c_char_p,
-            c_char_p,
-            c_char_p,
+            U8Pointer,
         ]
         lib.ls_netconf_get.restype = c_uint8
 
@@ -476,7 +477,7 @@ class LibScrapliNetconfMapping:
                 DriverPointer,
                 OperationIdPointer,
                 CancelPointer,
-                c_char_p,
+                U8Pointer,
             ],
             int,
         ] = lib.ls_netconf_validate
@@ -484,7 +485,7 @@ class LibScrapliNetconfMapping:
             DriverPointer,
             OperationIdPointer,
             CancelPointer,
-            c_char_p,
+            U8Pointer,
         ]
         lib.ls_netconf_validate.restype = c_uint8
 
@@ -495,7 +496,7 @@ class LibScrapliNetconfMapping:
                 CancelPointer,
                 c_char_p,
                 c_char_p,
-                c_char_p,
+                U8Pointer,
             ],
             int,
         ] = lib.ls_netconf_get_schema
@@ -505,7 +506,7 @@ class LibScrapliNetconfMapping:
             CancelPointer,
             c_char_p,
             c_char_p,
-            c_char_p,
+            U8Pointer,
         ]
         lib.ls_netconf_get_schema.restype = c_uint8
 
@@ -514,16 +515,16 @@ class LibScrapliNetconfMapping:
                 DriverPointer,
                 OperationIdPointer,
                 CancelPointer,
+                U8Pointer,
+                c_char_p,
+                U8Pointer,
                 c_char_p,
                 c_char_p,
-                c_char_p,
-                c_char_p,
-                c_char_p,
-                c_char_p,
+                U8Pointer,
                 c_char_p,
                 c_int,
                 c_bool,
-                c_char_p,
+                U8Pointer,
             ],
             int,
         ] = lib.ls_netconf_get_data
@@ -531,16 +532,16 @@ class LibScrapliNetconfMapping:
             DriverPointer,
             OperationIdPointer,
             CancelPointer,
+            U8Pointer,
+            c_char_p,
+            U8Pointer,
             c_char_p,
             c_char_p,
-            c_char_p,
-            c_char_p,
-            c_char_p,
-            c_char_p,
+            U8Pointer,
             c_char_p,
             c_int,
             c_bool,
-            c_char_p,
+            U8Pointer,
         ]
         lib.ls_netconf_get_data.restype = c_uint8
 
@@ -549,9 +550,9 @@ class LibScrapliNetconfMapping:
                 DriverPointer,
                 OperationIdPointer,
                 CancelPointer,
+                U8Pointer,
                 c_char_p,
-                c_char_p,
-                c_char_p,
+                U8Pointer,
             ],
             int,
         ] = lib.ls_netconf_edit_data
@@ -559,9 +560,9 @@ class LibScrapliNetconfMapping:
             DriverPointer,
             OperationIdPointer,
             CancelPointer,
+            U8Pointer,
             c_char_p,
-            c_char_p,
-            c_char_p,
+            U8Pointer,
         ]
         lib.ls_netconf_edit_data.restype = c_uint8
 
@@ -1018,12 +1019,12 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
-        source: c_char_p,
+        source: U8Pointer,
         filter_: c_char_p,
-        filter_type: c_char_p,
+        filter_type: U8Pointer,
         filter_namespace_prefix: c_char_p,
         filter_namespace: c_char_p,
-        defaults_type: c_char_p,
+        defaults_type: U8Pointer,
     ) -> None:
         """
         Execute a get-config rpc operation.
@@ -1069,10 +1070,10 @@ class LibScrapliNetconfMapping:
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
         config: c_char_p,
-        target: c_char_p,
-        default_operation: c_char_p,
-        test_option: c_char_p,
-        error_option: c_char_p,
+        target: U8Pointer,
+        default_operation: U8Pointer,
+        test_option: U8Pointer,
+        error_option: U8Pointer,
     ) -> None:
         """
         Execute an edit-config rpc operation.
@@ -1115,8 +1116,8 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
-        target: c_char_p,
-        source: c_char_p,
+        target: U8Pointer,
+        source: U8Pointer,
     ) -> None:
         """
         Execute a copy-config rpc operation.
@@ -1153,7 +1154,7 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
-        target: c_char_p,
+        target: U8Pointer,
     ) -> None:
         """
         Execute a delete-config rpc operation.
@@ -1188,7 +1189,7 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
-        target: c_char_p,
+        target: U8Pointer,
     ) -> None:
         """
         Execute a lock rpc operation.
@@ -1223,7 +1224,7 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
-        target: c_char_p,
+        target: U8Pointer,
     ) -> None:
         """
         Execute an unlock rpc operation.
@@ -1259,10 +1260,10 @@ class LibScrapliNetconfMapping:
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
         filter_: c_char_p,
-        filter_type: c_char_p,
+        filter_type: U8Pointer,
         filter_namespace_prefix: c_char_p,
         filter_namespace: c_char_p,
-        defaults_type: c_char_p,
+        defaults_type: U8Pointer,
     ) -> None:
         """
         Execute a get rpc operation.
@@ -1471,7 +1472,7 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
-        source: c_char_p,
+        source: U8Pointer,
     ) -> None:
         """
         Execute a validate rpc operation.
@@ -1508,7 +1509,7 @@ class LibScrapliNetconfMapping:
         operation_id_ptr: OperationIdPointer,
         identifier: c_char_p,
         version: c_char_p,
-        format_: c_char_p,
+        format_: U8Pointer,
     ) -> None:
         """
         Execute a get-schema rpc operation.
@@ -1547,16 +1548,16 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
-        source: c_char_p,
+        source: U8Pointer,
         filter_: c_char_p,
-        filter_type: c_char_p,
+        filter_type: U8Pointer,
         filter_namespace_prefix: c_char_p,
         filter_namespace: c_char_p,
-        config_filter: c_char_p,
+        config_filter: U8Pointer,
         origin_filters: c_char_p,
         max_depth: c_int,
         with_origin: c_bool,
-        defaults_type: c_char_p,
+        defaults_type: U8Pointer,
     ) -> None:
         """
         Execute a get-data rpc operation.
@@ -1609,9 +1610,9 @@ class LibScrapliNetconfMapping:
         *,
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
-        target: c_char_p,
+        target: U8Pointer,
         content: c_char_p,
-        default_operation: c_char_p,
+        default_operation: U8Pointer,
     ) -> None:
         """
         Execute a edit-data rpc operation.

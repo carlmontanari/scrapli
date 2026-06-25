@@ -7,6 +7,7 @@ from ctypes import (
     c_char_p,
     c_int,
     c_size_t,
+    c_uint8,
     c_uint32,
     c_uint64,
     c_void_p,
@@ -34,6 +35,7 @@ from scrapli.ffi_types import (
     IntPointer,
     NetconfCapabilitesCallback,
     OperationIdPointer,
+    U8Pointer,
     U64Pointer,
     ZigSlice,
     capabilities_callback_wrapper,
@@ -94,6 +96,25 @@ class DatastoreType(str, Enum):
     DYNAMIC = "dynamic"
     OPERATIONAL = "operational"
 
+    def _to_ffi(self) -> U8Pointer:  # noqa: PLR0911
+        match self:
+            case DatastoreType.CONVENTIONAL:
+                return pointer(c_uint8(0))
+            case DatastoreType.RUNNING:
+                return pointer(c_uint8(1))
+            case DatastoreType.CANDIDATE:
+                return pointer(c_uint8(2))
+            case DatastoreType.STARTUP:
+                return pointer(c_uint8(3))
+            case DatastoreType.INTENDED:
+                return pointer(c_uint8(4))
+            case DatastoreType.DYNAMIC:
+                return pointer(c_uint8(5))
+            case DatastoreType.OPERATIONAL:
+                return pointer(c_uint8(6))
+            case _:
+                return U8Pointer()
+
 
 class FilterType(str, Enum):
     """
@@ -113,6 +134,15 @@ class FilterType(str, Enum):
     SUBTREE = "subtree"
     XPATH = "xpath"
 
+    def _to_ffi(self) -> U8Pointer:
+        match self:
+            case FilterType.SUBTREE:
+                return pointer(c_uint8(0))
+            case FilterType.XPATH:
+                return pointer(c_uint8(1))
+            case _:
+                return U8Pointer()
+
 
 class DefaultsType(str, Enum):
     """
@@ -129,11 +159,24 @@ class DefaultsType(str, Enum):
 
     """
 
-    UNSET = "unset"
     REPORT_ALL = "report-all"
     REPORT_ALL_TAGGED = "report-all-tagged"
     TRIM = "trim"
     EXPLICIT = "explicit"
+    UNSET = "unset"
+
+    def _to_ffi(self) -> U8Pointer:
+        match self:
+            case DefaultsType.REPORT_ALL:
+                return pointer(c_uint8(0))
+            case DefaultsType.REPORT_ALL_TAGGED:
+                return pointer(c_uint8(1))
+            case DefaultsType.TRIM:
+                return pointer(c_uint8(2))
+            case DefaultsType.EXPLICIT:
+                return pointer(c_uint8(3))
+            case _:
+                return U8Pointer()
 
 
 class SchemaFormat(str, Enum):
@@ -157,6 +200,21 @@ class SchemaFormat(str, Enum):
     RNG = "rng"
     RNC = "rnc"
 
+    def _to_ffi(self) -> U8Pointer:
+        match self:
+            case SchemaFormat.XSD:
+                return pointer(c_uint8(0))
+            case SchemaFormat.YANG:
+                return pointer(c_uint8(1))
+            case SchemaFormat.YIN:
+                return pointer(c_uint8(2))
+            case SchemaFormat.RNG:
+                return pointer(c_uint8(3))
+            case SchemaFormat.RNC:
+                return pointer(c_uint8(4))
+            case _:
+                return U8Pointer()
+
 
 class ConfigFilter(str, Enum):
     """
@@ -173,9 +231,18 @@ class ConfigFilter(str, Enum):
 
     """
 
-    UNSET = "unset"
     TRUE = "true"
     FALSE = "false"
+    UNSET = "unset"
+
+    def _to_ffi(self) -> U8Pointer:
+        match self:
+            case ConfigFilter.TRUE:
+                return pointer(c_uint8(0))
+            case ConfigFilter.FALSE:
+                return pointer(c_uint8(1))
+            case _:
+                return U8Pointer()
 
 
 class DefaultOperation(str, Enum):
@@ -196,6 +263,18 @@ class DefaultOperation(str, Enum):
     MERGE = "merge"
     REPLACE = "replace"
     NONE = "none"
+    UNSET = "unset"
+
+    def _to_ffi(self) -> U8Pointer:
+        match self:
+            case DefaultOperation.MERGE:
+                return pointer(c_uint8(0))
+            case DefaultOperation.REPLACE:
+                return pointer(c_uint8(1))
+            case DefaultOperation.NONE:
+                return pointer(c_uint8(2))
+            case _:
+                return U8Pointer()
 
 
 class TestOption(str, Enum):
@@ -215,6 +294,16 @@ class TestOption(str, Enum):
 
     TEST_THEN_SET = "test-then-set"
     SET = "set"
+    UNSET = "unset"
+
+    def _to_ffi(self) -> U8Pointer:
+        match self:
+            case TestOption.TEST_THEN_SET:
+                return pointer(c_uint8(0))
+            case TestOption.SET:
+                return pointer(c_uint8(1))
+            case _:
+                return U8Pointer()
 
 
 class ErrorOption(str, Enum):
@@ -235,6 +324,18 @@ class ErrorOption(str, Enum):
     STOP_ON_ERROR = "stop-on-error"
     CONTINUE_ON_ERROR = "continue-on-error"
     ROLLBACK_ON_ERROR = "rollback-on-error"
+    UNSET = "unset"
+
+    def _to_ffi(self) -> U8Pointer:
+        match self:
+            case ErrorOption.STOP_ON_ERROR:
+                return pointer(c_uint8(0))
+            case ErrorOption.CONTINUE_ON_ERROR:
+                return pointer(c_uint8(1))
+            case ErrorOption.ROLLBACK_ON_ERROR:
+                return pointer(c_uint8(2))
+            case _:
+                return U8Pointer()
 
 
 @dataclass
@@ -1017,22 +1118,6 @@ class Netconf:
 
         return subscription_slice.contents.get_decoded_contents()
 
-    def _raw_rpc(
-        self,
-        *,
-        operation_id_ptr: OperationIdPointer,
-        payload: c_char_p,
-        base_namespace_prefix: c_char_p,
-        extra_namespaces: c_char_p,
-    ) -> None:
-        self.ffi_mapping.netconf_mapping.raw_rpc(
-            ptr=self._ptr_or_exception(),
-            operation_id_ptr=operation_id_ptr,
-            payload=payload,
-            base_namespace_prefix=base_namespace_prefix,
-            extra_namespaces=extra_namespaces,
-        )
-
     @handle_operation_timeout
     def raw_rpc(
         self,
@@ -1076,7 +1161,8 @@ class Netconf:
         else:
             _extra_namespaces = to_c_string("")
 
-        self._raw_rpc(
+        self.ffi_mapping.netconf_mapping.raw_rpc(
+            ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             payload=_payload,
             base_namespace_prefix=_base_namespace_prefix,
@@ -1128,7 +1214,8 @@ class Netconf:
         else:
             _extra_namespaces = to_c_string("")
 
-        self._raw_rpc(
+        self.ffi_mapping.netconf_mapping.raw_rpc(
+            ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             payload=_payload,
             base_namespace_prefix=_base_namespace_prefix,
@@ -1136,28 +1223,6 @@ class Netconf:
         )
 
         return await self._get_result_async(operation_id_ptr=operation_id_ptr)
-
-    def _get_config(  # noqa: PLR0913,too-many-locals
-        self,
-        *,
-        operation_id_ptr: OperationIdPointer,
-        source: c_char_p,
-        filter_: c_char_p,
-        filter_type: c_char_p,
-        filter_namespace_prefix: c_char_p,
-        filter_namespace: c_char_p,
-        defaults_type: c_char_p,
-    ) -> None:
-        self.ffi_mapping.netconf_mapping.get_config(
-            ptr=self._ptr_or_exception(),
-            operation_id_ptr=operation_id_ptr,
-            source=source,
-            filter_=filter_,
-            filter_type=filter_type,
-            filter_namespace_prefix=filter_namespace_prefix,
-            filter_namespace=filter_namespace,
-            defaults_type=defaults_type,
-        )
 
     @handle_operation_timeout
     def get_config(  # noqa: PLR0913
@@ -1196,21 +1261,19 @@ class Netconf:
 
         operation_id_ptr = OperationIdPointer(c_uint32(0))
 
-        _source = to_c_string(source)
         _filter = to_c_string(filter_)
-        _filter_type = to_c_string(filter_type)
         _filter_namespace_prefix = to_c_string(filter_namespace_prefix)
         _filter_namespace = to_c_string(filter_namespace)
-        _defaults_type = to_c_string(defaults_type)
 
-        self._get_config(
+        self.ffi_mapping.netconf_mapping.get_config(
+            ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
-            source=_source,
+            source=source._to_ffi(),
             filter_=_filter,
-            filter_type=_filter_type,
+            filter_type=filter_type._to_ffi(),
             filter_namespace_prefix=_filter_namespace_prefix,
             filter_namespace=_filter_namespace,
-            defaults_type=_defaults_type,
+            defaults_type=defaults_type._to_ffi(),
         )
 
         return self._get_result(operation_id_ptr=operation_id_ptr)
@@ -1252,44 +1315,22 @@ class Netconf:
 
         operation_id_ptr = OperationIdPointer(c_uint32(0))
 
-        _source = to_c_string(source)
         _filter = to_c_string(filter_)
-        _filter_type = to_c_string(filter_type)
         _filter_namespace_prefix = to_c_string(filter_namespace_prefix)
         _filter_namespace = to_c_string(filter_namespace)
-        _defaults_type = to_c_string(defaults_type)
 
-        self._get_config(
+        self.ffi_mapping.netconf_mapping.get_config(
+            ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
-            source=_source,
+            source=source._to_ffi(),
             filter_=_filter,
-            filter_type=_filter_type,
+            filter_type=filter_type._to_ffi(),
             filter_namespace_prefix=_filter_namespace_prefix,
             filter_namespace=_filter_namespace,
-            defaults_type=_defaults_type,
+            defaults_type=defaults_type._to_ffi(),
         )
 
         return await self._get_result_async(operation_id_ptr=operation_id_ptr)
-
-    def _edit_config(  # noqa: PLR0913
-        self,
-        *,
-        operation_id_ptr: OperationIdPointer,
-        config: c_char_p,
-        target: c_char_p,
-        default_operation: c_char_p,
-        test_option: c_char_p,
-        error_option: c_char_p,
-    ) -> None:
-        self.ffi_mapping.netconf_mapping.edit_config(
-            ptr=self._ptr_or_exception(),
-            operation_id_ptr=operation_id_ptr,
-            config=config,
-            target=target,
-            default_operation=default_operation,
-            test_option=test_option,
-            error_option=error_option,
-        )
 
     @handle_operation_timeout
     def edit_config(  # noqa: PLR0913
@@ -1297,9 +1338,9 @@ class Netconf:
         *,
         config: str = "",
         target: DatastoreType = DatastoreType.RUNNING,
-        default_operation: DefaultOperation | None = None,
-        test_option: TestOption | None = None,
-        error_option: ErrorOption | None = None,
+        default_operation: DefaultOperation = DefaultOperation.UNSET,
+        test_option: TestOption = TestOption.UNSET,
+        error_option: ErrorOption = ErrorOption.UNSET,
         operation_timeout_ns: int | None = None,
     ) -> Result:
         """
@@ -1327,19 +1368,15 @@ class Netconf:
         operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _config = to_c_string(config)
-        _target = to_c_string(target)
 
-        _default_operation = to_c_string(default_operation or "")
-        _test_option = to_c_string(test_option or "")
-        _error_option = to_c_string(error_option or "")
-
-        self._edit_config(
+        self.ffi_mapping.netconf_mapping.edit_config(
+            ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             config=_config,
-            target=_target,
-            default_operation=_default_operation,
-            test_option=_test_option,
-            error_option=_error_option,
+            target=target._to_ffi(),
+            default_operation=default_operation._to_ffi(),
+            test_option=test_option._to_ffi(),
+            error_option=error_option._to_ffi(),
         )
 
         return self._get_result(operation_id_ptr=operation_id_ptr)
@@ -1350,9 +1387,9 @@ class Netconf:
         *,
         config: str = "",
         target: DatastoreType = DatastoreType.RUNNING,
-        default_operation: DefaultOperation | None = None,
-        test_option: TestOption | None = None,
-        error_option: ErrorOption | None = None,
+        default_operation: DefaultOperation = DefaultOperation.UNSET,
+        test_option: TestOption = TestOption.UNSET,
+        error_option: ErrorOption = ErrorOption.UNSET,
         operation_timeout_ns: int | None = None,
     ) -> Result:
         """
@@ -1380,36 +1417,18 @@ class Netconf:
         operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _config = to_c_string(config)
-        _target = to_c_string(target)
 
-        _default_operation = to_c_string(default_operation or "")
-        _test_option = to_c_string(test_option or "")
-        _error_option = to_c_string(error_option or "")
-
-        self._edit_config(
+        self.ffi_mapping.netconf_mapping.edit_config(
+            ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             config=_config,
-            target=_target,
-            default_operation=_default_operation,
-            test_option=_test_option,
-            error_option=_error_option,
+            target=target._to_ffi(),
+            default_operation=default_operation._to_ffi(),
+            test_option=test_option._to_ffi(),
+            error_option=error_option._to_ffi(),
         )
 
         return await self._get_result_async(operation_id_ptr=operation_id_ptr)
-
-    def _copy_config(
-        self,
-        *,
-        operation_id_ptr: OperationIdPointer,
-        target: c_char_p,
-        source: c_char_p,
-    ) -> None:
-        self.ffi_mapping.netconf_mapping.copy_config(
-            ptr=self._ptr_or_exception(),
-            operation_id_ptr=operation_id_ptr,
-            target=target,
-            source=source,
-        )
 
     @handle_operation_timeout
     def copy_config(
@@ -1440,13 +1459,11 @@ class Netconf:
 
         operation_id_ptr = OperationIdPointer(c_uint32(0))
 
-        _target = to_c_string(target)
-        _source = to_c_string(source)
-
-        self._copy_config(
+        self.ffi_mapping.netconf_mapping.copy_config(
+            ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
-            target=_target,
-            source=_source,
+            target=target._to_ffi(),
+            source=source._to_ffi(),
         )
 
         return self._get_result(operation_id_ptr=operation_id_ptr)
@@ -1480,28 +1497,14 @@ class Netconf:
 
         operation_id_ptr = OperationIdPointer(c_uint32(0))
 
-        _target = to_c_string(target)
-        _source = to_c_string(source)
-
-        self._copy_config(
+        self.ffi_mapping.netconf_mapping.copy_config(
+            ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
-            target=_target,
-            source=_source,
+            target=target._to_ffi(),
+            source=source._to_ffi(),
         )
 
         return await self._get_result_async(operation_id_ptr=operation_id_ptr)
-
-    def _delete_config(
-        self,
-        *,
-        operation_id_ptr: OperationIdPointer,
-        target: c_char_p,
-    ) -> None:
-        self.ffi_mapping.netconf_mapping.delete_config(
-            ptr=self._ptr_or_exception(),
-            operation_id_ptr=operation_id_ptr,
-            target=target,
-        )
 
     @handle_operation_timeout
     def delete_config(
@@ -1530,11 +1533,10 @@ class Netconf:
 
         operation_id_ptr = OperationIdPointer(c_uint32(0))
 
-        _target = to_c_string(target)
-
-        self._delete_config(
+        self.ffi_mapping.netconf_mapping.delete_config(
+            ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
-            target=_target,
+            target=target._to_ffi(),
         )
 
         return self._get_result(operation_id_ptr=operation_id_ptr)
@@ -1566,26 +1568,13 @@ class Netconf:
 
         operation_id_ptr = OperationIdPointer(c_uint32(0))
 
-        _target = to_c_string(target)
-
-        self._delete_config(
+        self.ffi_mapping.netconf_mapping.delete_config(
+            ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
-            target=_target,
+            target=target._to_ffi(),
         )
 
         return await self._get_result_async(operation_id_ptr=operation_id_ptr)
-
-    def _lock(
-        self,
-        *,
-        operation_id_ptr: OperationIdPointer,
-        target: c_char_p,
-    ) -> None:
-        self.ffi_mapping.netconf_mapping.lock(
-            ptr=self._ptr_or_exception(),
-            operation_id_ptr=operation_id_ptr,
-            target=target,
-        )
 
     @handle_operation_timeout
     def lock(
@@ -1614,11 +1603,10 @@ class Netconf:
 
         operation_id_ptr = OperationIdPointer(c_uint32(0))
 
-        _target = to_c_string(target)
-
-        self._lock(
+        self.ffi_mapping.netconf_mapping.lock(
+            ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
-            target=_target,
+            target=target._to_ffi(),
         )
 
         return self._get_result(operation_id_ptr=operation_id_ptr)
@@ -1650,26 +1638,13 @@ class Netconf:
 
         operation_id_ptr = OperationIdPointer(c_uint32(0))
 
-        _target = to_c_string(target)
-
-        self._lock(
+        self.ffi_mapping.netconf_mapping.lock(
+            ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
-            target=_target,
+            target=target._to_ffi(),
         )
 
         return await self._get_result_async(operation_id_ptr=operation_id_ptr)
-
-    def _unlock(
-        self,
-        *,
-        operation_id_ptr: OperationIdPointer,
-        target: c_char_p,
-    ) -> None:
-        self.ffi_mapping.netconf_mapping.unlock(
-            ptr=self._ptr_or_exception(),
-            operation_id_ptr=operation_id_ptr,
-            target=target,
-        )
 
     @handle_operation_timeout
     def unlock(
@@ -1698,11 +1673,10 @@ class Netconf:
 
         operation_id_ptr = OperationIdPointer(c_uint32(0))
 
-        _target = to_c_string(target)
-
-        self._unlock(
+        self.ffi_mapping.netconf_mapping.unlock(
+            ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
-            target=_target,
+            target=target._to_ffi(),
         )
 
         return self._get_result(operation_id_ptr=operation_id_ptr)
@@ -1734,34 +1708,13 @@ class Netconf:
 
         operation_id_ptr = OperationIdPointer(c_uint32(0))
 
-        _target = to_c_string(target)
-
-        self._unlock(
+        self.ffi_mapping.netconf_mapping.unlock(
+            ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
-            target=_target,
+            target=target._to_ffi(),
         )
 
         return await self._get_result_async(operation_id_ptr=operation_id_ptr)
-
-    def _get(  # noqa: PLR0913,too-many-locals
-        self,
-        *,
-        operation_id_ptr: OperationIdPointer,
-        filter_: c_char_p,
-        filter_type: c_char_p,
-        filter_namespace_prefix: c_char_p,
-        filter_namespace: c_char_p,
-        defaults_type: c_char_p,
-    ) -> None:
-        self.ffi_mapping.netconf_mapping.get(
-            ptr=self._ptr_or_exception(),
-            operation_id_ptr=operation_id_ptr,
-            filter_=filter_,
-            filter_type=filter_type,
-            filter_namespace_prefix=filter_namespace_prefix,
-            filter_namespace=filter_namespace,
-            defaults_type=defaults_type,
-        )
 
     @handle_operation_timeout
     def get(  # noqa: PLR0913
@@ -1799,18 +1752,17 @@ class Netconf:
         operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _filter = to_c_string(filter_)
-        _filter_type = to_c_string(filter_type)
         _filter_namespace_prefix = to_c_string(filter_namespace_prefix)
         _filter_namespace = to_c_string(filter_namespace)
-        _defaults_type = to_c_string(defaults_type)
 
-        self._get(
+        self.ffi_mapping.netconf_mapping.get(
+            ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             filter_=_filter,
-            filter_type=_filter_type,
+            filter_type=filter_type._to_ffi(),
             filter_namespace_prefix=_filter_namespace_prefix,
             filter_namespace=_filter_namespace,
-            defaults_type=_defaults_type,
+            defaults_type=defaults_type._to_ffi(),
         )
 
         return self._get_result(operation_id_ptr=operation_id_ptr)
@@ -1851,18 +1803,17 @@ class Netconf:
         operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _filter = to_c_string(filter_)
-        _filter_type = to_c_string(filter_type)
         _filter_namespace_prefix = to_c_string(filter_namespace_prefix)
         _filter_namespace = to_c_string(filter_namespace)
-        _defaults_type = to_c_string(defaults_type)
 
-        self._get(
+        self.ffi_mapping.netconf_mapping.get(
+            ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             filter_=_filter,
-            filter_type=_filter_type,
+            filter_type=filter_type._to_ffi(),
             filter_namespace_prefix=_filter_namespace_prefix,
             filter_namespace=_filter_namespace,
-            defaults_type=_defaults_type,
+            defaults_type=defaults_type._to_ffi(),
         )
 
         return await self._get_result_async(operation_id_ptr=operation_id_ptr)
@@ -2230,12 +2181,10 @@ class Netconf:
 
         operation_id_ptr = OperationIdPointer(c_uint32(0))
 
-        _source = to_c_string(source)
-
         self.ffi_mapping.netconf_mapping.validate(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
-            source=_source,
+            source=source._to_ffi(),
         )
 
         return self._get_result(operation_id_ptr=operation_id_ptr)
@@ -2267,12 +2216,10 @@ class Netconf:
 
         operation_id_ptr = OperationIdPointer(c_uint32(0))
 
-        _source = to_c_string(source)
-
         self.ffi_mapping.netconf_mapping.validate(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
-            source=_source,
+            source=source._to_ffi(),
         )
 
         return await self._get_result_async(operation_id_ptr=operation_id_ptr)
@@ -2310,14 +2257,13 @@ class Netconf:
 
         _identifier = to_c_string(identifier)
         _version = to_c_string(version)
-        _format = to_c_string(format_)
 
         self.ffi_mapping.netconf_mapping.get_schema(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             identifier=_identifier,
             version=_version,
-            format_=_format,
+            format_=format_._to_ffi(),
         )
 
         return self._get_result(operation_id_ptr=operation_id_ptr)
@@ -2355,14 +2301,13 @@ class Netconf:
 
         _identifier = to_c_string(identifier)
         _version = to_c_string(version)
-        _format = to_c_string(format_)
 
         self.ffi_mapping.netconf_mapping.get_schema(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             identifier=_identifier,
             version=_version,
-            format_=_format,
+            format_=format_._to_ffi(),
         )
 
         return await self._get_result_async(operation_id_ptr=operation_id_ptr)
@@ -2412,28 +2357,24 @@ class Netconf:
 
         operation_id_ptr = OperationIdPointer(c_uint32(0))
 
-        _source = to_c_string(source)
         _filter = to_c_string(filter_)
-        _filter_type = to_c_string(filter_type)
         _filter_namespace_prefix = to_c_string(filter_namespace_prefix)
         _filter_namespace = to_c_string(filter_namespace)
-        _config_filter = to_c_string(config_filter)
         _origin_filters = to_c_string(origin_filters)
-        _defaults_type = to_c_string(defaults_type)
 
         self.ffi_mapping.netconf_mapping.get_data(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
-            source=_source,
+            source=source._to_ffi(),
             filter_=_filter,
-            filter_type=_filter_type,
+            filter_type=filter_type._to_ffi(),
             filter_namespace_prefix=_filter_namespace_prefix,
             filter_namespace=_filter_namespace,
-            config_filter=_config_filter,
+            config_filter=config_filter._to_ffi(),
             origin_filters=_origin_filters,
             max_depth=c_int(max_depth),
             with_origin=c_bool(with_origin),
-            defaults_type=_defaults_type,
+            defaults_type=defaults_type._to_ffi(),
         )
 
         return self._get_result(operation_id_ptr=operation_id_ptr)
@@ -2483,28 +2424,24 @@ class Netconf:
 
         operation_id_ptr = OperationIdPointer(c_uint32(0))
 
-        _source = to_c_string(source)
         _filter = to_c_string(filter_)
-        _filter_type = to_c_string(filter_type)
         _filter_namespace_prefix = to_c_string(filter_namespace_prefix)
         _filter_namespace = to_c_string(filter_namespace)
-        _config_filter = to_c_string(config_filter)
         _origin_filters = to_c_string(origin_filters)
-        _defaults_type = to_c_string(defaults_type)
 
         self.ffi_mapping.netconf_mapping.get_data(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
-            source=_source,
+            source=source._to_ffi(),
             filter_=_filter,
-            filter_type=_filter_type,
+            filter_type=filter_type._to_ffi(),
             filter_namespace_prefix=_filter_namespace_prefix,
             filter_namespace=_filter_namespace,
-            config_filter=_config_filter,
+            config_filter=config_filter._to_ffi(),
             origin_filters=_origin_filters,
             max_depth=c_int(max_depth),
             with_origin=c_bool(with_origin),
-            defaults_type=_defaults_type,
+            defaults_type=defaults_type._to_ffi(),
         )
 
         return await self._get_result_async(operation_id_ptr=operation_id_ptr)
@@ -2515,7 +2452,7 @@ class Netconf:
         content: str,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
-        default_operation: DefaultOperation | None = None,
+        default_operation: DefaultOperation = DefaultOperation.UNSET,
         operation_timeout_ns: int | None = None,
     ) -> Result:
         """
@@ -2541,15 +2478,13 @@ class Netconf:
         operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _content = to_c_string(content)
-        _target = to_c_string(target)
-        _default_operation = to_c_string(default_operation or "")
 
         self.ffi_mapping.netconf_mapping.edit_data(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             content=_content,
-            target=_target,
-            default_operation=_default_operation,
+            target=target._to_ffi(),
+            default_operation=default_operation._to_ffi(),
         )
 
         return self._get_result(operation_id_ptr=operation_id_ptr)
@@ -2560,7 +2495,7 @@ class Netconf:
         content: str,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
-        default_operation: DefaultOperation | None = None,
+        default_operation: DefaultOperation = DefaultOperation.UNSET,
         operation_timeout_ns: int | None = None,
     ) -> Result:
         """
@@ -2586,15 +2521,13 @@ class Netconf:
         operation_id_ptr = OperationIdPointer(c_uint32(0))
 
         _content = to_c_string(content)
-        _target = to_c_string(target)
-        _default_operation = to_c_string(default_operation or "")
 
         self.ffi_mapping.netconf_mapping.edit_data(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             content=_content,
-            target=_target,
-            default_operation=_default_operation,
+            target=target._to_ffi(),
+            default_operation=default_operation._to_ffi(),
         )
 
         return await self._get_result_async(operation_id_ptr=operation_id_ptr)

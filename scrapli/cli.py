@@ -7,6 +7,7 @@ from ctypes import (
     c_bool,
     c_char_p,
     c_size_t,
+    c_uint8,
     c_uint32,
     c_uint64,
     c_void_p,
@@ -38,6 +39,7 @@ from scrapli.ffi_types import (
     LIBSCRAPLI_DELIMITER,
     DriverPointer,
     OperationIdPointer,
+    U8Pointer,
     ZigSlice,
     ZigU64Slice,
     ffi_logger_callback_wrapper,
@@ -101,6 +103,17 @@ class InputHandling(str, Enum):
     EXACT = "exact"
     FUZZY = "fuzzy"
     IGNORE = "ignore"
+
+    def _to_ffi(self) -> U8Pointer:
+        match self:
+            case InputHandling.EXACT:
+                return pointer(c_uint8(0))
+            case InputHandling.FUZZY:
+                return pointer(c_uint8(1))
+            case InputHandling.IGNORE:
+                return pointer(c_uint8(2))
+            case _:
+                return U8Pointer()
 
 
 @dataclass
@@ -1211,14 +1224,13 @@ class Cli:
 
         _input = to_c_string(input_)
         _requested_mode = to_c_string(requested_mode)
-        _input_handling = to_c_string(input_handling)
 
         self.ffi_mapping.cli_mapping.send_input(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             input_=_input,
             requested_mode=_requested_mode,
-            input_handling=_input_handling,
+            input_handling=input_handling._to_ffi(),
             retain_input=c_bool(retain_input),
             retain_trailing_prompt=c_bool(retain_trailing_prompt),
         )
@@ -1262,14 +1274,13 @@ class Cli:
 
         _input = to_c_string(input_)
         _requested_mode = to_c_string(requested_mode)
-        _input_handling = to_c_string(input_handling)
 
         self.ffi_mapping.cli_mapping.send_input(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             input_=_input,
             requested_mode=_requested_mode,
-            input_handling=_input_handling,
+            input_handling=input_handling._to_ffi(),
             retain_input=c_bool(retain_input),
             retain_trailing_prompt=c_bool(retain_trailing_prompt),
         )
@@ -1316,14 +1327,13 @@ class Cli:
 
         _inputs = to_c_string(LIBSCRAPLI_DELIMITER.join(inputs))
         _requested_mode = to_c_string(requested_mode)
-        _input_handling = to_c_string(input_handling)
 
         self.ffi_mapping.cli_mapping.send_inputs(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             inputs=_inputs,
             requested_mode=_requested_mode,
-            input_handling=_input_handling,
+            input_handling=input_handling._to_ffi(),
             retain_input=c_bool(retain_input),
             retain_trailing_prompt=c_bool(retain_trailing_prompt),
             stop_on_indicated_failure=c_bool(stop_on_indicated_failure),
@@ -1371,14 +1381,13 @@ class Cli:
 
         _inputs = to_c_string(LIBSCRAPLI_DELIMITER.join(inputs))
         _requested_mode = to_c_string(requested_mode)
-        _input_handling = to_c_string(input_handling)
 
         self.ffi_mapping.cli_mapping.send_inputs(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             inputs=_inputs,
             requested_mode=_requested_mode,
-            input_handling=_input_handling,
+            input_handling=input_handling._to_ffi(),
             retain_input=c_bool(retain_input),
             retain_trailing_prompt=c_bool(retain_trailing_prompt),
             stop_on_indicated_failure=c_bool(stop_on_indicated_failure),
@@ -1524,7 +1533,6 @@ class Cli:
         _response = to_c_string(response)
         _abort_input = to_c_string(abort_input)
         _requested_mode = to_c_string(requested_mode)
-        _input_handling = to_c_string(input_handling)
 
         self.ffi_mapping.cli_mapping.send_prompted_input(
             ptr=self._ptr_or_exception(),
@@ -1536,7 +1544,7 @@ class Cli:
             hidden_response=c_bool(hidden_response),
             abort_input=_abort_input,
             requested_mode=_requested_mode,
-            input_handling=_input_handling,
+            input_handling=input_handling._to_ffi(),
             retain_trailing_prompt=c_bool(retain_trailing_prompt),
         )
 
@@ -1592,7 +1600,6 @@ class Cli:
         _response = to_c_string(response)
         _abort_input = to_c_string(abort_input)
         _requested_mode = to_c_string(requested_mode)
-        _input_handling = to_c_string(input_handling)
 
         self.ffi_mapping.cli_mapping.send_prompted_input(
             ptr=self._ptr_or_exception(),
@@ -1604,7 +1611,7 @@ class Cli:
             hidden_response=c_bool(hidden_response),
             abort_input=_abort_input,
             requested_mode=_requested_mode,
-            input_handling=_input_handling,
+            input_handling=input_handling._to_ffi(),
             retain_trailing_prompt=c_bool(retain_trailing_prompt),
         )
 

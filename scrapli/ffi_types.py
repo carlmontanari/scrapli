@@ -51,6 +51,7 @@ if TYPE_CHECKING:
     BoolPointer: TypeAlias = _Pointer[c_bool]
 
     IntPointer: TypeAlias = _Pointer[c_int]
+    U8Pointer: TypeAlias = _Pointer[c_uint8]
     U16Pointer: TypeAlias = _Pointer[c_uint16]
     U32Pointer: TypeAlias = _Pointer[c_uint32]
     U64Pointer: TypeAlias = _Pointer[c_uint64]
@@ -65,6 +66,7 @@ else:
     BoolPointer: TypeAlias = POINTER(c_bool)
 
     IntPointer: TypeAlias = POINTER(c_int)
+    U8Pointer: TypeAlias = POINTER(c_uint8)
     U16Pointer: TypeAlias = POINTER(c_uint16)
     U32Pointer: TypeAlias = POINTER(c_uint32)
     U64Pointer: TypeAlias = POINTER(c_uint64)
