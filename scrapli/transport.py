@@ -1,7 +1,7 @@
 """scrapli.transport"""
 
 from abc import ABC, abstractmethod
-from ctypes import c_bool, c_char_p, c_size_t, c_uint16, pointer
+from ctypes import c_bool, c_char_p, c_size_t, c_uint8, c_uint16, pointer
 from dataclasses import dataclass, field
 from enum import Enum
 
@@ -25,9 +25,22 @@ class TransportKind(str, Enum):
     """
 
     BIN = "bin"
-    SSH2 = "ssh2"
     TELNET = "telnet"
+    SSH2 = "ssh2"
     TEST = "test_"
+
+    def _to_ffi(self) -> c_uint8:
+        match self:
+            case TransportKind.BIN:
+                return c_uint8(0)
+            case TransportKind.TELNET:
+                return c_uint8(1)
+            case TransportKind.SSH2:
+                return c_uint8(2)
+            case TransportKind.TEST:
+                return c_uint8(3)
+            case _:
+                return c_uint8(0)
 
 
 class Options(ABC):
@@ -45,7 +58,7 @@ class Options(ABC):
 
     """
 
-    _transport_kind: TransportKind | None = None
+    _transport_kind: TransportKind = TransportKind.BIN
 
     @property
     def transport_kind(self) -> TransportKind:

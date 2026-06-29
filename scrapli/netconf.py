@@ -681,7 +681,7 @@ class Netconf:
             logger_callback=self.logger_callback,
             logger_level=ffi_logger_level(logger=self.logger),
             port=self.port,
-            transport_kind=c_char_p(self.transport_options.transport_kind.encode(encoding="utf-8")),
+            transport_kind=self.transport_options.transport_kind._to_ffi(),
         )
 
         self.options.apply(options=options)
@@ -718,7 +718,7 @@ class Netconf:
             logger_callback=self.logger_callback,
             logger_level=ffi_logger_level(logger=self.logger),
             port=self.port,
-            transport_kind=c_char_p(self.transport_options.transport_kind.encode(encoding="utf-8")),
+            transport_kind=self.transport_options.transport_kind._to_ffi(),
         )
 
         self.options.apply(options=options)

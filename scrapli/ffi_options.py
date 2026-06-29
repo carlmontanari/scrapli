@@ -1,6 +1,6 @@
 """scrapli.ffi_options"""
 
-from ctypes import POINTER, Structure, _Pointer, c_char_p, c_size_t, c_uint16, pointer
+from ctypes import POINTER, Structure, _Pointer, c_char_p, c_size_t, c_uint8, c_uint16, pointer
 from typing import TYPE_CHECKING, Any, ClassVar, TypeAlias
 
 from scrapli.exceptions import OptionsException
@@ -286,11 +286,9 @@ class DriverOptions(Structure):
 
     _fields_: ClassVar[list[tuple[str, Any]]] = [
         ("logger_callback", LoggerCallbackC),
-        ("logger_level", c_char_p),
-        ("logger_level_len", c_size_t),
+        ("logger_level", c_uint8),
         ("port", U16Pointer),
-        ("transport_kind", c_char_p),
-        ("transport_kind_len", c_size_t),
+        ("transport_kind", c_uint8),
         ("cli", CLI),
         ("netconf", Netconf),
         ("session", Session),
@@ -302,9 +300,9 @@ class DriverOptions(Structure):
         self,
         *,
         logger_callback: LoggerCallback,
-        logger_level: c_char_p,
+        logger_level: c_uint8,
         port: int,
-        transport_kind: c_char_p,
+        transport_kind: c_uint8,
         cli_definition_string: c_char_p | None = None,
     ) -> None:
         """
@@ -325,20 +323,12 @@ class DriverOptions(Structure):
             OptionsException: if any of the c types values are None
 
         """
-        if not logger_level.value:
-            raise OptionsException("logger level value is None, this is a bug")
-
-        if not transport_kind.value:
-            raise OptionsException("transport kind value is None, this is a bug")
-
         self.logger_callback = logger_callback
         self.logger_level = logger_level
-        self.logger_level_len = c_size_t(len(logger_level.value))
 
         self.port = pointer(c_uint16(port))
 
         self.transport_kind = transport_kind
-        self.transport_kind_len = c_size_t(len(transport_kind.value))
 
         if cli_definition_string:
             if not cli_definition_string.value:

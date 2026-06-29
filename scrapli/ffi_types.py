@@ -338,7 +338,7 @@ def ffi_logger_callback_wrapper(logger: Logger) -> LoggerCallback:
     return LoggerCallbackC(_cb)
 
 
-def ffi_logger_level(logger: Logger) -> c_char_p:  # noqa: PLR0911
+def ffi_logger_level(logger: Logger) -> c_uint8:  # noqa: PLR0911
     """
     Returns a c string matching a libscrapli log level based on the given loggers configuration
 
@@ -346,7 +346,7 @@ def ffi_logger_level(logger: Logger) -> c_char_p:  # noqa: PLR0911
         logger: the logger we are getting the level from
 
     Returns:
-        c_char_p: the level as a c string
+        c_uint8: the level as a uint8 so libscrapli can cast that to the enum value
 
     Raises:
         N/A
@@ -355,19 +355,19 @@ def ffi_logger_level(logger: Logger) -> c_char_p:  # noqa: PLR0911
     level = logger.getEffectiveLevel()
 
     if level == NOTSET:
-        return c_char_p(b"trace")
+        return c_uint8(0)
     elif level == DEBUG:
-        return c_char_p(b"debug")
+        return c_uint8(1)
     elif level == INFO:
-        return c_char_p(b"info")
+        return c_uint8(2)
     elif level == WARN:
-        return c_char_p(b"warn")
+        return c_uint8(3)
     elif level == CRITICAL:
-        return c_char_p(b"critical")
+        return c_uint8(4)
     elif level == FATAL:
-        return c_char_p(b"fatal")
+        return c_uint8(5)
     else:
-        return c_char_p(b"warn")
+        return c_uint8(3)
 
 
 RecorderCallbackC = CFUNCTYPE(None, ZigSlicePointer)
