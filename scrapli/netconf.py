@@ -869,6 +869,7 @@ class Netconf:
         rpc_warnings_size = pointer(c_size_t())
         rpc_errors_size = pointer(c_size_t())
         err_size = pointer(c_size_t())
+        last_err_str_size = pointer(c_size_t())
 
         self.ffi_mapping.netconf_mapping.fetch_sizes(
             ptr=self._ptr_or_exception(),
@@ -879,6 +880,7 @@ class Netconf:
             rpc_warnings_size=rpc_warnings_size,
             rpc_errors_size=rpc_errors_size,
             err_size=err_size,
+            last_err_str_size=last_err_str_size,
         )
 
         start_time = U64Pointer(c_uint64())
@@ -891,6 +893,7 @@ class Netconf:
         rpc_warnings_slice = pointer(ZigSlice(size=rpc_warnings_size.contents))
         rpc_errors_slice = pointer(ZigSlice(size=rpc_errors_size.contents))
         err_slice = pointer(ZigSlice(size=err_size.contents))
+        last_err_string = pointer(ZigSlice(size=last_err_str_size.contents))
 
         self.ffi_mapping.netconf_mapping.fetch(
             ptr=self._ptr_or_exception(),
@@ -903,6 +906,7 @@ class Netconf:
             rpc_warnings_slice=rpc_warnings_slice,
             rpc_errors_slice=rpc_errors_slice,
             err_slice=err_slice,
+            last_err_string=last_err_string,
         )
 
         err_contents = err_slice.contents.get_decoded_contents()
@@ -935,6 +939,7 @@ class Netconf:
         rpc_warnings_size = pointer(c_size_t())
         rpc_errors_size = pointer(c_size_t())
         err_size = pointer(c_size_t())
+        last_err_str_size = pointer(c_size_t())
 
         self.ffi_mapping.netconf_mapping.fetch_sizes(
             ptr=self._ptr_or_exception(),
@@ -945,6 +950,7 @@ class Netconf:
             rpc_warnings_size=rpc_warnings_size,
             rpc_errors_size=rpc_errors_size,
             err_size=err_size,
+            last_err_str_size=last_err_str_size,
         )
 
         start_time = U64Pointer(c_uint64())
@@ -957,6 +963,7 @@ class Netconf:
         rpc_warnings_slice = pointer(ZigSlice(size=rpc_warnings_size.contents))
         rpc_errors_slice = pointer(ZigSlice(size=rpc_errors_size.contents))
         err_slice = pointer(ZigSlice(size=err_size.contents))
+        last_err_string = pointer(ZigSlice(size=last_err_str_size.contents))
 
         self.ffi_mapping.netconf_mapping.fetch(
             ptr=self._ptr_or_exception(),
@@ -969,6 +976,7 @@ class Netconf:
             rpc_warnings_slice=rpc_warnings_slice,
             rpc_errors_slice=rpc_errors_slice,
             err_slice=err_slice,
+            last_err_string=last_err_string,
         )
 
         err_contents = err_slice.contents.get_decoded_contents()

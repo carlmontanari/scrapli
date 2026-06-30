@@ -99,12 +99,14 @@ class LibScrapliNetconfMapping:
                 USizePointer,
                 USizePointer,
                 USizePointer,
+                USizePointer,
             ],
             int,
         ] = lib.ls_netconf_fetch_operation_sizes
         lib.ls_netconf_fetch_operation_sizes.argtypes = [
             DriverPointer,
             OperationId,
+            USizePointer,
             USizePointer,
             USizePointer,
             USizePointer,
@@ -126,6 +128,7 @@ class LibScrapliNetconfMapping:
                 ZigSlicePointer,
                 ZigSlicePointer,
                 ZigSlicePointer,
+                ZigSlicePointer,
             ],
             int,
         ] = lib.ls_netconf_fetch_operation
@@ -134,6 +137,7 @@ class LibScrapliNetconfMapping:
             OperationId,
             U64Pointer,
             U64Pointer,
+            ZigSlicePointer,
             ZigSlicePointer,
             ZigSlicePointer,
             ZigSlicePointer,
@@ -685,6 +689,7 @@ class LibScrapliNetconfMapping:
         rpc_warnings_size: USizePointer,
         rpc_errors_size: USizePointer,
         err_size: USizePointer,
+        last_err_str_size: USizePointer,
     ) -> None:
         """
         Fetch the sizes of a netconf operation's results.
@@ -700,6 +705,7 @@ class LibScrapliNetconfMapping:
             rpc_warnings_size: int pointer to fill with the size of any rpc warning string
             rpc_errors_size: int pointer to fill with the size of any rpc error string
             err_size: int pointer to fill with the operation's error size
+            last_err_str_size: int pointer to fill with the operation's last error string size
 
         Returns:
             N/A
@@ -718,6 +724,7 @@ class LibScrapliNetconfMapping:
                 rpc_warnings_size,
                 rpc_errors_size,
                 err_size,
+                last_err_str_size,
             )
         ).raise_if_error(
             message="fetching operation sizes failed",
@@ -736,6 +743,7 @@ class LibScrapliNetconfMapping:
         rpc_warnings_slice: ZigSlicePointer,
         rpc_errors_slice: ZigSlicePointer,
         err_slice: ZigSlicePointer,
+        last_err_string: ZigSlicePointer,
     ) -> None:
         """
         Fetch the result of a cli operation.
@@ -753,6 +761,7 @@ class LibScrapliNetconfMapping:
             rpc_warnings_slice: pre allocated slice to fill with the rpc warnings string
             rpc_errors_slice: pre allocated slice to fill with the rpc errors string
             err_slice: pre allocated slice to fill with the operations error
+            last_err_string: pre allocated slice to fill with the operations last error string
 
         Returns:
             N/A
@@ -773,6 +782,7 @@ class LibScrapliNetconfMapping:
                 rpc_warnings_slice,
                 rpc_errors_slice,
                 err_slice,
+                last_err_string,
             )
         ).raise_if_error(
             message="fetching operation content failed",

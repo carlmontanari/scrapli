@@ -124,6 +124,7 @@ class LibScrapliCliMapping:
                 USizePointer,
                 USizePointer,
                 USizePointer,
+                USizePointer,
             ],
             int,
         ] = lib.ls_cli_fetch_operation_sizes
@@ -131,6 +132,7 @@ class LibScrapliCliMapping:
             DriverPointer,
             OperationId,
             U32Pointer,
+            USizePointer,
             USizePointer,
             USizePointer,
             USizePointer,
@@ -150,6 +152,7 @@ class LibScrapliCliMapping:
                 ZigSlicePointer,
                 ZigSlicePointer,
                 ZigSlicePointer,
+                ZigSlicePointer,
             ],
             int,
         ] = lib.ls_cli_fetch_operation
@@ -158,6 +161,7 @@ class LibScrapliCliMapping:
             OperationId,
             U64Pointer,
             ZigU64SlicePointer,
+            ZigSlicePointer,
             ZigSlicePointer,
             ZigSlicePointer,
             ZigSlicePointer,
@@ -496,6 +500,7 @@ class LibScrapliCliMapping:
         results_size: USizePointer,
         results_failed_indicator_size: USizePointer,
         err_size: USizePointer,
+        last_err_str_size: USizePointer,
     ) -> None:
         """
         Fetch the sizes of a cli operation's results.
@@ -512,6 +517,7 @@ class LibScrapliCliMapping:
             results_failed_indicator_size: int pointer to fill with the operation's failed indicator
                 size
             err_size: int pointer to fill with the operation's error size
+            last_err_str_size: int pointer to fill with the operation's last error string size
 
         Returns:
             N/A
@@ -530,6 +536,7 @@ class LibScrapliCliMapping:
                 results_size,
                 results_failed_indicator_size,
                 err_size,
+                last_err_str_size,
             )
         ).raise_if_error(
             message="fetching operation sizes failed",
@@ -547,6 +554,7 @@ class LibScrapliCliMapping:
         results_slice: ZigSlicePointer,
         results_failed_indicator_slice: ZigSlicePointer,
         err_slice: ZigSlicePointer,
+        last_err_string: ZigSlicePointer,
     ) -> None:
         """
         Fetch the result of a cli operation.
@@ -564,6 +572,7 @@ class LibScrapliCliMapping:
             results_failed_indicator_slice: pre allocated slice to fill with the operations failed
                 indicator
             err_slice: pre allocated slice to fill with the operations error
+            last_err_string: pre allocated slice to fill with the operations last error string
 
         Returns:
             N/A
@@ -583,6 +592,7 @@ class LibScrapliCliMapping:
                 results_slice,
                 results_failed_indicator_slice,
                 err_slice,
+                last_err_string,
             )
         ).raise_if_error(
             message="fetching operation content failed",

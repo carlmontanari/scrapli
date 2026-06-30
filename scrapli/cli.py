@@ -927,6 +927,7 @@ class Cli:
         results_size = pointer(c_size_t())
         results_failed_indicator_size = pointer(c_size_t())
         err_size = pointer(c_size_t())
+        last_err_str_size = pointer(c_size_t())
 
         self.ffi_mapping.cli_mapping.fetch_sizes(
             ptr=self._ptr_or_exception(),
@@ -937,6 +938,7 @@ class Cli:
             results_size=results_size,
             results_failed_indicator_size=results_failed_indicator_size,
             err_size=err_size,
+            last_err_str_size=last_err_str_size,
         )
 
         start_time = pointer(c_uint64())
@@ -950,6 +952,7 @@ class Cli:
             ZigSlice(size=results_failed_indicator_size.contents)
         )
         err_slice = pointer(ZigSlice(size=err_size.contents))
+        last_err_string = pointer(ZigSlice(size=last_err_str_size.contents))
 
         self.ffi_mapping.cli_mapping.fetch(
             ptr=self._ptr_or_exception(),
@@ -961,6 +964,7 @@ class Cli:
             results_slice=results_slice,
             results_failed_indicator_slice=results_failed_indicator_slice,
             err_slice=err_slice,
+            last_err_string=last_err_string,
         )
 
         err_contents = err_slice.contents.get_decoded_contents()
@@ -994,6 +998,7 @@ class Cli:
         results_size = pointer(c_size_t())
         results_failed_indicator_size = pointer(c_size_t())
         err_size = pointer(c_size_t())
+        last_err_str_size = pointer(c_size_t())
 
         self.ffi_mapping.cli_mapping.fetch_sizes(
             ptr=self._ptr_or_exception(),
@@ -1004,6 +1009,7 @@ class Cli:
             results_size=results_size,
             results_failed_indicator_size=results_failed_indicator_size,
             err_size=err_size,
+            last_err_str_size=last_err_str_size,
         )
 
         start_time = pointer(c_uint64())
@@ -1017,6 +1023,7 @@ class Cli:
             ZigSlice(size=results_failed_indicator_size.contents)
         )
         err_slice = pointer(ZigSlice(size=err_size.contents))
+        last_err_string = pointer(ZigSlice(size=last_err_str_size.contents))
 
         self.ffi_mapping.cli_mapping.fetch(
             ptr=self._ptr_or_exception(),
@@ -1028,6 +1035,7 @@ class Cli:
             results_slice=results_slice,
             results_failed_indicator_slice=results_failed_indicator_slice,
             err_slice=err_slice,
+            last_err_string=last_err_string,
         )
 
         err_contents = err_slice.contents.get_decoded_contents()
