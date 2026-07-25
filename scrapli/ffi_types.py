@@ -6,9 +6,6 @@ from ctypes import (
     CFUNCTYPE,
     POINTER,
     Structure,
-)
-from ctypes import _CFuncPtr as FuncPtr  # type: ignore[attr-defined]
-from ctypes import (
     _Pointer,
     c_bool,
     c_char_p,
@@ -23,6 +20,7 @@ from ctypes import (
     create_string_buffer,
     pointer,
 )
+from ctypes import _CFuncPtr as FuncPtr  # type: ignore[attr-defined]
 from enum import IntEnum
 from logging import CRITICAL, DEBUG, FATAL, INFO, NOTSET, WARN, Logger
 from typing import TYPE_CHECKING, Any, ClassVar, TypeAlias
@@ -311,7 +309,7 @@ def ffi_logger_callback_wrapper(logger: Logger) -> LoggerCallback:
 
     """
 
-    def _cb(level: c_uint8, message: ZigSlicePointer) -> None:
+    def _cb(_: c_size_t, level: c_uint8, message: ZigSlicePointer) -> None:
         v = message.contents
         if v is None:
             return
@@ -389,7 +387,7 @@ def recorder_callback_wrapper(cb: Callable[[str], None]) -> RecorderCallback:
 
     """
 
-    def _cb(buf: ZigSlicePointer) -> None:
+    def _cb(_: c_size_t, buf: ZigSlicePointer) -> None:
         v = buf.contents
         if not v:
             return
@@ -420,7 +418,7 @@ def capabilities_callback_wrapper(
 
     """
 
-    def _cb(buf: ZigSlicePointer) -> int:
+    def _cb(_: c_size_t, buf: ZigSlicePointer) -> int:
         v = buf.contents
 
         root = ET.fromstring(v.get_decoded_contents())

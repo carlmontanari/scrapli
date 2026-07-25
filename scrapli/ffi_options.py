@@ -287,6 +287,7 @@ class DriverOptions(Structure):
     """
 
     _fields_: ClassVar[list[tuple[str, Any]]] = [
+        ("user_data", c_size_t),
         ("logger_callback", LoggerCallbackC),
         ("logger_level", c_uint8),
         ("port", U16Pointer),
