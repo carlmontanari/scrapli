@@ -181,34 +181,32 @@ class Libscrapli:
 
         shutil.rmtree(libscrapli_build_path)
 
-    @staticmethod
-    def _get_libscrapli_output_shared_object_filename() -> str:
-        p = sys.platform
-
+    @classmethod
+    def _get_libscrapli_qualified_shared_object_filename(cls, dynamic_str: str = "") -> str:
         zig_triple = os.environ.get(LIBSCRPALI_ZIG_TRIPLE_ENV, None)
-        if zig_triple is not None:
-            # probably building all the wheels, we dont actually want the shared object
-            # for our current system, we want it for the target triple
-            if "linux" in zig_triple:
-                p = "linux"
-            else:
-                p = "darwin"
+        if zig_triple is None:
+            # no triple set in env, so not in ci, target the current/native platform; note that
+            # _get_zig_style_platform returns "macos" for darwin so this forms a valid triple
+            # for both platforms
+            zig_triple = f"{cls._get_zig_style_arch()}-{cls._get_zig_style_platform()}"
 
-        if p == "linux":
-            lib_filename = f"libscrapli.so.{LIBSCRAPLI_VERSION}"
-        elif p == "darwin":
-            lib_filename = f"libscrapli.{LIBSCRAPLI_VERSION}.dylib"
-        else:
-            raise NotImplementedError("unsupported platform")
+        if "linux" in zig_triple:
+            return f"libscrapli-{dynamic_str}{zig_triple}.so.{LIBSCRAPLI_VERSION}"
 
-        return lib_filename
+        return f"libscrapli-{dynamic_str}{zig_triple}.{LIBSCRAPLI_VERSION}.dylib"
+
+    @classmethod
+    def _get_libscrapli_output_shared_object_filename(cls) -> str:
+        # the fully qualified name we store the shared object at in scrapli/lib -- this matches
+        # the release asset naming (sans any "dynamic-" marker, dynamic builds are stored w/out
+        # the marker so runtime lookup is the same either way) and must match what
+        # scrapli/ffi.py:get_libscrapli_shared_object_filename produces at runtime
+        return cls._get_libscrapli_qualified_shared_object_filename()
 
     def _get_libscrapli_built_shared_object_filename(self, build_path: str) -> str:
-        if self.libscrapli_is_release_tag:
-            return str(Path(build_path) / self._get_libscrapli_output_shared_object_filename())
-
-        # if we aren't a release the built object will still be named like foo.1.2.3, so we gotta
-        # snag it by globbing since we dont know
+        # the built object is always named "plainly" (i.e. libscrapli.so.1.2.3, or w/ the sha for
+        # a non release build) in the zig-out dir, and the zig-out dir is per-triple, so just
+        # glob it up and expect exactly one object
         built_objects = list(Path(build_path).glob("libscrapli.*"))
         if len(built_objects) != 1:
             raise OSError("expecting exactly one built object...")
@@ -217,25 +215,10 @@ class Libscrapli:
 
     @classmethod
     def _get_libscrapli_asset_filename(cls) -> str:
-        zig_triple = os.environ.get(LIBSCRPALI_ZIG_TRIPLE_ENV, None)
         dynamic = os.environ.get(LIBSCRAPLI_DYNAMIC_ENV, None)
         dynamic_str = "dynamic-" if dynamic is not None else ""
 
-        if zig_triple is not None:
-            if "linux" in zig_triple:
-                return f"libscrapli-{dynamic_str}{zig_triple}.so.{LIBSCRAPLI_VERSION}"
-            return f"libscrapli-{dynamic_str}{zig_triple}.{LIBSCRAPLI_VERSION}.dylib"
-
-        _base = f"libscrapli-{dynamic_str}{cls._get_zig_style_arch()}"
-
-        if sys.platform == "linux":
-            lib_filename = f"{_base}-{cls._get_zig_style_platform()}.so.{LIBSCRAPLI_VERSION}"
-        elif sys.platform == "darwin":
-            lib_filename = f"{_base}-macos.{LIBSCRAPLI_VERSION}.dylib"
-        else:
-            raise NotImplementedError("unsupported platform")
-
-        return lib_filename
+        return cls._get_libscrapli_qualified_shared_object_filename(dynamic_str=dynamic_str)
 
     def _get_clone_command(self, tmp_build_dir: str) -> list[list[str]]:
         if self.libscrapli_is_release_tag:

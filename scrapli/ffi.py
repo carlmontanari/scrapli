@@ -1,7 +1,9 @@
 """scrapli.ffi"""
 
+import ctypes
 import importlib.resources
 import os
+import platform
 import sys
 from logging import getLogger
 from pathlib import Path
@@ -16,9 +18,47 @@ LIBSCRAPLI_CACHE_PATH_OVERRIDE_ENV = "LIBSCRAPLI_CACHE_PATH"
 XDG_CACHE_HOME_ENV = "XDG_CACHE_HOME"
 
 
+def _is_musl() -> bool:
+    try:
+        ctypes.CDLL(None).gnu_get_libc_version
+    except (AttributeError, OSError):
+        return True
+
+    return False
+
+
+def _get_zig_style_arch() -> str:
+    """
+    Returns the zig-style arch name for the current machine.
+
+    Args:
+        N/A
+
+    Returns:
+        str: the zig-style arch name
+
+    Raises:
+        LibScrapliException: if unsupported arch
+
+    """
+    p = platform.machine()
+
+    if p in {"amd64", "x86_64"}:
+        return "x86_64"
+
+    if p in {"arm64", "aarch64"}:
+        return "aarch64"
+
+    raise LibScrapliException(f"unsupported arch '{p}'")
+
+
 def get_libscrapli_shared_object_filename(version: str = LIBSCRAPLI_VERSION) -> str:
     """
     Returns the name of the libscrapli shared object for the given version/platform.
+
+    The name is fully qualified -- as in it includes the arch/platform (and abi for linux) -- this
+    mirrors the release asset naming (sans any "dynamic-" marker) and how scrapligo caches
+    libscrapli, and ensures shared objects for different targets never collide on disk.
 
     Args:
         version: the libscrapli version
@@ -31,9 +71,10 @@ def get_libscrapli_shared_object_filename(version: str = LIBSCRAPLI_VERSION) -> 
 
     """
     if sys.platform == "linux":
-        lib_filename = f"libscrapli.so.{version}"
+        abi = "musl" if _is_musl() else "gnu"
+        lib_filename = f"libscrapli-{_get_zig_style_arch()}-linux-{abi}.so.{version}"
     elif sys.platform == "darwin":
-        lib_filename = f"libscrapli.{version}.dylib"
+        lib_filename = f"libscrapli-{_get_zig_style_arch()}-macos.{version}.dylib"
     else:
         raise LibScrapliException("unsupported platform")
 

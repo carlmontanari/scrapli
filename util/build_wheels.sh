@@ -14,9 +14,10 @@ fi
 
 echo "building libscrapli in $LIBSCRAPLI_BUILD_PATH"
 
-# have to make sure we remove the lib if it exists, then do so at each
-# iteration, otherwise we'll end up just putting whatever the first target
-# shared object would be in all the wheels
+# shared objects are stored w/ fully qualified (arch/platform/abi) names now so a stale lib can
+# no longer be silently packaged into the wrong target's wheel, but we still clean up between
+# iterations since the package-data globs match *all* libscrapli objects -- without this each
+# successive wheel would also contain all the previous targets' libs
 rm scrapli/lib/*.dylib || true
 rm scrapli/lib/*.so.* || true
 
