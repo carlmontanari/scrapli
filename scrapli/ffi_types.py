@@ -292,7 +292,7 @@ def to_c_string(s: str) -> c_char_p:
     return c_char_p(s.encode(encoding="utf-8"))
 
 
-LoggerCallbackC = CFUNCTYPE(None, c_uint8, ZigSlicePointer)
+LoggerCallbackC = CFUNCTYPE(c_void_p, c_size_t, c_uint8, ZigSlicePointer)
 LoggerCallback: TypeAlias = FuncPtr
 
 
@@ -370,7 +370,7 @@ def ffi_logger_level(logger: Logger) -> c_uint8:  # noqa: PLR0911
         return c_uint8(3)
 
 
-RecorderCallbackC = CFUNCTYPE(None, ZigSlicePointer)
+RecorderCallbackC = CFUNCTYPE(c_void_p, c_size_t, ZigSlicePointer)
 RecorderCallback: TypeAlias = FuncPtr
 
 
@@ -399,7 +399,7 @@ def recorder_callback_wrapper(cb: Callable[[str], None]) -> RecorderCallback:
     return RecorderCallbackC(_cb)
 
 
-NetconfCapabilitesCallbackC = CFUNCTYPE(c_void_p, ZigSlicePointer)
+NetconfCapabilitesCallbackC = CFUNCTYPE(c_void_p, c_size_t, ZigSlicePointer)
 NetconfCapabilitesCallback: TypeAlias = FuncPtr
 
 
