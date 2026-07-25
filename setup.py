@@ -1,5 +1,6 @@
 """setup"""
 
+import ctypes
 import os
 import platform
 import re
@@ -48,6 +49,15 @@ def get_libscrapli_version() -> str:
         return match.group(1)
 
     raise RuntimeError("Unable to find LIBSCRAPLI_VERSION in scrapli/ffi.py")
+
+
+def _is_musl() -> bool:
+    try:
+        ctypes.CDLL(None).gnu_get_libc_version
+    except (AttributeError, OSError):
+        return True
+
+    return False
 
 
 LIBSCRAPLI_VERSION = get_libscrapli_version()
@@ -149,7 +159,7 @@ class Libscrapli:
             return "macos"
 
         if sys.platform == "linux":
-            if os.path.exists("/lib/libc.musl-x86_64.so.1"):
+            if _is_musl():
                 return "linux-musl"
             return "linux-gnu"
 
