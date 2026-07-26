@@ -38,6 +38,10 @@ jobs:
         with:
           python-version: ${{ matrix.version }}
 
+      # for the dummy go ssh server
+      - name: set up go
+        uses: actions/setup-go@v6
+
       # dont bother with the genie stuff, dont care
       - name: install python dev tools
         run: |
