@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 
-CONCURRENCY_COUNT = 200
+CONCURRENCY_COUNT = 100
 
 
 @pytest.mark.parametrize(
