@@ -970,7 +970,7 @@ class Cli:
         err_contents = err_slice.contents.get_decoded_contents()
         if err_contents:
             if last_err_string:
-                err_contents += f": {last_err_string}"
+                err_contents += f": {last_err_string.contents.get_decoded_contents()}"
 
             raise OperationException(err_contents)
 
@@ -1044,7 +1044,7 @@ class Cli:
         err_contents = err_slice.contents.get_decoded_contents()
         if err_contents:
             if last_err_string:
-                err_contents += f": {last_err_string}"
+                err_contents += f": {last_err_string.contents.get_decoded_contents()}"
 
             raise OperationException(err_contents)
 
