@@ -41,6 +41,13 @@ jobs:
       # for the dummy go ssh server
       - name: set up go
         uses: actions/setup-go@v6
+        with:
+          go-version: 1.26
+
+      - name: prep dummy ssh server
+        working-directory: tests/unit/dummy_ssh_server
+        run: |
+          go mod tidy
 
       # dont bother with the genie stuff, dont care
       - name: install python dev tools

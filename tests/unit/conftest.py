@@ -4,9 +4,11 @@ import shutil
 import signal
 import socket
 import subprocess
+import tempfile
 import time
 from collections.abc import Callable, Generator
 from pathlib import Path
+from typing import IO
 
 import pytest
 
@@ -232,13 +234,19 @@ def options_assert_result(request: pytest.FixtureRequest) -> Callable[[Result], 
     return _options_assert_result
 
 
-def _wait_for_dummy_ssh_server(proc: subprocess.Popen[bytes]) -> None:
+def _wait_for_dummy_ssh_server(proc: subprocess.Popen[bytes], output_f: IO[bytes]) -> None:
     # lil time to fetch deps etc.
     deadline = time.monotonic() + 120
 
     while time.monotonic() < deadline:
         if proc.poll() is not None:
-            raise RuntimeError(f"dummy ssh server exited early w/ return code {proc.returncode}")
+            output_f.seek(0)
+            output = output_f.read().decode(errors="replace")
+
+            raise RuntimeError(
+                f"dummy ssh server exited early w/ return code {proc.returncode}, "
+                f"output:\n{output}"
+            )
 
         try:
             with socket.create_connection(
@@ -253,22 +261,25 @@ def _wait_for_dummy_ssh_server(proc: subprocess.Popen[bytes]) -> None:
 
 @pytest.fixture(scope="module")
 def dummy_ssh_server() -> Generator[None, None, None]:
-    command = ["go", "run", Path(__file__).parent / "dummy_ssh_server"]
+    command = ["go", "run", "."]
 
     if command[0] == "go" and shutil.which("go") is None:
         pytest.skip("go toolchain not available, skipping...")
 
+    output_f = tempfile.TemporaryFile()
+
     proc = subprocess.Popen(
         command,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        cwd=Path(__file__).parent / "dummy_ssh_server",
+        stdout=output_f,
+        stderr=subprocess.STDOUT,
         # new session/process group so we can reliably kill the server `go run` spawns, not
         # just `go run` itself
         start_new_session=True,
     )
 
     try:
-        _wait_for_dummy_ssh_server(proc=proc)
+        _wait_for_dummy_ssh_server(proc=proc, output_f=output_f)
 
         yield
     finally:
@@ -276,6 +287,7 @@ def dummy_ssh_server() -> Generator[None, None, None]:
             os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
 
         proc.wait()
+        output_f.close()
 
 
 @pytest.fixture(scope="function")
