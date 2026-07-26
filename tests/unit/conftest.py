@@ -1,4 +1,12 @@
-from collections.abc import Callable
+import contextlib
+import os
+import shutil
+import signal
+import socket
+import subprocess
+import time
+from collections.abc import Callable, Generator
+from pathlib import Path
 
 import pytest
 
@@ -9,6 +17,7 @@ from scrapli import (
     Netconf,
     SessionOptions,
     TransportBinOptions,
+    TransportSsh2Options,
     TransportTestOptions,
 )
 from scrapli.cli_result import Result
@@ -18,6 +27,8 @@ SSH_PORT_RECORD = 22022
 SSH_PORT = 22
 NETCONF_PORT_RECORD = 23830
 NETCONF_PORT = 830
+DUMMY_SSH_SERVER_HOST = "localhost"
+DUMMY_SSH_SERVER_PORT = 2222
 
 
 def _original_name_to_filename(originalname: str) -> str:
@@ -219,3 +230,77 @@ def options_assert_result(request: pytest.FixtureRequest) -> Callable[[Result], 
         assert actual == golden.strip()
 
     return _options_assert_result
+
+
+def _wait_for_dummy_ssh_server(proc: subprocess.Popen[bytes]) -> None:
+    # lil time to fetch deps etc.
+    deadline = time.monotonic() + 120
+
+    while time.monotonic() < deadline:
+        if proc.poll() is not None:
+            raise RuntimeError(f"dummy ssh server exited early w/ return code {proc.returncode}")
+
+        try:
+            with socket.create_connection(
+                (DUMMY_SSH_SERVER_HOST, DUMMY_SSH_SERVER_PORT), timeout=1
+            ):
+                return
+        except OSError:
+            time.sleep(0.25)
+
+    raise TimeoutError("timed out waiting for dummy ssh server to accept connections")
+
+
+@pytest.fixture(scope="module")
+def dummy_ssh_server() -> Generator[None, None, None]:
+    command = ["go", "run", Path(__file__).parent / "dummy_ssh_server"]
+
+    if command[0] == "go" and shutil.which("go") is None:
+        pytest.skip("go toolchain not available, skipping...")
+
+    proc = subprocess.Popen(
+        command,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        # new session/process group so we can reliably kill the server `go run` spawns, not
+        # just `go run` itself
+        start_new_session=True,
+    )
+
+    try:
+        _wait_for_dummy_ssh_server(proc=proc)
+
+        yield
+    finally:
+        with contextlib.suppress(ProcessLookupError):
+            os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+
+        proc.wait()
+
+
+@pytest.fixture(scope="function")
+def concurrency_cli(transport) -> Callable[[], Cli]:
+    """Fixture providing a factory building Cli instances pointed at the dummy ssh server"""
+
+    def _concurrency_cli() -> Cli:
+        # note that every call builds fresh transport options -- options objects hold
+        # per-connection c-string state once applied, so they must not be shared across
+        # concurrent connections
+        if transport == "bin":
+            transport_options: TransportBinOptions | TransportSsh2Options = TransportBinOptions(
+                extra_open_args=["-F", "/dev/null"],
+            )
+        else:
+            transport_options = TransportSsh2Options()
+
+        return Cli(
+            DUMMY_SSH_SERVER_HOST,
+            port=DUMMY_SSH_SERVER_PORT,
+            auth_options=AuthOptions(
+                username="admin",
+                password="password",
+            ),
+            transport_options=transport_options,
+        )
+
+    return _concurrency_cli
