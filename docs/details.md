@@ -20,22 +20,24 @@ Lastly, there is the `ssh2` transport -- this transport is a zig wrapper around 
 
 A platform *definition* defines how libscrapli should interact with a Cli device (telnet/SSH). This definition is a simple YAML file that holds some information such as the regular expression pattern used to match a prompt for the given device, some inputs that should be called upon connection (to disable pagingation for example), and possible "modes" the device may have (such as a "configuration" mode).
 
-Here is an annotated version of the (at time of writing) Nokia SRLinux platform definition:
+Here is an annotated and slightly modified version (for illustration purposes) of the (at time of writing) Nokia SRLinux platform definition:
 
 ```yaml
 ---
 prompt_pattern: '(^.*[>#$]\s?+$)|(--.*--\s*\n[abcd]:\S+#\s*$)' # (1)
-default_mode: 'exec' # (2)
-modes:  # (3)
+prompt_excludes: # (2)
+  - foobarbaz
+default_mode: 'exec' # (3)
+modes:  # (4)
   - name: 'bash'
     prompt_pattern: '^.*[>#$]\s?+$'
-    prompt_excludes: # (4)
+    prompt_excludes: # (5)
       # ensure bash doesnt match on exec/config. technically this could be in a bash prompt
       # but seems pretty unlikely
       - '--{'
     accessible_modes:
       - name: 'exec'
-        instructions: # (5)
+        instructions: # (6)
           - send_input:
               input: 'exit'
   - name: 'exec'
@@ -47,8 +49,11 @@ modes:  # (3)
               input: 'bash'
       - name: 'configuration'
         instructions:
-          - send_input:
-              input: 'enter candidate private'
+          # yes, this is made up and not applicable to srlinux, just using it to have an example!
+          - send_prompted_input: # (7)
+              input: 'enable'
+              prompt_exact: 'Password:'
+              response: '__lookup::enable'
   - name: 'configuration'
     prompt_pattern: '^--{(\s\[[\w\s]+\]){0,5}[\+\*\!\s]{1,}candidate[\-\w\s]+}--\[.+?\]--\s*\n[abcd]:\S+#\s*$'
     accessible_modes:
@@ -56,16 +61,16 @@ modes:  # (3)
         instructions:
           - send_input:
               input: 'discard now'
-failure_indicators: # (6)
+failure_indicators: # (8)
   - 'Error:'
-on_open_instructions: # (7)
+on_open_instructions: # (9)
   - enter_mode:
       requested_mode: 'exec'
   - send_input:
       input: 'environment cli-engine type basic'
   - send_input:
       input: 'environment complete-on-space false'
-on_close_instructions: # (8)
+on_close_instructions: # (10)
   - enter_mode:
       requested_mode: 'exec'
   - write:
@@ -73,13 +78,20 @@ on_close_instructions: # (8)
 ```
 
 1. The single most important part -- a regular expression (PCRE2) that matches any/all prompts the device may show.
-2. The "mode" to acquire and send inputs to by default.
-3. An array of "modes" that define a more explicit pattern that matches the prompt of this mode, and which other modes are accessible from the given mode (and how to access them).
-4. Prompts can be tricky to match with a regular expression without accidentally matching other mode prompts too -- this is a list of strings that, if a prompt contains them, would preclude a possible prompt from matching this mode.
-5. Instructions on how to acquire another mode from this mode -- these instructions are very simple -- send an input, send a return character, send a *prompted* input (for things like expecting a password prompt).
-6. A list of strings that when found in the output of some input will cause the result object to be marked as "failed" -- this is not an error scrapli will return, but is more an annotation that the given input completed successfully but likely did not succeed.
-7. Instructions for what libscrapli should do immediately upon successfully opening a connection to a device of this flavor. Typically this includes disabling fancy prompt things, disabling pagination, and possibly disabling console/terminal logging output.
-8. Instructions for what libscrapli should do before closing the connection. Usually this just means sending "exit", "quit", or "logout" in order to nicely close/clean-up the connection.
+2. Optional array of strings that indicate a matched prompt should be excluded -- this applies only
+to the global prompt pattern.
+3. The "mode" to acquire and send inputs to by default.
+4. An array of "modes" that define a more explicit pattern that matches the prompt of this mode, and which other modes are accessible from the given mode (and how to access them).
+5. Prompts can be tricky to match with a regular expression without accidentally matching other mode prompts too -- this is a list of strings that, if a prompt contains them, would preclude a possible prompt from matching this mode.
+6. Instructions on how to acquire another mode from this mode -- these instructions are very simple -- send an input, send a return character, send a *prompted* input (for things like expecting a password prompt).
+7. You can always "manually" enter modes by sending inputs (or for password related things more
+likely using `sendPromptedInput` or the python/go equivalent), however for privilege levels this
+should generally be baked into the platform. In this case we send `enable`, expecting `Password:`
+and then send the value the "enable" field via a lookup (more on this below), alternatively you
+could simply put your credentials here in plaintext if you're into that sort of thing.
+8. A list of strings that when found in the output of some input will cause the result object to be marked as "failed" -- this is not an error scrapli will return, but is more an annotation that the given input completed successfully but likely did not succeed.
+9. Instructions for what libscrapli should do immediately upon successfully opening a connection to a device of this flavor. Typically this includes disabling fancy prompt things, disabling pagination, and possibly disabling console/terminal logging output.
+10. Instructions for what libscrapli should do before closing the connection. Usually this just means sending "exit", "quit", or "logout" in order to nicely close/clean-up the connection.
 
 Lastly, here is a lazily LLM generated schema if you're into that sort of thing (that appears to be pretty accurate):
 
@@ -88,140 +100,361 @@ Lastly, here is a lazily LLM generated schema if you're into that sort of thing 
     {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "title": "PlatformDefinition",
+      "description": "libscrapli cli platform definition -- the yaml document that tells libscrapli how to drive a cli connection to some device: prompt matching, available 'modes', on open/close instructions, etc.",
       "type": "object",
       "properties": {
         "prompt_pattern": {
+          "description": "PCRE2 pattern that matches any prompt of the device, in any mode.",
           "type": "string"
         },
+        "prompt_excludes": {
+          "description": "Substrings that, if found in the output, indicate the match is not actually a prompt.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
         "default_mode": {
+          "description": "Name of the mode the driver should treat as the default mode -- must be one of the modes defined in 'modes'.",
           "type": "string"
         },
         "modes": {
+          "description": "The privilege levels/'modes' of the device (e.g. exec, privileged exec, configuration).",
           "type": "array",
           "items": {
-            "$ref": "#/$defs/ModeOptions"
+            "$ref": "#/$defs/mode"
           }
         },
         "failure_indicators": {
-          "type": ["array", "null"],
+          "description": "Substrings in device output that indicate an operation failed (e.g. '% Invalid input').",
+          "type": [
+            "array",
+            "null"
+          ],
           "items": {
-            "type": "array",
-            "items": { "type": "string" }
+            "type": "string"
           }
         },
         "on_open_instructions": {
-          "type": ["array", "null"],
-          "items": { "$ref": "#/$defs/BoundOnXCallbackInstruction" }
+          "description": "Instructions executed after the connection is opened and authenticated (e.g. disable paging).",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/onXInstruction"
+          }
         },
         "on_close_instructions": {
-          "type": ["array", "null"],
-          "items": { "$ref": "#/$defs/BoundOnXCallbackInstruction" }
+          "description": "Instructions executed prior to closing the connection.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/onXInstruction"
+          }
         },
         "force_in_session_auth": {
-          "type": ["boolean", "null"]
+          "description": "Force 'in session' authentication handling (i.e. username/password prompts consumed in the session itself, as with telnet or bin transport).",
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": false
         },
         "bypass_in_session_auth": {
-          "type": ["boolean", "null"]
+          "description": "Skip 'in session' authentication handling entirely.",
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": false
         },
         "ntc_templates_platform": {
-          "type": ["string", "null"]
+          "description": "The ntc-templates platform name to use for textfsm parsing of outputs.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "genie_platform": {
-          "type": ["string", "null"]
+          "description": "The (pyats) genie platform name to use for genie parsing of outputs.",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
-      "required": ["prompt_pattern", "default_mode", "modes"],
+      "required": [
+        "prompt_pattern",
+        "default_mode",
+        "modes"
+      ],
+      "additionalProperties": false,
       "$defs": {
-        "ModeOptions": {
-          "description": "Placeholder for mode.Options definition",
-          "type": "object"
+        "mode": {
+          "title": "Mode",
+          "description": "A mode -- some type of config 'level' on a cli device, e.g. 'privileged exec' or 'configuration'.",
+          "type": "object",
+          "properties": {
+            "name": {
+              "description": "Name of the mode.",
+              "type": "string"
+            },
+            "prompt_exact": {
+              "description": "Exact string that matches this mode's prompt.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "prompt_pattern": {
+              "description": "PCRE2 pattern that matches this mode's prompt.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "prompt_excludes": {
+              "description": "Substrings that, if found in the current prompt, exclude it from matching this mode (useful when another mode's prompt would otherwise also match).",
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "accessible_modes": {
+              "description": "Modes reachable from this mode and the instructions required to get to them.",
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "$ref": "#/$defs/accessibleMode"
+              }
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
         },
-        "BoundOnXCallbackInstruction": {
+        "accessibleMode": {
+          "title": "AccessibleMode",
+          "description": "The name of a mode accessible from the parent mode, and the instructions required to access it.",
+          "type": "object",
+          "properties": {
+            "name": {
+              "description": "Name of the target mode.",
+              "type": "string"
+            },
+            "instructions": {
+              "description": "Operations executed, in order, to move from the parent mode to the target mode.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/modeOperation"
+              }
+            }
+          },
+          "required": [
+            "name",
+            "instructions"
+          ],
+          "additionalProperties": false
+        },
+        "modeOperation": {
+          "title": "ModeOperation",
+          "description": "An operation used when changing between modes -- exactly one of 'send_input' or 'send_prompted_input'.",
+          "type": "object",
           "oneOf": [
             {
-              "type": "object",
-              "properties": {
-                "write": {
-                  "type": "object",
-                  "properties": {
-                    "write": {
-                      "type": "object",
-                      "properties": {
-                        "input": { "type": "string" }
-                      },
-                      "required": ["input"]
-                    }
-                  },
-                  "required": ["write"]
-                }
-              },
-              "required": ["write"]
-            },
-            {
-              "type": "object",
-              "properties": {
-                "enter_mode": {
-                  "type": "object",
-                  "properties": {
-                    "enter_mode": {
-                      "type": "object",
-                      "properties": {
-                        "requested_mode": { "type": "string" }
-                      },
-                      "required": ["requested_mode"]
-                    }
-                  },
-                  "required": ["enter_mode"]
-                }
-              },
-              "required": ["enter_mode"]
-            },
-            {
-              "type": "object",
               "properties": {
                 "send_input": {
-                  "type": "object",
-                  "properties": {
-                    "send_input": {
-                      "type": "object",
-                      "properties": {
-                        "input": { "type": "string" }
-                      },
-                      "required": ["input"]
-                    }
-                  },
-                  "required": ["send_input"]
+                  "$ref": "#/$defs/sendInput"
                 }
               },
-              "required": ["send_input"]
+              "required": [
+                "send_input"
+              ],
+              "additionalProperties": false
             },
             {
-              "type": "object",
               "properties": {
                 "send_prompted_input": {
-                  "type": "object",
-                  "properties": {
-                    "send_prompted_input": {
-                      "type": "object",
-                      "properties": {
-                        "input": { "type": "string" },
-                        "prompt_exact": { "type": ["string", "null"] },
-                        "prompt_pattern": { "type": ["string", "null"] },
-                        "response": { "type": "string" }
-                      },
-                      "required": ["input", "response"]
-                    }
-                  },
-                  "required": ["send_prompted_input"]
+                  "$ref": "#/$defs/sendPromptedInput"
                 }
               },
-              "required": ["send_prompted_input"]
+              "required": [
+                "send_prompted_input"
+              ],
+              "additionalProperties": false
             }
           ]
+        },
+        "onXInstruction": {
+          "title": "OnXInstruction",
+          "description": "An instruction usable in on open/close instruction lists -- exactly one of 'write', 'enter_mode', 'send_input', or 'send_prompted_input'.",
+          "type": "object",
+          "oneOf": [
+            {
+              "properties": {
+                "write": {
+                  "$ref": "#/$defs/write"
+                }
+              },
+              "required": [
+                "write"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "properties": {
+                "enter_mode": {
+                  "$ref": "#/$defs/enterMode"
+                }
+              },
+              "required": [
+                "enter_mode"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "properties": {
+                "send_input": {
+                  "$ref": "#/$defs/sendInput"
+                }
+              },
+              "required": [
+                "send_input"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "properties": {
+                "send_prompted_input": {
+                  "$ref": "#/$defs/sendPromptedInput"
+                }
+              },
+              "required": [
+                "send_prompted_input"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "write": {
+          "title": "Write",
+          "description": "Write the given input to the session without waiting for a prompt (a return is sent after the input).",
+          "type": "object",
+          "properties": {
+            "input": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "input"
+          ],
+          "additionalProperties": false
+        },
+        "enterMode": {
+          "title": "EnterMode",
+          "description": "Enter the requested mode.",
+          "type": "object",
+          "properties": {
+            "requested_mode": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "requested_mode"
+          ],
+          "additionalProperties": false
+        },
+        "sendInput": {
+          "title": "SendInput",
+          "description": "Send the given input and wait for the prompt to return.",
+          "type": "object",
+          "properties": {
+            "input": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "input"
+          ],
+          "additionalProperties": false
+        },
+        "sendPromptedInput": {
+          "title": "SendPromptedInput",
+          "description": "Send an input that triggers a secondary prompt (e.g. 'enable' asking for a password) and respond to it. One of 'prompt_exact' or 'prompt_pattern' should be set.",
+          "type": "object",
+          "properties": {
+            "input": {
+              "type": "string"
+            },
+            "prompt_exact": {
+              "description": "Exact string of the expected secondary prompt.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "prompt_pattern": {
+              "description": "PCRE2 pattern matching the expected secondary prompt.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "response": {
+              "description": "Response to send when the secondary prompt is seen.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "input",
+            "response"
+          ],
+          "additionalProperties": false
         }
       }
     }
     ```
+
+#### Lookups
+
+A quick note about "lookups"... Lookups basically exist so that you can specify how to enter some
+mode of the cli that is "privileged" and requires credentials to escalate into (i.e. "enable" to
+get into privileged exec mode in cisco/arista style platforms). The definition should obviously not
+include hard coded credentials in anything other than some lab/test scenario, so we provide this
+lookup functionality to wire those credentials into the definition. A simple example in python and
+go:
+
+```python
+c = Cli(
+    host="localhost",
+    auth_options=AuthOptions(
+        username="foo",
+        password="bar",
+        lookups=[LookupKeyValue(key="enable", value="baz")],
+    ),
+)
+```
+
+```go
+c, err := cli.NewCli(
+	"localhost",
+	scrapligooptions.WithUsername("foo"),
+	scrapligooptions.WithPassword("bar"),
+	scrapligooptions.WithLookupKeyValue("enable", "baz"),
+)
+```
 
 
 ### Async IO
