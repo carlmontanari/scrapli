@@ -312,6 +312,9 @@ def concurrency_cli(transport) -> Callable[[], Cli]:
                 username="admin",
                 password="password",
             ),
+            session_options=SessionOptions(
+                operation_timeout_s=20,
+            ),
             transport_options=transport_options,
         )
 
