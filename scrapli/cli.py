@@ -1360,10 +1360,13 @@ class Cli:
 
         encoded_inputs = [i.encode(encoding="utf-8") for i in inputs]
 
-        _inputs = pointer(ZigSlice.from_bytes(b"".join(encoded_inputs)))
+        _inputs = pointer(ZigSlice(content=b"".join(encoded_inputs)))
         _input_lens = pointer(
-            ZigU64Slice.from_list([len(encoded_input) for encoded_input in encoded_inputs])
+            ZigU64Slice(
+                vals=[len(encoded_input) for encoded_input in encoded_inputs],
+            )
         )
+
         _requested_mode = to_c_string(requested_mode)
 
         self.ffi_mapping.cli_mapping.send_inputs(
@@ -1420,10 +1423,15 @@ class Cli:
 
         encoded_inputs = [i.encode(encoding="utf-8") for i in inputs]
 
-        _inputs = pointer(ZigSlice.from_bytes(b"".join(encoded_inputs)))
+        encoded_inputs = [i.encode(encoding="utf-8") for i in inputs]
+
+        _inputs = pointer(ZigSlice(content=b"".join(encoded_inputs)))
         _input_lens = pointer(
-            ZigU64Slice.from_list([len(encoded_input) for encoded_input in encoded_inputs])
+            ZigU64Slice(
+                vals=[len(encoded_input) for encoded_input in encoded_inputs],
+            )
         )
+
         _requested_mode = to_c_string(requested_mode)
 
         self.ffi_mapping.cli_mapping.send_inputs(

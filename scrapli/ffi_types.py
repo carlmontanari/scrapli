@@ -21,6 +21,7 @@ from ctypes import (
     c_void_p,
     cast,
     create_string_buffer,
+    memmove,
     pointer,
 )
 from enum import IntEnum
@@ -176,33 +177,26 @@ class ZigU64Slice(Structure):
         ("len", c_size_t),
     ]
 
-    def __init__(self, size: c_uint64):
-        self.ptr = cast((c_uint64 * size.value)(), POINTER(c_uint64))
-        self.len = size.value
-
+    def __init__(
+        self,
+        size: c_uint64 | None = None,
+        vals: list[int] | None = None,
+    ):
         super().__init__()
 
-    @classmethod
-    def from_list(cls, vals: list[int]) -> "ZigU64Slice":
-        """
-        Builds a ZigU64Slice from an existing list of ints.
+        if vals is not None:
+            size = c_uint64(len(vals))
 
-        Args:
-            vals: the ints to fill the slice with
+        if size is None:
+            raise ValueError("size or vals required")
 
-        Returns:
-            ZigU64Slice: the built slice
+        self._buf = (c_uint64 * size.value)()
+        self.ptr = cast(self._buf, POINTER(c_uint64))
+        self.len = size.value
 
-        Raises:
-            N/A
-
-        """
-        slice_ = cls(size=c_uint64(len(vals)))
-
-        for idx, val in enumerate(vals):
-            slice_.ptr[idx] = val
-
-        return slice_
+        if vals is not None:
+            for idx, val in enumerate(vals):
+                self.ptr[idx] = val
 
     def get_contents(self) -> list[int]:
         """
@@ -250,37 +244,25 @@ class ZigSlice(Structure):
         ("len", c_size_t),
     ]
 
-    def __init__(self, size: c_size_t | c_uint64):
-        self.ptr = cast(create_string_buffer(size.value), POINTER(c_uint8))
-        self.len = size.value
-
+    def __init__(
+        self,
+        size: c_size_t | c_uint64 | None = None,
+        content: bytes | None = None,
+    ):
         super().__init__()
 
-    @classmethod
-    def from_bytes(cls, data: bytes) -> "ZigSlice":
-        """
-        Builds a ZigSlice wrapping (a copy of) the given bytes.
+        if content is not None:
+            size = c_size_t(len(content))
 
-        Args:
-            data: the bytes to fill the slice with
+        if size is None:
+            raise ValueError("size or content required")
 
-        Returns:
-            ZigSlice: the built slice
+        self._buf = create_string_buffer(size.value)
+        self.ptr = cast(self._buf, POINTER(c_uint8))
+        self.len = size.value
 
-        Raises:
-            N/A
-
-        """
-        slice_ = cls(size=c_size_t(len(data)))
-
-        # hold a reference to the backing buffer so it lives as long as the slice does
-        backing = create_string_buffer(data, len(data))
-        slice_._backing = backing
-
-        slice_.ptr = cast(backing, POINTER(c_uint8))
-        slice_.len = len(data)
-
-        return slice_
+        if content is not None:
+            memmove(self.ptr, content, len(content))
 
     def get_contents(self) -> bytes:
         """

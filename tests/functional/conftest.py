@@ -140,8 +140,9 @@ def cli_assert_result(
         assert actual.start_time != 0
         assert actual.end_time != 0
         assert actual.elapsed_time_seconds != 0
-        assert len(actual.results) != 0
-        assert len(actual.results_raw) != 0
+        # a "noop" op (i.e. enter_mode where no mode change was needed) legitimately has
+        # no entries, we already check golden so we're just making sure this is not foobar
+        assert len(actual.results) == len(actual.results_raw)
         assert actual.failed is False
 
     return _cli_assert_result

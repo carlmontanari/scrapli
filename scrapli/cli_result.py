@@ -275,8 +275,8 @@ class Result:
             # empty journal means nothing was ever cleaned out of this entry, raw == result
             return result
 
-        result_slice = pointer(ZigSlice.from_bytes(result))
-        journal_slice = pointer(ZigSlice.from_bytes(journal))
+        result_slice = pointer(ZigSlice(content=result))
+        journal_slice = pointer(ZigSlice(content=journal))
 
         raw_size = pointer(c_size_t())
 

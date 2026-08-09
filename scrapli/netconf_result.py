@@ -79,8 +79,8 @@ class Result:
         # deferred to avoid circular imports (and to only pay for it when raw is fetched)
         from scrapli.ffi_mapping import LibScrapliMapping  # noqa: PLC0415
 
-        result_slice = pointer(ZigSlice.from_bytes(result))
-        journal_slice = pointer(ZigSlice.from_bytes(self.result_raw_journal))
+        result_slice = pointer(ZigSlice(content=result))
+        journal_slice = pointer(ZigSlice(content=self.result_raw_journal))
 
         raw_size = pointer(c_size_t())
 

@@ -1175,9 +1175,9 @@ class Netconf:
                 encoded_extra_namespaces.append(prefix.encode(encoding="utf-8"))
                 encoded_extra_namespaces.append(namespace.encode(encoding="utf-8"))
 
-        _extra_namespaces = pointer(ZigSlice.from_bytes(b"".join(encoded_extra_namespaces)))
+        _extra_namespaces = pointer(ZigSlice(content=b"".join(encoded_extra_namespaces)))
         _extra_namespace_lens = pointer(
-            ZigU64Slice.from_list([len(e) for e in encoded_extra_namespaces])
+            ZigU64Slice(vals=[len(e) for e in encoded_extra_namespaces])
         )
 
         self.ffi_mapping.netconf_mapping.raw_rpc(
@@ -1234,9 +1234,9 @@ class Netconf:
                 encoded_extra_namespaces.append(prefix.encode(encoding="utf-8"))
                 encoded_extra_namespaces.append(namespace.encode(encoding="utf-8"))
 
-        _extra_namespaces = pointer(ZigSlice.from_bytes(b"".join(encoded_extra_namespaces)))
+        _extra_namespaces = pointer(ZigSlice(content=b"".join(encoded_extra_namespaces)))
         _extra_namespace_lens = pointer(
-            ZigU64Slice.from_list([len(e) for e in encoded_extra_namespaces])
+            ZigU64Slice(vals=[len(e) for e in encoded_extra_namespaces])
         )
 
         self.ffi_mapping.netconf_mapping.raw_rpc(
