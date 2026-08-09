@@ -30,7 +30,6 @@ from scrapli.exceptions import (
 from scrapli.ffi_mapping import LibScrapliMapping
 from scrapli.ffi_options import DriverOptions, DriverOptionsPointer
 from scrapli.ffi_types import (
-    LIBSCRAPLI_DELIMITER,
     DriverPointer,
     IntPointer,
     NetconfCapabilitesCallback,
@@ -38,6 +37,7 @@ from scrapli.ffi_types import (
     U8Pointer,
     U64Pointer,
     ZigSlice,
+    ZigU64Slice,
     capabilities_callback_wrapper,
     ffi_logger_callback_wrapper,
     ffi_logger_level,
@@ -922,7 +922,7 @@ class Netconf:
             port=self.port,
             start_time=start_time.contents.value,
             end_time=end_time.contents.value,
-            result_raw=result_raw_slice.contents.get_contents(),
+            result_raw_journal=result_raw_slice.contents.get_contents(),
             _result=result_slice.contents.get_decoded_contents(),
             rpc_warnings=rpc_warnings_slice.contents.get_decoded_contents(),
             rpc_errors=rpc_errors_slice.contents.get_decoded_contents(),
@@ -995,7 +995,7 @@ class Netconf:
             port=self.port,
             start_time=start_time.contents.value,
             end_time=end_time.contents.value,
-            result_raw=result_raw_slice.contents.get_contents(),
+            result_raw_journal=result_raw_slice.contents.get_contents(),
             _result=result_slice.contents.get_decoded_contents(),
             rpc_warnings=rpc_warnings_slice.contents.get_decoded_contents(),
             rpc_errors=rpc_errors_slice.contents.get_decoded_contents(),
@@ -1168,12 +1168,17 @@ class Netconf:
         _payload = to_c_string(payload)
         _base_namespace_prefix = to_c_string(base_namespace_prefix)
 
+        encoded_extra_namespaces = []
+
         if extra_namespaces is not None:
-            _extra_namespaces = to_c_string(
-                LIBSCRAPLI_DELIMITER.join(["::".join(p) for p in extra_namespaces])
-            )
-        else:
-            _extra_namespaces = to_c_string("")
+            for prefix, namespace in extra_namespaces:
+                encoded_extra_namespaces.append(prefix.encode(encoding="utf-8"))
+                encoded_extra_namespaces.append(namespace.encode(encoding="utf-8"))
+
+        _extra_namespaces = pointer(ZigSlice.from_bytes(b"".join(encoded_extra_namespaces)))
+        _extra_namespace_lens = pointer(
+            ZigU64Slice.from_list([len(e) for e in encoded_extra_namespaces])
+        )
 
         self.ffi_mapping.netconf_mapping.raw_rpc(
             ptr=self._ptr_or_exception(),
@@ -1181,6 +1186,7 @@ class Netconf:
             payload=_payload,
             base_namespace_prefix=_base_namespace_prefix,
             extra_namespaces=_extra_namespaces,
+            extra_namespace_lens=_extra_namespace_lens,
         )
 
         return self._get_result(operation_id_ptr=operation_id_ptr)
@@ -1221,12 +1227,17 @@ class Netconf:
         _payload = to_c_string(payload)
         _base_namespace_prefix = to_c_string(base_namespace_prefix)
 
+        encoded_extra_namespaces = []
+
         if extra_namespaces is not None:
-            _extra_namespaces = to_c_string(
-                LIBSCRAPLI_DELIMITER.join(["::".join(p) for p in extra_namespaces])
-            )
-        else:
-            _extra_namespaces = to_c_string("")
+            for prefix, namespace in extra_namespaces:
+                encoded_extra_namespaces.append(prefix.encode(encoding="utf-8"))
+                encoded_extra_namespaces.append(namespace.encode(encoding="utf-8"))
+
+        _extra_namespaces = pointer(ZigSlice.from_bytes(b"".join(encoded_extra_namespaces)))
+        _extra_namespace_lens = pointer(
+            ZigU64Slice.from_list([len(e) for e in encoded_extra_namespaces])
+        )
 
         self.ffi_mapping.netconf_mapping.raw_rpc(
             ptr=self._ptr_or_exception(),
@@ -1234,6 +1245,7 @@ class Netconf:
             payload=_payload,
             base_namespace_prefix=_base_namespace_prefix,
             extra_namespaces=_extra_namespaces,
+            extra_namespace_lens=_extra_namespace_lens,
         )
 
         return await self._get_result_async(operation_id_ptr=operation_id_ptr)

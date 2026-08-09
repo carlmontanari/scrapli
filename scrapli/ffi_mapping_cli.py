@@ -44,7 +44,7 @@ class LibScrapliCliMapping:
 
     """
 
-    def __init__(self, lib: CDLL) -> None:
+    def __init__(self, lib: CDLL) -> None:  # noqa: PLR0915
         self._alloc: Callable[
             [
                 c_char_p,
@@ -148,8 +148,11 @@ class LibScrapliCliMapping:
                 U64Pointer,
                 ZigU64SlicePointer,
                 ZigSlicePointer,
+                ZigU64SlicePointer,
                 ZigSlicePointer,
+                ZigU64SlicePointer,
                 ZigSlicePointer,
+                ZigU64SlicePointer,
                 ZigSlicePointer,
                 ZigSlicePointer,
                 ZigSlicePointer,
@@ -162,13 +165,46 @@ class LibScrapliCliMapping:
             U64Pointer,
             ZigU64SlicePointer,
             ZigSlicePointer,
+            ZigU64SlicePointer,
             ZigSlicePointer,
+            ZigU64SlicePointer,
             ZigSlicePointer,
+            ZigU64SlicePointer,
             ZigSlicePointer,
             ZigSlicePointer,
             ZigSlicePointer,
         ]
         lib.ls_cli_fetch_operation.restype = c_uint8
+
+        self._get_reconstructed_result_raw_size: Callable[
+            [
+                ZigSlicePointer,
+                ZigSlicePointer,
+                USizePointer,
+            ],
+            int,
+        ] = lib.ls_cli_get_reconstructed_result_raw_size
+        lib.ls_cli_get_reconstructed_result_raw_size.argtypes = [
+            ZigSlicePointer,
+            ZigSlicePointer,
+            USizePointer,
+        ]
+        lib.ls_cli_get_reconstructed_result_raw_size.restype = c_uint8
+
+        self._get_reconstructed_result_raw: Callable[
+            [
+                ZigSlicePointer,
+                ZigSlicePointer,
+                ZigSlicePointer,
+            ],
+            int,
+        ] = lib.ls_cli_get_reconstructed_result_raw
+        lib.ls_cli_get_reconstructed_result_raw.argtypes = [
+            ZigSlicePointer,
+            ZigSlicePointer,
+            ZigSlicePointer,
+        ]
+        lib.ls_cli_get_reconstructed_result_raw.restype = c_uint8
 
         self._enter_mode: Callable[
             [
@@ -232,7 +268,8 @@ class LibScrapliCliMapping:
                 DriverPointer,
                 OperationIdPointer,
                 CancelPointer,
-                c_char_p,
+                ZigSlicePointer,
+                ZigU64SlicePointer,
                 c_char_p,
                 U8Pointer,
                 c_bool,
@@ -245,7 +282,8 @@ class LibScrapliCliMapping:
             DriverPointer,
             OperationIdPointer,
             CancelPointer,
-            c_char_p,
+            ZigSlicePointer,
+            ZigU64SlicePointer,
             c_char_p,
             U8Pointer,
             c_bool,
@@ -550,8 +588,11 @@ class LibScrapliCliMapping:
         start_time: U64Pointer,
         splits: ZigU64SlicePointer,
         inputs_slice: ZigSlicePointer,
+        inputs_lens_slice: ZigU64SlicePointer,
         results_raw_slice: ZigSlicePointer,
+        results_raw_lens_slice: ZigU64SlicePointer,
         results_slice: ZigSlicePointer,
+        results_lens_slice: ZigU64SlicePointer,
         results_failed_indicator_slice: ZigSlicePointer,
         err_slice: ZigSlicePointer,
         last_err_string: ZigSlicePointer,
@@ -566,9 +607,12 @@ class LibScrapliCliMapping:
             operation_id_value: operation id of which to fetch
             start_time: int pointer to fill with the operation's start time
             splits: slice of u64 timestamps -- the end time (in unix ns) for each operation
-            inputs_slice: pre allocated slice to fill with the operations input
-            results_raw_slice: pre allocated slice to fill with the operations result raw
-            results_slice: pre allocated slice to fill with the operations result
+            inputs_slice: pre allocated slice to fill with the operations packed inputs
+            inputs_lens_slice: pre allocated slice to fill with each input's length
+            results_raw_slice: pre allocated slice to fill with the packed raw journals
+            results_raw_lens_slice: pre allocated slice to fill with each raw journal's length
+            results_slice: pre allocated slice to fill with the packed results
+            results_lens_slice: pre allocated slice to fill with each result's length
             results_failed_indicator_slice: pre allocated slice to fill with the operations failed
                 indicator
             err_slice: pre allocated slice to fill with the operations error
@@ -588,14 +632,88 @@ class LibScrapliCliMapping:
                 start_time,
                 splits,
                 inputs_slice,
+                inputs_lens_slice,
                 results_raw_slice,
+                results_raw_lens_slice,
                 results_slice,
+                results_lens_slice,
                 results_failed_indicator_slice,
                 err_slice,
                 last_err_string,
             )
         ).raise_if_error(
             message="fetching operation content failed",
+        )
+
+    def get_reconstructed_result_raw_size(
+        self,
+        *,
+        result_slice: ZigSlicePointer,
+        result_raw_journal_slice: ZigSlicePointer,
+        raw_size: USizePointer,
+    ) -> None:
+        """
+        Get the size of the buffer needed to rebuild a single result entry's raw into.
+
+        Should (generally) not be called directly/by users. Stateless -- valid whenever the
+        caller still holds the fetched (result, journal) pair, including after driver teardown.
+
+        Args:
+            result_slice: slice wrapping the entry's result
+            result_raw_journal_slice: slice wrapping the entry's raw journal
+            raw_size: int pointer to fill with the reconstructed raw size
+
+        Returns:
+            N/A
+
+        Raises:
+            FFIException: if the size cant be computed (i.e. corrupt journal)
+
+        """
+        LibScrapliFFIResult(
+            self._get_reconstructed_result_raw_size(
+                result_slice,
+                result_raw_journal_slice,
+                raw_size,
+            )
+        ).raise_if_error(
+            message="getting reconstructed result raw size failed",
+        )
+
+    def get_reconstructed_result_raw(
+        self,
+        *,
+        result_slice: ZigSlicePointer,
+        result_raw_journal_slice: ZigSlicePointer,
+        result_raw_slice: ZigSlicePointer,
+    ) -> None:
+        """
+        Reconstruct a single result entry's raw from its (result, journal) pair.
+
+        Should (generally) not be called directly/by users. Stateless -- valid whenever the
+        caller still holds the fetched (result, journal) pair, including after driver teardown.
+
+        Args:
+            result_slice: slice wrapping the entry's result
+            result_raw_journal_slice: slice wrapping the entry's raw journal
+            result_raw_slice: pre allocated slice (sized via get_reconstructed_result_raw_size)
+                to fill with the reconstructed raw
+
+        Returns:
+            N/A
+
+        Raises:
+            FFIException: if reconstruction failed (i.e. corrupt journal)
+
+        """
+        LibScrapliFFIResult(
+            self._get_reconstructed_result_raw(
+                result_slice,
+                result_raw_journal_slice,
+                result_raw_slice,
+            )
+        ).raise_if_error(
+            message="reconstructing result raw failed",
         )
 
     def enter_mode(
@@ -718,7 +836,8 @@ class LibScrapliCliMapping:
         *,
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
-        inputs: c_char_p,
+        inputs: ZigSlicePointer,
+        input_lens: ZigU64SlicePointer,
         requested_mode: c_char_p,
         input_handling: U8Pointer,
         retain_input: c_bool,
@@ -733,7 +852,8 @@ class LibScrapliCliMapping:
         Args:
             ptr: ptr to the cli object
             operation_id_ptr: int pointer to fill with the id of the submitted operation
-            inputs: the inputs to send, joined on the libscrapli delimiter
+            inputs: the inputs to send, packed back-to-back
+            input_lens: the length of each packed input
             requested_mode: string name of the mode to send the input in
             input_handling: u8 mapping to input handling enum that governs how the input is
                 handled
@@ -755,6 +875,7 @@ class LibScrapliCliMapping:
                 operation_id_ptr,
                 CANCEL,
                 inputs,
+                input_lens,
                 requested_mode,
                 input_handling,
                 retain_input,

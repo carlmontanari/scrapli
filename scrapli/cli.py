@@ -36,7 +36,6 @@ from scrapli.exceptions import (
 from scrapli.ffi_mapping import LibScrapliMapping
 from scrapli.ffi_options import DriverOptions, DriverOptionsPointer
 from scrapli.ffi_types import (
-    LIBSCRAPLI_DELIMITER,
     DriverPointer,
     OperationIdPointer,
     U8Pointer,
@@ -225,10 +224,12 @@ class Options:
 
         """
         if self.normalize_line_feeds is not None:
-            options.contents.cli.normalize_line_feeds = pointer(c_bool(self.normalize_line_feeds))
+            options.contents.session.normalize_line_feeds = pointer(
+                c_bool(self.normalize_line_feeds)
+            )
 
         if self.normalize_trailing_whitespace is not None:
-            options.contents.cli.normalize_trailing_whitespace = pointer(
+            options.contents.session.normalize_trailing_whitespace = pointer(
                 c_bool(self.normalize_trailing_whitespace)
             )
 
@@ -945,8 +946,11 @@ class Cli:
         splits = pointer(ZigU64Slice(size=c_uint64(operation_count.contents.value)))
 
         inputs_slice = pointer(ZigSlice(size=inputs_size.contents))
+        inputs_lens_slice = pointer(ZigU64Slice(size=c_uint64(operation_count.contents.value)))
         results_raw_slice = pointer(ZigSlice(size=results_raw_size.contents))
+        results_raw_lens_slice = pointer(ZigU64Slice(size=c_uint64(operation_count.contents.value)))
         results_slice = pointer(ZigSlice(size=results_size.contents))
+        results_lens_slice = pointer(ZigU64Slice(size=c_uint64(operation_count.contents.value)))
 
         results_failed_indicator_slice = pointer(
             ZigSlice(size=results_failed_indicator_size.contents)
@@ -960,8 +964,11 @@ class Cli:
             start_time=start_time,
             splits=splits,
             inputs_slice=inputs_slice,
+            inputs_lens_slice=inputs_lens_slice,
             results_raw_slice=results_raw_slice,
+            results_raw_lens_slice=results_raw_lens_slice,
             results_slice=results_slice,
+            results_lens_slice=results_lens_slice,
             results_failed_indicator_slice=results_failed_indicator_slice,
             err_slice=err_slice,
             last_err_string=last_err_string,
@@ -975,13 +982,16 @@ class Cli:
             raise OperationException(err_contents)
 
         return Result(
-            inputs=inputs_slice.contents.get_decoded_contents(),
+            inputs=inputs_slice.contents.get_contents(),
+            input_lens=inputs_lens_slice.contents.get_contents(),
             host=self.host,
             port=self.port,
             start_time=start_time.contents.value,
             splits=splits.contents.get_contents(),
-            results_raw=results_raw_slice.contents.get_contents(),
-            results=results_slice.contents.get_decoded_contents(),
+            result_raw_journals=results_raw_slice.contents.get_contents(),
+            result_raw_journal_lens=results_raw_lens_slice.contents.get_contents(),
+            results=results_slice.contents.get_contents(),
+            result_lens=results_lens_slice.contents.get_contents(),
             results_failed_indicator=results_failed_indicator_slice.contents.get_decoded_contents(),
             textfsm_platform=self.ntc_templates_platform,
             genie_platform=self.genie_platform,
@@ -1019,8 +1029,11 @@ class Cli:
         splits = pointer(ZigU64Slice(size=c_uint64(operation_count.contents.value)))
 
         inputs_slice = pointer(ZigSlice(size=inputs_size.contents))
+        inputs_lens_slice = pointer(ZigU64Slice(size=c_uint64(operation_count.contents.value)))
         results_raw_slice = pointer(ZigSlice(size=results_raw_size.contents))
+        results_raw_lens_slice = pointer(ZigU64Slice(size=c_uint64(operation_count.contents.value)))
         results_slice = pointer(ZigSlice(size=results_size.contents))
+        results_lens_slice = pointer(ZigU64Slice(size=c_uint64(operation_count.contents.value)))
 
         results_failed_indicator_slice = pointer(
             ZigSlice(size=results_failed_indicator_size.contents)
@@ -1034,8 +1047,11 @@ class Cli:
             start_time=start_time,
             splits=splits,
             inputs_slice=inputs_slice,
+            inputs_lens_slice=inputs_lens_slice,
             results_raw_slice=results_raw_slice,
+            results_raw_lens_slice=results_raw_lens_slice,
             results_slice=results_slice,
+            results_lens_slice=results_lens_slice,
             results_failed_indicator_slice=results_failed_indicator_slice,
             err_slice=err_slice,
             last_err_string=last_err_string,
@@ -1051,13 +1067,16 @@ class Cli:
         failed_indicator = results_failed_indicator_slice.contents.get_decoded_contents()
 
         return Result(
-            inputs=inputs_slice.contents.get_decoded_contents(),
+            inputs=inputs_slice.contents.get_contents(),
+            input_lens=inputs_lens_slice.contents.get_contents(),
             host=self.host,
             port=self.port,
             start_time=start_time.contents.value,
             splits=splits.contents.get_contents(),
-            results_raw=results_raw_slice.contents.get_contents(),
-            results=results_slice.contents.get_decoded_contents(),
+            result_raw_journals=results_raw_slice.contents.get_contents(),
+            result_raw_journal_lens=results_raw_lens_slice.contents.get_contents(),
+            results=results_slice.contents.get_contents(),
+            result_lens=results_lens_slice.contents.get_contents(),
             results_failed_indicator=failed_indicator,
             textfsm_platform=self.ntc_templates_platform,
             genie_platform=self.genie_platform,
@@ -1339,13 +1358,19 @@ class Cli:
 
         operation_id_ptr = pointer(c_uint32(0))
 
-        _inputs = to_c_string(LIBSCRAPLI_DELIMITER.join(inputs))
+        encoded_inputs = [i.encode(encoding="utf-8") for i in inputs]
+
+        _inputs = pointer(ZigSlice.from_bytes(b"".join(encoded_inputs)))
+        _input_lens = pointer(
+            ZigU64Slice.from_list([len(encoded_input) for encoded_input in encoded_inputs])
+        )
         _requested_mode = to_c_string(requested_mode)
 
         self.ffi_mapping.cli_mapping.send_inputs(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             inputs=_inputs,
+            input_lens=_input_lens,
             requested_mode=_requested_mode,
             input_handling=input_handling._to_ffi(),
             retain_input=c_bool(retain_input),
@@ -1393,13 +1418,19 @@ class Cli:
 
         operation_id_ptr = pointer(c_uint32(0))
 
-        _inputs = to_c_string(LIBSCRAPLI_DELIMITER.join(inputs))
+        encoded_inputs = [i.encode(encoding="utf-8") for i in inputs]
+
+        _inputs = pointer(ZigSlice.from_bytes(b"".join(encoded_inputs)))
+        _input_lens = pointer(
+            ZigU64Slice.from_list([len(encoded_input) for encoded_input in encoded_inputs])
+        )
         _requested_mode = to_c_string(requested_mode)
 
         self.ffi_mapping.cli_mapping.send_inputs(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
             inputs=_inputs,
+            input_lens=_input_lens,
             requested_mode=_requested_mode,
             input_handling=input_handling._to_ffi(),
             retain_input=c_bool(retain_input),
@@ -1713,18 +1744,30 @@ class Cli:
                     callback.callback(self, result[search_start_idx:], result)
 
                 if callback.completes is True:
-                    return Result(
-                        inputs=initial_input,
+                    encoded_initial_input = initial_input.encode(encoding="utf-8")
+                    encoded_result = result.encode(encoding="utf-8")
+
+                    final_result = Result(
+                        inputs=encoded_initial_input,
+                        input_lens=[len(encoded_initial_input)],
                         host=self.host,
                         port=self.port,
                         start_time=start_time,
                         splits=[time_ns()],
-                        results_raw=result_raw,
-                        results=result,
+                        # no journal -- this op *accumulated* actual raw from the intermediate
+                        # reads, so raw is pre-materialized into the reconstruction cache below
+                        # rather than rebuilt from a journal
+                        result_raw_journals=b"",
+                        result_raw_journal_lens=[0],
+                        results=encoded_result,
+                        result_lens=[len(encoded_result)],
                         results_failed_indicator="",
                         textfsm_platform=self.ntc_templates_platform,
                         genie_platform=self.genie_platform,
                     )
+                    final_result._results_raw = [result_raw]
+
+                    return final_result
 
     @handle_operation_timeout_async
     async def read_with_callbacks_async(
@@ -1810,18 +1853,30 @@ class Cli:
                     await callback.callback_async(self, result[search_start_idx:], result)
 
                 if callback.completes is True:
-                    return Result(
-                        inputs=initial_input,
+                    encoded_initial_input = initial_input.encode(encoding="utf-8")
+                    encoded_result = result.encode(encoding="utf-8")
+
+                    final_result = Result(
+                        inputs=encoded_initial_input,
+                        input_lens=[len(encoded_initial_input)],
                         host=self.host,
                         port=self.port,
                         start_time=start_time,
                         splits=[time_ns()],
-                        results_raw=result_raw,
-                        results=result,
+                        # no journal -- this op *accumulated* actual raw from the intermediate
+                        # reads, so raw is pre-materialized into the reconstruction cache below
+                        # rather than rebuilt from a journal
+                        result_raw_journals=b"",
+                        result_raw_journal_lens=[0],
+                        results=encoded_result,
+                        result_lens=[len(encoded_result)],
                         results_failed_indicator="",
                         textfsm_platform=self.ntc_templates_platform,
                         genie_platform=self.genie_platform,
                     )
+                    final_result._results_raw = [result_raw]
+
+                    return final_result
 
     def replace_definition(self, definition_file_or_name: str) -> None:
         """

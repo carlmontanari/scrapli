@@ -41,14 +41,19 @@ Internet  172.31.254.2            -   c800.84b2.e9c2  ARPA   Vlan254""",
     ids=["to_dict_false", "to_dict_true"],
 )
 def test_result_textfsm_parse(result, to_dict, expected):
+    _input = b"show ip arp"
+
     r = Result(
         host="localhost",
         port=22,
-        inputs="show ip arp",
+        inputs=_input,
+        input_lens=[len(_input)],
         start_time=0,
         splits=[1],
-        results_raw=result.encode(),
-        results=result,
+        result_raw_journals=b"",
+        result_raw_journal_lens=[0],
+        results=result.encode(),
+        result_lens=[len(result)],
         results_failed_indicator="",
         textfsm_platform="cisco_ios",
         genie_platform="iosxe",
@@ -74,14 +79,19 @@ Internet  172.31.254.2            -   c800.84b2.e9c2  ARPA   Vlan254"""
 
     template = textfsm_get_template("cisco_ios", "show ip arp").name
 
+    _input = b"show ip arp"
+
     r = Result(
         host="localhost",
         port=22,
-        inputs="show ip arp",
+        inputs=_input,
+        input_lens=[len(_input)],
         start_time=0,
         splits=[1],
-        results_raw=result.encode(),
-        results=result,
+        result_raw_journals=b"",
+        result_raw_journal_lens=[0],
+        results=result.encode(),
+        result_lens=[len(result)],
         results_failed_indicator="",
         textfsm_platform="cisco_ios",
         genie_platform="iosxe",

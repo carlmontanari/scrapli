@@ -6,8 +6,6 @@
   },
   "cli": {
     "definition_str": "",
-    "normalize_line_feeds": "null",
-    "normalize_trailing_whitespace": "null"
   },
   "netconf": {
     "error_tag": "<errrrrrro>",
@@ -24,6 +22,8 @@
     "scratch_initial_size": null,
     "scratch_retain_max": null,
     "record_destination": ""
+    "normalize_line_feeds": "null",
+    "normalize_trailing_whitespace": "null"
   },
   "auth": {
     "username": "",

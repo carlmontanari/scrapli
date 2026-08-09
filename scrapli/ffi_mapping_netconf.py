@@ -23,6 +23,7 @@ from scrapli.ffi_types import (
     U64Pointer,
     USizePointer,
     ZigSlicePointer,
+    ZigU64SlicePointer,
 )
 
 
@@ -236,7 +237,8 @@ class LibScrapliNetconfMapping:
                 CancelPointer,
                 c_char_p,
                 c_char_p,
-                c_char_p,
+                ZigSlicePointer,
+                ZigU64SlicePointer,
             ],
             int,
         ] = lib.ls_netconf_raw_rpc
@@ -246,9 +248,40 @@ class LibScrapliNetconfMapping:
             CancelPointer,
             c_char_p,
             c_char_p,
-            c_char_p,
+            ZigSlicePointer,
+            ZigU64SlicePointer,
         ]
         lib.ls_netconf_raw_rpc.restype = c_uint8
+
+        self._get_reconstructed_result_raw_size: Callable[
+            [
+                ZigSlicePointer,
+                ZigSlicePointer,
+                USizePointer,
+            ],
+            int,
+        ] = lib.ls_netconf_get_reconstructed_result_raw_size
+        lib.ls_netconf_get_reconstructed_result_raw_size.argtypes = [
+            ZigSlicePointer,
+            ZigSlicePointer,
+            USizePointer,
+        ]
+        lib.ls_netconf_get_reconstructed_result_raw_size.restype = c_uint8
+
+        self._get_reconstructed_result_raw: Callable[
+            [
+                ZigSlicePointer,
+                ZigSlicePointer,
+                ZigSlicePointer,
+            ],
+            int,
+        ] = lib.ls_netconf_get_reconstructed_result_raw
+        lib.ls_netconf_get_reconstructed_result_raw.argtypes = [
+            ZigSlicePointer,
+            ZigSlicePointer,
+            ZigSlicePointer,
+        ]
+        lib.ls_netconf_get_reconstructed_result_raw.restype = c_uint8
 
         self._get_config: Callable[
             [
@@ -987,7 +1020,8 @@ class LibScrapliNetconfMapping:
         operation_id_ptr: OperationIdPointer,
         payload: c_char_p,
         base_namespace_prefix: c_char_p,
-        extra_namespaces: c_char_p,
+        extra_namespaces: ZigSlicePointer,
+        extra_namespace_lens: ZigU64SlicePointer,
     ) -> None:
         """
         Execute a "raw" / user defined rpc operation.
@@ -999,10 +1033,12 @@ class LibScrapliNetconfMapping:
             operation_id_ptr: int pointer to fill with the id of the submitted operation
             payload: the payload to write into the outer rpc element
             base_namespace_prefix: prefix to use for hte base/default netconf base namespace
-            extra_namespaces: extra namespace::prefix pairs (using "::" as split there), and
-                split by "__libscrapli__" for additional pairs. this plus the base namespace
-                prefix can allow for weird cases like nxos where the base namespace must be
-                prefixed and then additional namespaces indicating desired targets must be added
+            extra_namespaces: extra prefix/namespace pairs packed back-to-back, entries
+                alternating prefix, namespace (so the lens count is always even). this plus the
+                base namespace prefix can allow for weird cases like nxos where the base
+                namespace must be prefixed and then additional namespaces indicating desired
+                targets must be added
+            extra_namespace_lens: the length of each packed entry
 
         Returns:
             N/A
@@ -1019,9 +1055,81 @@ class LibScrapliNetconfMapping:
                 payload,
                 base_namespace_prefix,
                 extra_namespaces,
+                extra_namespace_lens,
             )
         ).raise_if_error(
             message="submitting raw rpc operation failed",
+        )
+
+    def get_reconstructed_result_raw_size(
+        self,
+        *,
+        result_slice: ZigSlicePointer,
+        result_raw_journal_slice: ZigSlicePointer,
+        raw_size: USizePointer,
+    ) -> None:
+        """
+        Get the size of the buffer needed to rebuild the result's raw into.
+
+        Should (generally) not be called directly/by users. Stateless -- valid whenever the
+        caller still holds the fetched (result, journal) pair, including after driver teardown.
+
+        Args:
+            result_slice: slice wrapping the result
+            result_raw_journal_slice: slice wrapping the raw journal
+            raw_size: int pointer to fill with the reconstructed raw size
+
+        Returns:
+            N/A
+
+        Raises:
+            FFIException: if the size cant be computed (i.e. corrupt journal)
+
+        """
+        LibScrapliFFIResult(
+            self._get_reconstructed_result_raw_size(
+                result_slice,
+                result_raw_journal_slice,
+                raw_size,
+            )
+        ).raise_if_error(
+            message="getting reconstructed result raw size failed",
+        )
+
+    def get_reconstructed_result_raw(
+        self,
+        *,
+        result_slice: ZigSlicePointer,
+        result_raw_journal_slice: ZigSlicePointer,
+        result_raw_slice: ZigSlicePointer,
+    ) -> None:
+        """
+        Reconstruct the result's raw from its (result, journal) pair.
+
+        Should (generally) not be called directly/by users. Stateless -- valid whenever the
+        caller still holds the fetched (result, journal) pair, including after driver teardown.
+
+        Args:
+            result_slice: slice wrapping the result
+            result_raw_journal_slice: slice wrapping the raw journal
+            result_raw_slice: pre allocated slice (sized via get_reconstructed_result_raw_size)
+                to fill with the reconstructed raw
+
+        Returns:
+            N/A
+
+        Raises:
+            FFIException: if reconstruction failed (i.e. corrupt journal)
+
+        """
+        LibScrapliFFIResult(
+            self._get_reconstructed_result_raw(
+                result_slice,
+                result_raw_journal_slice,
+                result_raw_slice,
+            )
+        ).raise_if_error(
+            message="reconstructing result raw failed",
         )
 
     def get_config(

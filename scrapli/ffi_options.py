@@ -39,8 +39,6 @@ class CLI(Structure):
     _fields_: ClassVar[list[tuple[str, Any]]] = [
         ("definition_str", c_char_p),
         ("definition_str_len", c_size_t),
-        ("normalize_line_feeds", BoolPointer),
-        ("normalize_trailing_whitespace", BoolPointer),
     ]
 
 
@@ -97,6 +95,9 @@ class Session(Structure):
         ("record_callback", RecorderCallbackC),
         ("scratch_initial_size", U64Pointer),
         ("scratch_retain_max", U64Pointer),
+        # note: explicitly overwritten/ignored when the driver is netconf
+        ("normalize_line_feeds", BoolPointer),
+        ("normalize_trailing_whitespace", BoolPointer),
     ]
 
 

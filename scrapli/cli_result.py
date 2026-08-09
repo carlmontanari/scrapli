@@ -1,11 +1,39 @@
 """scrapli.result"""
 
+from ctypes import c_size_t, pointer
 from typing import Any, TextIO
 
 from scrapli.cli_parse import genie_parse, textfsm_get_template, textfsm_parse
 from scrapli.exceptions import ParsingException
-from scrapli.ffi_types import LIBSCRAPLI_DELIMITER
+from scrapli.ffi_types import ZigSlice
 from scrapli.helper import bulid_result_preview, unix_nano_timestmap_to_iso
+
+
+def _split_packed(data: bytes, lens: list[int]) -> list[bytes]:
+    """
+    Split a packed (back-to-back, no delimiters) buffer apart using the given lens.
+
+    Args:
+        data: the packed buffer
+        lens: the length of each entry in the packed buffer
+
+    Returns:
+        list[bytes]: the entries
+
+    Raises:
+        N/A
+
+    """
+    out = []
+
+    cur = 0
+
+    for length in lens:
+        out.append(data[cur : cur + length])
+
+        cur += length
+
+    return out
 
 
 class Result:
@@ -28,25 +56,33 @@ class Result:
         *,
         host: str,
         port: int,
-        inputs: str,
+        inputs: bytes,
+        input_lens: list[int],
         start_time: int,
         splits: list[int],
-        results_raw: bytes,
-        results: str,
+        result_raw_journals: bytes,
+        result_raw_journal_lens: list[int],
+        results: bytes,
+        result_lens: list[int],
         results_failed_indicator: str,
         textfsm_platform: str,
         genie_platform: str,
     ) -> None:
         self.host = host
         self.port = port
-        self.inputs = inputs.split(LIBSCRAPLI_DELIMITER)
+        self.inputs = [i.decode() for i in _split_packed(inputs, input_lens)]
         self.start_time = start_time
         self.splits = splits
-        self.results_raw = results_raw.split(LIBSCRAPLI_DELIMITER.encode())
-        self.results = results.split(LIBSCRAPLI_DELIMITER)
+        self.results = [r.decode() for r in _split_packed(results, result_lens)]
         self.results_failed_indicator = results_failed_indicator
         self.textfsm_platform = textfsm_platform
         self.genie_platform = genie_platform
+
+        # each entry's *journal* of the content that was cleaned out of the corresponding
+        # result -- raw is never stored, its reconstructed (lazily, see results_raw) from the
+        # (result, journal) pair on demand
+        self._result_raw_journals = _split_packed(result_raw_journals, result_raw_journal_lens)
+        self._results_raw: list[bytes] | None = None
 
     def __repr__(self) -> str:
         """
@@ -108,9 +144,13 @@ class Result:
 
         """
         self.inputs.extend(result.inputs)
-        self.results_raw.extend(result.results_raw)
         self.results.extend(result.results)
         self.splits.extend(result.splits)
+
+        self._result_raw_journals.extend(result._result_raw_journals)
+        # drop any cached reconstruction, itll rebuild (now including the extended entries)
+        # on next access
+        self._results_raw = None
 
     @property
     def failed(self) -> bool:
@@ -185,6 +225,78 @@ class Result:
 
         """
         return "\n".join(self.results)
+
+    @property
+    def results_raw(self) -> list[bytes]:
+        """
+        Returns the raw (as in wire-exact) bytes of each result.
+
+        Raw is never shipped over the ffi boundary or stored -- each entry is reconstructed
+        (then cached) from its (result, journal) pair on first access.
+
+        Args:
+            N/A
+
+        Returns:
+            list[bytes]: the raw result entries
+
+        Raises:
+            N/A
+
+        """
+        if self._results_raw is None:
+            self._results_raw = [
+                self._reconstruct_result_raw(index=index) for index in range(len(self.results))
+            ]
+
+        return self._results_raw
+
+    def _reconstruct_result_raw(self, index: int) -> bytes:
+        """
+        Reconstructs a single entry's raw output from its (result, journal) pair.
+
+        Args:
+            index: the index of the result to reconstruct
+
+        Returns:
+            bytes: the reconstructed raw entry
+
+        Raises:
+            N/A
+
+        """
+        # deferred to avoid circular imports (and to only pay for it when raw is fetched)
+        from scrapli.ffi_mapping import LibScrapliMapping  # noqa: PLC0415
+
+        result = self.results[index].encode()
+        journal = self._result_raw_journals[index]
+
+        if not journal:
+            # empty journal means nothing was ever cleaned out of this entry, raw == result
+            return result
+
+        result_slice = pointer(ZigSlice.from_bytes(result))
+        journal_slice = pointer(ZigSlice.from_bytes(journal))
+
+        raw_size = pointer(c_size_t())
+
+        mapping = LibScrapliMapping()
+
+        mapping.cli_mapping.get_reconstructed_result_raw_size(
+            result_slice=result_slice,
+            result_raw_journal_slice=journal_slice,
+            raw_size=raw_size,
+        )
+
+        result_raw_slice = pointer(ZigSlice(size=raw_size.contents))
+
+        mapping.cli_mapping.get_reconstructed_result_raw(
+            result_slice=result_slice,
+            result_raw_journal_slice=journal_slice,
+            result_raw_slice=result_raw_slice,
+        )
+
+        return result_raw_slice.contents.get_contents()
 
     @property
     def result_raw(self) -> bytes:

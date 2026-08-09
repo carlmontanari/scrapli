@@ -75,8 +75,6 @@ else:
     StringPointer: TypeAlias = POINTER(c_char_p)
 
 
-LIBSCRAPLI_DELIMITER = "__libscrapli__"
-
 # cancellation is handled via timeout in python (vs context cancellation in go), so just have
 # an always false cancellation pointer
 CANCEL = CancelPointer(c_bool(False))
@@ -184,6 +182,28 @@ class ZigU64Slice(Structure):
 
         super().__init__()
 
+    @classmethod
+    def from_list(cls, vals: list[int]) -> "ZigU64Slice":
+        """
+        Builds a ZigU64Slice from an existing list of ints.
+
+        Args:
+            vals: the ints to fill the slice with
+
+        Returns:
+            ZigU64Slice: the built slice
+
+        Raises:
+            N/A
+
+        """
+        slice_ = cls(size=c_uint64(len(vals)))
+
+        for idx, val in enumerate(vals):
+            slice_.ptr[idx] = val
+
+        return slice_
+
     def get_contents(self) -> list[int]:
         """
         Return the contents of the slice as a list of ints.
@@ -235,6 +255,32 @@ class ZigSlice(Structure):
         self.len = size.value
 
         super().__init__()
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> "ZigSlice":
+        """
+        Builds a ZigSlice wrapping (a copy of) the given bytes.
+
+        Args:
+            data: the bytes to fill the slice with
+
+        Returns:
+            ZigSlice: the built slice
+
+        Raises:
+            N/A
+
+        """
+        slice_ = cls(size=c_size_t(len(data)))
+
+        # hold a reference to the backing buffer so it lives as long as the slice does
+        backing = create_string_buffer(data, len(data))
+        slice_._backing = backing
+
+        slice_.ptr = cast(backing, POINTER(c_uint8))
+        slice_.len = len(data)
+
+        return slice_
 
     def get_contents(self) -> bytes:
         """
