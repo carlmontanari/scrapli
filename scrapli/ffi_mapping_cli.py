@@ -104,6 +104,7 @@ class LibScrapliCliMapping:
                 DriverPointer,
                 OperationIdPointer,
                 CancelPointer,
+                c_bool,
             ],
             int,
         ] = lib.ls_cli_close
@@ -499,6 +500,7 @@ class LibScrapliCliMapping:
         self,
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
+        force: c_bool,
     ) -> None:
         """
         Close the driver at ptr.
@@ -509,6 +511,7 @@ class LibScrapliCliMapping:
             ptr: the ptr to the libscrapli cli object.
             operation_id_ptr: c_int pointer that is filled with the operation id to poll for
                 completion.
+            force: force close the connection.
 
         Returns:
             N/A
@@ -522,6 +525,7 @@ class LibScrapliCliMapping:
                 ptr,
                 operation_id_ptr,
                 CANCEL,
+                force,
             )
         ).raise_if_error(
             message="failed submitting close operation",

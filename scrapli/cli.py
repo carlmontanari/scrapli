@@ -756,20 +756,24 @@ class Cli:
         self,
         *,
         operation_id_ptr: OperationIdPointer,
+        force: c_bool,
     ) -> None:
         self.ffi_mapping.cli_mapping.close(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            force=force,
         )
 
     def close(
         self,
+        *,
+        force: bool = False,
     ) -> Result:
         """
         Close the cli connection.
 
         Args:
-            N/A
+            force: force close the connection -- skips sending any on exit inputs.
 
         Returns:
             None
@@ -780,8 +784,9 @@ class Cli:
 
         """
         operation_id_ptr = pointer(c_uint32(0))
+        _force = c_bool(force)
 
-        self._close(operation_id_ptr=operation_id_ptr)
+        self._close(operation_id_ptr=operation_id_ptr, force=_force)
 
         result = self._get_result(operation_id_ptr=operation_id_ptr)
 
@@ -791,12 +796,14 @@ class Cli:
 
     async def close_async(
         self,
+        *,
+        force: bool = False,
     ) -> Result:
         """
         Close the cli connection.
 
         Args:
-            N/A
+            force: force close the connection -- skips sending any on exit inputs.
 
         Returns:
             None
@@ -807,8 +814,9 @@ class Cli:
 
         """
         operation_id_ptr = pointer(c_uint32(0))
+        _force = c_bool(force)
 
-        self._close(operation_id_ptr=operation_id_ptr)
+        self._close(operation_id_ptr=operation_id_ptr, force=_force)
 
         result = await self._get_result_async(operation_id_ptr=operation_id_ptr)
 
