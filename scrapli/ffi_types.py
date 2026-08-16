@@ -76,11 +76,6 @@ else:
     StringPointer: TypeAlias = POINTER(c_char_p)
 
 
-# cancellation is (usually) handled via timeout in python (vs context cancellation in go), so just
-# have an always false cancellation pointer
-CANCEL = CancelPointer(c_bool(False))
-
-
 class Cancel:
     """Wrapper to provide ergonomic cancellation for ops."""
 

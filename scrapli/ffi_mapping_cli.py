@@ -11,7 +11,6 @@ from ctypes import (
 )
 
 from scrapli.ffi_types import (
-    CANCEL,
     BoolPointer,
     CancelPointer,
     DriverPointer,
@@ -970,6 +969,7 @@ class LibScrapliCliMapping:
         self,
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
+        cancel: CancelPointer,
     ) -> None:
         """
         Read any available data from the session, up to the normal timeout behavior.
@@ -979,6 +979,7 @@ class LibScrapliCliMapping:
         Args:
             ptr: the ptr to the libscrapli cli/netconf object.
             operation_id_ptr: pointer to fill with the id of the submitted operation
+            cancel: the cancellation bool
 
         Returns:
             N/A
@@ -991,7 +992,7 @@ class LibScrapliCliMapping:
             self._read_any(
                 ptr,
                 operation_id_ptr,
-                CANCEL,
+                cancel,
             )
         ).raise_if_error(
             message="submitting read any operation failed",

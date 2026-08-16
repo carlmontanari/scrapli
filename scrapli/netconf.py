@@ -30,6 +30,7 @@ from scrapli.exceptions import (
 from scrapli.ffi_mapping import LibScrapliMapping
 from scrapli.ffi_options import DriverOptions, DriverOptionsPointer
 from scrapli.ffi_types import (
+    Cancel,
     DriverPointer,
     IntPointer,
     NetconfCapabilitesCallback,
@@ -710,6 +711,7 @@ class Netconf:
         self,
         *,
         operation_id_ptr: OperationIdPointer,
+        cancel: Cancel,
     ) -> None:
         options_ptr = self.ffi_mapping.shared_mapping.alloc_driver_options()
         options = cast(options_ptr, POINTER(DriverOptions))
@@ -735,20 +737,26 @@ class Netconf:
             self.ffi_mapping.netconf_mapping.open(
                 ptr=self._ptr_or_exception(),
                 operation_id_ptr=operation_id_ptr,
+                cancel=cancel._to_ffi(),
             )
         except FFIException:
             self._free()
 
             raise
 
+    @handle_operation_timeout
     def open(
         self,
+        *,
+        operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Open the netconf connection.
 
         Args:
-            N/A
+            operation_timeout_ns: operation timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             None
@@ -757,18 +765,31 @@ class Netconf:
             OpenException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
+        # only used in the decorator
+        _ = operation_timeout_ns
+
         operation_id_ptr = OperationIdPointer(c_uint32(0))
 
-        self._open(operation_id_ptr=operation_id_ptr)
+        self._open(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
-        return self._get_result(operation_id_ptr=operation_id_ptr)
+        return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
-    async def open_async(self) -> Result:
+    @handle_operation_timeout_async
+    async def open_async(
+        self,
+        *,
+        operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
+    ) -> Result:
         """
         Open the netconf connection.
 
         Args:
-            N/A
+            operation_timeout_ns: operation timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             None
@@ -777,34 +798,47 @@ class Netconf:
             OpenException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
+        # only used in the decorator
+        _ = operation_timeout_ns
+
         operation_id_ptr = OperationIdPointer(c_uint32(0))
 
-        self._open(operation_id_ptr=operation_id_ptr)
+        self._open(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
-        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     def _close(
         self,
         *,
         operation_id_ptr: OperationIdPointer,
+        cancel: Cancel,
         force: c_bool,
     ) -> None:
         self.ffi_mapping.netconf_mapping.close(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             force=force,
         )
 
+    @handle_operation_timeout
     def close(
         self,
         *,
         force: bool = False,
+        operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Close the netconf connection.
 
         Args:
             force: skips sending a close-session rpc and just directly shuts down the connection
+            operation_timeout_ns: operation timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             None
@@ -814,27 +848,38 @@ class Netconf:
             CloseException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
+        # only used in the decorator
+        _ = operation_timeout_ns
+
         operation_id_ptr = OperationIdPointer(c_uint32(0))
         _force = c_bool(force)
 
-        self._close(operation_id_ptr=operation_id_ptr, force=_force)
+        self._close(operation_id_ptr=operation_id_ptr, cancel=cancel, force=_force)
 
-        result = self._get_result(operation_id_ptr=operation_id_ptr)
+        result = self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
         self._free()
 
         return result
 
+    @handle_operation_timeout_async
     async def close_async(
         self,
         *,
         force: bool = False,
+        operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Close the netconf connection.
 
         Args:
             force: skips sending a close-session rpc and just directly shuts down the connection
+            operation_timeout_ns: operation timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             None
@@ -844,12 +889,18 @@ class Netconf:
             CloseException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
+        # only used in the decorator
+        _ = operation_timeout_ns
+
         operation_id_ptr = OperationIdPointer(c_uint32(0))
         _force = c_bool(force)
 
-        self._close(operation_id_ptr=operation_id_ptr, force=_force)
+        self._close(operation_id_ptr=operation_id_ptr, cancel=cancel, force=_force)
 
-        result = await self._get_result_async(operation_id_ptr=operation_id_ptr)
+        result = await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
         self._free()
 
@@ -858,10 +909,11 @@ class Netconf:
     def _get_result(
         self,
         operation_id_ptr: OperationIdPointer,
+        cancel: Cancel,
     ) -> Result:
         wait_for_available_operation_result(
             self.poll_fd,
-            cancel=None,  # TODO
+            cancel=cancel,
             operation_id_ptr=operation_id_ptr,
         )
 
@@ -935,10 +987,11 @@ class Netconf:
     async def _get_result_async(
         self,
         operation_id_ptr: OperationIdPointer,
+        cancel: Cancel,
     ) -> Result:
         await wait_for_available_operation_result_async(
             self.poll_fd,
-            cancel=None,  # TODO
+            cancel=cancel,
             operation_id_ptr=operation_id_ptr,
         )
 
@@ -1148,6 +1201,7 @@ class Netconf:
         base_namespace_prefix: str = "",
         extra_namespaces: list[tuple[str, str]] | None = None,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute a "raw" / user crafted rpc operation.
@@ -1159,6 +1213,7 @@ class Netconf:
                 namespace prefix can allow for weird cases like nxos where the base namespace must
                 be prefixed and then additional namespaces indicating desired targets must be added
             operation_timeout_ns: operation timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1168,6 +1223,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -1191,13 +1249,14 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.raw_rpc(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             payload=_payload,
             base_namespace_prefix=_base_namespace_prefix,
             extra_namespaces=_extra_namespaces,
             extra_namespace_lens=_extra_namespace_lens,
         )
 
-        return self._get_result(operation_id_ptr=operation_id_ptr)
+        return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout_async
     async def raw_rpc_async(
@@ -1207,6 +1266,7 @@ class Netconf:
         base_namespace_prefix: str = "",
         extra_namespaces: list[tuple[str, str]] | None = None,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute a "raw" / user crafted rpc operation.
@@ -1218,6 +1278,7 @@ class Netconf:
                 namespace prefix can allow for weird cases like nxos where the base namespace must
                 be prefixed and then additional namespaces indicating desired targets must be added
             operation_timeout_ns: operation timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1227,6 +1288,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -1250,13 +1314,14 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.raw_rpc(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             payload=_payload,
             base_namespace_prefix=_base_namespace_prefix,
             extra_namespaces=_extra_namespaces,
             extra_namespace_lens=_extra_namespace_lens,
         )
 
-        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout
     def get_config(  # noqa: PLR0913
@@ -1269,6 +1334,7 @@ class Netconf:
         filter_namespace: str = "",
         defaults_type: DefaultsType = DefaultsType.UNSET,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute a get-config rpc operation.
@@ -1281,6 +1347,7 @@ class Netconf:
             filter_namespace: filter namespace
             defaults_type: defaults type to apply to the get-config, "unset" means dont apply one
             operation_timeout_ns: operation timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1290,6 +1357,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -1302,6 +1372,7 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.get_config(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             source=source._to_ffi(),
             filter_=_filter,
             filter_type=filter_type._to_ffi(),
@@ -1310,7 +1381,7 @@ class Netconf:
             defaults_type=defaults_type._to_ffi(),
         )
 
-        return self._get_result(operation_id_ptr=operation_id_ptr)
+        return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout_async
     async def get_config_async(  # noqa: PLR0913
@@ -1323,6 +1394,7 @@ class Netconf:
         filter_namespace: str = "",
         defaults_type: DefaultsType = DefaultsType.UNSET,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute a get-config rpc operation.
@@ -1335,6 +1407,7 @@ class Netconf:
             filter_namespace: filter namespace
             defaults_type: defaults type to apply to the get-config, "unset" means dont apply one
             operation_timeout_ns: operation timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1344,6 +1417,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -1356,6 +1432,7 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.get_config(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             source=source._to_ffi(),
             filter_=_filter,
             filter_type=filter_type._to_ffi(),
@@ -1364,7 +1441,7 @@ class Netconf:
             defaults_type=defaults_type._to_ffi(),
         )
 
-        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout
     def edit_config(  # noqa: PLR0913
@@ -1376,6 +1453,7 @@ class Netconf:
         test_option: TestOption = TestOption.UNSET,
         error_option: ErrorOption = ErrorOption.UNSET,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute an edit-config rpc operation.
@@ -1387,6 +1465,7 @@ class Netconf:
             test_option: the value (or none) for the test option field
             error_option: the value (or none) for the error option field
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1396,6 +1475,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -1406,6 +1488,7 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.edit_config(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             config=_config,
             target=target._to_ffi(),
             default_operation=default_operation._to_ffi(),
@@ -1413,7 +1496,7 @@ class Netconf:
             error_option=error_option._to_ffi(),
         )
 
-        return self._get_result(operation_id_ptr=operation_id_ptr)
+        return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout_async
     async def edit_config_async(  # noqa: PLR0913
@@ -1425,6 +1508,7 @@ class Netconf:
         test_option: TestOption = TestOption.UNSET,
         error_option: ErrorOption = ErrorOption.UNSET,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute an edit-config rpc operation.
@@ -1436,6 +1520,7 @@ class Netconf:
             test_option: the value (or none) for the test option field
             error_option: the value (or none) for the error option field
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1445,6 +1530,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -1455,6 +1543,7 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.edit_config(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             config=_config,
             target=target._to_ffi(),
             default_operation=default_operation._to_ffi(),
@@ -1462,7 +1551,7 @@ class Netconf:
             error_option=error_option._to_ffi(),
         )
 
-        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout
     def copy_config(
@@ -1471,6 +1560,7 @@ class Netconf:
         target: DatastoreType = DatastoreType.RUNNING,
         source: DatastoreType = DatastoreType.STARTUP,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute a copy-config rpc operation.
@@ -1479,6 +1569,7 @@ class Netconf:
             target: target to copy *to*
             source: source to copy *from*
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1488,6 +1579,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -1496,11 +1590,12 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.copy_config(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             target=target._to_ffi(),
             source=source._to_ffi(),
         )
 
-        return self._get_result(operation_id_ptr=operation_id_ptr)
+        return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout_async
     async def copy_config_async(
@@ -1509,6 +1604,7 @@ class Netconf:
         target: DatastoreType = DatastoreType.RUNNING,
         source: DatastoreType = DatastoreType.STARTUP,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute a copy-config rpc operation.
@@ -1517,6 +1613,7 @@ class Netconf:
             target: target to copy *to*
             source: source to copy *from*
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1526,6 +1623,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -1534,11 +1634,12 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.copy_config(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             target=target._to_ffi(),
             source=source._to_ffi(),
         )
 
-        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout
     def delete_config(
@@ -1546,6 +1647,7 @@ class Netconf:
         *,
         target: DatastoreType = DatastoreType.RUNNING,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute a delete-config rpc operation.
@@ -1553,6 +1655,7 @@ class Netconf:
         Args:
             target: target datastore to delete
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1562,6 +1665,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -1570,10 +1676,11 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.delete_config(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             target=target._to_ffi(),
         )
 
-        return self._get_result(operation_id_ptr=operation_id_ptr)
+        return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout_async
     async def delete_config_async(
@@ -1581,6 +1688,7 @@ class Netconf:
         *,
         target: DatastoreType = DatastoreType.RUNNING,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute a delete-config rpc operation.
@@ -1588,6 +1696,7 @@ class Netconf:
         Args:
             target: target datastore to delete
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1597,6 +1706,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -1605,10 +1717,11 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.delete_config(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             target=target._to_ffi(),
         )
 
-        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout
     def lock(
@@ -1616,6 +1729,7 @@ class Netconf:
         *,
         target: DatastoreType = DatastoreType.RUNNING,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute a lock rpc operation.
@@ -1623,6 +1737,7 @@ class Netconf:
         Args:
             target: target datastore to lock
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1632,6 +1747,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -1640,10 +1758,11 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.lock(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             target=target._to_ffi(),
         )
 
-        return self._get_result(operation_id_ptr=operation_id_ptr)
+        return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout_async
     async def lock_async(
@@ -1651,6 +1770,7 @@ class Netconf:
         *,
         target: DatastoreType = DatastoreType.RUNNING,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute a lock rpc operation.
@@ -1658,6 +1778,7 @@ class Netconf:
         Args:
             target: target datastore to lock
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1667,6 +1788,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -1675,10 +1799,11 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.lock(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             target=target._to_ffi(),
         )
 
-        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout
     def unlock(
@@ -1686,6 +1811,7 @@ class Netconf:
         *,
         target: DatastoreType = DatastoreType.RUNNING,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute an unlock rpc operation.
@@ -1693,6 +1819,7 @@ class Netconf:
         Args:
             target: target datastore to unlock
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1702,6 +1829,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -1710,10 +1840,11 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.unlock(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             target=target._to_ffi(),
         )
 
-        return self._get_result(operation_id_ptr=operation_id_ptr)
+        return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout_async
     async def unlock_async(
@@ -1721,6 +1852,7 @@ class Netconf:
         *,
         target: DatastoreType = DatastoreType.RUNNING,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute an unlock rpc operation.
@@ -1728,6 +1860,7 @@ class Netconf:
         Args:
             target: target datastore to unlock
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1737,6 +1870,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -1745,10 +1881,11 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.unlock(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             target=target._to_ffi(),
         )
 
-        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout
     def get(  # noqa: PLR0913
@@ -1760,6 +1897,7 @@ class Netconf:
         filter_namespace: str = "",
         defaults_type: DefaultsType = DefaultsType.UNSET,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute a get rpc operation.
@@ -1771,6 +1909,7 @@ class Netconf:
             filter_namespace: filter namespace
             defaults_type: defaults type to apply to the get-config, "unset" means dont apply one
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1780,6 +1919,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -1792,6 +1934,7 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.get(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             filter_=_filter,
             filter_type=filter_type._to_ffi(),
             filter_namespace_prefix=_filter_namespace_prefix,
@@ -1799,7 +1942,7 @@ class Netconf:
             defaults_type=defaults_type._to_ffi(),
         )
 
-        return self._get_result(operation_id_ptr=operation_id_ptr)
+        return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout_async
     async def get_async(  # noqa: PLR0913
@@ -1811,6 +1954,7 @@ class Netconf:
         filter_namespace: str = "",
         defaults_type: DefaultsType = DefaultsType.UNSET,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute a get rpc operation.
@@ -1822,6 +1966,7 @@ class Netconf:
             filter_namespace: filter namespace
             defaults_type: defaults type to apply to the get-config, "unset" means dont apply one
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1831,6 +1976,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -1843,6 +1991,7 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.get(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             filter_=_filter,
             filter_type=filter_type._to_ffi(),
             filter_namespace_prefix=_filter_namespace_prefix,
@@ -1850,19 +1999,21 @@ class Netconf:
             defaults_type=defaults_type._to_ffi(),
         )
 
-        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout
     def close_session(
         self,
         *,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute a close-session rpc operation.
 
         Args:
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1872,6 +2023,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -1880,21 +2034,24 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.close_session(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
         )
 
-        return self._get_result(operation_id_ptr=operation_id_ptr)
+        return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout_async
     async def close_session_async(
         self,
         *,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute a close-session rpc operation.
 
         Args:
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1904,6 +2061,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -1912,9 +2072,10 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.close_session(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
         )
 
-        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout
     def kill_session(
@@ -1922,6 +2083,7 @@ class Netconf:
         session_id: int,
         *,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute a kill-session rpc operation.
@@ -1929,6 +2091,7 @@ class Netconf:
         Args:
             session_id: session id to kill
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1938,6 +2101,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -1946,10 +2112,11 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.kill_session(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             session_id=c_int(session_id),
         )
 
-        return self._get_result(operation_id_ptr=operation_id_ptr)
+        return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout_async
     async def kill_session_async(
@@ -1957,6 +2124,7 @@ class Netconf:
         session_id: int,
         *,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute a kill-session rpc operation.
@@ -1964,6 +2132,7 @@ class Netconf:
         Args:
             session_id: session id to kill
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1973,6 +2142,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -1981,22 +2153,25 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.kill_session(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             session_id=c_int(session_id),
         )
 
-        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout
     def commit(
         self,
         *,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute a commit rpc operation.
 
         Args:
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -2006,6 +2181,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -2014,21 +2192,24 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.commit(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
         )
 
-        return self._get_result(operation_id_ptr=operation_id_ptr)
+        return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout_async
     async def commit_async(
         self,
         *,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute a commit rpc operation.
 
         Args:
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -2038,6 +2219,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -2046,21 +2230,24 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.commit(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
         )
 
-        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout
     def discard(
         self,
         *,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute a discard rpc operation.
 
         Args:
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -2070,6 +2257,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -2078,21 +2268,24 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.discard(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
         )
 
-        return self._get_result(operation_id_ptr=operation_id_ptr)
+        return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout_async
     async def discard_async(
         self,
         *,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute a discard rpc operation.
 
         Args:
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -2102,6 +2295,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -2110,9 +2306,10 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.discard(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
         )
 
-        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout
     def cancel_commit(
@@ -2120,6 +2317,7 @@ class Netconf:
         *,
         persist_id: str | None = None,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute a cancel-commit rpc operation.
@@ -2127,6 +2325,7 @@ class Netconf:
         Args:
             persist_id: optional persist-id value
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -2136,6 +2335,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -2146,10 +2348,11 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.cancel_commit(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             persist_id=_persist_id,
         )
 
-        return self._get_result(operation_id_ptr=operation_id_ptr)
+        return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout_async
     async def cancel_commit_async(
@@ -2157,6 +2360,7 @@ class Netconf:
         *,
         persist_id: str | None = None,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute a cancel-commit rpc operation.
@@ -2164,6 +2368,7 @@ class Netconf:
         Args:
             persist_id: optional persist-id value
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -2173,6 +2378,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -2183,10 +2391,11 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.cancel_commit(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             persist_id=_persist_id,
         )
 
-        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout
     def validate(
@@ -2194,6 +2403,7 @@ class Netconf:
         *,
         source: DatastoreType = DatastoreType.RUNNING,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute a validate rpc operation.
@@ -2201,6 +2411,7 @@ class Netconf:
         Args:
             source: datastore to validate
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -2210,6 +2421,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -2218,10 +2432,11 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.validate(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             source=source._to_ffi(),
         )
 
-        return self._get_result(operation_id_ptr=operation_id_ptr)
+        return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout_async
     async def validate_async(
@@ -2229,6 +2444,7 @@ class Netconf:
         *,
         source: DatastoreType = DatastoreType.RUNNING,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute a validate rpc operation.
@@ -2236,6 +2452,7 @@ class Netconf:
         Args:
             source: datastore to validate
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -2245,6 +2462,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -2253,10 +2473,11 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.validate(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             source=source._to_ffi(),
         )
 
-        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout
     def get_schema(
@@ -2266,6 +2487,7 @@ class Netconf:
         version: str = "",
         format_: SchemaFormat = SchemaFormat.YANG,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute a get-schema rpc operation.
@@ -2275,6 +2497,7 @@ class Netconf:
             version: optional schema version to request
             format_: schema format to apply
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -2284,6 +2507,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -2295,12 +2521,13 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.get_schema(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             identifier=_identifier,
             version=_version,
             format_=format_._to_ffi(),
         )
 
-        return self._get_result(operation_id_ptr=operation_id_ptr)
+        return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout_async
     async def get_schema_async(
@@ -2310,6 +2537,7 @@ class Netconf:
         version: str = "",
         format_: SchemaFormat = SchemaFormat.YANG,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute a get-schema rpc operation.
@@ -2319,6 +2547,7 @@ class Netconf:
             version: optional schema version to request
             format_: schema format to apply
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -2328,6 +2557,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -2339,12 +2571,13 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.get_schema(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             identifier=_identifier,
             version=_version,
             format_=format_._to_ffi(),
         )
 
-        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout
     def get_data(  # noqa: PLR0913
@@ -2361,6 +2594,7 @@ class Netconf:
         with_origin: bool = False,
         defaults_type: DefaultsType = DefaultsType.UNSET,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute a get-data rpc operation.
@@ -2377,6 +2611,7 @@ class Netconf:
             with_origin: include origin data
             defaults_type: defaults type to apply to the get-config, "unset" means dont apply one
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -2386,6 +2621,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -2399,6 +2637,7 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.get_data(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             source=source._to_ffi(),
             filter_=_filter,
             filter_type=filter_type._to_ffi(),
@@ -2411,7 +2650,7 @@ class Netconf:
             defaults_type=defaults_type._to_ffi(),
         )
 
-        return self._get_result(operation_id_ptr=operation_id_ptr)
+        return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout_async
     async def get_data_async(  # noqa: PLR0913
@@ -2428,6 +2667,7 @@ class Netconf:
         with_origin: bool = False,
         defaults_type: DefaultsType = DefaultsType.UNSET,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute a get-data rpc operation.
@@ -2444,6 +2684,7 @@ class Netconf:
             with_origin: include origin data
             defaults_type: defaults type to apply to the get-config, "unset" means dont apply one
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -2453,6 +2694,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -2466,6 +2710,7 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.get_data(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             source=source._to_ffi(),
             filter_=_filter,
             filter_type=filter_type._to_ffi(),
@@ -2478,7 +2723,7 @@ class Netconf:
             defaults_type=defaults_type._to_ffi(),
         )
 
-        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout
     def edit_data(
@@ -2488,6 +2733,7 @@ class Netconf:
         target: DatastoreType = DatastoreType.RUNNING,
         default_operation: DefaultOperation = DefaultOperation.UNSET,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute an edit-data rpc operation.
@@ -2497,6 +2743,7 @@ class Netconf:
             target: datastore to target
             default_operation: value (or none) for default operation field
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -2506,6 +2753,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -2516,12 +2766,13 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.edit_data(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             content=_content,
             target=target._to_ffi(),
             default_operation=default_operation._to_ffi(),
         )
 
-        return self._get_result(operation_id_ptr=operation_id_ptr)
+        return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout_async
     async def edit_data_async(
@@ -2531,6 +2782,7 @@ class Netconf:
         target: DatastoreType = DatastoreType.RUNNING,
         default_operation: DefaultOperation = DefaultOperation.UNSET,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute an edit-data rpc operation.
@@ -2540,6 +2792,7 @@ class Netconf:
             target: datastore to target
             default_operation: value (or none) for default operation field
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -2549,6 +2802,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -2559,12 +2815,13 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.edit_data(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             content=_content,
             target=target._to_ffi(),
             default_operation=default_operation._to_ffi(),
         )
 
-        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout
     def action(
@@ -2572,6 +2829,7 @@ class Netconf:
         action: str,
         *,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute an action rpc operation.
@@ -2579,6 +2837,7 @@ class Netconf:
         Args:
             action: action to execute
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -2588,6 +2847,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -2598,10 +2860,11 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.action(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             action=_action,
         )
 
-        return self._get_result(operation_id_ptr=operation_id_ptr)
+        return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout_async
     async def action_async(
@@ -2609,6 +2872,7 @@ class Netconf:
         action: str,
         *,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Execute an action rpc operation.
@@ -2616,6 +2880,7 @@ class Netconf:
         Args:
             action: action to execute
             operation_timeout_ns: optional timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -2625,6 +2890,9 @@ class Netconf:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -2635,7 +2903,8 @@ class Netconf:
         self.ffi_mapping.netconf_mapping.action(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             action=_action,
         )
 
-        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)

@@ -1855,6 +1855,7 @@ class Cli:
             self.ffi_mapping.cli_mapping.read_any(
                 ptr=self._ptr_or_exception(),
                 operation_id_ptr=operation_id_ptr,
+                cancel=cancel._to_ffi(),
             )
 
             intermediate_result = self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
@@ -1969,6 +1970,7 @@ class Cli:
             self.ffi_mapping.cli_mapping.read_any(
                 ptr=self._ptr_or_exception(),
                 operation_id_ptr=operation_id_ptr,
+                cancel=cancel._to_ffi(),
             )
 
             intermediate_result = await self._get_result_async(
