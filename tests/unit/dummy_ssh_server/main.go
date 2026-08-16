@@ -3,8 +3,8 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/ed25519"
 	"crypto/rand"
-	"crypto/rsa"
 	"errors"
 	"fmt"
 	"log"
@@ -102,7 +102,7 @@ func main() {
 		},
 	}
 
-	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	_, privateKey, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
 		panic(err)
 	}
