@@ -1,6 +1,8 @@
 """scrapli.helper"""
 
-from asyncio import get_event_loop
+from asyncio import CancelledError
+from asyncio import TimeoutError as AsyncioTimeoutError
+from asyncio import get_event_loop, wait_for
 from datetime import datetime
 from os import read
 from pathlib import Path
@@ -10,6 +12,7 @@ from scrapli.exceptions import CancelledException, OperationException
 from scrapli.ffi_types import Cancel, OperationIdPointer
 
 WAKEUP_FD_SIGNAL_SIZE = 4
+WAKEUP_FD_POLL_INTERVAL_S = 0.1
 
 
 def resolve_file(file: str) -> str:
@@ -34,6 +37,31 @@ def resolve_file(file: str) -> str:
     raise OperationException(f"path `{file}` could not be resolved")
 
 
+def _read_wakeup_signal_operation_id(fd: int) -> int:
+    """
+    Read a wakeup signal (an operation id) off of the wakeup fd.
+
+    Args:
+        fd: the fd to read from
+
+    Returns:
+        int: the operation id the wakeup signal was for
+
+    Raises:
+        OperationException: if the fd was closed or we read an invalid signal size
+
+    """
+    b = read(fd, WAKEUP_FD_SIGNAL_SIZE)
+
+    if len(b) == 0:
+        raise OperationException("wakeup signal fd closed")
+
+    if len(b) != WAKEUP_FD_SIGNAL_SIZE:
+        raise OperationException("wakeup signal read invalid read size")
+
+    return int.from_bytes(b, byteorder="little")
+
+
 def wait_for_available_operation_result(
     fd: int,
     cancel: Cancel,
@@ -52,38 +80,28 @@ def wait_for_available_operation_result(
 
     Raises:
         CancelledException: if cancellation ocurred while waiting.
+        OperationException: if a wakeup signal is received for an operation id greater than the
+            requested id -- this should never happen
 
     """
     while True:
         if cancel.cancelled:
             raise CancelledException
 
-        readable, _, _ = select([fd], [], [], 0.1)
+        readable, _, _ = select([fd], [], [], WAKEUP_FD_POLL_INTERVAL_S)
 
-        if readable:
-            b = read(fd, WAKEUP_FD_SIGNAL_SIZE)
+        if not readable:
+            continue
 
-            if len(b) == 0:
-                # wake up fd closed
-                raise OperationException("wakeup signal fd closed")
-            elif len(b) != WAKEUP_FD_SIGNAL_SIZE:
-                raise OperationException("wakeup signal read invalid read size")
+        wait_wakeup_operation_id = _read_wakeup_signal_operation_id(fd)
 
-            wait_wakeup_operation_id = int.from_bytes(b, byteorder="little")
+        if wait_wakeup_operation_id == operation_id_ptr.contents.value:
+            return
 
-            if wait_wakeup_operation_id == operation_id_ptr.contents.value:
-                return
-
-            if wait_wakeup_operation_id < operation_id_ptr.contents.value:
-                return wait_for_available_operation_result(
-                    fd=fd, cancel=cancel, operation_id_ptr=operation_id_ptr
-                )
-
-            if wait_wakeup_operation_id > operation_id_ptr.contents.value:
-                raise OperationException(
-                    "signal received for operation id greater than requested, "
-                    "this should not happen"
-                )
+        if wait_wakeup_operation_id > operation_id_ptr.contents.value:
+            raise OperationException(
+                "signal received for operation id greater than requested, this should not happen"
+            )
 
 
 async def _wait_for_fd_readable(fd: int) -> None:
@@ -105,13 +123,15 @@ async def _wait_for_fd_readable(fd: int) -> None:
     fut = loop.create_future()
 
     def on_ready() -> None:
-        loop.remove_reader(fd)
-
-        fut.set_result(None)
+        if not fut.done():
+            fut.set_result(None)
 
     loop.add_reader(fd, on_ready)
 
-    await fut
+    try:
+        await fut
+    finally:
+        loop.remove_reader(fd)
 
 
 async def wait_for_available_operation_result_async(
@@ -131,33 +151,35 @@ async def wait_for_available_operation_result_async(
         None
 
     Raises:
-        N/A
+        CancelledException: if cancellation ocurred while waiting.
+        OperationException: if a wakeup signal is received for an operation id greater than the
+            requested id -- this should never happen
 
     """
-    await _wait_for_fd_readable(fd)
+    while True:
+        if cancel.cancelled:
+            raise CancelledException
 
-    b = read(fd, WAKEUP_FD_SIGNAL_SIZE)
+        try:
+            await wait_for(_wait_for_fd_readable(fd), timeout=WAKEUP_FD_POLL_INTERVAL_S)
+        except AsyncioTimeoutError:
+            continue
+        except CancelledError:
+            # the enclosing task was cancelled -- propagate that into the operation's cancel so
+            # libscrapli stops the work (and drops the result), then re-raise
+            cancel.cancel()
 
-    if len(b) == 0:
-        # wake up fd closed
-        raise OperationException("wakeup signal fd closed")
-    elif len(b) != WAKEUP_FD_SIGNAL_SIZE:
-        raise OperationException("wakeup signal read invalid read size")
+            raise
 
-    wait_wakeup_operation_id = int.from_bytes(b, byteorder="little")
+        wait_wakeup_operation_id = _read_wakeup_signal_operation_id(fd)
 
-    if wait_wakeup_operation_id == operation_id_ptr.contents.value:
-        return
+        if wait_wakeup_operation_id == operation_id_ptr.contents.value:
+            return
 
-    if wait_wakeup_operation_id < operation_id_ptr.contents.value:
-        return await wait_for_available_operation_result_async(
-            fd=fd, cancel=cancel, operation_id_ptr=operation_id_ptr
-        )
-
-    if wait_wakeup_operation_id > operation_id_ptr.contents.value:
-        raise OperationException(
-            "signal received for operation id greater than requested, " "this should not happen"
-        )
+        if wait_wakeup_operation_id > operation_id_ptr.contents.value:
+            raise OperationException(
+                "signal received for operation id greater than requested, this should not happen"
+            )
 
 
 def second_to_nano(d: int | float) -> int:
