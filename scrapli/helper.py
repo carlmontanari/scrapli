@@ -6,7 +6,10 @@ from os import read
 from pathlib import Path
 from select import select
 
-from scrapli.exceptions import OperationException
+from scrapli.exceptions import CancelledException, OperationException
+from scrapli.ffi_types import Cancel, OperationIdPointer
+
+WAKEUP_FD_SIGNAL_SIZE = 4
 
 
 def resolve_file(file: str) -> str:
@@ -31,22 +34,56 @@ def resolve_file(file: str) -> str:
     raise OperationException(f"path `{file}` could not be resolved")
 
 
-def wait_for_available_operation_result(fd: int) -> None:
+def wait_for_available_operation_result(
+    fd: int,
+    cancel: Cancel,
+    operation_id_ptr: OperationIdPointer,
+) -> None:
     """
     Wait for the next operation to be complete.
 
     Args:
         fd: the fd to wait on
+        cancel: the cancellation object for the op
+        operation_id_ptr: the pointer to the operation id we are polling for
 
     Returns:
         None
 
     Raises:
-        N/A
+        CancelledException: if cancellation ocurred while waiting.
 
     """
-    _, _, _ = select([fd], [], [])
-    read(fd, 1)
+    while True:
+        if cancel.cancelled:
+            raise CancelledException
+
+        readable, _, _ = select([fd], [], [], 0.1)
+
+        if readable:
+            b = read(fd, WAKEUP_FD_SIGNAL_SIZE)
+
+            if len(b) == 0:
+                # wake up fd closed
+                raise OperationException("wakeup signal fd closed")
+            elif len(b) != WAKEUP_FD_SIGNAL_SIZE:
+                raise OperationException("wakeup signal read invalid read size")
+
+            wait_wakeup_operation_id = int.from_bytes(b, byteorder="little")
+
+            if wait_wakeup_operation_id == operation_id_ptr.contents.value:
+                return
+
+            if wait_wakeup_operation_id < operation_id_ptr.contents.value:
+                return wait_for_available_operation_result(
+                    fd=fd, cancel=cancel, operation_id_ptr=operation_id_ptr
+                )
+
+            if wait_wakeup_operation_id > operation_id_ptr.contents.value:
+                raise OperationException(
+                    "signal received for operation id greater than requested, "
+                    "this should not happen"
+                )
 
 
 async def _wait_for_fd_readable(fd: int) -> None:
@@ -77,12 +114,18 @@ async def _wait_for_fd_readable(fd: int) -> None:
     await fut
 
 
-async def wait_for_available_operation_result_async(fd: int) -> None:
+async def wait_for_available_operation_result_async(
+    fd: int,
+    cancel: Cancel,
+    operation_id_ptr: OperationIdPointer,
+) -> None:
     """
     Wait for the next operation to be complete.
 
     Args:
         fd: the fd to wait on
+        cancel: the cancellation object for the op
+        operation_id_ptr: the pointer to the operation id we are polling for
 
     Returns:
         None
@@ -93,7 +136,28 @@ async def wait_for_available_operation_result_async(fd: int) -> None:
     """
     await _wait_for_fd_readable(fd)
 
-    read(fd, 1)
+    b = read(fd, WAKEUP_FD_SIGNAL_SIZE)
+
+    if len(b) == 0:
+        # wake up fd closed
+        raise OperationException("wakeup signal fd closed")
+    elif len(b) != WAKEUP_FD_SIGNAL_SIZE:
+        raise OperationException("wakeup signal read invalid read size")
+
+    wait_wakeup_operation_id = int.from_bytes(b, byteorder="little")
+
+    if wait_wakeup_operation_id == operation_id_ptr.contents.value:
+        return
+
+    if wait_wakeup_operation_id < operation_id_ptr.contents.value:
+        return await wait_for_available_operation_result_async(
+            fd=fd, cancel=cancel, operation_id_ptr=operation_id_ptr
+        )
+
+    if wait_wakeup_operation_id > operation_id_ptr.contents.value:
+        raise OperationException(
+            "signal received for operation id greater than requested, " "this should not happen"
+        )
 
 
 def second_to_nano(d: int | float) -> int:

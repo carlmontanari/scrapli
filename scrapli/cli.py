@@ -36,6 +36,7 @@ from scrapli.exceptions import (
 from scrapli.ffi_mapping import LibScrapliMapping
 from scrapli.ffi_options import DriverOptions, DriverOptionsPointer
 from scrapli.ffi_types import (
+    Cancel,
     DriverPointer,
     OperationIdPointer,
     U8Pointer,
@@ -676,6 +677,7 @@ class Cli:
         self,
         *,
         operation_id_ptr: OperationIdPointer,
+        cancel: Cancel,
     ) -> None:
         options_ptr = self.ffi_mapping.shared_mapping.alloc_driver_options()
         options = cast(options_ptr, POINTER(DriverOptions))
@@ -704,20 +706,26 @@ class Cli:
             self.ffi_mapping.cli_mapping.open(
                 ptr=self._ptr_or_exception(),
                 operation_id_ptr=operation_id_ptr,
+                cancel=cancel._to_ffi(),
             )
         except FFIException:
             self._free()
 
             raise
 
+    @handle_operation_timeout
     def open(
         self,
+        *,
+        operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Open the cli connection.
 
         Args:
-            N/A
+            operation_timeout_ns: operation timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             None
@@ -726,18 +734,31 @@ class Cli:
             OpenException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
+        # only used in the decorator
+        _ = operation_timeout_ns
+
         operation_id_ptr = pointer(c_uint32(0))
 
-        self._open(operation_id_ptr=operation_id_ptr)
+        self._open(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
-        return self._get_result(operation_id_ptr=operation_id_ptr)
+        return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
-    async def open_async(self) -> Result:
+    @handle_operation_timeout_async
+    async def open_async(
+        self,
+        *,
+        operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
+    ) -> Result:
         """
         Open the cli connection.
 
         Args:
-            N/A
+            operation_timeout_ns: operation timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             None
@@ -746,34 +767,47 @@ class Cli:
             OpenException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
+        # only used in the decorator
+        _ = operation_timeout_ns
+
         operation_id_ptr = pointer(c_uint32(0))
 
-        self._open(operation_id_ptr=operation_id_ptr)
+        self._open(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
-        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     def _close(
         self,
         *,
         operation_id_ptr: OperationIdPointer,
+        cancel: Cancel,
         force: c_bool,
     ) -> None:
         self.ffi_mapping.cli_mapping.close(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             force=force,
         )
 
+    @handle_operation_timeout
     def close(
         self,
         *,
         force: bool = False,
+        operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Close the cli connection.
 
         Args:
-            force: force close the connection -- skips sending any on exit inputs.
+            force: force close the connection -- skips sending any on exit inputs
+            operation_timeout_ns: operation timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             None
@@ -783,27 +817,38 @@ class Cli:
             CloseException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
+        # only used in the decorator
+        _ = operation_timeout_ns
+
         operation_id_ptr = pointer(c_uint32(0))
         _force = c_bool(force)
 
-        self._close(operation_id_ptr=operation_id_ptr, force=_force)
+        self._close(operation_id_ptr=operation_id_ptr, cancel=cancel, force=_force)
 
-        result = self._get_result(operation_id_ptr=operation_id_ptr)
+        result = self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
         self._free()
 
         return result
 
+    @handle_operation_timeout_async
     async def close_async(
         self,
         *,
         force: bool = False,
+        operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Close the cli connection.
 
         Args:
-            force: force close the connection -- skips sending any on exit inputs.
+            force: force close the connection -- skips sending any on exit inputs
+            operation_timeout_ns: operation timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             None
@@ -813,12 +858,18 @@ class Cli:
             CloseException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
+        # only used in the decorator
+        _ = operation_timeout_ns
+
         operation_id_ptr = pointer(c_uint32(0))
         _force = c_bool(force)
 
-        self._close(operation_id_ptr=operation_id_ptr, force=_force)
+        self._close(operation_id_ptr=operation_id_ptr, cancel=cancel, force=_force)
 
-        result = await self._get_result_async(operation_id_ptr=operation_id_ptr)
+        result = await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
         self._free()
 
@@ -925,8 +976,13 @@ class Cli:
     def _get_result(
         self,
         operation_id_ptr: OperationIdPointer,
+        cancel: Cancel,
     ) -> Result:
-        wait_for_available_operation_result(self.poll_fd)
+        wait_for_available_operation_result(
+            self.poll_fd,
+            cancel=cancel,
+            operation_id_ptr=operation_id_ptr,
+        )
 
         operation_id_value = c_uint32(operation_id_ptr.contents.value)
 
@@ -1008,8 +1064,13 @@ class Cli:
     async def _get_result_async(
         self,
         operation_id_ptr: OperationIdPointer,
+        cancel: Cancel,
     ) -> Result:
-        await wait_for_available_operation_result_async(fd=self.poll_fd)
+        await wait_for_available_operation_result_async(
+            self.poll_fd,
+            cancel=cancel,
+            operation_id_ptr=operation_id_ptr,
+        )
 
         operation_id_value = c_uint32(operation_id_ptr.contents.value)
 
@@ -1096,6 +1157,7 @@ class Cli:
         requested_mode: str,
         *,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Enter the given mode on the cli connection.
@@ -1103,6 +1165,7 @@ class Cli:
         Args:
             requested_mode: name of the mode to enter
             operation_timeout_ns: operation timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1112,6 +1175,9 @@ class Cli:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -1122,10 +1188,11 @@ class Cli:
         self.ffi_mapping.cli_mapping.enter_mode(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             requested_mode=_requested_mode,
         )
 
-        return self._get_result(operation_id_ptr=operation_id_ptr)
+        return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout_async
     async def enter_mode_async(
@@ -1133,6 +1200,7 @@ class Cli:
         requested_mode: str,
         *,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Enter the given mode on the cli connection.
@@ -1140,6 +1208,7 @@ class Cli:
         Args:
             requested_mode: name of the mode to enter
             operation_timeout_ns: operation timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1149,6 +1218,9 @@ class Cli:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -1159,22 +1231,25 @@ class Cli:
         self.ffi_mapping.cli_mapping.enter_mode(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             requested_mode=_requested_mode,
         )
 
-        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout
     def get_prompt(
         self,
         *,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Get the current prompt of the cli connection.
 
         Args:
             operation_timeout_ns: operation timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1184,6 +1259,9 @@ class Cli:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -1192,21 +1270,24 @@ class Cli:
         self.ffi_mapping.cli_mapping.get_prompt(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
         )
 
-        return self._get_result(operation_id_ptr=operation_id_ptr)
+        return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout_async
     async def get_prompt_async(
         self,
         *,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Get the current prompt of the cli connection.
 
         Args:
             operation_timeout_ns: operation timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1216,6 +1297,9 @@ class Cli:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -1224,9 +1308,10 @@ class Cli:
         self.ffi_mapping.cli_mapping.get_prompt(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
         )
 
-        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout
     def send_input(  # noqa: PLR0913
@@ -1238,6 +1323,7 @@ class Cli:
         retain_input: bool = False,
         retain_trailing_prompt: bool = False,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Send an input on the cli connection.
@@ -1249,6 +1335,7 @@ class Cli:
             retain_input: retain the input in the final "result"
             retain_trailing_prompt: retain the trailing prompt in the final "result"
             operation_timeout_ns: operation timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1258,6 +1345,9 @@ class Cli:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -1269,6 +1359,7 @@ class Cli:
         self.ffi_mapping.cli_mapping.send_input(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             input_=_input,
             requested_mode=_requested_mode,
             input_handling=input_handling._to_ffi(),
@@ -1276,7 +1367,7 @@ class Cli:
             retain_trailing_prompt=c_bool(retain_trailing_prompt),
         )
 
-        return self._get_result(operation_id_ptr=operation_id_ptr)
+        return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout_async
     async def send_input_async(  # noqa: PLR0913
@@ -1288,6 +1379,7 @@ class Cli:
         retain_input: bool = False,
         retain_trailing_prompt: bool = False,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Send an input on the cli connection.
@@ -1299,6 +1391,7 @@ class Cli:
             retain_input: retain the input in the final "result"
             retain_trailing_prompt: retain the trailing prompt in the final "result"
             operation_timeout_ns: operation timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1308,6 +1401,9 @@ class Cli:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -1319,6 +1415,7 @@ class Cli:
         self.ffi_mapping.cli_mapping.send_input(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             input_=_input,
             requested_mode=_requested_mode,
             input_handling=input_handling._to_ffi(),
@@ -1326,7 +1423,7 @@ class Cli:
             retain_trailing_prompt=c_bool(retain_trailing_prompt),
         )
 
-        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout
     def send_inputs(  # noqa: PLR0913
@@ -1339,6 +1436,7 @@ class Cli:
         retain_trailing_prompt: bool = False,
         stop_on_indicated_failure: bool = True,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Send inputs (plural!) on the cli connection.
@@ -1351,6 +1449,7 @@ class Cli:
             retain_trailing_prompt: retain the trailing prompt in the final "result"
             stop_on_indicated_failure: stops sending inputs at first indicated failure
             operation_timeout_ns: operation timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1360,6 +1459,9 @@ class Cli:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator; note that the timeout here is for the whole operation,
         # meaning all the "inputs" combined, not individually
         _ = operation_timeout_ns
@@ -1380,6 +1482,7 @@ class Cli:
         self.ffi_mapping.cli_mapping.send_inputs(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             inputs=_inputs,
             input_lens=_input_lens,
             requested_mode=_requested_mode,
@@ -1389,7 +1492,7 @@ class Cli:
             stop_on_indicated_failure=c_bool(stop_on_indicated_failure),
         )
 
-        return self._get_result(operation_id_ptr=operation_id_ptr)
+        return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout_async
     async def send_inputs_async(  # noqa: PLR0913
@@ -1402,6 +1505,7 @@ class Cli:
         retain_trailing_prompt: bool = False,
         stop_on_indicated_failure: bool = True,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Send inputs (plural!) on the cli connection.
@@ -1414,6 +1518,7 @@ class Cli:
             retain_trailing_prompt: retain the trailing prompt in the final "result"
             stop_on_indicated_failure: stops sending inputs at first indicated failure
             operation_timeout_ns: operation timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             MultiResult: a MultiResult object representing the operations
@@ -1423,6 +1528,9 @@ class Cli:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator; note that the timeout here is for the whole operation,
         # meaning all the "inputs" combined, not individually
         _ = operation_timeout_ns
@@ -1445,6 +1553,7 @@ class Cli:
         self.ffi_mapping.cli_mapping.send_inputs(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             inputs=_inputs,
             input_lens=_input_lens,
             requested_mode=_requested_mode,
@@ -1454,7 +1563,7 @@ class Cli:
             stop_on_indicated_failure=c_bool(stop_on_indicated_failure),
         )
 
-        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     def send_inputs_from_file(  # noqa: PLR0913
         self,
@@ -1466,6 +1575,7 @@ class Cli:
         retain_trailing_prompt: bool = False,
         stop_on_indicated_failure: bool = True,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Send inputs (plural! from a file, line-by-line) on the cli connection.
@@ -1478,6 +1588,7 @@ class Cli:
             retain_trailing_prompt: retain the trailing prompt in the final "result"
             stop_on_indicated_failure: stops sending inputs at first indicated failure
             operation_timeout_ns: operation timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             MultiResult: a MultiResult object representing the operations
@@ -1498,6 +1609,7 @@ class Cli:
             retain_trailing_prompt=retain_trailing_prompt,
             stop_on_indicated_failure=stop_on_indicated_failure,
             operation_timeout_ns=operation_timeout_ns,
+            cancel=cancel,
         )
 
     async def send_inputs_from_file_async(  # noqa: PLR0913
@@ -1510,6 +1622,7 @@ class Cli:
         retain_trailing_prompt: bool = False,
         stop_on_indicated_failure: bool = True,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Send inputs (plural! from a file, line-by-line) on the cli connection.
@@ -1522,6 +1635,7 @@ class Cli:
             retain_trailing_prompt: retain the trailing prompt in the final "result"
             stop_on_indicated_failure: stops sending inputs at first indicated failure
             operation_timeout_ns: operation timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             MultiResult: a MultiResult object representing the operations
@@ -1542,6 +1656,7 @@ class Cli:
             retain_trailing_prompt=retain_trailing_prompt,
             stop_on_indicated_failure=stop_on_indicated_failure,
             operation_timeout_ns=operation_timeout_ns,
+            cancel=cancel,
         )
 
     @handle_operation_timeout
@@ -1558,6 +1673,7 @@ class Cli:
         hidden_response: bool = False,
         retain_trailing_prompt: bool = False,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Send a prompted input on the cli connection.
@@ -1574,6 +1690,7 @@ class Cli:
             hidden_response: if the response input will be hidden (like for a password prompt)
             retain_trailing_prompt: retain the trailing prompt in the final "result"
             operation_timeout_ns: operation timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1583,6 +1700,9 @@ class Cli:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -1598,6 +1718,7 @@ class Cli:
         self.ffi_mapping.cli_mapping.send_prompted_input(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             input_=_input,
             prompt=_prompt,
             prompt_pattern=_prompt_pattern,
@@ -1609,7 +1730,7 @@ class Cli:
             retain_trailing_prompt=c_bool(retain_trailing_prompt),
         )
 
-        return self._get_result(operation_id_ptr=operation_id_ptr)
+        return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout_async
     async def send_prompted_input_async(  # noqa: PLR0913
@@ -1625,6 +1746,7 @@ class Cli:
         hidden_response: bool = False,
         retain_trailing_prompt: bool = False,
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Send a prompted input on the cli connection.
@@ -1641,6 +1763,7 @@ class Cli:
             hidden_response: if the response input will be hidden (like for a password prompt)
             retain_trailing_prompt: retain the trailing prompt in the final "result"
             operation_timeout_ns: operation timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1650,6 +1773,9 @@ class Cli:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -1665,6 +1791,7 @@ class Cli:
         self.ffi_mapping.cli_mapping.send_prompted_input(
             ptr=self._ptr_or_exception(),
             operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
             input_=_input,
             prompt=_prompt,
             prompt_pattern=_prompt_pattern,
@@ -1676,7 +1803,7 @@ class Cli:
             retain_trailing_prompt=c_bool(retain_trailing_prompt),
         )
 
-        return await self._get_result_async(operation_id_ptr=operation_id_ptr)
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
     @handle_operation_timeout
     def read_with_callbacks(
@@ -1685,6 +1812,7 @@ class Cli:
         *,
         initial_input: str = "",
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Read from the device and react to the output with some callback.
@@ -1693,6 +1821,7 @@ class Cli:
             callbacks: a list of callbacks to process when reading from the session
             initial_input: an initial input to send
             operation_timeout_ns: operation timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1702,6 +1831,9 @@ class Cli:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -1725,7 +1857,7 @@ class Cli:
                 operation_id_ptr=operation_id_ptr,
             )
 
-            intermediate_result = self._get_result(operation_id_ptr=operation_id_ptr)
+            intermediate_result = self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
             result += intermediate_result.result
             result_raw += intermediate_result.result_raw
@@ -1792,6 +1924,7 @@ class Cli:
         *,
         initial_input: str = "",
         operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
     ) -> Result:
         """
         Read from the device and react to the output with some callback.
@@ -1802,6 +1935,7 @@ class Cli:
             callbacks: a list of callbacks to process when reading from the session
             initial_input: an initial input to send
             operation_timeout_ns: operation timeout in ns for this operation
+            cancel: cancellation context for this operation
 
         Returns:
             Result: a Result object representing the operation
@@ -1811,6 +1945,9 @@ class Cli:
             FFIException: if the operation fails
 
         """
+        if cancel is None:
+            cancel = Cancel()
+
         # only used in the decorator
         _ = operation_timeout_ns
 
@@ -1834,7 +1971,9 @@ class Cli:
                 operation_id_ptr=operation_id_ptr,
             )
 
-            intermediate_result = await self._get_result_async(operation_id_ptr=operation_id_ptr)
+            intermediate_result = await self._get_result_async(
+                operation_id_ptr=operation_id_ptr, cancel=cancel
+            )
 
             result += intermediate_result.result
             result_raw += intermediate_result.result_raw

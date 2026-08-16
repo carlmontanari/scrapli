@@ -859,7 +859,11 @@ class Netconf:
         self,
         operation_id_ptr: OperationIdPointer,
     ) -> Result:
-        wait_for_available_operation_result(self.poll_fd)
+        wait_for_available_operation_result(
+            self.poll_fd,
+            cancel=None,  # TODO
+            operation_id_ptr=operation_id_ptr,
+        )
 
         operation_id_value = c_uint32(operation_id_ptr.contents.value)
 
@@ -932,7 +936,11 @@ class Netconf:
         self,
         operation_id_ptr: OperationIdPointer,
     ) -> Result:
-        await wait_for_available_operation_result_async(fd=self.poll_fd)
+        await wait_for_available_operation_result_async(
+            self.poll_fd,
+            cancel=None,  # TODO
+            operation_id_ptr=operation_id_ptr,
+        )
 
         operation_id_value = c_uint32(operation_id_ptr.contents.value)
 

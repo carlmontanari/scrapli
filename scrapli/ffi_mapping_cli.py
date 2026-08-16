@@ -112,6 +112,7 @@ class LibScrapliCliMapping:
             DriverPointer,
             OperationIdPointer,
             CancelPointer,
+            c_bool,
         ]
         lib.ls_cli_close.restype = c_uint8
 
@@ -468,6 +469,7 @@ class LibScrapliCliMapping:
         self,
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
+        cancel: CancelPointer,
     ) -> None:
         """
         Open the driver at ptr.
@@ -478,6 +480,7 @@ class LibScrapliCliMapping:
             ptr: the ptr to the libscrapli cli object.
             operation_id_ptr: c_int pointer that is filled with the operation id to poll for
                 completion.
+            cancel: the cancellation bool
 
         Returns:
             N/A
@@ -490,7 +493,7 @@ class LibScrapliCliMapping:
             self._open(
                 ptr,
                 operation_id_ptr,
-                CANCEL,
+                cancel,
             )
         ).raise_if_error(
             message="failed submitting open operation",
@@ -500,6 +503,7 @@ class LibScrapliCliMapping:
         self,
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
+        cancel: CancelPointer,
         force: c_bool,
     ) -> None:
         """
@@ -511,6 +515,7 @@ class LibScrapliCliMapping:
             ptr: the ptr to the libscrapli cli object.
             operation_id_ptr: c_int pointer that is filled with the operation id to poll for
                 completion.
+            cancel: the cancellation bool
             force: force close the connection.
 
         Returns:
@@ -524,7 +529,7 @@ class LibScrapliCliMapping:
             self._close(
                 ptr,
                 operation_id_ptr,
-                CANCEL,
+                cancel,
                 force,
             )
         ).raise_if_error(
@@ -725,6 +730,7 @@ class LibScrapliCliMapping:
         *,
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
+        cancel: CancelPointer,
         requested_mode: c_char_p,
     ) -> None:
         """
@@ -735,6 +741,7 @@ class LibScrapliCliMapping:
         Args:
             ptr: ptr to the cli object
             operation_id_ptr: int pointer to fill with the id of the submitted operation
+            cancel: the cancellation bool
             requested_mode: string name of the mode to enter
 
         Returns:
@@ -748,7 +755,7 @@ class LibScrapliCliMapping:
             self._enter_mode(
                 ptr,
                 operation_id_ptr,
-                CANCEL,
+                cancel,
                 requested_mode,
             )
         ).raise_if_error(
@@ -760,6 +767,7 @@ class LibScrapliCliMapping:
         *,
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
+        cancel: CancelPointer,
     ) -> None:
         """
         Get the current prompt for the cli object.
@@ -769,6 +777,7 @@ class LibScrapliCliMapping:
         Args:
             ptr: ptr to the cli object
             operation_id_ptr: int pointer to fill with the id of the submitted operation
+            cancel: the cancellation bool
 
         Returns:
             N/A
@@ -781,7 +790,7 @@ class LibScrapliCliMapping:
             self._get_prompt(
                 ptr,
                 operation_id_ptr,
-                CANCEL,
+                cancel,
             )
         ).raise_if_error(
             message="submitting get prompt operation failed",
@@ -792,6 +801,7 @@ class LibScrapliCliMapping:
         *,
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
+        cancel: CancelPointer,
         input_: c_char_p,
         requested_mode: c_char_p,
         input_handling: U8Pointer,
@@ -806,6 +816,7 @@ class LibScrapliCliMapping:
         Args:
             ptr: ptr to the cli object
             operation_id_ptr: int pointer to fill with the id of the submitted operation
+            cancel: the cancellation bool
             input_: the input to send
             requested_mode: string name of the mode to send the input in
             input_handling: u8 mapping to input handling enum that governs how the input is
@@ -824,7 +835,7 @@ class LibScrapliCliMapping:
             self._send_input(
                 ptr,
                 operation_id_ptr,
-                CANCEL,
+                cancel,
                 input_,
                 requested_mode,
                 input_handling,
@@ -840,6 +851,7 @@ class LibScrapliCliMapping:
         *,
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
+        cancel: CancelPointer,
         inputs: ZigSlicePointer,
         input_lens: ZigU64SlicePointer,
         requested_mode: c_char_p,
@@ -856,6 +868,7 @@ class LibScrapliCliMapping:
         Args:
             ptr: ptr to the cli object
             operation_id_ptr: int pointer to fill with the id of the submitted operation
+            cancel: the cancellation bool
             inputs: the inputs to send, packed back-to-back
             input_lens: the length of each packed input
             requested_mode: string name of the mode to send the input in
@@ -877,7 +890,7 @@ class LibScrapliCliMapping:
             self._send_inputs(
                 ptr,
                 operation_id_ptr,
-                CANCEL,
+                cancel,
                 inputs,
                 input_lens,
                 requested_mode,
@@ -895,6 +908,7 @@ class LibScrapliCliMapping:
         *,
         ptr: DriverPointer,
         operation_id_ptr: OperationIdPointer,
+        cancel: CancelPointer,
         input_: c_char_p,
         prompt: c_char_p,
         prompt_pattern: c_char_p,
@@ -913,6 +927,7 @@ class LibScrapliCliMapping:
         Args:
             ptr: ptr to the cli object
             operation_id_ptr: int pointer to fill with the id of the submitted operation
+            cancel: the cancellation bool
             input_: the input to send
             prompt: the prompt to expect
             prompt_pattern: the prompt pattern to expect
@@ -936,7 +951,7 @@ class LibScrapliCliMapping:
             self._send_prompted_input(
                 ptr,
                 operation_id_ptr,
-                CANCEL,
+                cancel,
                 input_,
                 prompt,
                 prompt_pattern,
