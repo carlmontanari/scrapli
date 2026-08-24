@@ -1,5 +1,6 @@
 """scrapli.helper"""
 
+import sys
 from asyncio import get_event_loop
 from datetime import datetime
 from os import read
@@ -36,7 +37,9 @@ def wait_for_available_operation_result(fd: int) -> None:
     Wait for the next operation to be complete.
 
     Args:
-        fd: the fd to wait on
+        fd: the fd to wait on. On Windows this is a WinSock SOCKET value
+            (the read end of a loopback TCP pair); on POSIX it is the read
+            end of the wakeup pipe.
 
     Returns:
         None
@@ -45,6 +48,70 @@ def wait_for_available_operation_result(fd: int) -> None:
         N/A
 
     """
+    if sys.platform == "win32":
+        # CPython's socket(fileno=...) wrapper mis-detects raw WinSock
+        # SOCKET values created inside the ffi library, so talk to
+        # ws2_32 directly: select() on the wakeup socket, then recv() one
+        # byte to consume the event. Mirrors the POSIX pipe flow above.
+        import ctypes as _ctypes  # noqa: PLC0415
+
+        class _fd_set(_ctypes.Structure):
+            # WinSock fd_set: fd_count + fd_array[FD_SETSIZE] where each
+            # element is a SOCKET (UINT_PTR = 8 bytes on x64). Using c_int
+            # here misaligns the array and WSAENOTSOCKs every call.
+            _fields_ = [("fd_count", _ctypes.c_uint), ("fd_array", _ctypes.c_uint64 * 64)]
+
+        class _timeval(_ctypes.Structure):
+            _fields_ = [("tv_sec", _ctypes.c_long), ("tv_usec", _ctypes.c_long)]
+
+        ws2 = _ctypes.WinDLL("ws2_32", use_last_error=True)
+        ws2.select.argtypes = [
+            _ctypes.c_int,
+            _ctypes.POINTER(_fd_set),
+            _ctypes.c_void_p,
+            _ctypes.c_void_p,
+            _ctypes.POINTER(_timeval),
+        ]
+        ws2.select.restype = _ctypes.c_int
+        ws2.recv.argtypes = [
+            _ctypes.c_uint64,
+            _ctypes.c_char_p,
+            _ctypes.c_int,
+            _ctypes.c_int,
+        ]
+        ws2.recv.restype = _ctypes.c_int
+
+        read_set = _fd_set()
+        read_set.fd_count = 1
+        read_set.fd_array[0] = fd
+        timeout = _timeval(5, 0)
+
+        rc = ws2.select(0, _ctypes.byref(read_set), None, None, _ctypes.byref(timeout))
+        err = ws2.WSAGetLastError()
+        print(
+            f"[helper] select(sock={fd}) rc={rc} lasterr={err}",
+            file=sys.stderr,
+            flush=True,
+        )
+        if rc > 0:
+            buf = _ctypes.create_string_buffer(1)
+            got = ws2.recv(fd, buf, 1, 0)
+            print(
+                f"[helper] consumed {got} bytes",
+                file=sys.stderr,
+                flush=True,
+            )
+        elif rc == 0:
+            # timeout with no event: keep waiting rather than pretending the
+            # operation finished (mirrors blocking POSIX behaviour).
+            import time as _t  # noqa: PLC0415
+
+            _t.sleep(0.05)
+            return wait_for_available_operation_result(fd)
+        else:
+            raise OSError(err, f"winsock select failed on wake socket {fd}")
+        return
+
     _, _, _ = select([fd], [], [])
     read(fd, 1)
 

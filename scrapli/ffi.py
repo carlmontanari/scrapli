@@ -41,7 +41,7 @@ def _get_zig_style_arch() -> str:
         LibScrapliException: if unsupported arch
 
     """
-    p = platform.machine()
+    p = platform.machine().lower()
 
     if p in {"amd64", "x86_64"}:
         return "x86_64"
@@ -75,6 +75,10 @@ def get_libscrapli_shared_object_filename(version: str = LIBSCRAPLI_VERSION) -> 
         lib_filename = f"libscrapli-{_get_zig_style_arch()}-linux-{abi}.so.{version}"
     elif sys.platform == "darwin":
         lib_filename = f"libscrapli-{_get_zig_style_arch()}-macos.{version}.dylib"
+    elif sys.platform == "win32":
+        # community windows build (zig x86_64-windows-gnu, see
+        # github.com/scrapli/libscrapli windows patch series)
+        lib_filename = f"libscrapli-{_get_zig_style_arch()}-windows-gnu.dll"
     else:
         raise LibScrapliException("unsupported platform")
 

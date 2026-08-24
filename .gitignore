@@ -84,5 +84,10 @@ private/
 public/
 tmp/
 
+# local windows build artifacts (built from github.com/scrapli/libscrapli
+# windows patch series, zig x86_64-windows-gnu) — binaries stay out of git;
+# fetch/build them via the libscrapli windows-support branch instead
+scrapli/lib/*.dll
+
 # where we mount stuff when running clab bits
 .clab
