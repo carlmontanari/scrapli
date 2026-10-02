@@ -1152,6 +1152,82 @@ class Cli:
         )
 
     @handle_operation_timeout
+    def execute_on_open_callback(
+        self,
+        *,
+        operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
+    ) -> Result:
+        """
+        Execute the on open callback of the driver (if present).
+
+        Args:
+            operation_timeout_ns: operation timeout in ns for this operation
+            cancel: cancellation context for this operation
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            FFIException: if the operation fails
+
+        """
+        if cancel is None:
+            cancel = Cancel()
+
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+        operation_id_ptr = pointer(c_uint32(0))
+
+        self.ffi_mapping.cli_mapping.execute_on_open_callback(
+            ptr=self._ptr_or_exception(),
+            operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
+        )
+
+        return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
+
+    @handle_operation_timeout_async
+    async def execute_on_open_callback_async(
+        self,
+        *,
+        operation_timeout_ns: int | None = None,
+        cancel: Cancel | None = None,
+    ) -> Result:
+        """
+        Execute the on open callback of the driver (if present).
+
+        Args:
+            operation_timeout_ns: operation timeout in ns for this operation
+            cancel: cancellation context for this operation
+
+        Returns:
+            Result: a Result object representing the operation
+
+        Raises:
+            NotOpenedException: if the ptr to the cli object is None (via _ptr_or_exception)
+            FFIException: if the operation fails
+
+        """
+        if cancel is None:
+            cancel = Cancel()
+
+        # only used in the decorator
+        _ = operation_timeout_ns
+
+        operation_id_ptr = pointer(c_uint32(0))
+
+        self.ffi_mapping.cli_mapping.execute_on_open_callback(
+            ptr=self._ptr_or_exception(),
+            operation_id_ptr=operation_id_ptr,
+            cancel=cancel._to_ffi(),
+        )
+
+        return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
+
+    @handle_operation_timeout
     def enter_mode(
         self,
         requested_mode: str,

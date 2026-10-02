@@ -341,6 +341,21 @@ class LibScrapliCliMapping:
         ]
         lib.ls_cli_read_any.restype = c_uint8
 
+        self._execute_on_open_callback: Callable[
+            [
+                DriverPointer,
+                OperationIdPointer,
+                CancelPointer,
+            ],
+            int,
+        ] = lib.ls_cli_execute_on_open_callback
+        lib.ls_cli_execute_on_open_callback.argtypes = [
+            DriverPointer,
+            OperationIdPointer,
+            CancelPointer,
+        ]
+        lib.ls_cli_execute_on_open_callback.restype = c_uint8
+
         self._read_callback_should_execute: Callable[
             [
                 c_char_p,
@@ -996,6 +1011,39 @@ class LibScrapliCliMapping:
             )
         ).raise_if_error(
             message="submitting read any operation failed",
+        )
+
+    def execute_on_open_callback(
+        self,
+        ptr: DriverPointer,
+        operation_id_ptr: OperationIdPointer,
+        cancel: CancelPointer,
+    ) -> None:
+        """
+        Execute the on open callback (if present) for the driver.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: the ptr to the libscrapli cli/netconf object.
+            operation_id_ptr: pointer to fill with the id of the submitted operation
+            cancel: the cancellation bool
+
+        Returns:
+            N/A
+
+        Raises:
+            FFIException: if submitting the execute on open callback operation failed
+
+        """
+        LibScrapliFFIResult(
+            self._execute_on_open_callback(
+                ptr,
+                operation_id_ptr,
+                cancel,
+            )
+        ).raise_if_error(
+            message="submitting execute on open callback operation failed",
         )
 
     def read_callback_should_execute(  # noqa: PLR0917
