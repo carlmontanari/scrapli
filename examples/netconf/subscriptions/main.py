@@ -35,12 +35,10 @@ def main() -> None:
         # establish then differing ways to setup the payload based on the rfc that is followed
         # scrapli decided... nope. you can just send what you need to create your subscription
         # however makes sense for your server. here we'll just do a very simple example.
-        result = nc.raw_rpc(
-            payload="""
+        result = nc.raw_rpc(payload="""
             <create-subscription xmlns="urn:ietf:params:xml:ns:netconf:notification:1.0">
             </create-subscription>
-        """
-        )
+        """)
 
         print(result.result)
 
@@ -77,15 +75,13 @@ def main() -> None:
     )
 
     with netconf as nc:
-        result = nc.raw_rpc(
-            payload="""
+        result = nc.raw_rpc(payload="""
             <establish-subscription xmlns="urn:ietf:params:xml:ns:yang:ietf-event-notifications" xmlns:yp="urn:ietf:params:xml:ns:yang:ietf-yang-push">
                 <stream>yp:yang-push</stream>
                 <yp:xpath-filter>/mdt-oper:mdt-oper-data/mdt-subscriptions</yp:xpath-filter>
                 <yp:period>1000</yp:period>
             </establish-subscription>
-            """  # noqa: E501
-        )
+            """)  # noqa: E501
 
         print(result.result)
 

@@ -487,15 +487,13 @@ async def test_validate_async(netconf, netconf_assert_result):
 
 def test_get_next_notification(request, netconf):
     with netconf as n:
-        _ = n.raw_rpc(
-            payload="""
+        _ = n.raw_rpc(payload="""
 <create-subscription xmlns="urn:ietf:params:xml:ns:netconf:notification:1.0">
     <stream>NETCONF</stream>
     <filter type="subtree">
         <counter-update xmlns="urn:boring:counter"/>
     </filter>
-</create-subscription>"""
-        )
+</create-subscription>""")
 
         if request.config.getoption("--record"):
             # boring counter updates every 3s; only when recording fixture ofc
@@ -544,14 +542,12 @@ def test_get_next_subscription(request):
     )
 
     with netconf as n:
-        r = n.raw_rpc(
-            payload="""
+        r = n.raw_rpc(payload="""
 <establish-subscription xmlns="urn:ietf:params:xml:ns:yang:ietf-event-notifications" xmlns:yp="urn:ietf:params:xml:ns:yang:ietf-yang-push">
     <stream>yp:yang-push</stream>
     <yp:xpath-filter>/mdt-oper:mdt-oper-data/mdt-subscriptions</yp:xpath-filter>
     <yp:period>1000</yp:period>
-</establish-subscription>"""
-        )
+</establish-subscription>""")
 
         if request.config.getoption("--record"):
             # only when recording fixture ofc
