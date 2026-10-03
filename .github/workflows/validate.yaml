@@ -20,6 +20,11 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: load env vars for workflow run
+        run: |
+          source .github/vars.env
+          echo "PYTHON_VERSION=$PYTHON_VERSION" >> "$GITHUB_ENV"
+
       - name: set up python
         uses: actions/setup-python@v7
         with:
@@ -60,11 +65,6 @@ jobs:
           fi
 
           echo "CALENDAR_VERSION=$CALVER" >> "$GITHUB_ENV"
-
-      - name: load env vars for workflow run
-        run: |
-          source .github/vars.env
-          echo "PYTHON_VERSION=$PYTHON_VERSION" >> "$GITHUB_ENV"
 
       - name: install and test dynamic libscrapli (from source - no wheel provided for dynamic)
         run: |
