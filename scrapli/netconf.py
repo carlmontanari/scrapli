@@ -1090,6 +1090,40 @@ class Netconf:
 
         return self._session_id
 
+    def get_capabilities(self) -> list[str]:
+        """
+        Get the server capabilities from the connection.
+
+        Args:
+            N/A
+
+        Returns:
+            caps: list of capabilities.
+
+        Raises:
+            GetResultException: if fetching the capabilities fails
+
+        """
+        capabilities_size = U64Pointer(c_uint64())
+
+        self.ffi_mapping.netconf_mapping.get_capabilities_size(
+            ptr=self._ptr_or_exception(),
+            capabilities_size=capabilities_size,
+        )
+
+        if capabilities_size.contents.value == 0:
+            # probably means connection not opened, so we'll go w/ that exception.
+            raise NotOpenedException("no capabilities available")
+
+        capabilities_slice = pointer(ZigSlice(size=capabilities_size.contents))
+
+        self.ffi_mapping.netconf_mapping.get_capabilities(
+            ptr=self._ptr_or_exception(),
+            capabilities_slice=capabilities_slice,
+        )
+
+        return capabilities_slice.contents.get_decoded_contents().split()
+
     def get_subscription_id(self, payload: str) -> int:
         """
         Get the subscription id from a rpc-reply (from an establish-subscription rpc).

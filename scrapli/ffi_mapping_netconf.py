@@ -160,6 +160,32 @@ class LibScrapliNetconfMapping:
         ]
         lib.ls_netconf_get_session_id.restype = c_uint8
 
+        self._get_capabilities_size: Callable[
+            [
+                DriverPointer,
+                U64Pointer,
+            ],
+            int,
+        ] = lib.ls_netconf_get_capabilities_size
+        lib.ls_netconf_get_capabilities_size.argtypes = [
+            DriverPointer,
+            U64Pointer,
+        ]
+        lib.ls_netconf_get_capabilities_size.restype = c_uint8
+
+        self._get_capabilities: Callable[
+            [
+                DriverPointer,
+                ZigSlicePointer,
+            ],
+            int,
+        ] = lib.ls_netconf_get_capabilities
+        lib.ls_netconf_get_capabilities.argtypes = [
+            DriverPointer,
+            ZigSlicePointer,
+        ]
+        lib.ls_netconf_get_capabilities.restype = c_uint8
+
         self._get_subscription_id: Callable[
             [
                 c_char_p,
@@ -855,6 +881,68 @@ class LibScrapliNetconfMapping:
             message="submitting getting session id failed",
         )
 
+    def get_capabilities_size(
+        self,
+        *,
+        ptr: DriverPointer,
+        capabilities_size: U64Pointer,
+    ) -> None:
+        """
+        Get the size of the joined (on newlines) server capabilities.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: ptr to the netconf object
+            capabilities_size: int pointer to fill with the capabilities size
+
+        Returns:
+            N/A
+
+        Raises:
+            FFIException: if submitting the get subscription id operation failed
+
+        """
+        LibScrapliFFIResult(
+            self._get_capabilities_size(
+                ptr,
+                capabilities_size,
+            )
+        ).raise_if_error(
+            message="submitting get capabilities size failed",
+        )
+
+    def get_capabilities(
+        self,
+        *,
+        ptr: DriverPointer,
+        capabilities_slice: ZigSlicePointer,
+    ) -> None:
+        """
+        Fill the joined (on newlines) server capabilities into the pre allocated buf.
+
+        Should (generally) not be called directly/by users.
+
+        Args:
+            ptr: ptr to the netconf object
+            capabilities_slice: slice to fill the capabilities into.
+
+        Returns:
+            N/A
+
+        Raises:
+            FFIException: if submitting the get subscription id operation failed
+
+        """
+        LibScrapliFFIResult(
+            self._get_capabilities(
+                ptr,
+                capabilities_slice,
+            )
+        ).raise_if_error(
+            message="submitting get capabilities failed",
+        )
+
     def get_subscription_id(
         self,
         *,
@@ -899,7 +987,7 @@ class LibScrapliNetconfMapping:
 
         Args:
             ptr: ptr to the netconf object
-            notification_size: int pointer to fill with the session id
+            notification_size: int pointer to fill with the notification size
 
         Returns:
             N/A
