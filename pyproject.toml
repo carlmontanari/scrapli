@@ -19,6 +19,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
     "Programming Language :: Python :: 3 :: Only",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
@@ -64,7 +65,7 @@ multi_line_output = 3
 include_trailing_comma = true
 
 [tool.mypy]
-python_version = "3.13"
+python_version = "3.14"
 pretty = true
 ignore_missing_imports = true
 warn_redundant_casts = true
