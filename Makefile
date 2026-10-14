@@ -91,7 +91,7 @@ run-clab:
 		-v "$$(pwd):$$(pwd)" \
 		-e "WORKDIR=$$(pwd)/.clab" \
 		-e "HOST_ARCH=$$(uname -m)" \
-		ghcr.io/scrapli/scrapli_clab/launcher:0.0.7
+		ghcr.io/scrapli/scrapli_clab/launcher:0.0.8
 
 ## Runs the clab functional testing topo with the ci specific topology - omits ceos
 run-clab-ci:
@@ -121,7 +121,7 @@ run-clab-ci:
         -e "WORKDIR=$$(pwd)/.clab" \
         -e "HOST_ARCH=$$(uname -m)" \
         -e "CLAB_TOPO=topo.ci.$$(uname -m).yaml" \
-        ghcr.io/scrapli/scrapli_clab/launcher:0.0.7
+        ghcr.io/scrapli/scrapli_clab/launcher:0.0.8
 
 ##@ Docs
 ## Serve docs locally.
