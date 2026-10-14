@@ -317,7 +317,7 @@ else:
     ZigSlicePointer: TypeAlias = POINTER(ZigSlice)
 
 
-def to_c_string(s: str) -> c_char_p:
+def to_c_string(s: str | bytes) -> c_char_p:
     """
     Accepts a string and converts it to a c_char_p.
 
@@ -331,7 +331,10 @@ def to_c_string(s: str) -> c_char_p:
         N/A
 
     """
-    return c_char_p(s.encode(encoding="utf-8"))
+    if isinstance(s, str):
+        return c_char_p(s.encode(encoding="utf-8"))
+
+    return c_char_p(s)
 
 
 LoggerCallbackC = CFUNCTYPE(c_void_p, c_size_t, c_uint8, ZigSlicePointer)

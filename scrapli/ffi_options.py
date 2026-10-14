@@ -15,11 +15,6 @@ from scrapli.ffi_types import (
     U64Pointer,
 )
 
-if TYPE_CHECKING:
-    DriverOptionsPointer: TypeAlias = _Pointer["DriverOptions"]
-else:
-    DriverOptionsPointer: TypeAlias = POINTER("DriverOptions")
-
 
 class CLI(Structure):
     """
@@ -340,3 +335,9 @@ class DriverOptions(Structure):
 
             self.cli.definition_str = cli_definition_string
             self.cli.definition_str_len = c_size_t(len(cli_definition_string.value))
+
+
+if TYPE_CHECKING:
+    DriverOptionsPointer: TypeAlias = _Pointer[DriverOptions]
+else:
+    DriverOptionsPointer: TypeAlias = POINTER(DriverOptions)

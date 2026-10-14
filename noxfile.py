@@ -11,7 +11,7 @@ nox.options.stop_on_first_error = False
 nox.options.default_venv_backend = "venv"
 
 
-@nox.session(python=["3.10", "3.11", "3.12", "3.13", "3.14"])
+@nox.session(python=["3.11", "3.12", "3.13", "3.14", "3.15"])
 def lint(session: nox.sessions.Session) -> None:
     """
     Nox run linters
@@ -31,7 +31,7 @@ def lint(session: nox.sessions.Session) -> None:
     session.run("make", "lint")
 
 
-@nox.session(python=["3.10", "3.11", "3.12", "3.13", "3.14"])
+@nox.session(python=["3.11", "3.12", "3.13", "3.14", "3.15"])
 def unit_tests(session: nox.sessions.Session) -> None:
     """
     Nox run unit tests
