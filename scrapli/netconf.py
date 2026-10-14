@@ -1230,7 +1230,7 @@ class Netconf:
     @handle_operation_timeout
     def raw_rpc(
         self,
-        payload: str,
+        payload: str | bytes,
         *,
         base_namespace_prefix: str = "",
         extra_namespaces: list[tuple[str, str]] | None = None,
@@ -1295,7 +1295,7 @@ class Netconf:
     @handle_operation_timeout_async
     async def raw_rpc_async(
         self,
-        payload: str,
+        payload: str | bytes,
         *,
         base_namespace_prefix: str = "",
         extra_namespaces: list[tuple[str, str]] | None = None,
@@ -1481,7 +1481,7 @@ class Netconf:
     def edit_config(  # noqa: PLR0913
         self,
         *,
-        config: str = "",
+        config: str | bytes = "",
         target: DatastoreType = DatastoreType.RUNNING,
         default_operation: DefaultOperation = DefaultOperation.UNSET,
         test_option: TestOption = TestOption.UNSET,
@@ -1536,7 +1536,7 @@ class Netconf:
     async def edit_config_async(  # noqa: PLR0913
         self,
         *,
-        config: str = "",
+        config: str | bytes = "",
         target: DatastoreType = DatastoreType.RUNNING,
         default_operation: DefaultOperation = DefaultOperation.UNSET,
         test_option: TestOption = TestOption.UNSET,
@@ -2762,7 +2762,7 @@ class Netconf:
     @handle_operation_timeout
     def edit_data(
         self,
-        content: str,
+        content: str | bytes,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
         default_operation: DefaultOperation = DefaultOperation.UNSET,
@@ -2811,7 +2811,7 @@ class Netconf:
     @handle_operation_timeout_async
     async def edit_data_async(
         self,
-        content: str,
+        content: str | bytes,
         *,
         target: DatastoreType = DatastoreType.RUNNING,
         default_operation: DefaultOperation = DefaultOperation.UNSET,
