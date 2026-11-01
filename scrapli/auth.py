@@ -57,6 +57,12 @@ class Options:
         private_key_path: filepath to the ssh private key to use
         private_key_passphrase: the private key passphrase if set
         private_key_content: the private key content to use -- only supported w/ ssh2 transport.
+        certificate_path: filepath to an openssh user certificate for `private_key_path`;
+            presented when authenticating with that key (passed as `CertificateFile` w/ bin
+            transport). Not paired with `private_key_content`.
+        certificate_content: the openssh user certificate content (the `*-cert.pub` file's
+            contents) for `private_key_content` -- only supported w/ ssh2 transport. Not paired
+            with `private_key_path`.
         lookups: a list of key/values that can be "looked up" from a connection -- used in
             conjunction with platform definition templating like `__lookup::enable` where "enable"
             is the key to "lookup" in the list of lookup key/values.
@@ -79,6 +85,8 @@ class Options:
     private_key_path: str | None = None
     private_key_passphrase: str | None = None
     private_key_content: str | None = None
+    certificate_path: str | None = None
+    certificate_content: str | None = None
     lookups: list[LookupKeyValue] | None = None
     force_in_session_auth: bool | None = None
     bypass_in_session_auth: bool | None = None
@@ -91,6 +99,8 @@ class Options:
     _private_key_path: c_char_p | None = field(init=False, default=None, repr=False)
     _private_key_passphrase: c_char_p | None = field(init=False, default=None, repr=False)
     _private_key_content: c_char_p | None = field(init=False, default=None, repr=False)
+    _certificate_path: c_char_p | None = field(init=False, default=None, repr=False)
+    _certificate_content: c_char_p | None = field(init=False, default=None, repr=False)
     _username_pattern: c_char_p | None = field(init=False, default=None, repr=False)
     _password_pattern: c_char_p | None = field(init=False, default=None, repr=False)
     _private_key_passphrase_pattern: c_char_p | None = field(init=False, default=None, repr=False)
@@ -100,7 +110,7 @@ class Options:
     _lookup_map_vals: Array[c_char_p] | None = field(init=False, default=None, repr=False)
     _lookup_map_val_lens: Array[c_uint16] | None = field(init=False, default=None, repr=False)
 
-    def apply(self, *, options: DriverOptionsPointer) -> None:  # noqa: C901,PLR0915
+    def apply(self, *, options: DriverOptionsPointer) -> None:  # noqa: C901,PLR0912,PLR0915
         """
         Applies the options to the given options struct.
 
@@ -147,6 +157,20 @@ class Options:
 
             options.contents.auth.private_key_content = self._private_key_content
             options.contents.auth.private_key_content_len = c_size_t(len(self.private_key_content))
+
+        if self.certificate_path is not None:
+            certificate_path = self.certificate_path.encode(encoding="utf-8")
+            self._certificate_path = to_c_string(certificate_path)
+
+            options.contents.auth.certificate_path = self._certificate_path
+            options.contents.auth.certificate_path_len = c_size_t(len(certificate_path))
+
+        if self.certificate_content is not None:
+            certificate_content = self.certificate_content.encode(encoding="utf-8")
+            self._certificate_content = to_c_string(certificate_content)
+
+            options.contents.auth.certificate_content = self._certificate_content
+            options.contents.auth.certificate_content_len = c_size_t(len(certificate_content))
 
         if self.lookups is not None:
             count = len(self.lookups)
@@ -228,6 +252,8 @@ class Options:
             f"private_key_path={self.private_key_path!r}, "
             f"private_key_passphrase={None if not self.private_key_passphrase else 'REDACTED'}, "
             f"private_key_content={None if not self.private_key_content else 'REDACTED'}, "
+            f"certificate_path={self.certificate_path!r}, "
+            f"certificate_content={None if not self.certificate_content else 'REDACTED'}, "
             f"lookups={self.lookups!r}, "
             f"force_in_session_auth={self.force_in_session_auth!r}, "
             f"bypass_in_session_auth={self.bypass_in_session_auth!r}, "

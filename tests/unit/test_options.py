@@ -21,6 +21,8 @@ def test_auth_options(options_assert_result):
             password="bar",
             private_key_path="secretpath",
             private_key_passphrase="secretpassphrase",
+            certificate_path="certpath",
+            certificate_content="certcontent",
             lookups=[LookupKeyValue(key="baz", value="qux")],
             force_in_session_auth=True,
             username_pattern="usernamepattern",
