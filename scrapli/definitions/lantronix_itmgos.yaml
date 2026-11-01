@@ -1,0 +1,24 @@
+---
+# IT Management Gateway OS (SLC 9000, SLC 8000, EMG 7500/8500, SLB) has one flat CLI
+# with no enable or configuration mode. The prompt is the hostname in brackets: [slc-01]>
+prompt_pattern: '^\[[\w.\-]{1,64}\]>\s?$'
+default_mode: 'exec'
+modes:
+  - name: 'exec'
+    prompt_pattern: '^\[[\w.\-]{1,64}\]>\s?$'
+failure_indicators:
+  - 'Unknown parameter'
+  - 'Invalid number of parameters'
+  - 'Invalid option'
+  - 'Incomplete Command'
+on_open_instructions:
+  - enter_mode:
+      requested_mode: 'exec'
+  - send_input:
+      input: 'set cli terminallines disable'
+on_close_instructions:
+  - enter_mode:
+      requested_mode: 'exec'
+  - write:
+      input: 'logout'
+ntc_templates_platform: 'lantronix_itmgos'
