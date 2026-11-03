@@ -10,7 +10,7 @@ This page contains a very simple example for using scrapli to connect to a CLI d
 from scrapli import AuthOptions, Cli # (1)
 
 
-def main(name):
+def main():
     cli = Cli( # (2)
         definition_file_or_name="cisco_iosxe",
         host="myrouter",
@@ -42,7 +42,7 @@ if __name__ == "__main__":
 from scrapli import AuthOptions, Netconf # (1)
 
 
-def main(name):
+def main():
     netconf = Netconf( # (2)
         host="myrouter",
         auth_options=AuthOptions(
@@ -51,7 +51,7 @@ def main(name):
         ),
     )
 
-    with cli as c: # (3)
+    with netconf as c: # (3)
         result = c.get_config() # (4)
         print(result.result) # (5)
 
