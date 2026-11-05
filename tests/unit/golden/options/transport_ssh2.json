@@ -58,7 +58,7 @@
     "proxy_jump_username": "jumpuser",
     "proxy_jump_password": "jumppass",
     "proxy_jump_private_key_path": "jumpprivatekey",
-    "proxy_jump_private_key_passphrase": "",
+    "proxy_jump_private_key_passphrase": "jumpprivatekeypassphrase",
     "proxy_jump_libssh2trace": true
   },
   "transportTest": {

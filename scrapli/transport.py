@@ -333,10 +333,10 @@ class Ssh2Options(Options):
                 self.proxy_jump_private_key_passphrase
             )
 
-            options.contents.transport.ssh2.proxy_jump_private_key_prassphrase = (
+            options.contents.transport.ssh2.proxy_jump_private_key_passphrase = (
                 self._proxy_jump_private_key_passphrase
             )
-            options.contents.transport.ssh2.proxy_jump_private_key_prassphrase_len = c_size_t(
+            options.contents.transport.ssh2.proxy_jump_private_key_passphrase_len = c_size_t(
                 len(self.proxy_jump_private_key_passphrase)
             )
 
