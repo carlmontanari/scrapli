@@ -146,6 +146,9 @@ class Result:
         self.inputs.extend(result.inputs)
         self.results.extend(result.results)
         self.splits.extend(result.splits)
+        self.results_failed_indicator = (
+            self.results_failed_indicator or result.results_failed_indicator
+        )
 
         self._result_raw_journals.extend(result._result_raw_journals)
         # drop any cached reconstruction, itll rebuild (now including the extended entries)
