@@ -129,29 +129,6 @@ class Result:
             "----->"
         )
 
-    def extend(self, result: "Result") -> None:
-        """
-        Extends this Result object with another Result object.
-
-        Args:
-            result: the result object with which to extend this result object
-
-        Returns:
-            N/A
-
-        Raises:
-            N/A
-
-        """
-        self.inputs.extend(result.inputs)
-        self.results.extend(result.results)
-        self.splits.extend(result.splits)
-
-        self._result_raw_journals.extend(result._result_raw_journals)
-        # drop any cached reconstruction, itll rebuild (now including the extended entries)
-        # on next access
-        self._results_raw = None
-
     @property
     def failed(self) -> bool:
         """
