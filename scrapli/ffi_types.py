@@ -23,6 +23,7 @@ from ctypes import (
     create_string_buffer,
     memmove,
     pointer,
+    string_at,
 )
 from enum import IntEnum
 from logging import CRITICAL, DEBUG, FATAL, INFO, NOTSET, WARN, Logger
@@ -74,6 +75,36 @@ else:
     USizePointer: TypeAlias = POINTER(c_size_t)
 
     StringPointer: TypeAlias = POINTER(c_char_p)
+
+
+def _create_buffer(size: int, init: bytes | None = None) -> Any:
+    """
+    Create a raw byte buffer of the given size, optionally initialized with `init`.
+
+    This exists (rather than just doing `(c_uint8 * size)()` inline) because ctypes caches every
+    dynamically created array type (`c_uint8 * n`, `c_uint64 * n`, and any `POINTER()` of those)
+    in a module level cache that is never evicted. Any time we build one of those with a size that
+    varies at runtime (output lengths, payload lengths, etc.) we pin a brand new type for every
+    distinct size, forever -- in a long running process that is a leak. `create_string_buffer` goes
+    through a single pre-existing `c_char` array type so it does not have this problem. The same
+    reasoning is why `ZigSlice.get_contents` uses `string_at` rather than casting to an array
+    type. See #425.
+
+    Args:
+        size: size of the buffer in bytes
+        init: optional bytes to copy into the buffer
+
+    Returns:
+        Any: the ctypes buffer (a `c_char` array)
+
+    Raises:
+        N/A
+
+    """
+    if init is not None:
+        return create_string_buffer(init, size)
+
+    return create_string_buffer(size)
 
 
 class Cancel:
@@ -204,7 +235,7 @@ class ZigU64Slice(Structure):
         if size is None:
             raise ValueError("size or vals required")
 
-        self._buf = (c_uint64 * size.value)()
+        self._buf = _create_buffer(8 * size.value)
         self.ptr = cast(self._buf, POINTER(c_uint64))
         self.len = size.value
 
@@ -271,7 +302,7 @@ class ZigSlice(Structure):
         if size is None:
             raise ValueError("size or content required")
 
-        self._buf = create_string_buffer(size.value)
+        self._buf = _create_buffer(size.value)
         self.ptr = cast(self._buf, POINTER(c_uint8))
         self.len = size.value
 
@@ -292,7 +323,7 @@ class ZigSlice(Structure):
             N/A
 
         """
-        return bytes(cast(self.ptr, POINTER(c_uint8 * self.len)).contents[0 : self.len])
+        return string_at(self.ptr, self.len)
 
     def get_decoded_contents(self) -> str:
         """
@@ -489,7 +520,7 @@ def capabilities_callback_wrapper(
         out_bytes = "".join(out_elems).encode()
 
         slice = ZigSlice(size=c_size_t(len(out_bytes)))
-        slice.ptr = cast((c_uint8 * len(out_bytes))(*out_bytes), POINTER(c_uint8))
+        slice.ptr = cast(_create_buffer(len(out_bytes), init=out_bytes), POINTER(c_uint8))
 
         # ctypes expects an int that it will wrap in c_void_p for us (because of the typing above
         # so... we'll just always return an int, it should really never not succeed?)
