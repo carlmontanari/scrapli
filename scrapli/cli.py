@@ -563,7 +563,11 @@ class Cli:
     def _free(
         self,
     ) -> None:
-        self.ffi_mapping.shared_mapping.free(ptr=self._ptr_or_exception())
+        ptr = self._ptr_or_exception()
+
+        self.ptr = None
+        self.poll_fd = 0
+        self.ffi_mapping.shared_mapping.free(ptr=ptr)
 
     def _get_options(self) -> str:
         """
