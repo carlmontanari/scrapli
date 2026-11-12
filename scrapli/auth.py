@@ -12,7 +12,7 @@ class LookupKeyValue:
     """
     Options a "lookup" key/value pair.
 
-    Used in conjuection with platform definition templating like `__lookup::enable` where "enable"
+    Used in conjunction with platform definition templating like `__lookup::enable` where "enable"
     is the key to "lookup" in the list of lookup key/values.
 
     Args:
