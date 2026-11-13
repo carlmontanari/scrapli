@@ -71,7 +71,11 @@ def handle_operation_timeout(
             # unconditionally reset the timeout
             inst.ffi_mapping.session_mapping.set_operation_timeout_ns(
                 inst._ptr_or_exception(),
-                c_uint64(inst.session_options.operation_timeout_ns or DEFAULT_OPERATION_TIMEOUT_NS),
+                c_uint64(
+                    DEFAULT_OPERATION_TIMEOUT_NS
+                    if inst.session_options.operation_timeout_ns is None
+                    else inst.session_options.operation_timeout_ns
+                ),
             )
 
         return res
@@ -138,7 +142,11 @@ def handle_operation_timeout_async(
             # unconditionally reset the timeout
             inst.ffi_mapping.session_mapping.set_operation_timeout_ns(
                 inst._ptr_or_exception(),
-                c_uint64(inst.session_options.operation_timeout_ns or DEFAULT_OPERATION_TIMEOUT_NS),
+                c_uint64(
+                    DEFAULT_OPERATION_TIMEOUT_NS
+                    if inst.session_options.operation_timeout_ns is None
+                    else inst.session_options.operation_timeout_ns
+                ),
             )
 
         return res

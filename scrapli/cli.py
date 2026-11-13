@@ -558,6 +558,9 @@ class Cli:
             )
         )
         if poll_fd <= 0:
+            # nothing will ever free a driver that never opened, so do it before bailing
+            self._free()
+
             raise AllocationException("failed to allocate poll fd")
 
         self.poll_fd = poll_fd
@@ -682,7 +685,11 @@ class Cli:
     def _reset_operation_timeout(self) -> None:
         self.ffi_mapping.session_mapping.set_operation_timeout_ns(
             self._ptr_or_exception(),
-            c_uint64(self.session_options.operation_timeout_ns or DEFAULT_OPERATION_TIMEOUT_NS),
+            c_uint64(
+                DEFAULT_OPERATION_TIMEOUT_NS
+                if self.session_options.operation_timeout_ns is None
+                else self.session_options.operation_timeout_ns
+            ),
         )
 
     def _open(
@@ -770,7 +777,11 @@ class Cli:
             return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
         except BaseException:
             # the open failed (or was cancelled/interrupted), nothing will ever close this
-            # driver -- free it so the zig side resources (and its threads) go away
+            # driver -- free it so the zig side resources (and its threads) go away. free joins
+            # the operation thread, so signal cancellation first in case the open is still in
+            # flight (i.e. KeyboardInterrupt), otherwise free blocks until the open times out
+            cancel.cancel()
+
             if self.ptr is not None:
                 self._free()
 
@@ -814,7 +825,11 @@ class Cli:
             return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
         except BaseException:
             # the open failed (or was cancelled/interrupted), nothing will ever close this
-            # driver -- free it so the zig side resources (and its threads) go away
+            # driver -- free it so the zig side resources (and its threads) go away. free joins
+            # the operation thread, so signal cancellation first in case the open is still in
+            # flight (i.e. KeyboardInterrupt), otherwise free blocks until the open times out
+            cancel.cancel()
+
             if self.ptr is not None:
                 self._free()
 
