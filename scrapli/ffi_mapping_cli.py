@@ -126,6 +126,7 @@ class LibScrapliCliMapping:
                 USizePointer,
                 USizePointer,
                 USizePointer,
+                U8Pointer,
             ],
             int,
         ] = lib.ls_cli_fetch_operation_sizes
@@ -139,6 +140,7 @@ class LibScrapliCliMapping:
             USizePointer,
             USizePointer,
             USizePointer,
+            U8Pointer,
         ]
         lib.ls_cli_fetch_operation_sizes.restype = c_uint8
 
@@ -562,6 +564,7 @@ class LibScrapliCliMapping:
         results_failed_indicator_size: USizePointer,
         err_size: USizePointer,
         last_err_str_size: USizePointer,
+        err_code: U8Pointer,
     ) -> None:
         """
         Fetch the sizes of a cli operation's results.
@@ -579,6 +582,8 @@ class LibScrapliCliMapping:
                 size
             err_size: int pointer to fill with the operation's error size
             last_err_str_size: int pointer to fill with the operation's last error string size
+            err_code: int pointer to fill with the result code of the error the operation hit,
+                if any
 
         Returns:
             N/A
@@ -598,6 +603,7 @@ class LibScrapliCliMapping:
                 results_failed_indicator_size,
                 err_size,
                 last_err_str_size,
+                err_code,
             )
         ).raise_if_error(
             message="fetching operation sizes failed",

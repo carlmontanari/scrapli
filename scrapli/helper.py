@@ -8,8 +8,8 @@ from os import read
 from pathlib import Path
 from select import select
 
-from scrapli.exceptions import CancelledException, OperationException
-from scrapli.ffi_types import Cancel, OperationIdPointer
+from scrapli.exceptions import CancelledException, OperationException, ScrapliException
+from scrapli.ffi_types import Cancel, LibScrapliFFIResult, OperationIdPointer
 
 WAKEUP_FD_SIGNAL_SIZE = 4
 WAKEUP_FD_POLL_INTERVAL_S = 0.1
@@ -35,6 +35,32 @@ def resolve_file(file: str) -> str:
         return str(Path(file).expanduser())
 
     raise OperationException(f"path `{file}` could not be resolved")
+
+
+def operation_error_to_exception(
+    error_code: int,
+    error_name: str,
+    last_error: str,
+) -> ScrapliException:
+    """
+    Build the exception for a failed operation from the values fetched from libscrapli.
+
+    Args:
+        error_code: the libscrapli result code for the error the operation hit
+        error_name: the name of the error the operation hit
+        last_error: the last error message libscrapli recorded for the operation, if any
+
+    Returns:
+        ScrapliException: the exception matching the error code, OperationException if the code
+            does not map to a specific exception
+
+    Raises:
+        N/A
+
+    """
+    message = f"{error_name}: {last_error}" if last_error else error_name
+
+    return LibScrapliFFIResult(error_code).to_exception(message, unknown=OperationException)
 
 
 def _read_wakeup_signal_operation_id(fd: int) -> int:

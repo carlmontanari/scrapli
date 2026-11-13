@@ -28,10 +28,10 @@ from scrapli.cli_decorators import handle_operation_timeout, handle_operation_ti
 from scrapli.cli_result import Result
 from scrapli.exceptions import (
     AllocationException,
-    FFIException,
     NotOpenedException,
     OperationException,
     OptionsException,
+    ScrapliException,
 )
 from scrapli.ffi_mapping import LibScrapliMapping
 from scrapli.ffi_options import DriverOptions, DriverOptionsPointer
@@ -47,10 +47,12 @@ from scrapli.ffi_types import (
     to_c_string,
 )
 from scrapli.helper import (
+    operation_error_to_exception,
     resolve_file,
     wait_for_available_operation_result,
     wait_for_available_operation_result_async,
 )
+from scrapli.session import DEFAULT_OPERATION_TIMEOUT_NS
 from scrapli.session import Options as SessionOptions
 from scrapli.transport import BinOptions as TransportBinOptions
 from scrapli.transport import Options as TransportOptions
@@ -677,11 +679,18 @@ class Cli:
 
         return self._genie_platform
 
+    def _reset_operation_timeout(self) -> None:
+        self.ffi_mapping.session_mapping.set_operation_timeout_ns(
+            self._ptr_or_exception(),
+            c_uint64(self.session_options.operation_timeout_ns or DEFAULT_OPERATION_TIMEOUT_NS),
+        )
+
     def _open(
         self,
         *,
         operation_id_ptr: OperationIdPointer,
         cancel: Cancel,
+        operation_timeout_ns: int | None,
     ) -> None:
         options_ptr = self.ffi_mapping.shared_mapping.alloc_driver_options()
         options = cast(options_ptr, POINTER(DriverOptions))
@@ -707,17 +716,25 @@ class Cli:
             self.ffi_mapping.shared_mapping.free_driver_options(options_ptr=options_ptr)
 
         try:
+            if operation_timeout_ns is not None:
+                # the driver only exists once allocated, so a per call open timeout can't be set
+                # by the timeout decorator like for other operations -- set it here instead, open
+                # resets it to the session default once the open completes
+                self.ffi_mapping.session_mapping.set_operation_timeout_ns(
+                    self._ptr_or_exception(),
+                    c_uint64(operation_timeout_ns),
+                )
+
             self.ffi_mapping.cli_mapping.open(
                 ptr=self._ptr_or_exception(),
                 operation_id_ptr=operation_id_ptr,
                 cancel=cancel._to_ffi(),
             )
-        except FFIException:
+        except ScrapliException:
             self._free()
 
             raise
 
-    @handle_operation_timeout
     def open(
         self,
         *,
@@ -741,16 +758,27 @@ class Cli:
         if cancel is None:
             cancel = Cancel()
 
-        # only used in the decorator
-        _ = operation_timeout_ns
-
         operation_id_ptr = pointer(c_uint32(0))
 
-        self._open(operation_id_ptr=operation_id_ptr, cancel=cancel)
+        self._open(
+            operation_id_ptr=operation_id_ptr,
+            cancel=cancel,
+            operation_timeout_ns=operation_timeout_ns,
+        )
 
-        return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
+        try:
+            return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
+        except BaseException:
+            # the open failed (or was cancelled/interrupted), nothing will ever close this
+            # driver -- free it so the zig side resources (and its threads) go away
+            if self.ptr is not None:
+                self._free()
 
-    @handle_operation_timeout_async
+            raise
+        finally:
+            if operation_timeout_ns is not None and self.ptr is not None:
+                self._reset_operation_timeout()
+
     async def open_async(
         self,
         *,
@@ -774,14 +802,26 @@ class Cli:
         if cancel is None:
             cancel = Cancel()
 
-        # only used in the decorator
-        _ = operation_timeout_ns
-
         operation_id_ptr = pointer(c_uint32(0))
 
-        self._open(operation_id_ptr=operation_id_ptr, cancel=cancel)
+        self._open(
+            operation_id_ptr=operation_id_ptr,
+            cancel=cancel,
+            operation_timeout_ns=operation_timeout_ns,
+        )
 
-        return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
+        try:
+            return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
+        except BaseException:
+            # the open failed (or was cancelled/interrupted), nothing will ever close this
+            # driver -- free it so the zig side resources (and its threads) go away
+            if self.ptr is not None:
+                self._free()
+
+            raise
+        finally:
+            if operation_timeout_ns is not None and self.ptr is not None:
+                self._reset_operation_timeout()
 
     def _close(
         self,
@@ -997,6 +1037,7 @@ class Cli:
         results_failed_indicator_size = pointer(c_size_t())
         err_size = pointer(c_size_t())
         last_err_str_size = pointer(c_size_t())
+        err_code = pointer(c_uint8())
 
         self.ffi_mapping.cli_mapping.fetch_sizes(
             ptr=self._ptr_or_exception(),
@@ -1008,6 +1049,7 @@ class Cli:
             results_failed_indicator_size=results_failed_indicator_size,
             err_size=err_size,
             last_err_str_size=last_err_str_size,
+            err_code=err_code,
         )
 
         start_time = pointer(c_uint64())
@@ -1044,10 +1086,11 @@ class Cli:
 
         err_contents = err_slice.contents.get_decoded_contents()
         if err_contents:
-            if last_err_string:
-                err_contents += f": {last_err_string.contents.get_decoded_contents()}"
-
-            raise OperationException(err_contents)
+            raise operation_error_to_exception(
+                error_code=err_code.contents.value,
+                error_name=err_contents,
+                last_error=last_err_string.contents.get_decoded_contents(),
+            )
 
         return Result(
             inputs=inputs_slice.contents.get_contents(),
@@ -1085,6 +1128,7 @@ class Cli:
         results_failed_indicator_size = pointer(c_size_t())
         err_size = pointer(c_size_t())
         last_err_str_size = pointer(c_size_t())
+        err_code = pointer(c_uint8())
 
         self.ffi_mapping.cli_mapping.fetch_sizes(
             ptr=self._ptr_or_exception(),
@@ -1096,6 +1140,7 @@ class Cli:
             results_failed_indicator_size=results_failed_indicator_size,
             err_size=err_size,
             last_err_str_size=last_err_str_size,
+            err_code=err_code,
         )
 
         start_time = pointer(c_uint64())
@@ -1132,10 +1177,11 @@ class Cli:
 
         err_contents = err_slice.contents.get_decoded_contents()
         if err_contents:
-            if last_err_string:
-                err_contents += f": {last_err_string.contents.get_decoded_contents()}"
-
-            raise OperationException(err_contents)
+            raise operation_error_to_exception(
+                error_code=err_code.contents.value,
+                error_name=err_contents,
+                last_error=last_err_string.contents.get_decoded_contents(),
+            )
 
         failed_indicator = results_failed_indicator_slice.contents.get_decoded_contents()
 

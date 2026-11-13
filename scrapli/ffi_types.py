@@ -37,6 +37,7 @@ from scrapli.exceptions import (
     InvalidArgumentException,
     OperationException,
     OutOfMememoryException,
+    ScrapliException,
     SessionException,
     TimeoutException,
     TransportException,
@@ -132,9 +133,10 @@ class LibScrapliFFIResult(IntEnum):
 
     Many operations expose/return a uint8 where 0 is success, and any non-zero value indicates an
     error of some kind. Typically the "real" errors are not happening at the ffi driver layer,
-    and instead are happening in the actual Cli/Netconf objects in zig and written into the error
-    results, however sometimes we can catch/see memory related errors etc. because of this enum so
-    we get a bit of extra debug/troubleshooting info.
+    and instead are happening in the actual Cli/Netconf objects in zig -- those errors are
+    reported when fetching the operation result as an error code (one of these values) alongside
+    the error name and last error message. Errors at the ffi driver layer itself (i.e. memory
+    related errors) are returned directly as the result of the ffi call.
 
     Args:
         N/A
@@ -159,7 +161,48 @@ class LibScrapliFFIResult(IntEnum):
     OPERATION = 9
     INVALID_ARGUMENT = 10
 
-    def raise_if_error(  # noqa:C901
+    @classmethod
+    def _missing_(cls, value: object) -> "LibScrapliFFIResult":
+        """
+        Treat result codes this version of scrapli does not know about as unknown errors.
+
+        Args:
+            value: the unknown result code
+
+        Returns:
+            LibScrapliFFIResult: always UNKNOWN
+
+        Raises:
+            N/A
+
+        """
+        _ = value
+
+        return cls.UNKNOWN
+
+    def to_exception(
+        self,
+        message: str,
+        *,
+        unknown: type[ScrapliException] = FFIException,
+    ) -> ScrapliException:
+        """
+        Returns the exception matching the result
+
+        Args:
+            message: the message to push into the exception.
+            unknown: the exception type to use for results that do not map to a specific exception
+
+        Returns:
+            ScrapliException: the exception for this result
+
+        Raises:
+            N/A
+
+        """
+        return _RESULT_EXCEPTIONS.get(self, unknown)(message)
+
+    def raise_if_error(
         self,
         message: str,
     ) -> None:
@@ -173,32 +216,27 @@ class LibScrapliFFIResult(IntEnum):
             N/A
 
         Raises:
-            FFIException: wrapping an exception based on the result.
+            ScrapliException: the exception matching the result (see to_exception), FFIException
+                if the result does not map to a specific exception.
 
         """
-        match self:
-            case LibScrapliFFIResult.SUCCESS:
-                return
-            case LibScrapliFFIResult.OUT_OF_MEMORY:
-                raise FFIException(OutOfMememoryException(message))
-            case LibScrapliFFIResult.EOF:
-                raise FFIException(EOFException(message))
-            case LibScrapliFFIResult.CANCELLED:
-                raise FFIException(CancelledException(message))
-            case LibScrapliFFIResult.TIMEOUT:
-                raise FFIException(TimeoutException(message))
-            case LibScrapliFFIResult.DRIVER:
-                raise FFIException(DriverException(message))
-            case LibScrapliFFIResult.SESSION:
-                raise FFIException(SessionException(message))
-            case LibScrapliFFIResult.TRANSPORT:
-                raise FFIException(TransportException(message))
-            case LibScrapliFFIResult.OPERATION:
-                raise FFIException(OperationException(message))
-            case LibScrapliFFIResult.INVALID_ARGUMENT:
-                raise FFIException(InvalidArgumentException(message))
-            case LibScrapliFFIResult.UNKNOWN | _:
-                raise FFIException(message)
+        if self == LibScrapliFFIResult.SUCCESS:
+            return
+
+        raise self.to_exception(message)
+
+
+_RESULT_EXCEPTIONS: dict[LibScrapliFFIResult, type[ScrapliException]] = {
+    LibScrapliFFIResult.OUT_OF_MEMORY: OutOfMememoryException,
+    LibScrapliFFIResult.EOF: EOFException,
+    LibScrapliFFIResult.CANCELLED: CancelledException,
+    LibScrapliFFIResult.TIMEOUT: TimeoutException,
+    LibScrapliFFIResult.DRIVER: DriverException,
+    LibScrapliFFIResult.SESSION: SessionException,
+    LibScrapliFFIResult.TRANSPORT: TransportException,
+    LibScrapliFFIResult.OPERATION: OperationException,
+    LibScrapliFFIResult.INVALID_ARGUMENT: InvalidArgumentException,
+}
 
 
 class ZigU64Slice(Structure):
