@@ -161,25 +161,6 @@ class LibScrapliFFIResult(IntEnum):
     OPERATION = 9
     INVALID_ARGUMENT = 10
 
-    @classmethod
-    def _missing_(cls, value: object) -> "LibScrapliFFIResult":
-        """
-        Treat result codes this version of scrapli does not know about as unknown errors.
-
-        Args:
-            value: the unknown result code
-
-        Returns:
-            LibScrapliFFIResult: always UNKNOWN
-
-        Raises:
-            N/A
-
-        """
-        _ = value
-
-        return cls.UNKNOWN
-
     def to_exception(
         self,
         message: str,

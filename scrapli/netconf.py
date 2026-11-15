@@ -32,6 +32,7 @@ from scrapli.ffi_types import (
     Cancel,
     DriverPointer,
     IntPointer,
+    LibScrapliFFIResult,
     NetconfCapabilitesCallback,
     OperationIdPointer,
     U8Pointer,
@@ -807,11 +808,7 @@ class Netconf:
             return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
         except BaseException:
             # the open failed (or was cancelled/interrupted), nothing will ever close this
-            # driver -- free it so the zig side resources (and its threads) go away. free joins
-            # the operation thread, so signal cancellation first in case the open is still in
-            # flight (i.e. KeyboardInterrupt), otherwise free blocks until the open times out
-            cancel.cancel()
-
+            # driver -- free it so the zig side resources (and its threads) go away
             if self.ptr is not None:
                 self._free()
 
@@ -855,11 +852,7 @@ class Netconf:
             return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
         except BaseException:
             # the open failed (or was cancelled/interrupted), nothing will ever close this
-            # driver -- free it so the zig side resources (and its threads) go away. free joins
-            # the operation thread, so signal cancellation first in case the open is still in
-            # flight (i.e. KeyboardInterrupt), otherwise free blocks until the open times out
-            cancel.cancel()
-
+            # driver -- free it so the zig side resources (and its threads) go away
             if self.ptr is not None:
                 self._free()
 
@@ -1025,11 +1018,10 @@ class Netconf:
             last_err_string=last_err_string,
         )
 
-        err_contents = err_slice.contents.get_decoded_contents()
-        if err_contents:
+        if err_code.contents.value != LibScrapliFFIResult.SUCCESS:
             raise operation_error_to_exception(
                 error_code=err_code.contents.value,
-                error_name=err_contents,
+                error_name=err_slice.contents.get_decoded_contents(),
                 last_error=last_err_string.contents.get_decoded_contents(),
             )
 
@@ -1106,11 +1098,10 @@ class Netconf:
             last_err_string=last_err_string,
         )
 
-        err_contents = err_slice.contents.get_decoded_contents()
-        if err_contents:
+        if err_code.contents.value != LibScrapliFFIResult.SUCCESS:
             raise operation_error_to_exception(
                 error_code=err_code.contents.value,
-                error_name=err_contents,
+                error_name=err_slice.contents.get_decoded_contents(),
                 last_error=last_err_string.contents.get_decoded_contents(),
             )
 
