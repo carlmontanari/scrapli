@@ -654,9 +654,6 @@ class Netconf:
             )
         )
         if poll_fd <= 0:
-            # nothing will ever free a driver that never opened, so do it before bailing
-            self._free()
-
             raise AllocationException("failed to allocate poll fd")
 
         self.poll_fd = poll_fd
