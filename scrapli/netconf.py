@@ -22,10 +22,9 @@ from types import TracebackType
 from scrapli.auth import Options as AuthOptions
 from scrapli.exceptions import (
     AllocationException,
-    FFIException,
     NoMessagesException,
     NotOpenedException,
-    OperationException,
+    ScrapliException,
 )
 from scrapli.ffi_mapping import LibScrapliMapping
 from scrapli.ffi_options import DriverOptions, DriverOptionsPointer
@@ -45,6 +44,7 @@ from scrapli.ffi_types import (
     to_c_string,
 )
 from scrapli.helper import (
+    operation_error_to_exception,
     wait_for_available_operation_result,
     wait_for_available_operation_result_async,
 )
@@ -743,7 +743,7 @@ class Netconf:
                 operation_id_ptr=operation_id_ptr,
                 cancel=cancel._to_ffi(),
             )
-        except FFIException:
+        except ScrapliException:
             self._free()
 
             raise
@@ -779,7 +779,15 @@ class Netconf:
 
         self._open(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
-        return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
+        try:
+            return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
+        except BaseException:
+            # the open failed (or was cancelled/interrupted), nothing will ever close this
+            # driver -- free it so the zig side resources (and its threads) go away
+            if self.ptr is not None:
+                self._free()
+
+            raise
 
     @handle_operation_timeout_async
     async def open_async(
@@ -812,7 +820,15 @@ class Netconf:
 
         self._open(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
-        return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
+        try:
+            return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
+        except BaseException:
+            # the open failed (or was cancelled/interrupted), nothing will ever close this
+            # driver -- free it so the zig side resources (and its threads) go away
+            if self.ptr is not None:
+                self._free()
+
+            raise
 
     def _close(
         self,
@@ -969,12 +985,12 @@ class Netconf:
             last_err_string=last_err_string,
         )
 
-        err_contents = err_slice.contents.get_decoded_contents()
-        if err_contents:
-            if last_err_string:
-                err_contents += f": {last_err_string.contents.get_decoded_contents()}"
-
-            raise OperationException(err_contents)
+        err_name = err_slice.contents.get_decoded_contents()
+        if err_name:
+            raise operation_error_to_exception(
+                error_name=err_name,
+                last_error=last_err_string.contents.get_decoded_contents(),
+            )
 
         return Result(
             input_=input_slice.contents.get_decoded_contents(),
@@ -1047,12 +1063,12 @@ class Netconf:
             last_err_string=last_err_string,
         )
 
-        err_contents = err_slice.contents.get_decoded_contents()
-        if err_contents:
-            if last_err_string:
-                err_contents += f": {last_err_string.contents.get_decoded_contents()}"
-
-            raise OperationException(err_contents)
+        err_name = err_slice.contents.get_decoded_contents()
+        if err_name:
+            raise operation_error_to_exception(
+                error_name=err_name,
+                last_error=last_err_string.contents.get_decoded_contents(),
+            )
 
         return Result(
             input_=input_slice.contents.get_decoded_contents(),

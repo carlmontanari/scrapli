@@ -28,10 +28,10 @@ from scrapli.cli_decorators import handle_operation_timeout, handle_operation_ti
 from scrapli.cli_result import Result
 from scrapli.exceptions import (
     AllocationException,
-    FFIException,
     NotOpenedException,
     OperationException,
     OptionsException,
+    ScrapliException,
 )
 from scrapli.ffi_mapping import LibScrapliMapping
 from scrapli.ffi_options import DriverOptions, DriverOptionsPointer
@@ -47,6 +47,7 @@ from scrapli.ffi_types import (
     to_c_string,
 )
 from scrapli.helper import (
+    operation_error_to_exception,
     resolve_file,
     wait_for_available_operation_result,
     wait_for_available_operation_result_async,
@@ -712,7 +713,7 @@ class Cli:
                 operation_id_ptr=operation_id_ptr,
                 cancel=cancel._to_ffi(),
             )
-        except FFIException:
+        except ScrapliException:
             self._free()
 
             raise
@@ -748,7 +749,15 @@ class Cli:
 
         self._open(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
-        return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
+        try:
+            return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
+        except BaseException:
+            # the open failed (or was cancelled/interrupted), nothing will ever close this
+            # driver -- free it so the zig side resources (and its threads) go away
+            if self.ptr is not None:
+                self._free()
+
+            raise
 
     @handle_operation_timeout_async
     async def open_async(
@@ -781,7 +790,15 @@ class Cli:
 
         self._open(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
-        return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
+        try:
+            return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
+        except BaseException:
+            # the open failed (or was cancelled/interrupted), nothing will ever close this
+            # driver -- free it so the zig side resources (and its threads) go away
+            if self.ptr is not None:
+                self._free()
+
+            raise
 
     def _close(
         self,
@@ -1042,12 +1059,12 @@ class Cli:
             last_err_string=last_err_string,
         )
 
-        err_contents = err_slice.contents.get_decoded_contents()
-        if err_contents:
-            if last_err_string:
-                err_contents += f": {last_err_string.contents.get_decoded_contents()}"
-
-            raise OperationException(err_contents)
+        err_name = err_slice.contents.get_decoded_contents()
+        if err_name:
+            raise operation_error_to_exception(
+                error_name=err_name,
+                last_error=last_err_string.contents.get_decoded_contents(),
+            )
 
         return Result(
             inputs=inputs_slice.contents.get_contents(),
@@ -1130,12 +1147,12 @@ class Cli:
             last_err_string=last_err_string,
         )
 
-        err_contents = err_slice.contents.get_decoded_contents()
-        if err_contents:
-            if last_err_string:
-                err_contents += f": {last_err_string.contents.get_decoded_contents()}"
-
-            raise OperationException(err_contents)
+        err_name = err_slice.contents.get_decoded_contents()
+        if err_name:
+            raise operation_error_to_exception(
+                error_name=err_name,
+                last_error=last_err_string.contents.get_decoded_contents(),
+            )
 
         failed_indicator = results_failed_indicator_slice.contents.get_decoded_contents()
 
