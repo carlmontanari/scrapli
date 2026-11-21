@@ -38,7 +38,6 @@ from scrapli.ffi_options import DriverOptions, DriverOptionsPointer
 from scrapli.ffi_types import (
     Cancel,
     DriverPointer,
-    LibScrapliFFIResult,
     OperationIdPointer,
     U8Pointer,
     ZigSlice,
@@ -53,7 +52,6 @@ from scrapli.helper import (
     wait_for_available_operation_result,
     wait_for_available_operation_result_async,
 )
-from scrapli.session import DEFAULT_OPERATION_TIMEOUT_NS
 from scrapli.session import Options as SessionOptions
 from scrapli.transport import BinOptions as TransportBinOptions
 from scrapli.transport import Options as TransportOptions
@@ -680,22 +678,11 @@ class Cli:
 
         return self._genie_platform
 
-    def _reset_operation_timeout(self) -> None:
-        self.ffi_mapping.session_mapping.set_operation_timeout_ns(
-            self._ptr_or_exception(),
-            c_uint64(
-                DEFAULT_OPERATION_TIMEOUT_NS
-                if self.session_options.operation_timeout_ns is None
-                else self.session_options.operation_timeout_ns
-            ),
-        )
-
     def _open(
         self,
         *,
         operation_id_ptr: OperationIdPointer,
         cancel: Cancel,
-        operation_timeout_ns: int | None,
     ) -> None:
         options_ptr = self.ffi_mapping.shared_mapping.alloc_driver_options()
         options = cast(options_ptr, POINTER(DriverOptions))
@@ -721,15 +708,6 @@ class Cli:
             self.ffi_mapping.shared_mapping.free_driver_options(options_ptr=options_ptr)
 
         try:
-            if operation_timeout_ns is not None:
-                # the driver only exists once allocated, so a per call open timeout can't be set
-                # by the timeout decorator like for other operations -- set it here instead, open
-                # resets it to the session default once the open completes
-                self.ffi_mapping.session_mapping.set_operation_timeout_ns(
-                    self._ptr_or_exception(),
-                    c_uint64(operation_timeout_ns),
-                )
-
             self.ffi_mapping.cli_mapping.open(
                 ptr=self._ptr_or_exception(),
                 operation_id_ptr=operation_id_ptr,
@@ -740,6 +718,7 @@ class Cli:
 
             raise
 
+    @handle_operation_timeout
     def open(
         self,
         *,
@@ -763,13 +742,12 @@ class Cli:
         if cancel is None:
             cancel = Cancel()
 
+        # only used in the decorator
+        _ = operation_timeout_ns
+
         operation_id_ptr = pointer(c_uint32(0))
 
-        self._open(
-            operation_id_ptr=operation_id_ptr,
-            cancel=cancel,
-            operation_timeout_ns=operation_timeout_ns,
-        )
+        self._open(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
         try:
             return self._get_result(operation_id_ptr=operation_id_ptr, cancel=cancel)
@@ -780,10 +758,8 @@ class Cli:
                 self._free()
 
             raise
-        finally:
-            if operation_timeout_ns is not None and self.ptr is not None:
-                self._reset_operation_timeout()
 
+    @handle_operation_timeout_async
     async def open_async(
         self,
         *,
@@ -807,13 +783,12 @@ class Cli:
         if cancel is None:
             cancel = Cancel()
 
+        # only used in the decorator
+        _ = operation_timeout_ns
+
         operation_id_ptr = pointer(c_uint32(0))
 
-        self._open(
-            operation_id_ptr=operation_id_ptr,
-            cancel=cancel,
-            operation_timeout_ns=operation_timeout_ns,
-        )
+        self._open(operation_id_ptr=operation_id_ptr, cancel=cancel)
 
         try:
             return await self._get_result_async(operation_id_ptr=operation_id_ptr, cancel=cancel)
@@ -824,9 +799,6 @@ class Cli:
                 self._free()
 
             raise
-        finally:
-            if operation_timeout_ns is not None and self.ptr is not None:
-                self._reset_operation_timeout()
 
     def _close(
         self,
@@ -1042,7 +1014,6 @@ class Cli:
         results_failed_indicator_size = pointer(c_size_t())
         err_size = pointer(c_size_t())
         last_err_str_size = pointer(c_size_t())
-        err_code = pointer(c_uint8())
 
         self.ffi_mapping.cli_mapping.fetch_sizes(
             ptr=self._ptr_or_exception(),
@@ -1054,7 +1025,6 @@ class Cli:
             results_failed_indicator_size=results_failed_indicator_size,
             err_size=err_size,
             last_err_str_size=last_err_str_size,
-            err_code=err_code,
         )
 
         start_time = pointer(c_uint64())
@@ -1089,10 +1059,10 @@ class Cli:
             last_err_string=last_err_string,
         )
 
-        if err_code.contents.value != LibScrapliFFIResult.SUCCESS:
+        err_name = err_slice.contents.get_decoded_contents()
+        if err_name:
             raise operation_error_to_exception(
-                error_code=err_code.contents.value,
-                error_name=err_slice.contents.get_decoded_contents(),
+                error_name=err_name,
                 last_error=last_err_string.contents.get_decoded_contents(),
             )
 
@@ -1132,7 +1102,6 @@ class Cli:
         results_failed_indicator_size = pointer(c_size_t())
         err_size = pointer(c_size_t())
         last_err_str_size = pointer(c_size_t())
-        err_code = pointer(c_uint8())
 
         self.ffi_mapping.cli_mapping.fetch_sizes(
             ptr=self._ptr_or_exception(),
@@ -1144,7 +1113,6 @@ class Cli:
             results_failed_indicator_size=results_failed_indicator_size,
             err_size=err_size,
             last_err_str_size=last_err_str_size,
-            err_code=err_code,
         )
 
         start_time = pointer(c_uint64())
@@ -1179,10 +1147,10 @@ class Cli:
             last_err_string=last_err_string,
         )
 
-        if err_code.contents.value != LibScrapliFFIResult.SUCCESS:
+        err_name = err_slice.contents.get_decoded_contents()
+        if err_name:
             raise operation_error_to_exception(
-                error_code=err_code.contents.value,
-                error_name=err_slice.contents.get_decoded_contents(),
+                error_name=err_name,
                 last_error=last_err_string.contents.get_decoded_contents(),
             )
 

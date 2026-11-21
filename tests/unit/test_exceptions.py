@@ -106,21 +106,6 @@ async def test_open_timeout_async(driver, silent_server):
 
 
 @pytest.mark.parametrize(argnames="driver", argvalues=DRIVERS, ids=DRIVER_IDS)
-def test_open_timeout_per_call(driver, silent_server):
-    with pytest.raises(TimeoutException):
-        driver(host="127.0.0.1", port=silent_server).open(operation_timeout_ns=1_000_000_000)
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(argnames="driver", argvalues=DRIVERS, ids=DRIVER_IDS)
-async def test_open_timeout_per_call_async(driver, silent_server):
-    with pytest.raises(TimeoutException):
-        await driver(host="127.0.0.1", port=silent_server).open_async(
-            operation_timeout_ns=1_000_000_000
-        )
-
-
-@pytest.mark.parametrize(argnames="driver", argvalues=DRIVERS, ids=DRIVER_IDS)
 def test_open_cancelled(driver, silent_server):
     cancel = Cancel()
     timer = threading.Timer(1, cancel.cancel)

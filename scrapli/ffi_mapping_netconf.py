@@ -100,7 +100,6 @@ class LibScrapliNetconfMapping:
                 USizePointer,
                 USizePointer,
                 USizePointer,
-                U8Pointer,
             ],
             int,
         ] = lib.ls_netconf_fetch_operation_sizes
@@ -114,7 +113,6 @@ class LibScrapliNetconfMapping:
             USizePointer,
             USizePointer,
             USizePointer,
-            U8Pointer,
         ]
         lib.ls_netconf_fetch_operation_sizes.restype = c_uint8
 
@@ -754,7 +752,6 @@ class LibScrapliNetconfMapping:
         rpc_errors_size: USizePointer,
         err_size: USizePointer,
         last_err_str_size: USizePointer,
-        err_code: U8Pointer,
     ) -> None:
         """
         Fetch the sizes of a netconf operation's results.
@@ -771,8 +768,6 @@ class LibScrapliNetconfMapping:
             rpc_errors_size: int pointer to fill with the size of any rpc error string
             err_size: int pointer to fill with the operation's error size
             last_err_str_size: int pointer to fill with the operation's last error string size
-            err_code: int pointer to fill with the result code of the error the operation hit,
-                if any
 
         Returns:
             N/A
@@ -792,7 +787,6 @@ class LibScrapliNetconfMapping:
                 rpc_errors_size,
                 err_size,
                 last_err_str_size,
-                err_code,
             )
         ).raise_if_error(
             message="fetching operation sizes failed",

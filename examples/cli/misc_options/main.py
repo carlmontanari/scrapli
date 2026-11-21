@@ -77,7 +77,6 @@ def main() -> None:
                 operation_timeout_ns=30,
             )
         except TimeoutException:
-            # the timeout we were expecting! note that TimeoutException is also a TimeoutError
             pass
 
         # the last option is "input handling" -- there are a few options here:
