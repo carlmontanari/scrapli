@@ -8,7 +8,7 @@ from scrapli import AuthOptions, Netconf, TransportBinOptions, TransportSsh2Opti
 
 IS_DARWIN = sys.platform == "darwin"
 
-# in this case host is only used w/ ssh2, and its going to the "jumper" host; same deal for port
+# in this case host is only used w/ ssh2, and it's going to the "jumper" host; same deal for port
 HOST = os.getenv("SCRAPLI_HOST", "localhost" if IS_DARWIN else "172.20.20.19")
 PORT = int(os.getenv("SCRAPLI_PORT") or 24022 if IS_DARWIN else 22)
 
