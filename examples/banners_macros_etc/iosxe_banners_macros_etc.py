@@ -21,7 +21,7 @@ I'm serious, you can't be in here!
 Go away!
 ^
 """
-    # Because the banner "input mode" is basically like a text editor where we dont get the prompt
+    # Because the banner "input mode" is basically like a text editor where we don't get the prompt
     # printed out between sending lines of banner config we need to use the `eager` mode to force
     # scrapli to blindly send the banner/macro lines without looking for the prompt in between each
     # line. You should *not* use eager unless you need to and know what you are doing as it
