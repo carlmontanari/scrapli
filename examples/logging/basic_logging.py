@@ -4,7 +4,7 @@ import logging
 
 from scrapli.driver.core import IOSXEDriver
 
-# set the name for the logfile and the logging level... thats about it for bare minimum!
+# set the name for the logfile and the logging level... that is about it for bare minimum!
 logging.basicConfig(filename="scrapli.log", level=logging.DEBUG)
 
 MY_DEVICE = {
