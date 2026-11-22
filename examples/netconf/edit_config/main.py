@@ -54,7 +54,7 @@ def main() -> None:
 
         print(result.result)
 
-        # well put it back just in case using this w/ testing so we didnt make any change
+        # we'll put it back just in case using this w/ testing so we didn't make any change
         nc.edit_config(
             config="""
             <system xmlns="urn:nokia.com:srlinux:general:system">
