@@ -1,5 +1,5 @@
 Host *
-  # ignoring so we dont get hung being prompted to accept fingerprint during proxy jump
+  # ignoring so we don't get hung being prompted to accept fingerprint during proxy jump
   # tests -- note that you need to care about this as the bin transport only ignores this (by
   # default) for the initial connection
   StrictHostKeyChecking no
