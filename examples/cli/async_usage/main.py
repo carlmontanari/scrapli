@@ -18,7 +18,7 @@ PASSWORD = os.getenv("SCRAPLI_USERNAME", "NokiaSrl1!")
 async def background(i: int) -> None:
     """Do dumb background work"""
     while True:
-        print(f"background task {i} doign work...")
+        print(f"background task {i} doing work...")
         await asyncio.sleep(random())
 
 
@@ -27,11 +27,11 @@ async def run(i: int, cli: Cli) -> tuple[int, str]:
     print(f"cli connection {i} opening...")
 
     async with cli as c:
-        # addign some randomness to make output more interesting
+        # adding some randomness to make output more interesting
         await asyncio.sleep(random())
 
         # when doing async stuff, just do the same as you'd do with sync, but add _async to the
-        # method name (and obv await it/schedule it), thats the only difference
+        # method name (and obv await it/schedule it), that's the only difference
         r = await c.send_input_async(input_="show version")
 
     print(f"cli connection {i} closed, returning...")
@@ -43,7 +43,7 @@ async def main() -> None:
     """A simple program showing async usage."""
     clis = [
         # creation is exactly the same as sync -- in "new" scrapli ("scrapli2", the stuff using
-        # the zig backend) any transport can be used asynchronously and there is no differnet
+        # the zig backend) any transport can be used asynchronously and there is no different
         # class to use to create the Cli connection object.
         Cli(
             definition_file_or_name=PLATFORM,
