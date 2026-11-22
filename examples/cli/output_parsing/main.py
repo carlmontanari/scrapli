@@ -30,11 +30,11 @@ def main() -> None:
         result = c.send_input(input_="show version")
 
         print(
-            # for platforms that have a "textfsm_platform" field, and where ntctemplates are
+            # for platforms that have a "textfsm_platform" field, and where ntc-templates are
             # installed, the template will be looked up automatically based on the platform and
-            # input. there arent templates for srlinux so we just have a down and dirty one that
+            # input. there aren't templates for srlinux so we just have a down and dirty one that
             # we can pass here to prove it out. obviously this means you can provide your own
-            # templates too if your platform/input is not represented in ntctemplates
+            # templates too if your platform/input is not represented in ntc-templates
             result.textfsm_parse(
                 template=f"{Path(__file__).resolve().parent}/nokia_srlinux_show_version.tpl",
             )
@@ -61,7 +61,7 @@ def main() -> None:
             )
         )
 
-        # some platforms will also support genie parsing, but... do yourself a favor and dont
+        # some platforms will also support genie parsing, but... do yourself a favor and don't
         # use that unless you want to install 90129481092480192 more packages :)
 
 
