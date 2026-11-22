@@ -17,7 +17,7 @@ def main() -> None:
     """Demonstrate using a custom platform definition"""
     cli = Cli(
         # this is exactly the same as the upstream definition but just doing this to show that
-        # you can load up any yaml definition and dont necessarily need to rely on the upstream
+        # you can load up any yaml definition and don't necessarily need to rely on the upstream
         # stuff in scrapli_definitions
         definition_file_or_name=f"{Path(__file__).resolve().parent}/foo_bar.yaml",
         host=HOST,
