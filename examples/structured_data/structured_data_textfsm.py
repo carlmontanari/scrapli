@@ -11,7 +11,7 @@ MY_DEVICE = {
 
 
 def main():
-    """Simple example demonstrating getting structured data via the genie parsing library"""
+    """Simple example demonstrating getting structured data via the textfsm/ntc-templates"""
     with IOSXEDriver(**MY_DEVICE) as conn:
         # Platform drivers will auto-magically handle disabling paging for you
         result = conn.send_command("show run")

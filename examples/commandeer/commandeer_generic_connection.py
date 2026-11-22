@@ -30,11 +30,11 @@ def main():
     term_server_conn.open()
 
     # here you would normally need to add some logic to get connected to the terminal server port or
-    # to ssh from this "outer" device to the target device, in this example we're just ssh'ing to a
-    # device using the generic driver then transforming that to the IOSXE driver so we dont need to
+    # to ssh from this "outer" device to the target device, in this example we're just sshing to a
+    # device using the generic driver then transforming that to the IOSXE driver so we don't need to
     # do anything
 
-    # next create, but dont open, a connection for the target device type
+    # next create, but don't open, a connection for the target device type
     target_device_conn = Scrapli(**TARGET_DEVICE)
 
     # we can then call `commandeer` from the "inner"/"child" connection, passing it the connection
@@ -54,10 +54,10 @@ def main():
     print(target_device_conn.get_prompt())
 
     # closing the "inner"/"child" connection will close the "outer"/"parent" connection, so if you
-    # wish to keep using the outer connection.... dont close this one :)
+    # wish to keep using the outer connection.... don't close this one :)
     # target_device_conn.close()
 
-    # if you dont close the inner connection, you can keep using the outer connection to do whatever
+    # if you don't close the inner connection, you can keep using the outer connection to do whatever
     # it is you need to do with it!
     print(term_server_conn.get_prompt())
 
