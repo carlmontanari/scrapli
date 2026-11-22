@@ -65,7 +65,7 @@ class Libscrapli:
     @staticmethod
     def _clean_libscrapli_build_path(libscrapli_build_path: Path) -> None:
         if LIBSCRAPLI_BUILD_PATH_ENV in os.environ:
-            # build path env set, likely in ci, dont clean up as we may need it for
+            # build path env set, likely in ci, don't clean up as we may need it for
             # building other wheels. ci will/should clean it
             return
 
@@ -179,7 +179,7 @@ class LibscrapliBdist(bdist_wheel, Libscrapli):  # type: ignore
 
             # we *technically* have a pure python package meaning we can lie to bdist_wheel and tell
             # it what our platform should be. so do that. we are "pure" python because we have no
-            #  c-extensions, only the pre compiled zig shared object (i.e. .so or .dylib)
+            #  c-extensions, only the precompiled zig shared object (i.e. .so or .dylib)
             self.plat_name_supplied = True
             self.plat_name = wheel_platform
         else:
