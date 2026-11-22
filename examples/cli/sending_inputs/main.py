@@ -39,7 +39,7 @@ def main() -> None:
         # but if you want to just see the result itself you can do like so:
         print(result.result)
 
-        # theres a plural method for... sending multiple inputs, shock!
+        # there is a plural method for... sending multiple inputs, shock!
         results = c.send_inputs(inputs=["show version", "show version"])
 
         # result will print a joined result
