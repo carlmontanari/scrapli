@@ -5,7 +5,7 @@ import sys
 
 from scrapli import AuthOptions, Cli
 from scrapli.cli import InputHandling
-from scrapli.exceptions import OperationException
+from scrapli.exceptions import TimeoutException
 from scrapli.helper import second_to_nano
 
 IS_DARWIN = sys.platform == "darwin"
@@ -76,10 +76,8 @@ def main() -> None:
                 # don't think any input would ever complete in 30ns :)
                 operation_timeout_ns=30,
             )
-        except OperationException as exc:
-            if "TimeoutExceeded" not in str(exc):
-                # wasn't the timeout we were expecting...
-                raise exc
+        except TimeoutException:
+            pass
 
         # the last option is "input handling" -- there are a few options here:
         # - Exact
