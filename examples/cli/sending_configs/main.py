@@ -46,7 +46,7 @@ def main() -> None:
         # if we want to send a "regular" input again, scrapli will automatically do so from the
         # default mode, which is usually exec/privileged_exec. once again, we retain the trailing
         # prompt so you can confirm/see this. note that *how* you "leave" the config mode varies
-        # depending on the platform, so check the definition. in this case its "discard now".
+        # depending on the platform, so check the definition. in this case it's "discard now".
         result = c.send_input(
             input_="show version",
             retain_trailing_prompt=True,
