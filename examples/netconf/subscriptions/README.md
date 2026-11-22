@@ -1,6 +1,6 @@
 # Subscriptions
 
-Netconf subscriptions... are wild. There are several differnet ways to set them up depending on the
+Netconf subscriptions... are wild. There are several different ways to set them up depending on the
 RFC the server supports. As such, scrapli said: NOPE. You can instead setup subscriptions yourself
 using the `raw_rpc` method. This example shows using the Netopeer server for a basic
 `create-subscription` setup and a bring your own IOSXE device to show an `establish-subscription`

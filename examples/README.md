@@ -28,6 +28,6 @@ also exposes them NAT'd for darwin users on 21022, 21023, and 21830. Credentials
 Each example will connect to the appropriate port based on the system the example is being ran on
 (i.e. check if darwin, if so SSH to 21022).
 
-The examples allow for overrding of the platform (srlinux), host, port, username, and password via
+The examples allow for overriding of the platform (srlinux), host, port, username, and password via
 environment variables. Obviously changing the target platform type may cause the examples to not
 work as expected or at all.
