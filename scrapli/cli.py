@@ -111,8 +111,8 @@ class Cli:
         self._load_definition(definition_file_or_name=definition_file_or_name)
 
         # note: many places have encodings done prior to function calls such that the encoded
-        # result is not gc'd prior to being used in zig-land, so it looks a bit weird, but thats
-        # why. in this case we also just store the host since thats cheap and we need it as a string
+        # result is not gc'd prior to being used in zig-land, so it looks a bit weird, but that is
+        # why. in this case we also just store the host since that is cheap and we need it as a string
         # in places too
         self.host = host
         self._host = to_c_string(host)
