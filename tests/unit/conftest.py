@@ -159,7 +159,7 @@ def netconf_assert_result(request: pytest.FixtureRequest) -> Callable[[Result], 
         assert actual.elapsed_time_seconds != 0
         assert len(actual.result) != 0
         assert len(actual.result_raw) != 0
-        # would be nice to check failed, but for now we dont as we are just making sure
+        # would be nice to check failed, but for now we don't as we are just making sure
         # we send valid rpcs for things like cancel commit which will always (for now)
         # reply w/ an error saying no commit to cancel.
 
