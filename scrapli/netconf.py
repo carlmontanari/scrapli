@@ -903,7 +903,7 @@ class Netconf:
             filter_type: type of filter to apply, subtree|xpath
             filter_namespace_prefix: filter namespace prefix
             filter_namespace: filter namespace
-            defaults_type: defaults type to apply to the get-config, "unset" means dont apply one
+            defaults_type: defaults type to apply to the get-config, "unset" means don't apply one
             operation_timeout_ns: operation timeout in ns for this operation
 
         Returns:
@@ -954,7 +954,7 @@ class Netconf:
             filter_type: type of filter to apply, subtree|xpath
             filter_namespace_prefix: filter namespace prefix
             filter_namespace: filter namespace
-            defaults_type: defaults type to apply to the get-config, "unset" means dont apply one
+            defaults_type: defaults type to apply to the get-config, "unset" means don't apply one
             operation_timeout_ns: operation timeout in ns for this operation
 
         Returns:
@@ -1513,7 +1513,7 @@ class Netconf:
             filter_type: type of filter to apply, subtree|xpath
             filter_namespace_prefix: filter namespace prefix
             filter_namespace: filter namespace
-            defaults_type: defaults type to apply to the get-config, "unset" means dont apply one
+            defaults_type: defaults type to apply to the get-config, "unset" means don't apply one
             operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
@@ -1561,7 +1561,7 @@ class Netconf:
             filter_type: type of filter to apply, subtree|xpath
             filter_namespace_prefix: filter namespace prefix
             filter_namespace: filter namespace
-            defaults_type: defaults type to apply to the get-config, "unset" means dont apply one
+            defaults_type: defaults type to apply to the get-config, "unset" means don't apply one
             operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
@@ -2284,7 +2284,7 @@ class Netconf:
             origin_filters: fully formed origin filter xml payload to embed
             max_depth: max depth of data requested
             with_origin: include origin data
-            defaults_type: defaults type to apply to the get-config, "unset" means dont apply one
+            defaults_type: defaults type to apply to the get-config, "unset" means don't apply one
             operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
@@ -2347,7 +2347,7 @@ class Netconf:
             origin_filters: fully formed origin filter xml payload to embed
             max_depth: max depth of data requested
             with_origin: include origin data
-            defaults_type: defaults type to apply to the get-config, "unset" means dont apply one
+            defaults_type: defaults type to apply to the get-config, "unset" means don't apply one
             operation_timeout_ns: optional timeout in ns for this operation
 
         Returns:
