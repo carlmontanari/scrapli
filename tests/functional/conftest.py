@@ -31,7 +31,7 @@ def cli(platform, transport) -> Cli:
     """Fixture to provide a Cli instance for functional testing"""
     if platform == "arista_eos":
         if EOS_AVAILABLE is False:
-            # because we cant have this publicly in ci afaik
+            # because we can't have this publicly in ci afaik
             pytest.skip("eos not available, skipping...")
 
         host = "localhost" if IS_DARWIN else "172.20.20.17"
@@ -104,7 +104,7 @@ def netconf(platform, transport) -> Netconf:
     """Fixture to provide a Netconf instance for functional testing"""
     if platform == "arista_eos":
         if EOS_AVAILABLE is False:
-            # because we cant have this publicly in ci afaik
+            # because we can't have this publicly in ci afaik
             pytest.skip("eos not available, skipping...")
 
         host = "localhost" if IS_DARWIN else "172.20.20.17"
