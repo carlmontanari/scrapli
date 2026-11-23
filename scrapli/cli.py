@@ -964,7 +964,7 @@ class Cli:
 
         Args:
             inputs: the inputs to send
-            requested_mode: name of the mode to send the input at`
+            requested_mode: name of the mode to send the input at
             input_handling: how to handle the input
             retain_input: retain the input in the final "result"
             retain_trailing_prompt: retain the trailing prompt in the final "result"
@@ -1033,7 +1033,7 @@ class Cli:
 
         Args:
             inputs: the inputs to send
-            requested_mode: name of the mode to send the input at`
+            requested_mode: name of the mode to send the input at
             input_handling: how to handle the input
             retain_input: retain the input in the final "result"
             retain_trailing_prompt: retain the trailing prompt in the final "result"
