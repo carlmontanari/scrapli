@@ -540,12 +540,12 @@ class LibScrapliCliMapping:
             operation_id: operation id of which to poll
             start_time: int pointer to fill with the operation's start time
             splits: slice of u64 timestamps -- the end time (in unix ns) for each operation
-            inputs_slice: pre allocated slice to fill with the operations input
-            results_raw_slice: pre allocated slice to fill with the operations result raw
-            results_slice: pre allocated slice to fill with the operations result
-            results_failed_indicator_slice: pre allocated slice to fill with the operations failed
+            inputs_slice: preallocated slice to fill with the operations input
+            results_raw_slice: preallocated slice to fill with the operations result raw
+            results_slice: preallocated slice to fill with the operations result
+            results_failed_indicator_slice: preallocated slice to fill with the operations failed
                 indicator
-            err_slice: pre allocated slice to fill with the operations error
+            err_slice: preallocated slice to fill with the operations error
 
         Returns:
             int: return code, non-zero value indicates an error. technically a c_uint8 converted by

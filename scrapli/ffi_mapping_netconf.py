@@ -740,12 +740,12 @@ class LibScrapliNetconfMapping:
             operation_id: operation id of which to poll
             start_time: int pointer to fill with the operation's start time
             end_time: int pointer to fill with the operation's end time
-            input_slice: pre allocated slice to fill with the operations input
-            result_raw_slice: pre allocated slice to fill with the operations result raw
-            result_slice: pre allocated slice to fill with the operations result
-            rpc_warnings_slice: pre allocated slice to fill with the rpc warnings string
-            rpc_errors_slice: pre allocated slice to fill with the rpc errors string
-            err_slice: pre allocated slice to fill with the operations error
+            input_slice: preallocated slice to fill with the operations input
+            result_raw_slice: preallocated slice to fill with the operations result raw
+            result_slice: preallocated slice to fill with the operations result
+            rpc_warnings_slice: preallocated slice to fill with the rpc warnings string
+            rpc_errors_slice: preallocated slice to fill with the rpc errors string
+            err_slice: preallocated slice to fill with the operations error
 
         Returns:
             int: return code, non-zero value indicates an error. technically a c_uint8 converted by
