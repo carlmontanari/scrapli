@@ -393,7 +393,7 @@ def test_send_input(
         )
 
         if input_ == "info from state":
-            # we dont save the 40mb of output from this command, and also even if we did
+            # we don't save the 40mb of output from this command, and also even if we did
             # the counters etc would change so comparing would be pointless
             assert actual.start_time != 0
             assert actual.end_time != 0
