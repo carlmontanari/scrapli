@@ -67,13 +67,16 @@ class Result:
         results_failed_indicator: str,
         textfsm_platform: str,
         genie_platform: str,
+        decode_errors: str,
     ) -> None:
         self.host = host
         self.port = port
         self.inputs = [i.decode() for i in _split_packed(inputs, input_lens)]
         self.start_time = start_time
         self.splits = splits
-        self.results = [r.decode() for r in _split_packed(results, result_lens)]
+        self.results = [
+            r.decode(errors=decode_errors) for r in _split_packed(results, result_lens)
+        ]
         self.results_failed_indicator = results_failed_indicator
         self.textfsm_platform = textfsm_platform
         self.genie_platform = genie_platform

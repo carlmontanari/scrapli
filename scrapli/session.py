@@ -1,5 +1,6 @@
 """scrapli.session"""
 
+from typing import Literal
 from collections.abc import Callable
 from ctypes import c_char_p, c_size_t, c_uint64, pointer
 from dataclasses import dataclass, field
@@ -10,6 +11,7 @@ from scrapli.helper import second_to_nano
 
 DEFAULT_OPERATION_TIMEOUT_NS = 10_000_000_000
 
+DecodeErrors = Literal["strict", "ignore", "replace"]
 
 @dataclass
 class Options:
@@ -43,6 +45,7 @@ class Options:
     scratch_retain_max: int | None = None
     recorder_path: str | None = None
     recorder_callback: Callable[[str], None] | None = None
+    decode_errors: DecodeErrors = "strict"
 
     _return_char: c_char_p | None = field(init=False, default=None, repr=False)
     _recorder_path: c_char_p | None = field(init=False, default=None, repr=False)
