@@ -1063,7 +1063,7 @@ class Cli:
             results_failed_indicator=results_failed_indicator_slice.contents.get_decoded_contents(),
             textfsm_platform=self.ntc_templates_platform,
             genie_platform=self.genie_platform,
-            decode_errors=self.session_options.decode_errors,
+            result_decode_errors=self.session_options.result_decode_errors,
         )
 
     async def _get_result_async(
@@ -1154,7 +1154,7 @@ class Cli:
             results_failed_indicator=failed_indicator,
             textfsm_platform=self.ntc_templates_platform,
             genie_platform=self.genie_platform,
-            decode_errors=self.session_options.decode_errors,
+            result_decode_errors=self.session_options.result_decode_errors,
         )
 
     @handle_operation_timeout
@@ -1995,7 +1995,7 @@ class Cli:
                         results_failed_indicator="",
                         textfsm_platform=self.ntc_templates_platform,
                         genie_platform=self.genie_platform,
-                        decode_errors=self.session_options.decode_errors,
+                        result_decode_errors=self.session_options.result_decode_errors,
                     )
                     final_result._results_raw = [result_raw]
 
@@ -2113,7 +2113,7 @@ class Cli:
                         results_failed_indicator="",
                         textfsm_platform=self.ntc_templates_platform,
                         genie_platform=self.genie_platform,
-                        decode_errors=self.session_options.decode_errors,
+                        result_decode_errors=self.session_options.result_decode_errors,
                     )
                     final_result._results_raw = [result_raw]
 
