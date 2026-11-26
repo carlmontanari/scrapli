@@ -1,9 +1,9 @@
 """scrapli.session"""
 
-from typing import Literal
 from collections.abc import Callable
 from ctypes import c_char_p, c_size_t, c_uint64, pointer
 from dataclasses import dataclass, field
+from typing import Literal
 
 from scrapli.ffi_options import DriverOptionsPointer
 from scrapli.ffi_types import RecorderCallback, recorder_callback_wrapper, to_c_string
@@ -12,6 +12,7 @@ from scrapli.helper import second_to_nano
 DEFAULT_OPERATION_TIMEOUT_NS = 10_000_000_000
 
 DecodeErrors = Literal["strict", "ignore", "replace"]
+
 
 @dataclass
 class Options:
