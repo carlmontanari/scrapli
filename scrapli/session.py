@@ -4,6 +4,7 @@ from collections.abc import Callable
 from ctypes import c_char_p, c_size_t, c_uint64, pointer
 from dataclasses import dataclass, field
 
+from scrapli.cli_result import DecodeErrorHandling
 from scrapli.ffi_options import DriverOptionsPointer
 from scrapli.ffi_types import RecorderCallback, recorder_callback_wrapper, to_c_string
 from scrapli.helper import second_to_nano
@@ -23,6 +24,7 @@ class Options:
         operation_timeout_ns: operation timeout in ns
         operation_max_search_depth: operation maximum search depth
         recorder_path: path for session recorder output to write to
+        result_decode_errors: sets bytes decode error handling
 
     Returns:
         None
@@ -43,6 +45,7 @@ class Options:
     scratch_retain_max: int | None = None
     recorder_path: str | None = None
     recorder_callback: Callable[[str], None] | None = None
+    result_decode_errors: DecodeErrorHandling = "strict"
 
     _return_char: c_char_p | None = field(init=False, default=None, repr=False)
     _recorder_path: c_char_p | None = field(init=False, default=None, repr=False)
